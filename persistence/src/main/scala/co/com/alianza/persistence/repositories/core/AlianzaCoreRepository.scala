@@ -1,0 +1,117 @@
+package co.com.alianza.persistence.repositories.core
+
+import java.sql.{CallableStatement, ResultSet, Connection}
+
+import scala.concurrent.{Future, ExecutionContext}
+import scala.util.{Failure, Success, Try}
+
+import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
+import co.com.alianza.exceptions._
+import co.com.alianza.persistence.conn.core.DataBaseAccesCoreAlianza
+import scala.util.Failure
+import scala.util.Success
+import oracle.net.ns.NetException
+import java.net.SocketTimeoutException
+
+/**
+ * Repositorio que obtiene la conexión del DataSource: [[DataBaseAccesCoreAlianza.ds]]
+ *
+ * @author seven4n
+ */
+class AlianzaCoreRepository(implicit val executionContex: ExecutionContext) {
+
+
+  def loan[R](f: Connection => Validation[PersistenceException, R]): Future[Validation[PersistenceException, R]] = {
+    Future {
+      Try {
+        val connectionDataSource = DataBaseAccesCoreAlianza.ds
+        connectionDataSource.getConnection
+      } match {
+        case Success(connection) =>
+          // log.info
+          // log.debug
+          f(connection) map {
+            value =>
+              connection.close()
+              value
+          }
+        case Failure(exception) =>
+          //   log.error
+          zFailure(PersistenceException(exception, getLevelException(exception), exception.getMessage))
+      }
+    }
+  }
+
+  private def getLevelException(exception:Throwable):LevelException = {
+    exception.getCause match {
+      case ex: NetException =>
+        ex.getCause match {
+          case ex: SocketTimeoutException =>TimeoutLevel
+          case _ =>NetworkLevel
+        }
+      case _ => TechnicalLevel
+    }
+  }
+
+  def resolveTry[T](connection: Connection, operation: Try[T], messageInfo: String): Validation[PersistenceException, T] = {
+    operation match {
+      case Success(response) =>
+        //TODO:Agregar logs
+        //log.info
+        //log.debug
+        connection.commit()
+        zSuccess(response)
+      case Failure(exception:PersistenceException) =>
+        exception.printStackTrace()
+        zFailure(exception)
+      case Failure(exception) =>
+        exception.printStackTrace()
+        //log.error
+        zFailure(PersistenceException(exception, TechnicalLevel, exception.getMessage))
+    }
+  }
+
+  def buildSpResponse(connection: Connection, callableStatement: CallableStatement, positionResult: Int): String = {
+    callableStatement.execute()
+
+    val resultObject = callableStatement getObject positionResult
+    resultObject match {
+      case r: ResultSet =>
+        val result = new StringBuilder()
+        var record: String = ""
+        val numCol = r.getMetaData.getColumnCount
+        while (r next ()) {
+          for (a <- 1 to numCol) {
+            val x = if(r.getString(a)!=null)r.getString(a).replaceAll("\"", "'") else ""
+            if (a == 1)
+              record = record + "{\n"
+            if (a == numCol)
+              record = record + "\t\t\"" + r.getMetaData.getColumnName(a).toLowerCase + "\": " + "\"" + x  + "\"\n},\n"
+            else
+              record = record + "\t\t\"" + r.getMetaData.getColumnName(a).toLowerCase + "\": " + "\"" + x + "\",\n"
+          }
+        }
+        if (!record.isEmpty) {
+          result append "[" append "\n"
+          record = record.substring(0, record.length() - 2)
+          result append "\t" + record + "\n"
+          result append "]" append "\n"
+        }else
+        {
+          result append "[" append "\n"
+          result append "]" append "\n"
+        }
+
+        r.close()
+        if (callableStatement != null) callableStatement.close()
+
+        result.toString()
+
+      case _ =>
+        val codeError = callableStatement getObject 1
+        val detailError = callableStatement getObject 2
+        val msg = s"Error ejecutando prodecimiento $codeError - $detailError"
+        throw PersistenceException(new Exception(msg), BusinessLevel, msg)
+    }
+  }
+}

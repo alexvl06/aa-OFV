@@ -1,0 +1,105 @@
+package co.com.alianza.infrastructure.anticorruption.usuarios
+
+import co.com.alianza.persistence.repositories.{IpsUsuarioRepository, UsuariosRepository}
+import scalaz.Validation
+import scala.concurrent.{ExecutionContext, Future}
+import co.com.alianza.exceptions.PersistenceException
+import co.com.alianza.app.MainActors
+import scalaz.{Failure => zFailure, Success => zSuccess}
+import co.com.alianza.infrastructure.dto.Usuario
+import co.com.alianza.persistence.entities.{Usuario => eUsuario, IpsUsuario}
+import co.com.alianza.persistence.messages.AutenticacionRequest
+
+object DataAccessAdapter {
+
+  implicit val ec: ExecutionContext = MainActors.dataAccesEx
+
+  def obtenerUsuarios(): Future[Validation[PersistenceException, List[Usuario]]] = {
+    val repo = new UsuariosRepository()
+    repo.obtenerUsuarios() map {
+      x => transformValidationList(x)
+    }
+  }
+
+  def crearUsuario(usuario:eUsuario): Future[Validation[PersistenceException, Int]] = {
+    val repo = new UsuariosRepository()
+    repo.guardar(usuario)
+  }
+
+  def relacionarIp(idUsuario:Int, ip:String): Future[Validation[PersistenceException, String]] = {
+    val repo = new IpsUsuarioRepository()
+    repo.guardar(IpsUsuario(idUsuario, ip))
+  }
+
+
+  def obtenerUsuarioNumeroIdentificacion( numeroIdentificacion:String): Future[Validation[PersistenceException, Option[Usuario]]] = {
+    val repo = new UsuariosRepository()
+    repo.obtenerUsuarioNumeroIdentificacion( numeroIdentificacion ) map {
+      x => transformValidation(x)
+    }
+  }
+
+  def obtenerUsuarioToken( token:String ): Future[Validation[PersistenceException, Option[Usuario]]] = {
+    val repo = new UsuariosRepository()
+    repo.obtenerUsuarioToken( token ) map {
+      x => transformValidation(x)
+    }
+  }
+
+  def obtenerUsuarioCorreo( correo:String): Future[Validation[PersistenceException, Option[Usuario]]] = {
+    val repo = new UsuariosRepository()
+    repo.obtenerUsuarioCorreo( correo ) map {
+      x => transformValidation(x)
+    }
+  }
+
+
+  def asociarTokenUsuario(numeroIdentificacion:String, token:String): Future[Validation[PersistenceException, Int]] = {
+    val repo = new UsuariosRepository()
+    repo.asociarTokenUsuario( numeroIdentificacion, token )
+  }
+
+  def actualizarNumeroIngresosErroneos( numeroIdentificacion:String, numeroIntentos:Int  ): Future[Validation[PersistenceException, Int]] = {
+    val repo = new UsuariosRepository()
+    repo.actualizarNumeroIngresosErroneos( numeroIdentificacion, numeroIntentos )
+  }
+
+  def obtenerIpsUsuario( idUsuario:Int ) : Future[Validation[PersistenceException, Vector[IpsUsuario]]] = {
+    val repo = new IpsUsuarioRepository()
+    repo.obtenerIpsUsuario( idUsuario )
+  }
+
+
+  def obtenerIpUsuarioValida( idUsuario:Int, ip:String ) : Future[Validation[PersistenceException, Option[IpsUsuario]]] = {
+    val repo = new IpsUsuarioRepository()
+    repo.obtenerIpUsuario(idUsuario, ip)
+  }
+
+  def actualizarEstadoUsuario( numeroIdentificacion:String, estado:Int ) : Future[Validation[PersistenceException, Int]] = {
+    val repo = new UsuariosRepository()
+    repo.actualizarEstadoUsuario( numeroIdentificacion, estado )
+  }
+
+
+  private def transformValidationList(origin: Validation[PersistenceException, List[eUsuario]]): Validation[PersistenceException, List[Usuario]] = {
+    origin match {
+      case zSuccess(response: List[eUsuario]) => zSuccess(DataAccessTranslator.translateUsuario(response))
+      case zFailure(error)    =>  zFailure(error)
+    }
+  }
+
+  private def transformValidation(origin: Validation[PersistenceException, Option[eUsuario]]): Validation[PersistenceException, Option[Usuario]] = {
+    origin match {
+      case zSuccess(response) =>
+        response match {
+          case Some(usuario) => zSuccess(Some(DataAccessTranslator.translateUsuario(usuario)))
+          case _ => zSuccess(None)
+        }
+
+      case zFailure(error)    =>  zFailure(error)
+    }
+  }
+
+}
+
+

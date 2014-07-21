@@ -1,0 +1,14 @@
+package co.com.alianza.util.clave
+
+sealed trait ErrorValidacionClave
+
+case object ErrorMinCaracteres extends ErrorValidacionClave
+case object ErrorMinCaracteresEsp extends ErrorValidacionClave
+case object ErrorMinDigitos extends ErrorValidacionClave
+case object ErrorMinMayusculas extends ErrorValidacionClave
+case object ErrorMinMinusculas extends ErrorValidacionClave
+case object ErrorCaracteresPermitidos extends ErrorValidacionClave
+case object ErrorIntentosErroneos extends ErrorValidacionClave
+
+case object ErrorObteniendoReglas extends ErrorValidacionClave
+
