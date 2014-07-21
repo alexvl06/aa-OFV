@@ -2,7 +2,7 @@ import sbt._
 import Keys._
 
 object Build extends Build {
-	lazy val autenticacionAutorizacionCommon  = Project( "autenticacion-autorizacion-common", file( "common" ) )
-	lazy val autenticacionAutorizacionPersistence = Project( "autenticacion-autorizacion-persistence", file( "persistence" ) ).dependsOn( autenticacionAutorizacionCommon )
-	lazy val autenticacionAutorizacionService = Project( "alianza-autenticacion-autorizacion", file( "services" ) ).dependsOn( autenticacionAutorizacionCommon ).dependsOn( autenticacionAutorizacionPersistence )
+	lazy val autenticacionAutorizacionCommon  = Project( "fiduciaria-alianza-aa-common", file( "common" ) )
+	lazy val autenticacionAutorizacionPersistence = Project( "fiduciaria-alianza-aa-persistence", file( "persistence" ) ).dependsOn( autenticacionAutorizacionCommon )
+	lazy val autenticacionAutorizacionService = Project( "fiduciaria-alianza-aa-service", file( "services" ) ).dependsOn( autenticacionAutorizacionCommon ).dependsOn( autenticacionAutorizacionPersistence )
 }

@@ -16,9 +16,9 @@ mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
 
 test in assembly := {}
 
-outputPath in assembly := file( "../alianza-autenticacion-autorizacion-service.jar" )
+outputPath in assembly := file( "../fiduciaria-alianza-aa-service.jar" )
 
-name := "autenticacion-autorizacion-service"
+name := "fiduciaria-alianza-aa-service"
 
 organization := "co.s4n"
 
@@ -46,4 +46,4 @@ libraryDependencies ++= commonLibraries ++ reactiveLibraries ++ recaptcha4j
 
 seq( Revolver.settings: _* )
 
-mainClass in Revolver.reStart := Some( "co.s4n.template.Boot" )
+mainClass in Revolver.reStart := Some( "co.com.alianza.app.Boot" )

@@ -1,2 +1,2 @@
-name := "alianza-autenticacion-autorizacion"
+name := "alianza-autenticacion-autorizacion-fiduciaria"
 

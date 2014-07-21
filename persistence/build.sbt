@@ -1,24 +1,4 @@
-import AssemblyKeys._
 import Common._
-
-assemblySettings
-
-mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
-{
-  case "reference.conf" => MergeStrategy.concat
-  case PathList("META-INF", xs @ _*) =>
-    (xs map {_.toLowerCase}) match {
-      case _ => MergeStrategy.discard
-    }
-  case x => MergeStrategy.first
-}
-}
-
-test in assembly := {}
-
-outputPath in assembly := file( "../alianza-aa-persistence.jar" )
-
-name := "autenticacion-autorizacion-persistence"
 
 organization := "co.s4n"
 
