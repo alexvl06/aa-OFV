@@ -76,7 +76,9 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
           case zFailure(error)  =>
             error match {
               case errorPersistence:ErrorPersistence  => currentSender !  errorPersistence.exception
-              case errorVal:ErrorValidacion => currentSender !  ResponseMessage(Conflict, errorVal.msg)
+              case errorVal:ErrorValidacion =>
+                println(s">>>>>>>> errorVal ${errorVal.msg}")
+                currentSender !  ResponseMessage(Conflict, errorVal.msg)
             }
         }
     }
