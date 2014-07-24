@@ -94,11 +94,21 @@ case object CaracteresPermitidos extends Regla("CARACTERES_PERMITIDOS")  {
 
     condicion match {
       case Some(value) =>
+
+        val valueFormat = Pattern.quote(value).replaceAll("-", "\\-")
+        val pattern = Pattern.compile(s"""(?=(?:.*?[^a-zA-Z0-9$valueFormat]))""")
+        val m = pattern.matcher(valor)
+        val b = m.find()
+        b match {
+          case true =>  Some(ErrorCaracteresPermitidos)
+          case false => None
+        }
+       /* println(s"""(?=(?:.*?[^a-zA-Z0-9$value]))"""" )
         val pattern = s"""(?=(?:.*?[^a-zA-Z0-9$value]))"""".r
         pattern findFirstIn  valor match {
           case Some(_) => Some(ErrorCaracteresPermitidos)
           case _ => None
-        }
+        }*/
       case None => Some(ErrorCaracteresPermitidos)
     }
 
