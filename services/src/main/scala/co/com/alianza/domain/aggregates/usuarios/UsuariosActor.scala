@@ -77,7 +77,6 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
             error match {
               case errorPersistence:ErrorPersistence  => currentSender !  errorPersistence.exception
               case errorVal:ErrorValidacion =>
-                println(s">>>>>>>> errorVal ${errorVal.msg}")
                 currentSender !  ResponseMessage(Conflict, errorVal.msg)
             }
         }
