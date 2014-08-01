@@ -14,7 +14,7 @@ class ClienteCoreService extends Directives with AlianzaCommons {
 
   def route = {
    get {
-     path("existeClienteCoreAlianza" / IntNumber / IntNumber)  {
+     path("existeClienteCoreAlianza" / IntNumber / IntNumber )  {
        (tipoDocumento, numDocumento) =>
           respondWithMediaType(mediaType) {
                 requestExecute(ExisteClienteCoreMessage(tipoDocumento, numDocumento.toString), consultaClienteActor)
