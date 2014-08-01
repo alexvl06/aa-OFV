@@ -73,13 +73,4 @@ class UsuariosRepository ( implicit executionContext: ExecutionContext) extends 
       resolveTry(resultTry, "Actualizar estado del usuario ")
   }
 
-
-
-
-
-
-
-
-
-
 }

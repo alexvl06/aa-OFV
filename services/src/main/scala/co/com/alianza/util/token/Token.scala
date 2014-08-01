@@ -19,7 +19,7 @@ import com.google.gson.JsonParseException
 
 object Token{
 
-    def generarToken( nombreUsuarioLogueado:String, correoUsuarioLogueado:String, tipoIdentificacion:String, ultimaIpIngreso: String, ultimaFechaIngreso: String ) : String = {
+    def generarToken( nombreUsuarioLogueado:String, correoUsuarioLogueado:String, tipoIdentificacion:String, ultimaIpIngreso: String, ultimaFechaIngreso: Date ) : String = {
       val SKEW = Duration.standardMinutes(1)
       val signer = new HmacSHA256Signer("google.com", "key2", "kjdhasdkjhaskdjhaskdjhaskdjh".getBytes())
       val clock = new SystemClock()
@@ -28,7 +28,7 @@ object Token{
       token.setParam("nombreUsuario", nombreUsuarioLogueado)
       token.setParam("tipoIdentificacion", tipoIdentificacion)
       token.setParam("ultimaIpIngreso", ultimaIpIngreso)
-      token.setParam("ultimaFechaIngreso", ultimaFechaIngreso)
+      token.setParam("ultimaFechaIngreso", ultimaFechaIngreso.toString)
       //TODO: Se debe cambiar el Audience al dominio dado para ambiente de produccion
       token.setAudience("http://www.google.com")
       token.setIssuedAt(clock.now())
