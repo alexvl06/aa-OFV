@@ -13,6 +13,7 @@ import co.com.alianza.util.transformers.ValidationT
 import scalaz.std.AllInstances._
 import co.com.alianza.util.clave.Crypto
 import com.typesafe.config.{ConfigFactory, Config}
+import co.com.alianza.exceptions.PersistenceException
 
 /**
  *
@@ -45,9 +46,47 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
   private def validaSolicitud(message:UsuarioMessage): Future[Validation[ErrorValidacion, Cliente]] = {
 
     val consultaNumDocFuture = validacionConsultaNumDoc(message)
-    val consultaCorreoFuture = validacionConsultaCorreo(message)
-    val consultaClienteFuture = validacionConsultaCliente(message)
-    val validacionClave = validacionReglasClave(message)
+    val consultaCorreoFuture: Future[Validation[ErrorValidacion, Unit.type]] = validacionConsultaCorreo(message)
+    val consultaClienteFuture: Future[Validation[ErrorValidacion, Cliente]] = validacionConsultaCliente(message)
+    val validacionClave: Future[Validation[ErrorValidacion, Unit.type]] = validacionReglasClave(message)
+
+    val f1:Future[Validation[ErrorPersistence, String]] = ???
+
+    val f2:Future[Validation[ErrorPersistence, String]] = ???
+
+    val x: Future[Validation[ErrorPersistence, String]] = (for{
+
+      s1 <-  ValidationT(f1)
+      s2 <-  ValidationT(f2)
+
+    }yield{
+
+      s"""$s1-$s2"""
+
+    }).run
+
+
+    val futureList: Future[List[Validation[PersistenceException, String]]] = ???
+
+
+
+    futureList onSuccess{
+      case listaValidation: List[Validation[PersistenceException, String]] =>
+
+
+        for( aaa: Validation[PersistenceException, String] <-  listaValidation){
+
+        }
+
+        for{
+          aaa:String <-  ValidationT(listaValidation)
+        }yield{
+          println(" aaa " + aaa)
+        }
+
+    }
+
+
 
     (for{
       resultValidacionClave <- ValidationT(validacionClave)
