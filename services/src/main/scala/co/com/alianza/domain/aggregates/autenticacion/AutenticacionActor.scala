@@ -152,7 +152,7 @@ class AutenticacionActor extends Actor with ActorLogging  {
 
 
   private def realizarAutenticacion( numeroIdentificacion:String, nombreCliente:String, nombreCorreoUsuario:String, tipoIdentificacion:String, currentSender:ActorRef ) = {
-    currentSender ! autenticacionUsuarioValido( numeroIdentificacion, nombreCliente, nombreCorreoUsuario, tipoIdentificacion, currentSender  );
+    currentSender ! autenticacionUsuarioValido( numeroIdentificacion, nombreCliente, nombreCorreoUsuario, tipoIdentificacion, ultimaIpIngreso, ultimaFechaIngreso, currentSender  );
   }
 
 
@@ -225,10 +225,10 @@ class AutenticacionActor extends Actor with ActorLogging  {
   }
 
 
-  private def autenticacionUsuarioValido( numeroIdentificacion:String, nombreCliente:String, correoCliente:String, tipoIdentificacion:String, currentSender:ActorRef ) : String  =  {
+  private def autenticacionUsuarioValido( numeroIdentificacion:String, nombreCliente:String, correoCliente:String, tipoIdentificacion:String, ultimaIpIngreso: String, ultimaFechaIngreso: String, currentSender:ActorRef ) : String  =  {
     //TODO: Falta consultar si el usuario ya tiene el token relacionado, de ser asi no se genera ni se asocia, sino que se trae el token
     //El usuario paso las validaciones necesarias para  darse por autenticado
-    val tokenGenerado = Token.generarToken(nombreCliente, correoCliente, tipoIdentificacion )
+    val tokenGenerado = Token.generarToken(nombreCliente, correoCliente, tipoIdentificacion, ultimaIpIngreso, ultimaFechaIngreso )
     //Una vez se genera el token se almacena al usuario que desea realizar la auteticacion el tabla de usuarios de la aplicacion
     val resultAsociarToken = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.asociarTokenUsuario(numeroIdentificacion, tokenGenerado)
 
