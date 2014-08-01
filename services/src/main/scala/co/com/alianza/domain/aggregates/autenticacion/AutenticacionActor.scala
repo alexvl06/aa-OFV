@@ -1,5 +1,7 @@
 package co.com.alianza.domain.aggregates.autenticacion
 
+import java.sql.Timestamp
+
 import akka.actor.{ActorRef, Actor, ActorLogging}
 import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
 import scala.util.{Success, Failure}
@@ -151,8 +153,8 @@ class AutenticacionActor extends Actor with ActorLogging  {
 
 
 
-  private def realizarAutenticacion( numeroIdentificacion:String, nombreCliente:String, nombreCorreoUsuario:String, tipoIdentificacion:String,  ipUltimoIngreso : String, fechaUltimoIngreso : Date, currentSender:ActorRef ) = {
-    currentSender ! autenticacionUsuarioValido( numeroIdentificacion, nombreCliente, nombreCorreoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso, currentSender  );
+  private def realizarAutenticacion( numeroIdentificacion:String, nombreCliente:String, nombreCorreoUsuario:String, tipoIdentificacion:String,  ipUltimoIngreso : String, fechaUltimoIngreso : Date, ipActual : String, currentSender:ActorRef ) = {
+    currentSender ! autenticacionUsuarioValido( numeroIdentificacion, nombreCliente, nombreCorreoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso, ipActual, currentSender  );
   }
 
 
@@ -171,7 +173,7 @@ class AutenticacionActor extends Actor with ActorLogging  {
                   //Se asocia la direccion IP a las habituales del usuario
                   val result = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.relacionarIp( idUsuario, ip )
                   //Luego de que el usuario asocia la IP, se envia a realizar autenticacion con datos a poner en el token
-                  realizarAutenticacion( numeroIdentificacion, valueResponseCliente.wcli_nombre, valueResponseCliente.wcli_dir_correo, valueResponseCliente.wcli_person, ipUltimoIngreso, fechaUltimoIngreso, currentSender)
+                  realizarAutenticacion( numeroIdentificacion, valueResponseCliente.wcli_nombre, valueResponseCliente.wcli_dir_correo, valueResponseCliente.wcli_person, ipUltimoIngreso, fechaUltimoIngreso, ip, currentSender)
                   //TODO:Se debe generar PIN de validacion de control de IP al igual que enviar correo con el mismo
                 }
                 else
@@ -198,7 +200,7 @@ class AutenticacionActor extends Actor with ActorLogging  {
               obtenerIpHabitual( numeroIdentificacion, idUsuario, ip, nombreCliente, correoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso, currentSender )
           case zFailure(error)   =>
             //Cuando el usuario no posea control de direcciones IP se debe permitir autenticacion normal
-            realizarAutenticacion( numeroIdentificacion, nombreCliente, correoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso, currentSender)
+            realizarAutenticacion( numeroIdentificacion, nombreCliente, correoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso, ip, currentSender)
         }
     }
   }
@@ -213,7 +215,7 @@ class AutenticacionActor extends Actor with ActorLogging  {
           case zSuccess(response: Option[IpsUsuario])   =>
             response match{
               case Some(valueResponse)  =>
-                realizarAutenticacion( numeroIdentificacion, nombreCliente, correoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso, currentSender)
+                realizarAutenticacion( numeroIdentificacion, nombreCliente, correoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso, ip, currentSender)
               case None =>
                 currentSender ! ResponseMessage(Conflict, errorUsuarioControlIpInactivo)
             }
@@ -225,7 +227,7 @@ class AutenticacionActor extends Actor with ActorLogging  {
   }
 
 
-  private def autenticacionUsuarioValido( numeroIdentificacion:String, nombreCliente:String, correoCliente:String, tipoIdentificacion:String, ipUltimoIngreso: String, fechaUltimaIngreso: Date, currentSender:ActorRef ) : String  =  {
+  private def autenticacionUsuarioValido( numeroIdentificacion:String, nombreCliente:String, correoCliente:String, tipoIdentificacion:String, ipUltimoIngreso: String, fechaUltimaIngreso: Date, ipActual : String, currentSender:ActorRef ) : String  =  {
     //TODO: Falta consultar si el usuario ya tiene el token relacionado, de ser asi no se genera ni se asocia, sino que se trae el token
     //El usuario paso las validaciones necesarias para  darse por autenticado
     val tokenGenerado = Token.generarToken(nombreCliente, correoCliente, tipoIdentificacion, ipUltimoIngreso, fechaUltimaIngreso )
@@ -243,6 +245,9 @@ class AutenticacionActor extends Actor with ActorLogging  {
     }
     //Se establece el numero de reintentos de ingreso en cero a la aplicacion
     actualizarNumeroIngresosErroneos( numeroIdentificacion, 0, currentSender )
+    //Se actualiza la fecha de ultimo ingreso y la ip de ultimo ingreso
+    actualizarIpUltimoIngreso( numeroIdentificacion, ipActual, currentSender )
+    actualizarFechaUltimoIngreso( numeroIdentificacion, new Timestamp((new Date).getTime()), currentSender )
     tokenGenerado
   }
 
@@ -260,6 +265,31 @@ class AutenticacionActor extends Actor with ActorLogging  {
     }
   }
 
+  private def actualizarIpUltimoIngreso( numeroIdentificacion:String, ipActual:String, currentSender:ActorRef ) = {
+    val resultActualizarIpUltimoIngreso = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.actualizarIpUltimoIngreso( numeroIdentificacion, ipActual )
+    resultActualizarIpUltimoIngreso  onComplete {
+      case Failure(failure)  =>    currentSender ! failure
+      case Success(value)    =>
+        value match {
+          case zSuccess(response:Int)   =>
+          //currentSender !  ResponseMessage(Accepted, response.toString)
+          case zFailure(error)              =>  currentSender ! error
+        }
+    }
+  }
+
+  private def actualizarFechaUltimoIngreso( numeroIdentificacion:String, fechaActual: Timestamp, currentSender:ActorRef ) = {
+    val resultActualizarFechaUltimoIngreso = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.actualizarFechaUltimoIngreso( numeroIdentificacion, fechaActual )
+    resultActualizarFechaUltimoIngreso onComplete {
+      case Failure(failure)  =>    currentSender ! failure
+      case Success(value)    =>
+        value match {
+          case zSuccess(response:Int)   =>
+          //currentSender !  ResponseMessage(Accepted, response.toString)
+          case zFailure(error)              =>  currentSender ! error
+        }
+    }
+  }
 
   private def ejecutarExcepcionPasswordInvalido( numeroIdentificacion:String, numeroIngresosErroneos:Int, currentSender:ActorRef  ) = {
     actualizarNumeroIngresosErroneos( numeroIdentificacion, numeroIngresosErroneos + 1, currentSender )
