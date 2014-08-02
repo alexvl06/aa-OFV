@@ -50,44 +50,6 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
     val consultaClienteFuture: Future[Validation[ErrorValidacion, Cliente]] = validacionConsultaCliente(message)
     val validacionClave: Future[Validation[ErrorValidacion, Unit.type]] = validacionReglasClave(message)
 
-    val f1:Future[Validation[ErrorPersistence, String]] = ???
-
-    val f2:Future[Validation[ErrorPersistence, String]] = ???
-
-    val x: Future[Validation[ErrorPersistence, String]] = (for{
-
-      s1 <-  ValidationT(f1)
-      s2 <-  ValidationT(f2)
-
-    }yield{
-
-      s"""$s1-$s2"""
-
-    }).run
-
-
-    val futureList: Future[List[Validation[PersistenceException, String]]] = ???
-
-
-
-    futureList onSuccess{
-      case listaValidation: List[Validation[PersistenceException, String]] =>
-
-
-        for( aaa: Validation[PersistenceException, String] <-  listaValidation){
-
-        }
-
-        for{
-          aaa:String <-  ValidationT(listaValidation)
-        }yield{
-          println(" aaa " + aaa)
-        }
-
-    }
-
-
-
     (for{
       resultValidacionClave <- ValidationT(validacionClave)
       resultConsultaNumDoc <- ValidationT(consultaNumDocFuture)
