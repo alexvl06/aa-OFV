@@ -3,7 +3,7 @@ package co.com.alianza.domain.aggregates.ips
 import akka.actor.{Actor, ActorLogging}
 import co.com.alianza.app.AlianzaActors
 import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
-import co.com.alianza.infrastructure.messages.{AgregarIpsUsuarioMessage, ResponseMessage, ObtenerIpsUsuarioMessage, InboxMessage}
+import co.com.alianza.infrastructure.messages._
 import co.com.alianza.persistence.entities.IpsUsuario
 import spray.http.StatusCodes._
 
@@ -22,6 +22,7 @@ class IpsUsuarioActor extends Actor with ActorLogging with AlianzaActors {
   def receive = {
     case message: ObtenerIpsUsuarioMessage  => obtenerIpsUsuario(message.idUsuario)
     case message: AgregarIpsUsuarioMessage => agregarIpsUsuarioMessage(message.toEntityIpsUsuario)
+    case message: EliminarIpsUsuarioMessage => eliminarIpsUsuarioMessage(message.toEntityIpsUsuario)
   }
 
   def obtenerIpsUsuario(idUsuario : Int) = {
@@ -47,6 +48,21 @@ class IpsUsuarioActor extends Actor with ActorLogging with AlianzaActors {
       case Success(value)    =>
         value match {
           case zSuccess(response: String) =>
+            currentSender !  ResponseMessage(OK, response.toJson)
+          case zFailure(error)                 =>  currentSender !  error
+        }
+    }
+
+  }
+
+  def eliminarIpsUsuarioMessage(ipUsuario : IpsUsuario ) = {
+    val currentSender = sender()
+    val result = DataAccessAdapter.eliminarIpUsuario(ipUsuario)
+    result  onComplete {
+      case Failure(failure)  =>    currentSender ! failure
+      case Success(value)    =>
+        value match {
+          case zSuccess(response: Int) =>
             currentSender !  ResponseMessage(OK, response.toJson)
           case zFailure(error)                 =>  currentSender !  error
         }

@@ -29,6 +29,14 @@ class IpsUsuariosService extends Directives with AlianzaCommons {
               requestExecute(agregarIpsUsuarioMessage, ipsUsuarioActor)
             }
         }
+      } ~
+      delete {
+        entity(as[EliminarIpsUsuarioMessage]) {
+          eliminarIpsUsuarioMessage =>
+            respondWithMediaType(mediaType) {
+              requestExecute(eliminarIpsUsuarioMessage, ipsUsuarioActor)
+            }
+        }
       }
     }
   }

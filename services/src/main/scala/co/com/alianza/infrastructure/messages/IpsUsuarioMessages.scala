@@ -10,6 +10,7 @@ import spray.httpx.SprayJsonSupport
  */
 object IpsUsuarioMessagesJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val AgregarIpsUsuarioMessageFormat = jsonFormat2(AgregarIpsUsuarioMessage)
+  implicit val EliminarIpsUsuarioMessageFormat = jsonFormat2(EliminarIpsUsuarioMessage)
 }
 
 
@@ -18,6 +19,12 @@ case class ObtenerIpsUsuarioMessage(idUsuario: Int) extends MessageService{
 }
 
 case class AgregarIpsUsuarioMessage(idUsuario: Int, ip: String) extends MessageService{
+  def toEntityIpsUsuario : IpsUsuario = {
+    new IpsUsuario(idUsuario, ip)
+  }
+}
+
+case class EliminarIpsUsuarioMessage(idUsuario: Int, ip: String) extends MessageService{
   def toEntityIpsUsuario : IpsUsuario = {
     new IpsUsuario(idUsuario, ip)
   }
