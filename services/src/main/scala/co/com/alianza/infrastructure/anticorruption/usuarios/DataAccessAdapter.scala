@@ -1,5 +1,7 @@
 package co.com.alianza.infrastructure.anticorruption.usuarios
 
+import java.sql.Timestamp
+
 import co.com.alianza.persistence.repositories.{IpsUsuarioRepository, UsuariosRepository}
 import scalaz.Validation
 import scala.concurrent.{ExecutionContext, Future}
@@ -62,6 +64,16 @@ object DataAccessAdapter {
   def actualizarNumeroIngresosErroneos( numeroIdentificacion:String, numeroIntentos:Int  ): Future[Validation[PersistenceException, Int]] = {
     val repo = new UsuariosRepository()
     repo.actualizarNumeroIngresosErroneos( numeroIdentificacion, numeroIntentos )
+  }
+
+  def actualizarIpUltimoIngreso( numeroIdentificacion:String, ipActual:String  ): Future[Validation[PersistenceException, Int]] = {
+    val repo = new UsuariosRepository()
+    repo.actualizarIpUltimoIngreso( numeroIdentificacion, ipActual )
+  }
+
+  def actualizarFechaUltimoIngreso( numeroIdentificacion:String, fechaActual: Timestamp  ): Future[Validation[PersistenceException, Int]] = {
+    val repo = new UsuariosRepository()
+    repo.actualizarFechaUltimoIngreso( numeroIdentificacion, fechaActual )
   }
 
   def obtenerIpsUsuario( idUsuario:Int ) : Future[Validation[PersistenceException, Vector[IpsUsuario]]] = {

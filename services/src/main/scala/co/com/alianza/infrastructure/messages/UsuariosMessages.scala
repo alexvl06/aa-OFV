@@ -19,6 +19,6 @@ object UsuariosMessagesJsonSupport extends DefaultJsonProtocol with SprayJsonSup
 case class UsuarioMessage(correo: String, identificacion: String, tipoIdentificacion: Int, contrasena: String, activarIP:Boolean, clientIp:Option[String] = None, challenge:String = "",uresponse:String="") extends MessageService{
 
  //TODO: Completar los datos automaticos del usuario
-  def toEntityUsuario(claveHash:String):eUsuario = eUsuario(None, correo,new Timestamp(System.currentTimeMillis()),identificacion,  tipoIdentificacion, 1, claveHash, null, 0)
+  def toEntityUsuario(claveHash:String):eUsuario = eUsuario(None, correo,new Timestamp(System.currentTimeMillis()),identificacion,  tipoIdentificacion, 1, claveHash, null, 0, "127.0.0.1", new Timestamp(System.currentTimeMillis()))
 }
 

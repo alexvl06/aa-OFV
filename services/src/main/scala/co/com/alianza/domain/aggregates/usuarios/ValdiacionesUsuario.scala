@@ -8,7 +8,7 @@ import co.com.alianza.infrastructure.dto.{Cliente, Usuario}
 import co.com.alianza.infrastructure.anticorruption.clientes.{DataAccessAdapter => DataAccessAdapterCliente }
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => DataAccessAdapterUsuario }
 
-import enumerations.EstadosCliente
+import enumerations.{TipoIdentificacion, EstadosCliente}
 
 import scalaz.Validation.FlatMap._
 
@@ -83,11 +83,24 @@ object  ValdiacionesUsuario {
       (x:Option[Cliente]) => x match{
         case None => zFailure(ErrorClienteNoExiste(errorClienteNoExiste))
         case Some(c) =>
-          if(c.wcli_estado == EstadosCliente.inactivo) zFailure(ErrorClienteNoExiste(errorClienteInactivo))
-          else zSuccess(c)
+          if(c.wcli_estado == EstadosCliente.inactivo)
+            zFailure(ErrorClienteNoExiste(errorClienteInactivo))
+          else if(getTipoPersona(message) != c.wcli_person)
+            zFailure(ErrorClienteNoExiste(errorClienteNoExiste))
+          else
+            zSuccess(c)
       }
     })
   }
+
+  private def getTipoPersona(message:UsuarioMessage):String = {
+    message.tipoIdentificacion match{
+      case  TipoIdentificacion.CEDULA_CUIDADANIA.identificador => "N"
+      case  TipoIdentificacion.CEDULA_EXTRANJERIA.identificador => "N"
+      case _ => "J"
+    }
+  }
+
   private val errorUsuarioExiste = ErrorMessage("409.1", "Usuario ya existe", "Usuario ya existe").toJson
   private val errorUsuarioCorreoExiste = ErrorMessage("409.3", "Correo ya existe", "Correo ya existe").toJson
   private val errorClienteNoExiste = ErrorMessage("409.2", "No existe el cliente", "No existe el cliente").toJson

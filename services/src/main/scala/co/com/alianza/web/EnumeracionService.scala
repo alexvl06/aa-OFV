@@ -14,23 +14,23 @@ class EnumeracionService extends Directives with AlianzaCommons  {
 
   val enumeracion = "enumeracion"
   val tiposIdentificacion = "tiposIdentificacion"
+  val tiposIdentificacionNatural = "tiposIdentificacionNatural"
 
   def route= {
     path(enumeracion/tiposIdentificacion) {
         get {
             complete {
               val list = List(new TipoIdentificaciones( 1 ,"CC" ),new TipoIdentificaciones( 2 ,"CE" ), new TipoIdentificaciones( 3 ,"NIT" ))
-              JsonUtil.toJson(
-                list
-              );
+              JsonUtil.toJson(list)
             }
-        } ~
-          // mapHttpResponseEntity(jsonFilter){
-          get {
-            complete(OK)
+        }
+      }~ path(enumeracion/tiposIdentificacionNatural) {
+        get {
+          complete {
+            val list = List(new TipoIdentificaciones( 1 ,"CC" ),new TipoIdentificaciones( 2 ,"CE" ))
+            JsonUtil.toJson(list)
           }
-
-        //}
+        }
       }
     }
 }

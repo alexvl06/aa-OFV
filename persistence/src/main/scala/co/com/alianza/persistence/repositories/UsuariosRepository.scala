@@ -1,5 +1,8 @@
 package co.com.alianza.persistence.repositories
 
+import java.sql.Timestamp
+import java.util.Date
+
 import scala.concurrent.{ExecutionContext, Future}
 import co.com.alianza.exceptions.PersistenceException
 
@@ -67,19 +70,24 @@ class UsuariosRepository ( implicit executionContext: ExecutionContext) extends 
       resolveTry(resultTry, "Actualizar usuario en numeroIngresosErroneos ")
   }
 
+  def actualizarIpUltimoIngreso( numeroIdentificacion:String, ipActual:String ): Future[Validation[PersistenceException, Int]] = loan {
+
+    implicit session =>
+      val resultTry = Try{ usuarios.filter( _.identificacion === numeroIdentificacion ).map( x => ( x.ipUltimoIngreso )).update(( ipActual ))  }
+      resolveTry(resultTry, "Actualizar usuario en actualizarIpUltimoIngreso ")
+  }
+
+  def actualizarFechaUltimoIngreso( numeroIdentificacion:String, fechaActual : Timestamp ): Future[Validation[PersistenceException, Int]] = loan {
+
+    implicit session =>
+      val resultTry = Try{ usuarios.filter( _.identificacion === numeroIdentificacion ).map( x => ( x.fechaUltimoIngreso )).update(( fechaActual ))  }
+      resolveTry(resultTry, "Actualizar usuario en actualizarFechaUltimoIngreso ")
+  }
+
   def actualizarEstadoUsuario( numeroIdentificacion:String, estado:Int ): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
       val resultTry = Try{ usuarios.filter( _.identificacion === numeroIdentificacion ).map( x => ( x.estado )).update(( estado ))  }
       resolveTry(resultTry, "Actualizar estado del usuario ")
   }
-
-
-
-
-
-
-
-
-
 
 }
