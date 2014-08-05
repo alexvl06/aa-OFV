@@ -1,5 +1,6 @@
 package co.com.alianza.infrastructure.messages
 
+import co.com.alianza.persistence.entities.{ReglasContrasenas, IpsUsuario}
 import spray.json.DefaultJsonProtocol
 import spray.httpx.SprayJsonSupport
 
@@ -8,7 +9,7 @@ import spray.httpx.SprayJsonSupport
  * @author smontanez
  */
 object IpsUsuarioMessagesJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
-  implicit val IpsUsuarioMessagesFormat = jsonFormat1(ObtenerIpsUsuarioMessage)
+  implicit val AgregarIpsUsuarioMessageFormat = jsonFormat2(AgregarIpsUsuarioMessage)
 }
 
 
@@ -16,3 +17,8 @@ case class ObtenerIpsUsuarioMessage(idUsuario: Int) extends MessageService{
 
 }
 
+case class AgregarIpsUsuarioMessage(idUsuario: Int, ip: String) extends MessageService{
+  def toEntityIpsUsuario : IpsUsuario = {
+    new IpsUsuario(idUsuario, ip)
+  }
+}

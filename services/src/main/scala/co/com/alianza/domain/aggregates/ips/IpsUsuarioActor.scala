@@ -3,7 +3,7 @@ package co.com.alianza.domain.aggregates.ips
 import akka.actor.{Actor, ActorLogging}
 import co.com.alianza.app.AlianzaActors
 import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
-import co.com.alianza.infrastructure.messages.{ResponseMessage, ObtenerIpsUsuarioMessage, InboxMessage}
+import co.com.alianza.infrastructure.messages.{AgregarIpsUsuarioMessage, ResponseMessage, ObtenerIpsUsuarioMessage, InboxMessage}
 import co.com.alianza.persistence.entities.IpsUsuario
 import spray.http.StatusCodes._
 
@@ -21,7 +21,7 @@ class IpsUsuarioActor extends Actor with ActorLogging with AlianzaActors {
 
   def receive = {
     case message: ObtenerIpsUsuarioMessage  => obtenerIpsUsuario(message.idUsuario)
-    //case message: ActualizarReglasContrasenasMessage => actualizarReglasContrasenas(message.toEntityReglasContrasenas)
+    case message: AgregarIpsUsuarioMessage => agregarIpsUsuarioMessage(message.toEntityIpsUsuario)
   }
 
   def obtenerIpsUsuario(idUsuario : Int) = {
@@ -39,21 +39,19 @@ class IpsUsuarioActor extends Actor with ActorLogging with AlianzaActors {
     }
   }
 
-  /*def actualizarReglasContrasenas(reglasContrasenas: List[ReglasContrasenas]) = {
+  def agregarIpsUsuarioMessage(ipUsuario : IpsUsuario ) = {
     val currentSender = sender()
-    for(regla <- reglasContrasenas) {
-      val result = DataAccessAdapter.actualizarReglasContrasenas(regla)
-      result  onComplete {
-        case Failure(failure)  =>    currentSender ! failure
-        case Success(value)    =>
-          value match {
-            case zSuccess(response: Int) =>
-              currentSender !  ResponseMessage(OK, response.toJson)
-            case zFailure(error)                 =>  currentSender !  error
-          }
-      }
+    val result = DataAccessAdapter.agregarIpUsuario(ipUsuario)
+    result  onComplete {
+      case Failure(failure)  =>    currentSender ! failure
+      case Success(value)    =>
+        value match {
+          case zSuccess(response: String) =>
+            currentSender !  ResponseMessage(OK, response.toJson)
+          case zFailure(error)                 =>  currentSender !  error
+        }
     }
 
-  }*/
+  }
 
 }
