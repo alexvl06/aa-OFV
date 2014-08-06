@@ -2,10 +2,12 @@ package co.com.alianza.app
 
 import akka.actor.{ Props, ActorSystem }
 import co.com.alianza.domain.aggregates.contrasenas.ContrasenasActor
+import co.com.alianza.domain.aggregates.ips.IpsUsuarioActor
 import co.com.alianza.domain.aggregates.usuarios.UsuariosActor
 import co.com.alianza.domain.aggregates.autoregistro.ConsultaClienteActor
 import co.com.alianza.domain.aggregates.confronta.{ConfrontaAditionalActorSupervisor, ConfrontaValidationActorSupervisor, ConfrontaActorSupervisor}
 import co.com.alianza.domain.aggregates.autenticacion.AutenticacionActor
+import com.typesafe.config.Config
 
 //import co.com.alianza.domain.aggregates.fondos.FondosActorSupervisor
 
@@ -22,6 +24,7 @@ trait Core {
  */
 trait BootedCore extends Core {
   import scala.concurrent.ExecutionContext
+  implicit lazy val conf: Config = system.settings.config
 
   implicit lazy val system = ActorSystem( "alianza-service" )
   implicit lazy val ex: ExecutionContext = system.dispatcher
@@ -41,6 +44,7 @@ trait CoreActors { this: Core =>
   val consultaClienteActor = system.actorOf( Props[ ConsultaClienteActor ], "consultaClienteActor" )
   val autenticacionActor = system.actorOf( Props[ AutenticacionActor ], "autenticacionActor" )
   val contrasenasActor = system.actorOf( Props[ ContrasenasActor ], "contrasenasActor" )
+  val ipsUsuarioActor  = system.actorOf( Props[ IpsUsuarioActor ], "ipsUsuarioActor" )
 }
 
 /**

@@ -81,6 +81,15 @@ object DataAccessAdapter {
     repo.obtenerIpsUsuario( idUsuario )
   }
 
+  def agregarIpUsuario( ip:IpsUsuario ) : Future[Validation[PersistenceException, String]] = {
+    val repo = new IpsUsuarioRepository()
+    repo.guardar( ip )
+  }
+
+  def eliminarIpUsuario( ip:IpsUsuario ) : Future[Validation[PersistenceException, Int]] = {
+    val repo = new IpsUsuarioRepository()
+    repo.eliminar(ip)
+  }
 
   def obtenerIpUsuarioValida( idUsuario:Int, ip:String ) : Future[Validation[PersistenceException, Option[IpsUsuario]]] = {
     val repo = new IpsUsuarioRepository()
