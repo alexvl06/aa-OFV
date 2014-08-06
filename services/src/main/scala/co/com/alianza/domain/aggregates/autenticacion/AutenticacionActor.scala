@@ -131,7 +131,7 @@ class AutenticacionActor extends Actor with ActorLogging  {
                   //Se valida la caducidad de la contraseña
                   validarFechaContrasena(usuario.fechaCaducidad, currentSender: ActorRef)
                   //Validacion de control de direccion IP del usuario
-                  validarControlIpUsuario( usuario.identificacion, usuario.id.get, ip, valueResponseCliente.wcli_nombre, usuario.correo, valueResponseCliente.wcli_person, usuario.ipUltimoIngreso, usuario.fechaUltimoIngreso, currentSender:ActorRef )
+                  validarControlIpUsuario( usuario.identificacion, usuario.id.get, ip, valueResponseCliente.wcli_nombre, valueResponseCliente.wcli_dir_correo, valueResponseCliente.wcli_person, usuario.ipUltimoIngreso, usuario.fechaUltimoIngreso, currentSender:ActorRef )
                 }
                 else
                   currentSender ! ResponseMessage(Unauthorized, errorClienteInactivoSP)
