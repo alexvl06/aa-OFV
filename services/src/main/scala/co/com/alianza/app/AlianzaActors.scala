@@ -18,5 +18,6 @@ trait AlianzaActors {
 	
   val consultaClienteActor = MainActors.system.actorSelection(MainActors.consultaClienteActor.path)
   val contrasenasActor = MainActors.system.actorSelection(MainActors.contrasenasActor.path)
+  val ipsUsuarioActor = MainActors.system.actorSelection(MainActors.ipsUsuarioActor.path)
 
 }

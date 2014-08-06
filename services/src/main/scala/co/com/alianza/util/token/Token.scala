@@ -44,7 +44,6 @@ object Token{
     }
 
     def  autorizarToken(token:String) : Boolean = {
-      //println("Token- " + tokenHeder)
       val SKEW = Duration.standardMinutes(1)
       val clock = new SystemClock(SKEW)
       val locators = new VerifierProviders()
@@ -66,6 +65,7 @@ object Token{
           false
         case ex: JsonParseException =>
           println("Error JsonParseException  " + ex.getMessage())
+          ex.printStackTrace()
           false
       }
     }

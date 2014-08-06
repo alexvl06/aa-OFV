@@ -63,6 +63,16 @@ class IpsUsuarioRepository ( implicit executionContext: ExecutionContext) extend
       resolveTry(resultTry, "Relaciona Ip Usuario")
   }
 
+  def eliminar(ipsUsuario:IpsUsuario): Future[Validation[PersistenceException, Int]] = loan {
+    implicit session =>
+      val resultTry = eliminarIpUsuarioTry(session: Session, ipsUsuario.idUsuario, ipsUsuario.ip )
+      resolveTry(resultTry, "Elimina Ip Usuario")
+  }
+
+  private def eliminarIpUsuarioTry(implicit session: Session, idUsuario : Int, ip:String): Try[Int] = Try {
+    //val result: Option[IpsUsuarioTable#TableElementType] = ipsUsuario.filter(x => x.idUsuario === idUsuario && x.ip === ip ).list.headOption
+    ipsUsuario.filter(x => x.idUsuario === idUsuario && x.ip === ip ).delete
+  }
 
 }
 
