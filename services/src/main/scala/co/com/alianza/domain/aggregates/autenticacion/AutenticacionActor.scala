@@ -48,7 +48,8 @@ class AutenticacionActor extends Actor with ActorLogging  {
                     currentSender ! ResponseMessage(Unauthorized, errorUsuarioBloqueadoIntentosErroneos )
                   else{
                     val passwordFrontEnd = message.password
-                    val passwordDB = valueResponse.contrasena
+                    val passwordDB = valueResponse.contrasena.getOrElse("")
+
                     if( passwordFrontEnd.contentEquals( passwordDB ) ) {
                       //Una vez el usuario se encuentre activo en el sistema, se valida por su estado en el core de alianza.
                       val futureCliente = obtenerClienteAlianza( message.tipoIdentificacion, valueResponse.identificacion, currentSender:ActorRef )
@@ -77,7 +78,7 @@ class AutenticacionActor extends Actor with ActorLogging  {
             case zSuccess(response:Option[Usuario])   =>
               response match {
                 case Some(valueResponse)  =>
-                  relacionarIpUsuarioAutenticacion(  valueResponse.id.get, message.clientIp.get, message.tipoIdentificacion, message.numeroIdentificacion, valueResponse.ipUltimoIngreso, valueResponse.fechaUltimoIngreso, currentSender )
+                  relacionarIpUsuarioAutenticacion(  valueResponse.id.get, message.clientIp.get, message.tipoIdentificacion, message.numeroIdentificacion, valueResponse.ipUltimoIngreso.getOrElse(""), valueResponse.fechaUltimoIngreso.get, currentSender )
 
                 case None  =>  currentSender ! ResponseMessage(Unauthorized, "Error al obtener usuario por numero de identificacion")
               }
@@ -131,7 +132,7 @@ class AutenticacionActor extends Actor with ActorLogging  {
                   //Se valida la caducidad de la contraseña
                   validarFechaContrasena(usuario.fechaCaducidad, currentSender: ActorRef)
                   //Validacion de control de direccion IP del usuario
-                  validarControlIpUsuario( usuario.identificacion, usuario.id.get, ip, valueResponseCliente.wcli_nombre, usuario.correo, valueResponseCliente.wcli_person, usuario.ipUltimoIngreso, usuario.fechaUltimoIngreso, currentSender:ActorRef )
+                  validarControlIpUsuario( usuario.identificacion, usuario.id.get, ip, valueResponseCliente.wcli_nombre, usuario.correo, valueResponseCliente.wcli_person, usuario.ipUltimoIngreso.getOrElse(""), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), currentSender:ActorRef )
                 }
                 else
                   currentSender ! ResponseMessage(Unauthorized, errorClienteInactivoSP)
@@ -154,7 +155,7 @@ class AutenticacionActor extends Actor with ActorLogging  {
 
 
   private def realizarAutenticacion( numeroIdentificacion:String, nombreCliente:String, nombreCorreoUsuario:String, tipoIdentificacion:String,  ipUltimoIngreso : String, fechaUltimoIngreso : Date, ipActual : String, currentSender:ActorRef ) = {
-    currentSender ! autenticacionUsuarioValido( numeroIdentificacion, nombreCliente, nombreCorreoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso, ipActual, currentSender  );
+    currentSender ! autenticacionUsuarioValido( numeroIdentificacion, nombreCliente, nombreCorreoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso, ipActual, currentSender  )
   }
 
 

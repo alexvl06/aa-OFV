@@ -13,10 +13,10 @@ case class Usuario(
                     identificacion: String,
                     tipoIdentificacion: Int,
                     estado: Int,
-                    contrasena: String,
+                    contrasena: Option[String],
                     numeroIngresosErroneos:Int,
-                    ipUltimoIngreso:String,
-                    fechaUltimoIngreso:Date
+                    ipUltimoIngreso:Option[String],
+                    fechaUltimoIngreso:Option[Date]
                   )
 
 

@@ -73,14 +73,14 @@ class UsuariosRepository ( implicit executionContext: ExecutionContext) extends 
   def actualizarIpUltimoIngreso( numeroIdentificacion:String, ipActual:String ): Future[Validation[PersistenceException, Int]] = loan {
 
     implicit session =>
-      val resultTry = Try{ usuarios.filter( _.identificacion === numeroIdentificacion ).map( x => ( x.ipUltimoIngreso )).update(( ipActual ))  }
+      val resultTry = Try{ usuarios.filter( _.identificacion === numeroIdentificacion ).map( x => ( x.ipUltimoIngreso )).update(( Some(ipActual) ))  }
       resolveTry(resultTry, "Actualizar usuario en actualizarIpUltimoIngreso ")
   }
 
   def actualizarFechaUltimoIngreso( numeroIdentificacion:String, fechaActual : Timestamp ): Future[Validation[PersistenceException, Int]] = loan {
 
     implicit session =>
-      val resultTry = Try{ usuarios.filter( _.identificacion === numeroIdentificacion ).map( x => ( x.fechaUltimoIngreso )).update(( fechaActual ))  }
+      val resultTry = Try{ usuarios.filter( _.identificacion === numeroIdentificacion ).map( x => ( x.fechaUltimoIngreso )).update(( Some(fechaActual) ))  }
       resolveTry(resultTry, "Actualizar usuario en actualizarFechaUltimoIngreso ")
   }
 
