@@ -30,7 +30,7 @@ class AutenticacionServiceTest extends Specification with Specs2RouteTest {
 
     "return status code 200 for GET requests to the path /autenticar" in {
 
-      Post( "/autenticar", AutenticarMessage("CC", "890114778", "2a8610aefdd0028c6bf074dd18721c0ef8bc43241cc7a653d7aedf2036bdf6b3") ) .withHeaders(headersRemoteAddress)  ~> service.route ~> check {
+      Post( "/autenticar", AutenticarMessage(1, "890114778", "2a8610aefdd0028c6bf074dd18721c0ef8bc43241cc7a653d7aedf2036bdf6b3") ) .withHeaders(headersRemoteAddress)  ~> service.route ~> check {
 
         println( "============== RESPONSE ============" )
         println( response )
@@ -43,7 +43,7 @@ class AutenticacionServiceTest extends Specification with Specs2RouteTest {
 
     "return status code 409 for GET requests to the path /autenticar user not exists" in {
 
-      Post( "/autenticar", AutenticarMessage("CC", "1234567", "1234567") )  ~> service.route ~> check {
+      Post( "/autenticar", AutenticarMessage(1, "1234567", "1234567") )  ~> service.route ~> check {
 
         println( "============== RESPONSE ============" )
         println( response )

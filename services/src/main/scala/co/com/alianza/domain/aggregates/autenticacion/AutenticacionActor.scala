@@ -8,7 +8,7 @@ import scala.util.{Success, Failure}
 import co.com.alianza.infrastructure.messages._
 import spray.http.StatusCodes._
 import co.com.alianza.infrastructure.dto.{Cliente, Usuario}
-import enumerations.{EstadosUsuarioEnum, EstadosCliente}
+import enumerations.{TipoIdentificacion, EstadosUsuarioEnum, EstadosCliente}
 import co.com.alianza.util.token.Token
 import co.com.alianza.persistence.messages.ConsultaClienteRequest
 import co.com.alianza.persistence.entities.{ReglasContrasenas, IpsUsuario}
@@ -53,7 +53,7 @@ class AutenticacionActor extends Actor with ActorLogging  {
                     if( passwordFrontEnd.contentEquals( passwordDB ) ) {
                       //Una vez el usuario se encuentre activo en el sistema, se valida por su estado en el core de alianza.
                       val futureCliente = obtenerClienteAlianza( message.tipoIdentificacion, valueResponse.identificacion, currentSender:ActorRef )
-                      realizarValidacionesCliente( futureCliente, valueResponse, message.clientIp.get, currentSender:ActorRef  )
+                      realizarValidacionesCliente( futureCliente, valueResponse, message.tipoIdentificacion, message.clientIp.get, currentSender:ActorRef  )
                     }
                     else
                       currentSender ! ejecutarExcepcionPasswordInvalido( valueResponse.identificacion, valueResponse.numeroIngresosErroneos, currentSender )
@@ -119,7 +119,7 @@ class AutenticacionActor extends Actor with ActorLogging  {
 
 
 
-  private def realizarValidacionesCliente (  futureCliente:Future[Validation[PersistenceException, Option[Cliente]]], usuario:Usuario, ip:String, currentSender:ActorRef  ){
+  private def realizarValidacionesCliente (  futureCliente:Future[Validation[PersistenceException, Option[Cliente]]], usuario:Usuario, messageTipoIdentificacion:Int, ip:String, currentSender:ActorRef  ){
     futureCliente onComplete {
       case Failure(failure) => currentSender ! failure
       case Success(value) =>
@@ -127,8 +127,9 @@ class AutenticacionActor extends Actor with ActorLogging  {
           case zSuccess(response: Option[Cliente]) =>
             response match {
               case Some(valueResponseCliente) =>
-                //TODO:Cambiar la validacion, es decir poner en el if !
-                if (  valueResponseCliente.wcli_estado != EstadosCliente.inactivo ) {
+                if( getTipoPersona(messageTipoIdentificacion) != valueResponseCliente.wcli_person )
+                  currentSender ! ResponseMessage(Unauthorized, errorClienteNoExisteSP)
+                else if (  valueResponseCliente.wcli_estado != EstadosCliente.inactivo ) {
                   //Se valida la caducidad de la contraseña
                   validarFechaContrasena(usuario.fechaCaducidad, currentSender: ActorRef)
                   //Validacion de control de direccion IP del usuario
@@ -144,10 +145,18 @@ class AutenticacionActor extends Actor with ActorLogging  {
   }
 
 
+  //Se valida la naturalidad de la persona que realiza la autenticaciónS
+  private def getTipoPersona(idTipoIdent:Int):String = {
+    idTipoIdent match{
+      case  TipoIdentificacion.CEDULA_CUIDADANIA.identificador => "N"
+      case  TipoIdentificacion.CEDULA_EXTRANJERIA.identificador => "N"
+      case _ => "J"
+    }
+  }
 
-  private def obtenerClienteAlianza( tipoIdentificacion:String, numeroIdentificacion:String, currentSender:ActorRef ) : Future[Validation[PersistenceException, Option[Cliente]]] = {
+  private def obtenerClienteAlianza( tipoIdentificacion:Int, numeroIdentificacion:String, currentSender:ActorRef ) : Future[Validation[PersistenceException, Option[Cliente]]] = {
     //TODO: Se debe poner el tipo de identificacion  de tipo String (tipoIdentificacion)
-    val resultCliente = co.com.alianza.infrastructure.anticorruption.clientes.DataAccessAdapter.consultarCliente(ConsultaClienteRequest(1, numeroIdentificacion))
+    val resultCliente = co.com.alianza.infrastructure.anticorruption.clientes.DataAccessAdapter.consultarCliente(ConsultaClienteRequest(tipoIdentificacion, numeroIdentificacion))
     resultCliente
   }
 
@@ -159,7 +168,7 @@ class AutenticacionActor extends Actor with ActorLogging  {
   }
 
 
-  private def relacionarIpUsuarioAutenticacion( idUsuario:Int, ip:String, tipoIdentificacion:String, numeroIdentificacion:String, ipUltimoIngreso : String, fechaUltimoIngreso : Date, currentSender:ActorRef ) = {
+  private def relacionarIpUsuarioAutenticacion( idUsuario:Int, ip:String, tipoIdentificacion:Int, numeroIdentificacion:String, ipUltimoIngreso : String, fechaUltimoIngreso : Date, currentSender:ActorRef ) = {
     //Se asocia IP como valida para el usuario, ya se ha hecho validacion de estado del cliente, pero se vuelve a validar.
     val futureCliente = obtenerClienteAlianza( tipoIdentificacion, numeroIdentificacion, currentSender:ActorRef )
     futureCliente onComplete {

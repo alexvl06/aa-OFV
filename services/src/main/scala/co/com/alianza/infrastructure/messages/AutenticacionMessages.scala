@@ -16,12 +16,12 @@ object AutenticacionMessagesJsonSupport extends DefaultJsonProtocol with SprayJs
 }
 
 
-case class AutenticarMessage ( tipoIdentificacion:String, numeroIdentificacion: String, password: String, clientIp:Option[String] = None) extends MessageService{
+case class AutenticarMessage ( tipoIdentificacion:Int, numeroIdentificacion: String, password: String, clientIp:Option[String] = None) extends MessageService{
   def toAutenticarRequest:AutenticacionRequest = AutenticacionRequest(tipoIdentificacion, numeroIdentificacion, password, clientIp)
 }
 
 
-case class AgregarIPHabitualUsuario(tipoIdentificacion:String, numeroIdentificacion: String, clientIp:Option[String] = None)  extends MessageService{
+case class AgregarIPHabitualUsuario(tipoIdentificacion:Int, numeroIdentificacion: String, clientIp:Option[String] = None)  extends MessageService{
   def toAgregarClienteRequest:AgregarIpHabitualRequest = AgregarIpHabitualRequest(tipoIdentificacion, numeroIdentificacion, clientIp)
 }
 
