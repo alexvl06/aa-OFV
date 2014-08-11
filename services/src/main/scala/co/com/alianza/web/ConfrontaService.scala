@@ -28,7 +28,7 @@ class ConfrontaService extends Directives with AlianzaCommons  {
         respondWithMediaType(mediaType) {
           entity(as[ObtenerCuestionarioAdicionalRequestMessage]) {
             message =>
-              requestExecute(message, confrontaAditionalActor)
+              requestExecute(message, confrontaActor)
           }
         }
       }
@@ -37,7 +37,7 @@ class ConfrontaService extends Directives with AlianzaCommons  {
         respondWithMediaType(mediaType) {
           entity(as[ValidarCuestionarioRequestMessage]) {
             message =>
-              requestExecute(message, confrontaValidationActor)
+              requestExecute(message, confrontaActor)
           }
         }
       }

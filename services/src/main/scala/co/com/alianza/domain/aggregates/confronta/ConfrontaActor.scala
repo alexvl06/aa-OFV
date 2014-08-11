@@ -5,10 +5,10 @@ import akka.routing.RoundRobinPool
 import scalaz.{Failure => zFailure, Success => zSuccess}
 import scala.util.{Success, Failure}
 import co.com.alianza.app.AlianzaActors
-import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
-import com.asobancaria.cifin.cifin.confrontav2plusws.services.ConfrontaBasicoPlusWS._
-import co.com.alianza.persistence.messages.{ValidarCuestionarioRequest, ObtenerCuestionarioAdicionalRequest, ObtenerCuestionarioRequest}
 import com.typesafe.config.{ConfigFactory, Config}
+import com.asobancaria.tciweb1.cifin.confrontav2plusws.services.ConfrontaUltraWS.ConfrontaUltraWebServiceServiceLocator
+import co.cifin.confrontaultra.dto.ultra.{ParametrosULTRADTO,ParametrosSeguridadULTRADTO}
+import co.com.alianza.infrastructure.messages.{ValidarCuestionarioRequestMessage, ObtenerCuestionarioAdicionalRequestMessage, ObtenerCuestionarioRequestMessage}
 
 
 class ConfrontaActorSupervisor extends Actor with ActorLogging {
@@ -41,11 +41,21 @@ class ConfrontaActor extends Actor with ActorLogging with AlianzaActors {
 
 
   def receive = {
-    case message:ObtenerCuestionarioRequest  =>
+    case message:ObtenerCuestionarioRequestMessage  =>
 
       val currentSender = sender()
-      val locator =  new ConfrontaBasicoPlusWebServiceServiceLocator
-      val response = locator.getConfrontaBasicoPlusWS(new java.net.URL(config.getString("confronta.service.obtenerCuestionario.location"))).obtenerCuestionario(null,null);
+      val locator =  new ConfrontaUltraWebServiceServiceLocator()
+      val response = locator.getConfrontaUltraWS(new java.net.URL(config.getString("confronta.service.obtenerCuestionario.location"))).
+        obtenerCuestionario(new ParametrosSeguridadULTRADTO(config.getString("confronta.service.claveCIFIN"),config.getString("confronta.service.password")),
+          new ParametrosULTRADTO(
+            message.numeroIdentificacion,
+            0,
+            config.getInt("confronta.service.cuestionario"),
+            "",
+            0,
+            message.primerApellido,
+            message.codigoTipoIdentificacion,
+            message.fechaExpedicion));
       currentSender ! response.toString
       /*val result = DataAccessAdapter.obtenerUsuarios()
 
@@ -58,17 +68,17 @@ class ConfrontaActor extends Actor with ActorLogging with AlianzaActors {
             case zFailure(error)    =>                   currentSender ! error
           }
       }*/
-    case message:ObtenerCuestionarioAdicionalRequest =>
+    case message:ObtenerCuestionarioAdicionalRequestMessage =>
       val currentSender = sender()
-      val locator =  new ConfrontaBasicoPlusWebServiceServiceLocator
-      val response = locator.getConfrontaBasicoPlusWS(new java.net.URL(config.getString("confronta.service.obtenerCuestionarioAdicional.location"))).obtenerCuestionario(null,null);
-      currentSender ! response.toString
+      //val locator =  new ConfrontaBasicoPlusWebServiceServiceLocator
+      //val response = locator.getConfrontaBasicoPlusWS(new java.net.URL(config.getString("confronta.service.obtenerCuestionarioAdicional.location"))).obtenerCuestionario(null,null);
+      //currentSender ! response.toString
 
-    case message:ValidarCuestionarioRequest =>
+    case message:ValidarCuestionarioRequestMessage =>
       val currentSender = sender()
-      val locator =  new ConfrontaBasicoPlusWebServiceServiceLocator
-      val response = locator.getConfrontaBasicoPlusWS(new java.net.URL(config.getString("confronta.service.evaluarCuestionario.location"))).obtenerCuestionario(null,null);
-      currentSender ! response.toString
+      //val locator =  new ConfrontaBasicoPlusWebServiceServiceLocator
+      //val response = locator.getConfrontaBasicoPlusWS(new java.net.URL(config.getString("confronta.service.evaluarCuestionario.location"))).obtenerCuestionario(null,null);
+      //currentSender ! response.toString
   }
 
 }
