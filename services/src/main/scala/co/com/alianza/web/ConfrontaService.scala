@@ -15,12 +15,9 @@ class ConfrontaService extends Directives with AlianzaCommons  {
 
   def route= {
     path(confronta/obtenerCuestionario) {
-      post {
+      get {
         respondWithMediaType(mediaType) {
-          entity(as[ObtenerCuestionarioRequestMessage]) {
-            message =>
-              requestExecute(message, confrontaActor)
-          }
+              requestExecute(new ObtenerCuestionarioRequestMessage("MARCELO","1","123456","fechaExpedicion"), confrontaActor)
         }
       }
     } ~ path(confronta/obtenerCuestionarioAdicional) {

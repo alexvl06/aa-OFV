@@ -284,16 +284,21 @@ public class ConfrontaUltraWSSoapBindingStub extends org.apache.axis.client.Stub
         if (super.cachedEndpoint == null) {
             throw new org.apache.axis.NoEndPointException();
         }
+        System.setProperty("javax.net.ssl.keyStore", "alianzakeys.jks");
+        System.setProperty("javax.net.ssl.keyStorePassword", "4l14nz4c3rt");
+        System.setProperty("javax.net.ssl.keyStoreType", "JKS");
+        System.setProperty("javax.net.ssl.requireClientAuth", "true");
         org.apache.axis.client.Call _call = createCall();
         _call.setOperation(_operations[0]);
         _call.setUseSOAPAction(true);
         _call.setSOAPActionURI("");
         _call.setSOAPVersion(org.apache.axis.soap.SOAPConstants.SOAP11_CONSTANTS);
         _call.setOperationName(new javax.xml.namespace.QName("http://ws.confrontaultra.cifin.asobancaria.com", "obtenerCuestionario"));
+        _call.setClientHandlers(new ClientHandler(),null);
 
         setRequestHeaders(_call);
         setAttachments(_call);
- try {        java.lang.Object _resp = _call.invoke(new java.lang.Object[] {p_parametrosSeguridad, p_parametros});
+        try {        java.lang.Object _resp = _call.invoke(new java.lang.Object[] {p_parametrosSeguridad, p_parametros});
 
         if (_resp instanceof java.rmi.RemoteException) {
             throw (java.rmi.RemoteException)_resp;
