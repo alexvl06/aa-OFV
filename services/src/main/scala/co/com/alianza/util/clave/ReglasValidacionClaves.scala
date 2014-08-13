@@ -103,12 +103,7 @@ case object CaracteresPermitidos extends Regla("CARACTERES_PERMITIDOS")  {
           case true =>  Some(ErrorCaracteresPermitidos)
           case false => None
         }
-       /* println(s"""(?=(?:.*?[^a-zA-Z0-9$value]))"""" )
-        val pattern = s"""(?=(?:.*?[^a-zA-Z0-9$value]))"""".r
-        pattern findFirstIn  valor match {
-          case Some(_) => Some(ErrorCaracteresPermitidos)
-          case _ => None
-        }*/
+
       case None => Some(ErrorCaracteresPermitidos)
     }
 
