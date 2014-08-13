@@ -2,50 +2,48 @@ package co.com.alianza.web
 
 import spray.routing.Directives
 import spray.http.StatusCodes._
-import co.com.alianza.app.{CrossHeaders, AlianzaCommons}
-import co.com.alianza.infrastructure.messages.{ValidarToken, AutenticacionMessagesJsonSupport, AutenticarMessage, AgregarIPHabitualUsuario}
-;
-
+import co.com.alianza.app.{ CrossHeaders, AlianzaCommons }
+import co.com.alianza.infrastructure.messages.{ ValidarToken, AutenticacionMessagesJsonSupport, AutenticarMessage, AgregarIPHabitualUsuario }
+import co.com.alianza.infrastructure.cache.UserCache;
 
 class AutenticacionService extends Directives with AlianzaCommons with CrossHeaders {
 
   import AutenticacionMessagesJsonSupport._
 
-
   def route = {
-      path("autenticar") {
-          post {
-            entity(as[AutenticarMessage]) {
-              autenticacion =>
-                respondWithMediaType(mediaType) {
-                  clientIP { ip =>
-                    val nuevaAutenticacion = autenticacion.copy(clientIp = Some(ip.value))
-                    requestExecute(nuevaAutenticacion, autenticacionActor)
-                  }
-                }
-            }
-          }
-        }~ path("ponerIpHabitual" ) {
-        post {
-          entity(as[AgregarIPHabitualUsuario]) {
-            ponerIpHabitual =>
-              respondWithMediaType(mediaType) {
-                clientIP { ip =>
-                  val nuevoPonerIpHabitual = ponerIpHabitual.copy(clientIp = Some(ip.value))
-                  requestExecute(nuevoPonerIpHabitual, autenticacionActor)
-                }
+    path("autenticar") {
+      post {
+        entity(as[AutenticarMessage]) {
+          autenticacion =>
+            respondWithMediaType(mediaType) {
+              clientIP { ip =>
+                val nuevaAutenticacion = autenticacion.copy(clientIp = Some(ip.value))
+                requestExecute(nuevaAutenticacion, autenticacionActor)
               }
-          }
-        }
-      }~ path( "validarToken" / Segment ){
-        (token) =>
-        get {
-          respondWithMediaType(mediaType) {
-            requestExecute( ValidarToken( token ) , autenticacionActor)
-          }
+            }
         }
       }
+    } ~ path("ponerIpHabitual") {
+      post {
+        entity(as[AgregarIPHabitualUsuario]) {
+          ponerIpHabitual =>
+            respondWithMediaType(mediaType) {
+              clientIP { ip =>
+                val nuevoPonerIpHabitual = ponerIpHabitual.copy(clientIp = Some(ip.value))
+                requestExecute(nuevoPonerIpHabitual, autenticacionActor)
+              }
+            }
+        }
+      }
+    } ~ path("validarToken" / Segment) {
+      (token) =>
+        get {
+          respondWithMediaType(mediaType) {
+            UserCache.getUser(token )
+          }
+        }
     }
+  }
 }
 
 

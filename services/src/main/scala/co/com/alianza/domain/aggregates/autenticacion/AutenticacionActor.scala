@@ -85,18 +85,8 @@ class AutenticacionActor extends Actor with ActorLogging {
 
       val currentSender = sender()
       val currentToken = message
+      callTokenService(currentToken, currentSender)
 
-      UserCache.getUser(message.token) onComplete {
-
-        case Success(result) => result match {
-          case Left(exception) => callTokenService(currentToken, currentSender)
-          case Right(response) => 
-            log.info("***************Token cacheado**********")
-            currentSender ! ResponseMessage(OK, response)
-        }
-
-        case Failure(exception) => callTokenService(currentToken, currentSender)
-      }
 
   }
 
