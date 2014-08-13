@@ -16,7 +16,7 @@ object UserCache {
   import MainActors.ex
 
   	def cacheDef[T](maxCapacity: Int = 5000, initialCapacity: Int = 16,
-                  timeToLive: Duration =  3 minutes, timeToIdle: Duration = Duration.Inf) =
+                  timeToLive: Duration =  5 minutes, timeToIdle: Duration = Duration.Inf) =
     new ExpiringLruCache[T](maxCapacity, initialCapacity, timeToLive, timeToIdle)
     
     val cache = cacheDef[Either[String, String]]()
