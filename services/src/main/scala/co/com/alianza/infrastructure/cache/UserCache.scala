@@ -13,6 +13,7 @@ import spray.util._
 import spray.routing.Route
 import co.com.alianza.app.AlianzaCommons
 import co.com.alianza.infrastructure.messages.ValidarToken
+import co.com.alianza.infrastructure.messages.MessageService
 
 object UserCache extends AlianzaCommons {
 
@@ -25,11 +26,10 @@ object UserCache extends AlianzaCommons {
     val cache = cacheDef[String]()
        
 
-   def getUser[T](msg: String): Route =
-    ctx =>  {
+   def getUser[T](msg: MessageService) : Future[String] = {
     cache.get(msg) match {
-      case None => requestExecute(ValidarToken(msg), autenticacionActor)
-      case Some(value) => ctx.complete(value)
+      case None => Future{""}
+      case Some(value) => value	
     }
   }
   

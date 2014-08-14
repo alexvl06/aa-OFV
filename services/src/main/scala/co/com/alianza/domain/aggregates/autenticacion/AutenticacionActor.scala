@@ -103,7 +103,7 @@ class AutenticacionActor extends Actor with ActorLogging {
               response match {
                 case Some(valueResponse) =>
                   val user = JsonUtil.toJson(valueResponse)
-                  UserCache.addUser(message.token, user)
+                  UserCache.addUser(message, user)
                   log.info("***************Token almacenado en cache**********")
                   currentSender ! ResponseMessage(OK, user)
                 case None => currentSender ! ResponseMessage(Unauthorized, "Error al obtener usuario por numero de identificacion")

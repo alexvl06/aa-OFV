@@ -39,7 +39,8 @@ class AutenticacionService extends Directives with AlianzaCommons with CrossHead
       (token) =>
         get {
           respondWithMediaType(mediaType) {
-            UserCache.getUser(token )
+            requestExecute(ValidarToken(token), autenticacionActor, true)
+          
           }
         }
     }
