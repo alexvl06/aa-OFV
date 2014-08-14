@@ -67,6 +67,7 @@ object Common {
 	  "io.spray"           		  % 	"spray-http"    	    % sprayVersion withSources(),
 	  "io.spray"           		  % 	"spray-httpx"   	    % sprayVersion withSources(),
 		"io.spray" 					      %% 	"spray-json" 		      % "1.2.5" withSources(),
+		"io.spray"           	% "spray-caching"        	% sprayVersion withSources(),
 		"com.chuusai"				      %% 	"shapeless" 		      % "1.2.4" withSources()
   )
 
