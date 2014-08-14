@@ -102,7 +102,11 @@ class AutenticacionActor extends Actor with ActorLogging {
             case zSuccess(response: Option[Usuario]) =>
               response match {
                 case Some(valueResponse) =>
-                  val user = JsonUtil.toJson(valueResponse)
+                  val userWithoutPassword = Usuario( valueResponse.id, valueResponse.correo, valueResponse.fechaCaducidad, valueResponse.identificacion
+                  ,valueResponse.tipoIdentificacion, valueResponse.estado, None, valueResponse.numeroIngresosErroneos, valueResponse.ipUltimoIngreso
+                  ,valueResponse.fechaUltimoIngreso )
+
+                  val user = JsonUtil.toJson(userWithoutPassword)
                   UserCache.addUser(message, user)
                   log.info("***************Token almacenado en cache**********")
                   currentSender ! ResponseMessage(OK, user)
