@@ -2,7 +2,7 @@ package co.com.alianza.web
 
 import spray.routing.Directives
 import co.com.alianza.app.AlianzaCommons
-import co.com.alianza.infrastructure.messages.{ValidarCuestionarioRequestMessage, ObtenerCuestionarioAdicionalRequestMessage, ObtenerCuestionarioRequestMessage, InboxMessage}
+import co.com.alianza.infrastructure.messages.{ObtenerCuestionarioAdicionalRequestMessage, ObtenerCuestionarioRequestMessage,ValidarCuestionarioRequestMessage}
 import spray.http.StatusCodes._
 
 class ConfrontaService extends Directives with AlianzaCommons  {
@@ -31,10 +31,13 @@ class ConfrontaService extends Directives with AlianzaCommons  {
       }
     }~ path(confronta/validarCuestionario) {
       post {
-        respondWithMediaType(mediaType) {
-          entity(as[ValidarCuestionarioRequestMessage]) {
-            message =>
-              requestExecute(message, confrontaActor)
+        entity(as[ValidarCuestionarioRequestMessage]) {
+          message =>
+          respondWithMediaType(mediaType) {
+            complete {
+              OK
+            }
+            //requestExecute(message, confrontaActor)
           }
         }
       }

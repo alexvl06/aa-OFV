@@ -19,5 +19,5 @@ case class ObtenerCuestionarioRequestMessage(primerApellido:String, codigoTipoId
 case class ObtenerCuestionarioAdicionalRequestMessage(codigoCiudad:Int, codigoCuestionario:Int, codigoDepartamento:Int, codigoTipoIdentificacion:String, numeroIdentificac: String, telefono:String, secuenciaCuestionario:Long) extends MessageService {
 }
 
-case class ValidarCuestionarioRequestMessage(codigoCuestionario:Int,respuestas:String ,secuenciaCuestionario:Int) extends MessageService {
+case class ValidarCuestionarioRequestMessage(respuestas:Array[String],secuenciaCuestionario:Long,codigoCuestionario:Int) extends MessageService {
 }
