@@ -27,4 +27,8 @@ object DataAccessAdapter {
     }
   }
 
+  def eliminarPin(tokenHash: String): Future[Validation[PersistenceException, Int]] = {
+    repo.eliminarPin(tokenHash)
+  }
+
 }

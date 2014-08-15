@@ -22,5 +22,10 @@ class PinRepository (implicit executionContext: ExecutionContext) extends Alianz
       resolveTry(resultTry, "Consulta un pin dado su hash")
   }
 
+  def eliminarPin(tokenHash: String): Future[Validation[PersistenceException, Int]] = loan {
+    implicit session =>
+      val resultTry = Try { pin.filter(_.tokenHash === tokenHash).delete }
+      resolveTry(resultTry, "Elimina un pin dado su hash")
+  }
 
 }

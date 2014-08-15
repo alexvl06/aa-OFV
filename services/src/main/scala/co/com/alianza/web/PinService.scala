@@ -2,6 +2,7 @@ package co.com.alianza.web
 
 import co.com.alianza.app.{CrossHeaders, AlianzaCommons}
 import co.com.alianza.infrastructure.messages.PinMessages._
+import co.com.alianza.infrastructure.messages.PinMarshallers._
 import spray.routing.Directives
 
 class PinService extends Directives with AlianzaCommons with CrossHeaders {
@@ -11,6 +12,16 @@ class PinService extends Directives with AlianzaCommons with CrossHeaders {
       pin => {
         post {
           requestExecute(ValidarPin(pin), pinActor)
+        }
+      }
+    } ~ path("cambiarPw" / Segment) {
+      pin => {
+        entity(as[UserPw]) {
+          userPw => {
+            post {
+              requestExecute(CambiarPw(pin, userPw.pw), pinActor)
+            }
+          }
         }
       }
     }

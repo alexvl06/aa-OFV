@@ -101,6 +101,15 @@ object DataAccessAdapter {
     repo.actualizarEstadoUsuario( numeroIdentificacion, estado )
   }
 
+  def actualizarEstadoUsuario( idUsuario:Int, estado:Int ) : Future[Validation[PersistenceException, Int]] = {
+    val repo = new UsuariosRepository()
+    repo.actualizarEstadoUsuario( idUsuario, estado )
+  }
+
+  def cambiarPassword (idUsuario: Int, password: String): Future[Validation[PersistenceException, Int]] = {
+    val repo = new UsuariosRepository()
+    repo.cambiarPassword(idUsuario, password)
+  }
 
   private def transformValidationList(origin: Validation[PersistenceException, List[eUsuario]]): Validation[PersistenceException, List[Usuario]] = {
     origin match {
@@ -120,6 +129,8 @@ object DataAccessAdapter {
       case zFailure(error)    =>  zFailure(error)
     }
   }
+
+
 
 }
 
