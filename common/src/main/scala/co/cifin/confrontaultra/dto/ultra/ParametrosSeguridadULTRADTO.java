@@ -1,71 +1,71 @@
 /**
- * ParametrosSeguridadBPDTO.java
+ * ParametrosSeguridadULTRADTO.java
  *
  * This file was auto-generated from WSDL
  * by the Apache Axis 1.4 Apr 22, 2006 (06:55:48 PDT) WSDL2Java emitter.
  */
 
-package com.asobancaria.cifin.confrontav2plusws.dto.basicoplus;
+package co.cifin.confrontaultra.dto.ultra;
 
-public class ParametrosSeguridadBPDTO  implements java.io.Serializable {
-    private String claveCIFIN;
+public class ParametrosSeguridadULTRADTO  implements java.io.Serializable {
+    private java.lang.String claveCIFIN;
 
-    private String password;
+    private java.lang.String password;
 
-    public ParametrosSeguridadBPDTO() {
+    public ParametrosSeguridadULTRADTO() {
     }
 
-    public ParametrosSeguridadBPDTO(
-           String claveCIFIN,
-           String password) {
+    public ParametrosSeguridadULTRADTO(
+           java.lang.String claveCIFIN,
+           java.lang.String password) {
            this.claveCIFIN = claveCIFIN;
            this.password = password;
     }
 
 
     /**
-     * Gets the claveCIFIN value for this ParametrosSeguridadBPDTO.
+     * Gets the claveCIFIN value for this ParametrosSeguridadULTRADTO.
      * 
      * @return claveCIFIN
      */
-    public String getClaveCIFIN() {
+    public java.lang.String getClaveCIFIN() {
         return claveCIFIN;
     }
 
 
     /**
-     * Sets the claveCIFIN value for this ParametrosSeguridadBPDTO.
+     * Sets the claveCIFIN value for this ParametrosSeguridadULTRADTO.
      * 
      * @param claveCIFIN
      */
-    public void setClaveCIFIN(String claveCIFIN) {
+    public void setClaveCIFIN(java.lang.String claveCIFIN) {
         this.claveCIFIN = claveCIFIN;
     }
 
 
     /**
-     * Gets the password value for this ParametrosSeguridadBPDTO.
+     * Gets the password value for this ParametrosSeguridadULTRADTO.
      * 
      * @return password
      */
-    public String getPassword() {
+    public java.lang.String getPassword() {
         return password;
     }
 
 
     /**
-     * Sets the password value for this ParametrosSeguridadBPDTO.
+     * Sets the password value for this ParametrosSeguridadULTRADTO.
      * 
      * @param password
      */
-    public void setPassword(String password) {
+    public void setPassword(java.lang.String password) {
         this.password = password;
     }
 
-    private Object __equalsCalc = null;
-    public synchronized boolean equals(Object obj) {
-        if (!(obj instanceof ParametrosSeguridadBPDTO)) return false;
-        ParametrosSeguridadBPDTO other = (ParametrosSeguridadBPDTO) obj;
+    private java.lang.Object __equalsCalc = null;
+    public synchronized boolean equals(java.lang.Object obj) {
+        if (!(obj instanceof ParametrosSeguridadULTRADTO)) return false;
+        ParametrosSeguridadULTRADTO other = (ParametrosSeguridadULTRADTO) obj;
         if (obj == null) return false;
         if (this == obj) return true;
         if (__equalsCalc != null) {
@@ -103,10 +103,10 @@ public class ParametrosSeguridadBPDTO  implements java.io.Serializable {
 
     // Type metadata
     private static org.apache.axis.description.TypeDesc typeDesc =
-        new org.apache.axis.description.TypeDesc(ParametrosSeguridadBPDTO.class, true);
+        new org.apache.axis.description.TypeDesc(ParametrosSeguridadULTRADTO.class, true);
 
     static {
-        typeDesc.setXmlType(new javax.xml.namespace.QName("http://basicoplus.dto.confrontav2plusws.cifin.asobancaria.com", "ParametrosSeguridadBPDTO"));
+        typeDesc.setXmlType(new javax.xml.namespace.QName("http://ultra.dto.confrontaultra.cifin.co", "ParametrosSeguridadULTRADTO"));
         org.apache.axis.description.ElementDesc elemField = new org.apache.axis.description.ElementDesc();
         elemField.setFieldName("claveCIFIN");
         elemField.setXmlName(new javax.xml.namespace.QName("", "claveCIFIN"));
@@ -132,8 +132,8 @@ public class ParametrosSeguridadBPDTO  implements java.io.Serializable {
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
-           String mechType,
-           Class _javaType,
+           java.lang.String mechType, 
+           java.lang.Class _javaType,  
            javax.xml.namespace.QName _xmlType) {
         return 
           new  org.apache.axis.encoding.ser.BeanSerializer(
@@ -144,8 +144,8 @@ public class ParametrosSeguridadBPDTO  implements java.io.Serializable {
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(
-           String mechType,
-           Class _javaType,
+           java.lang.String mechType, 
+           java.lang.Class _javaType,  
            javax.xml.namespace.QName _xmlType) {
         return 
           new  org.apache.axis.encoding.ser.BeanDeserializer(
