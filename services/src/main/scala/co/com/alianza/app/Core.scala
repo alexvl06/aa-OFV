@@ -3,6 +3,7 @@ package co.com.alianza.app
 import akka.actor.{ Props, ActorSystem }
 import co.com.alianza.domain.aggregates.contrasenas.ContrasenasActor
 import co.com.alianza.domain.aggregates.ips.IpsUsuarioActor
+import co.com.alianza.domain.aggregates.pin.PinActor
 import co.com.alianza.domain.aggregates.usuarios.UsuariosActor
 import co.com.alianza.domain.aggregates.autoregistro.ConsultaClienteActor
 import co.com.alianza.domain.aggregates.confronta.{ConfrontaActorSupervisor}
@@ -43,6 +44,7 @@ trait CoreActors { this: Core =>
   val autenticacionActor = system.actorOf( Props[ AutenticacionActor ], "autenticacionActor" )
   val contrasenasActor = system.actorOf( Props[ ContrasenasActor ], "contrasenasActor" )
   val ipsUsuarioActor  = system.actorOf( Props[ IpsUsuarioActor ], "ipsUsuarioActor" )
+  val pinActor = system.actorOf( Props[ PinActor ], "PinActor" )
 }
 
 /**
