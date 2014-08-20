@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.Properties;
+
 import javax.xml.soap.SOAPMessage;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
@@ -19,8 +20,10 @@ import org.apache.ws.security.components.crypto.Crypto;
 import org.apache.ws.security.components.crypto.CryptoFactory;
 import org.apache.ws.security.message.WSSecHeader;
 import org.apache.ws.security.message.WSSecSignature;
+import org.apache.ws.security.message.WSSecTimestamp;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import sun.security.rsa.RSASignature;
 
 /**
  * Clase encargada de securizar los mensajes SOAP de petición realizados desde
@@ -51,6 +54,8 @@ public class ClientHandler extends BasicHandler {
     // Password del certificado usado para firmar el tag soapBody de la petición
     // y que será alojado en el token BinarySecurityToken
     private String keystoreCertPassword = null;
+
+    final int signatureValidityTime = 3600;
 
 
     public ClientHandler() {
@@ -92,22 +97,31 @@ public class ClientHandler extends BasicHandler {
         WSSecSignature wsSecSignature;
         WSSecHeader wsSecHeader;
         SOAPMessage msg;
+        RSASignature.MD5withRSA rsa;
 
         try {
+
+
 
             // Obtención del documento XML que representa la petición SOAP
             msg = msgContext.getCurrentMessage();
             soapEnvelopeRequest = ((org.apache.axis.message.SOAPEnvelope) msg.getSOAPPart().getEnvelope()).getAsDocument();
-
             // Inserción del tag wsse:Security y BinarySecurityToken
             wsSecHeader = new WSSecHeader(null, false);
+
+
             wsSecSignature = new WSSecSignature();
             crypto = CryptoFactory.getInstance(this.initializateCryptoProperties());
             // Indicación para que inserte el tag BinarySecurityToken
             wsSecSignature.setKeyIdentifierType(WSConstants.BST_DIRECT_REFERENCE);
+
+
             // wsSecSignature.setKeyIdentifierType(WSConstants.ISSUER_SERIAL);
             wsSecSignature.setUserInfo(this.keystoreCertAlias, this.keystoreCertPassword);
             wsSecHeader.insertSecurityHeader(soapEnvelopeRequest);
+            WSSecTimestamp timestamp = new WSSecTimestamp();
+            timestamp.setTimeToLive(signatureValidityTime);
+            soapEnvelopeRequest = timestamp.build(soapEnvelopeRequest, wsSecHeader);
             wsSecSignature.prepare(soapEnvelopeRequest, crypto, wsSecHeader);
             // Modificación y firma de la petición
             secSOAPReqDoc = wsSecSignature.build(soapEnvelopeRequest, crypto, wsSecHeader);
@@ -122,10 +136,11 @@ public class ClientHandler extends BasicHandler {
             // Creación de un nuevo mensaje SOAP a partir del mensaje SOAP
             // securizado formado
             Message axisMessage = getAxisMessage(secSOAPReq,msgContext);
+            System.out.println("Llego aca: " + axisMessage.getSOAPEnvelope());
             return axisMessage.getSOAPEnvelope();
 
         } catch (Exception e) {
-            System.out.println("Llego aca");
+            System.out.println("Llego aca error");
             e.printStackTrace();
             return null;
 
