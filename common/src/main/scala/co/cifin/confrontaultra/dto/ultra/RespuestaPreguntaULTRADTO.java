@@ -1,21 +1,21 @@
 /**
- * RespuestaPreguntaBPDTO.java
+ * RespuestaPreguntaULTRADTO.java
  *
  * This file was auto-generated from WSDL
  * by the Apache Axis 1.4 Apr 22, 2006 (06:55:48 PDT) WSDL2Java emitter.
  */
 
-package com.asobancaria.cifin.confrontav2plusws.dto.basicoplus;
+package co.cifin.confrontaultra.dto.ultra;
 
-public class RespuestaPreguntaBPDTO  implements java.io.Serializable {
+public class RespuestaPreguntaULTRADTO  implements java.io.Serializable {
     private int secuenciaPregunta;
 
     private int secuenciaRespuesta;
 
-    public RespuestaPreguntaBPDTO() {
+    public RespuestaPreguntaULTRADTO() {
     }
 
-    public RespuestaPreguntaBPDTO(
+    public RespuestaPreguntaULTRADTO(
            int secuenciaPregunta,
            int secuenciaRespuesta) {
            this.secuenciaPregunta = secuenciaPregunta;
@@ -24,7 +24,7 @@ public class RespuestaPreguntaBPDTO  implements java.io.Serializable {
 
 
     /**
-     * Gets the secuenciaPregunta value for this RespuestaPreguntaBPDTO.
+     * Gets the secuenciaPregunta value for this RespuestaPreguntaULTRADTO.
      * 
      * @return secuenciaPregunta
      */
@@ -34,7 +34,7 @@ public class RespuestaPreguntaBPDTO  implements java.io.Serializable {
 
 
     /**
-     * Sets the secuenciaPregunta value for this RespuestaPreguntaBPDTO.
+     * Sets the secuenciaPregunta value for this RespuestaPreguntaULTRADTO.
      * 
      * @param secuenciaPregunta
      */
@@ -44,7 +44,7 @@ public class RespuestaPreguntaBPDTO  implements java.io.Serializable {
 
 
     /**
-     * Gets the secuenciaRespuesta value for this RespuestaPreguntaBPDTO.
+     * Gets the secuenciaRespuesta value for this RespuestaPreguntaULTRADTO.
      * 
      * @return secuenciaRespuesta
      */
@@ -54,7 +54,7 @@ public class RespuestaPreguntaBPDTO  implements java.io.Serializable {
 
 
     /**
-     * Sets the secuenciaRespuesta value for this RespuestaPreguntaBPDTO.
+     * Sets the secuenciaRespuesta value for this RespuestaPreguntaULTRADTO.
      * 
      * @param secuenciaRespuesta
      */
@@ -62,10 +62,10 @@ public class RespuestaPreguntaBPDTO  implements java.io.Serializable {
         this.secuenciaRespuesta = secuenciaRespuesta;
     }
 
-    private Object __equalsCalc = null;
-    public synchronized boolean equals(Object obj) {
-        if (!(obj instanceof RespuestaPreguntaBPDTO)) return false;
-        RespuestaPreguntaBPDTO other = (RespuestaPreguntaBPDTO) obj;
+    private java.lang.Object __equalsCalc = null;
+    public synchronized boolean equals(java.lang.Object obj) {
+        if (!(obj instanceof RespuestaPreguntaULTRADTO)) return false;
+        RespuestaPreguntaULTRADTO other = (RespuestaPreguntaULTRADTO) obj;
         if (obj == null) return false;
         if (this == obj) return true;
         if (__equalsCalc != null) {
@@ -95,10 +95,10 @@ public class RespuestaPreguntaBPDTO  implements java.io.Serializable {
 
     // Type metadata
     private static org.apache.axis.description.TypeDesc typeDesc =
-        new org.apache.axis.description.TypeDesc(RespuestaPreguntaBPDTO.class, true);
+        new org.apache.axis.description.TypeDesc(RespuestaPreguntaULTRADTO.class, true);
 
     static {
-        typeDesc.setXmlType(new javax.xml.namespace.QName("http://basicoplus.dto.confrontav2plusws.cifin.asobancaria.com", "RespuestaPreguntaBPDTO"));
+        typeDesc.setXmlType(new javax.xml.namespace.QName("http://ultra.dto.confrontaultra.cifin.co", "RespuestaPreguntaULTRADTO"));
         org.apache.axis.description.ElementDesc elemField = new org.apache.axis.description.ElementDesc();
         elemField.setFieldName("secuenciaPregunta");
         elemField.setXmlName(new javax.xml.namespace.QName("", "secuenciaPregunta"));
@@ -124,8 +124,8 @@ public class RespuestaPreguntaBPDTO  implements java.io.Serializable {
      * Get Custom Serializer
      */
     public static org.apache.axis.encoding.Serializer getSerializer(
-           String mechType,
-           Class _javaType,
+           java.lang.String mechType, 
+           java.lang.Class _javaType,  
            javax.xml.namespace.QName _xmlType) {
         return 
           new  org.apache.axis.encoding.ser.BeanSerializer(
@@ -136,8 +136,8 @@ public class RespuestaPreguntaBPDTO  implements java.io.Serializable {
      * Get Custom Deserializer
      */
     public static org.apache.axis.encoding.Deserializer getDeserializer(
-           String mechType,
-           Class _javaType,
+           java.lang.String mechType, 
+           java.lang.Class _javaType,  
            javax.xml.namespace.QName _xmlType) {
         return 
           new  org.apache.axis.encoding.ser.BeanDeserializer(
