@@ -55,7 +55,7 @@ public class ClientHandler extends BasicHandler {
     // y que será alojado en el token BinarySecurityToken
     private String keystoreCertPassword = null;
 
-    final int signatureValidityTime = 3600;
+    final int signatureValidityTime = 600;
 
 
     public ClientHandler() {
