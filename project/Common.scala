@@ -87,7 +87,8 @@ object Common {
 		"org.apache.axis" 			    % 	"axis" 	    % "1.4",
 		"wsdl4j"			%	"wsdl4j"	%	"1.4",
 		"commons-discovery" 	%	 "commons-discovery" 	% 	"0.2",
-		"javax.xml"               %   "jaxrpc-api"          % "1.1"
+    "org.apache.ws.security" % "wss4j" % "1.6.16",
+  "javax.xml"               %   "jaxrpc-api"          % "1.1"
 	)
 
 	def oracle = Seq( 

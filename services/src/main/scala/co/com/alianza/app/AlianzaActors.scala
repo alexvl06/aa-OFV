@@ -11,13 +11,12 @@ trait AlianzaActors {
   //Definicion de actores
   val usuariosActor = MainActors.system.actorSelection(MainActors.usuariosActor.path)
   val confrontaActor = MainActors.system.actorSelection(MainActors.confrontaActorSupervisor.path + "/confrontaActor")
-  val confrontaValidationActor = MainActors.system.actorSelection(MainActors.confrontaValidationActorSupervisor.path + "/confrontaValidationActor")
-  val confrontaAditionalActor = MainActors.system.actorSelection(MainActors.confrontaAditionalActorSupervisor.path + "/confrontaAditionalActor")
   val autenticacionActor = MainActors.system.actorSelection(MainActors.autenticacionActor.path )
   val autorizacionActor = MainActors.system.actorSelection(MainActors.autenticacionActor.path )
 	
   val consultaClienteActor = MainActors.system.actorSelection(MainActors.consultaClienteActor.path)
   val contrasenasActor = MainActors.system.actorSelection(MainActors.contrasenasActor.path)
   val ipsUsuarioActor = MainActors.system.actorSelection(MainActors.ipsUsuarioActor.path)
+  val pinActor = MainActors.system.actorSelection(MainActors.pinActor.path)
 
 }

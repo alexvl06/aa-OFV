@@ -13,4 +13,4 @@ case class ErrorClienteInactivo(msg:String)   extends ErrorValidacion
 case class ErrorFormatoClave(msg:String)   extends ErrorValidacion
 case class ErrorPersistence(msg:String, exception:PersistenceException)   extends ErrorValidacion
 case class ErrorCaptcha(msg:String)   extends ErrorValidacion
-
+case class ErrorPin(msg:String)   extends ErrorValidacion

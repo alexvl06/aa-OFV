@@ -2,7 +2,7 @@ package co.com.alianza.web
 
 import spray.routing.Directives
 import co.com.alianza.app.AlianzaCommons
-import co.com.alianza.infrastructure.messages.{ValidarCuestionarioRequestMessage, ObtenerCuestionarioAdicionalRequestMessage, ObtenerCuestionarioRequestMessage, InboxMessage}
+import co.com.alianza.infrastructure.messages.{ObtenerCuestionarioAdicionalRequestMessage, ObtenerCuestionarioRequestMessage,ValidarCuestionarioRequestMessage}
 import spray.http.StatusCodes._
 
 class ConfrontaService extends Directives with AlianzaCommons  {
@@ -15,12 +15,9 @@ class ConfrontaService extends Directives with AlianzaCommons  {
 
   def route= {
     path(confronta/obtenerCuestionario) {
-      post {
+      get {
         respondWithMediaType(mediaType) {
-          entity(as[ObtenerCuestionarioRequestMessage]) {
-            message =>
-              requestExecute(message, confrontaActor)
-          }
+              requestExecute(new ObtenerCuestionarioRequestMessage("MARCELO","1","123456","fechaExpedicion"), confrontaActor)
         }
       }
     } ~ path(confronta/obtenerCuestionarioAdicional) {
@@ -28,16 +25,19 @@ class ConfrontaService extends Directives with AlianzaCommons  {
         respondWithMediaType(mediaType) {
           entity(as[ObtenerCuestionarioAdicionalRequestMessage]) {
             message =>
-              requestExecute(message, confrontaAditionalActor)
+              requestExecute(message, confrontaActor)
           }
         }
       }
     }~ path(confronta/validarCuestionario) {
       post {
-        respondWithMediaType(mediaType) {
-          entity(as[ValidarCuestionarioRequestMessage]) {
-            message =>
-              requestExecute(message, confrontaValidationActor)
+        entity(as[ValidarCuestionarioRequestMessage]) {
+          message =>
+          respondWithMediaType(mediaType) {
+            complete {
+              OK
+            }
+            //requestExecute(message, confrontaActor)
           }
         }
       }
