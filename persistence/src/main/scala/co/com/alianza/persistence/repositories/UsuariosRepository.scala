@@ -90,4 +90,16 @@ class UsuariosRepository ( implicit executionContext: ExecutionContext) extends 
       resolveTry(resultTry, "Actualizar estado del usuario ")
   }
 
+  def actualizarEstadoUsuario( idUsuario:Int, estado:Int ): Future[Validation[PersistenceException, Int]] = loan {
+    implicit session =>
+      val resultTry = Try{ usuarios.filter( _.id === idUsuario ).map( x => ( x.estado )).update(( estado ))  }
+      resolveTry(resultTry, "Actualizar estado del usuario ")
+  }
+
+  def cambiarPassword (idUsuario: Int, password: String): Future[Validation[PersistenceException, Int]] = loan {
+    implicit session =>
+      val resultTry = Try { usuarios.filter(_.id === idUsuario).map( x => (x.contrasena)).update((Some (password))) }
+      resolveTry(resultTry, "Cambiar la contraseña del usuario ")
+  }
+
 }

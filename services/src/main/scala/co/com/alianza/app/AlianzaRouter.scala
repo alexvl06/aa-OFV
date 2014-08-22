@@ -22,6 +22,7 @@ class AlianzaRouter extends HttpServiceActor with RouteConcatenation with CrossH
     new ClienteCoreService().route ~
     new UsuarioService().route ~
     new ReglasContrasenasService().route ~
+    new PinService().route ~
     authenticate(authenticateUser) {
       user =>
         new IpsUsuariosService().route(user)

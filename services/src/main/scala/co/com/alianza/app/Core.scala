@@ -3,9 +3,10 @@ package co.com.alianza.app
 import akka.actor.{ Props, ActorSystem }
 import co.com.alianza.domain.aggregates.contrasenas.ContrasenasActor
 import co.com.alianza.domain.aggregates.ips.IpsUsuarioActor
+import co.com.alianza.domain.aggregates.pin.PinActor
 import co.com.alianza.domain.aggregates.usuarios.UsuariosActor
 import co.com.alianza.domain.aggregates.autoregistro.ConsultaClienteActor
-import co.com.alianza.domain.aggregates.confronta.{ConfrontaAditionalActorSupervisor, ConfrontaValidationActorSupervisor, ConfrontaActorSupervisor}
+import co.com.alianza.domain.aggregates.confronta.{ConfrontaActorSupervisor}
 import co.com.alianza.domain.aggregates.autenticacion.{AutorizacionActor, AutenticacionActor}
 import com.typesafe.config.Config
 
@@ -39,13 +40,12 @@ trait BootedCore extends Core {
 trait CoreActors { this: Core =>
   val usuariosActor = system.actorOf( Props[ UsuariosActor ], "UsuariosActor" )
   val confrontaActorSupervisor = system.actorOf( Props[ ConfrontaActorSupervisor ], "confrontaActorSupervisor" )
-  val confrontaValidationActorSupervisor = system.actorOf( Props[ ConfrontaValidationActorSupervisor ], "confrontaValidationActorSupervisor" )
-  val confrontaAditionalActorSupervisor = system.actorOf( Props[ ConfrontaAditionalActorSupervisor ], "confrontaAditionalActorSupervisor" )
   val consultaClienteActor = system.actorOf( Props[ ConsultaClienteActor ], "consultaClienteActor" )
   val autenticacionActor = system.actorOf( Props[ AutenticacionActor ], "autenticacionActor" )
   val autorizacionActor = system.actorOf( Props[ AutorizacionActor ], "autorizacionActor" )
   val contrasenasActor = system.actorOf( Props[ ContrasenasActor ], "contrasenasActor" )
   val ipsUsuarioActor  = system.actorOf( Props[ IpsUsuarioActor ], "ipsUsuarioActor" )
+  val pinActor = system.actorOf( Props[ PinActor ], "PinActor" )
 }
 
 /**

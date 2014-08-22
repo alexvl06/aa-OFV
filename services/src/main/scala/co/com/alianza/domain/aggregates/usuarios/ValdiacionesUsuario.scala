@@ -43,6 +43,21 @@ object  ValdiacionesUsuario {
   }
 
 
+  def validacionReglasClave(contrasena:String): Future[Validation[ErrorValidacion, Unit.type]] = {
+
+    val usuarioFuture = ValidarClave.aplicarReglas(contrasena,ValidarClave.reglasGenerales: _*)
+
+    usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message,pe)).flatMap{
+      (x:List[ErrorValidacionClave]) => x match{
+        case List() => zSuccess(Unit)
+        case erroresList =>
+          val errores = erroresList.foldLeft("") ( (z, i) => i.toString + "-" + z  )
+          zFailure(ErrorFormatoClave(errorClave(errores)))
+      }
+    })
+  }
+
+
   def validaCaptcha(message:UsuarioMessage): Future[Validation[ErrorValidacion, Unit.type]] = {
     val validador = new ValidarCaptcha()
 
