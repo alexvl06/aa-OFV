@@ -80,43 +80,8 @@ class AutenticacionActor extends Actor with ActorLogging {
           }
       }
 
-    //Mensaje de validacion del token para autenticidad del mismo y relacion con usuario del sistema
-    case message: ValidarToken =>
-
-      val currentSender = sender()
-      val currentToken = message
-      callTokenService(currentToken, currentSender)
 
 
-  }
-
-  private def callTokenService(message: ValidarToken, currentSender: akka.actor.ActorRef) {
-    //Valida que el token sea generado por el algoritmo creador de token
-    if (Token.autorizarToken(message.token)) {
-      val resultUsuario = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerUsuarioToken(message.token);
-
-      resultUsuario onComplete {
-        case Failure(failure) => currentSender ! failure
-        case Success(value) =>
-          value match {
-            case zSuccess(response: Option[Usuario]) =>
-              response match {
-                case Some(valueResponse) =>
-                  val userWithoutPassword = Usuario( valueResponse.id, valueResponse.correo, valueResponse.fechaCaducidad, valueResponse.identificacion
-                  ,valueResponse.tipoIdentificacion, valueResponse.estado, None, valueResponse.numeroIngresosErroneos, valueResponse.ipUltimoIngreso
-                  ,valueResponse.fechaUltimoIngreso )
-
-                  val user = JsonUtil.toJson(userWithoutPassword)
-                  UserCache.addUser(message, user)
-                  log.info("***************Token almacenado en cache**********")
-                  currentSender ! ResponseMessage(OK, user)
-                case None => currentSender ! ResponseMessage(Unauthorized, "Error al obtener usuario por numero de identificacion")
-              }
-            case zFailure(error) => currentSender ! error
-          }
-      }
-    } else
-      currentSender ! ResponseMessage(Unauthorized, "Token no valido")
   }
 
   private def realizarValidacionesCliente(futureCliente: Future[Validation[PersistenceException, Option[Cliente]]], usuario: Usuario, messageTipoIdentificacion: Int, ip: String, currentSender: ActorRef) {
