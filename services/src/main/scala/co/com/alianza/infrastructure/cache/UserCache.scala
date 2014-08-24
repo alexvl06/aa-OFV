@@ -12,7 +12,6 @@ import co.com.alianza.app.MainActors
 import spray.util._
 import spray.routing.Route
 import co.com.alianza.app.AlianzaCommons
-import co.com.alianza.infrastructure.messages.ValidarToken
 import co.com.alianza.infrastructure.messages.MessageService
 
 object UserCache extends AlianzaCommons {
