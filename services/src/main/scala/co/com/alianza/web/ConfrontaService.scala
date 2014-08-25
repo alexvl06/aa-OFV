@@ -15,9 +15,12 @@ class ConfrontaService extends Directives with AlianzaCommons  {
 
   def route= {
     path(confronta/obtenerCuestionario) {
-      get {
-        respondWithMediaType(mediaType) {
-              requestExecute(new ObtenerCuestionarioRequestMessage("MARCELO","1","123456","fechaExpedicion"), confrontaActor)
+      post {
+        entity(as[ObtenerCuestionarioRequestMessage]) {
+          message =>
+          respondWithMediaType(mediaType) {
+            requestExecute(message, confrontaActor)
+          }
         }
       }
     } ~ path(confronta/obtenerCuestionarioAdicional) {
@@ -34,10 +37,7 @@ class ConfrontaService extends Directives with AlianzaCommons  {
         entity(as[ValidarCuestionarioRequestMessage]) {
           message =>
           respondWithMediaType(mediaType) {
-            complete {
-              OK
-            }
-            //requestExecute(message, confrontaActor)
+            requestExecute(message, confrontaActor)
           }
         }
       }

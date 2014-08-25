@@ -98,7 +98,7 @@ object  ValdiacionesUsuario {
       (x:Option[Cliente]) => x match{
         case None => zFailure(ErrorClienteNoExiste(errorClienteNoExiste))
         case Some(c) =>
-          if(c.wcli_estado == EstadosCliente.inactivo)
+          if(c.wcli_estado == EstadosCliente.bloqueoContraseña)
             zFailure(ErrorClienteNoExiste(errorClienteInactivo))
           else if(getTipoPersona(message) != c.wcli_person)
             zFailure(ErrorClienteNoExiste(errorClienteNoExiste))

@@ -1,6 +1,6 @@
 package co.com.alianza.domain.aggregates.confronta
 
-import akka.actor.{ Actor, Props, ActorLogging }
+import akka.actor.{ActorRef, Actor, Props, ActorLogging}
 import akka.routing.RoundRobinPool
 import scalaz.{Failure => zFailure, Success => zSuccess}
 import scala.util.{Success, Failure}
@@ -16,6 +16,7 @@ import co.com.alianza.infrastructure.messages.ValidarCuestionarioRequestMessage
 import co.cifin.confrontaultra.dto.ultras.RespuestaCuestionarioULTRADTO
 import java.util
 import scala.util
+import java.sql.Timestamp
 
 
 class ConfrontaActorSupervisor extends Actor with ActorLogging {
@@ -63,14 +64,44 @@ class ConfrontaActor extends Actor with ActorLogging with AlianzaActors {
             message.primerApellido,
             message.codigoTipoIdentificacion,
             message.fechaExpedicion));*/
-      val resouesta11 = new OpcionRespuestaPreguntaULTRADTO(1,1,"Lo se pero no quiero decirlo")
-      val resouesta12 = new OpcionRespuestaPreguntaULTRADTO(2,2,"No importa")
-      val resouesta13 = new OpcionRespuestaPreguntaULTRADTO(3,3,"Solo Dios sabe")
-      val resouesta14 = new OpcionRespuestaPreguntaULTRADTO(4,4,"Todas las anteriores")
+
+      val resouesta11 = new OpcionRespuestaPreguntaULTRADTO(1,1,"VISA")
+      val resouesta12 = new OpcionRespuestaPreguntaULTRADTO(1,2,"AMERICAN EXPRESS")
+      val resouesta13 = new OpcionRespuestaPreguntaULTRADTO(1,3,"MASTER CARD")
+      val resouesta14 = new OpcionRespuestaPreguntaULTRADTO(1,4,"NINGUNA DE LAS ANTERIORES")
+
+      val resouesta21 = new OpcionRespuestaPreguntaULTRADTO(2,1,"NINGUNO")
+      val resouesta22 = new OpcionRespuestaPreguntaULTRADTO(2,2,"UNO")
+      val resouesta23 = new OpcionRespuestaPreguntaULTRADTO(2,3,"DOS")
+      val resouesta24 = new OpcionRespuestaPreguntaULTRADTO(2,4,"TRES o MÁS")
+
+      val resouesta31 = new OpcionRespuestaPreguntaULTRADTO(3,1,"SI")
+      val resouesta32 = new OpcionRespuestaPreguntaULTRADTO(3,2,"NO")
+
+
+      val resouesta41 = new OpcionRespuestaPreguntaULTRADTO(4,1,"CUENTA CORRIENTE")
+      val resouesta42 = new OpcionRespuestaPreguntaULTRADTO(4,2,"TARJETA DE CREDITO")
+      val resouesta43 = new OpcionRespuestaPreguntaULTRADTO(4,3,"CUENTA CORRIENTE Y TARJETA DE CREDITO")
+      val resouesta44 = new OpcionRespuestaPreguntaULTRADTO(4,4,"NINGUNO DE LOS ANTERIORES")
+
+      val resouesta51 = new OpcionRespuestaPreguntaULTRADTO(5,1,"NARIÑO")
+      val resouesta52 = new OpcionRespuestaPreguntaULTRADTO(5,2,"QUINDIO")
+      val resouesta53 = new OpcionRespuestaPreguntaULTRADTO(5,3,"BOGOTA DISTRITO CA")
+      val resouesta54 = new OpcionRespuestaPreguntaULTRADTO(5,4,"NINGUNA DE LAS ANTERIORES")
+
       val listadoRespuestas: Array[OpcionRespuestaPreguntaULTRADTO] = Array(resouesta11,resouesta12,resouesta13,resouesta14)
-      val pregunta1 = new PreguntaULTRADTO(1,listadoRespuestas,1,"Cual es el significado de la vida?")
-      val pregunta2 = new PreguntaULTRADTO(2,listadoRespuestas,2,"Cual es el origen del universo?")
-      val listadoPreguntas: Array[PreguntaULTRADTO] = Array(pregunta1,pregunta2)
+      val listadoRespuestas2: Array[OpcionRespuestaPreguntaULTRADTO] = Array(resouesta21,resouesta22,resouesta23,resouesta24)
+      val listadoRespuestas3: Array[OpcionRespuestaPreguntaULTRADTO] = Array(resouesta31,resouesta32)
+      val listadoRespuestas4: Array[OpcionRespuestaPreguntaULTRADTO] = Array(resouesta41,resouesta42,resouesta43,resouesta44)
+      val listadoRespuestas5: Array[OpcionRespuestaPreguntaULTRADTO] = Array(resouesta51,resouesta52,resouesta53,resouesta54)
+
+      val pregunta1 = new PreguntaULTRADTO(1,listadoRespuestas,1,"¿CUÁL O CUÁLES DE LOS SIGUIENTES PRODUCTOS TIENE CON COLPATRIA?")
+      val pregunta2 = new PreguntaULTRADTO(2,listadoRespuestas2,2,"¿DE QUÉ MARCA ES SU TARJETA DE CRÉDITO CON BANCO DE BOGOTA?")
+      val pregunta3 = new PreguntaULTRADTO(3,listadoRespuestas3,3,"¿CUÁL ES EL DEPARTAMENTO EN DONDE FUE EXPEDIDO SU DOCUMENTO DE IDENTIDAD?")
+      val pregunta4 = new PreguntaULTRADTO(4,listadoRespuestas4,4,"¿USTED FUE BENEFICIARIO DEL FONDO DE RESERVA (FRECH) PARA LA ADQUISICIÓN DE VIVIENDA QUE OTORGÓ EL GOBIERNO?")
+      val pregunta5 = new PreguntaULTRADTO(5,listadoRespuestas5,5,"ACTUALMENTE CUANTOS CREDITOS TIENE CON FEDEABC - FONDO DE EMPLEADOS  DE  ASOBANCARIA?")
+
+      val listadoPreguntas: Array[PreguntaULTRADTO] = Array(pregunta1,pregunta2,pregunta3,pregunta4,pregunta5)
       val huella: HuellaULTRADTO = new HuellaULTRADTO("Entidad",3,"fechaConsulta","resultadoConsulta")
       val huellaConsulta: Array[HuellaULTRADTO] = Array(huella)
       val response = new CuestionarioULTRADTO(listadoPreguntas,123,"claveCIFIN",new RespuestaULTRADTO(),new TerceroULTRADTO(),123456,huellaConsulta,"Cuestionario Super Cool").toJson
@@ -102,8 +133,27 @@ class ConfrontaActor extends Actor with ActorLogging with AlianzaActors {
       val resultadoConfrontacion: Int = 1
       val resultadoScore: Int = -1
       val response = new ResultadoEvaluacionCuestionarioULTRADTO(aciertos,claveCIFIN,codigoCuestionario,respuestaProceso,resultadoConfrontacion,resultadoScore)
-      currentSender ! response.toJson
 
+      if(resultadoConfrontacion == 1){
+        actualizarEstadoConfronta(message.id,response,currentSender)
+      } else {
+        currentSender ! response.toJson
+      }
+
+  }
+
+  private def actualizarEstadoConfronta(numeroIdentificacion: String, response:ResultadoEvaluacionCuestionarioULTRADTO, currentSender: ActorRef) = {
+    val resultActualizarEstadoConfronta = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.actualizarEstadoConfronta(numeroIdentificacion)
+    resultActualizarEstadoConfronta onComplete {
+      case Failure(failure) => currentSender ! failure
+      case Success(value) =>
+        value match {
+          case zSuccess(code: Int) =>
+          currentSender !  response.toJson
+          case zFailure(error) =>
+            currentSender ! error
+        }
+    }
   }
 
 }
