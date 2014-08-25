@@ -11,6 +11,7 @@ import scalaz.{Failure => zFailure, Success => zSuccess}
 import co.com.alianza.infrastructure.dto.Usuario
 import co.com.alianza.persistence.entities.{Usuario => eUsuario, IpsUsuario}
 import co.com.alianza.persistence.messages.AutenticacionRequest
+import enumerations.EstadosUsuarioEnum
 
 object DataAccessAdapter {
 
@@ -74,6 +75,11 @@ object DataAccessAdapter {
   def actualizarFechaUltimoIngreso( numeroIdentificacion:String, fechaActual: Timestamp  ): Future[Validation[PersistenceException, Int]] = {
     val repo = new UsuariosRepository()
     repo.actualizarFechaUltimoIngreso( numeroIdentificacion, fechaActual )
+  }
+
+  def actualizarEstadoConfronta( numeroIdentificacion:String): Future[Validation[PersistenceException, Int]] = {
+    val repo = new UsuariosRepository()
+    repo.actualizarEstadoUsuario( numeroIdentificacion,EstadosUsuarioEnum.activo.id )
   }
 
   def obtenerIpsUsuario( idUsuario:Int ) : Future[Validation[PersistenceException, Vector[IpsUsuario]]] = {
