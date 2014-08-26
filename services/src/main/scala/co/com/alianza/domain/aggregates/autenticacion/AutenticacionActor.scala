@@ -40,8 +40,14 @@ class AutenticacionActor extends Actor with ActorLogging {
             case zSuccess(response: Option[Usuario]) =>
               response match {
                 case Some(valueResponse) =>
-                  if (valueResponse.estado == EstadosUsuarioEnum.inactivo.id)
+                  if (valueResponse.estado == EstadosUsuarioEnum.bloqueContraseña.id)
                     currentSender ! ResponseMessage(Unauthorized, errorUsuarioBloqueadoIntentosErroneos)
+                  else if(valueResponse.estado == EstadosUsuarioEnum.pendienteActivacion.id)
+                    currentSender ! ResponseMessage(Unauthorized, errorUsuarioBloqueadoPendienteActivacion)
+                  else if(valueResponse.estado == EstadosUsuarioEnum.pendienteConfronta.id)
+                    currentSender ! ResponseMessage(Unauthorized, errorUsuarioBloqueadoPendienteConfronta)
+                  else if(valueResponse.estado == EstadosUsuarioEnum.pendienteReinicio.id)
+                    currentSender ! ResponseMessage(Unauthorized, errorUsuarioBloqueadoPendienteReinicio)
                   else {
                     val passwordFrontEnd = message.password
                     val passwordDB = valueResponse.contrasena.getOrElse("")
@@ -94,7 +100,7 @@ class AutenticacionActor extends Actor with ActorLogging {
               case Some(valueResponseCliente) =>
                 if (getTipoPersona(messageTipoIdentificacion) != valueResponseCliente.wcli_person)
                   currentSender ! ResponseMessage(Unauthorized, errorClienteNoExisteSP)
-                else if (valueResponseCliente.wcli_estado != EstadosCliente.inactivo) {
+                else if (valueResponseCliente.wcli_estado != EstadosCliente.bloqueoContraseña) {
                   //Se valida la caducidad de la contraseña
                   validarFechaContrasena(usuario.fechaCaducidad, currentSender: ActorRef)
                   //Validacion de control de direccion IP del usuario
@@ -138,7 +144,7 @@ class AutenticacionActor extends Actor with ActorLogging {
             response match {
               case Some(valueResponseCliente) =>
                 //TODO:Cambiar la validacion, es decir poner en el if !
-                if (valueResponseCliente.wcli_estado != EstadosCliente.inactivo) {
+                if (valueResponseCliente.wcli_estado != EstadosCliente.bloqueoContraseña) {
                   //Se asocia la direccion IP a las habituales del usuario
                   val result = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.relacionarIp(idUsuario, ip)
                   //Luego de que el usuario asocia la IP, se envia a realizar autenticacion con datos a poner en el token
@@ -267,7 +273,7 @@ class AutenticacionActor extends Actor with ActorLogging {
             response match {
               case Some(valueResponse) =>
                 if (valueResponse.valor.toInt == numeroIngresosErroneos + 1) {
-                  co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.actualizarEstadoUsuario(numeroIdentificacion, EstadosUsuarioEnum.inactivo.id)
+                  co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.actualizarEstadoUsuario(numeroIdentificacion, EstadosUsuarioEnum.bloqueContraseña.id)
                   currentSender ! ResponseMessage(Unauthorized, errorIntentosIngresosInvalidos)
                 } else {
                   currentSender ! ResponseMessage(Unauthorized, errorUsuarioCredencialesInvalidas)
@@ -317,5 +323,7 @@ class AutenticacionActor extends Actor with ActorLogging {
   private val errorIntentosIngresosInvalidos = ErrorMessage("401.7", "Usuario Bloqueado", "Ha excedido el numero máximo intentos permitidos al sistema, su usuario ha sido bloqueado").toJson
   private val errorUsuarioBloqueadoIntentosErroneos = ErrorMessage("401.8", "Usuario Bloqueado", "El usuario se encuentra bloqueado").toJson
   private val errorUsuarioCaducidadContrasena = ErrorMessage("401.9", "Error Credenciales", "La contraseña del usuario ha caducado").toJson
-
+  private val errorUsuarioBloqueadoPendienteActivacion = ErrorMessage("401.10", "Usuario Bloqueado", "El usuario se encuentra pendiente de activación").toJson
+  private val errorUsuarioBloqueadoPendienteConfronta = ErrorMessage("401.11", "Usuario Bloqueado", "El usuario se encuentra bloqueado pendiente preguntas de seguridad").toJson
+  private val errorUsuarioBloqueadoPendienteReinicio = ErrorMessage("401.12", "Usuario Bloqueado", "El usuario se encuentra bloqueado pendiente de reiniciar contraseña").toJson
 }
