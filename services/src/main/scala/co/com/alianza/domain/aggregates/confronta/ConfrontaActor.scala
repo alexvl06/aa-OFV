@@ -1,22 +1,16 @@
 package co.com.alianza.domain.aggregates.confronta
 
 import akka.actor.{ActorRef, Actor, Props, ActorLogging}
-import akka.routing.RoundRobinPool
 import scalaz.{Failure => zFailure, Success => zSuccess}
 import scala.util.{Success, Failure}
 import co.com.alianza.app.AlianzaActors
 import com.typesafe.config.{ConfigFactory, Config}
 import com.asobancaria.tciweb1.cifin.confrontav2plusws.services.ConfrontaUltraWS.ConfrontaUltraWebServiceServiceLocator
 import co.cifin.confrontaultra.dto.ultra._
-import co.com.alianza.infrastructure.messages.{ValidarCuestionarioRequestMessage, ObtenerCuestionarioAdicionalRequestMessage, ObtenerCuestionarioRequestMessage}
 import co.com.alianza.infrastructure.messages.ObtenerCuestionarioAdicionalRequestMessage
 import akka.routing.RoundRobinPool
 import co.com.alianza.infrastructure.messages.ObtenerCuestionarioRequestMessage
 import co.com.alianza.infrastructure.messages.ValidarCuestionarioRequestMessage
-import co.cifin.confrontaultra.dto.ultras.RespuestaCuestionarioULTRADTO
-import java.util
-import scala.util
-import java.sql.Timestamp
 
 
 class ConfrontaActorSupervisor extends Actor with ActorLogging {
