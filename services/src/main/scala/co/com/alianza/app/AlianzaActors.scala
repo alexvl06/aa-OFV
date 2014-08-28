@@ -12,7 +12,7 @@ trait AlianzaActors {
   val usuariosActor = MainActors.system.actorSelection(MainActors.usuariosActor.path)
   val confrontaActor = MainActors.system.actorSelection(MainActors.confrontaActorSupervisor.path + "/confrontaActor")
   val autenticacionActor = MainActors.system.actorSelection(MainActors.autenticacionActor.path )
-  val autorizacionActor = MainActors.system.actorSelection(MainActors.autenticacionActor.path )
+  val autorizacionActor = MainActors.system.actorSelection(MainActors.autorizacionActor.path )
 	
   val consultaClienteActor = MainActors.system.actorSelection(MainActors.consultaClienteActor.path)
   val contrasenasActor = MainActors.system.actorSelection(MainActors.contrasenasActor.path)

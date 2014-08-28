@@ -12,7 +12,7 @@ import co.com.alianza.persistence.messages.{AgregarIpHabitualRequest, Autenticac
 object AutenticacionMessagesJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val AutenticarRequestMessageFormat = jsonFormat4(AutenticarMessage)
   implicit val AgregarIpHabitualRequestMessageFormat = jsonFormat3(AgregarIPHabitualUsuario)
-  implicit val ValidarTokenRequestMessageFormat = jsonFormat1(ValidarToken)
+  implicit val AutorizarUrlRequestMessageFormat = jsonFormat2(AutorizarUrl)
 }
 
 
@@ -25,7 +25,7 @@ case class AgregarIPHabitualUsuario(tipoIdentificacion:Int, numeroIdentificacion
   def toAgregarClienteRequest:AgregarIpHabitualRequest = AgregarIpHabitualRequest(tipoIdentificacion, numeroIdentificacion, clientIp)
 }
 
-case class ValidarToken(token:String)  extends MessageService{
+case class AutorizarUrl(token:String, url:String)  extends MessageService{
   def toValidarTokenRequest:ValidarTokenRequest = ValidarTokenRequest( token )
 }
 

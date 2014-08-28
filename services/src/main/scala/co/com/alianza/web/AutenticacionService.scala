@@ -1,10 +1,8 @@
 package co.com.alianza.web
 
 import spray.routing.Directives
-import spray.http.StatusCodes._
 import co.com.alianza.app.{ CrossHeaders, AlianzaCommons }
-import co.com.alianza.infrastructure.messages.{ ValidarToken, AutenticacionMessagesJsonSupport, AutenticarMessage, AgregarIPHabitualUsuario }
-import co.com.alianza.infrastructure.cache.UserCache;
+import co.com.alianza.infrastructure.messages.{AutenticacionMessagesJsonSupport, AutenticarMessage, AgregarIPHabitualUsuario }
 
 class AutenticacionService extends Directives with AlianzaCommons with CrossHeaders {
 
@@ -35,14 +33,6 @@ class AutenticacionService extends Directives with AlianzaCommons with CrossHead
             }
         }
       }
-    } ~ path("validarToken" / Segment) {
-      (token) =>
-        get {
-          respondWithMediaType(mediaType) {
-            requestExecute(ValidarToken(token), autenticacionActor, true)
-          
-          }
-        }
     }
   }
 }

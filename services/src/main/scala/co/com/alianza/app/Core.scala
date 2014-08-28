@@ -7,7 +7,7 @@ import co.com.alianza.domain.aggregates.pin.PinActor
 import co.com.alianza.domain.aggregates.usuarios.UsuariosActor
 import co.com.alianza.domain.aggregates.autoregistro.ConsultaClienteActor
 import co.com.alianza.domain.aggregates.confronta.{ConfrontaActorSupervisor}
-import co.com.alianza.domain.aggregates.autenticacion.AutenticacionActor
+import co.com.alianza.domain.aggregates.autenticacion.{AutorizacionActor, AutenticacionActor}
 import com.typesafe.config.Config
 
 //import co.com.alianza.domain.aggregates.fondos.FondosActorSupervisor
@@ -42,6 +42,7 @@ trait CoreActors { this: Core =>
   val confrontaActorSupervisor = system.actorOf( Props[ ConfrontaActorSupervisor ], "confrontaActorSupervisor" )
   val consultaClienteActor = system.actorOf( Props[ ConsultaClienteActor ], "consultaClienteActor" )
   val autenticacionActor = system.actorOf( Props[ AutenticacionActor ], "autenticacionActor" )
+  val autorizacionActor = system.actorOf( Props[ AutorizacionActor ], "autorizacionActor" )
   val contrasenasActor = system.actorOf( Props[ ContrasenasActor ], "contrasenasActor" )
   val ipsUsuarioActor  = system.actorOf( Props[ IpsUsuarioActor ], "ipsUsuarioActor" )
   val pinActor = system.actorOf( Props[ PinActor ], "PinActor" )
