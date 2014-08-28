@@ -9,12 +9,14 @@ import co.com.alianza.exceptions.PersistenceException
 import scala.util.Try
 import scalaz.Validation
 
-import co.com.alianza.persistence.entities.{CustomDriver, UsuarioTable, Usuario}
+import co.com.alianza.persistence.entities._
 
 
 import scala.slick.lifted.TableQuery
 import CustomDriver.simple._
 import scala.slick.direct.Queryable
+import co.com.alianza.persistence.entities.Usuario
+import scala.Some
 
 /**
  *
@@ -25,6 +27,7 @@ class UsuariosRepository ( implicit executionContext: ExecutionContext) extends 
   //val usuarios = Queryable[Usuario]
 
   val usuarios = TableQuery[UsuarioTable]
+  val perfilesUsuarios = TableQuery[PerfilUsuarioTable]
 
   def obtenerUsuarios(): Future[Validation[PersistenceException, List[Usuario]]] = loan {
     implicit session =>
@@ -59,47 +62,54 @@ class UsuariosRepository ( implicit executionContext: ExecutionContext) extends 
   def asociarTokenUsuario( numeroIdentificacion:String, token:String  ) : Future[Validation[PersistenceException, Int]] = loan {
 
     implicit session =>
-      val resultTry = Try{ usuarios.filter( _.identificacion === numeroIdentificacion ).map( x => ( x.token )).update(( Some(token) ))  }
+      val resultTry = Try{ usuarios.filter( _.identificacion === numeroIdentificacion ).map(_.token ).update(Some(token))  }
       resolveTry(resultTry, "Actualizar usuario en token")
   }
 
   def actualizarNumeroIngresosErroneos( numeroIdentificacion:String, numeroIntentos:Int ): Future[Validation[PersistenceException, Int]] = loan {
 
     implicit session =>
-      val resultTry = Try{ usuarios.filter( _.identificacion === numeroIdentificacion ).map( x => ( x.numeroIngresosErroneos )).update(( numeroIntentos ))  }
+      val resultTry = Try{ usuarios.filter( _.identificacion === numeroIdentificacion ).map(_.numeroIngresosErroneos).update(numeroIntentos )  }
       resolveTry(resultTry, "Actualizar usuario en numeroIngresosErroneos ")
   }
 
   def actualizarIpUltimoIngreso( numeroIdentificacion:String, ipActual:String ): Future[Validation[PersistenceException, Int]] = loan {
 
     implicit session =>
-      val resultTry = Try{ usuarios.filter( _.identificacion === numeroIdentificacion ).map( x => ( x.ipUltimoIngreso )).update(( Some(ipActual) ))  }
+      val resultTry = Try{ usuarios.filter( _.identificacion === numeroIdentificacion ).map(_.ipUltimoIngreso ).update(Some(ipActual))  }
       resolveTry(resultTry, "Actualizar usuario en actualizarIpUltimoIngreso ")
   }
 
   def actualizarFechaUltimoIngreso( numeroIdentificacion:String, fechaActual : Timestamp ): Future[Validation[PersistenceException, Int]] = loan {
 
     implicit session =>
-      val resultTry = Try{ usuarios.filter( _.identificacion === numeroIdentificacion ).map( x => ( x.fechaUltimoIngreso )).update(( Some(fechaActual) ))  }
+      val resultTry = Try{ usuarios.filter( _.identificacion === numeroIdentificacion ).map(_.fechaUltimoIngreso ).update(Some(fechaActual))  }
       resolveTry(resultTry, "Actualizar usuario en actualizarFechaUltimoIngreso ")
   }
 
   def actualizarEstadoUsuario( numeroIdentificacion:String, estado:Int ): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
-      val resultTry = Try{ usuarios.filter( _.identificacion === numeroIdentificacion ).map( x => ( x.estado )).update(( estado ))  }
+      val resultTry = Try{ usuarios.filter( _.identificacion === numeroIdentificacion ).map(_.estado ).update(estado)  }
       resolveTry(resultTry, "Actualizar estado del usuario ")
   }
 
   def actualizarEstadoUsuario( idUsuario:Int, estado:Int ): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
-      val resultTry = Try{ usuarios.filter( _.id === idUsuario ).map( x => ( x.estado )).update(( estado ))  }
+      val resultTry = Try{ usuarios.filter( _.id === idUsuario ).map(_.estado ).update(estado)  }
       resolveTry(resultTry, "Actualizar estado del usuario ")
   }
 
   def cambiarPassword (idUsuario: Int, password: String): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
-      val resultTry = Try { usuarios.filter(_.id === idUsuario).map( x => (x.contrasena)).update((Some (password))) }
+      val resultTry = Try { usuarios.filter(_.id === idUsuario).map(_.contrasena).update(Some (password)) }
       resolveTry(resultTry, "Cambiar la contraseña del usuario ")
+  }
+
+  def asociarPerfiles(perfiles:List[PerfilUsuario]) : Future[Validation[PersistenceException, List[Int]]] = loan {
+
+    implicit session =>
+      val resultTry = Try{(perfilesUsuarios  ++= perfiles).toList}
+      resolveTry(resultTry, "Actualizar usuario en token")
   }
 
 }

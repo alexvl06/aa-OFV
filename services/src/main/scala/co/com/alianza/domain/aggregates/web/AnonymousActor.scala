@@ -35,7 +35,6 @@ class AnonymousActor(actorService: ActorSelection) extends Actor with ActorLoggi
     case m: MessageService =>
       log.info(m.toString)
       message = Option(m)
-      println(" actorService " + actorService)
       actorService ! m
       context.become(waitingResponses)
 

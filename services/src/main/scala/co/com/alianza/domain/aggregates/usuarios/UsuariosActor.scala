@@ -14,6 +14,8 @@ import scalaz.std.AllInstances._
 import co.com.alianza.util.clave.Crypto
 import com.typesafe.config.{ConfigFactory, Config}
 import co.com.alianza.exceptions.PersistenceException
+import co.com.alianza.persistence.entities.PerfilUsuario
+import enumerations.PerfilesUsuario
 
 /**
  *
@@ -71,6 +73,8 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
         value match {
           case zSuccess(response: Int) =>
             currentSender !  ResponseMessage(Created, response.toString)
+            DataAccessAdapterUsuario.asociarPerfiles(PerfilUsuario(response,PerfilesUsuario.clienteIndividual.id)::Nil)
+
             if(message.activarIP && message.clientIp.isDefined){
               DataAccessAdapterUsuario.relacionarIp(response,message.clientIp.get)
             }

@@ -15,7 +15,6 @@ class AutorizacionService extends Directives with AlianzaCommons{
           parameters('url) {
             url =>
               respondWithMediaType(mediaType) {
-                println(" url " + url )
                 requestExecute(AutorizarUrl(token,url), autorizacionActor, true)
             }
           }

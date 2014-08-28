@@ -28,7 +28,6 @@ class AutorizacionActor extends Actor with ActorLogging  with FutureResponse {
 
   def receive = {
     case message: AutorizarUrl =>
-
       val currentSender = sender()
       val futureValidarToken = validarToken(message.token)
 
@@ -36,7 +35,6 @@ class AutorizacionActor extends Actor with ActorLogging  with FutureResponse {
         usuarioOption <- ValidationT(futureValidarToken)
         resultAutorizar <- ValidationT(validarRecurso(usuarioOption,message.url))
       }yield {
-        println(" responde >>> "  + resultAutorizar)
         resultAutorizar
       }).run
 

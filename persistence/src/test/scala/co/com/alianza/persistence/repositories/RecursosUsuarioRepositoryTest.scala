@@ -21,7 +21,7 @@ class RecursosUsuarioRepositoryTest extends FunSuite {
 
   test("UsuariosRepository obtenerUsuarioNumeroIdentificacion") {
 
-    val repo = new RecursosUsuarioRepository
+    val repo = new RecursosPerfilRepository
 
     Try {
 
