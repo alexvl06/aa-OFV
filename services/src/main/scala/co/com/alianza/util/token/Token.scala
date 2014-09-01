@@ -30,6 +30,7 @@ object Token{
       token.setParam("ultimaIpIngreso", ultimaIpIngreso)
       val formater = new java.text.SimpleDateFormat("dd MMMM, yyyy 'a las' hh:mm a", new java.util.Locale("es", "ES"))
       token.setParam("ultimaFechaIngreso", formater.format(ultimaFechaIngreso))
+      token.setParam("tipoIdentificacion", tipoIdentificacion)
       //TODO: Se debe cambiar el Audience al dominio dado para ambiente de produccion
       token.setAudience("http://www.google.com")
       token.setIssuedAt(clock.now())
