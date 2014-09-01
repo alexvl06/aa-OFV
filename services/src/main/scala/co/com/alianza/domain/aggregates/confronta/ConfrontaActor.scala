@@ -47,7 +47,7 @@ class ConfrontaActor extends Actor with ActorLogging with AlianzaActors {
 
       val currentSender = sender()
       val locator =  new ConfrontaUltraWebServiceServiceLocator()
-      /*val response = locator.getConfrontaUltraWS(new java.net.URL(config.getString("confronta.service.obtenerCuestionario.location"))).
+      val response = locator.getConfrontaUltraWS(new java.net.URL(config.getString("confronta.service.obtenerCuestionario.location"))).
         obtenerCuestionario(new ParametrosSeguridadULTRADTO(config.getString("confronta.service.claveCIFIN"),config.getString("confronta.service.password")),
           new ParametrosULTRADTO(
             message.numeroIdentificacion,
@@ -57,9 +57,9 @@ class ConfrontaActor extends Actor with ActorLogging with AlianzaActors {
             0,
             message.primerApellido,
             message.codigoTipoIdentificacion.toString,
-            message.fechaExpedicion));*/
+            message.fechaExpedicion));
 
-      val resouesta11 = new OpcionRespuestaPreguntaULTRADTO(1,1,"VISA")
+      /*val resouesta11 = new OpcionRespuestaPreguntaULTRADTO(1,1,"VISA")
       val resouesta12 = new OpcionRespuestaPreguntaULTRADTO(1,2,"AMERICAN EXPRESS")
       val resouesta13 = new OpcionRespuestaPreguntaULTRADTO(1,3,"MASTER CARD")
       val resouesta14 = new OpcionRespuestaPreguntaULTRADTO(1,4,"NINGUNA DE LAS ANTERIORES")
@@ -99,7 +99,7 @@ class ConfrontaActor extends Actor with ActorLogging with AlianzaActors {
       val huella: HuellaULTRADTO = new HuellaULTRADTO("Entidad",3,"fechaConsulta","resultadoConsulta")
       val huellaConsulta: Array[HuellaULTRADTO] = Array(huella)
       val response = new CuestionarioULTRADTO(listadoPreguntas,123,"claveCIFIN",new RespuestaULTRADTO(),new TerceroULTRADTO(),123456,huellaConsulta,"Cuestionario Super Cool").toJson
-  
+  */
       currentSender ! response
 
     case message:ObtenerCuestionarioAdicionalRequestMessage =>
