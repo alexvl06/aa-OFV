@@ -19,14 +19,6 @@ class ReglasContrasenasService extends Directives with AlianzaCommons {
         respondWithMediaType(mediaType) {
           requestExecute(InboxMessage(), contrasenasActor)
         }
-      } ~
-      post {
-        entity(as[ActualizarReglasContrasenasMessage]) {
-          listaReglas =>
-            respondWithMediaType(mediaType) {
-              requestExecute(listaReglas, contrasenasActor)
-            }
-        }
       }
     }
   }
