@@ -41,6 +41,12 @@ class ConfrontaService extends Directives with AlianzaCommons  {
           }
         }
       }
+    } ~ path(confronta/"validarCuestionarioTest") {
+      get {
+            respondWithMediaType(mediaType) {
+              requestExecute(new ObtenerCuestionarioRequestMessage("MARCELO",1,"123456","fechaExpedicion"), confrontaActor)
+        }
+      }
     }
   }
 

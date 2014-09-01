@@ -61,11 +61,11 @@ public class ClientHandler extends BasicHandler {
     public ClientHandler() {
         try {
 
-            keystoreLocation = ("alianzakeys.jks");
+            keystoreLocation = ("desarrollo.jks");
             keystoreType = ("jks");
-            keystorePassword = ("4l14nz4c3rt");
-            keystoreCertAlias = ("alianzafiduciariacert");
-            keystoreCertPassword = ("4l14nz4c3rt");
+            keystorePassword = ("desarrollows");
+            keystoreCertAlias = ("firmadesarrollo");
+            keystoreCertPassword = ("desarrollows");
 
         } catch (Exception e) {
             System.err.println("Error leyendo el fichero de configuración de securización");
