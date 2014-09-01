@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.Properties;
+import java.util.Vector;
 
 import javax.xml.soap.SOAPMessage;
 import javax.xml.transform.TransformerFactory;
@@ -15,12 +16,15 @@ import org.apache.axis.MessageContext;
 import org.apache.axis.SOAPPart;
 import org.apache.axis.handlers.BasicHandler;
 import org.apache.axis.message.SOAPEnvelope;
+import org.apache.ws.security.SOAPConstants;
 import org.apache.ws.security.WSConstants;
+import org.apache.ws.security.WSEncryptionPart;
 import org.apache.ws.security.components.crypto.Crypto;
 import org.apache.ws.security.components.crypto.CryptoFactory;
 import org.apache.ws.security.message.WSSecHeader;
 import org.apache.ws.security.message.WSSecSignature;
 import org.apache.ws.security.message.WSSecTimestamp;
+import org.apache.ws.security.util.WSSecurityUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import sun.security.rsa.RSASignature;
@@ -61,11 +65,11 @@ public class ClientHandler extends BasicHandler {
     public ClientHandler() {
         try {
 
-            keystoreLocation = ("alianzakeys.jks");
+            keystoreLocation = ("desarrollo.jks");
             keystoreType = ("jks");
-            keystorePassword = ("4l14nz4c3rt");
-            keystoreCertAlias = ("alianzafiduciariacert");
-            keystoreCertPassword = ("4l14nz4c3rt");
+            keystorePassword = ("desarrollows");
+            keystoreCertAlias = ("firmadesarrollo");
+            keystoreCertPassword = ("desarrollows");
 
         } catch (Exception e) {
             System.err.println("Error leyendo el fichero de configuración de securización");
@@ -124,8 +128,14 @@ public class ClientHandler extends BasicHandler {
             soapEnvelopeRequest = timestamp.build(soapEnvelopeRequest, wsSecHeader);
             wsSecSignature.prepare(soapEnvelopeRequest, crypto, wsSecHeader);
             // Modificación y firma de la petición
+            element = soapEnvelopeRequest.getDocumentElement();
+            Vector parts = new Vector();
+            SOAPConstants soapConstants = WSSecurityUtil.getSOAPConstants(element);
+            WSEncryptionPart encP = new WSEncryptionPart("obtenerCuestionario", "http://ws.confrontaultra.cifin.asobancaria.com", "Content");
+            parts.add(encP);
+            wsSecSignature.addReferencesToSign(parts,wsSecHeader);
             secSOAPReqDoc = wsSecSignature.build(soapEnvelopeRequest, crypto, wsSecHeader);
-            element = secSOAPReqDoc.getDocumentElement();
+
             // Transformación del elemento DOM a String
             source = new DOMSource(element);
             baos = new ByteArrayOutputStream();
