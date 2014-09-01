@@ -18,6 +18,7 @@ class ConfrontaService extends Directives with AlianzaCommons  {
       post {
         entity(as[ObtenerCuestionarioRequestMessage]) {
           message =>
+            println("Llego: " + message)
           respondWithMediaType(mediaType) {
             requestExecute(message, confrontaActor)
           }
@@ -39,6 +40,12 @@ class ConfrontaService extends Directives with AlianzaCommons  {
           respondWithMediaType(mediaType) {
             requestExecute(message, confrontaActor)
           }
+        }
+      }
+    } ~ path(confronta/"validarCuestionarioTest") {
+      get {
+            respondWithMediaType(mediaType) {
+              requestExecute(new ObtenerCuestionarioRequestMessage("MARCELO",1,"123456","fechaExpedicion"), confrontaActor)
         }
       }
     }
