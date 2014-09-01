@@ -131,9 +131,7 @@ public class ClientHandler extends BasicHandler {
             element = soapEnvelopeRequest.getDocumentElement();
             Vector parts = new Vector();
             SOAPConstants soapConstants = WSSecurityUtil.getSOAPConstants(element);
-            WSEncryptionPart encP = new WSEncryptionPart(soapConstants
-                    .getBodyQName()., soapConstants
-                    .getEnvelopeURI(), "Content");
+            WSEncryptionPart encP = new WSEncryptionPart("obtenerCuestionario", "http://ws.confrontaultra.cifin.asobancaria.com", "Content");
             parts.add(encP);
             wsSecSignature.addReferencesToSign(parts,wsSecHeader);
             secSOAPReqDoc = wsSecSignature.build(soapEnvelopeRequest, crypto, wsSecHeader);
