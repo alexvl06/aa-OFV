@@ -58,8 +58,8 @@ class ConfrontaActor extends Actor with ActorLogging with AlianzaActors {
             message.primerApellido,
             message.codigoTipoIdentificacion.toString,
             message.fechaExpedicion));
-/*
-      val resouesta11 = new OpcionRespuestaPreguntaULTRADTO(1,1,"VISA")
+
+      /*val resouesta11 = new OpcionRespuestaPreguntaULTRADTO(1,1,"VISA")
       val resouesta12 = new OpcionRespuestaPreguntaULTRADTO(1,2,"AMERICAN EXPRESS")
       val resouesta13 = new OpcionRespuestaPreguntaULTRADTO(1,3,"MASTER CARD")
       val resouesta14 = new OpcionRespuestaPreguntaULTRADTO(1,4,"NINGUNA DE LAS ANTERIORES")
