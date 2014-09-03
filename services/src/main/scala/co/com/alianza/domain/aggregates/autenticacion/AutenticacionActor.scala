@@ -15,7 +15,6 @@ import java.util.{ Date, Calendar }
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.exceptions.{ PersistenceException, AlianzaException, TechnicalLevel }
 import scala.concurrent.Future
-import co.com.alianza.infrastructure.cache.UserCache
 
 /**
  *
