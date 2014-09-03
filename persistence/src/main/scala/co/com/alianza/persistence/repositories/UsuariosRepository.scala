@@ -53,6 +53,12 @@ class UsuariosRepository ( implicit executionContext: ExecutionContext) extends 
       resolveTry(resultTry, "Consulta usuario con correo " + correo)
   }
 
+  def consultaContrasenaActual( pw_actual:String, idUsuario:Int ): Future[Validation[PersistenceException, Option[Usuario]]] = loan {
+    implicit session =>
+      val resultTry = Try{ usuarios.filter(x => x.contrasena === pw_actual && x.id === idUsuario ).list.headOption}
+      resolveTry(resultTry, "Consulta contrasena actual de usuario " + pw_actual)
+  }
+
   def guardar(usuario:Usuario): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
       val resultTry = Try{  (usuarios returning usuarios.map(_.id.get)) +=usuario }

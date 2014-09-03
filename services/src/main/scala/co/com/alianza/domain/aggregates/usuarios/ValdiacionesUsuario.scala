@@ -12,7 +12,7 @@ import enumerations.{TipoIdentificacion, EstadosCliente}
 
 import scalaz.Validation.FlatMap._
 
-import co.com.alianza.util.clave.{ErrorValidacionClave, ValidarClave}
+import co.com.alianza.util.clave.{Crypto, ErrorValidacionClave, ValidarClave}
 import co.com.alianza.util.captcha.ValidarCaptcha
 import co.com.alianza.app.MainActors
 import com.typesafe.config.{ConfigFactory, Config}
@@ -116,11 +116,23 @@ object  ValdiacionesUsuario {
     }
   }
 
+  def validacionConsultaContrasenaActual(pw_actual: String, idUsuario: Int): Future[Validation[ErrorValidacion, Option[Usuario]]] = {
+    val contrasenaActualFuture = DataAccessAdapterUsuario.ConsultaContrasenaActual(Crypto.hashSha256(pw_actual), idUsuario)
+    contrasenaActualFuture.map(_.leftMap(pe => ErrorPersistence(pe.message,pe)).flatMap{
+      (x:Option[Usuario]) => x match{
+        case Some(c) => zSuccess(x)
+        case None => zFailure(ErrorContrasenaNoExiste(errorContrasenaActualNoExiste))
+        case _ => zFailure(ErrorContrasenaNoExiste(errorContrasenaActualNoExiste))
+      }
+    })
+  }
+
   private val errorUsuarioExiste = ErrorMessage("409.1", "Usuario ya existe", "Usuario ya existe").toJson
   private val errorUsuarioCorreoExiste = ErrorMessage("409.3", "Correo ya existe", "Correo ya existe").toJson
   private val errorClienteNoExiste = ErrorMessage("409.2", "No existe el cliente", "No existe el cliente").toJson
   private val errorClienteInactivo = ErrorMessage("409.4", "Cliente inactivo", "Cliente inactivo").toJson
   private def errorClave(error:String) = ErrorMessage("409.5", "Error clave", error).toJson
   private val errorCaptcha = ErrorMessage("409.6", "Valor captcha incorrecto", "Valor captcha incorrecto").toJson
+  private val errorContrasenaActualNoExiste = ErrorMessage("409.7", "No existe la contrasena actual", "No existe la contrasena actual").toJson
 
 }
