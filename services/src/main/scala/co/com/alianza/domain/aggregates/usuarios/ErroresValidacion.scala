@@ -9,6 +9,7 @@ sealed trait ErrorValidacion{
 case class ErrorDocumentoExiste(msg:String)   extends ErrorValidacion
 case class ErrorCorreoExiste(msg:String)      extends ErrorValidacion
 case class ErrorClienteNoExiste(msg:String)   extends ErrorValidacion
+case class ErrorContrasenaNoExiste(msg:String) extends ErrorValidacion
 case class ErrorClienteInactivo(msg:String)   extends ErrorValidacion
 case class ErrorFormatoClave(msg:String)   extends ErrorValidacion
 case class ErrorPersistence(msg:String, exception:PersistenceException)   extends ErrorValidacion
