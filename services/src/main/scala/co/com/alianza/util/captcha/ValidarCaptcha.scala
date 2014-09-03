@@ -15,9 +15,8 @@ class ValidarCaptcha(implicit val config:Config, val ex:ExecutionContext) {
     Try{
       val reCaptcha = new ReCaptchaImpl()
       reCaptcha.setPrivateKey(config.getString("alianza.captcha.privatekey"))
-      //val reCaptchaResponse = reCaptcha.checkAnswer(ip, challenge, uresponse)
-      //reCaptchaResponse.isValid
-      true
+      val reCaptchaResponse = reCaptcha.checkAnswer(ip, challenge, uresponse)
+      reCaptchaResponse.isValid
     } match {
       case Success(value)      => zSuccess(value)
       case Failure(exception)  => zFailure(ErrorValidacionCaptchaInternal)
