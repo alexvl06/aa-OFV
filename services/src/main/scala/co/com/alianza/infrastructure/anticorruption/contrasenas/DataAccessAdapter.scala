@@ -12,6 +12,7 @@ import co.com.alianza.persistence.repositories.core.ClienteRepository
 import scalaz.Validation
 import scala.concurrent.{Future, ExecutionContext}
 import scalaz.{Failure => zFailure, Success => zSuccess}
+import co.com.alianza.util.clave.Crypto
 
 /**
  * Created by david on 16/06/14.
@@ -33,5 +34,8 @@ object DataAccessAdapter {
     repo.obtenerRegla( llave )
   }
 
+  def ActualizarContrasena(pw_nuevo: String, idUsuario: Int): Future[Validation[PersistenceException, Int]] = {
+    repo.ActualizarContrasena(Crypto.hashSha256(pw_nuevo), idUsuario)
+  }
 
 }
