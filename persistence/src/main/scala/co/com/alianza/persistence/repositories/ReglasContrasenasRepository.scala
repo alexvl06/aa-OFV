@@ -52,7 +52,7 @@ class ReglasContrasenasRepository ( implicit executionContext: ExecutionContext)
       resolveTry(resultTry, "Actualiza Regla Contrasena")
   }
 
-  def ActualizarContrasena( pw_nuevo:String ,idUsuario: Int): Future[Validation[PersistenceException, Int]] = loan {
+  def actualizarContrasena( pw_nuevo:String ,idUsuario: Int): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
       val query = for { u <- usuarios if u.id === idUsuario } yield u.contrasena
       val resultTry =  Try { query.update(Some(pw_nuevo))}
