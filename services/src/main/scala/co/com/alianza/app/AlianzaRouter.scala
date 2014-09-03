@@ -10,9 +10,10 @@ import StatusCodes._
 
 class AlianzaRouter extends HttpServiceActor with RouteConcatenation with CrossHeaders  with ServiceAuthorization {
 
+
+  implicit val conf: Config = MainActors.conf
+  implicit val system: ActorSystem = MainActors.system
   implicit val contextAuthorization = MainActors.ex
-  val conf: Config= MainActors.conf
-  val system: ActorSystem = MainActors.system
 
   val routes =
     new AutorizacionService().route ~
