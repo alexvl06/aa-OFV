@@ -23,10 +23,17 @@ case object TechnicalLevel extends LevelException
  */
 case object TimeoutLevel extends LevelException
 
+
+/**
+ * Representa un error interno generado en un microservicio
+ *
+ * @author seven4n
+ */
+case object InternalServiceLevel extends LevelException
+
 /**
  * Representa un error Técnico de Conexión
  *
  * @author seven4n
  */
 case object NetworkLevel extends LevelException
-

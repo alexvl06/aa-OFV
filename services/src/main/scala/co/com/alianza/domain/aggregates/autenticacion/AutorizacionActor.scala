@@ -4,7 +4,6 @@ import akka.actor.{ActorLogging, Actor}
 import co.com.alianza.util.token.Token
 import scalaz.Validation
 import co.com.alianza.util.json.JsonUtil
-import co.com.alianza.infrastructure.cache.UserCache
 import spray.http.StatusCodes._
 import co.com.alianza.infrastructure.messages.AutorizarUrl
 import co.com.alianza.infrastructure.messages.ResponseMessage
@@ -69,8 +68,6 @@ class AutorizacionActor extends Actor with ActorLogging  with FutureResponse {
     usuarioOption.map{x =>
       val userWithoutPassword = x.copy(contrasena = None)
       val user = JsonUtil.toJson(userWithoutPassword)
-      UserCache.addUser(token, user)
-      log.info("***************Token almacenado en cache**********")
       userWithoutPassword
     }
   }

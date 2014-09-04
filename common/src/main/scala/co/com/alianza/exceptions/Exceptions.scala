@@ -36,7 +36,7 @@ case class PersistenceException(override val cause: Throwable, override val leve
  *
  * @author seven4n
  */
-case class ServiceException(override val cause: Throwable, override val level: LevelException,override val  message: String, override val currentTime: Long) extends AlianzaException(cause,level,message, currentTime)
+case class ServiceException(override val cause: Throwable, override val level: LevelException,override val  message: String, override val currentTime: Long, statusCode:Option[Int] = None, bodyError:Option[String] = None) extends AlianzaException(cause,level,message, currentTime)
 
 object PersistenceException {
   def apply(exc: Throwable, level: LevelException, message: String) = new PersistenceException(exc, level, message, currentTime = System.currentTimeMillis())
@@ -44,9 +44,9 @@ object PersistenceException {
 
 object ServiceException {
   def apply(exc: Throwable, level: LevelException, message: String) = new ServiceException(exc, level, message, currentTime = System.currentTimeMillis())
+  def apply(exc: Throwable, level: LevelException, message: String, statusCode:Int, bodyError:String) = new ServiceException(exc, level, message, currentTime = System.currentTimeMillis(), Some (statusCode), Some(bodyError))
 }
 
 object AlianzaException {
   def apply(exc: Throwable, level: LevelException, message: String) = new AlianzaException(exc, level, message, currentTime = System.currentTimeMillis())
 }
-

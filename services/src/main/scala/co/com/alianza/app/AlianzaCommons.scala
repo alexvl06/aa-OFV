@@ -9,7 +9,6 @@ import akka.actor.Props
 import co.com.alianza.domain.aggregates.web.ApiRequestCreator
 import co.com.alianza.domain.aggregates.web.AnonymousActor
 import co.com.alianza.util.json.Links_hal
-import co.com.alianza.infrastructure.cache.UserCache
 import scala.util.{ Success, Failure }
 trait AlianzaCommons extends ApiRequestCreator with AlianzaActors {
 
@@ -31,22 +30,7 @@ trait AlianzaCommons extends ApiRequestCreator with AlianzaActors {
 
   def requestExecute(message: MessageService, serviceActor: ActorSelection, cache: Boolean = false): Route =
     {
-      ctx =>
-        {
-          if (cache) {
-            UserCache.getUser(message) onComplete {
-              case Success(result) =>
-                if (!result.equals(""))
-                  ctx.complete(result)
-                else
-                  apiRequest(ctx, Props(new AnonymousActor(serviceActor)), message)
-              case Failure(t) => apiRequest(ctx, Props(new AnonymousActor(serviceActor)), message)
-            }
-          } else {
-            apiRequest(ctx, Props(new AnonymousActor(serviceActor)), message)
-          }
-
-        }
+		  ctx => apiRequest(ctx, Props(new AnonymousActor(serviceActor)), message)
     }
 
   def addHal(uri: String, links_hal: Option[List[Links_hal]], json: String): String = {
