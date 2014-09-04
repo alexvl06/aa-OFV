@@ -90,6 +90,7 @@ class ConfrontaActor extends Actor with ActorLogging with AlianzaActors {
       parametros.setClaveCIFIN(config.getString("confronta.service.claveCIFIN"))
       parametros.setPassword(config.getString("confronta.service.password"))
       val parametrosUltra: RespuestaCuestionarioULTRADTO = new RespuestaCuestionarioULTRADTO(message.secuenciaCuestionario,message.codigoCuestionario,respuestas.toArray(new Array[RespuestaPreguntaULTRADTO](respuestas.size())))
+      println("parametros: " + JsonUtil.toJson(parametrosUltra))
       val response = stub.evaluarCuestionario(parametros,parametrosUltra)
 
       if(response.getResultadoConfrontacion == 1){
