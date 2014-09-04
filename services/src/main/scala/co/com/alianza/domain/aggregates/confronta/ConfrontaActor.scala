@@ -63,7 +63,7 @@ class ConfrontaActor extends Actor with ActorLogging with AlianzaActors {
       parametrosUltra.setTelefono("");
       parametrosUltra.setCodigoCiudad(config.getInt("confronta.service.ciudad"))
       parametrosUltra.setPrimerApellido(message.primerApellido.toUpperCase())
-      parametrosUltra.setCodigoTipoIdentificacion(message.codigoTipoIdentificacion)
+      parametrosUltra.setCodigoTipoIdentificacion(if(message.codigoTipoIdentificacion.toString.equals("1")){"1"}else{"3"})
       parametrosUltra.setNumeroIdentificacion(message.numeroIdentificacion)
       parametrosUltra.setFechaExpedicion(message.fechaExpedicion)
 
