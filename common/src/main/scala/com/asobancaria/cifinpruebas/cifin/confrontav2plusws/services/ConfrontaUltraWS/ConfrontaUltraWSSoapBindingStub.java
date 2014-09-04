@@ -5,9 +5,9 @@
  * by the Apache Axis 1.4 Apr 22, 2006 (06:55:48 PDT) WSDL2Java emitter.
  */
 
-package com.asobancaria.tciweb1.cifin.confrontav2plusws.services.ConfrontaUltraWS;
+package com.asobancaria.cifinpruebas.cifin.confrontav2plusws.services.ConfrontaUltraWS;
 
-public class ConfrontaUltraWSSoapBindingStub extends org.apache.axis.client.Stub implements com.asobancaria.tciweb1.cifin.confrontav2plusws.services.ConfrontaUltraWS.ConfrontaUltraWebService {
+public class ConfrontaUltraWSSoapBindingStub extends org.apache.axis.client.Stub implements com.asobancaria.cifinpruebas.cifin.confrontav2plusws.services.ConfrontaUltraWS.ConfrontaUltraWebService {
     private java.util.Vector cachedSerClasses = new java.util.Vector();
     private java.util.Vector cachedSerQNames = new java.util.Vector();
     private java.util.Vector cachedSerFactories = new java.util.Vector();
@@ -177,7 +177,7 @@ public class ConfrontaUltraWSSoapBindingStub extends org.apache.axis.client.Stub
             cachedSerFactories.add(beansf);
             cachedDeserFactories.add(beandf);
 
-            qName = new javax.xml.namespace.QName("https://tciweb1.asobancaria.com/cifin/confrontav2plusws/services/ConfrontaUltraWS", "ArrayOf_tns1_HuellaULTRADTO");
+            qName = new javax.xml.namespace.QName("https://cifinpruebas.asobancaria.com/cifin/confrontav2plusws/services/ConfrontaUltraWS", "ArrayOf_tns1_HuellaULTRADTO");
             cachedSerQNames.add(qName);
             cls = co.cifin.confrontaultra.dto.ultra.HuellaULTRADTO[].class;
             cachedSerClasses.add(cls);
@@ -186,7 +186,7 @@ public class ConfrontaUltraWSSoapBindingStub extends org.apache.axis.client.Stub
             cachedSerFactories.add(new org.apache.axis.encoding.ser.ArraySerializerFactory(qName, qName2));
             cachedDeserFactories.add(new org.apache.axis.encoding.ser.ArrayDeserializerFactory());
 
-            qName = new javax.xml.namespace.QName("https://tciweb1.asobancaria.com/cifin/confrontav2plusws/services/ConfrontaUltraWS", "ArrayOf_tns1_OpcionRespuestaPreguntaULTRADTO");
+            qName = new javax.xml.namespace.QName("https://cifinpruebas.asobancaria.com/cifin/confrontav2plusws/services/ConfrontaUltraWS", "ArrayOf_tns1_OpcionRespuestaPreguntaULTRADTO");
             cachedSerQNames.add(qName);
             cls = co.cifin.confrontaultra.dto.ultra.OpcionRespuestaPreguntaULTRADTO[].class;
             cachedSerClasses.add(cls);
@@ -195,7 +195,7 @@ public class ConfrontaUltraWSSoapBindingStub extends org.apache.axis.client.Stub
             cachedSerFactories.add(new org.apache.axis.encoding.ser.ArraySerializerFactory(qName, qName2));
             cachedDeserFactories.add(new org.apache.axis.encoding.ser.ArrayDeserializerFactory());
 
-            qName = new javax.xml.namespace.QName("https://tciweb1.asobancaria.com/cifin/confrontav2plusws/services/ConfrontaUltraWS", "ArrayOf_tns1_PreguntaULTRADTO");
+            qName = new javax.xml.namespace.QName("https://cifinpruebas.asobancaria.com/cifin/confrontav2plusws/services/ConfrontaUltraWS", "ArrayOf_tns1_PreguntaULTRADTO");
             cachedSerQNames.add(qName);
             cls = co.cifin.confrontaultra.dto.ultra.PreguntaULTRADTO[].class;
             cachedSerClasses.add(cls);
@@ -204,7 +204,7 @@ public class ConfrontaUltraWSSoapBindingStub extends org.apache.axis.client.Stub
             cachedSerFactories.add(new org.apache.axis.encoding.ser.ArraySerializerFactory(qName, qName2));
             cachedDeserFactories.add(new org.apache.axis.encoding.ser.ArrayDeserializerFactory());
 
-            qName = new javax.xml.namespace.QName("https://tciweb1.asobancaria.com/cifin/confrontav2plusws/services/ConfrontaUltraWS", "ArrayOf_tns1_RespuestaPreguntaULTRADTO");
+            qName = new javax.xml.namespace.QName("https://cifinpruebas.asobancaria.com/cifin/confrontav2plusws/services/ConfrontaUltraWS", "ArrayOf_tns1_RespuestaPreguntaULTRADTO");
             cachedSerQNames.add(qName);
             cls = co.cifin.confrontaultra.dto.ultra.RespuestaPreguntaULTRADTO[].class;
             cachedSerClasses.add(cls);
@@ -284,21 +284,16 @@ public class ConfrontaUltraWSSoapBindingStub extends org.apache.axis.client.Stub
         if (super.cachedEndpoint == null) {
             throw new org.apache.axis.NoEndPointException();
         }
-        System.setProperty("javax.net.ssl.keyStore", "alianzakeys.jks");
-        System.setProperty("javax.net.ssl.keyStorePassword", "4l14nz4c3rt");
-        System.setProperty("javax.net.ssl.keyStoreType", "JKS");
-        System.setProperty("javax.net.ssl.requireClientAuth", "true");
         org.apache.axis.client.Call _call = createCall();
         _call.setOperation(_operations[0]);
         _call.setUseSOAPAction(true);
         _call.setSOAPActionURI("");
         _call.setSOAPVersion(org.apache.axis.soap.SOAPConstants.SOAP11_CONSTANTS);
         _call.setOperationName(new javax.xml.namespace.QName("http://ws.confrontaultra.cifin.asobancaria.com", "obtenerCuestionario"));
-        _call.setClientHandlers(new ClientHandler(),null);
 
         setRequestHeaders(_call);
         setAttachments(_call);
-        try {        java.lang.Object _resp = _call.invoke(new java.lang.Object[] {p_parametrosSeguridad, p_parametros});
+ try {        java.lang.Object _resp = _call.invoke(new java.lang.Object[] {p_parametrosSeguridad, p_parametros});
 
         if (_resp instanceof java.rmi.RemoteException) {
             throw (java.rmi.RemoteException)_resp;

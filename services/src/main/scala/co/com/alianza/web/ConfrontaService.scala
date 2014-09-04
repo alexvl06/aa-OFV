@@ -4,6 +4,7 @@ import spray.routing.Directives
 import co.com.alianza.app.AlianzaCommons
 import co.com.alianza.infrastructure.messages.{ObtenerCuestionarioAdicionalRequestMessage, ObtenerCuestionarioRequestMessage,ValidarCuestionarioRequestMessage}
 import spray.http.StatusCodes._
+import co.com.alianza.util.json.JsonUtil
 
 class ConfrontaService extends Directives with AlianzaCommons  {
   import co.com.alianza.infrastructure.messages.ConfrontaMessagesJsonSupport._
@@ -18,7 +19,6 @@ class ConfrontaService extends Directives with AlianzaCommons  {
       post {
         entity(as[ObtenerCuestionarioRequestMessage]) {
           message =>
-            println("Llego: " + message)
           respondWithMediaType(mediaType) {
             requestExecute(message, confrontaActor)
           }
@@ -37,15 +37,10 @@ class ConfrontaService extends Directives with AlianzaCommons  {
       post {
         entity(as[ValidarCuestionarioRequestMessage]) {
           message =>
+            println(JsonUtil.toJson(message))
           respondWithMediaType(mediaType) {
             requestExecute(message, confrontaActor)
           }
-        }
-      }
-    } ~ path(confronta/"validarCuestionarioTest") {
-      get {
-            respondWithMediaType(mediaType) {
-              requestExecute(new ObtenerCuestionarioRequestMessage("MARCELO",1,"123456","fechaExpedicion"), confrontaActor)
         }
       }
     }
