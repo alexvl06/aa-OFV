@@ -10,7 +10,7 @@ import spray.http.StatusCode
 import java.util.Date
 import spray.http.HttpHeaders.RawHeader
 import java.util.TimeZone
-import co.com.alianza.infrastructure.messages.{ErrorMessage, ResponseMessage, MessageService}
+import co.com.alianza.infrastructure.messages.{ ErrorMessage, ResponseMessage, MessageService }
 import co.com.alianza.app.AlianzaCommons
 import co.com.alianza.exceptions._
 import co.com.alianza.util.json.MarshallableImplicits._
@@ -39,7 +39,7 @@ class ApiSupervisor(r: RequestContext, props: Props, message: MessageService) ex
   }
 
   def complete[T <: AnyRef](status: StatusCode, obj: String) = {
-    r.complete(status, setETag(obj.hashCode().toString), obj)
+    r.complete((status,setHeadersNoCache(), obj): (StatusCode,List[spray.http.HttpHeader], String))
     stop(self)
   }
 
@@ -51,14 +51,20 @@ class ApiSupervisor(r: RequestContext, props: Props, message: MessageService) ex
     val df = new java.text.SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'")
     df.setTimeZone(TimeZone.getTimeZone("GMT"))
 
-    RawHeader("Etag", etag)  :: Nil
+    RawHeader("Etag", etag) :: Nil
+
+  }
+
+  def setHeadersNoCache(): List[spray.http.HttpHeader] = {
+    RawHeader("Cache-Control", "no-store") ::
+      RawHeader("Pragma", "no-cache") :: Nil
 
   }
   //TODO:Agregar Logs de los errores
   override val supervisorStrategy =
     OneForOneStrategy() {
 
-      case error: AlianzaException =>{
+      case error: AlianzaException => {
 
         error.level match {
           case TimeoutLevel =>
@@ -81,7 +87,6 @@ class ApiSupervisor(r: RequestContext, props: Props, message: MessageService) ex
         Stop
     }
 }
-
 
 trait ApiRequestCreator {
 

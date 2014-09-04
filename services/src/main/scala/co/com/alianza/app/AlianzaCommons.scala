@@ -14,7 +14,7 @@ trait AlianzaCommons extends ApiRequestCreator with AlianzaActors {
 
   implicit val ec: ExecutionContext = MainActors.ex
 
-  val mediaType = MediaType.custom("application/hal+json")
+  val mediaType = MediaType.custom("application/json")
 
   //Definición del origin para crosssite
   //val origin = "alianza.transaccional.com"
