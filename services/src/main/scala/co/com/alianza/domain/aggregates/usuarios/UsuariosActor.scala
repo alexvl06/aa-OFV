@@ -35,9 +35,9 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
       val crearUsuarioFuture = (for{
         captchaVal <-  ValidationT(validaCaptcha(message))
         cliente <- ValidationT(validaSolicitud(message))
-        idUsuario <- ValidationT(guardarUsuario(message))
+        //idUsuario <- ValidationT(guardarUsuario(message))
       }yield{
-        idUsuario
+        cliente
       }).run
 
       resolveCrearUsuarioFuture(crearUsuarioFuture,currentSender,message)
@@ -66,18 +66,18 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
     DataAccessAdapterUsuario.crearUsuario(message.toEntityUsuario( Crypto.hashSha256(message.contrasena))).map(_.leftMap( pe => ErrorPersistence(pe.message,pe)))
   }
 
-  private def resolveCrearUsuarioFuture(crearUsuarioFuture: Future[Validation[ErrorValidacion, Int]], currentSender: ActorRef,message:UsuarioMessage) = {
+  private def resolveCrearUsuarioFuture(crearUsuarioFuture: Future[Validation[ErrorValidacion, Cliente]], currentSender: ActorRef,message:UsuarioMessage) = {
     crearUsuarioFuture onComplete {
       case Failure(failure)  =>    currentSender ! failure
       case Success(value)    =>
         value match {
-          case zSuccess(response: Int) =>
+          case zSuccess(response) =>
             currentSender !  ResponseMessage(Created, response.toString)
-            DataAccessAdapterUsuario.asociarPerfiles(PerfilUsuario(response,PerfilesUsuario.clienteIndividual.id)::Nil)
+            //DataAccessAdapterUsuario.asociarPerfiles(PerfilUsuario(response,PerfilesUsuario.clienteIndividual.id)::Nil)
 
-            if(message.activarIP && message.clientIp.isDefined){
-              DataAccessAdapterUsuario.relacionarIp(response,message.clientIp.get)
-            }
+            //if(message.activarIP && message.clientIp.isDefined){
+            //  DataAccessAdapterUsuario.relacionarIp(response,message.clientIp.get)
+            //}
           case zFailure(error)  =>
             error match {
               case errorPersistence:ErrorPersistence  => currentSender !  errorPersistence.exception

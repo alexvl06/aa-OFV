@@ -5,11 +5,15 @@
  * by the Apache Axis 1.4 Apr 22, 2006 (06:55:48 PDT) WSDL2Java emitter.
  */
 
-package com.asobancaria.tciweb1.cifin.confrontav2plusws.services.ConfrontaUltraWS;
+package com.asobancaria.cifinpruebas.cifin.confrontav2plusws.services.ConfrontaUltraWS;
 
-public class ConfrontaUltraWebServiceServiceLocator extends org.apache.axis.client.Service implements com.asobancaria.tciweb1.cifin.confrontav2plusws.services.ConfrontaUltraWS.ConfrontaUltraWebServiceService {
+public class ConfrontaUltraWebServiceServiceLocator extends org.apache.axis.client.Service implements com.asobancaria.cifinpruebas.cifin.confrontav2plusws.services.ConfrontaUltraWS.ConfrontaUltraWebServiceService {
 
     public ConfrontaUltraWebServiceServiceLocator() {
+    }
+
+    public ConfrontaUltraWebServiceServiceLocator(String url) {
+        setConfrontaUltraWSEndpointAddress(url);
     }
 
 
@@ -22,7 +26,7 @@ public class ConfrontaUltraWebServiceServiceLocator extends org.apache.axis.clie
     }
 
     // Use to get a proxy class for ConfrontaUltraWS
-    private java.lang.String ConfrontaUltraWS_address = "https://tciweb1.asobancaria.com/cifin/confrontav2plusws/services/ConfrontaUltraWS";
+    private java.lang.String ConfrontaUltraWS_address = "https://cifinpruebas.asobancaria.com/cifin/confrontav2plusws/services/ConfrontaUltraWS";
 
     public java.lang.String getConfrontaUltraWSAddress() {
         return ConfrontaUltraWS_address;
@@ -39,7 +43,7 @@ public class ConfrontaUltraWebServiceServiceLocator extends org.apache.axis.clie
         ConfrontaUltraWSWSDDServiceName = name;
     }
 
-    public com.asobancaria.tciweb1.cifin.confrontav2plusws.services.ConfrontaUltraWS.ConfrontaUltraWebService getConfrontaUltraWS() throws javax.xml.rpc.ServiceException {
+    public com.asobancaria.cifinpruebas.cifin.confrontav2plusws.services.ConfrontaUltraWS.ConfrontaUltraWebService getConfrontaUltraWS() throws javax.xml.rpc.ServiceException {
        java.net.URL endpoint;
         try {
             endpoint = new java.net.URL(ConfrontaUltraWS_address);
@@ -50,9 +54,9 @@ public class ConfrontaUltraWebServiceServiceLocator extends org.apache.axis.clie
         return getConfrontaUltraWS(endpoint);
     }
 
-    public com.asobancaria.tciweb1.cifin.confrontav2plusws.services.ConfrontaUltraWS.ConfrontaUltraWebService getConfrontaUltraWS(java.net.URL portAddress) throws javax.xml.rpc.ServiceException {
+    public com.asobancaria.cifinpruebas.cifin.confrontav2plusws.services.ConfrontaUltraWS.ConfrontaUltraWebService getConfrontaUltraWS(java.net.URL portAddress) throws javax.xml.rpc.ServiceException {
         try {
-            com.asobancaria.tciweb1.cifin.confrontav2plusws.services.ConfrontaUltraWS.ConfrontaUltraWSSoapBindingStub _stub = new com.asobancaria.tciweb1.cifin.confrontav2plusws.services.ConfrontaUltraWS.ConfrontaUltraWSSoapBindingStub(portAddress, this);
+            com.asobancaria.cifinpruebas.cifin.confrontav2plusws.services.ConfrontaUltraWS.ConfrontaUltraWSSoapBindingStub _stub = new com.asobancaria.cifinpruebas.cifin.confrontav2plusws.services.ConfrontaUltraWS.ConfrontaUltraWSSoapBindingStub(portAddress, this);
             _stub.setPortName(getConfrontaUltraWSWSDDServiceName());
             return _stub;
         }
@@ -72,8 +76,8 @@ public class ConfrontaUltraWebServiceServiceLocator extends org.apache.axis.clie
      */
     public java.rmi.Remote getPort(Class serviceEndpointInterface) throws javax.xml.rpc.ServiceException {
         try {
-            if (com.asobancaria.tciweb1.cifin.confrontav2plusws.services.ConfrontaUltraWS.ConfrontaUltraWebService.class.isAssignableFrom(serviceEndpointInterface)) {
-                com.asobancaria.tciweb1.cifin.confrontav2plusws.services.ConfrontaUltraWS.ConfrontaUltraWSSoapBindingStub _stub = new com.asobancaria.tciweb1.cifin.confrontav2plusws.services.ConfrontaUltraWS.ConfrontaUltraWSSoapBindingStub(new java.net.URL(ConfrontaUltraWS_address), this);
+            if (com.asobancaria.cifinpruebas.cifin.confrontav2plusws.services.ConfrontaUltraWS.ConfrontaUltraWebService.class.isAssignableFrom(serviceEndpointInterface)) {
+                com.asobancaria.cifinpruebas.cifin.confrontav2plusws.services.ConfrontaUltraWS.ConfrontaUltraWSSoapBindingStub _stub = new com.asobancaria.cifinpruebas.cifin.confrontav2plusws.services.ConfrontaUltraWS.ConfrontaUltraWSSoapBindingStub(new java.net.URL(ConfrontaUltraWS_address), this);
                 _stub.setPortName(getConfrontaUltraWSWSDDServiceName());
                 return _stub;
             }
@@ -105,7 +109,7 @@ public class ConfrontaUltraWebServiceServiceLocator extends org.apache.axis.clie
     }
 
     public javax.xml.namespace.QName getServiceName() {
-        return new javax.xml.namespace.QName("https://tciweb1.asobancaria.com/cifin/confrontav2plusws/services/ConfrontaUltraWS", "ConfrontaUltraWebServiceService");
+        return new javax.xml.namespace.QName("https://cifinpruebas.asobancaria.com/cifin/confrontav2plusws/services/ConfrontaUltraWS", "ConfrontaUltraWebServiceService");
     }
 
     private java.util.HashSet ports = null;
@@ -113,7 +117,7 @@ public class ConfrontaUltraWebServiceServiceLocator extends org.apache.axis.clie
     public java.util.Iterator getPorts() {
         if (ports == null) {
             ports = new java.util.HashSet();
-            ports.add(new javax.xml.namespace.QName("https://tciweb1.asobancaria.com/cifin/confrontav2plusws/services/ConfrontaUltraWS", "ConfrontaUltraWS"));
+            ports.add(new javax.xml.namespace.QName("https://cifinpruebas.asobancaria.com/cifin/confrontav2plusws/services/ConfrontaUltraWS", "ConfrontaUltraWS"));
         }
         return ports.iterator();
     }
