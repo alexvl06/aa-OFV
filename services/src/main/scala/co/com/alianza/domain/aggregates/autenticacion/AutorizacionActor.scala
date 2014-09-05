@@ -1,6 +1,6 @@
 package co.com.alianza.domain.aggregates.autenticacion
 
-import akka.actor.{ActorLogging, Actor}
+import akka.actor.{ ActorLogging, Actor }
 import co.com.alianza.util.token.Token
 import scalaz.Validation
 import co.com.alianza.util.json.JsonUtil
@@ -9,18 +9,42 @@ import co.com.alianza.infrastructure.messages.AutorizarUrl
 import co.com.alianza.infrastructure.messages.ResponseMessage
 import scala.Some
 import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
-import co.com.alianza.infrastructure.anticorruption.recursos.{DataAccessAdapter => rDataAccessAdapter  }
+import co.com.alianza.infrastructure.anticorruption.recursos.{ DataAccessAdapter => rDataAccessAdapter }
 import scala.concurrent.Future
 import co.com.alianza.util.FutureResponse
 import co.com.alianza.util.transformers.ValidationT
-import co.com.alianza.infrastructure.dto.{RecursoUsuario, Usuario}
+import co.com.alianza.infrastructure.dto.{ RecursoUsuario, Usuario }
 import scalaz.std.AllInstances._
+import akka.actor.Props
+import akka.routing.RoundRobinPool
+
+class AutorizacionActorSupervisor extends Actor with ActorLogging {
+  import akka.actor.SupervisorStrategy._
+  import akka.actor.OneForOneStrategy
+
+  val autorizacionActor = context.actorOf(Props[AutorizacionActor].withRouter(RoundRobinPool(nrOfInstances = 1)), "autorizacionActor")
+
+  def receive = {
+
+    case message: Any =>
+      autorizacionActor forward message
+
+  }
+
+  override val supervisorStrategy = OneForOneStrategy() {
+    case exception: Exception =>
+      exception.printStackTrace()
+      log.error(exception, exception.getMessage)
+      Restart
+  }
+
+}
 
 /**
  * Realiza la validación de un token y si se está autorizado para acceder a la url
  * @author smontanez
  */
-class AutorizacionActor extends Actor with ActorLogging  with FutureResponse {
+class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
 
   import scala.concurrent.ExecutionContext
   implicit val _: ExecutionContext = context.dispatcher
@@ -30,14 +54,14 @@ class AutorizacionActor extends Actor with ActorLogging  with FutureResponse {
       val currentSender = sender()
       val futureValidarToken = validarToken(message.token)
 
-      val future =  (for{
+      val future = (for {
         usuarioOption <- ValidationT(futureValidarToken)
-        resultAutorizar <- ValidationT(validarRecurso(usuarioOption,message.url))
-      }yield {
+        resultAutorizar <- ValidationT(validarRecurso(usuarioOption, message.url))
+      } yield {
         resultAutorizar
       }).run
 
-      resolveFutureValidation(future,  (x:ResponseMessage) => x, currentSender)
+      resolveFutureValidation(future, (x: ResponseMessage) => x, currentSender)
 
   }
 
@@ -51,7 +75,7 @@ class AutorizacionActor extends Actor with ActorLogging  with FutureResponse {
   private def validarToken(token: String) = {
     Token.autorizarToken(token) match {
       case true =>
-        DataAccessAdapter.obtenerUsuarioToken(token) map(_.map(guardaTokenCache(_, token) ))
+        DataAccessAdapter.obtenerUsuarioToken(token) map (_.map(guardaTokenCache(_, token)))
       case false =>
         Future.successful(Validation.success(None))
     }
@@ -64,8 +88,8 @@ class AutorizacionActor extends Actor with ActorLogging  with FutureResponse {
    * @param token El token
    * @return
    */
-  private def guardaTokenCache (usuarioOption: Option[Usuario], token:String):Option[Usuario] = {
-    usuarioOption.map{x =>
+  private def guardaTokenCache(usuarioOption: Option[Usuario], token: String): Option[Usuario] = {
+    usuarioOption.map { x =>
       val userWithoutPassword = x.copy(contrasena = None)
       val user = JsonUtil.toJson(userWithoutPassword)
       userWithoutPassword
@@ -78,7 +102,7 @@ class AutorizacionActor extends Actor with ActorLogging  with FutureResponse {
    *
    * @return
    */
-  private def validarRecurso(usuarioOpt:Option[Usuario], url:String ) = {
+  private def validarRecurso(usuarioOpt: Option[Usuario], url: String) = {
 
     usuarioOpt match {
       case Some(usuario) =>
@@ -95,15 +119,15 @@ class AutorizacionActor extends Actor with ActorLogging  with FutureResponse {
    * @param recursos Listado de recursos
    * @return
    */
-  private def resolveMessageRecursos(usuario:Usuario, recursos:List[RecursoUsuario])  = {
+  private def resolveMessageRecursos(usuario: Usuario, recursos: List[RecursoUsuario]) = {
     recursos.isEmpty match {
-      case true   =>  ResponseMessage(Forbidden, JsonUtil.toJson(ForbiddenMessage(usuario, None,"403.1" )))
-      case false  =>
+      case true => ResponseMessage(Forbidden, JsonUtil.toJson(ForbiddenMessage(usuario, None, "403.1")))
+      case false =>
         val recurso = recursos.head
 
         recurso.filtro match {
-          case Some(filtro) => ResponseMessage(Forbidden, JsonUtil.toJson(ForbiddenMessage(usuario, recurso.filtro,"403.2" )))
-          case None =>         ResponseMessage(OK,JsonUtil.toJson(usuario))
+          case Some(filtro) => ResponseMessage(Forbidden, JsonUtil.toJson(ForbiddenMessage(usuario, recurso.filtro, "403.2")))
+          case None => ResponseMessage(OK, JsonUtil.toJson(usuario))
 
         }
 
@@ -117,24 +141,23 @@ class AutorizacionActor extends Actor with ActorLogging  with FutureResponse {
    * @param url la url a validar
    * @return
    */
-  private def filtrarRecursos (recurso:RecursoUsuario, url:String):Boolean = {
-    if(recurso.urlRecurso.equals(url))
+  private def filtrarRecursos(recurso: RecursoUsuario, url: String): Boolean = {
+    if (recurso.urlRecurso.equals(url))
       recurso.acceso
-    else if(recurso.urlRecurso.endsWith("/*")){
-      val urlC = recurso.urlRecurso.substring(0,recurso.urlRecurso.lastIndexOf("*"))
-      if(urlC.equals(url+"/")) recurso.acceso
-      else{
-        if(url.length >= urlC.length) {
-          val ends = if(url.endsWith("/")) "" else ""
-          val urlSuffix = url.substring(0,urlC.length ) + ends
-          if(urlSuffix.equals(urlC)) recurso.acceso
+    else if (recurso.urlRecurso.endsWith("/*")) {
+      val urlC = recurso.urlRecurso.substring(0, recurso.urlRecurso.lastIndexOf("*"))
+      if (urlC.equals(url + "/")) recurso.acceso
+      else {
+        if (url.length >= urlC.length) {
+          val ends = if (url.endsWith("/")) "" else ""
+          val urlSuffix = url.substring(0, urlC.length) + ends
+          if (urlSuffix.equals(urlC)) recurso.acceso
           else false
-        }else false
+        } else false
       }
 
-
-    }else false
+    } else false
   }
 
 }
-case class ForbiddenMessage(usuario:Usuario, filtro:Option[String], code:String)
+case class ForbiddenMessage(usuario: Usuario, filtro: Option[String], code: String)

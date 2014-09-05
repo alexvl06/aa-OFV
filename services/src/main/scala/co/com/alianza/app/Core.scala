@@ -9,6 +9,13 @@ import co.com.alianza.domain.aggregates.autoregistro.ConsultaClienteActor
 import co.com.alianza.domain.aggregates.confronta.{ConfrontaActorSupervisor}
 import co.com.alianza.domain.aggregates.autenticacion.{AutorizacionActor, AutenticacionActor}
 import com.typesafe.config.Config
+import co.com.alianza.domain.aggregates.usuarios.UsuariosActorSupervisor
+import co.com.alianza.domain.aggregates.autoregistro.ConsultaClienteActorSupervisor
+import co.com.alianza.domain.aggregates.autenticacion.AutenticacionActorSupervisor
+import co.com.alianza.domain.aggregates.autenticacion.AutorizacionActorSupervisor
+import co.com.alianza.domain.aggregates.contrasenas.ContrasenasActorSupervisor
+import co.com.alianza.domain.aggregates.ips.IpsUsuarioActorSupervisor
+import co.com.alianza.domain.aggregates.pin.PinActorSupervisor
 
 //import co.com.alianza.domain.aggregates.fondos.FondosActorSupervisor
 
@@ -38,14 +45,14 @@ trait BootedCore extends Core {
  * Template project actors instantiation
  */
 trait CoreActors { this: Core =>
-  val usuariosActor = system.actorOf( Props[ UsuariosActor ], "UsuariosActor" )
+  val usuariosActorSupervisor = system.actorOf( Props[ UsuariosActorSupervisor ], "UsuariosActorSupervisor" )
   val confrontaActorSupervisor = system.actorOf( Props[ ConfrontaActorSupervisor ], "confrontaActorSupervisor" )
-  val consultaClienteActor = system.actorOf( Props[ ConsultaClienteActor ], "consultaClienteActor" )
-  val autenticacionActor = system.actorOf( Props[ AutenticacionActor ], "autenticacionActor" )
-  val autorizacionActor = system.actorOf( Props[ AutorizacionActor ], "autorizacionActor" )
-  val contrasenasActor = system.actorOf( Props[ ContrasenasActor ], "contrasenasActor" )
-  val ipsUsuarioActor  = system.actorOf( Props[ IpsUsuarioActor ], "ipsUsuarioActor" )
-  val pinActor = system.actorOf( Props[ PinActor ], "PinActor" )
+  val consultaClienteActorSupervisor = system.actorOf( Props[ ConsultaClienteActorSupervisor ], "consultaClienteActorSupervisor" )
+  val autenticacionActorSupervisor = system.actorOf( Props[ AutenticacionActorSupervisor ], "autenticacionActorSupervisor" )
+  val autorizacionActorSupervisor = system.actorOf( Props[ AutorizacionActorSupervisor ], "autorizacionActorSupervisor" )
+  val contrasenasActorSupervisor = system.actorOf( Props[ ContrasenasActorSupervisor ], "contrasenasActorSupervisor" )
+  val ipsUsuarioActorSupervisor  = system.actorOf( Props[ IpsUsuarioActorSupervisor ], "ipsUsuarioActorSupervisor" )
+  val pinActorSupervisor = system.actorOf( Props[ PinActorSupervisor ], "PinActorSupervisor" )
 }
 
 /**

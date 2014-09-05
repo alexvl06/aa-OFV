@@ -7,6 +7,36 @@ import scala.util.{Success, Failure}
 import co.com.alianza.infrastructure.messages.{ResponseMessage, ExisteClienteCoreMessage}
 import co.com.alianza.infrastructure.dto.Cliente
 import spray.http.StatusCodes._
+
+
+
+import akka.actor.Props
+import akka.routing.RoundRobinPool
+
+
+
+
+class ConsultaClienteActorSupervisor extends Actor with ActorLogging {
+  import akka.actor.SupervisorStrategy._
+  import akka.actor.OneForOneStrategy
+
+  val consultaClienteActor = context.actorOf(Props[ConsultaClienteActor].withRouter(RoundRobinPool(nrOfInstances = 1)), "consultaClienteActor")
+
+  def receive = {
+
+    case message: Any =>
+      consultaClienteActor forward message
+
+  }
+
+  override val supervisorStrategy = OneForOneStrategy() {
+    case exception: Exception =>
+      exception.printStackTrace()
+      log.error(exception, exception.getMessage)
+      Restart
+  }
+
+}
 /**
  *
  * @author smontanez

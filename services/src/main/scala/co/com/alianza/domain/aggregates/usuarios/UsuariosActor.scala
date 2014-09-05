@@ -17,6 +17,34 @@ import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.persistence.entities.PerfilUsuario
 import enumerations.PerfilesUsuario
 
+import akka.actor.Props
+import akka.routing.RoundRobinPool
+
+
+
+
+class UsuariosActorSupervisor extends Actor with ActorLogging {
+  import akka.actor.SupervisorStrategy._
+  import akka.actor.OneForOneStrategy
+
+  val usuariosActor = context.actorOf(Props[UsuariosActor].withRouter(RoundRobinPool(nrOfInstances = 2)), "usuariosActor")
+
+  def receive = {
+
+    case message: Any =>
+      usuariosActor forward message
+
+  }
+
+  override val supervisorStrategy = OneForOneStrategy() {
+    case exception: Exception =>
+      exception.printStackTrace()
+      log.error(exception, exception.getMessage)
+      Restart
+  }
+
+}
+
 /**
  *
  */

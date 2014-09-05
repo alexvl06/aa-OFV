@@ -10,6 +10,34 @@ import spray.http.StatusCodes._
 import scalaz.{Failure => zFailure, Success => zSuccess}
 import scala.util.{Success, Failure}
 
+
+import akka.actor.Props
+import akka.routing.RoundRobinPool
+
+
+
+
+class IpsUsuarioActorSupervisor extends Actor with ActorLogging {
+  import akka.actor.SupervisorStrategy._
+  import akka.actor.OneForOneStrategy
+
+  val ipsUsuarioActor = context.actorOf(Props[IpsUsuarioActor].withRouter(RoundRobinPool(nrOfInstances = 2)), "ipsUsuarioActor")
+
+  def receive = {
+
+    case message: Any =>
+      ipsUsuarioActor forward message
+
+  }
+
+  override val supervisorStrategy = OneForOneStrategy() {
+    case exception: Exception =>
+      exception.printStackTrace()
+      log.error(exception, exception.getMessage)
+      Restart
+  }
+
+}
 /**
  * Created by david on 16/06/14.
  */

@@ -22,7 +22,7 @@ class ConfrontaActorSupervisor extends Actor with ActorLogging {
   import akka.actor.SupervisorStrategy._
   import akka.actor.OneForOneStrategy
 
-  val confrontaActor = context.actorOf(Props[ConfrontaActor].withRouter(RoundRobinPool(nrOfInstances = 1)), "confrontaActor")
+  val confrontaActor = context.actorOf(Props[ConfrontaActor].withRouter(RoundRobinPool(nrOfInstances = 2)), "confrontaActor")
 
   def receive = {
 

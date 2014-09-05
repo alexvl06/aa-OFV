@@ -21,6 +21,34 @@ import scalaz.{Failure => zFailure, Success => zSuccess}
 import scala.concurrent.{Future, ExecutionContext}
 import scalaz.Validation
 
+import akka.actor.Props
+import akka.routing.RoundRobinPool
+
+
+
+
+class PinActorSupervisor extends Actor with ActorLogging {
+  import akka.actor.SupervisorStrategy._
+  import akka.actor.OneForOneStrategy
+
+  val pinActor = context.actorOf(Props[PinActor].withRouter(RoundRobinPool(nrOfInstances = 2)), "pinActor")
+
+  def receive = {
+
+    case message: Any =>
+      pinActor forward message
+
+  }
+
+  override val supervisorStrategy = OneForOneStrategy() {
+    case exception: Exception =>
+      exception.printStackTrace()
+      log.error(exception, exception.getMessage)
+      Restart
+  }
+
+}
+
 class PinActor extends Actor with ActorLogging with AlianzaActors with FutureResponse {
 
   implicit val ex: ExecutionContext = MainActors.dataAccesEx

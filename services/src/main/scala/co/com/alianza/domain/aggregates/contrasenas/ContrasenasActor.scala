@@ -16,6 +16,33 @@ import scala.concurrent.Future
 import scalaz.std.AllInstances._
 import co.com.alianza.infrastructure.dto.Usuario
 import co.com.alianza.util.FutureResponse
+import akka.actor.Props
+import akka.routing.RoundRobinPool
+
+
+
+
+class ContrasenasActorSupervisor extends Actor with ActorLogging {
+  import akka.actor.SupervisorStrategy._
+  import akka.actor.OneForOneStrategy
+
+  val contrasenasActor = context.actorOf(Props[ContrasenasActor].withRouter(RoundRobinPool(nrOfInstances = 2)), "contrasenasActor")
+
+  def receive = {
+
+    case message: Any =>
+      contrasenasActor forward message
+
+  }
+
+  override val supervisorStrategy = OneForOneStrategy() {
+    case exception: Exception =>
+      exception.printStackTrace()
+      log.error(exception, exception.getMessage)
+      Restart
+  }
+
+}
 
 /**
  * Created by david on 16/06/14.

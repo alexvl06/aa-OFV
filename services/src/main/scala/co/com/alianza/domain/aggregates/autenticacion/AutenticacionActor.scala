@@ -16,9 +16,34 @@ import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.exceptions.{ PersistenceException, AlianzaException, TechnicalLevel }
 import scala.concurrent.Future
 
-/**
- *
- */
+import akka.actor.Props
+import akka.routing.RoundRobinPool
+
+
+
+
+class AutenticacionActorSupervisor extends Actor with ActorLogging {
+  import akka.actor.SupervisorStrategy._
+  import akka.actor.OneForOneStrategy
+
+  val autenticacionActor = context.actorOf(Props[AutenticacionActor].withRouter(RoundRobinPool(nrOfInstances = 5)), "autenticacionActor")
+
+  def receive = {
+
+    case message: Any =>
+      autenticacionActor forward message
+
+  }
+
+  override val supervisorStrategy = OneForOneStrategy() {
+    case exception: Exception =>
+      exception.printStackTrace()
+      log.error(exception, exception.getMessage)
+      Restart
+  }
+
+}
+
 class AutenticacionActor extends Actor with ActorLogging {
 
   import scala.concurrent.ExecutionContext
@@ -129,7 +154,7 @@ class AutenticacionActor extends Actor with ActorLogging {
   }
 
   private def realizarAutenticacion(numeroIdentificacion: String, nombreCliente: String, nombreCorreoUsuario: String, tipoIdentificacion: String, ipUltimoIngreso: String, fechaUltimoIngreso: Date, ipActual: String, currentSender: ActorRef) = {
-    currentSender ! autenticacionUsuarioValido(numeroIdentificacion, nombreCliente, nombreCorreoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso, ipActual, currentSender)
+    autenticacionUsuarioValido(numeroIdentificacion, nombreCliente, nombreCorreoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso, ipActual, currentSender)
   }
 
   private def relacionarIpUsuarioAutenticacion(idUsuario: Int, ip: String, tipoIdentificacion: Int, numeroIdentificacion: String, ipUltimoIngreso: String, fechaUltimoIngreso: Date, currentSender: ActorRef) = {
@@ -198,7 +223,7 @@ class AutenticacionActor extends Actor with ActorLogging {
     }
   }
 
-  private def autenticacionUsuarioValido(numeroIdentificacion: String, nombreCliente: String, correoCliente: String, tipoIdentificacion: String, ipUltimoIngreso: String, fechaUltimaIngreso: Date, ipActual: String, currentSender: ActorRef): String = {
+  private def autenticacionUsuarioValido(numeroIdentificacion: String, nombreCliente: String, correoCliente: String, tipoIdentificacion: String, ipUltimoIngreso: String, fechaUltimaIngreso: Date, ipActual: String, currentSender: ActorRef){
     //TODO: Falta consultar si el usuario ya tiene el token relacionado, de ser asi no se genera ni se asocia, sino que se trae el token
     //El usuario paso las validaciones necesarias para  darse por autenticado
     val tokenGenerado = Token.generarToken(nombreCliente, correoCliente, tipoIdentificacion, ipUltimoIngreso, fechaUltimaIngreso)
@@ -207,7 +232,7 @@ class AutenticacionActor extends Actor with ActorLogging {
 
     resultAsociarToken onComplete {
       case Failure(failure) => currentSender ! failure
-      case Success(value) =>
+      case Success(value) => currentSender ! tokenGenerado
         value match {
           case zSuccess(response: Int) =>
           //currentSender !  ResponseMessage(Accepted, response.toString)
@@ -219,7 +244,7 @@ class AutenticacionActor extends Actor with ActorLogging {
     //Se actualiza la fecha de ultimo ingreso y la ip de ultimo ingreso
     actualizarIpUltimoIngreso(numeroIdentificacion, ipActual, currentSender)
     actualizarFechaUltimoIngreso(numeroIdentificacion, new Timestamp((new Date).getTime()), currentSender)
-    tokenGenerado
+    
   }
 
   private def actualizarNumeroIngresosErroneos(numeroIdentificacion: String, numeroIngresosErroneos: Int, currentSender: ActorRef) = {

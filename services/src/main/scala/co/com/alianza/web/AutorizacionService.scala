@@ -26,7 +26,7 @@ class AutorizacionService extends Directives with AlianzaCommons with CacheHelpe
           parameters('url) {
             url =>
               respondWithMediaType(mediaType) {
-                cacheAlianza(cacheRequest("")) { cache =>
+                cacheAlianza(cacheRequest("fiduciaToken")) { cache =>
                 requestExecute(AutorizarUrl(token,url), autorizacionActor, true)
                 }
             }
