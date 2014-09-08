@@ -120,7 +120,6 @@ class ContrasenasActor extends Actor with ActorLogging with AlianzaActors {
   private def resolveCambiarContrasenaFuture(CambiarContrasenaFuture: Future[Validation[ErrorValidacion, Int]], currentSender: ActorRef, message: CambiarContrasenaMessage) = {
     CambiarContrasenaFuture onComplete {
       case sFailure(failure) =>
-        println(failure)
         currentSender ! failure
       case sSuccess(value) =>
         value match {
