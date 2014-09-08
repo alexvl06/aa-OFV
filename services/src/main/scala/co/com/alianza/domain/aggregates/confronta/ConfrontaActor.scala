@@ -92,7 +92,7 @@ class ConfrontaActor extends Actor with ActorLogging with AlianzaActors {
       val parametrosUltra: RespuestaCuestionarioULTRADTO = new RespuestaCuestionarioULTRADTO(message.secuenciaCuestionario,message.codigoCuestionario,respuestas.toArray(new Array[RespuestaPreguntaULTRADTO](respuestas.size())))
       val response = stub.evaluarCuestionario(parametros,parametrosUltra)
 
-      if(response.getResultadoConfrontacion == 1){
+      if(response.getRespuestaProceso.getCodigoRespuesta == 1){
         actualizarEstadoConfronta(message.id,response,currentSender)
       } else {
         currentSender ! response.toJson
@@ -103,7 +103,8 @@ class ConfrontaActor extends Actor with ActorLogging with AlianzaActors {
   private def actualizarEstadoConfronta(message: UsuarioMessage, response:ResultadoEvaluacionCuestionarioULTRADTO, currentSender: ActorRef) = {
     val resultActualizarEstadoConfronta = DataAccessAdapterUsuario.crearUsuario(message.toEntityUsuario( Crypto.hashSha256(message.contrasena))).map(_.leftMap( pe => ErrorPersistence(pe.message,pe)))
     resultActualizarEstadoConfronta onComplete {
-      case Failure(failure) => currentSender ! failure
+      case Failure(failure) =>
+        currentSender ! failure
       case Success(value) =>
         value match {
           case zSuccess(code: Int) =>
