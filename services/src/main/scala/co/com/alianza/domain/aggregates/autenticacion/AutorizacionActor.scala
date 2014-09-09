@@ -5,8 +5,7 @@ import co.com.alianza.util.token.Token
 import scalaz.Validation
 import co.com.alianza.util.json.JsonUtil
 import spray.http.StatusCodes._
-import co.com.alianza.infrastructure.messages.AutorizarUrl
-import co.com.alianza.infrastructure.messages.ResponseMessage
+import co.com.alianza.infrastructure.messages.{InvalidarToken, AutorizarUrl, ResponseMessage}
 import scala.Some
 import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
 import co.com.alianza.infrastructure.anticorruption.recursos.{ DataAccessAdapter => rDataAccessAdapter }
@@ -17,6 +16,7 @@ import co.com.alianza.infrastructure.dto.{ RecursoUsuario, Usuario }
 import scalaz.std.AllInstances._
 import akka.actor.Props
 import akka.routing.RoundRobinPool
+import scala.util.{Success, Failure}
 
 class AutorizacionActorSupervisor extends Actor with ActorLogging {
   import akka.actor.SupervisorStrategy._
@@ -63,6 +63,16 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
 
       resolveFutureValidation(future, (x: ResponseMessage) => x, currentSender)
 
+
+    case message: InvalidarToken =>
+
+      val currentSender = sender()
+      val futureInvalidarToken = DataAccessAdapter.invalidarTokenUsuario( message.token )
+
+      futureInvalidarToken  onComplete {
+        case Failure(failure)  =>    currentSender ! failure
+        case Success(value)    => currentSender ! ResponseMessage(OK, "El token ha sido removido" )
+      }
   }
 
   /**

@@ -11,3 +11,6 @@ case class AgregarIpHabitualRequest( tipoIdentificacion:Int, numeroIdentificacio
 
 
 case class ValidarTokenRequest( token:String )
+
+
+case class InvalidarTokenRequest( token:String )
