@@ -2,7 +2,7 @@ package co.com.alianza.infrastructure.messages
 
 import spray.json.DefaultJsonProtocol
 import spray.httpx.SprayJsonSupport
-import co.com.alianza.persistence.messages.{AgregarIpHabitualRequest, AutenticacionRequest, ValidarTokenRequest}
+import co.com.alianza.persistence.messages.{InvalidarTokenRequest, AgregarIpHabitualRequest, AutenticacionRequest, ValidarTokenRequest}
 
 /**
  *
@@ -27,5 +27,9 @@ case class AgregarIPHabitualUsuario(tipoIdentificacion:Int, numeroIdentificacion
 
 case class AutorizarUrl(token:String, url:String)  extends MessageService{
   def toValidarTokenRequest:ValidarTokenRequest = ValidarTokenRequest( token )
+}
+
+case class InvalidarToken(token:String)  extends MessageService{
+  def toInvalidarTokenRequest:InvalidarTokenRequest = InvalidarTokenRequest( token )
 }
 

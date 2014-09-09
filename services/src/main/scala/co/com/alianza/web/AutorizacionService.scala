@@ -2,7 +2,7 @@ package co.com.alianza.web
 
 import spray.routing.Directives
 import co.com.alianza.app.AlianzaCommons
-import co.com.alianza.infrastructure.messages.AutorizarUrl
+import co.com.alianza.infrastructure.messages.{InvalidarToken, AutorizarUrl}
 import co.com.alianza.infrastructure.cache.CacheHelper
 import akka.actor.ActorSystem
 import scala.concurrent.ExecutionContext
@@ -32,6 +32,16 @@ class AutorizacionService extends Directives with AlianzaCommons with CacheHelpe
             }
           }
         }
+    } ~ path( "invalidarToken" / Segment ){
+      token =>
+        get{
+          respondWithMediaType(mediaType) {
+            //cacheAlianza(cacheRequest("fiduciaToken")) { cache =>
+              requestExecute(InvalidarToken(token), autorizacionActor)
+            //}
+          }
+        }
+
     }
   }
 }

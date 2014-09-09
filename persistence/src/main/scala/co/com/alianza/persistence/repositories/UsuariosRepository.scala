@@ -72,6 +72,13 @@ class UsuariosRepository ( implicit executionContext: ExecutionContext) extends 
       resolveTry(resultTry, "Actualizar usuario en token")
   }
 
+  def invalidarTokenUsuario( token:String  ) : Future[Validation[PersistenceException, Int]] = loan {
+
+    implicit session =>
+      val resultTry = Try{ usuarios.filter( _.token === token ).map(_.token ).update(Some(null))  }
+      resolveTry(resultTry, "Invalidar token usuario")
+  }
+
   def actualizarNumeroIngresosErroneos( numeroIdentificacion:String, numeroIntentos:Int ): Future[Validation[PersistenceException, Int]] = loan {
 
     implicit session =>
