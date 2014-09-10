@@ -15,7 +15,7 @@ import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter 
 import co.com.alianza.util.clave.Crypto
 import co.com.alianza.domain.aggregates.usuarios.ErrorPersistence
 import co.com.alianza.persistence.entities.PerfilUsuario
-import enumerations.PerfilesUsuario
+import enumerations.{AppendPasswordUser, PerfilesUsuario}
 
 
 class ConfrontaActorSupervisor extends Actor with ActorLogging {
@@ -92,6 +92,7 @@ class ConfrontaActor extends Actor with ActorLogging with AlianzaActors {
       val parametrosUltra: RespuestaCuestionarioULTRADTO = new RespuestaCuestionarioULTRADTO(message.secuenciaCuestionario,message.codigoCuestionario,respuestas.toArray(new Array[RespuestaPreguntaULTRADTO](respuestas.size())))
       val response = stub.evaluarCuestionario(parametros,parametrosUltra)
 
+      //response.getRespuestaProceso.setCodigoRespuesta( 1 )
       if(response.getRespuestaProceso.getCodigoRespuesta == 1){
         actualizarEstadoConfronta(message.id,response,currentSender)
       } else {
@@ -101,7 +102,8 @@ class ConfrontaActor extends Actor with ActorLogging with AlianzaActors {
   }
 
   private def actualizarEstadoConfronta(message: UsuarioMessage, response:ResultadoEvaluacionCuestionarioULTRADTO, currentSender: ActorRef) = {
-    val resultActualizarEstadoConfronta = DataAccessAdapterUsuario.crearUsuario(message.toEntityUsuario( Crypto.hashSha256(message.contrasena))).map(_.leftMap( pe => ErrorPersistence(pe.message,pe)))
+    val passwordUserWithAppend = message.contrasena.concat( AppendPasswordUser.appendUsuariosFiducia )
+    val resultActualizarEstadoConfronta = DataAccessAdapterUsuario.crearUsuario(message.toEntityUsuario( Crypto.hashSha256(passwordUserWithAppend))).map(_.leftMap( pe => ErrorPersistence(pe.message,pe)))
     resultActualizarEstadoConfronta onComplete {
       case Failure(failure) =>
         currentSender ! failure
