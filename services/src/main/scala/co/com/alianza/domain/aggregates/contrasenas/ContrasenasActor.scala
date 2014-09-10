@@ -18,8 +18,7 @@ import co.com.alianza.infrastructure.dto.Usuario
 import co.com.alianza.util.FutureResponse
 import akka.actor.Props
 import akka.routing.RoundRobinPool
-
-
+import enumerations.AppendPasswordUser
 
 
 class ContrasenasActorSupervisor extends Actor with ActorLogging {
@@ -68,10 +67,12 @@ class ContrasenasActor extends Actor with ActorLogging with AlianzaActors {
 
     case message: CambiarContrasenaMessage =>
       val currentSender = sender()
+      val passwordActualAppend = message.pw_actual.concat( AppendPasswordUser.appendUsuariosFiducia )
+      val passwordNewAppend = message.pw_nuevo.concat( AppendPasswordUser.appendUsuariosFiducia )
       val CambiarContrasenaFuture = (for {
-        usuarioContrasenaActual <- ValidationT(validacionConsultaContrasenaActual(message.pw_actual, message.idUsuario.get))
+        usuarioContrasenaActual <- ValidationT(validacionConsultaContrasenaActual(passwordActualAppend, message.idUsuario.get))
         idValReglasContra <- ValidationT(validacionReglasClave(message.pw_nuevo))
-        idUsuario <- ValidationT(ActualizarContrasena(message.pw_nuevo, usuarioContrasenaActual ))
+        idUsuario <- ValidationT(ActualizarContrasena(passwordNewAppend, usuarioContrasenaActual ))
       } yield {
         idUsuario
       }).run

@@ -23,8 +23,7 @@ import scalaz.Validation
 
 import akka.actor.Props
 import akka.routing.RoundRobinPool
-
-
+import enumerations.AppendPasswordUser
 
 
 class PinActorSupervisor extends Actor with ActorLogging {
@@ -71,13 +70,14 @@ class PinActor extends Actor with ActorLogging with AlianzaActors with FutureRes
   private def cambiarPw(tokenHash: String, pw: String, currentSender: ActorRef) = {
 
     val obtenerPinFuture: Future[Validation[ErrorValidacion, Option[PinUsuario]]] = pDataAccessAdapter.obtenerPin(tokenHash).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
+    val passwordAppend = pw.concat( AppendPasswordUser.appendUsuariosFiducia )
 
     //En la funcion los cambios: idUsuario y tokenHash que se encuentran en ROJO, no son realmente un error.
     val finalResultFuture = (for {
       pin <- ValidationT(obtenerPinFuture)
       pinValidacion <- ValidationT(PinUtil.validarPinFuture(pin))
       rvalidacionClave <- ValidationT(validacionReglasClave(pw))
-      rCambiarPss <- ValidationT(cambiarPassword(pinValidacion.idUsuario, pw))
+      rCambiarPss <- ValidationT(cambiarPassword(pinValidacion.idUsuario, passwordAppend))
       rCambiarEstado <- ValidationT(cambiarEstado(pinValidacion.idUsuario))
       idResult <- ValidationT(eliminarPin(pinValidacion.tokenHash))
     } yield {

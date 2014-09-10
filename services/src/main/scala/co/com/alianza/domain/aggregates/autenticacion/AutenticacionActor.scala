@@ -7,7 +7,7 @@ import scala.util.{ Success, Failure }
 import co.com.alianza.infrastructure.messages._
 import spray.http.StatusCodes._
 import co.com.alianza.infrastructure.dto.{ Cliente, Usuario }
-import enumerations.{ TipoIdentificacion, EstadosUsuarioEnum, EstadosCliente }
+import enumerations.{AppendPasswordUser, TipoIdentificacion, EstadosUsuarioEnum, EstadosCliente}
 import co.com.alianza.util.token.Token
 import co.com.alianza.persistence.messages.ConsultaClienteRequest
 import co.com.alianza.persistence.entities.{ ReglasContrasenas, IpsUsuario }
@@ -18,8 +18,7 @@ import scala.concurrent.Future
 
 import akka.actor.Props
 import akka.routing.RoundRobinPool
-
-
+import co.com.alianza.util.clave.Crypto
 
 
 class AutenticacionActorSupervisor extends Actor with ActorLogging {
@@ -73,9 +72,10 @@ class AutenticacionActor extends Actor with ActorLogging {
                   else if(valueResponse.estado == EstadosUsuarioEnum.pendienteReinicio.id)
                     currentSender ! ResponseMessage(Unauthorized, errorUsuarioBloqueadoPendienteReinicio)
                   else {
-                    val passwordFrontEnd = message.password
+                    //Se pone un "pase" para que no sea tan facil hacer unHashSha256 de los password planos
+                    val passwordFrontEnd = Crypto.hashSha256( message.password.concat( AppendPasswordUser.appendUsuariosFiducia ) )
                     val passwordDB = valueResponse.contrasena.getOrElse("")
-
+                    //Crypto.hashSha256(message.contrasena))
                     if (passwordFrontEnd.contentEquals(passwordDB)) {
                       //Una vez el usuario se encuentre activo en el sistema, se valida por su estado en el core de alianza.
                       val futureCliente = obtenerClienteAlianza(message.tipoIdentificacion, valueResponse.identificacion, currentSender: ActorRef)

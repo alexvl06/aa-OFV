@@ -15,7 +15,7 @@ import co.com.alianza.util.clave.Crypto
 import com.typesafe.config.{ConfigFactory, Config}
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.persistence.entities.PerfilUsuario
-import enumerations.PerfilesUsuario
+import enumerations.{AppendPasswordUser, EstadosCliente, PerfilesUsuario}
 
 import akka.actor.Props
 import akka.routing.RoundRobinPool
@@ -91,7 +91,9 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
   }
 
   private def guardarUsuario(message:UsuarioMessage): Future[Validation[ErrorValidacion, Int]] = {
-    DataAccessAdapterUsuario.crearUsuario(message.toEntityUsuario( Crypto.hashSha256(message.contrasena))).map(_.leftMap( pe => ErrorPersistence(pe.message,pe)))
+    val passwordUserWithAppend = message.contrasena.concat( AppendPasswordUser.appendUsuariosFiducia );
+    println("Password User Final***->"+passwordUserWithAppend)
+    DataAccessAdapterUsuario.crearUsuario(message.toEntityUsuario( Crypto.hashSha256(passwordUserWithAppend))).map(_.leftMap( pe => ErrorPersistence(pe.message,pe)))
   }
 
   private def resolveCrearUsuarioFuture(crearUsuarioFuture: Future[Validation[ErrorValidacion, Cliente]], currentSender: ActorRef,message:UsuarioMessage) = {
