@@ -45,7 +45,7 @@ object Token{
     }
 
     def  autorizarToken(token:String) : Boolean = {
-      val SKEW = Duration.standardMinutes(1)
+      val SKEW = Duration.standardMinutes(5)
       val clock = new SystemClock(SKEW)
       val locators = new VerifierProviders()
       locators.setVerifierProvider(SignatureAlgorithm.HS256, verificador.hmacLocator)
