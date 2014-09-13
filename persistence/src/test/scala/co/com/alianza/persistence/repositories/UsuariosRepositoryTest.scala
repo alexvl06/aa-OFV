@@ -10,6 +10,7 @@ import scalaz.{OptionT, Validation}
 import co.com.alianza.exceptions.PersistenceException
 
 import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
+import co.com.alianza.util.ConfigApp
 
 /**
  *
@@ -17,7 +18,7 @@ import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
  */
 class UsuariosRepositoryTest extends FunSuite {
 
-  implicit val conf: Config = ConfigFactory.load
+  implicit val conf: Config = ConfigApp.conf
   import scala.concurrent.duration._
   import scala.concurrent.ExecutionContext.Implicits.global
 /*

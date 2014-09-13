@@ -1,10 +1,15 @@
 package co.com.alianza.app
 
-object Boot extends App with Api with BootedCore with HostBinding  {
+import akka.actor.Props
+
+object Boot extends App with HostBinding  {
   import akka.io.IO
   import spray.can.Http
+  val sys = MainActors.system
+  implicit val _ = sys.dispatcher
+  val rootService = sys.actorOf(Props(new AlianzaRouter), name = "api-AlianzaRouter")
 
-  IO( Http )( system ) ! Http.Bind( rootService, interface = machineIp( ), port = portNumber( args ) )
+  IO( Http )( sys ) ! Http.Bind( rootService, interface = machineIp( ), port = portNumber( args ) )
 }
 
 trait HostBinding {

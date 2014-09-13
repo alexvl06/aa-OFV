@@ -51,7 +51,7 @@ class UsuariosActorSupervisor extends Actor with ActorLogging {
 class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
   import scala.concurrent.ExecutionContext
   implicit val ex: ExecutionContext = MainActors.dataAccesEx
-  implicit private val config: Config = ConfigFactory.load
+  implicit private val config: Config = MainActors.conf
   import ValdiacionesUsuario._
 
   def receive = {

@@ -7,6 +7,7 @@ import scala.concurrent.Await
 import scalaz.OptionT
 
 import scalaz.{Failure => zFailure, Success => zSuccess}
+import co.com.alianza.util.ConfigApp
 
 /**
  *
@@ -14,7 +15,7 @@ import scalaz.{Failure => zFailure, Success => zSuccess}
  */
 class RecursosUsuarioRepositoryTest extends FunSuite {
 
-  implicit val conf: Config = ConfigFactory.load
+  implicit val conf: Config = ConfigApp.conf
   import scala.concurrent.duration._
   import scala.concurrent.ExecutionContext.Implicits.global
 

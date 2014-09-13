@@ -5,6 +5,7 @@ import com.typesafe.config.{ConfigFactory, Config}
 import scala.util.{Failure, Success, Try}
 import scala.concurrent.Await
 import co.com.alianza.persistence.messages.ConsultaClienteRequest
+import co.com.alianza.util.ConfigApp
 
 /**
  *
@@ -12,7 +13,7 @@ import co.com.alianza.persistence.messages.ConsultaClienteRequest
  */
 class ClienteRepositoryTest extends FunSuite {
 
-  implicit val conf: Config = ConfigFactory.load
+  implicit val conf: Config = ConfigApp.conf
   import scala.concurrent.ExecutionContext.Implicits.global
   import scala.concurrent.duration._
 

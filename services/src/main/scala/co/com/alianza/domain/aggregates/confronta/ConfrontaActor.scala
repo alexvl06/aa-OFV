@@ -3,7 +3,7 @@ package co.com.alianza.domain.aggregates.confronta
 import akka.actor.{ActorRef, Actor, Props, ActorLogging}
 import scalaz.{Failure => zFailure, Success => zSuccess}
 import scala.util.{Success, Failure}
-import co.com.alianza.app.AlianzaActors
+import co.com.alianza.app.{MainActors, AlianzaActors}
 import com.typesafe.config.{ConfigFactory, Config}
 import co.cifin.confrontaultra.dto.ultra._
 import co.com.alianza.infrastructure.messages.{UsuarioMessage, ObtenerCuestionarioAdicionalRequestMessage, ObtenerCuestionarioRequestMessage, ValidarCuestionarioRequestMessage}
@@ -44,7 +44,7 @@ class ConfrontaActor extends Actor with ActorLogging with AlianzaActors {
   import scala.concurrent.ExecutionContext
   implicit val _: ExecutionContext = context.dispatcher
   import co.com.alianza.util.json.MarshallableImplicits._
-  private val config: Config = ConfigFactory.load
+  private val config: Config = MainActors.conf
 
 
   def receive = {

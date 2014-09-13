@@ -3,6 +3,7 @@ package co.com.alianza.persistence.conn
 import com.typesafe.config.{Config, ConfigFactory}
 
 import com.mchange.v2.c3p0.ComboPooledDataSource
+import co.com.alianza.util.ConfigApp
 
 /**
  * Crea el data Source de la Conexión
@@ -11,7 +12,7 @@ import com.mchange.v2.c3p0.ComboPooledDataSource
  */
 object DataBaseAccessAlianza{
 
-	private val config: Config = ConfigFactory.load
+	private val config: Config = ConfigApp.conf
 	val dataSource: ComboPooledDataSource = createDatasource( ConnectionConfAlianza( config ) )
 
 	private def createDatasource( config: ConnectionConf ): ComboPooledDataSource = {

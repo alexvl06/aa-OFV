@@ -26,7 +26,7 @@ object  ValdiacionesUsuario {
 
   import co.com.alianza.util.json.MarshallableImplicits._
   implicit val _: ExecutionContext = MainActors.dataAccesEx
-  implicit private val config: Config = ConfigFactory.load
+  implicit private val config: Config = MainActors.conf
 
   def validacionReglasClave(message:UsuarioMessage): Future[Validation[ErrorValidacion, Unit.type]] = {
 

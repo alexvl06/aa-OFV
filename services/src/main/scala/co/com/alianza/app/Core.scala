@@ -16,6 +16,7 @@ import co.com.alianza.domain.aggregates.autenticacion.AutorizacionActorSuperviso
 import co.com.alianza.domain.aggregates.contrasenas.ContrasenasActorSupervisor
 import co.com.alianza.domain.aggregates.ips.IpsUsuarioActorSupervisor
 import co.com.alianza.domain.aggregates.pin.PinActorSupervisor
+import co.com.alianza.util.ConfigApp
 
 //import co.com.alianza.domain.aggregates.fondos.FondosActorSupervisor
 
@@ -32,7 +33,8 @@ trait Core {
  */
 trait BootedCore extends Core {
   import scala.concurrent.ExecutionContext
-  implicit lazy val conf: Config = system.settings.config
+
+  implicit lazy val conf: Config = ConfigApp.conf
 
   implicit lazy val system = ActorSystem( "alianza-service" )
   implicit lazy val ex: ExecutionContext = system.dispatcher

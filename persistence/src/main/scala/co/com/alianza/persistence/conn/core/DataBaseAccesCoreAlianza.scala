@@ -3,6 +3,7 @@ package co.com.alianza.persistence.conn.core
 import com.typesafe.config.{Config, ConfigFactory}
 
 import oracle.jdbc.xa.client.OracleXADataSource
+import co.com.alianza.util.ConfigApp
 
 /**
  * Crea el data Source de la Conexión
@@ -11,7 +12,7 @@ import oracle.jdbc.xa.client.OracleXADataSource
  */
 object DataBaseAccesCoreAlianza  {
 
-	private val config: Config = ConfigFactory.load
+	private val config: Config = ConfigApp.conf
 	val ds: OracleXADataSource = createDatasource( ConnectionConfigCoreAlianza( config ) )
 
 	private def createDatasource( config: ConnectionConfigCoreAlianza ): OracleXADataSource = {

@@ -6,13 +6,14 @@ import org.scalatest.FunSuite
 
 import scala.concurrent.Await
 import scala.util.{Failure, Success, Try}
+import co.com.alianza.util.ConfigApp
 
 /**
  * Created by david on 12/06/14.
  */
 class ReglasContrasenasRepositoryTest extends FunSuite{
 
-  implicit val conf: Config = ConfigFactory.load
+  implicit val conf: Config = ConfigApp.conf
   import scala.concurrent.duration._
   import scala.concurrent.ExecutionContext.Implicits.global
 

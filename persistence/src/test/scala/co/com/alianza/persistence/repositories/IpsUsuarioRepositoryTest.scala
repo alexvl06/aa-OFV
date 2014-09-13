@@ -7,13 +7,14 @@ import scala.concurrent.Await
 import scala.util.{Failure, Success, Try}
 import scala.util.Random
 import co.com.alianza.persistence.entities.IpsUsuario
+import co.com.alianza.util.ConfigApp
 
 /**
  * Created by david on 12/06/14.
  */
 class IpsUsuarioRepositoryTest extends FunSuite{
 
-  implicit val conf: Config = ConfigFactory.load
+  implicit val conf: Config = ConfigApp.conf
   import scala.concurrent.duration._
   import scala.concurrent.ExecutionContext.Implicits.global
 
