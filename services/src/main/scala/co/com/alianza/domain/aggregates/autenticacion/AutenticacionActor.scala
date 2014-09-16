@@ -83,7 +83,8 @@ class AutenticacionActor extends Actor with ActorLogging {
                     } else
                       currentSender ! ejecutarExcepcionPasswordInvalido(valueResponse.identificacion, valueResponse.numeroIngresosErroneos, currentSender)
                   }
-                case None => currentSender ! ResponseMessage(Unauthorized, errorUsuarioCredencialesInvalidas)
+                case None =>
+                  currentSender ! ResponseMessage(Unauthorized, errorUsuarioCredencialesInvalidas)
               }
             case zFailure(error) => currentSender ! error
           }
