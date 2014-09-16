@@ -102,7 +102,8 @@ object Common {
 	)
 
   def jsonWebTokenLibraries = Seq(
-    "com.googlecode.jsontoken" % "jsontoken" % "1.1"
+    "com.googlecode.jsontoken" % "jsontoken" % "1.1",
+    "com.nimbusds" % "nimbus-jose-jwt" % "3.1"
   )
 
   /*def scalaEnumerations = Seq(
