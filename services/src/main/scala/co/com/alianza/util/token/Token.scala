@@ -17,7 +17,7 @@ object Token{
 
 
   private val ISSUER = "http://fiduciaria.alianza.com.co"
-  private val SIGNING_KEY = "556878763f1ea3bddfd1bed5b15daa2fc6d2db5a98290dd9f91ddfd22d77d1e"+ AppendPasswordUser.appendUsuariosFiducia.getBytes
+  private val SIGNING_KEY = "556878763f1ea3bddfd1bed5b15daa2fc6d2db5a98290dd9f91ddfd22d77d1e"+ AppendPasswordUser.appendUsuariosFiducia
 
     def generarToken( nombreUsuarioLogueado:String, correoUsuarioLogueado:String, tipoIdentificacion:String, ultimaIpIngreso: String, ultimaFechaIngreso: Date ) : String = {
 
