@@ -106,11 +106,15 @@ object Common {
     "com.nimbusds" % "nimbus-jose-jwt" % "3.1"
   )
 
+  def jasyptLibraries= Seq(
+    "org.jasypt" % "jasypt" % "1.9.2"
+  )
+
   /*def scalaEnumerations = Seq(
     "se.radley" %% "play-plugins-enumeration" % "1.1.0"
   )*/
 
-  def commonLibraries   =  testingLibraries ++ commonScalaLibraries ++ apacheCommonsLibraries ++ json ++ functionalProgrammingLibraries
+  def commonLibraries   =  testingLibraries ++ commonScalaLibraries ++ apacheCommonsLibraries ++ json ++ functionalProgrammingLibraries ++ jasyptLibraries
  	def reactiveLibraries =   akkaLibraries ++ sprayLibraries ++ oracle ++ jsonWebTokenLibraries
 
 }
