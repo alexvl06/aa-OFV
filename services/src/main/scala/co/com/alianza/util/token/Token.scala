@@ -24,7 +24,7 @@ object Token{
       val claimsSet = new JWTClaimsSet()
       claimsSet.setIssueTime(new Date())
       claimsSet.setNotBeforeTime(new Date())
-      claimsSet.setExpirationTime(new DateTime().plus(2000).toDate)
+      claimsSet.setExpirationTime(new DateTime().plus(1800000).toDate)
       claimsSet.setIssuer(ISSUER)
 
       val formater = new java.text.SimpleDateFormat("dd MMMM, yyyy 'a las' hh:mm a", new java.util.Locale("es", "ES"))
@@ -48,13 +48,28 @@ object Token{
     def  autorizarToken(token:String) : Boolean = {
       try {
         val signedJWT2 = SignedJWT.parse(token)
-        val verifier = new MACVerifier(SIGNING_KEY)
-        signedJWT2.verify(verifier)
+        validarToken(signedJWT2)
       }catch{
         case ex: Exception =>
           ex.printStackTrace()
           false
       }
+    }
+
+
+    private def validarToken(signedJWT2:SignedJWT)={
+      val verifier = new MACVerifier(SIGNING_KEY)
+      val verify = signedJWT2.verify(verifier)
+      verify match {
+        case false => false
+        case true => validarExpiracion(signedJWT2)
+      }
+    }
+
+    private def validarExpiracion(signedJWT2:SignedJWT)={
+      val expirationTime = signedJWT2.getJWTClaimsSet.getExpirationTime
+      val now = new Date()
+      expirationTime.after(now)
     }
 
   }
