@@ -34,7 +34,7 @@ object Common {
 		"Sonatype Releases"   at "http://oss.sonatype.org/content/repositories/releases",
 		"Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/",
 		"Spray.io repository" at "http://repo.spray.io",
-		"artifactory alianza"    at "http://172.18.175.183:8081/artifactory/third-party-libs/",
+		"artifactory alianza"    at "http://artifactory.alianza.com.co:8081/artifactory/third-party-libs/",
 		"maven repository"    at "http://repo1.maven.org/maven2/"
 	)
 
