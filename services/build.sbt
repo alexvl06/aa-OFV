@@ -16,7 +16,7 @@ mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
 
 test in assembly := {}
 
-outputPath in assembly := file( "../fiduciaria-alianza-aa-service.jar" )
+outputPath in assembly := file( "./fiduciaria-alianza-aa-service.jar" )
 
 name := "fiduciaria-alianza-aa-service"
 
