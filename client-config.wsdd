@@ -10,7 +10,7 @@
 
  <parameter name="action" value="Timestamp Signature"/>
 
- <parameter name="user" value="alianzafiduciariacert"/>
+ <parameter name="user" value="alianzafiduciariaprodcert"/>
 
  <parameter name="passwordCallbackClass" value="co.cifin.PWCallBack"/>
 
