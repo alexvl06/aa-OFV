@@ -3,7 +3,7 @@ package co.com.alianza.web
 
 import spray.routing.Directives
 import co.com.alianza.app.{CrossHeaders, AlianzaCommons}
-import co.com.alianza.infrastructure.messages.{UsuariosMessagesJsonSupport, UsuarioMessage}
+import co.com.alianza.infrastructure.messages.{OlvidoContrasenaMessage, UsuariosMessagesJsonSupport, UsuarioMessage}
 
 
 /**
@@ -15,9 +15,9 @@ class UsuarioService  extends Directives with AlianzaCommons   with CrossHeaders
   import UsuariosMessagesJsonSupport._
 
   def route = {
-   put {
      pathPrefix("autoregistro") {
       path("usuario" ) {
+        put {
           entity(as[UsuarioMessage]) {
            usuario =>
             respondWithMediaType(mediaType) {
@@ -28,7 +28,17 @@ class UsuarioService  extends Directives with AlianzaCommons   with CrossHeaders
             }
           }
       }
-     }
+     }~ path("olvidoContrasena"){
+          //pathEndOrSingleSlash {
+            post {
+              //Reinicio de contrasena de la cuenta alianza fiduciaria (Implica cambio en el estado del usuario)
+              entity(as[OlvidoContrasenaMessage]) {
+                olvidarContrasena =>
+                  requestExecute(olvidarContrasena, usuariosActor)
+            }
+          }
+        //}
+      }
     }
   }
 

@@ -9,7 +9,7 @@ import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.app.MainActors
 import scalaz.{Failure => zFailure, Success => zSuccess}
 import co.com.alianza.infrastructure.dto.Usuario
-import co.com.alianza.persistence.entities.{Usuario => eUsuario, PerfilUsuario, IpsUsuario}
+import co.com.alianza.persistence.entities.{Usuario => eUsuario, PinUsuario => ePinUsuario , PerfilUsuario, IpsUsuario}
 import co.com.alianza.persistence.messages.AutenticacionRequest
 import enumerations.EstadosUsuarioEnum
 
@@ -132,6 +132,12 @@ object DataAccessAdapter {
   def asociarPerfiles (perfiles:List[PerfilUsuario]): Future[Validation[PersistenceException, List[Int]]] = {
     val repo = new UsuariosRepository()
     repo.asociarPerfiles(perfiles)
+  }
+
+
+  def crearUsuarioPin(pinUsuario:ePinUsuario): Future[Validation[PersistenceException, Int]] = {
+    val repo = new UsuariosRepository()
+    repo.guardarPinUsuario(pinUsuario)
   }
 
   private def transformValidationList(origin: Validation[PersistenceException, List[eUsuario]]): Validation[PersistenceException, List[Usuario]] = {

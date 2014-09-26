@@ -18,6 +18,10 @@ EclipseKeys.projectFlavor := EclipseProjectFlavor.Scala
 
 resolvers ++= commonResolvers
 
-libraryDependencies ++= commonLibraries ++ reactiveLibraries
+def scalate = Seq(
+  "org.fusesource.scalate" % "scalate-core_2.10" % "1.6.1"
+)
+
+libraryDependencies ++= commonLibraries ++ reactiveLibraries ++ scalate
 
 seq( Revolver.settings: _* )

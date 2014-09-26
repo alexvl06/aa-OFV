@@ -10,6 +10,7 @@ import co.com.alianza.persistence.repositories.PinRepository
 import scala.concurrent.{Future, ExecutionContext}
 import scalaz.{Failure => zFailure, Success => zSuccess}
 import scalaz.Validation
+import java.sql.Timestamp
 
 object DataAccessAdapter {
 
