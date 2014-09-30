@@ -34,7 +34,7 @@ object Common {
 		"Sonatype Releases"   at "http://oss.sonatype.org/content/repositories/releases",
 		"Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/",
 		"Spray.io repository" at "http://repo.spray.io",
-		"artifactory alianza"    at "http://172.20.0.67:8081/artifactory/third-party-libs/",
+		"artifactory alianza"    at "http://artifactory.alianza.com.co:8081/artifactory/third-party-libs/",
 		"maven repository"    at "http://repo1.maven.org/maven2/"
 	)
 
@@ -106,11 +106,15 @@ object Common {
     "com.nimbusds" % "nimbus-jose-jwt" % "3.1"
   )
 
+  def jasyptLibraries= Seq(
+    "org.jasypt" % "jasypt" % "1.9.2"
+  )
+
   /*def scalaEnumerations = Seq(
     "se.radley" %% "play-plugins-enumeration" % "1.1.0"
   )*/
 
-  def commonLibraries   =  testingLibraries ++ commonScalaLibraries ++ apacheCommonsLibraries ++ json ++ functionalProgrammingLibraries
+  def commonLibraries   =  testingLibraries ++ commonScalaLibraries ++ apacheCommonsLibraries ++ json ++ functionalProgrammingLibraries ++ jasyptLibraries
  	def reactiveLibraries =   akkaLibraries ++ sprayLibraries ++ oracle ++ jsonWebTokenLibraries
 
 }
