@@ -117,27 +117,46 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
 
   private def resolveReiniciarContrasenaFuture(actualizarContrasenaFuture: Future[Validation[ErrorValidacion, Int]], validarClienteFuture: Future[Validation[ErrorValidacion, Cliente]],  currentSender: ActorRef, message: OlvidoContrasenaMessage) = {
 
-    val resultUsuario = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerUsuarioNumeroIdentificacion(message.identificacion);
+    validarClienteFuture onComplete{
+      case sFailure( failure ) =>
+        println(failure)
+        currentSender ! failure
+      case sSuccess (value) =>
+        value match{
+          case zSuccess( responseCliente:Cliente ) =>
 
-    resultUsuario onComplete {
-      case sFailure(failure) => currentSender ! failure
-      case sSuccess(value) =>
-        value match {
-          case zSuccess(response: Option[Usuario]) =>
-            response match {
-              case Some(valueResponse) =>
-                enviarCorreoOlvidoContrasena( actualizarContrasenaFuture, validarClienteFuture, currentSender, message, valueResponse.id )
+            val resultUsuario = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerUsuarioNumeroIdentificacion(message.identificacion);
 
-              case None => currentSender ! ResponseMessage(Unauthorized, "Error al obtener usuario por numero de identificacion")
+            resultUsuario onComplete {
+              case sFailure(failure) => currentSender ! failure
+              case sSuccess(value) =>
+                value match {
+                  case zSuccess(response: Option[Usuario]) =>
+                    response match {
+                      case Some(valueResponse) =>
+                        enviarCorreoOlvidoContrasena( actualizarContrasenaFuture, responseCliente.wcli_dir_correo, currentSender, message, valueResponse.id )
+
+                      case None => currentSender ! ResponseMessage(Unauthorized, "Error al obtener usuario por numero de identificacion")
+                    }
+                  case zFailure(error) => currentSender ! error
+                }
             }
-          case zFailure(error) => currentSender ! error
+          case zFailure(error) =>
+            error match {
+              case errorPersistence: ErrorPersistence => currentSender ! errorPersistence.exception
+              case errorVal: ErrorValidacion =>
+                currentSender ! ResponseMessage(Conflict, errorVal.msg)
+              case errorClienteNoExiste:ErrorClienteNoExiste  => currentSender !errorClienteNoExiste
+            }
         }
     }
+
+
 
   }
 
 
-  private def enviarCorreoOlvidoContrasena( actualizarContrasenaFuture: Future[Validation[ErrorValidacion, Int]], validarClienteFuture: Future[Validation[ErrorValidacion, Cliente]],  currentSender: ActorRef, message: OlvidoContrasenaMessage, idUsuario:Option[Int] ) = {
+  private def enviarCorreoOlvidoContrasena( actualizarContrasenaFuture: Future[Validation[ErrorValidacion, Int]], correoCliente:String,  currentSender: ActorRef, message: OlvidoContrasenaMessage, idUsuario:Option[Int] ) = {
 
     actualizarContrasenaFuture onComplete {
       case sFailure(failure) =>
@@ -149,29 +168,14 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
             currentSender ! ResponseMessage(Created, response.toJson)
             if (response == 1) {
 
-              validarClienteFuture onComplete{
-                case sFailure( failure ) =>
-                  println(failure)
-                  currentSender ! failure
-                case sSuccess (value) =>
-                  value match{
-                    case zSuccess( response:Cliente ) =>
-                      val tokenPin: PinData = TokenPin.obtenerToken()
-                      val pin: PinUsuario = PinUsuario(None, idUsuario.get, tokenPin.token, tokenPin.fechaExpiracion, tokenPin.tokenHash.get)
-                      val pinUsuario: entities.PinUsuario = DataAccessTranslatorPin.translateEntityPinUsuario(pin)
+              val tokenPin: PinData = TokenPin.obtenerToken()
+              val pin: PinUsuario = PinUsuario(None, idUsuario.get, tokenPin.token, tokenPin.fechaExpiracion, tokenPin.tokenHash.get)
+              val pinUsuario: entities.PinUsuario = DataAccessTranslatorPin.translateEntityPinUsuario(pin)
 
-                      DataAccessAdapterUsuario.crearUsuarioPin(pinUsuario)
+              DataAccessAdapterUsuario.crearUsuarioPin(pinUsuario)
 
-                      new SmtpServiceClient().send(buildMessage(pin, UsuarioMessage(response.wcli_dir_correo, message.identificacion, message.tipoIdentificacion,null, false, None), "alianza.smtp.templatepin.reiniciarContrasena", "alianza.smtp.asunto.reiniciarContrasena"), (_, _) => Unit)
+              new SmtpServiceClient().send(buildMessage(pin, UsuarioMessage(correoCliente, message.identificacion, message.tipoIdentificacion,null, false, None), "alianza.smtp.templatepin.reiniciarContrasena", "alianza.smtp.asunto.reiniciarContrasena"), (_, _) => Unit)
 
-                    case zFailure(error) =>
-                      error match {
-                        case errorPersistence: ErrorPersistence => currentSender ! errorPersistence.exception
-                        case errorVal: ErrorValidacion =>
-                          currentSender ! ResponseMessage(Conflict, errorVal.msg)
-                      }
-                  }
-              }
             }
           case zFailure(error) =>
             error match {
