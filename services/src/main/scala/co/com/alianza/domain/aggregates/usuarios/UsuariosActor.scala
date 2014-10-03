@@ -20,12 +20,10 @@ import co.com.alianza.util.token.{TokenPin, PinData}
 import akka.routing.RoundRobinPool
 import scalaz.Failure
 import scala.util.{Success, Failure}
-import co.com.alianza.infrastructure.messages.OlvidoContrasenaMessage
+import co.com.alianza.infrastructure.messages.{ErrorMessage, OlvidoContrasenaMessage, UsuarioMessage, ResponseMessage}
 import co.com.alianza.infrastructure.dto.Cliente
-import co.com.alianza.infrastructure.messages.UsuarioMessage
 import scalaz.Success
 import co.com.alianza.util.transformers.ValidationT
-import co.com.alianza.infrastructure.messages.ResponseMessage
 import co.com.alianza.persistence.entities
 import co.com.alianza.microservices.{MailMessage, SmtpServiceClient}
 import co.com.alianza.domain.aggregates.usuarios.MailMessageUsuario
@@ -134,11 +132,13 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
                   case zSuccess(response: Option[Usuario]) =>
                     response match {
                       case Some(valueResponse) =>
-                        //TODO:Se debe realizar vvalidación para que estados de usuario se deben permitir el olvido contraseña.
-                        if( valueResponse.estado == EstadosUsuarioEnum.activo.id  )
+                        //El olvido de contrasena queda para usuarios en estado bloqueado por contrasena y activos
+                        if( valueResponse.estado == EstadosUsuarioEnum.activo.id || valueResponse.estado == EstadosUsuarioEnum.bloqueContraseña.id  )
                           enviarCorreoOlvidoContrasena( actualizarContrasenaFuture, responseCliente.wcli_dir_correo, currentSender, message, valueResponse.id )
+                        else if( valueResponse.estado == EstadosUsuarioEnum.pendienteReinicio.id )
+                          currentSender ! ErrorEstadoUsuarioOlvidoContrasena(errorEstadoReinicioContrasena)
                         else
-                          currentSender ! ResponseMessage(Conflict, "El estado del usuario no permite realizar funcionalidad de olvido de contrasena")
+                          currentSender ! ErrorEstadoUsuarioOlvidoContrasena(errorEstadoUsuarioNoPermitido)
 
                       case None => currentSender ! ResponseMessage(Unauthorized, "Error al obtener usuario por numero de identificacion")
                     }
@@ -262,5 +262,9 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
     val asunto: String = config.getString(asuntoTemp)
     MailMessage(config.getString("alianza.smtp.from"), "josegarcia@seven4n.com", List(), asunto, body, "")
   }
+
+
+  private val errorEstadoReinicioContrasena = ErrorMessage("409.8", "El usuario se encuentra en proceso de reinicio de contrasena", "El usuario se encuentra en proceso de reinicio de contrasena").toJson
+  private val errorEstadoUsuarioNoPermitido = ErrorMessage("409.9", "El estado del usuario no permite reiniciar la contrasena", "El estado del usuario no permite reiniciar la contrasena").toJson
 
 }
