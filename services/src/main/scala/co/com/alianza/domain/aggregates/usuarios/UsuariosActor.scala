@@ -134,7 +134,11 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
                   case zSuccess(response: Option[Usuario]) =>
                     response match {
                       case Some(valueResponse) =>
-                        enviarCorreoOlvidoContrasena( actualizarContrasenaFuture, responseCliente.wcli_dir_correo, currentSender, message, valueResponse.id )
+                        //TODO:Se debe realizar vvalidación para que estados de usuario se deben permitir el olvido contraseña.
+                        if( valueResponse.estado == EstadosUsuarioEnum.activo.id  )
+                          enviarCorreoOlvidoContrasena( actualizarContrasenaFuture, responseCliente.wcli_dir_correo, currentSender, message, valueResponse.id )
+                        else
+                          currentSender ! ResponseMessage(Conflict, "El estado del usuario no permite realizar funcionalidad de olvido de contrasena")
 
                       case None => currentSender ! ResponseMessage(Unauthorized, "Error al obtener usuario por numero de identificacion")
                     }
