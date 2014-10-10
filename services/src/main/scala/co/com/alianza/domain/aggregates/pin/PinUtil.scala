@@ -19,7 +19,7 @@ object PinUtil {
   implicit val ex: ExecutionContext = MainActors.dataAccesEx
 
   def deserializarPin(pin: String, fechaExpiracion: Date): String = {
-    val md = MessageDigest.getInstance("SHA-256")
+    val md = MessageDigest.getInstance("SHA-512")
     val hash = md.digest( s"""${pin} - ${fechaExpiracion}""".getBytes)
     val hexString = new StringBuffer()
     for (i <- hash) {

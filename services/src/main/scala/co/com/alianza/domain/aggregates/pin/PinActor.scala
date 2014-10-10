@@ -88,7 +88,7 @@ class PinActor extends Actor with ActorLogging with AlianzaActors with FutureRes
   }
 
   private def cambiarPassword(idUsuario: Int, pw: String): Future[Validation[ErrorValidacion, Int]] = {
-    uDataAccessAdapter.cambiarPassword(idUsuario, Crypto.hashSha256(pw)).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
+    uDataAccessAdapter.cambiarPassword(idUsuario, Crypto.hashSha512(pw)).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
   }
 
   private def cambiarEstado(idUsuario: Int): Future[Validation[ErrorValidacion, Int]] = {

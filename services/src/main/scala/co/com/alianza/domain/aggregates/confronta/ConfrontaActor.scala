@@ -103,7 +103,7 @@ class ConfrontaActor extends Actor with ActorLogging with AlianzaActors {
 
   private def actualizarEstadoConfronta(message: UsuarioMessage, response:ResultadoEvaluacionCuestionarioULTRADTO, currentSender: ActorRef) = {
     val passwordUserWithAppend = message.contrasena.concat( AppendPasswordUser.appendUsuariosFiducia )
-    val resultActualizarEstadoConfronta = DataAccessAdapterUsuario.crearUsuario(message.toEntityUsuario( Crypto.hashSha256(passwordUserWithAppend))).map(_.leftMap( pe => ErrorPersistence(pe.message,pe)))
+    val resultActualizarEstadoConfronta = DataAccessAdapterUsuario.crearUsuario(message.toEntityUsuario( Crypto.hashSha512(passwordUserWithAppend))).map(_.leftMap( pe => ErrorPersistence(pe.message,pe)))
     resultActualizarEstadoConfronta onComplete {
       case Failure(failure) =>
         currentSender ! failure

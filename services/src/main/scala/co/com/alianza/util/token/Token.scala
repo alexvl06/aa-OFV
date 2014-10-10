@@ -38,7 +38,7 @@ object Token{
 
       claimsSet.setCustomClaims(customData)
 
-      val signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.HS256), claimsSet)
+      val signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.HS512), claimsSet)
       val signer = new MACSigner(SIGNING_KEY)
       signedJWT.sign(signer)
       val jwt = signedJWT.serialize()
