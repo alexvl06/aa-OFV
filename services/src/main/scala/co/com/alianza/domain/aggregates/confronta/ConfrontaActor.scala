@@ -92,11 +92,12 @@ class ConfrontaActor extends Actor with ActorLogging with AlianzaActors {
       val parametrosUltra: RespuestaCuestionarioULTRADTO = new RespuestaCuestionarioULTRADTO(message.secuenciaCuestionario,message.codigoCuestionario,respuestas.toArray(new Array[RespuestaPreguntaULTRADTO](respuestas.size())))
       val response = stub.evaluarCuestionario(parametros,parametrosUltra)
 
-      //response.getRespuestaProceso.setCodigoRespuesta( 1 )
       if(response.getRespuestaProceso.getCodigoRespuesta == 1){
         actualizarEstadoConfronta(message.id,response,currentSender)
       } else {
-        currentSender ! response.toJson
+        val respToSender = new ResultadoEvaluacionCuestionarioULTRADTO()
+        respToSender.setRespuestaProceso(response.getRespuestaProceso)
+        currentSender !  respToSender.toJson
       }
 
   }
@@ -110,7 +111,9 @@ class ConfrontaActor extends Actor with ActorLogging with AlianzaActors {
       case Success(value) =>
         value match {
           case zSuccess(code: Int) =>
-            currentSender !  response.toJson
+            val respToSender = new ResultadoEvaluacionCuestionarioULTRADTO()
+            respToSender.setRespuestaProceso(response.getRespuestaProceso)
+            currentSender !  respToSender.toJson
             DataAccessAdapterUsuario.asociarPerfiles(PerfilUsuario(code,PerfilesUsuario.clienteIndividual.id)::Nil)
             if(message.activarIP && message.clientIp.isDefined){
               DataAccessAdapterUsuario.relacionarIp(code,message.clientIp.get)
