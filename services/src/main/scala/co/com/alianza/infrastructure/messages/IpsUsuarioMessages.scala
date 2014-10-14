@@ -18,14 +18,14 @@ case class ObtenerIpsUsuarioMessage(idUsuario: Int) extends MessageService{
 
 }
 
-case class AgregarIpsUsuarioMessage(idUsuario: Int, ip: String) extends MessageService{
+case class AgregarIpsUsuarioMessage(idUsuario: Option[Int], ip: String) extends MessageService{
   def toEntityIpsUsuario : IpsUsuario = {
-    new IpsUsuario(idUsuario, ip)
+    new IpsUsuario(idUsuario.get, ip)
   }
 }
 
-case class EliminarIpsUsuarioMessage(idUsuario: Int, ip: String) extends MessageService{
+case class EliminarIpsUsuarioMessage(idUsuario: Option[Int], ip: String) extends MessageService{
   def toEntityIpsUsuario : IpsUsuario = {
-    new IpsUsuario(idUsuario, ip)
+    new IpsUsuario(idUsuario.get, ip)
   }
 }
