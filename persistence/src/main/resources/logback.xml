@@ -5,6 +5,9 @@
             <pattern>%date{ISO8601} %-5level %logger{36} %X{sourceThread} - %msg%n</pattern>
         </encoder>
     </appender>
+    
+    <logger name="spray.can.server" level="ERROR"/>
+    
     <root level="INFO">
         <appender-ref ref="STDOUT" />
     </root>     
