@@ -6,9 +6,8 @@
         </encoder>
     </appender>
     
-    <logger name="spray.can.server" level="ERROR"/>
     
-    <root level="INFO">
+    <root level="OFF">
         <appender-ref ref="STDOUT" />
     </root>     
 </configuration>
