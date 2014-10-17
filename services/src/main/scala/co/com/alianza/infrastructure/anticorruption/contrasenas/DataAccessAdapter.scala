@@ -38,4 +38,8 @@ object DataAccessAdapter {
     repo.actualizarContrasena(Crypto.hashSha512(pw_nuevo), idUsuario)
   }
 
+  def ActualizarContrasenaYCaducidad(idUsuario: Int, pw_nuevo: String, caducidad: Long): Future[Validation[PersistenceException, Int]] = {
+    repo.actualizarContrasenaYCaducidad(idUsuario, Crypto.hashSha512(pw_nuevo), caducidad)
+  }
+
 }

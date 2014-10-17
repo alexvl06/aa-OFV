@@ -127,7 +127,7 @@ class AutenticacionActor extends Actor with ActorLogging {
                   currentSender ! ResponseMessage(Unauthorized, errorClienteNoExisteSP)
                 else if (valueResponseCliente.wcli_estado != EstadosCliente.bloqueoContraseña) {
                   //Se valida la caducidad de la contraseña
-                  validarFechaContrasena(usuario.fechaCaducidad, currentSender: ActorRef)
+                  validarFechaContrasena(usuario.id.get, usuario.fechaCaducidad, currentSender: ActorRef)
                   //Validacion de control de direccion IP del usuario
                   validarControlIpUsuario(usuario.identificacion, usuario.id.get, ip, valueResponseCliente.wcli_nombre, valueResponseCliente.wcli_dir_correo, valueResponseCliente.wcli_person, usuario.ipUltimoIngreso.getOrElse(""), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), currentSender: ActorRef)
                 } else
@@ -313,7 +313,7 @@ class AutenticacionActor extends Actor with ActorLogging {
     }
   }
 
-  private def validarFechaContrasena(fechaCaducidadUsuario: Date, currentSender: ActorRef) = {
+  private def validarFechaContrasena(idUsuario: Int, fechaCaducidadUsuario: Date, currentSender: ActorRef) = {
 
     val calendarFechaCaducidad = Calendar.getInstance()
     calendarFechaCaducidad.setTime(fechaCaducidadUsuario)
@@ -329,7 +329,11 @@ class AutenticacionActor extends Actor with ActorLogging {
               case Some(valueResponse) =>
                 calendarFechaCaducidad.add(Calendar.DATE, valueResponse.valor.toInt)
                 if (calendarFechaActual.compareTo(calendarFechaCaducidad) >= 0)
-                  currentSender ! ResponseMessage(Unauthorized, errorUsuarioCaducidadContrasena)
+                {
+                  val tokenGenerado: String = Token.generarTokenCaducidadContrasena(idUsuario)
+                  val resp: String = ErrorMessage("401.9", "Error Credenciales", "La contraseña del usuario ha caducado", tokenGenerado).toJson
+                  currentSender ! ResponseMessage(Unauthorized, resp)
+                }
 
               case None =>
                 currentSender ! AlianzaException(new Exception("Error Obteniendo Clave de Días validos de contraseña al sistema"), TechnicalLevel, "Error al obtener clave de dias validos de contraseña al sistema")
@@ -348,7 +352,7 @@ class AutenticacionActor extends Actor with ActorLogging {
   //private val errorUsuarioRelacionIP = """{"code":"401.6","description":"No se pudo relacionar la direccion ip al usuario "}"""
   private val errorIntentosIngresosInvalidos = ErrorMessage("401.7", "Usuario Bloqueado", "Ha excedido el numero máximo intentos permitidos al sistema, su usuario ha sido bloqueado").toJson
   private val errorUsuarioBloqueadoIntentosErroneos = ErrorMessage("401.8", "Usuario Bloqueado", "El usuario se encuentra bloqueado").toJson
-  private val errorUsuarioCaducidadContrasena = ErrorMessage("401.9", "Error Credenciales", "La contraseña del usuario ha caducado").toJson
+  //private val errorUsuarioCaducidadContrasena = ErrorMessage("401.9", "Error Credenciales", "La contraseña del usuario ha caducado").toJson
   private val errorUsuarioBloqueadoPendienteActivacion = ErrorMessage("401.10", "Usuario Bloqueado", "El usuario se encuentra pendiente de activación").toJson
   private val errorUsuarioBloqueadoPendienteConfronta = ErrorMessage("401.11", "Usuario Bloqueado", "El usuario se encuentra bloqueado pendiente preguntas de seguridad").toJson
   private val errorUsuarioBloqueadoPendienteReinicio = ErrorMessage("401.12", "Usuario Bloqueado", "El usuario se encuentra bloqueado pendiente de reiniciar contraseña").toJson

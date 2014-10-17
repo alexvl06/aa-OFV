@@ -3,7 +3,7 @@ package co.com.alianza.web
 import spray.routing.Directives
 import co.com.alianza.app.AlianzaCommons
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
-import co.com.alianza.infrastructure.messages.{AdministrarContrasenaMessagesJsonSupport, CambiarContrasenaMessage}
+import co.com.alianza.infrastructure.messages.{CambiarContrasenaCaducadaMessage, AdministrarContrasenaMessagesJsonSupport, CambiarContrasenaMessage}
 
 /**
  * Created by seven4n on 01/09/14.
@@ -12,7 +12,7 @@ class AdministrarContrasenaService extends Directives with AlianzaCommons {
 
   import AdministrarContrasenaMessagesJsonSupport._
 
-  def route(user: UsuarioAuth) =
+  def secureRoute(user: UsuarioAuth) =
 
     pathPrefix("actualizarContrasena") {
       respondWithMediaType(mediaType) {
@@ -28,5 +28,20 @@ class AdministrarContrasenaService extends Directives with AlianzaCommons {
         }
       }
     }
+
+  def insecureRoute = {
+    pathPrefix("actualizarContrasenaCaducada") {
+      respondWithMediaType(mediaType) {
+        pathEndOrSingleSlash {
+          put {
+            entity(as[CambiarContrasenaCaducadaMessage]) {
+              data =>
+                requestExecute(data, contrasenasActor)
+            }
+          }
+        }
+      }
+    }
+  }
 
 }
