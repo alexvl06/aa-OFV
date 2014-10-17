@@ -103,16 +103,36 @@ class AutenticacionActor extends Actor with ActorLogging {
             case zSuccess(response: Option[Usuario]) =>
               response match {
                 case Some(valueResponse) =>
-                  relacionarIpUsuarioAutenticacion(valueResponse.id.get, message.clientIp.get, message.tipoIdentificacion, message.numeroIdentificacion, valueResponse.ipUltimoIngreso.getOrElse(""), valueResponse.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), currentSender)
-
+                  //Si el mensaje tiene campo agregarIP en true, se registra la IP desde donde se intenta realizar la validación
+                  //En caso de que venga el false, se realiza la autenticacion normalmente, es decir se genera el token, solo que no se agrega IP
+                  if( message.agregarIP )
+                    relacionarIpUsuarioAutenticacion(valueResponse.id.get, message.clientIp.get, message.tipoIdentificacion, message.numeroIdentificacion, valueResponse.ipUltimoIngreso.getOrElse(""), valueResponse.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), currentSender)
+                  else {
+                    val futureClienteAlianza = obtenerClienteAlianza(message.tipoIdentificacion, message.numeroIdentificacion, currentSender )
+                    realizarAutenticacionSinRegitrarIP(message.numeroIdentificacion, message.tipoIdentificacion.toString, valueResponse.ipUltimoIngreso.get, valueResponse.fechaUltimoIngreso.get, message.clientIp.get, currentSender, futureClienteAlianza);
+                  }
                 case None => currentSender ! ResponseMessage(Unauthorized, "Error al obtener usuario por numero de identificacion")
               }
             case zFailure(error) => currentSender ! error
           }
       }
+  }
 
 
-
+  private def realizarAutenticacionSinRegitrarIP( numeroIdentificacion: String, tipoIdentificacion: String, ipUltimoIngreso: String, fechaUltimoIngreso: Date, ipActual: String, currentSender: ActorRef, futureCliente: Future[Validation[PersistenceException, Option[Cliente]]] ){
+    futureCliente onComplete {
+      case Failure(failure) => currentSender ! failure
+      case Success(value) =>
+        value match {
+          case zSuccess(response: Option[Cliente]) =>
+            response match {
+              case Some(valueResponse) =>
+                realizarAutenticacion(numeroIdentificacion, valueResponse.wcli_nombre, valueResponse.wcli_dir_correo, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso, ipActual, currentSender);
+              case None => currentSender ! ResponseMessage(Unauthorized, "Error al obtener cliente en alianza por numero de identificacion")
+            }
+          case zFailure(error) => currentSender ! error
+        }
+    }
   }
 
   private def realizarValidacionesCliente(futureCliente: Future[Validation[PersistenceException, Option[Cliente]]], usuario: Usuario, messageTipoIdentificacion: Int, ip: String, currentSender: ActorRef) {
