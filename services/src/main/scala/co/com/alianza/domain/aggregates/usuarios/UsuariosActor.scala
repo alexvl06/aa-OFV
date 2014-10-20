@@ -14,10 +14,23 @@ import com.typesafe.config.Config
 import enumerations.{EstadosUsuarioEnum, AppendPasswordUser}
 
 import akka.actor.Props
-import co.com.alianza.util.token.{TokenPin}
+import co.com.alianza.util.token.{TokenPin, PinData}
+import akka.routing.RoundRobinPool
+import scalaz.Failure
+import scala.util.{Success, Failure}
 import co.com.alianza.infrastructure.messages._
+import co.com.alianza.infrastructure.dto.Cliente
+import scalaz.Success
+import co.com.alianza.util.transformers.ValidationT
 import co.com.alianza.persistence.entities
-import co.com.alianza.microservices.{SmtpServiceClient}
+import co.com.alianza.microservices.{MailMessage, SmtpServiceClient}
+import co.com.alianza.domain.aggregates.usuarios.MailMessageUsuario
+import scalaz.Failure
+import scalaz.Success
+import scala.util.Success
+import java.util.Date
+import scalaz.std.AllInstances._
+import co.com.alianza.util.FutureResponse
 import co.com.alianza.infrastructure.dto.PinUsuario
 import scala.Some
 import co.com.alianza.infrastructure.messages.OlvidoContrasenaMessage
