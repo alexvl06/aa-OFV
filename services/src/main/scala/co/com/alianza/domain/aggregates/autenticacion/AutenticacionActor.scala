@@ -193,8 +193,8 @@ class AutenticacionActor extends Actor with ActorLogging {
                   //Se asocia la direccion IP a las habituales del usuario
                   val result = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.relacionarIp(idUsuario, ip)
                   //Luego de que el usuario asocia la IP, se envia a realizar autenticacion con datos a poner en el token
-                  //realizarAutenticacion(numeroIdentificacion, valueResponseCliente.wcli_nombre, valueResponseCliente.wcli_dir_correo, valueResponseCliente.wcli_person, ipUltimoIngreso, fechaUltimoIngreso, ip, currentSender)
-                  currentSender ! "Registro de IP Exitoso"
+                  realizarAutenticacion(numeroIdentificacion, valueResponseCliente.wcli_nombre, valueResponseCliente.wcli_dir_correo, valueResponseCliente.wcli_person, ipUltimoIngreso, fechaUltimoIngreso, ip, currentSender)
+                  //currentSender ! "Registro de IP Exitoso"
                   //TODO:Se debe generar PIN de validacion de control de IP al igual que enviar correo con el mismo
                 } else
                   currentSender ! ResponseMessage(Unauthorized, errorClienteInactivoSP)

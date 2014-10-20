@@ -57,22 +57,13 @@ class ReglasContrasenasRepository(implicit executionContext: ExecutionContext) e
 
   def actualizarContrasena(pw_nuevo: String, idUsuario: Int): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
-      val query = for {u <- usuarios if u.id === idUsuario} yield u.contrasena
-      val act = Some(pw_nuevo)
-      val resultTry = Try {
-        query.update(act)
-      }
-      resolveTry(resultTry, "Actualizar Contrasena")
-  }
-
-  def actualizarContrasenaYCaducidad(idUsuario: Int, pw_nuevo: String, caducidad: Long): Future[Validation[PersistenceException, Int]] = loan {
-    implicit session =>
       val query = for {u <- usuarios if u.id === idUsuario} yield (u.contrasena, u.fechaActualizacion)
-      val act = ( Some(pw_nuevo), new Timestamp(caducidad) )
+      val fechaAct= new org.joda.time.DateTime().getMillis
+      val act = ( Some(pw_nuevo), new Timestamp(fechaAct) )
       val resultTry = Try {
         query.update(act)
       }
-      resolveTry(resultTry, "Actualizar Contrasena y caducidad")
+      resolveTry(resultTry, "Actualizar Contrasena y fecha de actualizacion")
   }
 
 }
