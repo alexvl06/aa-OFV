@@ -48,27 +48,6 @@ class ConfrontaActor extends Actor with ActorLogging with AlianzaActors {
 
 
   def receive = {
-    case message:ObtenerCuestionarioRequestMessage  =>
-
-      val currentSender = sender()
-
-      val locator: ConfrontaUltraWebServiceServiceLocator = new ConfrontaUltraWebServiceServiceLocator(config.getString("confronta.service.obtenerCuestionario.location"))
-      val stub: ConfrontaUltraWSSoapBindingStub = locator.getConfrontaUltraWS.asInstanceOf[ConfrontaUltraWSSoapBindingStub]
-      val parametros: ParametrosSeguridadULTRADTO = new ParametrosSeguridadULTRADTO
-      parametros.setClaveCIFIN(config.getString("confronta.service.claveCIFIN"))
-      parametros.setPassword(config.getString("confronta.service.password"))
-      val parametrosUltra: ParametrosULTRADTO = new ParametrosULTRADTO
-      parametrosUltra.setCodigoDepartamento(config.getInt("confronta.service.departamento"))
-      parametrosUltra.setCodigoCuestionario(config.getInt("confronta.service.cuestionario"))
-      parametrosUltra.setTelefono("");
-      parametrosUltra.setCodigoCiudad(config.getInt("confronta.service.ciudad"))
-      parametrosUltra.setPrimerApellido(message.primerApellido.toUpperCase())
-      parametrosUltra.setCodigoTipoIdentificacion(if(message.codigoTipoIdentificacion.toString.equals("1")){"1"}else{"3"})
-      parametrosUltra.setNumeroIdentificacion(message.numeroIdentificacion)
-      parametrosUltra.setFechaExpedicion(message.fechaExpedicion)
-
-      val response: CuestionarioULTRADTO = stub.obtenerCuestionario(parametros, parametrosUltra)
-      currentSender ! JsonUtil.toJson(response)
 
     case message:ObtenerCuestionarioAdicionalRequestMessage =>
       val currentSender = sender()

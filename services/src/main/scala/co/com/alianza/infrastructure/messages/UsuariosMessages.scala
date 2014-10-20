@@ -11,12 +11,12 @@ import enumerations.EstadosUsuarioEnum
  * @author smontanez
  */
 object UsuariosMessagesJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
-  implicit val UsuarioMessageormat = jsonFormat8(UsuarioMessage)
+  implicit val UsuarioMessageormat = jsonFormat10(UsuarioMessage)
   implicit val OlvidoContrasenaMessageFormat = jsonFormat2(OlvidoContrasenaMessage)
 }
 
 
-case class UsuarioMessage(correo: String, identificacion: String, tipoIdentificacion: Int, contrasena: String, activarIP:Boolean, clientIp:Option[String] = None, challenge:String = "",uresponse:String="") extends MessageService{
+case class UsuarioMessage(correo: String, identificacion: String, tipoIdentificacion: Int, contrasena: String, activarIP:Boolean, clientIp:Option[String] = None, challenge:String = "",uresponse:String="", primerApellido:Option[String] = None, fechaExpedicion:Option[String] = None) extends MessageService{
 
  //TODO: Completar los datos automaticos del usuario
   def toEntityUsuario(claveHash:String):eUsuario = eUsuario(None, correo,new Timestamp(System.currentTimeMillis()),identificacion,  tipoIdentificacion,EstadosUsuarioEnum.activo.id, Some(claveHash), null, 0, None, None)

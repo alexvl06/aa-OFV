@@ -20,7 +20,7 @@ import co.com.alianza.util.token.{TokenPin, PinData}
 import akka.routing.RoundRobinPool
 import scalaz.Failure
 import scala.util.{Success, Failure}
-import co.com.alianza.infrastructure.messages.{ErrorMessage, OlvidoContrasenaMessage, UsuarioMessage, ResponseMessage}
+import co.com.alianza.infrastructure.messages._
 import co.com.alianza.infrastructure.dto.Cliente
 import scalaz.Success
 import co.com.alianza.util.transformers.ValidationT
@@ -33,6 +33,20 @@ import scala.util.Success
 import java.util.Date
 import scalaz.std.AllInstances._
 import co.com.alianza.util.FutureResponse
+import co.com.alianza.infrastructure.dto.PinUsuario
+import scala.Some
+import co.com.alianza.infrastructure.messages.OlvidoContrasenaMessage
+import co.com.alianza.util.transformers.ValidationT
+import co.com.alianza.microservices.MailMessage
+import akka.routing.RoundRobinPool
+import co.com.alianza.util.token.PinData
+import co.com.alianza.infrastructure.dto.Cliente
+import co.com.alianza.infrastructure.dto.Usuario
+import co.com.alianza.infrastructure.messages.UsuarioMessage
+import co.com.alianza.infrastructure.messages.ResponseMessage
+import com.asobancaria.cifinpruebas.cifin.confrontav2plusws.services.ConfrontaUltraWS.{ConfrontaUltraWSSoapBindingStub, ConfrontaUltraWebServiceServiceLocator}
+import co.cifin.confrontaultra.dto.ultra.{CuestionarioULTRADTO, ParametrosULTRADTO, ParametrosSeguridadULTRADTO}
+import co.com.alianza.util.json.JsonUtil
 
 
 class UsuariosActorSupervisor extends Actor with ActorLogging {
@@ -192,7 +206,27 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
 
   }
 
+  private def obtenerCuestionario(sender:ActorRef, message:UsuarioMessage) = {
+      val currentSender = sender
 
+      val locator: ConfrontaUltraWebServiceServiceLocator = new ConfrontaUltraWebServiceServiceLocator(config.getString("confronta.service.obtenerCuestionario.location"))
+      val stub: ConfrontaUltraWSSoapBindingStub = locator.getConfrontaUltraWS.asInstanceOf[ConfrontaUltraWSSoapBindingStub]
+      val parametros: ParametrosSeguridadULTRADTO = new ParametrosSeguridadULTRADTO
+      parametros.setClaveCIFIN(config.getString("confronta.service.claveCIFIN"))
+      parametros.setPassword(config.getString("confronta.service.password"))
+      val parametrosUltra: ParametrosULTRADTO = new ParametrosULTRADTO
+      parametrosUltra.setCodigoDepartamento(config.getInt("confronta.service.departamento"))
+      parametrosUltra.setCodigoCuestionario(config.getInt("confronta.service.cuestionario"))
+      parametrosUltra.setTelefono("");
+      parametrosUltra.setCodigoCiudad(config.getInt("confronta.service.ciudad"))
+      parametrosUltra.setPrimerApellido(message.primerApellido.get.toUpperCase())
+      parametrosUltra.setCodigoTipoIdentificacion(if(message.tipoIdentificacion.toString.equals("1")){"1"}else{"3"})
+      parametrosUltra.setNumeroIdentificacion(message.identificacion)
+      parametrosUltra.setFechaExpedicion(message.fechaExpedicion.get)
+
+      val response: CuestionarioULTRADTO = stub.obtenerCuestionario(parametros, parametrosUltra)
+      currentSender ! JsonUtil.toJson(response)
+  }
 
   private def validaSolicitudCliente(message: OlvidoContrasenaMessage): Future[Validation[ErrorValidacion, Cliente]] = {
 
@@ -240,12 +274,7 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
       case sSuccess(value)    =>
         value match {
           case zSuccess(response) =>
-            currentSender !  ResponseMessage(Created, response.toString)
-            //DataAccessAdapterUsuario.asociarPerfiles(PerfilUsuario(response,PerfilesUsuario.clienteIndividual.id)::Nil)
-
-            //if(message.activarIP && message.clientIp.isDefined){
-            //  DataAccessAdapterUsuario.relacionarIp(response,message.clientIp.get)
-            //}
+            obtenerCuestionario(currentSender,message)
           case zFailure(error)  =>
             error match {
               case errorPersistence:ErrorPersistence  => currentSender !  errorPersistence.exception
