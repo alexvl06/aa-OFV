@@ -105,28 +105,15 @@ class ContrasenasActor extends Actor with ActorLogging with AlianzaActors {
           val passwordActualAppend = message.pw_actual.concat(AppendPasswordUser.appendUsuariosFiducia)
           val passwordNewAppend = message.pw_nuevo.concat(AppendPasswordUser.appendUsuariosFiducia)
 
-          DataAccessAdapter.consultarReglasContrasenas().onComplete {
-            case sFailure(failure) => currentSender ! failure
-            case sSuccess(value) =>
-              value match {
-                case zSuccess(response: List[ReglasContrasenas]) =>
+          val CambiarContrasenaFuture = (for {
+            usuarioContrasenaActual <- ValidationT(validacionConsultaContrasenaActual(passwordActualAppend, us_id))
+            idValReglasContra <- ValidationT(validacionReglasClave(message.pw_nuevo))
+            idUsuario <- ValidationT(ActualizarContrasena(passwordNewAppend, usuarioContrasenaActual))
+          } yield {
+            idUsuario
+          }).run
 
-                  val diasValida: Int = response.filter( r => r.llave == "DIAS_VALIDA").head.valor.toInt
-                  val nuevaFecha = new org.joda.time.DateTime().plusDays(diasValida)
-
-                  val CambiarContrasenaFuture = (for {
-                    usuarioContrasenaActual <- ValidationT(validacionConsultaContrasenaActual(passwordActualAppend, us_id))
-                    idValReglasContra <- ValidationT(validacionReglasClave(message.pw_nuevo))
-                    idUsuario <- ValidationT(ActualizarContrasenaYCaducidad(usuarioContrasenaActual, passwordNewAppend, nuevaFecha.getMillis))
-                  } yield {
-                    idUsuario
-                  }).run
-
-                  resolveCambiarContrasenaFuture(CambiarContrasenaFuture, currentSender)
-
-                case zFailure(error) => currentSender ! error
-              }
-          }
+          resolveCambiarContrasenaFuture(CambiarContrasenaFuture, currentSender)
 
         case false => currentSender ! ResponseMessage(Conflict, tokenValidationFailure)
       }
@@ -135,10 +122,6 @@ class ContrasenasActor extends Actor with ActorLogging with AlianzaActors {
 
   private def ActualizarContrasena(pw_nuevo: String, usuario: Option[Usuario]): Future[Validation[ErrorValidacion, Int]] = {
     DataAccessAdapter.ActualizarContrasena(pw_nuevo, usuario.get.id.get).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
-  }
-
-  private def ActualizarContrasenaYCaducidad(usuario: Option[Usuario], pw_nuevo: String, caducidad: Long): Future[Validation[ErrorValidacion, Int]] = {
-    DataAccessAdapter.ActualizarContrasenaYCaducidad(usuario.get.id.get, pw_nuevo, caducidad).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
   }
 
   def obtenerReglasContrasenas() = {
