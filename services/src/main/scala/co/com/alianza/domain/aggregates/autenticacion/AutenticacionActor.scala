@@ -72,10 +72,10 @@ class AutenticacionActor extends Actor with ActorLogging {
                   else if(valueResponse.estado == EstadosUsuarioEnum.pendienteReinicio.id)
                     currentSender ! ResponseMessage(Unauthorized, errorUsuarioBloqueadoPendienteReinicio)
                   else {
-                    //Se pone un "pase" para que no sea tan facil hacer unHashSha256 de los password planos
-                    val passwordFrontEnd = Crypto.hashSha256( message.password.concat( AppendPasswordUser.appendUsuariosFiducia ) )
+                    //Se pone un "pase" para que no sea tan facil hacer unHashSha512 de los password planos
+                    val passwordFrontEnd = Crypto.hashSha512( message.password.concat( AppendPasswordUser.appendUsuariosFiducia ) )
                     val passwordDB = valueResponse.contrasena.getOrElse("")
-                    //Crypto.hashSha256(message.contrasena))
+                    //Crypto.hashSha512(message.contrasena))
                     if (passwordFrontEnd.contentEquals(passwordDB)) {
                       //Una vez el usuario se encuentre activo en el sistema, se valida por su estado en el core de alianza.
                       val futureCliente = obtenerClienteAlianza(message.tipoIdentificacion, valueResponse.identificacion, currentSender: ActorRef)
@@ -103,16 +103,36 @@ class AutenticacionActor extends Actor with ActorLogging {
             case zSuccess(response: Option[Usuario]) =>
               response match {
                 case Some(valueResponse) =>
-                  relacionarIpUsuarioAutenticacion(valueResponse.id.get, message.clientIp.get, message.tipoIdentificacion, message.numeroIdentificacion, valueResponse.ipUltimoIngreso.getOrElse(""), valueResponse.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), currentSender)
-
+                  //Si el mensaje tiene campo agregarIP en true, se registra la IP desde donde se intenta realizar la validación
+                  //En caso de que venga el false, se realiza la autenticacion normalmente, es decir se genera el token, solo que no se agrega IP
+                  if( message.agregarIP )
+                    relacionarIpUsuarioAutenticacion(valueResponse.id.get, message.clientIp.get, message.tipoIdentificacion, message.numeroIdentificacion, valueResponse.ipUltimoIngreso.getOrElse(""), valueResponse.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), currentSender)
+                  else {
+                    val futureClienteAlianza = obtenerClienteAlianza(message.tipoIdentificacion, message.numeroIdentificacion, currentSender )
+                    realizarAutenticacionSinRegitrarIP(message.numeroIdentificacion, message.tipoIdentificacion.toString, valueResponse.ipUltimoIngreso.get, valueResponse.fechaUltimoIngreso.get, message.clientIp.get, currentSender, futureClienteAlianza);
+                  }
                 case None => currentSender ! ResponseMessage(Unauthorized, "Error al obtener usuario por numero de identificacion")
               }
             case zFailure(error) => currentSender ! error
           }
       }
+  }
 
 
-
+  private def realizarAutenticacionSinRegitrarIP( numeroIdentificacion: String, tipoIdentificacion: String, ipUltimoIngreso: String, fechaUltimoIngreso: Date, ipActual: String, currentSender: ActorRef, futureCliente: Future[Validation[PersistenceException, Option[Cliente]]] ){
+    futureCliente onComplete {
+      case Failure(failure) => currentSender ! failure
+      case Success(value) =>
+        value match {
+          case zSuccess(response: Option[Cliente]) =>
+            response match {
+              case Some(valueResponse) =>
+                realizarAutenticacion(numeroIdentificacion, valueResponse.wcli_nombre, valueResponse.wcli_dir_correo, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso, ipActual, currentSender);
+              case None => currentSender ! ResponseMessage(Unauthorized, "Error al obtener cliente en alianza por numero de identificacion")
+            }
+          case zFailure(error) => currentSender ! error
+        }
+    }
   }
 
   private def realizarValidacionesCliente(futureCliente: Future[Validation[PersistenceException, Option[Cliente]]], usuario: Usuario, messageTipoIdentificacion: Int, ip: String, currentSender: ActorRef) {
@@ -127,7 +147,7 @@ class AutenticacionActor extends Actor with ActorLogging {
                   currentSender ! ResponseMessage(Unauthorized, errorClienteNoExisteSP)
                 else if (valueResponseCliente.wcli_estado != EstadosCliente.bloqueoContraseña) {
                   //Se valida la caducidad de la contraseña
-                  validarFechaContrasena(usuario.fechaCaducidad, currentSender: ActorRef)
+                  validarFechaContrasena(usuario.id.get, usuario.fechaCaducidad, currentSender: ActorRef)
                   //Validacion de control de direccion IP del usuario
                   validarControlIpUsuario(usuario.identificacion, usuario.id.get, ip, valueResponseCliente.wcli_nombre, valueResponseCliente.wcli_dir_correo, valueResponseCliente.wcli_person, usuario.ipUltimoIngreso.getOrElse(""), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), currentSender: ActorRef)
                 } else
@@ -174,6 +194,7 @@ class AutenticacionActor extends Actor with ActorLogging {
                   val result = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.relacionarIp(idUsuario, ip)
                   //Luego de que el usuario asocia la IP, se envia a realizar autenticacion con datos a poner en el token
                   realizarAutenticacion(numeroIdentificacion, valueResponseCliente.wcli_nombre, valueResponseCliente.wcli_dir_correo, valueResponseCliente.wcli_person, ipUltimoIngreso, fechaUltimoIngreso, ip, currentSender)
+                  //currentSender ! "Registro de IP Exitoso"
                   //TODO:Se debe generar PIN de validacion de control de IP al igual que enviar correo con el mismo
                 } else
                   currentSender ! ResponseMessage(Unauthorized, errorClienteInactivoSP)
@@ -312,7 +333,7 @@ class AutenticacionActor extends Actor with ActorLogging {
     }
   }
 
-  private def validarFechaContrasena(fechaCaducidadUsuario: Date, currentSender: ActorRef) = {
+  private def validarFechaContrasena(idUsuario: Int, fechaCaducidadUsuario: Date, currentSender: ActorRef) = {
 
     val calendarFechaCaducidad = Calendar.getInstance()
     calendarFechaCaducidad.setTime(fechaCaducidadUsuario)
@@ -328,7 +349,11 @@ class AutenticacionActor extends Actor with ActorLogging {
               case Some(valueResponse) =>
                 calendarFechaCaducidad.add(Calendar.DATE, valueResponse.valor.toInt)
                 if (calendarFechaActual.compareTo(calendarFechaCaducidad) >= 0)
-                  currentSender ! ResponseMessage(Unauthorized, errorUsuarioCaducidadContrasena)
+                {
+                  val tokenGenerado: String = Token.generarTokenCaducidadContrasena(idUsuario)
+                  val resp: String = ErrorMessage("401.9", "Error Credenciales", "La contraseña del usuario ha caducado", tokenGenerado).toJson
+                  currentSender ! ResponseMessage(Unauthorized, resp)
+                }
 
               case None =>
                 currentSender ! AlianzaException(new Exception("Error Obteniendo Clave de Días validos de contraseña al sistema"), TechnicalLevel, "Error al obtener clave de dias validos de contraseña al sistema")
@@ -347,7 +372,7 @@ class AutenticacionActor extends Actor with ActorLogging {
   //private val errorUsuarioRelacionIP = """{"code":"401.6","description":"No se pudo relacionar la direccion ip al usuario "}"""
   private val errorIntentosIngresosInvalidos = ErrorMessage("401.7", "Usuario Bloqueado", "Ha excedido el numero máximo intentos permitidos al sistema, su usuario ha sido bloqueado").toJson
   private val errorUsuarioBloqueadoIntentosErroneos = ErrorMessage("401.8", "Usuario Bloqueado", "El usuario se encuentra bloqueado").toJson
-  private val errorUsuarioCaducidadContrasena = ErrorMessage("401.9", "Error Credenciales", "La contraseña del usuario ha caducado").toJson
+  //private val errorUsuarioCaducidadContrasena = ErrorMessage("401.9", "Error Credenciales", "La contraseña del usuario ha caducado").toJson
   private val errorUsuarioBloqueadoPendienteActivacion = ErrorMessage("401.10", "Usuario Bloqueado", "El usuario se encuentra pendiente de activación").toJson
   private val errorUsuarioBloqueadoPendienteConfronta = ErrorMessage("401.11", "Usuario Bloqueado", "El usuario se encuentra bloqueado pendiente preguntas de seguridad").toJson
   private val errorUsuarioBloqueadoPendienteReinicio = ErrorMessage("401.12", "Usuario Bloqueado", "El usuario se encuentra bloqueado pendiente de reiniciar contraseña").toJson

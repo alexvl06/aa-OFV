@@ -35,7 +35,7 @@ object DataAccessAdapter {
   }
 
   def ActualizarContrasena(pw_nuevo: String, idUsuario: Int): Future[Validation[PersistenceException, Int]] = {
-    repo.actualizarContrasena(Crypto.hashSha256(pw_nuevo), idUsuario)
+    repo.actualizarContrasena(Crypto.hashSha512(pw_nuevo), idUsuario)
   }
 
 }

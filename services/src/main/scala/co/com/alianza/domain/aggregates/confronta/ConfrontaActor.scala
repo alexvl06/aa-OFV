@@ -48,27 +48,6 @@ class ConfrontaActor extends Actor with ActorLogging with AlianzaActors {
 
 
   def receive = {
-    case message:ObtenerCuestionarioRequestMessage  =>
-
-      val currentSender = sender()
-
-      val locator: ConfrontaUltraWebServiceServiceLocator = new ConfrontaUltraWebServiceServiceLocator(config.getString("confronta.service.obtenerCuestionario.location"))
-      val stub: ConfrontaUltraWSSoapBindingStub = locator.getConfrontaUltraWS.asInstanceOf[ConfrontaUltraWSSoapBindingStub]
-      val parametros: ParametrosSeguridadULTRADTO = new ParametrosSeguridadULTRADTO
-      parametros.setClaveCIFIN(config.getString("confronta.service.claveCIFIN"))
-      parametros.setPassword(config.getString("confronta.service.password"))
-      val parametrosUltra: ParametrosULTRADTO = new ParametrosULTRADTO
-      parametrosUltra.setCodigoDepartamento(config.getInt("confronta.service.departamento"))
-      parametrosUltra.setCodigoCuestionario(config.getInt("confronta.service.cuestionario"))
-      parametrosUltra.setTelefono("");
-      parametrosUltra.setCodigoCiudad(config.getInt("confronta.service.ciudad"))
-      parametrosUltra.setPrimerApellido(message.primerApellido.toUpperCase())
-      parametrosUltra.setCodigoTipoIdentificacion(if(message.codigoTipoIdentificacion.toString.equals("1")){"1"}else{"3"})
-      parametrosUltra.setNumeroIdentificacion(message.numeroIdentificacion)
-      parametrosUltra.setFechaExpedicion(message.fechaExpedicion)
-
-      val response: CuestionarioULTRADTO = stub.obtenerCuestionario(parametros, parametrosUltra)
-      currentSender ! JsonUtil.toJson(response)
 
     case message:ObtenerCuestionarioAdicionalRequestMessage =>
       val currentSender = sender()
@@ -92,25 +71,28 @@ class ConfrontaActor extends Actor with ActorLogging with AlianzaActors {
       val parametrosUltra: RespuestaCuestionarioULTRADTO = new RespuestaCuestionarioULTRADTO(message.secuenciaCuestionario,message.codigoCuestionario,respuestas.toArray(new Array[RespuestaPreguntaULTRADTO](respuestas.size())))
       val response = stub.evaluarCuestionario(parametros,parametrosUltra)
 
-      //response.getRespuestaProceso.setCodigoRespuesta( 1 )
       if(response.getRespuestaProceso.getCodigoRespuesta == 1){
         actualizarEstadoConfronta(message.id,response,currentSender)
       } else {
-        currentSender ! response.toJson
+        val respToSender = new ResultadoEvaluacionCuestionarioULTRADTO()
+        respToSender.setRespuestaProceso(response.getRespuestaProceso)
+        currentSender !  respToSender.toJson
       }
 
   }
 
   private def actualizarEstadoConfronta(message: UsuarioMessage, response:ResultadoEvaluacionCuestionarioULTRADTO, currentSender: ActorRef) = {
     val passwordUserWithAppend = message.contrasena.concat( AppendPasswordUser.appendUsuariosFiducia )
-    val resultActualizarEstadoConfronta = DataAccessAdapterUsuario.crearUsuario(message.toEntityUsuario( Crypto.hashSha256(passwordUserWithAppend))).map(_.leftMap( pe => ErrorPersistence(pe.message,pe)))
+    val resultActualizarEstadoConfronta = DataAccessAdapterUsuario.crearUsuario(message.toEntityUsuario( Crypto.hashSha512(passwordUserWithAppend))).map(_.leftMap( pe => ErrorPersistence(pe.message,pe)))
     resultActualizarEstadoConfronta onComplete {
       case Failure(failure) =>
         currentSender ! failure
       case Success(value) =>
         value match {
           case zSuccess(code: Int) =>
-            currentSender !  response.toJson
+            val respToSender = new ResultadoEvaluacionCuestionarioULTRADTO()
+            respToSender.setRespuestaProceso(response.getRespuestaProceso)
+            currentSender !  respToSender.toJson
             DataAccessAdapterUsuario.asociarPerfiles(PerfilUsuario(code,PerfilesUsuario.clienteIndividual.id)::Nil)
             if(message.activarIP && message.clientIp.isDefined){
               DataAccessAdapterUsuario.relacionarIp(code,message.clientIp.get)

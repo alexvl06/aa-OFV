@@ -28,6 +28,7 @@ class UsuariosRepository ( implicit executionContext: ExecutionContext) extends 
 
   val usuarios = TableQuery[UsuarioTable]
   val perfilesUsuarios = TableQuery[PerfilUsuarioTable]
+  val pinusuarios = TableQuery[PinUsuarioTable]
 
   def obtenerUsuarios(): Future[Validation[PersistenceException, List[Usuario]]] = loan {
     implicit session =>
@@ -123,6 +124,13 @@ class UsuariosRepository ( implicit executionContext: ExecutionContext) extends 
     implicit session =>
       val resultTry = Try{(perfilesUsuarios  ++= perfiles).toList}
       resolveTry(resultTry, "Actualizar usuario en token")
+  }
+
+
+  def guardarPinUsuario(pinUsuario:PinUsuario): Future[Validation[PersistenceException, Int]] = loan {
+    implicit session =>
+      val resultTry = Try{  (pinusuarios returning pinusuarios.map(_.id.get)) +=pinUsuario }
+      resolveTry(resultTry, "Agregar pin usuario")
   }
 
 }

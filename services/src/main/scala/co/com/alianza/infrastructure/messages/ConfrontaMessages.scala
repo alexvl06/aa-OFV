@@ -10,7 +10,7 @@ import spray.httpx.SprayJsonSupport
 object ConfrontaMessagesJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val ObtenerCuestionarioRequestMessageFormat = jsonFormat4(ObtenerCuestionarioRequestMessage)
   implicit val ObtenerCuestionarioAdicionalRequestMessageFormat = jsonFormat7(ObtenerCuestionarioAdicionalRequestMessage)
-  implicit val UsuariosMessageFormar = jsonFormat8(UsuarioMessage)
+  implicit val UsuariosMessageFormar = jsonFormat10(UsuarioMessage)
   implicit val ValidarCuestionarioRequestMessageFormat = jsonFormat4(ValidarCuestionarioRequestMessage)
 }
 

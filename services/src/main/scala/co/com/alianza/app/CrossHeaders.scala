@@ -1,20 +1,24 @@
 package co.com.alianza.app
 
-/**
- *
- * @author seven4n
- */
-trait  CrossHeaders {
+import spray.http._
+import spray.http.HttpHeaders._
+import spray.http.HttpMethods._
 
-  def listCrossHeaders: List[ spray.http.HttpHeader ] = {
-    import spray.http.HttpHeaders._
-    import spray.http._
-    import spray.http.HttpMethods._
+trait CrossHeaders {
 
-    List(
-      `Access-Control-Allow-Methods`( OPTIONS, GET, POST, PUT ),
-      `Access-Control-Allow-Headers`( "Accept", "Authorization", "Content-Type", "X-Requested-With" ),
-      `Access-Control-Expose-Headers`( "Accept", "WWW-Authenticate" ),
-      `Access-Control-Allow-Origin`( AllOrigins ) )
+  val domain: String = "http://fiduciaria.alianza.com.co"
+
+  def listCrossHeaders: List[spray.http.HttpHeader] = {
+
+    val origins = `Access-Control-Allow-Origin`(SomeOrigins(Seq(HttpOrigin(domain))))
+    val methods: `Access-Control-Allow-Methods` = `Access-Control-Allow-Methods`(GET, POST, PUT, DELETE)
+    val headers: `Access-Control-Allow-Headers` = `Access-Control-Allow-Headers`("Content-Type", "token")
+    val csp = RawHeader("Content-Security-Policy", "default-src 'self'")
+    val xpcd: RawHeader = RawHeader("X-Permitted-Cross-Domain-Policies", "master-only")
+    val ns: RawHeader = RawHeader("X-Content-Type-Options:", "nosniff")
+    val xfo: RawHeader = RawHeader("X-Frame-Options", "DENY")
+    val xss: RawHeader = RawHeader("X-XSS-Protection", "1")
+
+    origins :: methods :: headers :: csp ::xpcd :: ns :: xfo :: xss :: Nil
   }
 }
