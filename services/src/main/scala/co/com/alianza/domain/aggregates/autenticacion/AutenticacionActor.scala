@@ -108,8 +108,9 @@ class AutenticacionActor extends Actor with ActorLogging {
                   if( message.agregarIP )
                     relacionarIpUsuarioAutenticacion(valueResponse.id.get, message.clientIp.get, message.tipoIdentificacion, message.numeroIdentificacion, valueResponse.ipUltimoIngreso.getOrElse(""), valueResponse.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), currentSender)
                   else {
-                    val futureClienteAlianza = obtenerClienteAlianza(message.tipoIdentificacion, message.numeroIdentificacion, currentSender )
-                    realizarAutenticacionSinRegitrarIP(message.numeroIdentificacion, message.tipoIdentificacion.toString, valueResponse.ipUltimoIngreso.get, valueResponse.fechaUltimoIngreso.get, message.clientIp.get, currentSender, futureClienteAlianza);
+                    //val futureClienteAlianza = obtenerClienteAlianza(message.tipoIdentificacion, message.numeroIdentificacion, currentSender )
+                    //realizarAutenticacionSinRegitrarIP(message.numeroIdentificacion, message.tipoIdentificacion.toString, valueResponse.ipUltimoIngreso.get, valueResponse.fechaUltimoIngreso.get, message.clientIp.get, currentSender, futureClienteAlianza);
+                    currentSender ! ResponseMessage(OK, "La IP no ha sido registrada, puede continuar la operación")
                   }
                 case None => currentSender ! ResponseMessage(Unauthorized, "Error al obtener usuario por numero de identificacion")
               }
@@ -193,7 +194,8 @@ class AutenticacionActor extends Actor with ActorLogging {
                   //Se asocia la direccion IP a las habituales del usuario
                   val result = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.relacionarIp(idUsuario, ip)
                   //Luego de que el usuario asocia la IP, se envia a realizar autenticacion con datos a poner en el token
-                  realizarAutenticacion(numeroIdentificacion, valueResponseCliente.wcli_nombre, valueResponseCliente.wcli_dir_correo, valueResponseCliente.wcli_person, ipUltimoIngreso, fechaUltimoIngreso, ip, currentSender)
+                  //realizarAutenticacion(numeroIdentificacion, valueResponseCliente.wcli_nombre, valueResponseCliente.wcli_dir_correo, valueResponseCliente.wcli_person, ipUltimoIngreso, fechaUltimoIngreso, ip, currentSender)
+                  currentSender ! ResponseMessage(OK, "La IP fue registrada exitosamente")
                   //currentSender ! "Registro de IP Exitoso"
                   //TODO:Se debe generar PIN de validacion de control de IP al igual que enviar correo con el mismo
                 } else
