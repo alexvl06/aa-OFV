@@ -18,4 +18,9 @@ case class ConnectionConfigCoreAlianza( config: Config ) extends ConnectionConf 
 	val acquireIncrement =  config.getInt("db.alianza.core.acquireIncrement")
 	val maxPoolSize =       config.getInt("db.alianza.core.maxPoolSize")
   val checkoutTimeout =   config.getInt("db.alianza.core.checkoutTimeout")
+
+
+  val dataSourceName = config.getString( "db.alianza.dataSourceName" )
+  val serverName = config.getString( "db.alianza.serverName" )
+  val dataBaseName = config.getString( "db.alianza.dataBaseName" )
 }

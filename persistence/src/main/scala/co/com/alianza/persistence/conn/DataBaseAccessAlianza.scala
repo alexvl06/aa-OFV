@@ -4,6 +4,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 
 import com.mchange.v2.c3p0.ComboPooledDataSource
 import co.com.alianza.util.ConfigApp
+import org.postgresql.ds.PGPoolingDataSource
 
 /**
  * Crea el data Source de la Conexión
@@ -13,18 +14,18 @@ import co.com.alianza.util.ConfigApp
 object DataBaseAccessAlianza{
 
 	private val config: Config = ConfigApp.conf
-	val dataSource: ComboPooledDataSource = createDatasource( ConnectionConfAlianza( config ) )
+	val dataSource: PGPoolingDataSource = createDatasource( ConnectionConfAlianza( config ) )
 
-	private def createDatasource( config: ConnectionConf ): ComboPooledDataSource = {
-		val dataSource = new ComboPooledDataSource
-    dataSource.setDriverClass( config.driver )
-    dataSource.setJdbcUrl( config.connectionString )
-    dataSource.setMinPoolSize( config.minPoolSize )
-    dataSource.setAcquireIncrement( config.acquireIncrement )
-    dataSource.setMaxPoolSize( config.maxPoolSize )
-    dataSource.setUser( config.user )
-    dataSource.setPassword( config.pass )
-    dataSource.setCheckoutTimeout(config.checkoutTimeout)
+	private def createDatasource( config: ConnectionConf ): PGPoolingDataSource = {
+
+    val dataSource = new PGPoolingDataSource();
+    dataSource.setDataSourceName( config.dataSourceName );
+    dataSource.setServerName( config.serverName );
+    dataSource.setDatabaseName( config.dataBaseName );
+    dataSource.setUser(config.user);
+    dataSource.setPassword(config.pass);
+    dataSource.setMaxConnections(config.maxPoolSize);
+    //new InitialContext().rebind("DataSource", source);
     dataSource
 	}
 }
