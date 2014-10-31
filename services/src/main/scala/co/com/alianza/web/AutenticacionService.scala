@@ -21,18 +21,6 @@ class AutenticacionService extends Directives with AlianzaCommons with CrossHead
             }
         }
       }
-    } ~ path("ponerIpHabitual") {
-      post {
-        entity(as[AgregarIPHabitualUsuario]) {
-          ponerIpHabitual =>
-            respondWithMediaType(mediaType) {
-              clientIP { ip =>
-                val nuevoPonerIpHabitual = ponerIpHabitual.copy(clientIp = Some(ip.value))
-                requestExecute(nuevoPonerIpHabitual, autenticacionActor)
-              }
-            }
-        }
-      }
     }
   }
 }

@@ -40,6 +40,18 @@ class IpsUsuariosService extends Directives with AlianzaCommons {
             }
         }
       }
+    } ~ path("ponerIpHabitual") {
+      post {
+        entity(as[AgregarIPHabitualUsuario]) {
+          ponerIpHabitual =>
+            respondWithMediaType(mediaType) {
+              clientIP { ip =>
+                val nuevoPonerIpHabitual = ponerIpHabitual.copy(clientIp = Some(ip.value))
+                requestExecute(nuevoPonerIpHabitual, autenticacionActor)
+              }
+            }
+        }
+      }
     }
   }
 
