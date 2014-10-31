@@ -3,6 +3,7 @@ package co.com.alianza.infrastructure.messages
 import co.com.alianza.persistence.entities.{ReglasContrasenas, IpsUsuario}
 import spray.json.DefaultJsonProtocol
 import spray.httpx.SprayJsonSupport
+import co.com.alianza.persistence.messages.AgregarIpHabitualRequest
 
 /**
  *
@@ -11,6 +12,7 @@ import spray.httpx.SprayJsonSupport
 object IpsUsuarioMessagesJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val AgregarIpsUsuarioMessageFormat = jsonFormat2(AgregarIpsUsuarioMessage)
   implicit val EliminarIpsUsuarioMessageFormat = jsonFormat2(EliminarIpsUsuarioMessage)
+  implicit val AgregarIpHabitualRequestMessageFormat = jsonFormat4(AgregarIPHabitualUsuario)
 }
 
 
@@ -28,4 +30,8 @@ case class EliminarIpsUsuarioMessage(idUsuario: Option[Int], ip: String) extends
   def toEntityIpsUsuario : IpsUsuario = {
     new IpsUsuario(idUsuario.get, ip)
   }
+}
+
+case class AgregarIPHabitualUsuario(tipoIdentificacion:Int, numeroIdentificacion: String, agregarIP:Boolean, clientIp:Option[String] = None)  extends MessageService{
+  def toAgregarClienteRequest:AgregarIpHabitualRequest = AgregarIpHabitualRequest(tipoIdentificacion, numeroIdentificacion, agregarIP, clientIp)
 }
