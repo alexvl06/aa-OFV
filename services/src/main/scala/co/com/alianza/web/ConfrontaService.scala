@@ -15,13 +15,13 @@ class ConfrontaService extends Directives with AlianzaCommons  {
   val validarCuestionario = "validarCuestionario"
 
   def route= {
-    path(confronta/obtenerCuestionario) {
+    path(confronta/obtenerCuestionarioAdicional) {
       post {
-        entity(as[ObtenerCuestionarioRequestMessage]) {
-          message =>
-            respondWithMediaType(mediaType) {
+        respondWithMediaType(mediaType) {
+          entity(as[ObtenerCuestionarioAdicionalRequestMessage]) {
+            message =>
               requestExecute(message, confrontaActor)
-            }
+          }
         }
       }
     } ~ path(confronta/validarCuestionario) {
