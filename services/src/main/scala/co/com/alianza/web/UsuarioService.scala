@@ -3,7 +3,7 @@ package co.com.alianza.web
 
 import spray.routing.Directives
 import co.com.alianza.app.{CrossHeaders, AlianzaCommons}
-import co.com.alianza.infrastructure.messages.{OlvidoContrasenaMessage, UsuariosMessagesJsonSupport, UsuarioMessage}
+import co.com.alianza.infrastructure.messages.{AgregarIPHabitualUsuario, OlvidoContrasenaMessage, UsuariosMessagesJsonSupport, UsuarioMessage}
 
 
 /**

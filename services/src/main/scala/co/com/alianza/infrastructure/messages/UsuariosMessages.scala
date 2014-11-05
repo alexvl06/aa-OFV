@@ -5,6 +5,7 @@ import spray.httpx.SprayJsonSupport
 import co.com.alianza.persistence.entities.{Usuario => eUsuario}
 import java.sql.Timestamp
 import enumerations.EstadosUsuarioEnum
+import co.com.alianza.persistence.messages.AgregarIpHabitualRequest
 
 /**
  *
@@ -28,4 +29,5 @@ case class UsuarioMessage(correo: String, identificacion: String, tipoIdentifica
 case class OlvidoContrasenaMessage(identificacion: String, tipoIdentificacion: Int) extends MessageService{
 
 }
+
 
