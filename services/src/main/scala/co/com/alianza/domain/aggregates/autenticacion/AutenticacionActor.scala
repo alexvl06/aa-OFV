@@ -213,13 +213,23 @@ class AutenticacionActor extends Actor with ActorLogging {
       case Success(value) =>
         value match {
           case zSuccess(response: Vector[IpsUsuario]) =>
-            if (response.isEmpty)
-              currentSender ! ResponseMessage(Conflict, errorUsuarioControlIpInactivo)
+            if (response.isEmpty) {
+              val tokenGenerado = Token.generarToken(nombreCliente, correoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso)
+
+              val resultAsociarToken = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.asociarTokenUsuario(numeroIdentificacion, tokenGenerado)
+
+              resultAsociarToken onComplete {
+                case Failure(failure) => currentSender ! failure
+                case Success(value) => currentSender ! ResponseMessage(Conflict, ErrorMessage("401.4", "Control IP", "El usuario no tiene activo el control de direcciones ip", "nknknk").toJson)
+              }
+
+              actualizarNumeroIngresosErroneos(numeroIdentificacion, 0, currentSender)
+              actualizarFechaUltimoIngreso(numeroIdentificacion, new Timestamp((new Date).getTime()), currentSender)
+            }
             else
               obtenerIpHabitual(numeroIdentificacion, idUsuario, ip, nombreCliente, correoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso, currentSender)
           case zFailure(error) =>
-            //Cuando el usuario no posea control de direcciones IP se debe permitir autenticacion normal
-            realizarAutenticacion(numeroIdentificacion, nombreCliente, correoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso, ip, currentSender)
+            currentSender ! error
         }
     }
   }
@@ -245,6 +255,8 @@ class AutenticacionActor extends Actor with ActorLogging {
     }
   }
 
+
+
   private def autenticacionUsuarioValido(numeroIdentificacion: String, nombreCliente: String, correoCliente: String, tipoIdentificacion: String, ipUltimoIngreso: String, fechaUltimaIngreso: Date, ipActual: String, currentSender: ActorRef){
     //TODO: Falta consultar si el usuario ya tiene el token relacionado, de ser asi no se genera ni se asocia, sino que se trae el token
     //El usuario paso las validaciones necesarias para  darse por autenticado
@@ -255,11 +267,6 @@ class AutenticacionActor extends Actor with ActorLogging {
     resultAsociarToken onComplete {
       case Failure(failure) => currentSender ! failure
       case Success(value) => currentSender ! tokenGenerado
-        value match {
-          case zSuccess(response: Int) =>
-          //currentSender !  ResponseMessage(Accepted, response.toString)
-          case zFailure(error) => currentSender ! error
-        }
     }
     //Se establece el numero de reintentos de ingreso en cero a la aplicacion
     actualizarNumeroIngresosErroneos(numeroIdentificacion, 0, currentSender)
