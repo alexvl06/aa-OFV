@@ -9,7 +9,7 @@ import spray.routing.Directives
 /**
  * Created by david on 16/06/14.
  */
-class IpsUsuariosService extends Directives with AlianzaCommons with CrossHeaders{
+class IpsUsuariosService extends Directives with AlianzaCommons with CrossHeaders {
 
   import IpsUsuarioMessagesJsonSupport._
   val ipsUsuarios = "ipsUsuarios"
@@ -18,27 +18,26 @@ class IpsUsuariosService extends Directives with AlianzaCommons with CrossHeader
   def route(user: UsuarioAuth) = {
 
     path(ipsUsuarios) {
-        get {
-          respondWithMediaType(mediaType) {
-            requestExecute(new ObtenerIpsUsuarioMessage(user.id), ipsUsuarioActor)
-          }
-        } ~
-          put {
-            entity(as[AgregarIpsUsuarioMessage]) {
-              agregarIpsUsuarioMessage =>
-                respondWithMediaType(mediaType) {
-                  val agregarIpsUsuarioMessageAux: AgregarIpsUsuarioMessage = agregarIpsUsuarioMessage.copy(idUsuario = Some(user.id))
-                  requestExecute(agregarIpsUsuarioMessageAux, ipsUsuarioActor)
-                }
+      get {
+        respondWithMediaType(mediaType) {
+          requestExecute(new ObtenerIpsUsuarioMessage(user.id), ipsUsuarioActor)
+        }
+      } ~
+      put {
+        entity(as[AgregarIpsUsuarioMessage]) {
+          agregarIpsUsuarioMessage =>
+            respondWithMediaType(mediaType) {
+              val agregarIpsUsuarioMessageAux: AgregarIpsUsuarioMessage = agregarIpsUsuarioMessage.copy(idUsuario = Some(user.id))
+              requestExecute(agregarIpsUsuarioMessageAux, ipsUsuarioActor)
             }
-          } ~
-          delete {
-            entity(as[EliminarIpsUsuarioMessage]) {
-              eliminarIpsUsuarioMessage =>
-                respondWithMediaType(mediaType) {
-                  val eliminarIpsUsuarioMessageAux: EliminarIpsUsuarioMessage = eliminarIpsUsuarioMessage.copy(idUsuario = Some(user.id))
-                  requestExecute(eliminarIpsUsuarioMessageAux, ipsUsuarioActor)
-                }
+        }
+      } ~
+      delete {
+        entity(as[EliminarIpsUsuarioMessage]) {
+          eliminarIpsUsuarioMessage =>
+            respondWithMediaType(mediaType) {
+              val eliminarIpsUsuarioMessageAux: EliminarIpsUsuarioMessage = eliminarIpsUsuarioMessage.copy(idUsuario = Some(user.id))
+              requestExecute(eliminarIpsUsuarioMessageAux, ipsUsuarioActor)
             }
           }
     }

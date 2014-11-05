@@ -148,9 +148,9 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
                           enviarCorreoOlvidoContrasena(actualizarContrasenaFuture, responseCliente.wcli_dir_correo, currentSender, message, valueResponse.id)
                         }
                         else if( valueResponse.estado == EstadosUsuarioEnum.pendienteReinicio.id )
-                          currentSender ! ErrorEstadoUsuarioOlvidoContrasena(errorEstadoReinicioContrasena)
+                          currentSender ! ResponseMessage(Conflict,errorEstadoReinicioContrasena)
                         else
-                          currentSender ! ErrorEstadoUsuarioOlvidoContrasena(errorEstadoUsuarioNoPermitido)
+                          currentSender ! ResponseMessage(Conflict,errorEstadoUsuarioNoPermitido)
 
                       case None => currentSender ! ResponseMessage(Unauthorized, "Error al obtener usuario por numero de identificacion")
                     }
