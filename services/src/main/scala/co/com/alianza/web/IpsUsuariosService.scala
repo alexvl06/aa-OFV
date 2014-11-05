@@ -39,7 +39,8 @@ class IpsUsuariosService extends Directives with AlianzaCommons with CrossHeader
               val eliminarIpsUsuarioMessageAux: EliminarIpsUsuarioMessage = eliminarIpsUsuarioMessage.copy(idUsuario = Some(user.id))
               requestExecute(eliminarIpsUsuarioMessageAux, ipsUsuarioActor)
             }
-          }
+        }
+      }
     }
   }
 
