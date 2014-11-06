@@ -94,7 +94,7 @@ class AutenticacionActor extends Actor with ActorLogging {
     case message: AgregarIPHabitualUsuario =>
 
       val currentSender = sender()
-      val resultUsuario = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerUsuarioNumeroIdentificacion(message.numeroIdentificacion);
+      val resultUsuario = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerUsuarioNumeroIdentificacion(message.numeroIdentificacion)
 
       resultUsuario onComplete {
         case Failure(failure) => currentSender ! failure
@@ -102,37 +102,14 @@ class AutenticacionActor extends Actor with ActorLogging {
           value match {
             case zSuccess(response: Option[Usuario]) =>
               response match {
+
                 case Some(valueResponse) =>
-                  //Si el mensaje tiene campo agregarIP en true, se registra la IP desde donde se intenta realizar la validación
-                  //En caso de que venga el false, se realiza la autenticacion normalmente, es decir se genera el token, solo que no se agrega IP
-                  if( message.agregarIP )
                     relacionarIpUsuarioAutenticacion(valueResponse.id.get, message.clientIp.get, message.tipoIdentificacion, message.numeroIdentificacion, valueResponse.ipUltimoIngreso.getOrElse(""), valueResponse.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), currentSender)
-                  else {
-                    val futureClienteAlianza = obtenerClienteAlianza(message.tipoIdentificacion, message.numeroIdentificacion, currentSender )
-                    realizarAutenticacionSinRegitrarIP(message.numeroIdentificacion, message.tipoIdentificacion.toString, valueResponse.ipUltimoIngreso.get, valueResponse.fechaUltimoIngreso.get, message.clientIp.get, currentSender, futureClienteAlianza);
-                  }
                 case None => currentSender ! ResponseMessage(Unauthorized, "Error al obtener usuario por numero de identificacion")
               }
             case zFailure(error) => currentSender ! error
           }
       }
-  }
-
-
-  private def realizarAutenticacionSinRegitrarIP( numeroIdentificacion: String, tipoIdentificacion: String, ipUltimoIngreso: String, fechaUltimoIngreso: Date, ipActual: String, currentSender: ActorRef, futureCliente: Future[Validation[PersistenceException, Option[Cliente]]] ){
-    futureCliente onComplete {
-      case Failure(failure) => currentSender ! failure
-      case Success(value) =>
-        value match {
-          case zSuccess(response: Option[Cliente]) =>
-            response match {
-              case Some(valueResponse) =>
-                realizarAutenticacion(numeroIdentificacion, valueResponse.wcli_nombre, valueResponse.wcli_dir_correo, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso, ipActual, currentSender);
-              case None => currentSender ! ResponseMessage(Unauthorized, "Error al obtener cliente en alianza por numero de identificacion")
-            }
-          case zFailure(error) => currentSender ! error
-        }
-    }
   }
 
   private def realizarValidacionesCliente(futureCliente: Future[Validation[PersistenceException, Option[Cliente]]], usuario: Usuario, messageTipoIdentificacion: Int, ip: String, currentSender: ActorRef) {
@@ -188,14 +165,10 @@ class AutenticacionActor extends Actor with ActorLogging {
           case zSuccess(response: Option[Cliente]) =>
             response match {
               case Some(valueResponseCliente) =>
-                //TODO:Cambiar la validacion, es decir poner en el if !
                 if (valueResponseCliente.wcli_estado != EstadosCliente.bloqueoContraseña) {
                   //Se asocia la direccion IP a las habituales del usuario
                   val result = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.relacionarIp(idUsuario, ip)
-                  //Luego de que el usuario asocia la IP, se envia a realizar autenticacion con datos a poner en el token
-                  realizarAutenticacion(numeroIdentificacion, valueResponseCliente.wcli_nombre, valueResponseCliente.wcli_dir_correo, valueResponseCliente.wcli_person, ipUltimoIngreso, fechaUltimoIngreso, ip, currentSender)
-                  //currentSender ! "Registro de IP Exitoso"
-                  //TODO:Se debe generar PIN de validacion de control de IP al igual que enviar correo con el mismo
+                  currentSender ! "Registro de IP Exitoso"
                 } else
                   currentSender ! ResponseMessage(Unauthorized, errorClienteInactivoSP)
               case None => currentSender ! ResponseMessage(Unauthorized, errorClienteNoExisteSP)
@@ -208,33 +181,33 @@ class AutenticacionActor extends Actor with ActorLogging {
   private def validarControlIpUsuario(numeroIdentificacion: String, idUsuario: Int, ip: String, nombreCliente: String, correoUsuario: String, tipoIdentificacion: String, ipUltimoIngreso: String, fechaUltimoIngreso: Date, currentSender: ActorRef) = {
     //Se valida que el control de direcciones IP del usuario se encuentre activo
     val resultControlIP = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerIpsUsuario(idUsuario)
+
+    val tokenGenerado: String = Token.generarToken(nombreCliente, correoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso)
+    val resultAsociarToken: Future[Validation[PersistenceException, Int]] = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.asociarTokenUsuario(numeroIdentificacion, tokenGenerado)
+    actualizarNumeroIngresosErroneos(numeroIdentificacion, 0, currentSender)
+    actualizarFechaUltimoIngreso(numeroIdentificacion, new Timestamp((new Date).getTime()), currentSender)
+
     resultControlIP onComplete {
       case Failure(failure) => currentSender ! failure
       case Success(value) =>
         value match {
           case zSuccess(response: Vector[IpsUsuario]) =>
+
             if (response.isEmpty) {
-              val tokenGenerado = Token.generarToken(nombreCliente, correoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso)
-
-              val resultAsociarToken = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.asociarTokenUsuario(numeroIdentificacion, tokenGenerado)
-
               resultAsociarToken onComplete {
                 case Failure(failure) => currentSender ! failure
-                case Success(value) => currentSender ! ResponseMessage(Conflict, ErrorMessage("401.4", "Control IP", "El usuario no tiene activo el control de direcciones ip", "nknknk").toJson)
+                case Success(value) => currentSender ! ResponseMessage(Conflict, ErrorMessage("401.4", "Control IP", "El usuario no tiene activo el control de direcciones ip", tokenGenerado).toJson)
               }
-
-              actualizarNumeroIngresosErroneos(numeroIdentificacion, 0, currentSender)
-              actualizarFechaUltimoIngreso(numeroIdentificacion, new Timestamp((new Date).getTime()), currentSender)
             }
-            else
-              obtenerIpHabitual(numeroIdentificacion, idUsuario, ip, nombreCliente, correoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso, currentSender)
+            else obtenerIpHabitual(numeroIdentificacion, idUsuario, ip, nombreCliente, correoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso, currentSender, tokenGenerado)
+
           case zFailure(error) =>
             currentSender ! error
         }
     }
   }
 
-  private def obtenerIpHabitual(numeroIdentificacion: String, idUsuario: Int, ip: String, nombreCliente: String, correoUsuario: String, tipoIdentificacion: String, ipUltimoIngreso: String, fechaUltimoIngreso: Date, currentSender: ActorRef) = {
+  private def obtenerIpHabitual(numeroIdentificacion: String, idUsuario: Int, ip: String, nombreCliente: String, correoUsuario: String, tipoIdentificacion: String, ipUltimoIngreso: String, fechaUltimoIngreso: Date, currentSender: ActorRef, tokenGenerado: String) = {
     //En caso de que este activo, se valida que la ip de acceso es una direccion habitual registrada
     val resultIpValida = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerIpUsuarioValida(idUsuario, ip)
     resultIpValida onComplete {
@@ -246,7 +219,7 @@ class AutenticacionActor extends Actor with ActorLogging {
               case Some(valueResponse) =>
                 realizarAutenticacion(numeroIdentificacion, nombreCliente, correoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso, ip, currentSender)
               case None =>
-                currentSender ! ResponseMessage(Conflict, errorUsuarioControlIpInactivo)
+                currentSender ! ResponseMessage(Conflict, ErrorMessage("401.4", "Control IP", "El usuario no tiene activo el control de direcciones ip", tokenGenerado).toJson)
             }
           //En caso de que la direccion IP no sea habitual para el usuario, se procede a preguntar si desea registrarla como habitual
           //Esta excepcion debe ser mostrada en un confirm en presentacion, creando un servicio de registro de la misma
