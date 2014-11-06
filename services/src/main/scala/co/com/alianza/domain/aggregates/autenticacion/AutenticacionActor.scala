@@ -102,7 +102,6 @@ class AutenticacionActor extends Actor with ActorLogging {
           value match {
             case zSuccess(response: Option[Usuario]) =>
               response match {
-
                 case Some(valueResponse) =>
                     relacionarIpUsuarioAutenticacion(valueResponse.id.get, message.clientIp.get, message.tipoIdentificacion, message.numeroIdentificacion, valueResponse.ipUltimoIngreso.getOrElse(""), valueResponse.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), currentSender)
                 case None => currentSender ! ResponseMessage(Unauthorized, "Error al obtener usuario por numero de identificacion")
@@ -169,8 +168,7 @@ class AutenticacionActor extends Actor with ActorLogging {
                   //Se asocia la direccion IP a las habituales del usuario
                   val result = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.relacionarIp(idUsuario, ip)
                   currentSender ! "Registro de IP Exitoso"
-                } else
-                  currentSender ! ResponseMessage(Unauthorized, errorClienteInactivoSP)
+                } else currentSender ! ResponseMessage(Unauthorized, errorClienteInactivoSP)
               case None => currentSender ! ResponseMessage(Unauthorized, errorClienteNoExisteSP)
             }
           case zFailure(error) => currentSender ! error
@@ -347,7 +345,6 @@ class AutenticacionActor extends Actor with ActorLogging {
   private val errorClienteInactivoSP = ErrorMessage("401.1", "Error Cliente Alianza", "Cliente inactivo en core de alianza").toJson
   private val errorClienteNoExisteSP = ErrorMessage("401.2", "Error Cliente Alianza", "No existe el cliente en el core de alianza").toJson
   private val errorUsuarioCredencialesInvalidas = ErrorMessage("401.3", "Error Credenciales", "Credenciales invalidas para acceder al portal de alianza fiduciaria").toJson
-  private val errorUsuarioControlIpInactivo = ErrorMessage("401.4", "Control IP", "El usuario no tiene activo el control de direcciones ip").toJson
   // private val errorClienteConexionCore = """{"code":"401.5","description":"No se pudo conectar con el servicio core de alianza"}"""
   //private val errorUsuarioRelacionIP = """{"code":"401.6","description":"No se pudo relacionar la direccion ip al usuario "}"""
   private val errorIntentosIngresosInvalidos = ErrorMessage("401.7", "Usuario Bloqueado", "Ha excedido el numero máximo intentos permitidos al sistema, su usuario ha sido bloqueado").toJson
