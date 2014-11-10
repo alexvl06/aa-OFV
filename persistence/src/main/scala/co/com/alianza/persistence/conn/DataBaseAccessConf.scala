@@ -8,19 +8,16 @@ package co.com.alianza.persistence.conn
  */
 trait ConnectionConf {
 
-	def connectionString: String
+  def dataSourceName:String
+
+  def serverName:String
+
+  def dataBaseName:String
 
 	def user: String
 
 	def pass: String
 
-	def driver: String
-
-	def minPoolSize: Int
-
-	def acquireIncrement: Int
-
 	def maxPoolSize: Int
 
-  def checkoutTimeout:Int
 }

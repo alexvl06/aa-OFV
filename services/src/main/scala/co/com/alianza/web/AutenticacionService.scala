@@ -2,7 +2,7 @@ package co.com.alianza.web
 
 import spray.routing.Directives
 import co.com.alianza.app.{ CrossHeaders, AlianzaCommons }
-import co.com.alianza.infrastructure.messages.{AutenticacionMessagesJsonSupport, AutenticarMessage, AgregarIPHabitualUsuario }
+import co.com.alianza.infrastructure.messages.{IpsUsuarioMessagesJsonSupport, AutenticacionMessagesJsonSupport, AutenticarMessage, AgregarIPHabitualUsuario}
 
 class AutenticacionService extends Directives with AlianzaCommons with CrossHeaders {
 
@@ -27,7 +27,7 @@ class AutenticacionService extends Directives with AlianzaCommons with CrossHead
           ponerIpHabitual =>
             respondWithMediaType(mediaType) {
               clientIP { ip =>
-                val nuevoPonerIpHabitual = ponerIpHabitual.copy(clientIp = Some(ip.value))
+                val nuevoPonerIpHabitual: AgregarIPHabitualUsuario = ponerIpHabitual.copy(clientIp = Some(ip.value))
                 requestExecute(nuevoPonerIpHabitual, autenticacionActor)
               }
             }

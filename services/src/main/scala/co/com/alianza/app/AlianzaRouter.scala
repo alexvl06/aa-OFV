@@ -20,11 +20,10 @@ class AlianzaRouter extends HttpServiceActor with RouteConcatenation with CrossH
     new AutenticacionService( ).route ~
     new ConfrontaService().route ~
     new EnumeracionService().route ~
-    //new ClienteCoreService().route ~
     new UsuarioService().route ~
     new ReglasContrasenasService().route ~
     new PinService().route ~
-    new AdministrarContrasenaService().insecureRoute
+    new AdministrarContrasenaService().insecureRoute ~
     authenticate(authenticateUser) {
       user =>
         new IpsUsuariosService().route(user) ~
@@ -33,9 +32,7 @@ class AlianzaRouter extends HttpServiceActor with RouteConcatenation with CrossH
 
   def receive = runRoute(
     respondWithHeaders(listCrossHeaders){
-      routes ~ options {
-        complete(OK)
-      }
+      routes
     })
 
 }

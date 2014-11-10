@@ -18,6 +18,10 @@ EclipseKeys.projectFlavor := EclipseProjectFlavor.Scala
 
 resolvers ++= commonResolvers
 
-libraryDependencies ++= commonLibraries ++ reactiveLibraries ++ Seq("com.typesafe.slick" %% "slick" % "2.0.2", "postgresql" % "postgresql" % "9.1-901.jdbc4", "c3p0" % "c3p0" % "0.9.1.2", "com.github.tminglei" % "slick-pg_2.10" % "0.6.0-M1", "com.github.tminglei" % "slick-pg_joda-time_2.10" % "0.6.0-M1")
+def postgresqljdbc = Seq(
+  "org.postgresql" % "postgresql" % "9.3-1102-jdbc41"
+)
+
+libraryDependencies ++= commonLibraries ++ reactiveLibraries ++ postgresqljdbc ++ Seq("com.typesafe.slick" %% "slick" % "2.0.2", "postgresql" % "postgresql" % "9.1-901.jdbc4", "c3p0" % "c3p0" % "0.9.1.2", "com.github.tminglei" % "slick-pg_2.10" % "0.6.0-M1", "com.github.tminglei" % "slick-pg_joda-time_2.10" % "0.6.0-M1")
 
 seq( Revolver.settings: _* )

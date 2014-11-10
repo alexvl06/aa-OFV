@@ -148,9 +148,9 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
                           enviarCorreoOlvidoContrasena(actualizarContrasenaFuture, responseCliente.wcli_dir_correo, currentSender, message, valueResponse.id)
                         }
                         else if( valueResponse.estado == EstadosUsuarioEnum.pendienteReinicio.id )
-                          currentSender ! ErrorEstadoUsuarioOlvidoContrasena(errorEstadoReinicioContrasena)
+                          currentSender ! ResponseMessage(Conflict,errorEstadoReinicioContrasena)
                         else
-                          currentSender ! ErrorEstadoUsuarioOlvidoContrasena(errorEstadoUsuarioNoPermitido)
+                          currentSender ! ResponseMessage(Conflict,errorEstadoUsuarioNoPermitido)
 
                       case None => currentSender ! ResponseMessage(Unauthorized, "Error al obtener usuario por numero de identificacion")
                     }
@@ -287,8 +287,8 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
   private def buildMessage(pinUsuario: PinUsuario, message: UsuarioMessage, templateBody: String, asuntoTemp: String) = {
     val body: String =new MailMessageUsuario(templateBody).getMessagePin(pinUsuario)
     val asunto: String = config.getString(asuntoTemp)
-    //MailMessage(config.getString("alianza.smtp.from"), "josegarcia@seven4n.com", List(), asunto, body, "")
-    MailMessage(config.getString("alianza.smtp.from"), message.correo, List(), asunto, body, "")
+    MailMessage(config.getString("alianza.smtp.from"), "josegarcia@seven4n.com", List(), asunto, body, "")
+    //MailMessage(config.getString("alianza.smtp.from"), message.correo, List(), asunto, body, "")
   }
 
 

@@ -1,6 +1,6 @@
 package co.com.alianza.web
 
-import co.com.alianza.app.AlianzaCommons
+import co.com.alianza.app.{CrossHeaders, AlianzaCommons}
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.persistence.entities.IpsUsuario
@@ -9,10 +9,11 @@ import spray.routing.Directives
 /**
  * Created by david on 16/06/14.
  */
-class IpsUsuariosService extends Directives with AlianzaCommons {
+class IpsUsuariosService extends Directives with AlianzaCommons with CrossHeaders {
 
   import IpsUsuarioMessagesJsonSupport._
   val ipsUsuarios = "ipsUsuarios"
+  val ponerIpHabitual = "ponerIpHabitual"
 
   def route(user: UsuarioAuth) = {
 

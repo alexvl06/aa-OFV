@@ -3,6 +3,7 @@ package co.com.alianza.infrastructure.messages
 import co.com.alianza.persistence.entities.{ReglasContrasenas, IpsUsuario}
 import spray.json.DefaultJsonProtocol
 import spray.httpx.SprayJsonSupport
+import co.com.alianza.persistence.messages.AgregarIpHabitualRequest
 
 /**
  *
