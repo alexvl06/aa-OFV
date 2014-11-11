@@ -20,7 +20,7 @@ class EnumeracionService extends Directives with AlianzaCommons  {
     path(enumeracion/tiposIdentificacion) {
         get {
             complete {
-              val list = List(new TipoIdentificaciones( 1 ,"CC" ),new TipoIdentificaciones( 2 ,"CE" ), new TipoIdentificaciones( 3 ,"NIT" ))
+              val list = List(new TipoIdentificaciones( 1 ,"CC" ),new TipoIdentificaciones( 2 ,"CE" ), new TipoIdentificaciones( 3 ,"NIT" ), new TipoIdentificaciones( 4 ,"F" ), new TipoIdentificaciones( 5 ,"T" ))
               JsonUtil.toJson(list)
             }
         }
