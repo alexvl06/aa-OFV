@@ -138,9 +138,9 @@ class AutenticacionActor extends Actor with ActorLogging {
   //Se valida la naturalidad de la persona que realiza la autenticaciónS
   private def getTipoPersona(idTipoIdent: Int): String = {
     idTipoIdent match {
-      case TipoIdentificacion.CEDULA_CUIDADANIA.identificador => "N"
-      case TipoIdentificacion.CEDULA_EXTRANJERIA.identificador => "N"
-      case _ => "J"
+      case TipoIdentificacion.FID.identificador => "F"
+      case TipoIdentificacion.NIT.identificador => "J"
+      case _ => "N"
     }
   }
 
