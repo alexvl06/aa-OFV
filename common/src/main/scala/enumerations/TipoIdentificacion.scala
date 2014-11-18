@@ -13,7 +13,7 @@ object TipoIdentificacion extends Enumeration {
   val CEDULA_CUIDADANIA = Val( 1 ,"CC" )
   val CEDULA_EXTRANJERIA = Val( 2 , "CE" )
   val NIT = Val( 3 , "NIT" )
-
-
+  val FID = Val( 4 , "F" )
+  val TI = Val( 5 , "T" )
 
 }

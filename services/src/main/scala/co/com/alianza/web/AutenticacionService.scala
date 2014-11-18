@@ -36,6 +36,3 @@ class AutenticacionService extends Directives with AlianzaCommons with CrossHead
     }
   }
 }
-
-
-
