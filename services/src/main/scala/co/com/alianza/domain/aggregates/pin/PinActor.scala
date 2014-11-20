@@ -5,7 +5,7 @@ import java.sql.Timestamp
 import akka.actor.{ActorRef, ActorLogging, Actor}
 
 import co.com.alianza.app.{MainActors, AlianzaActors}
-import co.com.alianza.domain.aggregates.usuarios.{ErrorPersistence, ErrorValidacion, ValdiacionesUsuario}
+import co.com.alianza.domain.aggregates.usuarios.{ErrorPersistence, ErrorValidacion, ValidacionesUsuario}
 import co.com.alianza.infrastructure.anticorruption.pin.{DataAccessAdapter => pDataAccessAdapter}
 import co.com.alianza.infrastructure.anticorruption.ultimasContrasenas.{ DataAccessAdapter => DataAccessAdapterUltimaContrasena }
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => uDataAccessAdapter}
@@ -55,7 +55,7 @@ class PinActorSupervisor extends Actor with ActorLogging {
 class PinActor extends Actor with ActorLogging with AlianzaActors with FutureResponse {
 
   implicit val ex: ExecutionContext = MainActors.dataAccesEx
-  import ValdiacionesUsuario._
+  import ValidacionesUsuario._
 
   def receive = {
     case message: ValidarPin => validarPin(message.tokenHash)

@@ -1,14 +1,17 @@
 package co.com.alianza.domain.aggregates.usuarios
 
+import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.exceptions.PersistenceException
+import co.com.alianza.infrastructure.anticorruption.configuraciones.DataAccessAdapter
 
 import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
 import co.com.alianza.infrastructure.messages.{ErrorMessage, UsuarioMessage}
 import co.com.alianza.persistence.messages.ConsultaClienteRequest
 import scala.concurrent.{ExecutionContext, Future}
-import co.com.alianza.infrastructure.dto.{Cliente, Usuario}
+import co.com.alianza.infrastructure.dto.{Configuracion, Cliente, Usuario}
 import co.com.alianza.infrastructure.anticorruption.clientes.{DataAccessAdapter => DataAccessAdapterCliente }
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => DataAccessAdapterUsuario }
+import co.com.alianza.infrastructure.anticorruption.configuraciones.{DataAccessTranslator => dataAccessTransConf, DataAccessAdapter => dataAccesAdaptarConf}
 
 import enumerations.{TipoIdentificacion, EstadosCliente}
 
@@ -24,7 +27,7 @@ import com.typesafe.config.{ConfigFactory, Config}
  *
  * @author smontanez
  */
-object  ValdiacionesUsuario {
+object  ValidacionesUsuario {
 
   import co.com.alianza.util.json.MarshallableImplicits._
   implicit val _: ExecutionContext = MainActors.dataAccesEx
@@ -125,6 +128,15 @@ object  ValdiacionesUsuario {
         case Some(c) => zSuccess(x)
         case None => zFailure(ErrorContrasenaNoExiste(errorContrasenaActualNoExiste))
         case _ => zFailure(ErrorContrasenaNoExiste(errorContrasenaActualNoExiste))
+      }
+    })
+  }
+
+  def validacionConsultaTiempoExpiracion(): Future[Validation[ErrorValidacion, Configuracion]] = {
+    val configuracionFuture = dataAccesAdaptarConf.obtenerConfiguracionPorLlave( TiposConfiguracion.EXPIRACION_PIN.llave )
+    configuracionFuture.map(_.leftMap(pe => ErrorPersistence(pe.message,pe)).flatMap{
+      (x:Option[Configuracion]) => x match{
+        case Some(c) => zSuccess(c)
       }
     })
   }
