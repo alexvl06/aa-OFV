@@ -1,5 +1,7 @@
 package co.com.alianza.domain.aggregates.usuarios
 
+import co.com.alianza.exceptions.PersistenceException
+
 import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
 import co.com.alianza.infrastructure.messages.{ErrorMessage, UsuarioMessage}
 import co.com.alianza.persistence.messages.ConsultaClienteRequest
@@ -30,7 +32,7 @@ object  ValdiacionesUsuario {
 
   def validacionReglasClave(message:UsuarioMessage): Future[Validation[ErrorValidacion, Unit.type]] = {
 
-    val usuarioFuture = ValidarClave.aplicarReglas(message.contrasena,ValidarClave.reglasGenerales: _*)
+    val usuarioFuture: Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = ValidarClave.aplicarReglas(message.contrasena, None, ValidarClave.reglasGenerales: _*)
 
     usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message,pe)).flatMap{
       (x:List[ErrorValidacionClave]) => x match{
@@ -43,9 +45,9 @@ object  ValdiacionesUsuario {
   }
 
 
-  def validacionReglasClave(contrasena:String): Future[Validation[ErrorValidacion, Unit.type]] = {
+  def validacionReglasClave(contrasena:String, idUsuario: Int): Future[Validation[ErrorValidacion, Unit.type]] = {
 
-    val usuarioFuture = ValidarClave.aplicarReglas(contrasena,ValidarClave.reglasGenerales: _*)
+    val usuarioFuture: Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = ValidarClave.aplicarReglas(contrasena, Some(idUsuario), ValidarClave.reglasGenerales: _*)
 
     usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message,pe)).flatMap{
       (x:List[ErrorValidacionClave]) => x match{

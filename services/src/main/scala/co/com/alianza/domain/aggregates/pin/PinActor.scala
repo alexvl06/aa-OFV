@@ -1,14 +1,18 @@
 package co.com.alianza.domain.aggregates.pin
 
+import java.sql.Timestamp
+
 import akka.actor.{ActorRef, ActorLogging, Actor}
 
 import co.com.alianza.app.{MainActors, AlianzaActors}
 import co.com.alianza.domain.aggregates.usuarios.{ErrorPersistence, ErrorValidacion, ValdiacionesUsuario}
 import co.com.alianza.infrastructure.anticorruption.pin.{DataAccessAdapter => pDataAccessAdapter}
+import co.com.alianza.infrastructure.anticorruption.ultimasContrasenas.{ DataAccessAdapter => DataAccessAdapterUltimaContrasena }
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => uDataAccessAdapter}
 import co.com.alianza.infrastructure.dto.PinUsuario
 import co.com.alianza.infrastructure.messages.PinMessages._
 import co.com.alianza.infrastructure.messages.ResponseMessage
+import co.com.alianza.persistence.entities.UltimaContrasena
 import co.com.alianza.util.FutureResponse
 import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.transformers.ValidationT
@@ -76,8 +80,9 @@ class PinActor extends Actor with ActorLogging with AlianzaActors with FutureRes
     val finalResultFuture = (for {
       pin <- ValidationT(obtenerPinFuture)
       pinValidacion <- ValidationT(PinUtil.validarPinFuture(pin))
-      rvalidacionClave <- ValidationT(validacionReglasClave(pw))
+      rvalidacionClave <- ValidationT(validacionReglasClave(pw, pinValidacion.idUsuario))
       rCambiarPss <- ValidationT(cambiarPassword(pinValidacion.idUsuario, passwordAppend))
+      resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(pinValidacion.idUsuario, Crypto.hashSha512(passwordAppend)))
       rCambiarEstado <- ValidationT(cambiarEstado(pinValidacion.idUsuario))
       idResult <- ValidationT(eliminarPin(pinValidacion.tokenHash))
     } yield {
@@ -85,6 +90,10 @@ class PinActor extends Actor with ActorLogging with AlianzaActors with FutureRes
     }).run
 
     resolveCrearUsuarioFuture(finalResultFuture, currentSender)
+  }
+
+  private def guardarUltimaContrasena(idUsuario: Int, uContrasena: String): Future[Validation[ErrorValidacion, Unit]] = {
+    DataAccessAdapterUltimaContrasena.guardarUltimaContrasena(UltimaContrasena(None, idUsuario , uContrasena, new Timestamp(System.currentTimeMillis()))).map(_.leftMap( pe => ErrorPersistence(pe.message, pe)))
   }
 
   private def cambiarPassword(idUsuario: Int, pw: String): Future[Validation[ErrorValidacion, Int]] = {

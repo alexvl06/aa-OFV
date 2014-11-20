@@ -1,7 +1,11 @@
 package co.com.alianza.domain.aggregates.confronta
 
+import java.sql.Timestamp
 import akka.actor.{ActorRef, Actor, Props, ActorLogging}
+import co.com.alianza.infrastructure.anticorruption.ultimasContrasenas.DataAccessAdapter
+import co.com.alianza.util.transformers.ValidationT
 import scalaz.{Failure => zFailure, Success => zSuccess}
+import scalaz.std.AllInstances._
 import scala.util.{Success, Failure}
 import co.com.alianza.app.{MainActors, AlianzaActors}
 import com.typesafe.config.{ConfigFactory, Config}
@@ -12,9 +16,10 @@ import com.asobancaria.cifinpruebas.cifin.confrontav2plusws.services.ConfrontaUl
 import co.com.alianza.util.json.JsonUtil
 import co.cifin.confrontaultra.dto.ultras.RespuestaCuestionarioULTRADTO
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => DataAccessAdapterUsuario }
+import co.com.alianza.infrastructure.anticorruption.ultimasContrasenas.{DataAccessAdapter => DataAccessAdapterUltimaContrasena }
 import co.com.alianza.util.clave.Crypto
 import co.com.alianza.domain.aggregates.usuarios.ErrorPersistence
-import co.com.alianza.persistence.entities.PerfilUsuario
+import co.com.alianza.persistence.entities.{UltimaContrasena, PerfilUsuario}
 import enumerations.{AppendPasswordUser, PerfilesUsuario}
 
 
@@ -83,10 +88,17 @@ class ConfrontaActor extends Actor with ActorLogging with AlianzaActors {
 
   private def actualizarEstadoConfronta(message: UsuarioMessage, response:ResultadoEvaluacionCuestionarioULTRADTO, currentSender: ActorRef) = {
     val passwordUserWithAppend = message.contrasena.concat( AppendPasswordUser.appendUsuariosFiducia )
-    val resultActualizarEstadoConfronta = DataAccessAdapterUsuario.crearUsuario(message.toEntityUsuario( Crypto.hashSha512(passwordUserWithAppend))).map(_.leftMap( pe => ErrorPersistence(pe.message,pe)))
-    resultActualizarEstadoConfronta onComplete {
-      case Failure(failure) =>
-        currentSender ! failure
+    //val resultActualizarEstadoConfronta = DataAccessAdapterUsuario.crearUsuario(message.toEntityUsuario( Crypto.hashSha512(passwordUserWithAppend))).map(_.leftMap( pe => ErrorPersistence(pe.message,pe)))
+
+    val UsuarioCreadoFuture = (for{
+      resultActualizarEstadoConfronta <- ValidationT( DataAccessAdapterUsuario.crearUsuario(message.toEntityUsuario( Crypto.hashSha512(passwordUserWithAppend))).map(_.leftMap( pe => ErrorPersistence(pe.message,pe))) )
+      resultGuardarUltimasContrasenas <- ValidationT( DataAccessAdapterUltimaContrasena.guardarUltimaContrasena( UltimaContrasena( None, resultActualizarEstadoConfronta , Crypto.hashSha512(passwordUserWithAppend), new Timestamp(System.currentTimeMillis()))).map(_.leftMap( pe => ErrorPersistence( pe.message, pe ) ) ) )
+    }yield{
+      resultActualizarEstadoConfronta
+    }).run
+
+    UsuarioCreadoFuture onComplete {
+      case Failure(failure) => currentSender ! failure
       case Success(value) =>
         value match {
           case zSuccess(code: Int) =>

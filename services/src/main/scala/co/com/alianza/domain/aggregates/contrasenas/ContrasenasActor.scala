@@ -1,10 +1,14 @@
 package co.com.alianza.domain.aggregates.contrasenas
 
+import java.sql.Timestamp
+
 import akka.actor.{ActorRef, ActorLogging, Actor}
 import co.com.alianza.app.{MainActors, AlianzaActors}
 import co.com.alianza.infrastructure.anticorruption.contrasenas.DataAccessAdapter
+import co.com.alianza.infrastructure.anticorruption.ultimasContrasenas.{DataAccessAdapter => DataAccessAdapterUltimaContrasena}
 import co.com.alianza.infrastructure.messages._
-import co.com.alianza.persistence.entities.ReglasContrasenas
+import co.com.alianza.persistence.entities.{UltimaContrasena, ReglasContrasenas}
+import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.token.Token
 import spray.http.StatusCodes._
 
@@ -84,8 +88,9 @@ class ContrasenasActor extends Actor with ActorLogging with AlianzaActors {
       val passwordNewAppend = message.pw_nuevo.concat(AppendPasswordUser.appendUsuariosFiducia)
       val CambiarContrasenaFuture = (for {
         usuarioContrasenaActual <- ValidationT(validacionConsultaContrasenaActual(passwordActualAppend, message.idUsuario.get))
-        idValReglasContra <- ValidationT(validacionReglasClave(message.pw_nuevo))
+        idValReglasContra <- ValidationT(validacionReglasClave(message.pw_nuevo, message.idUsuario.get))
         idUsuario <- ValidationT(ActualizarContrasena(passwordNewAppend, usuarioContrasenaActual))
+        resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(message.idUsuario.get, Crypto.hashSha512(passwordNewAppend)))
       } yield {
         idUsuario
       }).run
@@ -107,8 +112,9 @@ class ContrasenasActor extends Actor with ActorLogging with AlianzaActors {
 
           val CambiarContrasenaFuture = (for {
             usuarioContrasenaActual <- ValidationT(validacionConsultaContrasenaActual(passwordActualAppend, us_id))
-            idValReglasContra <- ValidationT(validacionReglasClave(message.pw_nuevo))
+            idValReglasContra <- ValidationT(validacionReglasClave(message.pw_nuevo, us_id))
             idUsuario <- ValidationT(ActualizarContrasena(passwordNewAppend, usuarioContrasenaActual))
+            resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(us_id, Crypto.hashSha512(passwordNewAppend)))
           } yield {
             idUsuario
           }).run
@@ -118,6 +124,10 @@ class ContrasenasActor extends Actor with ActorLogging with AlianzaActors {
         case false => currentSender ! ResponseMessage(Conflict, tokenValidationFailure)
       }
 
+  }
+
+  private def guardarUltimaContrasena(idUsuario: Int, uContrasena: String): Future[Validation[ErrorValidacion, Unit]] = {
+    DataAccessAdapterUltimaContrasena.guardarUltimaContrasena(UltimaContrasena(None, idUsuario , uContrasena, new Timestamp(System.currentTimeMillis()))).map(_.leftMap( pe => ErrorPersistence(pe.message, pe)))
   }
 
   private def ActualizarContrasena(pw_nuevo: String, usuario: Option[Usuario]): Future[Validation[ErrorValidacion, Int]] = {
