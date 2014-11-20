@@ -56,7 +56,7 @@ object PinUtil {
     }
   }
 
-  private val errorPinNoEncontrado = ErrorMessage("409.1", "No se ha encontrado el pin", "No se ha encontrado el pin").toJson
+  private val errorPinNoEncontrado = ErrorMessage("409.1", "El proceso de definir contraseña se venció por las siguientes opciones: Paso mas de XX horas o ya fue utilizado", "El proceso de definir contraseña se venció por las siguientes opciones: Paso mas de XX horas o ya fue utilizado").toJson
   private val errorCaducoPin = ErrorMessage("409.2", "El pin ha caducado", "El pin ha caducado").toJson
   private val errorPinInvalido = ErrorMessage("409.3", "El pin es invalido", "El pin es invalido").toJson
 

@@ -37,10 +37,8 @@ class PinActorSupervisor extends Actor with ActorLogging {
   val pinActor = context.actorOf(Props[PinActor].withRouter(RoundRobinPool(nrOfInstances = 2)), "pinActor")
 
   def receive = {
-
     case message: Any =>
       pinActor forward message
-
   }
 
   override val supervisorStrategy = OneForOneStrategy() {
@@ -49,7 +47,6 @@ class PinActorSupervisor extends Actor with ActorLogging {
       log.error(exception, exception.getMessage)
       Restart
   }
-
 }
 
 class PinActor extends Actor with ActorLogging with AlianzaActors with FutureResponse {
