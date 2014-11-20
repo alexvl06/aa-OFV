@@ -16,7 +16,7 @@ import scalaz.{Failure => zFailure, Success => zSuccess}
 import scala.util.{Failure => sFailure, Success => sSuccess}
 import scala.util.{Success, Failure}
 import co.com.alianza.util.transformers.ValidationT
-import co.com.alianza.domain.aggregates.usuarios.{ErrorPersistence, ErrorValidacion, ValdiacionesUsuario}
+import co.com.alianza.domain.aggregates.usuarios.{ErrorPersistence, ErrorValidacion, ValidacionesUsuario}
 import scala.concurrent.Future
 import scalaz.std.AllInstances._
 import co.com.alianza.infrastructure.dto.Usuario
@@ -73,7 +73,7 @@ class ContrasenasActor extends Actor with ActorLogging with AlianzaActors {
   //implicit val _: ExecutionContext = context.dispatcher
 
   import co.com.alianza.util.json.MarshallableImplicits._
-  import ValdiacionesUsuario._
+  import ValidacionesUsuario._
 
   implicit val ex: ExecutionContext = MainActors.dataAccesEx
 
