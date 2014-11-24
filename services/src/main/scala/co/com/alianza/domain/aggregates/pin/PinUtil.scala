@@ -65,7 +65,8 @@ object PinUtil {
   }
 
   def errorPinNoEncontrado(caducidad: Int) : ResponseMessage = {
-    val message = s"El proceso de definir contraseña se venció por las siguientes opciones: Paso mas de $caducidad horas o ya fue utilizado."
+    val plural = if (caducidad > 1)  "s" else ""
+    val message = s"El proceso de definir contraseña se venció por las siguientes opciones: Paso mas de $caducidad hora$plural o ya fue utilizado."
     ResponseMessage(Conflict, ErrorMessage("409.1", "Pin invalido", message).toJson)
   }
 
