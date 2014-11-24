@@ -135,8 +135,9 @@ object  ValidacionesUsuario {
   def validacionConsultaTiempoExpiracion(): Future[Validation[ErrorValidacion, Configuracion]] = {
     val configuracionFuture = dataAccesAdaptarConf.obtenerConfiguracionPorLlave( TiposConfiguracion.EXPIRACION_PIN.llave )
     configuracionFuture.map(_.leftMap(pe => ErrorPersistence(pe.message,pe)).flatMap{
-      (x:Option[Configuracion]) => x match{
+      (x:Option[Configuracion]) => x match {
         case Some(c) => zSuccess(c)
+        case None => zFailure(ErrorPin(errorPin))
       }
     })
   }
@@ -148,5 +149,6 @@ object  ValidacionesUsuario {
   private def errorClave(error:String) = ErrorMessage("409.5", "Error clave", error).toJson
   private val errorCaptcha = ErrorMessage("409.6", "Valor captcha incorrecto", "Valor captcha incorrecto").toJson
   private val errorContrasenaActualNoExiste = ErrorMessage("409.7", "No existe la contrasena actual", "No existe la contrasena actual").toJson
+  private val errorPin = ErrorMessage("409.8", "Error en el pin", "Ocurrió un error al obtener el tiempo de expiracion del pin").toJson
 
 }

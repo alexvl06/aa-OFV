@@ -6,6 +6,7 @@ import akka.actor.{ActorRef, ActorLogging, Actor}
 
 import co.com.alianza.app.{MainActors, AlianzaActors}
 import co.com.alianza.domain.aggregates.usuarios.{ErrorPersistence, ErrorValidacion, ValidacionesUsuario}
+import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.pin.{DataAccessAdapter => pDataAccessAdapter}
 import co.com.alianza.infrastructure.anticorruption.ultimasContrasenas.{ DataAccessAdapter => DataAccessAdapterUltimaContrasena }
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => uDataAccessAdapter}
@@ -63,8 +64,20 @@ class PinActor extends Actor with ActorLogging with AlianzaActors with FutureRes
 
   private def validarPin(tokenHash: String) = {
     val currentSender = sender()
-    val result = pDataAccessAdapter.obtenerPin(tokenHash)
-    resolveFutureValidation(result, PinUtil.validarPin, currentSender)
+    val result: Future[Validation[PersistenceException, Option[PinUsuario]]] = pDataAccessAdapter.obtenerPin(tokenHash)
+
+    validacionConsultaTiempoExpiracion().map {
+      case zSuccess(conf) =>
+        pDataAccessAdapter.obtenerPin(tokenHash).map {
+          case zSuccess(pinUsuario) =>
+            currentSender ! PinUtil.validarPin(conf.valor.toInt, pinUsuario)
+          case zFailure(failure) => currentSender ! failure
+        }
+      case zFailure(failure) => currentSender ! failure
+    } recover {
+      case t: Throwable => currentSender ! t
+    }
+
   }
 
 
@@ -75,8 +88,9 @@ class PinActor extends Actor with ActorLogging with AlianzaActors with FutureRes
 
     //En la funcion los cambios: idUsuario y tokenHash que se encuentran en ROJO, no son realmente un error.
     val finalResultFuture = (for {
+      conf <- ValidationT(validacionConsultaTiempoExpiracion())
       pin <- ValidationT(obtenerPinFuture)
-      pinValidacion <- ValidationT(PinUtil.validarPinFuture(pin))
+      pinValidacion <- ValidationT(PinUtil.validarPinFuture(conf.valor.toInt, pin))
       rvalidacionClave <- ValidationT(validacionReglasClave(pw, pinValidacion.idUsuario))
       rCambiarPss <- ValidationT(cambiarPassword(pinValidacion.idUsuario, passwordAppend))
       resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(pinValidacion.idUsuario, Crypto.hashSha512(passwordAppend)))

@@ -12,5 +12,5 @@ class ConfiguracionesTable(tag: Tag) extends Table[Configuraciones](tag, "CONFIG
 
   // Every table needs a * projection with the same type as the table's type parameter
   def * = (llave, valor) <>(Configuraciones.tupled, Configuraciones.unapply)
-}
 
+}
