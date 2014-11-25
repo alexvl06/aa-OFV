@@ -1,24 +1,30 @@
 package co.com.alianza.domain.aggregates.autenticacion
 
-import akka.actor.{ ActorLogging, Actor }
+import java.util.Date
+
+import akka.actor.{ActorLogging, Actor}
+import co.com.alianza.constants.TiposConfiguracion
+import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.util.token.Token
+import org.joda.time.DateTime
 import scalaz.Validation
 import co.com.alianza.util.json.JsonUtil
 import spray.http.StatusCodes._
 import co.com.alianza.infrastructure.messages.{InvalidarToken, AutorizarUrl, ResponseMessage}
 import scala.Some
 import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
-import co.com.alianza.infrastructure.anticorruption.recursos.{ DataAccessAdapter => rDataAccessAdapter }
+import co.com.alianza.infrastructure.anticorruption.recursos.{DataAccessAdapter => rDataAccessAdapter}
 import scala.concurrent.Future
 import co.com.alianza.util.FutureResponse
 import co.com.alianza.util.transformers.ValidationT
-import co.com.alianza.infrastructure.dto.{ RecursoUsuario, Usuario }
+import co.com.alianza.infrastructure.dto.{Configuracion, RecursoUsuario, Usuario}
 import scalaz.std.AllInstances._
 import akka.actor.Props
 import akka.routing.RoundRobinPool
 import scala.util.{Success, Failure}
 
 class AutorizacionActorSupervisor extends Actor with ActorLogging {
+
   import akka.actor.SupervisorStrategy._
   import akka.actor.OneForOneStrategy
 
@@ -47,15 +53,16 @@ class AutorizacionActorSupervisor extends Actor with ActorLogging {
 class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
 
   import scala.concurrent.ExecutionContext
+
   implicit val _: ExecutionContext = context.dispatcher
 
   def receive = {
     case message: AutorizarUrl =>
       val currentSender = sender()
-      val futureValidarToken = validarToken(message.token)
 
       val future = (for {
-        usuarioOption <- ValidationT(futureValidarToken)
+        tiempoSesion <- ValidationT(co.com.alianza.infrastructure.anticorruption.configuraciones.DataAccessAdapter.obtenerConfiguracionPorLlave(TiposConfiguracion.EXPIRACION_SESION.llave))
+        usuarioOption <- ValidationT(validarToken(message.token, tiempoSesion))
         resultAutorizar <- ValidationT(validarRecurso(usuarioOption, message.url))
       } yield {
         resultAutorizar
@@ -67,11 +74,11 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
     case message: InvalidarToken =>
 
       val currentSender = sender()
-      val futureInvalidarToken = DataAccessAdapter.invalidarTokenUsuario( message.token )
+      val futureInvalidarToken = DataAccessAdapter.invalidarTokenUsuario(message.token)
 
-      futureInvalidarToken  onComplete {
-        case Failure(failure)  =>    currentSender ! failure
-        case Success(value)    => currentSender ! ResponseMessage(OK, "El token ha sido removido" )
+      futureInvalidarToken onComplete {
+        case Failure(failure) => currentSender ! failure
+        case Success(value) => currentSender ! ResponseMessage(OK, "El token ha sido removido")
       }
   }
 
@@ -82,10 +89,14 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
    *
    * @param token El token para realizar validación
    */
-  private def validarToken(token: String) = {
+  private def validarToken(token: String, tiempoSesion: Option[Configuracion]) = {
     Token.autorizarToken(token) match {
       case true =>
-        DataAccessAdapter.obtenerUsuarioToken(token) map (_.map(guardaTokenCache(_, token)))
+        DataAccessAdapter.obtenerUsuarioToken(token).map {
+          _.map { userOpt =>
+            guardaTokenCache(userOpt, token, tiempoSesion.getOrElse(Configuracion(TiposConfiguracion.EXPIRACION_SESION.llave, "5")))
+          }
+        }
       case false =>
         Future.successful(Validation.success(None))
     }
@@ -98,11 +109,13 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
    * @param token El token
    * @return
    */
-  private def guardaTokenCache(usuarioOption: Option[Usuario], token: String): Option[Usuario] = {
-    usuarioOption.map { x =>
-      val userWithoutPassword = x.copy(contrasena = None)
-      val user = JsonUtil.toJson(userWithoutPassword)
-      userWithoutPassword
+  private def guardaTokenCache(usuarioOption: Option[Usuario], token: String, tiempoSesion: Configuracion): Option[Usuario] = {
+    for {
+      usuario <- usuarioOption
+      fecha <- usuario.fechaUltimaPeticion if new DateTime(fecha.getTime).plusMinutes(tiempoSesion.valor.toInt).isAfterNow
+    } yield {
+      co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.actualizarFechaUltimaPeticion(usuario.identificacion, new java.sql.Timestamp(new Date().getTime))
+      usuario.copy(contrasena = None)
     }
   }
 
@@ -170,4 +183,5 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
   }
 
 }
+
 case class ForbiddenMessage(usuario: Usuario, filtro: Option[String], code: String)

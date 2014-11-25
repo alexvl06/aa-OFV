@@ -16,7 +16,8 @@ case class Usuario(
                     contrasena: Option[String],
                     numeroIngresosErroneos:Int,
                     ipUltimoIngreso:Option[String],
-                    fechaUltimoIngreso:Option[Date]
+                    fechaUltimoIngreso:Option[Date],
+                    fechaUltimaPeticion: Option[Date]
                   )
 
 

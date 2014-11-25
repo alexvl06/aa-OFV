@@ -8,4 +8,5 @@ object TiposConfiguracion extends Enumeration {
 
   val EXPIRACION_PIN = Val( "Expiración Pin" )
 
+  val EXPIRACION_SESION = Val ("EXPIRACION_SESION")
 }
