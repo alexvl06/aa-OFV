@@ -234,6 +234,7 @@ class AutenticacionActor extends Actor with ActorLogging {
     val tokenGenerado = Token.generarToken(nombreCliente, correoCliente, tipoIdentificacion, ipUltimoIngreso, fechaUltimaIngreso)
     //Una vez se genera el token se almacena al usuario que desea realizar la auteticacion el tabla de usuarios de la aplicacion
     val resultAsociarToken = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.asociarTokenUsuario(numeroIdentificacion, tokenGenerado)
+    val resultActualizacion = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.actualizarFechaUltimaPeticion(numeroIdentificacion, new java.sql.Timestamp(new Date().getTime))
 
     resultAsociarToken onComplete {
       case Failure(failure) => currentSender ! failure

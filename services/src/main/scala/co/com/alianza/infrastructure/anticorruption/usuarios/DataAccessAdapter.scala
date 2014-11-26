@@ -140,6 +140,11 @@ object DataAccessAdapter {
     repo.guardarPinUsuario(pinUsuario)
   }
 
+  def actualizarFechaUltimaPeticion( numeroIdentificacion:String, fecha: Timestamp  ): Future[Validation[PersistenceException, Int]] = {
+    val repo = new UsuariosRepository()
+    repo.actualizarFechaUltimaPeticion( numeroIdentificacion, fecha )
+  }
+
   private def transformValidationList(origin: Validation[PersistenceException, List[eUsuario]]): Validation[PersistenceException, List[Usuario]] = {
     origin match {
       case zSuccess(response: List[eUsuario]) => zSuccess(DataAccessTranslator.translateUsuario(response))
