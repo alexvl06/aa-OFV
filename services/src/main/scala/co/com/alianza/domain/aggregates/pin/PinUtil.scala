@@ -32,7 +32,7 @@ object PinUtil {
     hexString.toString
   }
 
-  def validarPin(caducidad: Int, response: Option[PinUsuario]) = {
+  def validarPin(response: Option[PinUsuario]) = {
    response match {
       case Some(valueResponse) =>
         val pinHash = deserializarPin(valueResponse.token, valueResponse.fechaExpiracion)
@@ -46,11 +46,11 @@ object PinUtil {
         else {
           ResponseMessage(Conflict, errorPinInvalido)
         }
-      case None => errorPinNoEncontrado(caducidad)
+      case None => ResponseMessage(Conflict, errorPinNoEncontrado)
     }
   }
 
-  def validarPinFuture(caducidad: Int, response: Option[PinUsuario]): Future[Validation[ErrorValidacion, PinUsuario]] = Future {
+  def validarPinFuture(response: Option[PinUsuario]): Future[Validation[ErrorValidacion, PinUsuario]] = Future {
     response match {
       case Some(valueResponse) =>
         val pinHash = deserializarPin(valueResponse.token, valueResponse.fechaExpiracion)
@@ -60,16 +60,11 @@ object PinUtil {
           else zFailure(ErrorPin(errorCaducoPin))
         }
         else zFailure(ErrorPin(errorPinInvalido))
-      case None => zFailure(ErrorPin(errorPinNoEncontrado(caducidad).toJson))
+      case None => zFailure(ErrorPin(errorPinNoEncontrado))
     }
   }
 
-  def errorPinNoEncontrado(caducidad: Int) : ResponseMessage = {
-    val plural = if (caducidad > 1)  "s" else ""
-    val message = s"El proceso de definir contraseña se venció por las siguientes opciones: Paso mas de $caducidad hora$plural o ya fue utilizado."
-    ResponseMessage(Conflict, ErrorMessage("409.1", "Pin invalido", message).toJson)
-  }
-
+  private val errorPinNoEncontrado = ErrorMessage("409.1", "Pin invalido", "El proceso para definición de la contraseña esta vencido, si requiere uno nuevo solicítelo <a href=\"/#!/olvidarContrasena\" target=\"_blank\" >aquí</a>.").toJson
   private val errorCaducoPin = ErrorMessage("409.2", "El pin ha caducado", "El pin ha caducado").toJson
   private val errorPinInvalido = ErrorMessage("409.3", "El pin es invalido", "El pin es invalido").toJson
 
