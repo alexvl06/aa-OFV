@@ -39,7 +39,7 @@ class ValidacionClaveTest  extends FunSuite {
 
 
   private def validaClave(clave:String): Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = {
-    ValidarClave.aplicarReglas(clave,ValidarClave.reglasGenerales: _*)
+    ValidarClave.aplicarReglas(clave,Some(123456),ValidarClave.reglasGenerales: _*)
   }
 
 

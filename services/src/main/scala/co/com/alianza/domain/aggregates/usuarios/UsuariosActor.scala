@@ -95,7 +95,28 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
 
       resolveCrearUsuarioFuture(crearUsuarioFuture,currentSender,message)
 
+    case message: DesbloquarMessage =>
+      val currentSender = sender()
 
+      val futureCliente = (for{
+        captchaVal <-  validaCaptcha(message.toUsuarioMessage)
+        cliente <- co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerUsuarioNumeroIdentificacion(message.identificacion)
+      }yield{
+        cliente
+      })
+
+      futureCliente onComplete{
+        case sFailure( failure ) =>
+          currentSender ! failure
+        case sSuccess (value) =>
+          value match{
+            case zSuccess( response ) =>
+              var mensajeCuestionario = message.toUsuarioMessage.copy(tipoIdentificacion = response.get.tipoIdentificacion)
+              obtenerCuestionario(currentSender,mensajeCuestionario)
+            case zFailure (error) =>
+              currentSender ! error
+          }
+      }
 
     case message: OlvidoContrasenaMessage =>
 

@@ -12,6 +12,7 @@ object ConfrontaMessagesJsonSupport extends DefaultJsonProtocol with SprayJsonSu
   implicit val ObtenerCuestionarioAdicionalRequestMessageFormat = jsonFormat7(ObtenerCuestionarioAdicionalRequestMessage)
   implicit val UsuariosMessageFormar = jsonFormat10(UsuarioMessage)
   implicit val ValidarCuestionarioRequestMessageFormat = jsonFormat4(ValidarCuestionarioRequestMessage)
+  implicit val ValidarCuestionarioDesbloqueoRequestMessageFormat = jsonFormat4(ValidarCuestionarioDesbloqueoRequestMessage)
 }
 
 case class ObtenerCuestionarioRequestMessage(primerApellido:String, codigoTipoIdentificacion:String, numeroIdentificacion: String, fechaExpedicion:String) extends MessageService {
@@ -21,4 +22,7 @@ case class ObtenerCuestionarioAdicionalRequestMessage(codigoCiudad:Int, codigoCu
 }
 
 case class ValidarCuestionarioRequestMessage(id:UsuarioMessage, respuestas:Array[String],secuenciaCuestionario:Long,codigoCuestionario:Int) extends MessageService {
+}
+
+case class ValidarCuestionarioDesbloqueoRequestMessage(id:String, respuestas:Array[String],secuenciaCuestionario:Long,codigoCuestionario:Int) extends MessageService {
 }

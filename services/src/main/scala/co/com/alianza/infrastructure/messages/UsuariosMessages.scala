@@ -13,6 +13,8 @@ import co.com.alianza.persistence.messages.AgregarIpHabitualRequest
  */
 object UsuariosMessagesJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val UsuarioMessageormat = jsonFormat10(UsuarioMessage)
+  implicit val DesbloquearFormat = jsonFormat10(DesbloquarMessage)
+  implicit val DesbloquearWebFormat = jsonFormat7(DesbloquarWebMessage)
   implicit val OlvidoContrasenaMessageFormat = jsonFormat2(OlvidoContrasenaMessage)
 }
 
@@ -30,4 +32,12 @@ case class OlvidoContrasenaMessage(identificacion: String, tipoIdentificacion: I
 
 }
 
+case class DesbloquarMessage (correo: String, identificacion: String, tipoIdentificacion: Int, contrasena: String, activarIP:Boolean, clientIp:Option[String] = None, challenge:String = "",uresponse:String="", primerApellido:Option[String] = None, fechaExpedicion:Option[String] = None) extends MessageService{
+  def toUsuarioMessage = UsuarioMessage(correo,identificacion,tipoIdentificacion,contrasena,activarIP,clientIp,challenge,uresponse,primerApellido,fechaExpedicion)
 
+}
+
+case class DesbloquarWebMessage ( identificacion: String, tipoIdentificacion: Int, clientIp:Option[String] = None, challenge:String = "",uresponse:String="", primerApellido:Option[String] = None, fechaExpedicion:Option[String] = None) extends MessageService{
+  def toDesbloquarMessage = DesbloquarMessage("",identificacion,tipoIdentificacion,"",false,clientIp,challenge,uresponse,primerApellido,fechaExpedicion)
+
+}
