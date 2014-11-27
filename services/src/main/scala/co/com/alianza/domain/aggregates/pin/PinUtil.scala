@@ -41,10 +41,10 @@ object PinUtil {
           if (fecha.getTime < valueResponse.fechaExpiracion.getTime)
             ResponseMessage(OK)
           else
-            ResponseMessage(Conflict, errorCaducoPin)
+            ResponseMessage(Conflict, errorPinNoEncontrado)
         }
         else {
-          ResponseMessage(Conflict, errorPinInvalido)
+          ResponseMessage(Conflict, errorPinNoEncontrado)
         }
       case None => ResponseMessage(Conflict, errorPinNoEncontrado)
     }
@@ -57,15 +57,13 @@ object PinUtil {
         if (pinHash == valueResponse.tokenHash) {
           val fecha = new Date()
           if (fecha.getTime < valueResponse.fechaExpiracion.getTime) zSuccess(valueResponse)
-          else zFailure(ErrorPin(errorCaducoPin))
+          else zFailure(ErrorPin(errorPinNoEncontrado))
         }
-        else zFailure(ErrorPin(errorPinInvalido))
+        else zFailure(ErrorPin(errorPinNoEncontrado))
       case None => zFailure(ErrorPin(errorPinNoEncontrado))
     }
   }
 
   private val errorPinNoEncontrado = ErrorMessage("409.1", "Pin invalido", "El proceso para definición de la contraseña esta vencido, si requiere uno nuevo solicítelo <a href=\"/#!/olvidarContrasena\" target=\"_blank\" >aquí</a>.").toJson
-  private val errorCaducoPin = ErrorMessage("409.2", "El pin ha caducado", "El proceso para definición de la contraseña esta vencido, si requiere uno nuevo solicítelo <a href=\"/#!/olvidarContrasena\" target=\"_blank\" >aquí</a>.").toJson
-  private val errorPinInvalido = ErrorMessage("409.3", "El pin es invalido", "El pin es invalido").toJson
 
 }
