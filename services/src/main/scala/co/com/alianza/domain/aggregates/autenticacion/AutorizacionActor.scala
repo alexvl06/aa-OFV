@@ -1,27 +1,29 @@
 package co.com.alianza.domain.aggregates.autenticacion
 
-import java.util.Date
 
 import akka.actor.{ActorLogging, Actor}
-import co.com.alianza.constants.TiposConfiguracion
-import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.util.token.Token
-import org.joda.time.DateTime
-import scalaz.Validation
-import co.com.alianza.util.json.JsonUtil
-import spray.http.StatusCodes._
-import co.com.alianza.infrastructure.messages.{InvalidarToken, AutorizarUrl, ResponseMessage}
-import scala.Some
-import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
-import co.com.alianza.infrastructure.anticorruption.recursos.{DataAccessAdapter => rDataAccessAdapter}
-import scala.concurrent.Future
-import co.com.alianza.util.FutureResponse
-import co.com.alianza.util.transformers.ValidationT
-import co.com.alianza.infrastructure.dto.{Configuracion, RecursoUsuario, Usuario}
-import scalaz.std.AllInstances._
 import akka.actor.Props
 import akka.routing.RoundRobinPool
+
+import co.com.alianza.constants.TiposConfiguracion
+import co.com.alianza.exceptions.PersistenceException
+import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
+import co.com.alianza.infrastructure.anticorruption.recursos.{DataAccessAdapter => rDataAccessAdapter}
+import co.com.alianza.infrastructure.dto.{Configuracion, RecursoUsuario, Usuario}
+import co.com.alianza.infrastructure.messages.{InvalidarToken, AutorizarUrl, ResponseMessage}
+import co.com.alianza.util.FutureResponse
+import co.com.alianza.util.json.JsonUtil
+import co.com.alianza.util.token.Token
+import co.com.alianza.util.transformers.ValidationT
+
+import java.util.Date
+import org.joda.time.DateTime
+import spray.http.StatusCodes._
+
+import scala.concurrent.Future
+import scalaz.std.AllInstances._
 import scala.util.{Success, Failure}
+import scalaz.Validation
 
 class AutorizacionActorSupervisor extends Actor with ActorLogging {
 
@@ -89,13 +91,14 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
    *
    * @param token El token para realizar validación
    */
-  private def validarToken(token: String, tiempoSesion: Option[Configuracion]) = {
+  private def validarToken(token: String, tiempoSesion: Option[Configuracion]): Future[Validation[PersistenceException, Option[Usuario]]] = {
     Token.autorizarToken(token) match {
       case true =>
-        DataAccessAdapter.obtenerUsuarioToken(token).map {
-          _.map { userOpt =>
+        DataAccessAdapter.obtenerUsuarioToken(token).flatMap { x =>
+          val y: Validation[PersistenceException, Future[Option[Usuario]]] = x.map { userOpt =>
             guardaTokenCache(userOpt, token, tiempoSesion.getOrElse(Configuracion(TiposConfiguracion.EXPIRACION_SESION.llave, "5")))
           }
+          co.com.alianza.util.transformers.Validation.sequence(y)
         }
       case false =>
         Future.successful(Validation.success(None))
@@ -109,14 +112,24 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
    * @param token El token
    * @return
    */
-  private def guardaTokenCache(usuarioOption: Option[Usuario], token: String, tiempoSesion: Configuracion): Option[Usuario] = {
-    for {
+  private def guardaTokenCache(usuarioOption: Option[Usuario], token: String, tiempoSesion: Configuracion): Future[Option[Usuario]] = {
+
+    val usOpt: Option[Usuario] = for {
       usuario <- usuarioOption
       fecha <- usuario.fechaUltimaPeticion if new DateTime(fecha.getTime).plusMinutes(tiempoSesion.valor.toInt).isAfterNow
     } yield {
-      co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.actualizarFechaUltimaPeticion(usuario.identificacion, new java.sql.Timestamp(new Date().getTime))
       usuario.copy(contrasena = None)
     }
+
+    usOpt match {
+      case Some(usuario) =>
+        co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.actualizarFechaUltimaPeticion(usuario.identificacion, new java.sql.Timestamp(new Date().getTime)).map {
+          _ =>
+            usOpt
+        }
+      case None => Future.successful(None)
+    }
+
   }
 
   /**
@@ -134,6 +147,7 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
       case _ =>
         Future.successful(Validation.success(ResponseMessage(Unauthorized, "Error Validando Token")))
     }
+
   }
 
   /**
