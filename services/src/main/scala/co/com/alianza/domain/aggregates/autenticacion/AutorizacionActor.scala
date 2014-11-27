@@ -61,10 +61,10 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
   def receive = {
     case message: AutorizarUrl =>
       val currentSender = sender()
+      val futureValidarToken = validarToken(message.token)
 
       val future = (for {
-        tiempoSesion <- ValidationT(co.com.alianza.infrastructure.anticorruption.configuraciones.DataAccessAdapter.obtenerConfiguracionPorLlave(TiposConfiguracion.EXPIRACION_SESION.llave))
-        usuarioOption <- ValidationT(validarToken(message.token, tiempoSesion))
+        usuarioOption <- ValidationT(futureValidarToken)
         resultAutorizar <- ValidationT(validarRecurso(usuarioOption, message.url))
       } yield {
         resultAutorizar
@@ -91,15 +91,10 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
    *
    * @param token El token para realizar validación
    */
-  private def validarToken(token: String, tiempoSesion: Option[Configuracion]): Future[Validation[PersistenceException, Option[Usuario]]] = {
+  private def validarToken(token: String): Future[Validation[PersistenceException, Option[Usuario]]] = {
     Token.autorizarToken(token) match {
       case true =>
-        DataAccessAdapter.obtenerUsuarioToken(token).flatMap { x =>
-          val y: Validation[PersistenceException, Future[Option[Usuario]]] = x.map { userOpt =>
-            guardaTokenCache(userOpt, token, tiempoSesion.getOrElse(Configuracion(TiposConfiguracion.EXPIRACION_SESION.llave, "5")))
-          }
-          co.com.alianza.util.transformers.Validation.sequence(y)
-        }
+        DataAccessAdapter.obtenerUsuarioToken(token) map (_.map(guardaTokenCache(_, token)))
       case false =>
         Future.successful(Validation.success(None))
     }
@@ -112,24 +107,12 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
    * @param token El token
    * @return
    */
-  private def guardaTokenCache(usuarioOption: Option[Usuario], token: String, tiempoSesion: Configuracion): Future[Option[Usuario]] = {
-
-    val usOpt: Option[Usuario] = for {
-      usuario <- usuarioOption
-      fecha <- usuario.fechaUltimaPeticion if new DateTime(fecha.getTime).plusMinutes(tiempoSesion.valor.toInt).isAfterNow
-    } yield {
-      usuario.copy(contrasena = None)
+  private def guardaTokenCache(usuarioOption: Option[Usuario], token: String): Option[Usuario] = {
+    usuarioOption.map { x =>
+      val userWithoutPassword = x.copy(contrasena = None)
+      val user = JsonUtil.toJson(userWithoutPassword)
+      userWithoutPassword
     }
-
-    usOpt match {
-      case Some(usuario) =>
-        co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.actualizarFechaUltimaPeticion(usuario.identificacion, new java.sql.Timestamp(new Date().getTime)).map {
-          _ =>
-            usOpt
-        }
-      case None => Future.successful(None)
-    }
-
   }
 
   /**
