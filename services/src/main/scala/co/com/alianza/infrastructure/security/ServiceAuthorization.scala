@@ -1,58 +1,60 @@
 package co.com.alianza.infrastructure.security
 
-import scala.concurrent.{ExecutionContext, Future}
-import spray.routing.{Rejection, AuthenticationFailedRejection}
+import akka.actor._
+import akka.pattern.ask
+import akka.util.Timeout
+
+import co.com.alianza.app.MainActors
+import co.com.alianza.infrastructure.dto.Usuario
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
-import spray.routing.authentication.ContextAuthenticator
+
+import co.com.alianza.infrastructure.messages.{AutorizarUrl, ResponseMessage}
+import co.com.alianza.util.json.JsonUtil
+
 import com.typesafe.config.Config
-import akka.actor.ActorSystem
-import co.com.alianza.util.token.Token
+
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
+
+import spray.http.StatusCodes._
+import spray.routing.authentication.ContextAuthenticator
+import spray.routing.AuthenticationFailedRejection
 import spray.routing.AuthenticationFailedRejection.{CredentialsRejected, CredentialsMissing}
-import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
-import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.infrastructure.dto.{Usuario}
-import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
 
 trait ServiceAuthorization {
 
   implicit val contextAuthorization: ExecutionContext
   implicit val conf: Config
   implicit val system: ActorSystem
+  implicit val timeout: Timeout = Timeout(10 seconds)
 
-  def authenticateUser: ContextAuthenticator[UsuarioAuth] = { ctx =>
-  {
-    val token = ctx.request.headers.find(header => header.name equals "token")
+  def authenticateUser: ContextAuthenticator[UsuarioAuth] = {
+    ctx =>
 
-    if (token.isEmpty) {
-      Future(Left(AuthenticationFailedRejection(CredentialsMissing, List())))
-    } else {
+      val token = ctx.request.headers.find(header => header.name equals "token")
+      if (token.isEmpty) {
+        Future(Left(AuthenticationFailedRejection(CredentialsMissing, List())))
+      }
+      else {
 
-      Token.autorizarToken( token.get.value ) match {
-        case true =>
-          val usuario: Future[Validation[PersistenceException, Option[Usuario]]] = DataAccessAdapter.obtenerUsuarioToken(token.get.value)
-          val future: Future[Either[Rejection, UsuarioAuth]] = usuario.map(x =>resolveObtenerToken(x))
-          future
-        case false =>
-          Future(Left(AuthenticationFailedRejection(CredentialsRejected, List())))
+        val x: Future[Any] = MainActors.autorizacionActorSupervisor ? AutorizarUrl(token.get.value, "")
+        x.map {
+          case r: ResponseMessage =>
+            r.statusCode match {
+              case Unauthorized => Left(AuthenticationFailedRejection(CredentialsRejected, List()))
+              case OK =>
+                val user = JsonUtil.fromJson[Usuario](r.responseBody)
+                Right(UsuarioAuth(user.id.get))
+              case Forbidden =>
+                val id = r.responseBody.substring(17, 20)
+                Right(UsuarioAuth(id.toInt))
+
+            }
+          case _ =>
+            Left(AuthenticationFailedRejection(CredentialsRejected, List()))
+        }
 
       }
-    }
-  }
-  }
-
-  private def resolveObtenerToken(usuario: Validation[PersistenceException, Option[Usuario]]):Either[Rejection, UsuarioAuth] = {
-    usuario match{
-      case zFailure(error) =>
-        Left(AuthenticationFailedRejection(CredentialsRejected,List()))
-      case zSuccess(value) =>
-        value match {
-          case Some(usu) => Right(UsuarioAuth(usu.id.get))
-          case _ =>  Left(AuthenticationFailedRejection(CredentialsRejected,List()))
-        }
-    }
   }
 
 }
-
-
-

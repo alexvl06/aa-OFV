@@ -33,5 +33,18 @@ case class AgregarIPHabitualUsuario(tipoIdentificacion:Int, numeroIdentificacion
   def toAgregarClienteRequest:AgregarIpHabitualRequest = AgregarIpHabitualRequest(tipoIdentificacion, numeroIdentificacion, clientIp)
 }
 
+//
+// Mensajes para el manejo de las sesiones
+//
+
+case class ActualizarSesion()
+
+case class CrearSesionUsuario(token: String)
+
+case class InvalidarSesion(token: String)
+
+case class ExpirarSesion()
+
+case class ValidarSesion(token: String)
 
 

@@ -1,25 +1,29 @@
 package co.com.alianza.domain.aggregates.autenticacion
 
+import java.util.Date
 
 import akka.actor.{ActorLogging, Actor}
 import akka.actor.Props
+import akka.pattern.ask
 import akka.routing.RoundRobinPool
+import akka.util.Timeout
 
+import co.com.alianza.app.MainActors
 import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
+import co.com.alianza.infrastructure.anticorruption.configuraciones.{DataAccessAdapter => confDataAdapter}
+import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => usDataAdapter}
 import co.com.alianza.infrastructure.anticorruption.recursos.{DataAccessAdapter => rDataAccessAdapter}
 import co.com.alianza.infrastructure.dto.{Configuracion, RecursoUsuario, Usuario}
-import co.com.alianza.infrastructure.messages.{InvalidarToken, AutorizarUrl, ResponseMessage}
+import co.com.alianza.infrastructure.messages._
 import co.com.alianza.util.FutureResponse
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.token.Token
 import co.com.alianza.util.transformers.ValidationT
 
-import java.util.Date
-import org.joda.time.DateTime
 import spray.http.StatusCodes._
 
+import scala.concurrent.duration._
 import scala.concurrent.Future
 import scalaz.std.AllInstances._
 import scala.util.{Success, Failure}
@@ -57,14 +61,14 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
   import scala.concurrent.ExecutionContext
 
   implicit val _: ExecutionContext = context.dispatcher
+  implicit val timeout: Timeout = 10.seconds
 
   def receive = {
     case message: AutorizarUrl =>
       val currentSender = sender()
-      val futureValidarToken = validarToken(message.token)
 
       val future = (for {
-        usuarioOption <- ValidationT(futureValidarToken)
+        usuarioOption <- ValidationT(validarToken(message.token))
         resultAutorizar <- ValidationT(validarRecurso(usuarioOption, message.url))
       } yield {
         resultAutorizar
@@ -76,11 +80,13 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
     case message: InvalidarToken =>
 
       val currentSender = sender()
-      val futureInvalidarToken = DataAccessAdapter.invalidarTokenUsuario(message.token)
+      val futureInvalidarToken = usDataAdapter.invalidarTokenUsuario(message.token)
 
       futureInvalidarToken onComplete {
         case Failure(failure) => currentSender ! failure
-        case Success(value) => currentSender ! ResponseMessage(OK, "El token ha sido removido")
+        case Success(value) =>
+          MainActors.sesionActorSupervisor ! InvalidarSesion(message.token)
+          currentSender ! ResponseMessage(OK, "El token ha sido removido")
       }
   }
 
@@ -94,7 +100,12 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
   private def validarToken(token: String): Future[Validation[PersistenceException, Option[Usuario]]] = {
     Token.autorizarToken(token) match {
       case true =>
-        DataAccessAdapter.obtenerUsuarioToken(token) map (_.map(guardaTokenCache(_, token)))
+        usDataAdapter.obtenerUsuarioToken(token).flatMap { x =>
+          val y: Validation[PersistenceException, Future[Option[Usuario]]] = x.map { userOpt =>
+            guardaTokenCache(userOpt, token)
+          }
+          co.com.alianza.util.transformers.Validation.sequence(y)
+        }
       case false =>
         Future.successful(Validation.success(None))
     }
@@ -107,11 +118,13 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
    * @param token El token
    * @return
    */
-  private def guardaTokenCache(usuarioOption: Option[Usuario], token: String): Option[Usuario] = {
-    usuarioOption.map { x =>
-      val userWithoutPassword = x.copy(contrasena = None)
-      val user = JsonUtil.toJson(userWithoutPassword)
-      userWithoutPassword
+  private def guardaTokenCache(usuarioOption: Option[Usuario], token: String): Future[Option[Usuario]] = {
+
+    val validacionSesion: Future[Boolean] = ask(MainActors.sesionActorSupervisor, ValidarSesion(token)).mapTo[Boolean]
+    validacionSesion.map {
+      case true =>
+        usuarioOption.map ( usuario =>usuario.copy(contrasena = None))
+      case false => None
     }
   }
 

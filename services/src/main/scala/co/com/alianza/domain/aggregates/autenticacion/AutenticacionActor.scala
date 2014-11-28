@@ -2,6 +2,8 @@ package co.com.alianza.domain.aggregates.autenticacion
 
 import java.sql.Timestamp
 import akka.actor.{ ActorRef, Actor, ActorLogging }
+import co.com.alianza.app.MainActors
+import co.com.alianza.constants.TiposConfiguracion
 import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
 import scala.util.{ Success, Failure }
 import co.com.alianza.infrastructure.messages._
@@ -234,11 +236,12 @@ class AutenticacionActor extends Actor with ActorLogging {
     val tokenGenerado = Token.generarToken(nombreCliente, correoCliente, tipoIdentificacion, ipUltimoIngreso, fechaUltimaIngreso)
     //Una vez se genera el token se almacena al usuario que desea realizar la auteticacion el tabla de usuarios de la aplicacion
     val resultAsociarToken = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.asociarTokenUsuario(numeroIdentificacion, tokenGenerado)
-    val resultActualizacion = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.actualizarFechaUltimaPeticion(numeroIdentificacion, new java.sql.Timestamp(new Date().getTime))
 
     resultAsociarToken onComplete {
       case Failure(failure) => currentSender ! failure
-      case Success(value) => currentSender ! tokenGenerado
+      case Success(value) =>
+        MainActors.sesionActorSupervisor ! CrearSesionUsuario(tokenGenerado)
+        currentSender ! tokenGenerado
     }
     //Se establece el numero de reintentos de ingreso en cero a la aplicacion
     actualizarNumeroIngresosErroneos(numeroIdentificacion, 0, currentSender)
