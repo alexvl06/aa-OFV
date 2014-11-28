@@ -22,18 +22,12 @@ class SesionActorSupervisor extends Actor with ActorLogging {
 
     case message: CrearSesionUsuario =>
 
-      confDataAdapter.obtenerConfiguracionPorLlave(TiposConfiguracion.EXPIRACION_SESION.llave).map {
-        _.map {
-          confOp =>
-
-            val config = confOp.getOrElse(Configuracion(TiposConfiguracion.EXPIRACION_SESION.llave, "5"))
-            buscarSesion(message.token).onComplete {
-              case Success(actor) =>
-                actor ! ActualizarSesion()
-              case Failure(ex) =>
-                crearSesion(message.token, config.valor.toInt)
-            }
-        }
+      val config = message.tiempoExpiracion.getOrElse(Configuracion(TiposConfiguracion.EXPIRACION_SESION.llave, "5"))
+      buscarSesion(message.token).onComplete {
+        case Success(actor) =>
+          actor ! ActualizarSesion()
+        case Failure(ex) =>
+          crearSesion(message.token, config.valor.toInt)
       }
 
     case message: InvalidarSesion =>
@@ -56,13 +50,13 @@ class SesionActorSupervisor extends Actor with ActorLogging {
   }
 
   private def buscarSesion(token: String): Future[ActorRef] = {
-    val pathLocal = "akka://alianza-service/user/"
-    context.system.actorSelection(pathLocal + "sesion_" + token).resolveOne()
+    val pathLocal = "akka://alianza-service/user/sesionActorSupervisor/"
+    context.actorSelection(pathLocal + token).resolveOne()
   }
 
   private def crearSesion(token: String, expiration: Int) = {
     log.info("Creando sesion de usuario. Tiempo de expiracion: " + expiration + " minutos")
-    context.system.actorOf(Props(new SesionActor(expiration)), "sesion_" + token)
+    val ac = context.actorOf(Props(new SesionActor(expiration)), token)
   }
 
 }

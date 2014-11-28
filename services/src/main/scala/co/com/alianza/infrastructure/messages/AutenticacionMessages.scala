@@ -1,8 +1,10 @@
 package co.com.alianza.infrastructure.messages
 
-import spray.json.DefaultJsonProtocol
-import spray.httpx.SprayJsonSupport
+import co.com.alianza.infrastructure.dto.Configuracion
 import co.com.alianza.persistence.messages.{InvalidarTokenRequest, AgregarIpHabitualRequest, AutenticacionRequest, ValidarTokenRequest}
+
+import spray.httpx.SprayJsonSupport
+import spray.json.DefaultJsonProtocol
 
 /**
  *
@@ -39,7 +41,7 @@ case class AgregarIPHabitualUsuario(tipoIdentificacion:Int, numeroIdentificacion
 
 case class ActualizarSesion()
 
-case class CrearSesionUsuario(token: String)
+case class CrearSesionUsuario(token: String, tiempoExpiracion: Option[Configuracion])
 
 case class InvalidarSesion(token: String)
 
