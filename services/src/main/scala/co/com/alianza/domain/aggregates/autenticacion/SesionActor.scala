@@ -1,8 +1,6 @@
 package co.com.alianza.domain.aggregates.autenticacion
 
 import akka.actor._
-import akka.actor.OneForOneStrategy
-import akka.actor.SupervisorStrategy._
 import akka.util.Timeout
 
 import co.com.alianza.constants.TiposConfiguracion
@@ -19,13 +17,6 @@ class SesionActorSupervisor extends Actor with ActorLogging {
 
   implicit val _: ExecutionContext = context.dispatcher
   implicit val timeout: Timeout = 10.seconds
-
-  override val supervisorStrategy = OneForOneStrategy() {
-    case exception: Exception =>
-      exception.printStackTrace()
-      log.error(exception, exception.getMessage)
-      Restart
-  }
 
   def receive = {
 

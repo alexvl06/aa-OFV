@@ -122,8 +122,7 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
 
     val validacionSesion: Future[Boolean] = ask(MainActors.sesionActorSupervisor, ValidarSesion(token)).mapTo[Boolean]
     validacionSesion.map {
-      case true =>
-        usuarioOption.map ( usuario =>usuario.copy(contrasena = None))
+      case true => usuarioOption.map ( usuario =>usuario.copy(contrasena = None))
       case false => None
     }
   }
