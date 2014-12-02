@@ -126,12 +126,6 @@ class UsuariosRepository ( implicit executionContext: ExecutionContext) extends 
       resolveTry(resultTry, "Actualizar usuario en token")
   }
 
-  def actualizarFechaUltimaPeticion( numeroIdentificacion:String, fecha : Timestamp ): Future[Validation[PersistenceException, Int]] = loan {
-    implicit session =>
-      val resultTry = Try{ usuarios.filter( _.identificacion === numeroIdentificacion ).map( x => ( x.fechaUltimaPeticion )).update(( Some(fecha) ))  }
-      resolveTry(resultTry, "Actualizar usuario en actualizarFechaUltimoIngreso ")
-  }
-
   def guardarPinUsuario(pinUsuario:PinUsuario): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
       val resultTry = Try{  (pinusuarios returning pinusuarios.map(_.id.get)) +=pinUsuario }
