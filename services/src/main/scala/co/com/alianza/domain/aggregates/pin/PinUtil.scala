@@ -64,6 +64,6 @@ object PinUtil {
     }
   }
 
-  private val errorPinNoEncontrado = ErrorMessage("409.1", "Pin invalido", "El proceso para definición de la contraseña esta vencido, si requiere uno nuevo solicítelo <a href=\"/#!/olvidarContrasena\" target=\"_blank\" >aquí</a>.").toJson
+  private val errorPinNoEncontrado = ErrorMessage("409.1", "Pin invalido", "El proceso para la definición de la contraseña esta vencido, si requiere una nueva contraseña solicítela <a href=\"/#!/olvidarContrasena\" target=\"_blank\" >AQUÍ</a>.").toJson
 
 }
