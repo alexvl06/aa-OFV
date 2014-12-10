@@ -57,7 +57,7 @@ object Common {
 		"com.typesafe.akka" 	    %%  "akka-actor" 			    % akkaVersion withSources(),
 	  "com.typesafe.akka" 	    %%  "akka-slf4j"       		% akkaVersion withSources(),
     "com.typesafe.akka"       %%  "akka-testkit"        % akkaVersion withSources(),
-    "com.typesafe.akka"       %%  "akka-remote"        % akkaVersion withSources(),
+    "com.typesafe.akka"       %%  "akka-cluster"        % akkaVersion withSources(),
 	 	"ch.qos.logback"     		  %   "logback-classic"  		% "1.0.13" withSources()
   )
 
