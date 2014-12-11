@@ -2,14 +2,14 @@ package co.com.alianza.infrastructure.anticorruption.usuarios
 
 import java.sql.Timestamp
 
-import co.com.alianza.persistence.repositories.{IpsUsuarioRepository, UsuariosRepository}
+import co.com.alianza.persistence.repositories.{IpsUsuarioRepository, UsuariosRepository, UsuariosEmpresarialRepository}
 import scalaz.Validation
 import scala.concurrent.{ExecutionContext, Future}
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.app.MainActors
 import scalaz.{Failure => zFailure, Success => zSuccess}
 import co.com.alianza.infrastructure.dto.Usuario
-import co.com.alianza.persistence.entities.{Usuario => eUsuario, PinUsuario => ePinUsuario , PerfilUsuario, IpsUsuario}
+import co.com.alianza.persistence.entities.{Usuario => eUsuario, PinUsuario => ePinUsuario , PerfilUsuario, IpsUsuario, UsuarioEmpresarial => eUsuarioEmpresarial}
 import co.com.alianza.persistence.messages.AutenticacionRequest
 import enumerations.EstadosUsuarioEnum
 
@@ -40,6 +40,10 @@ object DataAccessAdapter {
     repo.obtenerUsuarioNumeroIdentificacion( numeroIdentificacion ) map {
       x => transformValidation(x)
     }
+  }
+
+  def obtenerClienteEmpresaUsuario (nit: String, usuario: String): Future[Validation[PersistenceException, Option[eUsuarioEmpresarial]]] = {
+    new UsuariosEmpresarialRepository().obtieneUsuarioEmpresaPorNitYUsuario(nit, usuario)
   }
 
   def obtenerUsuarioToken( token:String ): Future[Validation[PersistenceException, Option[Usuario]]] = {
