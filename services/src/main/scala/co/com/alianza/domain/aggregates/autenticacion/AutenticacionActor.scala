@@ -12,7 +12,7 @@ import co.com.alianza.infrastructure.messages._
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.exceptions.{ PersistenceException, AlianzaException, TechnicalLevel }
 import co.com.alianza.util.clave.Crypto
-import co.com.alianza.infrastructure.dto.{ Cliente, Usuario }
+import co.com.alianza.infrastructure.dto.{ Cliente, Usuario, UsuarioEmpresarial }
 import co.com.alianza.util.token.Token
 import co.com.alianza.persistence.messages.ConsultaClienteRequest
 import co.com.alianza.persistence.entities.{ ReglasContrasenas, IpsUsuario }
@@ -34,6 +34,7 @@ class AutenticacionActorSupervisor extends Actor with ActorLogging {
   import akka.actor.OneForOneStrategy
 
   val autenticacionActor = context.actorOf(Props[AutenticacionActor].withRouter(RoundRobinPool(nrOfInstances = 5)), "autenticacionActor")
+  val autenticacionUsuarioEmpresaActor = context.actorOf(Props[AutenticacionUsuarioEmpresaActor].withRouter(RoundRobinPool(nrOfInstances = 5)), "autenticacionUsuarioEmpresaActor")
 
   def receive = {
 
@@ -133,6 +134,7 @@ class AutenticacionActor extends Actor with ActorLogging {
                   //Se valida la caducidad de la contraseña
                   validarFechaContrasena(usuario.id.get, usuario.fechaCaducidad, currentSender: ActorRef)
                   //Validacion de control de direccion IP del usuario
+                  //TODO:                  validarEmpresaCliente(usuario.id.get, )
                   validarControlIpUsuario(usuario.identificacion, usuario.id.get, ip, valueResponseCliente.wcli_nombre, valueResponseCliente.wcli_dir_correo, valueResponseCliente.wcli_person, usuario.ipUltimoIngreso.getOrElse(""), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), currentSender: ActorRef)
                 } else
                   currentSender ! ResponseMessage(Unauthorized, errorClienteInactivoSP)
@@ -144,7 +146,7 @@ class AutenticacionActor extends Actor with ActorLogging {
   }
 
   //Se valida la naturalidad de la persona que realiza la autenticaciónS
-  private def getTipoPersona(idTipoIdent: Int): String = {
+  protected def getTipoPersona(idTipoIdent: Int): String = {
     idTipoIdent match {
       case TipoIdentificacion.FID.identificador => "F"
       case TipoIdentificacion.NIT.identificador => "J"
@@ -152,7 +154,7 @@ class AutenticacionActor extends Actor with ActorLogging {
     }
   }
 
-  private def obtenerClienteAlianza(tipoIdentificacion: Int, numeroIdentificacion: String, currentSender: ActorRef): Future[Validation[PersistenceException, Option[Cliente]]] = {
+  protected def obtenerClienteAlianza(tipoIdentificacion: Int, numeroIdentificacion: String, currentSender: ActorRef): Future[Validation[PersistenceException, Option[Cliente]]] = {
     //TODO: Se debe poner el tipo de identificacion  de tipo String (tipoIdentificacion)
     val resultCliente = co.com.alianza.infrastructure.anticorruption.clientes.DataAccessAdapter.consultarCliente(ConsultaClienteRequest(tipoIdentificacion, numeroIdentificacion))
     resultCliente
@@ -184,7 +186,7 @@ class AutenticacionActor extends Actor with ActorLogging {
     }
   }
 
-  private def validarControlIpUsuario(numeroIdentificacion: String, idUsuario: Int, ip: String, nombreCliente: String, correoUsuario: String, tipoIdentificacion: String, ipUltimoIngreso: String, fechaUltimoIngreso: Date, currentSender: ActorRef) = {
+  protected def validarControlIpUsuario(numeroIdentificacion: String, idUsuario: Int, ip: String, nombreCliente: String, correoUsuario: String, tipoIdentificacion: String, ipUltimoIngreso: String, fechaUltimoIngreso: Date, currentSender: ActorRef) = {
     //Se valida que el control de direcciones IP del usuario se encuentre activo
     val resultControlIP = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerIpsUsuario(idUsuario)
 
@@ -244,7 +246,7 @@ class AutenticacionActor extends Actor with ActorLogging {
 
 
 
-  private def autenticacionUsuarioValido(numeroIdentificacion: String, nombreCliente: String, correoCliente: String, tipoIdentificacion: String, ipUltimoIngreso: String, fechaUltimaIngreso: Date, ipActual: String, currentSender: ActorRef){
+  protected def autenticacionUsuarioValido(numeroIdentificacion: String, nombreCliente: String, correoCliente: String, tipoIdentificacion: String, ipUltimoIngreso: String, fechaUltimaIngreso: Date, ipActual: String, currentSender: ActorRef){
     //TODO: Falta consultar si el usuario ya tiene el token relacionado, de ser asi no se genera ni se asocia, sino que se trae el token
     //El usuario paso las validaciones necesarias para  darse por autenticado
     val tokenGenerado = Token.generarToken(nombreCliente, correoCliente, tipoIdentificacion, ipUltimoIngreso, fechaUltimaIngreso)
@@ -267,7 +269,7 @@ class AutenticacionActor extends Actor with ActorLogging {
     
   }
 
-  private def actualizarNumeroIngresosErroneos(numeroIdentificacion: String, numeroIngresosErroneos: Int, currentSender: ActorRef) = {
+  protected def actualizarNumeroIngresosErroneos(numeroIdentificacion: String, numeroIngresosErroneos: Int, currentSender: ActorRef) = {
     val resultActualizarReintentosCero = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.actualizarNumeroIngresosErroneos(numeroIdentificacion, numeroIngresosErroneos)
     resultActualizarReintentosCero onComplete {
       case Failure(failure) => currentSender ! failure
@@ -280,7 +282,7 @@ class AutenticacionActor extends Actor with ActorLogging {
     }
   }
 
-  private def actualizarIpUltimoIngreso(numeroIdentificacion: String, ipActual: String, currentSender: ActorRef) = {
+  protected def actualizarIpUltimoIngreso(numeroIdentificacion: String, ipActual: String, currentSender: ActorRef) = {
     val resultActualizarIpUltimoIngreso = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.actualizarIpUltimoIngreso(numeroIdentificacion, ipActual)
     resultActualizarIpUltimoIngreso onComplete {
       case Failure(failure) => currentSender ! failure
@@ -293,7 +295,7 @@ class AutenticacionActor extends Actor with ActorLogging {
     }
   }
 
-  private def actualizarFechaUltimoIngreso(numeroIdentificacion: String, fechaActual: Timestamp, currentSender: ActorRef) = {
+  protected def actualizarFechaUltimoIngreso(numeroIdentificacion: String, fechaActual: Timestamp, currentSender: ActorRef) = {
     val resultActualizarFechaUltimoIngreso = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.actualizarFechaUltimoIngreso(numeroIdentificacion, fechaActual)
     resultActualizarFechaUltimoIngreso onComplete {
       case Failure(failure) => currentSender ! failure
@@ -306,7 +308,7 @@ class AutenticacionActor extends Actor with ActorLogging {
     }
   }
 
-  private def ejecutarExcepcionPasswordInvalido(numeroIdentificacion: String, numeroIngresosErroneos: Int, currentSender: ActorRef) = {
+  protected def ejecutarExcepcionPasswordInvalido(numeroIdentificacion: String, numeroIngresosErroneos: Int, currentSender: ActorRef) = {
     actualizarNumeroIngresosErroneos(numeroIdentificacion, numeroIngresosErroneos + 1, currentSender)
     val resultLlave = co.com.alianza.infrastructure.anticorruption.contrasenas.DataAccessAdapter.obtenerRegla("CANTIDAD_REINTENTOS_INGRESO_CONTRASENA")
     resultLlave onComplete {
@@ -331,7 +333,7 @@ class AutenticacionActor extends Actor with ActorLogging {
     }
   }
 
-  private def validarFechaContrasena(idUsuario: Int, fechaCaducidadUsuario: Date, currentSender: ActorRef) = {
+  protected def validarFechaContrasena(idUsuario: Int, fechaCaducidadUsuario: Date, currentSender: ActorRef) = {
 
     val calendarFechaCaducidad = Calendar.getInstance()
     calendarFechaCaducidad.setTime(fechaCaducidadUsuario)
@@ -362,15 +364,19 @@ class AutenticacionActor extends Actor with ActorLogging {
     }
   }
 
-  private val errorClienteInactivoSP = ErrorMessage("401.1", "Error Cliente Alianza", "Cliente inactivo en core de alianza").toJson
-  private val errorClienteNoExisteSP = ErrorMessage("401.2", "Error Cliente Alianza", "No existe el cliente en el core de alianza").toJson
-  private val errorUsuarioCredencialesInvalidas = ErrorMessage("401.3", "Error Credenciales", "Credenciales invalidas para acceder al portal de alianza fiduciaria").toJson
-  // private val errorClienteConexionCore = """{"code":"401.5","description":"No se pudo conectar con el servicio core de alianza"}"""
-  //private val errorUsuarioRelacionIP = """{"code":"401.6","description":"No se pudo relacionar la direccion ip al usuario "}"""
-  private val errorIntentosIngresosInvalidos = ErrorMessage("401.7", "Usuario Bloqueado", "Ha excedido el numero máximo intentos permitidos al sistema, su usuario ha sido bloqueado").toJson
-  private val errorUsuarioBloqueadoIntentosErroneos = ErrorMessage("401.8", "Usuario Bloqueado", "El usuario se encuentra bloqueado").toJson
-  //private val errorUsuarioCaducidadContrasena = ErrorMessage("401.9", "Error Credenciales", "La contraseña del usuario ha caducado").toJson
-  private val errorUsuarioBloqueadoPendienteActivacion = ErrorMessage("401.10", "Usuario Bloqueado", "El usuario se encuentra pendiente de activación").toJson
-  private val errorUsuarioBloqueadoPendienteConfronta = ErrorMessage("401.11", "Usuario Bloqueado", "El usuario se encuentra bloqueado pendiente preguntas de seguridad").toJson
-  private val errorUsuarioBloqueadoPendienteReinicio = ErrorMessage("401.12", "Usuario Bloqueado", "El usuario se encuentra bloqueado pendiente de reiniciar contraseña").toJson
+  protected def validarEmpresaCliente(idUsuario: Int, idEmpresa: Int, currentSender: ActorRef) = {
+    //TODO: Hacer servicio de consulta de empresa
+  }
+
+  protected val errorClienteInactivoSP = ErrorMessage("401.1", "Error Cliente Alianza", "Cliente inactivo en core de alianza").toJson
+  protected val errorClienteNoExisteSP = ErrorMessage("401.2", "Error Cliente Alianza", "No existe el cliente en el core de alianza").toJson
+  protected val errorUsuarioCredencialesInvalidas = ErrorMessage("401.3", "Error Credenciales", "Credenciales invalidas para acceder al portal de alianza fiduciaria").toJson
+  //protected val errorClienteConexionCore = """{"code":"401.5","description":"No se pudo conectar con el servicio core de alianza"}"""
+  //protected val errorUsuarioRelacionIP = """{"code":"401.6","description":"No se pudo relacionar la direccion ip al usuario "}"""
+  protected val errorIntentosIngresosInvalidos = ErrorMessage("401.7", "Usuario Bloqueado", "Ha excedido el numero máximo intentos permitidos al sistema, su usuario ha sido bloqueado").toJson
+  protected val errorUsuarioBloqueadoIntentosErroneos = ErrorMessage("401.8", "Usuario Bloqueado", "El usuario se encuentra bloqueado").toJson
+  //protected val errorUsuarioCaducidadContrasena = ErrorMessage("401.9", "Error Credenciales", "La contraseña del usuario ha caducado").toJson
+  protected val errorUsuarioBloqueadoPendienteActivacion = ErrorMessage("401.10", "Usuario Bloqueado", "El usuario se encuentra pendiente de activación").toJson
+  protected val errorUsuarioBloqueadoPendienteConfronta = ErrorMessage("401.11", "Usuario Bloqueado", "El usuario se encuentra bloqueado pendiente preguntas de seguridad").toJson
+  protected val errorUsuarioBloqueadoPendienteReinicio = ErrorMessage("401.12", "Usuario Bloqueado", "El usuario se encuentra bloqueado pendiente de reiniciar contraseña").toJson
 }
