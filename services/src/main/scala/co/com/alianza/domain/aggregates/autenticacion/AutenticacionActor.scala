@@ -190,7 +190,11 @@ class AutenticacionActor extends Actor with ActorLogging {
 
     val tokenGenerado: String = Token.generarToken(nombreCliente, correoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso)
     val resultAsociarToken: Future[Validation[PersistenceException, Int]] = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.asociarTokenUsuario(numeroIdentificacion, tokenGenerado)
+
+    //Se establece el numero de reintentos de ingreso en cero a la aplicacion
     actualizarNumeroIngresosErroneos(numeroIdentificacion, 0, currentSender)
+    //Se actualiza la fecha de ultimo ingreso y la ip de ultimo ingreso
+    actualizarIpUltimoIngreso(numeroIdentificacion, ip, currentSender)
     actualizarFechaUltimoIngreso(numeroIdentificacion, new Timestamp((new Date).getTime()), currentSender)
 
     resultControlIP onComplete {
@@ -233,7 +237,13 @@ class AutenticacionActor extends Actor with ActorLogging {
               case Some(valueResponse) =>
                 realizarAutenticacion(numeroIdentificacion, nombreCliente, correoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso, ip, currentSender)
               case None =>
-                currentSender ! ResponseMessage(Conflict, ErrorMessage("401.4", "Control IP", "El usuario no tiene activo el control de direcciones ip", tokenGenerado).toJson)
+                for {
+                  asociar <- ValidationT(co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.asociarTokenUsuario(numeroIdentificacion, tokenGenerado))
+                  expiracionSesion <- ValidationT(confDataAdapter.obtenerConfiguracionPorLlave(TiposConfiguracion.EXPIRACION_SESION.llave))
+                } yield {
+                  MainActors.sesionActorSupervisor ! CrearSesionUsuario(tokenGenerado, expiracionSesion)
+                  currentSender ! ResponseMessage(Conflict, ErrorMessage("401.4", "Control IP", "El usuario no tiene activo el control de direcciones ip", tokenGenerado).toJson)
+                }
             }
           //En caso de que la direccion IP no sea habitual para el usuario, se procede a preguntar si desea registrarla como habitual
           //Esta excepcion debe ser mostrada en un confirm en presentacion, creando un servicio de registro de la misma
@@ -258,12 +268,6 @@ class AutenticacionActor extends Actor with ActorLogging {
       MainActors.sesionActorSupervisor ! CrearSesionUsuario(tokenGenerado, expiracionSesion)
       currentSender ! tokenGenerado
     }
-
-    //Se establece el numero de reintentos de ingreso en cero a la aplicacion
-    actualizarNumeroIngresosErroneos(numeroIdentificacion, 0, currentSender)
-    //Se actualiza la fecha de ultimo ingreso y la ip de ultimo ingreso
-    actualizarIpUltimoIngreso(numeroIdentificacion, ipActual, currentSender)
-    actualizarFechaUltimoIngreso(numeroIdentificacion, new Timestamp((new Date).getTime()), currentSender)
     
   }
 
