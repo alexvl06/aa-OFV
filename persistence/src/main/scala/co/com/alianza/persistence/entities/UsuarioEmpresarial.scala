@@ -8,7 +8,7 @@ import CustomDriver.simple._
  */
 case class UsuarioEmpresarial(id: Int, correo: String, fechaActualizacion: Timestamp, identificacion: String, tipoIdentificacion: Int, usuario: String, estado: Int, contrasena: Option[String], token: Option[String], numeroIngresosErroneos:Int, ipUltimoIngreso: Option[String], fechaUltimoIngreso : Option[Timestamp], fechaUltimaPeticion: Option[Timestamp])
 
-class UsuarioEmpresarialTable(tag: Tag) extends Table[UsuarioEmpresarial](tag, "USUARIO_EMPRESA") {
+class UsuarioEmpresarialTable(tag: Tag) extends Table[UsuarioEmpresarial](tag, "USUARIO_EMPRESARIAL") {
   def id      = column[Int]("ID", O.PrimaryKey, O.AutoInc)
   def correo  = column[String]("CORREO")
   def fechaActualizacion   = column[Timestamp]("FECHA_ACTUALIZACION")
