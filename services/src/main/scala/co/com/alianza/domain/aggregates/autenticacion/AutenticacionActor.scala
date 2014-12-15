@@ -102,7 +102,7 @@ class AutenticacionActor extends Actor with ActorLogging {
     case message: AgregarIPHabitualUsuario =>
 
       val currentSender = sender()
-      val resultUsuario = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerUsuarioNumeroIdentificacion(message.numeroIdentificacion)
+      val resultUsuario = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerUsuarioId(message.idUsuario.get)
 
       resultUsuario onComplete {
         case Failure(failure) => currentSender ! failure
@@ -111,7 +111,7 @@ class AutenticacionActor extends Actor with ActorLogging {
             case zSuccess(response: Option[Usuario]) =>
               response match {
                 case Some(valueResponse) =>
-                    relacionarIpUsuarioAutenticacion(valueResponse.id.get, message.clientIp.get, message.tipoIdentificacion, message.numeroIdentificacion, valueResponse.ipUltimoIngreso.getOrElse(""), valueResponse.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), currentSender)
+                    relacionarIpUsuarioAutenticacion(valueResponse.id.get, message.clientIp.get, valueResponse.tipoIdentificacion, valueResponse.identificacion, valueResponse.ipUltimoIngreso.getOrElse(""), valueResponse.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), currentSender)
                 case None => currentSender ! ResponseMessage(Unauthorized, "Error al obtener usuario por numero de identificacion")
               }
             case zFailure(error) => currentSender ! error
