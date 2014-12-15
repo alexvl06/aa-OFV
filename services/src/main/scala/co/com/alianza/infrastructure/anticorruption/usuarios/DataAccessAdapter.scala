@@ -8,7 +8,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.app.MainActors
 import scalaz.{Failure => zFailure, Success => zSuccess}
-import co.com.alianza.infrastructure.dto.Usuario
+import co.com.alianza.infrastructure.dto.{Usuario, UsuarioEmpresarial}
 import co.com.alianza.persistence.entities.{Usuario => eUsuario, PinUsuario => ePinUsuario , PerfilUsuario, IpsUsuario, UsuarioEmpresarial => eUsuarioEmpresarial}
 import co.com.alianza.persistence.messages.AutenticacionRequest
 import enumerations.EstadosUsuarioEnum
@@ -42,8 +42,10 @@ object DataAccessAdapter {
     }
   }
 
-  def obtenerClienteEmpresaUsuario (nit: String, usuario: String): Future[Validation[PersistenceException, Option[eUsuarioEmpresarial]]] = {
-    new UsuariosEmpresarialRepository().obtieneUsuarioEmpresaPorNitYUsuario(nit, usuario)
+  def obtieneUsuarioEmpresarialPorNitYUsuario (nit: String, usuario: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = {
+    new UsuariosEmpresarialRepository().obtieneUsuarioEmpresaPorNitYUsuario(nit, usuario) map {
+      x => transformValidationUsuarioEmpresarial(x)
+    }
   }
 
   def obtenerUsuarioToken( token:String ): Future[Validation[PersistenceException, Option[Usuario]]] = {
@@ -156,6 +158,18 @@ object DataAccessAdapter {
       case zSuccess(response) =>
         response match {
           case Some(usuario) => zSuccess(Some(DataAccessTranslator.translateUsuario(usuario)))
+          case _ => zSuccess(None)
+        }
+
+      case zFailure(error)    =>  zFailure(error)
+    }
+  }
+
+  private def transformValidationUsuarioEmpresarial(origin: Validation[PersistenceException, Option[eUsuarioEmpresarial]]): Validation[PersistenceException, Option[UsuarioEmpresarial]] = {
+    origin match {
+      case zSuccess(response) =>
+        response match {
+          case Some(usuario) => zSuccess(Some(DataAccessTranslator.translateUsuarioEmpresarial(usuario)))
           case _ => zSuccess(None)
         }
 

@@ -37,7 +37,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor {
     case message: AutenticarUsuarioEmpresaMessage =>
 
       val currentSender = sender()
-      val result = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerClienteEmpresaUsuario(message.nit, message.usuario)
+      val result = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtieneUsuarioEmpresarialPorNitYUsuario(message.nit, message.usuario)
       result onComplete {
         case Failure(failure) => currentSender ! failure
         case Success(value) =>
