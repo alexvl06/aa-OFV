@@ -46,8 +46,8 @@ trait ServiceAuthorization {
                 val user = JsonUtil.fromJson[Usuario](r.responseBody)
                 Right(UsuarioAuth(user.id.get))
               case Forbidden =>
-                val id = r.responseBody.substring(17, 20)
-                Right(UsuarioAuth(id.toInt))
+                val user = JsonUtil.fromJson[UsuarioForbidden](r.responseBody)
+                Right(UsuarioAuth(user.usuario.id.get))
 
             }
           case _ =>
@@ -58,3 +58,5 @@ trait ServiceAuthorization {
   }
 
 }
+
+case class UsuarioForbidden(usuario: Usuario, filtro: String, code: String)
