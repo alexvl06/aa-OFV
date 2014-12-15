@@ -1,8 +1,10 @@
 package co.com.alianza.infrastructure.messages
 
-import spray.json.DefaultJsonProtocol
-import spray.httpx.SprayJsonSupport
+import co.com.alianza.infrastructure.dto.Configuracion
 import co.com.alianza.persistence.messages.{InvalidarTokenRequest, AgregarIpHabitualRequest, AutenticacionRequest, ValidarTokenRequest}
+
+import spray.httpx.SprayJsonSupport
+import spray.json.DefaultJsonProtocol
 
 /**
  *
@@ -12,7 +14,7 @@ import co.com.alianza.persistence.messages.{InvalidarTokenRequest, AgregarIpHabi
 object AutenticacionMessagesJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val AutenticarRequestMessageFormat = jsonFormat4(AutenticarMessage)
   implicit val AutorizarUrlRequestMessageFormat = jsonFormat2(AutorizarUrl)
-  implicit val AgregarIpHabitualRequestMessageFormat = jsonFormat3(AgregarIPHabitualUsuario)
+  implicit val AgregarIpHabitualRequestMessageFormat = jsonFormat2(AgregarIPHabitualUsuario)
 }
 
 
@@ -29,9 +31,22 @@ case class InvalidarToken(token:String)  extends MessageService{
   def toInvalidarTokenRequest:InvalidarTokenRequest = InvalidarTokenRequest( token )
 }
 
-case class AgregarIPHabitualUsuario(tipoIdentificacion:Int, numeroIdentificacion: String, clientIp:Option[String] = None)  extends MessageService{
-  def toAgregarClienteRequest:AgregarIpHabitualRequest = AgregarIpHabitualRequest(tipoIdentificacion, numeroIdentificacion, clientIp)
+case class AgregarIPHabitualUsuario(idUsuario: Option[Int], clientIp:Option[String] = None)  extends MessageService{
+  def toAgregarClienteRequest:AgregarIpHabitualRequest = AgregarIpHabitualRequest(idUsuario.get, clientIp)
 }
 
+//
+// Mensajes para el manejo de las sesiones
+//
+
+case class ActualizarSesion()
+
+case class CrearSesionUsuario(token: String, tiempoExpiracion: Option[Configuracion])
+
+case class InvalidarSesion(token: String)
+
+case class ExpirarSesion()
+
+case class ValidarSesion(token: String)
 
 

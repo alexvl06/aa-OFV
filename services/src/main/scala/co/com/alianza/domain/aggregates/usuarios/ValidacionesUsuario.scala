@@ -1,12 +1,17 @@
 package co.com.alianza.domain.aggregates.usuarios
 
+import co.com.alianza.constants.TiposConfiguracion
+import co.com.alianza.exceptions.PersistenceException
+import co.com.alianza.infrastructure.anticorruption.configuraciones.DataAccessAdapter
+
 import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
 import co.com.alianza.infrastructure.messages.{ErrorMessage, UsuarioMessage}
 import co.com.alianza.persistence.messages.ConsultaClienteRequest
 import scala.concurrent.{ExecutionContext, Future}
-import co.com.alianza.infrastructure.dto.{Cliente, Usuario}
+import co.com.alianza.infrastructure.dto.{Configuracion, Cliente, Usuario}
 import co.com.alianza.infrastructure.anticorruption.clientes.{DataAccessAdapter => DataAccessAdapterCliente }
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => DataAccessAdapterUsuario }
+import co.com.alianza.infrastructure.anticorruption.configuraciones.{DataAccessTranslator => dataAccessTransConf, DataAccessAdapter => dataAccesAdaptarConf}
 
 import enumerations.{TipoIdentificacion, EstadosCliente}
 
@@ -22,7 +27,7 @@ import com.typesafe.config.{ConfigFactory, Config}
  *
  * @author smontanez
  */
-object  ValdiacionesUsuario {
+object  ValidacionesUsuario {
 
   import co.com.alianza.util.json.MarshallableImplicits._
   implicit val _: ExecutionContext = MainActors.dataAccesEx
@@ -30,7 +35,7 @@ object  ValdiacionesUsuario {
 
   def validacionReglasClave(message:UsuarioMessage): Future[Validation[ErrorValidacion, Unit.type]] = {
 
-    val usuarioFuture = ValidarClave.aplicarReglas(message.contrasena,ValidarClave.reglasGenerales: _*)
+    val usuarioFuture: Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = ValidarClave.aplicarReglas(message.contrasena, None, ValidarClave.reglasGenerales: _*)
 
     usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message,pe)).flatMap{
       (x:List[ErrorValidacionClave]) => x match{
@@ -43,9 +48,9 @@ object  ValdiacionesUsuario {
   }
 
 
-  def validacionReglasClave(contrasena:String): Future[Validation[ErrorValidacion, Unit.type]] = {
+  def validacionReglasClave(contrasena:String, idUsuario: Int): Future[Validation[ErrorValidacion, Unit.type]] = {
 
-    val usuarioFuture = ValidarClave.aplicarReglas(contrasena,ValidarClave.reglasGenerales: _*)
+    val usuarioFuture: Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = ValidarClave.aplicarReglas(contrasena, Some(idUsuario), ValidarClave.reglasGenerales: _*)
 
     usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message,pe)).flatMap{
       (x:List[ErrorValidacionClave]) => x match{
@@ -127,6 +132,16 @@ object  ValdiacionesUsuario {
     })
   }
 
+  def validacionConsultaTiempoExpiracion(): Future[Validation[ErrorValidacion, Configuracion]] = {
+    val configuracionFuture = dataAccesAdaptarConf.obtenerConfiguracionPorLlave( TiposConfiguracion.EXPIRACION_PIN.llave )
+    configuracionFuture.map(_.leftMap(pe => ErrorPersistence(pe.message,pe)).flatMap{
+      (x:Option[Configuracion]) => x match {
+        case Some(c) => zSuccess(c)
+        case None => zFailure(ErrorPin(errorPin))
+      }
+    })
+  }
+
   private val errorUsuarioExiste = ErrorMessage("409.1", "Usuario ya existe", "Usuario ya existe").toJson
   private val errorUsuarioCorreoExiste = ErrorMessage("409.3", "Correo ya existe", "Correo ya existe").toJson
   private val errorClienteNoExiste = ErrorMessage("409.2", "No existe el cliente", "No existe el cliente").toJson
@@ -134,5 +149,6 @@ object  ValdiacionesUsuario {
   private def errorClave(error:String) = ErrorMessage("409.5", "Error clave", error).toJson
   private val errorCaptcha = ErrorMessage("409.6", "Valor captcha incorrecto", "Valor captcha incorrecto").toJson
   private val errorContrasenaActualNoExiste = ErrorMessage("409.7", "No existe la contrasena actual", "No existe la contrasena actual").toJson
+  private val errorPin = ErrorMessage("409.8", "Error en el pin", "Ocurrió un error al obtener el tiempo de expiracion del pin").toJson
 
 }

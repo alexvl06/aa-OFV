@@ -12,11 +12,11 @@ case class PinData(token:String, fechaExpiracion:Date, tokenHash:Option[String])
  * @author smontanez
  */
 object TokenPin {
- def obtenerToken():PinData = {
+ def obtenerToken(fechaExp: Date):PinData = {
 
    val md = MessageDigest.getInstance("SHA-512")
 
-   val data: PinData = PinData(RandomStringUtils.randomAscii(89), new Date(System.currentTimeMillis()+86400000), None)
+   val data: PinData = PinData(RandomStringUtils.randomAscii(89), fechaExp, None)
    val hash = md.digest(s"""${data.token} - ${data.fechaExpiracion}""".getBytes)
 
    val hexString = new StringBuffer()

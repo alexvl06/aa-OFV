@@ -1,25 +1,33 @@
 package co.com.alianza.domain.aggregates.autenticacion
 
-import java.sql.Timestamp
 import akka.actor.{ ActorRef, Actor, ActorLogging }
-import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
-import scala.util.{ Success, Failure }
+import akka.actor.Props
+import akka.routing.RoundRobinPool
+
+import co.com.alianza.app.MainActors
+import co.com.alianza.constants.TiposConfiguracion
+import co.com.alianza.infrastructure.anticorruption.configuraciones.{DataAccessAdapter => confDataAdapter}
+import co.com.alianza.util.transformers.ValidationT
 import co.com.alianza.infrastructure.messages._
-import spray.http.StatusCodes._
+import co.com.alianza.util.json.JsonUtil
+import co.com.alianza.exceptions.{ PersistenceException, AlianzaException, TechnicalLevel }
+import co.com.alianza.util.clave.Crypto
 import co.com.alianza.infrastructure.dto.{ Cliente, Usuario }
-import enumerations.{AppendPasswordUser, TipoIdentificacion, EstadosUsuarioEnum, EstadosCliente}
 import co.com.alianza.util.token.Token
 import co.com.alianza.persistence.messages.ConsultaClienteRequest
 import co.com.alianza.persistence.entities.{ ReglasContrasenas, IpsUsuario }
+import enumerations.{AppendPasswordUser, TipoIdentificacion, EstadosUsuarioEnum, EstadosCliente}
+
+import java.sql.Timestamp
 import java.util.{ Date, Calendar }
-import co.com.alianza.util.json.JsonUtil
-import co.com.alianza.exceptions.{ PersistenceException, AlianzaException, TechnicalLevel }
+
 import scala.concurrent.Future
+import scala.util.{ Success, Failure }
 
-import akka.actor.Props
-import akka.routing.RoundRobinPool
-import co.com.alianza.util.clave.Crypto
+import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
+import scalaz.std.AllInstances._
 
+import spray.http.StatusCodes._
 
 class AutenticacionActorSupervisor extends Actor with ActorLogging {
   import akka.actor.SupervisorStrategy._
@@ -94,7 +102,7 @@ class AutenticacionActor extends Actor with ActorLogging {
     case message: AgregarIPHabitualUsuario =>
 
       val currentSender = sender()
-      val resultUsuario = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerUsuarioNumeroIdentificacion(message.numeroIdentificacion)
+      val resultUsuario = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerUsuarioId(message.idUsuario.get)
 
       resultUsuario onComplete {
         case Failure(failure) => currentSender ! failure
@@ -103,7 +111,7 @@ class AutenticacionActor extends Actor with ActorLogging {
             case zSuccess(response: Option[Usuario]) =>
               response match {
                 case Some(valueResponse) =>
-                    relacionarIpUsuarioAutenticacion(valueResponse.id.get, message.clientIp.get, message.tipoIdentificacion, message.numeroIdentificacion, valueResponse.ipUltimoIngreso.getOrElse(""), valueResponse.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), currentSender)
+                    relacionarIpUsuarioAutenticacion(valueResponse.id.get, message.clientIp.get, valueResponse.tipoIdentificacion, valueResponse.identificacion, valueResponse.ipUltimoIngreso.getOrElse(""), valueResponse.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), currentSender)
                 case None => currentSender ! ResponseMessage(Unauthorized, "Error al obtener usuario por numero de identificacion")
               }
             case zFailure(error) => currentSender ! error
@@ -182,7 +190,11 @@ class AutenticacionActor extends Actor with ActorLogging {
 
     val tokenGenerado: String = Token.generarToken(nombreCliente, correoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso)
     val resultAsociarToken: Future[Validation[PersistenceException, Int]] = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.asociarTokenUsuario(numeroIdentificacion, tokenGenerado)
+
+    //Se establece el numero de reintentos de ingreso en cero a la aplicacion
     actualizarNumeroIngresosErroneos(numeroIdentificacion, 0, currentSender)
+    //Se actualiza la fecha de ultimo ingreso y la ip de ultimo ingreso
+    actualizarIpUltimoIngreso(numeroIdentificacion, ip, currentSender)
     actualizarFechaUltimoIngreso(numeroIdentificacion, new Timestamp((new Date).getTime()), currentSender)
 
     resultControlIP onComplete {
@@ -194,7 +206,15 @@ class AutenticacionActor extends Actor with ActorLogging {
             if (response.isEmpty) {
               resultAsociarToken onComplete {
                 case Failure(failure) => currentSender ! failure
-                case Success(value) => currentSender ! ResponseMessage(Conflict, ErrorMessage("401.4", "Control IP", "El usuario no tiene activo el control de direcciones ip", tokenGenerado).toJson)
+                case Success(value) =>
+
+                  for {
+                    expiracionSesion <- ValidationT(confDataAdapter.obtenerConfiguracionPorLlave(TiposConfiguracion.EXPIRACION_SESION.llave))
+                  } yield {
+                    MainActors.sesionActorSupervisor ! CrearSesionUsuario(tokenGenerado, expiracionSesion)
+                    currentSender ! ResponseMessage(Conflict, ErrorMessage("401.4", "Control IP", "El usuario no tiene activo el control de direcciones ip", tokenGenerado).toJson)
+                  }
+
               }
             }
             else obtenerIpHabitual(numeroIdentificacion, idUsuario, ip, nombreCliente, correoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso, currentSender, tokenGenerado)
@@ -217,7 +237,13 @@ class AutenticacionActor extends Actor with ActorLogging {
               case Some(valueResponse) =>
                 realizarAutenticacion(numeroIdentificacion, nombreCliente, correoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso, ip, currentSender)
               case None =>
-                currentSender ! ResponseMessage(Conflict, ErrorMessage("401.4", "Control IP", "El usuario no tiene activo el control de direcciones ip", tokenGenerado).toJson)
+                for {
+                  asociar <- ValidationT(co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.asociarTokenUsuario(numeroIdentificacion, tokenGenerado))
+                  expiracionSesion <- ValidationT(confDataAdapter.obtenerConfiguracionPorLlave(TiposConfiguracion.EXPIRACION_SESION.llave))
+                } yield {
+                  MainActors.sesionActorSupervisor ! CrearSesionUsuario(tokenGenerado, expiracionSesion)
+                  currentSender ! ResponseMessage(Conflict, ErrorMessage("401.4", "Control IP", "El usuario no tiene activo el control de direcciones ip", tokenGenerado).toJson)
+                }
             }
           //En caso de que la direccion IP no sea habitual para el usuario, se procede a preguntar si desea registrarla como habitual
           //Esta excepcion debe ser mostrada en un confirm en presentacion, creando un servicio de registro de la misma
@@ -235,15 +261,13 @@ class AutenticacionActor extends Actor with ActorLogging {
     //Una vez se genera el token se almacena al usuario que desea realizar la auteticacion el tabla de usuarios de la aplicacion
     val resultAsociarToken = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.asociarTokenUsuario(numeroIdentificacion, tokenGenerado)
 
-    resultAsociarToken onComplete {
-      case Failure(failure) => currentSender ! failure
-      case Success(value) => currentSender ! tokenGenerado
+    for {
+      asociar <- ValidationT(resultAsociarToken)
+      expiracionSesion <- ValidationT(confDataAdapter.obtenerConfiguracionPorLlave(TiposConfiguracion.EXPIRACION_SESION.llave))
+    } yield {
+      MainActors.sesionActorSupervisor ! CrearSesionUsuario(tokenGenerado, expiracionSesion)
+      currentSender ! tokenGenerado
     }
-    //Se establece el numero de reintentos de ingreso en cero a la aplicacion
-    actualizarNumeroIngresosErroneos(numeroIdentificacion, 0, currentSender)
-    //Se actualiza la fecha de ultimo ingreso y la ip de ultimo ingreso
-    actualizarIpUltimoIngreso(numeroIdentificacion, ipActual, currentSender)
-    actualizarFechaUltimoIngreso(numeroIdentificacion, new Timestamp((new Date).getTime()), currentSender)
     
   }
 

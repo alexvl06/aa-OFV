@@ -1,6 +1,6 @@
 package co.com.alianza.infrastructure.dto.security
 
-import spray.http.HttpEntity
+import spray.http.{HttpResponse, HttpEntity}
 import spray.json._
 
 /**

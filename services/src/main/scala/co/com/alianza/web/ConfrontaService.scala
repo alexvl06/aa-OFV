@@ -2,7 +2,7 @@ package co.com.alianza.web
 
 import spray.routing.Directives
 import co.com.alianza.app.AlianzaCommons
-import co.com.alianza.infrastructure.messages.{ObtenerCuestionarioAdicionalRequestMessage, ObtenerCuestionarioRequestMessage,ValidarCuestionarioRequestMessage}
+import co.com.alianza.infrastructure.messages.{ValidarCuestionarioDesbloqueoRequestMessage, ObtenerCuestionarioAdicionalRequestMessage, ObtenerCuestionarioRequestMessage, ValidarCuestionarioRequestMessage}
 import spray.http.StatusCodes._
 import co.com.alianza.util.json.JsonUtil
 
@@ -13,6 +13,7 @@ class ConfrontaService extends Directives with AlianzaCommons  {
   val obtenerCuestionario = "obtenerCuestionario"
   val obtenerCuestionarioAdicional = "obtenerCuestionarioAdicional"
   val validarCuestionario = "validarCuestionario"
+  val validarCuestionarioDesbloqueo = "validarCuestionarioDesbloqueo"
 
   def route= {
     path(confronta/obtenerCuestionarioAdicional) {
@@ -32,6 +33,16 @@ class ConfrontaService extends Directives with AlianzaCommons  {
           respondWithMediaType(mediaType) {
             requestExecute(message, confrontaActor)
           }
+        }
+      }
+    } ~ path(confronta/validarCuestionarioDesbloqueo) {
+      post {
+        entity(as[ValidarCuestionarioDesbloqueoRequestMessage]) {
+          message =>
+            println(JsonUtil.toJson(message))
+            respondWithMediaType(mediaType) {
+              requestExecute(message, confrontaActor)
+            }
         }
       }
     }

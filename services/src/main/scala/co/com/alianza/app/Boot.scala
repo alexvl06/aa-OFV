@@ -14,7 +14,7 @@ object Boot extends App with HostBinding  {
 
 trait HostBinding {
 	import java.net.InetAddress
-	
+
   def portNumber( args: Array[ String ] ): Int =
     if ( args.length != 0 ) args( 0 ).toInt else 4900
 

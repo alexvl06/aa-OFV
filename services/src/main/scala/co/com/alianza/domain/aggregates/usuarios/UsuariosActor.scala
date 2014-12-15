@@ -19,7 +19,7 @@ import akka.routing.RoundRobinPool
 import scalaz.Failure
 import scala.util.{Success, Failure}
 import co.com.alianza.infrastructure.messages._
-import co.com.alianza.infrastructure.dto.Cliente
+import co.com.alianza.infrastructure.dto._
 import scalaz.Success
 import co.com.alianza.util.transformers.ValidationT
 import co.com.alianza.persistence.entities
@@ -28,18 +28,15 @@ import co.com.alianza.domain.aggregates.usuarios.MailMessageUsuario
 import scalaz.Failure
 import scalaz.Success
 import scala.util.Success
-import java.util.Date
+import java.util.{Calendar, Date}
 import scalaz.std.AllInstances._
 import co.com.alianza.util.FutureResponse
-import co.com.alianza.infrastructure.dto.PinUsuario
 import scala.Some
 import co.com.alianza.infrastructure.messages.OlvidoContrasenaMessage
 import co.com.alianza.util.transformers.ValidationT
 import co.com.alianza.microservices.MailMessage
 import akka.routing.RoundRobinPool
 import co.com.alianza.util.token.PinData
-import co.com.alianza.infrastructure.dto.Cliente
-import co.com.alianza.infrastructure.dto.Usuario
 import co.com.alianza.infrastructure.messages.UsuarioMessage
 import co.com.alianza.infrastructure.messages.ResponseMessage
 import com.asobancaria.cifinpruebas.cifin.confrontav2plusws.services.ConfrontaUltraWS.{ConfrontaUltraWSSoapBindingStub, ConfrontaUltraWebServiceServiceLocator}
@@ -80,7 +77,7 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
   implicit val sys = context.system
   implicit private val config: Config = MainActors.conf
 
-  import ValdiacionesUsuario._
+  import ValidacionesUsuario._
 
   def receive = {
 
@@ -98,7 +95,28 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
 
       resolveCrearUsuarioFuture(crearUsuarioFuture,currentSender,message)
 
+    case message: DesbloquarMessage =>
+      val currentSender = sender()
 
+      val futureCliente = (for{
+        captchaVal <-  validaCaptcha(message.toUsuarioMessage)
+        cliente <- co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerUsuarioNumeroIdentificacion(message.identificacion)
+      }yield{
+        cliente
+      })
+
+      futureCliente onComplete{
+        case sFailure( failure ) =>
+          currentSender ! failure
+        case sSuccess (value) =>
+          value match{
+            case zSuccess( response ) =>
+              var mensajeCuestionario = message.toUsuarioMessage.copy(tipoIdentificacion = response.get.tipoIdentificacion)
+              obtenerCuestionario(currentSender,mensajeCuestionario)
+            case zFailure (error) =>
+              currentSender ! error
+          }
+      }
 
     case message: OlvidoContrasenaMessage =>
 
@@ -181,17 +199,35 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
       case sSuccess(value) =>
         value match {
           case zSuccess(response: Int) =>
-            currentSender ! ResponseMessage(Created, response.toJson)
             if (response == 1) {
 
-              val tokenPin: PinData = TokenPin.obtenerToken()
-              val pin: PinUsuario = PinUsuario(None, idUsuario.get, tokenPin.token, tokenPin.fechaExpiracion, tokenPin.tokenHash.get)
-              val pinUsuario: entities.PinUsuario = DataAccessTranslatorPin.translateEntityPinUsuario(pin)
+              val validacionConsulta = validacionConsultaTiempoExpiracion()
 
-              DataAccessAdapterUsuario.crearUsuarioPin(pinUsuario)
+              validacionConsulta onComplete {
+                case sFailure(failure) => currentSender ! failure
+                case sSuccess(value) =>
+                  value match {
+                    case zSuccess(responseConf: Configuracion) =>
 
-              new SmtpServiceClient().send(buildMessage(pin, UsuarioMessage(correoCliente, message.identificacion, message.tipoIdentificacion,null, false, None), "alianza.smtp.templatepin.reiniciarContrasena", "alianza.smtp.asunto.reiniciarContrasena"), (_, _) => Unit)
+                      val fechaActual: Calendar = Calendar.getInstance()
+                      fechaActual.add(Calendar.HOUR_OF_DAY, responseConf.valor.toInt)
+                      val tokenPin: PinData = TokenPin.obtenerToken(fechaActual.getTime)
 
+                      val pin: PinUsuario = PinUsuario(None, idUsuario.get, tokenPin.token, tokenPin.fechaExpiracion, tokenPin.tokenHash.get)
+                      val pinUsuario: entities.PinUsuario = DataAccessTranslatorPin.translateEntityPinUsuario(pin)
+
+                      DataAccessAdapterUsuario.crearUsuarioPin(pinUsuario)
+
+                      new SmtpServiceClient().send(buildMessage(pin, responseConf.valor.toInt, UsuarioMessage(correoCliente, message.identificacion, message.tipoIdentificacion,null, false, None), "alianza.smtp.templatepin.reiniciarContrasena", "alianza.smtp.asunto.reiniciarContrasena"), (_, _) => Unit)
+                      currentSender ! ResponseMessage(Created, response.toJson)
+
+                    case zFailure(error) =>
+                      error match {
+                        case errorPersistence: ErrorPersistence => currentSender ! errorPersistence.exception
+                        case errorFail => currentSender ! ResponseMessage(Conflict, errorFail.msg)
+                      }
+                  }
+              }
             }
           case zFailure(error) =>
             error match {
@@ -284,8 +320,8 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
   }
 
 
-  private def buildMessage(pinUsuario: PinUsuario, message: UsuarioMessage, templateBody: String, asuntoTemp: String) = {
-    val body: String =new MailMessageUsuario(templateBody).getMessagePin(pinUsuario)
+  private def buildMessage(pinUsuario: PinUsuario, numHorasCaducidad: Int, message: UsuarioMessage, templateBody: String, asuntoTemp: String) = {
+    val body: String =new MailMessageUsuario(templateBody).getMessagePin(pinUsuario, numHorasCaducidad)
     val asunto: String = config.getString(asuntoTemp)
     //MailMessage(config.getString("alianza.smtp.from"), "luisaceleita@seven4n.com", List(), asunto, body, "")
     //MailMessage(config.getString("alianza.smtp.from"), "josegarcia@seven4n.com", List(), asunto, body, "")
