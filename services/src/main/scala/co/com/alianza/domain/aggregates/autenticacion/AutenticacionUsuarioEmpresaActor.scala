@@ -105,7 +105,6 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor {
     val resultControlIP = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerIpsUsuario(idUsuario)
 
     val tokenGenerado: String = Token.generarToken(nombreCliente, correoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso)
-    log info ("Token generado: "+tokenGenerado)
     val resultAsociarToken: Future[Validation[PersistenceException, Int]] = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.asociarTokenUsuarioEmpresarial(idUsuario, tokenGenerado)
     actualizarNumeroIngresosErroneos(numeroIdentificacion, 0, currentSender)
     actualizarFechaUltimoIngreso(numeroIdentificacion, new Timestamp((new Date).getTime()), currentSender)
