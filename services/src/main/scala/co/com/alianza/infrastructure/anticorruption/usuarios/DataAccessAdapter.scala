@@ -74,6 +74,10 @@ object DataAccessAdapter {
     repo.asociarTokenUsuario( numeroIdentificacion, token )
   }
 
+  def asociarTokenUsuarioEmpresarial(usuarioId: Int, token:String): Future[Validation[PersistenceException, Int]] = {
+    val repo = new UsuariosEmpresarialRepository()
+    repo.asociarTokenUsuario( usuarioId, token )
+  }
 
   def invalidarTokenUsuario(token:String): Future[Validation[PersistenceException, Int]] = {
     val repo = new UsuariosRepository()
