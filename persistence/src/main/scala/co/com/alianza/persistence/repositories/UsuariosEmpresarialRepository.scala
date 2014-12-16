@@ -32,4 +32,11 @@ class UsuariosEmpresarialRepository ( implicit executionContext: ExecutionContex
     }, "Consulta usuario empresarial por nit y usuario")
   }
 
+  def asociarTokenUsuario( usuarioId: Int, token: String ) : Future[Validation[PersistenceException, Int]] = loan {
+
+    implicit session =>
+      val resultTry = Try{ UsuariosEmpresariales.filter( _.id === usuarioId ).map(_.token ).update(Some(token))  }
+      resolveTry(resultTry, "Actualizar token de usuario empresarial")
+  }
+
 }
