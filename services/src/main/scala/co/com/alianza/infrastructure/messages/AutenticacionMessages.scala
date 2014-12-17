@@ -15,7 +15,7 @@ object AutenticacionMessagesJsonSupport extends DefaultJsonProtocol with SprayJs
   implicit val AutenticarRequestMessageFormat = jsonFormat4(AutenticarMessage)
   implicit val AutenticarClienteEmpresaMessageFormat = jsonFormat6(AutenticarUsuarioEmpresaMessage)
   implicit val AutorizarUrlRequestMessageFormat = jsonFormat2(AutorizarUrl)
-  implicit val AgregarIpHabitualRequestMessageFormat = jsonFormat3(AgregarIPHabitualUsuario)
+  implicit val AgregarIpHabitualRequestMessageFormat = jsonFormat2(AgregarIPHabitualUsuario)
 }
 
 
@@ -36,8 +36,8 @@ case class InvalidarToken(token:String)  extends MessageService {
   def toInvalidarTokenRequest:InvalidarTokenRequest = InvalidarTokenRequest( token )
 }
 
-case class AgregarIPHabitualUsuario(tipoIdentificacion:Int, numeroIdentificacion: String, clientIp:Option[String] = None)  extends MessageService {
-  def toAgregarClienteRequest:AgregarIpHabitualRequest = AgregarIpHabitualRequest(tipoIdentificacion, numeroIdentificacion, clientIp)
+case class AgregarIPHabitualUsuario(idUsuario: Option[Int], clientIp:Option[String] = None)  extends MessageService{
+  def toAgregarClienteRequest:AgregarIpHabitualRequest = AgregarIpHabitualRequest(idUsuario.get, clientIp)
 }
 
 //

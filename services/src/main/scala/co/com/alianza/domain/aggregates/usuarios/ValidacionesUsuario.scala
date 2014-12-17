@@ -33,6 +33,20 @@ object  ValidacionesUsuario {
   implicit val _: ExecutionContext = MainActors.dataAccesEx
   implicit private val config: Config = MainActors.conf
 
+  def validacionReglasClaveAutoregistro(message:UsuarioMessage): Future[Validation[ErrorValidacion, Unit.type]] = {
+
+    val usuarioFuture: Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = ValidarClave.aplicarReglas(message.contrasena, None, ValidarClave.reglasGeneralesAutoregistro: _*)
+
+    usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message,pe)).flatMap{
+      (x:List[ErrorValidacionClave]) => x match{
+        case List() => zSuccess(Unit)
+        case erroresList =>
+          val errores = erroresList.foldLeft("") ( (z, i) => i.toString + "-" + z  )
+          zFailure(ErrorFormatoClave(errorClave(errores)))
+      }
+    })
+  }
+
   def validacionReglasClave(message:UsuarioMessage): Future[Validation[ErrorValidacion, Unit.type]] = {
 
     val usuarioFuture: Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = ValidarClave.aplicarReglas(message.contrasena, None, ValidarClave.reglasGenerales: _*)

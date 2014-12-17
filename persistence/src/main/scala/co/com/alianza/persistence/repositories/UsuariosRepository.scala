@@ -42,6 +42,12 @@ class UsuariosRepository ( implicit executionContext: ExecutionContext) extends 
       resolveTry(resultTry, "Consulta usuario con identificador " + numeroIdentificacion)
   }
 
+  def obtenerUsuarioId( idUsuario:Int ): Future[Validation[PersistenceException, Option[Usuario]]] = loan {
+    implicit session =>
+      val resultTry = Try{ usuarios.filter(_.id === idUsuario ).list.headOption }
+      resolveTry(resultTry, "Consulta usuario con identificador " + idUsuario)
+  }
+
   def obtenerUsuarioToken( token:String ): Future[Validation[PersistenceException, Option[Usuario]]] = loan {
     implicit session =>
       val resultTry = Try{ usuarios.filter(_.token === token).list.headOption}
