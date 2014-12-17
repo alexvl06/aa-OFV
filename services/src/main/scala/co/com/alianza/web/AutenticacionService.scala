@@ -34,7 +34,6 @@ class AutenticacionService extends Directives with AlianzaCommons with CrossHead
             }
         }
       }
-    } ~ path("ponerIpHabitual") {
     }
   }
 
