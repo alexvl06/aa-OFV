@@ -42,18 +42,14 @@ object DataAccessAdapter {
     }
   }
 
-  def obtieneUsuarioEmpresarialPorNitYUsuario (nit: String, usuario: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = {
-    new UsuariosEmpresarialRepository().obtieneUsuarioEmpresaPorNitYUsuario(nit, usuario) map {
-      x => transformValidationUsuarioEmpresarial(x)
-    }
-  }
+  def obtieneUsuarioEmpresarialPorNitYUsuario (nit: String, usuario: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] =
+    new UsuariosEmpresarialRepository().obtieneUsuarioEmpresaPorNitYUsuario(nit, usuario) map transformValidationUsuarioEmpresarial
 
-  def obtenerUsuarioToken( token:String ): Future[Validation[PersistenceException, Option[Usuario]]] = {
-    val repo = new UsuariosRepository()
-    repo.obtenerUsuarioToken( token ) map {
-      x => transformValidation(x)
-    }
-  }
+  def obtenerUsuarioToken( token:String ): Future[Validation[PersistenceException, Option[Usuario]]] =
+    new UsuariosRepository().obtenerUsuarioToken( token ) map transformValidation
+
+  def obtenerUsuarioEmpresarialToken( token:String ): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] =
+    new UsuariosEmpresarialRepository().obtenerUsuarioToken( token ) map transformValidationUsuarioEmpresarial
 
   def obtenerUsuarioCorreo( correo:String): Future[Validation[PersistenceException, Option[Usuario]]] = {
     val repo = new UsuariosRepository()
@@ -74,10 +70,8 @@ object DataAccessAdapter {
     repo.asociarTokenUsuario( numeroIdentificacion, token )
   }
 
-  def asociarTokenUsuarioEmpresarial(usuarioId: Int, token:String): Future[Validation[PersistenceException, Int]] = {
-    val repo = new UsuariosEmpresarialRepository()
-    repo.asociarTokenUsuario( usuarioId, token )
-  }
+  def asociarTokenUsuarioEmpresarial(usuarioId: Int, token:String): Future[Validation[PersistenceException, Int]] =
+    new UsuariosEmpresarialRepository().asociarTokenUsuario( usuarioId, token )
 
   def invalidarTokenUsuario(token:String): Future[Validation[PersistenceException, Int]] = {
     val repo = new UsuariosRepository()
@@ -174,17 +168,15 @@ object DataAccessAdapter {
     }
   }
 
-  private def transformValidationUsuarioEmpresarial(origin: Validation[PersistenceException, Option[eUsuarioEmpresarial]]): Validation[PersistenceException, Option[UsuarioEmpresarial]] = {
+  private def transformValidationUsuarioEmpresarial(origin: Validation[PersistenceException, Option[eUsuarioEmpresarial]]): Validation[PersistenceException, Option[UsuarioEmpresarial]] =
     origin match {
       case zSuccess(response) =>
         response match {
           case Some(usuario) => zSuccess(Some(DataAccessTranslator.translateUsuarioEmpresarial(usuario)))
           case _ => zSuccess(None)
         }
-
       case zFailure(error)    =>  zFailure(error)
     }
-  }
 
 
 

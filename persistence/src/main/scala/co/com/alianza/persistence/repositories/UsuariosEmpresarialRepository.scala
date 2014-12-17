@@ -39,4 +39,10 @@ class UsuariosEmpresarialRepository ( implicit executionContext: ExecutionContex
       resolveTry(resultTry, "Actualizar token de usuario empresarial")
   }
 
+  def obtenerUsuarioToken( token:String ): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = loan {
+    implicit session =>
+      val resultTry = Try{ UsuariosEmpresariales.filter(_.token === token).list.headOption}
+      resolveTry(resultTry, "Consulta usuario empresarial por token: " + token)
+  }
+
 }

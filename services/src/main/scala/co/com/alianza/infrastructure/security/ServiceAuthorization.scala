@@ -5,16 +5,17 @@ import akka.pattern.ask
 import akka.util.Timeout
 
 import co.com.alianza.app.MainActors
-import co.com.alianza.infrastructure.dto.Usuario
+import co.com.alianza.infrastructure.dto.{Usuario, UsuarioEmpresarial}
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 
-import co.com.alianza.infrastructure.messages.{AutorizarUrl, ResponseMessage}
+import co.com.alianza.infrastructure.messages.{AutorizarUrl, ResponseMessage, AutorizarUsuarioEmpresarialUrl}
 import co.com.alianza.util.json.JsonUtil
 
 import com.typesafe.config.Config
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Success, Failure}
 
 import spray.http.StatusCodes._
 import spray.routing.authentication.ContextAuthenticator
@@ -34,11 +35,10 @@ trait ServiceAuthorization {
       val token = ctx.request.headers.find(header => header.name equals "token")
       if (token.isEmpty) {
         Future(Left(AuthenticationFailedRejection(CredentialsMissing, List())))
-      }
-      else {
+      } else {
 
         val x: Future[Any] = MainActors.autorizacionActorSupervisor ? AutorizarUrl(token.get.value, "")
-        x.map {
+        val fr = x map {
           case r: ResponseMessage =>
             r.statusCode match {
               case Unauthorized => Left(AuthenticationFailedRejection(CredentialsRejected, List()))
@@ -53,7 +53,25 @@ trait ServiceAuthorization {
           case _ =>
             Left(AuthenticationFailedRejection(CredentialsRejected, List()))
         }
+        fr onSuccess {
+          case Left(s) =>
+            MainActors.autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialUrl(token.get.value, "") map {
+              case r: ResponseMessage =>
+                r.statusCode match {
+                  case Unauthorized => Left(AuthenticationFailedRejection(CredentialsRejected, List()))
+                  case OK =>
+                    val user = JsonUtil.fromJson[UsuarioEmpresarial](r.responseBody)
+                    Right(UsuarioAuth(user.id))
+                  case Forbidden =>
+                    val id = r.responseBody.substring(17, 20)
+                    Right(UsuarioAuth(id.toInt))
 
+                }
+              case _ =>
+                Left(AuthenticationFailedRejection(CredentialsRejected, List()))
+            }
+        }
+        fr
       }
   }
 
