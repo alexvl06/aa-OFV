@@ -42,6 +42,13 @@ object DataAccessAdapter {
     }
   }
 
+  def obtenerUsuarioId( idUsuario:Int ): Future[Validation[PersistenceException, Option[Usuario]]] = {
+    val repo = new UsuariosRepository()
+    repo.obtenerUsuarioId( idUsuario ) map {
+      x => transformValidation(x)
+    }
+  }
+
   def obtieneUsuarioEmpresarialPorNitYUsuario (nit: String, usuario: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] =
     new UsuariosEmpresarialRepository().obtieneUsuarioEmpresaPorNitYUsuario(nit, usuario) map transformValidationUsuarioEmpresarial
 
