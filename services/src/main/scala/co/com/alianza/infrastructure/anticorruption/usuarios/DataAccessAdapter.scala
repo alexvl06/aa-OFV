@@ -42,6 +42,7 @@ object DataAccessAdapter {
     }
   }
 
+
   def obtieneUsuarioEmpresarialPorNitYUsuario (nit: String, usuario: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = {
     new UsuariosEmpresarialRepository().obtieneUsuarioEmpresaPorNitYUsuario(nit, usuario) map {
       x => transformValidationUsuarioEmpresarial(x)
@@ -81,6 +82,10 @@ object DataAccessAdapter {
     repo.asociarTokenUsuario( numeroIdentificacion, token )
   }
 
+  def asociarTokenUsuarioEmpresarial(usuarioId: Int, token:String): Future[Validation[PersistenceException, Int]] = {
+    val repo = new UsuariosEmpresarialRepository()
+    repo.asociarTokenUsuario( usuarioId, token )
+  }
 
   def invalidarTokenUsuario(token:String): Future[Validation[PersistenceException, Int]] = {
     val repo = new UsuariosRepository()

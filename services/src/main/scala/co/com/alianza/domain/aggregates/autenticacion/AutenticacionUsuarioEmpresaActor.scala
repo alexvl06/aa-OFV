@@ -31,6 +31,7 @@ import spray.http.StatusCodes._
  * Created by manuel on 10/12/14.
  */
 class AutenticacionUsuarioEmpresaActor extends AutenticacionActor {
+  import co.com.alianza.util.json.MarshallableImplicits._
 
   override def receive = {
    //Mensaje de autenticación de usuario cliente de empresa
@@ -95,6 +96,43 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor {
               case None => currentSender ! ResponseMessage(Unauthorized, errorClienteNoExisteSP)
             }
           case zFailure(error) => currentSender ! error
+        }
+    }
+  }
+
+  override protected def validarControlIpUsuario(numeroIdentificacion: String, idUsuario: Int, ip: String, nombreCliente: String, correoUsuario: String, tipoIdentificacion: String, ipUltimoIngreso: String, fechaUltimoIngreso: Date, currentSender: ActorRef) = {
+    //Se valida que el control de direcciones IP del usuario se encuentre activo
+    val resultControlIP = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerIpsUsuario(idUsuario)
+
+    val tokenGenerado: String = Token.generarToken(nombreCliente, correoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso)
+    val resultAsociarToken: Future[Validation[PersistenceException, Int]] = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.asociarTokenUsuarioEmpresarial(idUsuario, tokenGenerado)
+    actualizarNumeroIngresosErroneos(numeroIdentificacion, 0, currentSender)
+    actualizarFechaUltimoIngreso(numeroIdentificacion, new Timestamp((new Date).getTime()), currentSender)
+
+    resultControlIP onComplete {
+      case Failure(failure) => currentSender ! failure
+      case Success(value) =>
+        value match {
+          case zSuccess(response: Vector[IpsUsuario]) =>
+
+            if (response.isEmpty) {
+              resultAsociarToken onComplete {
+                case Failure(failure) => currentSender ! failure
+                case Success(value) =>
+
+                  for {
+                    expiracionSesion <- ValidationT(confDataAdapter.obtenerConfiguracionPorLlave(TiposConfiguracion.EXPIRACION_SESION.llave))
+                  } yield {
+                    MainActors.sesionActorSupervisor ! CrearSesionUsuario(tokenGenerado, expiracionSesion)
+                    currentSender ! ResponseMessage(Conflict, ErrorMessage("401.4", "Control IP", "El usuario no tiene activo el control de direcciones ip", tokenGenerado).toJson)
+                  }
+
+              }
+            }
+            else obtenerIpHabitual(numeroIdentificacion, idUsuario, ip, nombreCliente, correoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso, currentSender, tokenGenerado)
+
+          case zFailure(error) =>
+            currentSender ! error
         }
     }
   }

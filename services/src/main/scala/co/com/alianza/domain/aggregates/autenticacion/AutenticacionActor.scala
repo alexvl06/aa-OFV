@@ -227,7 +227,7 @@ class AutenticacionActor extends Actor with ActorLogging {
     }
   }
 
-  private def obtenerIpHabitual(numeroIdentificacion: String, idUsuario: Int, ip: String, nombreCliente: String, correoUsuario: String, tipoIdentificacion: String, ipUltimoIngreso: String, fechaUltimoIngreso: Date, currentSender: ActorRef, tokenGenerado: String) = {
+  protected def obtenerIpHabitual(numeroIdentificacion: String, idUsuario: Int, ip: String, nombreCliente: String, correoUsuario: String, tipoIdentificacion: String, ipUltimoIngreso: String, fechaUltimoIngreso: Date, currentSender: ActorRef, tokenGenerado: String) = {
     //En caso de que este activo, se valida que la ip de acceso es una direccion habitual registrada
     val resultIpValida = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerIpUsuarioValida(idUsuario, ip)
     resultIpValida onComplete {
