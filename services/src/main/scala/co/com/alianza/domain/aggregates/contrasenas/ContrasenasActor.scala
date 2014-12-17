@@ -129,7 +129,7 @@ class ContrasenasActor extends Actor with ActorLogging with AlianzaActors {
 
       val currentSender = sender()
       val ReiniciarContrasenaFuture = (for {
-        idUsuarioAgenteEmpresarial <- ValidationT(validacionAgenteEmpresarial())
+        idUsuarioAgenteEmpresarial <- ValidationT(validacionAgenteEmpresarial(message.numIdentificacionAgenteEmpresarial, message.correoUsuarioAgenteEmpresarial, message.tipoIdentiAgenteEmpresarial))
       } yield {
         idUsuarioAgenteEmpresarial
       }).run
