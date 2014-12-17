@@ -46,7 +46,6 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
       case true =>
         usDataAdapter.obtenerUsuarioEmpresarialToken(token).flatMap { x =>
           val y: Validation[PersistenceException, Future[Option[UsuarioEmpresarial]]] = x.map { userOpt =>
-            log info (userOpt toString)
             guardaTokenCache(userOpt, token)
           }
           co.com.alianza.util.transformers.Validation.sequence(y)
