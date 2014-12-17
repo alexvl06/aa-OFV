@@ -32,6 +32,10 @@ case class AutorizarUrl(token:String, url:String)  extends MessageService{
   def toValidarTokenRequest:ValidarTokenRequest = ValidarTokenRequest( token )
 }
 
+case class AutorizarUsuarioEmpresarialUrl(token:String, url:String)  extends MessageService{
+  def toValidarTokenRequest:ValidarTokenRequest = ValidarTokenRequest( token )
+}
+
 case class InvalidarToken(token:String)  extends MessageService {
   def toInvalidarTokenRequest:InvalidarTokenRequest = InvalidarTokenRequest( token )
 }
