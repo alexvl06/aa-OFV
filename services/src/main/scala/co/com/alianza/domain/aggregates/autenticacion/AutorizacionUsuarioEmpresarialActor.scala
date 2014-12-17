@@ -24,7 +24,8 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
 
   override def receive = {
     case message: AutorizarUsuarioEmpresarialUrl =>
-      val currentSender = sender()
+      val currentSender = message.sender
+      log info (message toString)
 
       val future = (for {
         usuarioOption <- ValidationT(validarToken(message.token))
@@ -61,6 +62,7 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
       case true =>
         usDataAdapter.obtenerUsuarioEmpresarialToken(token).flatMap { x =>
           val y: Validation[PersistenceException, Future[Option[UsuarioEmpresarial]]] = x.map { userOpt =>
+            log info (userOpt toString)
             guardaTokenCache(userOpt, token)
           }
           co.com.alianza.util.transformers.Validation.sequence(y)

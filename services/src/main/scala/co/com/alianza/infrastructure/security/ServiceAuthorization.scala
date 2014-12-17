@@ -36,10 +36,10 @@ trait ServiceAuthorization {
       if (token.isEmpty) {
         Future(Left(AuthenticationFailedRejection(CredentialsMissing, List())))
       } else {
-
         val x: Future[Any] = MainActors.autorizacionActorSupervisor ? AutorizarUrl(token.get.value, "")
-        val fr = x map {
+        x map {
           case r: ResponseMessage =>
+            println("*****"+r.toString)
             r.statusCode match {
               case Unauthorized => Left(AuthenticationFailedRejection(CredentialsRejected, List()))
               case OK =>
@@ -53,25 +53,6 @@ trait ServiceAuthorization {
           case _ =>
             Left(AuthenticationFailedRejection(CredentialsRejected, List()))
         }
-        fr onSuccess {
-          case Left(s) =>
-            MainActors.autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialUrl(token.get.value, "") map {
-              case r: ResponseMessage =>
-                r.statusCode match {
-                  case Unauthorized => Left(AuthenticationFailedRejection(CredentialsRejected, List()))
-                  case OK =>
-                    val user = JsonUtil.fromJson[UsuarioEmpresarial](r.responseBody)
-                    Right(UsuarioAuth(user.id))
-                  case Forbidden =>
-                    val id = r.responseBody.substring(17, 20)
-                    Right(UsuarioAuth(id.toInt))
-
-                }
-              case _ =>
-                Left(AuthenticationFailedRejection(CredentialsRejected, List()))
-            }
-        }
-        fr
       }
   }
 
