@@ -39,7 +39,6 @@ trait ServiceAuthorization {
         val x: Future[Any] = MainActors.autorizacionActorSupervisor ? AutorizarUrl(token.get.value, "")
         x map {
           case r: ResponseMessage =>
-            println("*****"+r.toString)
             r.statusCode match {
               case Unauthorized => Left(AuthenticationFailedRejection(CredentialsRejected, List()))
               case OK =>

@@ -25,29 +25,13 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
   override def receive = {
     case message: AutorizarUsuarioEmpresarialUrl =>
       val currentSender = message.sender
-      log info (message toString)
-
       val future = (for {
         usuarioOption <- ValidationT(validarToken(message.token))
-//        resultAutorizar <- ValidationT(validarRecurso(usuarioOption, message.url))
       } yield {
         usuarioOption
       }).run
-
       resolveFutureValidation(future, (x: Option[UsuarioEmpresarial]) => x, currentSender)
 
-
-//    case message: InvalidarToken =>
-//
-//      val currentSender = sender()
-//      val futureInvalidarToken = usDataAdapter.invalidarTokenUsuario(message.token)
-//
-//      futureInvalidarToken onComplete {
-//        case Failure(failure) => currentSender ! failure
-//        case Success(value) =>
-//          MainActors.sesionActorSupervisor ! InvalidarSesion(message.token)
-//          currentSender ! ResponseMessage(OK, "El token ha sido removido")
-//      }
   }
 
   /**
