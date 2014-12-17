@@ -83,7 +83,6 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
             case zSuccess(response) =>
               try {
                 val f = (r: ResponseMessage) => {
-                  log info (r toString)
                   if (r.statusCode == Unauthorized || r.statusCode == Forbidden)
                     MainActors.autorizacionActorSupervisor ! AutorizarUsuarioEmpresarialUrl(message.token, message.url, currentSender)
                   else
