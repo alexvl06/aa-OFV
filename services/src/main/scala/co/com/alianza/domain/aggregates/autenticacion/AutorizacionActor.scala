@@ -28,6 +28,7 @@ import scala.concurrent.Future
 import scalaz.std.AllInstances._
 import scala.util.{Success, Failure}
 import scalaz.Validation
+import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
 
 class AutorizacionActorSupervisor extends Actor with ActorLogging {
 
@@ -35,9 +36,11 @@ class AutorizacionActorSupervisor extends Actor with ActorLogging {
   import akka.actor.OneForOneStrategy
 
   val autorizacionActor = context.actorOf(Props[AutorizacionActor].withRouter(RoundRobinPool(nrOfInstances = 1)), "autorizacionActor")
-  val autorizacionUsuarioEmpresarialActor = context.actorOf(Props[AutorizacionActor].withRouter(RoundRobinPool(nrOfInstances = 1)), "autorizacionUsuarioEmpresarialActor")
+  val autorizacionUsuarioEmpresarialActor = context.actorOf(Props[AutorizacionUsuarioEmpresarialActor].withRouter(RoundRobinPool(nrOfInstances = 1)), "autorizacionUsuarioEmpresarialActor")
 
   def receive = {
+
+    case m: AutorizarUsuarioEmpresarialUrl => autorizacionUsuarioEmpresarialActor forward m
 
     case message: Any =>
       autorizacionActor forward message
@@ -73,9 +76,30 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
         resultAutorizar <- ValidationT(validarRecurso(usuarioOption, message.url))
       } yield {
         resultAutorizar
-      }).run
+      }).run onComplete {
+        case Failure(failure) => currentSender ! failure
+        case Success(value) =>
+          value match {
+            case zSuccess(response) =>
+              try {
+                val f = (r: ResponseMessage) => {
+                  log info (r toString)
+                  if (r.statusCode == Unauthorized || r.statusCode == Forbidden)
+                    MainActors.autorizacionActorSupervisor ! AutorizarUsuarioEmpresarialUrl(message.token, message.url, currentSender)
+                  else
+                    currentSender ! r
+                }
+                f(response)
+              }catch {
+                case error:Exception =>
+                  currentSender ! error
+              }
+            case zFailure(error) =>
+              currentSender ! error
+          }
+    }
 
-      resolveFutureValidation(future, (x: ResponseMessage) => x, currentSender)
+//      resolveFutureValidation(future, (x: ResponseMessage) => x, MainActors.autorizacionActorSupervisor)
 
 
     case message: InvalidarToken =>
