@@ -16,7 +16,7 @@ import scalaz.{Failure => zFailure, Success => zSuccess}
 import scala.util.{Failure => sFailure, Success => sSuccess}
 import scala.util.{Success, Failure}
 import co.com.alianza.util.transformers.ValidationT
-import co.com.alianza.domain.aggregates.usuarios.{ErrorPersistence, ErrorValidacion, ValidacionesUsuario, ValidacionesAgenteEmpresarial}
+import co.com.alianza.domain.aggregates.usuarios.{ErrorPersistence, ErrorValidacion, ValidacionesUsuario}
 import scala.concurrent.Future
 import scalaz.std.AllInstances._
 import co.com.alianza.infrastructure.dto.Usuario
@@ -74,7 +74,6 @@ class ContrasenasActor extends Actor with ActorLogging with AlianzaActors {
 
   import co.com.alianza.util.json.MarshallableImplicits._
   import ValidacionesUsuario._
-  import ValidacionesAgenteEmpresarial._
 
   implicit val ex: ExecutionContext = MainActors.dataAccesEx
 
@@ -124,15 +123,6 @@ class ContrasenasActor extends Actor with ActorLogging with AlianzaActors {
 
         case false => currentSender ! ResponseMessage(Conflict, tokenValidationFailure)
       }
-
-    case message: ReiniciarContrasenaMessage =>
-
-      val currentSender = sender()
-      val ReiniciarContrasenaFuture = (for {
-        idUsuarioAgenteEmpresarial <- ValidationT(validacionAgenteEmpresarial(message.numIdentificacionAgenteEmpresarial, message.correoUsuarioAgenteEmpresarial, message.tipoIdentiAgenteEmpresarial))
-      } yield {
-        idUsuarioAgenteEmpresarial
-      }).run
 
   }
 
