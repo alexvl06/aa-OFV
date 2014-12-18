@@ -23,8 +23,8 @@ import akka.pattern.ask
 class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
 
   override def receive = {
-    case message: AutorizarUsuarioEmpresarialUrl =>
-      val currentSender = message.sender
+    case message: AutorizarUsuarioEmpresarialMessage =>
+      val currentSender = sender()
       val future = (for {
         usuarioOption <- ValidationT(validarToken(message.token))
       } yield {
