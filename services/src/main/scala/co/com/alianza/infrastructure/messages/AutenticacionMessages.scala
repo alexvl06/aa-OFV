@@ -33,7 +33,7 @@ case class AutorizarUrl(token:String, url:String)  extends MessageService{
   def toValidarTokenRequest:ValidarTokenRequest = ValidarTokenRequest( token )
 }
 
-case class AutorizarUsuarioEmpresarialUrl(token:String, url:String, sender: ActorRef)  extends MessageService{
+case class AutorizarUsuarioEmpresarialMessage(token:String)  extends MessageService{
   def toValidarTokenRequest:ValidarTokenRequest = ValidarTokenRequest( token )
 }
 
