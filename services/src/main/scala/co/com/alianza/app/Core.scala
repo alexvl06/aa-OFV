@@ -1,6 +1,7 @@
 package co.com.alianza.app
 
 import akka.actor.{ Props, ActorSystem }
+import akka.cluster.Cluster
 
 import co.com.alianza.domain.aggregates.confronta.{ConfrontaActorSupervisor}
 import co.com.alianza.domain.aggregates.autenticacion._
@@ -33,6 +34,7 @@ trait BootedCore extends Core {
 
   implicit lazy val system = ActorSystem( "alianza-service" )
   implicit lazy val ex: ExecutionContext = system.dispatcher
+  implicit lazy val cluster = Cluster(system)
   implicit lazy val dataAccesEx: ExecutionContext = system.dispatcher
 
   sys.addShutdownHook( system.shutdown( ) )
