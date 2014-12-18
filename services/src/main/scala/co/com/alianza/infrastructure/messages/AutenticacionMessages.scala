@@ -5,6 +5,7 @@ import co.com.alianza.persistence.messages.{InvalidarTokenRequest, AgregarIpHabi
 
 import spray.httpx.SprayJsonSupport
 import spray.json.DefaultJsonProtocol
+import akka.actor.ActorRef
 
 /**
  *
@@ -29,6 +30,10 @@ case class AutenticarUsuarioEmpresaMessage (tipoIdentificacion: Option[Int] = No
 
 
 case class AutorizarUrl(token:String, url:String)  extends MessageService{
+  def toValidarTokenRequest:ValidarTokenRequest = ValidarTokenRequest( token )
+}
+
+case class AutorizarUsuarioEmpresarialMessage(token:String)  extends MessageService{
   def toValidarTokenRequest:ValidarTokenRequest = ValidarTokenRequest( token )
 }
 

@@ -16,3 +16,4 @@ case class ErrorPersistence(msg:String, exception:PersistenceException)   extend
 case class ErrorCaptcha(msg:String)   extends ErrorValidacion
 case class ErrorPin(msg:String)   extends ErrorValidacion
 case class ErrorEstadoUsuarioOlvidoContrasena(msg:String)   extends ErrorValidacion
+case class ErrorAgenteEmpresarialNoExiste(msg:String) extends ErrorValidacion
