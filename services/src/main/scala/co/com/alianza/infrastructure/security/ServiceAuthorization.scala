@@ -49,7 +49,7 @@ trait ServiceAuthorization {
           case Success(None) =>
             MainActors.usuariosActorSupervisor ? ConsultaUsuarioEmpresarialMessage(token = Some(token.get.value)) onComplete {
               case Success(Some(usuario)) =>
-                log info ("Empresarial: "+usuario.toString)
+                log info ("Empresarial: " + usuario.toString)
                 val uf = MainActors.autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialMessage(token.get.value)
                 uf onSuccess { case _ => p.trySuccess(_) }
                 uf onFailure { case _ => p.tryFailure(_) }

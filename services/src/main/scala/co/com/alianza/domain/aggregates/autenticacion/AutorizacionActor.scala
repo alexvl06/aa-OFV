@@ -100,7 +100,6 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
 */
       resolveFutureValidation(future, (x: ResponseMessage) => x, MainActors.autorizacionActorSupervisor)
 
-
     case message: InvalidarToken =>
 
       val currentSender = sender()

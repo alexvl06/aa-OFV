@@ -27,6 +27,9 @@ class AdministrarContrasenaEmpresaService extends Directives with AlianzaCommons
                   println("-------------------------------------")
                   requestExecute(data, contrasenasEmpresaActor)
               }
+            } ~
+            get{
+              complete("OK")
             }
           }
         }

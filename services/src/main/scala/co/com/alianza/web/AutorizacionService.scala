@@ -22,12 +22,11 @@ class AutorizacionService extends Directives with AlianzaCommons with CacheHelpe
     path("validarToken" / Segment) {
       token =>
         get {
-          
           parameters('url) {
             url =>
               respondWithMediaType(mediaType) {
                 //cacheAlianza(cacheRequest("fiduciaToken")) { cache =>
-                requestExecute(AutorizarUrl(token,url), autorizacionActor, true)
+                requestExecute(AutorizarUrl(token,url), autenticacionUsuarioEmpresaActor, true)
                 //}
             }
           }
