@@ -31,7 +31,7 @@ class SesionActorSupervisor extends Actor with ActorLogging {
     case message: ClusterRegistration if !sessions.contains(sender()) =>
       context watch sender()
       sessions = sessions :+ sender()
-      log.info("Registrando sesion en el cluster. Sesiones {}", sessions)
+      log.info("Registrando sesion en el cluster...")
 
     // When a session died or is stopped
     case Terminated(a) =>
