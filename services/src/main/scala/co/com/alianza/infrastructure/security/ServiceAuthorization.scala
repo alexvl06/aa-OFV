@@ -54,7 +54,15 @@ trait ServiceAuthorization {
                 uf onSuccess { case _ => p.trySuccess(_) }
                 uf onFailure { case _ => p.tryFailure(_) }
               case Success(None) =>
-                p.trySuccess(None)
+                MainActors.usuariosActorSupervisor ? ConsultaUsuarioEmpresarialAdminMessage(token = Some(token.get.value)) onComplete {
+                  case Success(Some(usuario)) =>
+                    log info ("Empresarial admin: "+usuario.toString)
+                    val uf = MainActors.autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialAdminMessage(token.get.value)
+                    uf onSuccess { case _ => p.trySuccess(_) }
+                    uf onFailure { case _ => p.tryFailure(_) }
+                  case Success(None) =>
+                    p.trySuccess(None)
+                }
               case Failure(t) =>
                 p.tryFailure(t)
             }

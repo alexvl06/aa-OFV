@@ -2,7 +2,7 @@ package co.com.alianza.web
 
 import spray.routing.Directives
 import co.com.alianza.app.{ CrossHeaders, AlianzaCommons }
-import co.com.alianza.infrastructure.messages.{IpsUsuarioMessagesJsonSupport, AutenticacionMessagesJsonSupport, AutenticarMessage, AutenticarUsuarioEmpresaMessage, AgregarIPHabitualUsuario}
+import co.com.alianza.infrastructure.messages._
 
 class AutenticacionService extends Directives with AlianzaCommons with CrossHeaders {
 
@@ -23,7 +23,7 @@ class AutenticacionService extends Directives with AlianzaCommons with CrossHead
       }
     } ~ path("autenticarUsuarioEmpresa") {
       post {
-        entity(as[AutenticarUsuarioEmpresaMessage]) {
+        entity(as[AutenticarUsuarioEmpresarialMessage]) {
           autenticacion =>
             respondWithMediaType(mediaType) {
               clientIP { ip =>

@@ -56,6 +56,9 @@ class UsuariosActorSupervisor extends Actor with ActorLogging {
     case message: ConsultaUsuarioEmpresarialMessage =>
       usuarioEmpresarialActor forward message
 
+    case message: ConsultaUsuarioEmpresarialAdminMessage =>
+      usuarioEmpresarialActor forward message
+
     case message: Any =>
       usuariosActor forward message
 

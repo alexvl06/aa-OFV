@@ -1,6 +1,6 @@
 package co.com.alianza.infrastructure.messages
 
-import co.com.alianza.infrastructure.dto.Configuracion
+import co.com.alianza.infrastructure.dto._
 import co.com.alianza.persistence.messages.{InvalidarTokenRequest, AgregarIpHabitualRequest, AutenticacionRequest, ValidarTokenRequest}
 
 import spray.httpx.SprayJsonSupport
@@ -14,7 +14,7 @@ import akka.actor.ActorRef
 
 object AutenticacionMessagesJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val AutenticarRequestMessageFormat = jsonFormat4(AutenticarMessage)
-  implicit val AutenticarClienteEmpresaMessageFormat = jsonFormat6(AutenticarUsuarioEmpresaMessage)
+  implicit val AutenticarClienteEmpresaMessageFormat = jsonFormat6(AutenticarUsuarioEmpresarialMessage)
   implicit val AutorizarUrlRequestMessageFormat = jsonFormat2(AutorizarUrl)
   implicit val AgregarIpHabitualRequestMessageFormat = jsonFormat3(AgregarIPHabitualUsuario)
 }
@@ -24,16 +24,41 @@ case class AutenticarMessage ( tipoIdentificacion:Int, numeroIdentificacion: Str
   def toAutenticarRequest:AutenticacionRequest = AutenticacionRequest(tipoIdentificacion, numeroIdentificacion, password, clientIp)
 }
 
-case class AutenticarUsuarioEmpresaMessage (tipoIdentificacion: Option[Int] = None, numeroIdentificacion: Option[String] = None, nit: String, usuario: String, password: String, clientIp: Option[String] = None) extends MessageService {
-//  def toAutenticarRequest:AutenticacionRequest = AutenticacionRequest(tipoIdentificacion, numeroIdentificacion, password, clientIp)
+case class AutenticarUsuarioEmpresarialMessage (tipoIdentificacion: Option[Int] = None,
+                                                numeroIdentificacion: Option[String] = None,
+                                                nit: String,
+                                                usuario: String,
+                                                password: String,
+                                                clientIp: Option[String] = None) extends MessageService {
+  //  def toAutenticarRequest:AutenticacionRequest = AutenticacionRequest(tipoIdentificacion, numeroIdentificacion, password, clientIp)
 }
 
+case class AutenticarUsuarioEmpresarialAgenteMessage (tipoIdentificacion: Option[Int] = None,
+                                                      numeroIdentificacion: Option[String] = None,
+                                                      nit: String,
+                                                      usuario: String,
+                                                      password: String,
+                                                      clientIp: Option[String] = None) extends MessageService {
+  //  def toAutenticarRequest:AutenticacionRequest = AutenticacionRequest(tipoIdentificacion, numeroIdentificacion, password, clientIp)
+}
+case class AutenticarUsuarioEmpresarialAdminMessage (tipoIdentificacion: Option[Int] = None,
+                                                     numeroIdentificacion: Option[String] = None,
+                                                     nit: String,
+                                                     usuario: String,
+                                                     password: String,
+                                                     clientIp: Option[String] = None) extends MessageService {
+  //  def toAutenticarRequest:AutenticacionRequest = AutenticacionRequest(tipoIdentificacion, numeroIdentificacion, password, clientIp)
+}
 
 case class AutorizarUrl(token:String, url:String)  extends MessageService{
   def toValidarTokenRequest:ValidarTokenRequest = ValidarTokenRequest( token )
 }
 
 case class AutorizarUsuarioEmpresarialMessage(token:String)  extends MessageService{
+  def toValidarTokenRequest:ValidarTokenRequest = ValidarTokenRequest( token )
+}
+
+case class AutorizarUsuarioEmpresarialAdminMessage(token:String)  extends MessageService{
   def toValidarTokenRequest:ValidarTokenRequest = ValidarTokenRequest( token )
 }
 
