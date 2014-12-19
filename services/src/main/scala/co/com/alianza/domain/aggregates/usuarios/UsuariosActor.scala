@@ -300,14 +300,15 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
   private def validaSolicitud(message:UsuarioMessage): Future[Validation[ErrorValidacion, Cliente]] = {
 
     val consultaNumDocFuture = validacionConsultaNumDoc(message)
-    val consultaCorreoFuture: Future[Validation[ErrorValidacion, Unit.type]] = validacionConsultaCorreo(message)
+    //Se quita la validación ya que alianza quiere permitir registro de usuarios a la misma cuenta de correo.
+    //val consultaCorreoFuture: Future[Validation[ErrorValidacion, Unit.type]] = validacionConsultaCorreo(message)
     val consultaClienteFuture: Future[Validation[ErrorValidacion, Cliente]] = validacionConsultaCliente(message)
     val validacionClave: Future[Validation[ErrorValidacion, Unit.type]] = validacionReglasClaveAutoregistro(message)
 
     (for{
       resultValidacionClave <- ValidationT(validacionClave)
       resultConsultaNumDoc <- ValidationT(consultaNumDocFuture)
-      resultConsultaCorreo <- ValidationT(consultaCorreoFuture)
+      //resultConsultaCorreo <- ValidationT(consultaCorreoFuture)
       cliente <- ValidationT(consultaClienteFuture)
     }yield {
       cliente

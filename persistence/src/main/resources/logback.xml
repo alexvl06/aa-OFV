@@ -6,6 +6,9 @@
         </encoder>
     </appender>
 
+    <logger name="akka.remote.EndpointWriter" level="OFF"/>
+    <logger name="spray.can.server.HttpServerConnection" level="OFF" />
+
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <!--See also http://logback.qos.ch/manual/appenders.html#RollingFileAppender-->
         <!--File>../log/fiduciaria_alianza_admin_%{pid}.log</File-->
