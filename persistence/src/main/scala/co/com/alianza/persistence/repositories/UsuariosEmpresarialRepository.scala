@@ -15,7 +15,9 @@ class UsuariosEmpresarialRepository ( implicit executionContext: ExecutionContex
 
   val Empresas = TableQuery[EmpresaTable]
   val UsuariosEmpresariales = TableQuery[UsuarioEmpresarialTable]
+  val UsuariosEmpresarialesAdmin = TableQuery[UsuarioEmpresarialAdminTable]
   val UsuariosEmpresarialesEmpresa = TableQuery[UsuarioEmpresarialEmpresaTable]
+  val UsuariosEmpresarialesAdminEmpresa = TableQuery[UsuarioEmpresarialAdminEmpresaTable]
 
   def obtieneUsuarioEmpresaPorNitYUsuario(nit: String, usuario: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = loan {
     implicit session => resolveTry(Try {
@@ -32,6 +34,21 @@ class UsuariosEmpresarialRepository ( implicit executionContext: ExecutionContex
     }, "Consulta usuario empresarial por nit y usuario")
   }
 
+  def obtieneUsuarioEmpresaAdminPorNitYUsuario(nit: String, usuario: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = loan {
+    implicit session => resolveTry(Try {
+      (
+        for {
+          ((usuarioEmpresarial, usuarioEmpresarialEmpresa), empresa) <-
+          UsuariosEmpresarialesAdmin join UsuariosEmpresarialesAdminEmpresa on {
+            (ue, uee) => ue.id===uee.idUsuarioEmpresarialAdmin
+          } join Empresas on {
+            case ((ue, uee), e) => e.nit===nit && ue.usuario===usuario
+          }
+        } yield (usuarioEmpresarial)
+        ) firstOption
+    }, "Consulta usuario empresarial administrador por nit y usuario")
+  }
+
   def asociarTokenUsuario( usuarioId: Int, token: String ) : Future[Validation[PersistenceException, Int]] = loan {
 
     implicit session =>
@@ -39,7 +56,7 @@ class UsuariosEmpresarialRepository ( implicit executionContext: ExecutionContex
       resolveTry(resultTry, "Actualizar token de usuario empresarial")
   }
 
-def validacionAgenteEmpresarial(numIdentificacionAgenteEmpresarial: String, correoUsuarioAgenteEmpresarial: String, tipoIdentiAgenteEmpresarial: Int): Future[Validation[PersistenceException, Option[Int]]] = loan {
+  def validacionAgenteEmpresarial(numIdentificacionAgenteEmpresarial: String, correoUsuarioAgenteEmpresarial: String, tipoIdentiAgenteEmpresarial: Int): Future[Validation[PersistenceException, Option[Int]]] = loan {
     implicit session =>
       val resultTry = Try { UsuariosEmpresariales.filter(x => x.identificacion === numIdentificacionAgenteEmpresarial && x.correo === correoUsuarioAgenteEmpresarial && x.tipoIdentificacion === tipoIdentiAgenteEmpresarial).list.headOption }
       val resultIdUsuarioAE: Try[Option[Int]] = resultTry map {
@@ -54,5 +71,5 @@ def validacionAgenteEmpresarial(numIdentificacionAgenteEmpresarial: String, corr
       val resultTry = Try{ UsuariosEmpresariales.filter(_.token === token).list.headOption}
       resolveTry(resultTry, "Consulta usuario empresarial por token: " + token)
   }
- 
+
 }

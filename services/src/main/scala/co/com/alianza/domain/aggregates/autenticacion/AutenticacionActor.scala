@@ -38,7 +38,7 @@ class AutenticacionActorSupervisor extends Actor with ActorLogging {
 
   def receive = {
 
-    case m: AutenticarUsuarioEmpresaMessage => autenticacionUsuarioEmpresaActor forward m
+    case m: AutenticarUsuarioEmpresarialMessage => autenticacionUsuarioEmpresaActor forward m
 
     case message: Any =>
       autenticacionActor forward message
