@@ -65,14 +65,14 @@ class SesionActorSupervisor extends Actor with ActorLogging {
   }
 
   private def buscarSesion(token: String): Future[ActorRef] = {
-    val name = MessageDigest.getInstance("MD5").digest(token.split("\\.")(2).getBytes).toString
+    val name = MessageDigest.getInstance("MD5").digest(token.split("\\.")(2).getBytes).map{ b => String.format("%02X", java.lang.Byte.valueOf(b)) }.mkString("")
     val actor: IndexedSeq[ActorRef] = sessions.filter(ar => ar.path.name == name)
     if (actor.nonEmpty) context.actorSelection(actor(0).path).resolveOne()
     else Future.failed(new Throwable)
   }
 
   private def crearSesion(token: String, expiration: Int) = {
-    val name = MessageDigest.getInstance("MD5").digest(token.split("\\.")(2).getBytes).toString
+    val name = MessageDigest.getInstance("MD5").digest(token.split("\\.")(2).getBytes).map{ b => String.format("%02X", java.lang.Byte.valueOf(b)) }.mkString("")
     context.actorOf(SesionActor.props(expiration), name)
     log.info("Creando sesion de usuario. Tiempo de expiracion: " + expiration + " minutos")
   }
