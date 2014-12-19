@@ -6,6 +6,7 @@ import co.com.alianza.infrastructure.messages._
 import spray.http.StatusCodes._
 
 import co.com.alianza.infrastructure.dto.UsuarioEmpresarial
+import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.infrastructure.dto.{UsuarioEmpresarial, UsuarioEmpresarialAdmin}
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => usDataAdapter}
 import co.com.alianza.infrastructure.anticorruption.recursos.{DataAccessAdapter => rDataAccessAdapter}
@@ -28,19 +29,21 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
       val currentSender = sender()
       val future = (for {
         usuarioOption <- ValidationT(validarToken(message.token))
+        result <- ValidationT(Future.successful(Validation.success(ResponseMessage(OK, JsonUtil.toJson(usuarioOption)))))
       } yield {
-        usuarioOption
+        result
       }).run
-      resolveFutureValidation(future, (x: Option[UsuarioEmpresarial]) => x, currentSender)
+      resolveFutureValidation(future, (x: ResponseMessage) => x, currentSender)
 
     case message: AutorizarUsuarioEmpresarialAdminMessage =>
       val currentSender = sender()
       val future = (for {
         usuarioOption <- ValidationT(validarTokenAdmin(message.token))
+        result <- ValidationT(Future.successful(Validation.success(ResponseMessage(OK, JsonUtil.toJson(usuarioOption)))))
       } yield {
-        usuarioOption
+        result
       }).run
-      resolveFutureValidation(future, (x: Option[UsuarioEmpresarialAdmin]) => x, currentSender)
+      resolveFutureValidation(future, (x: ResponseMessage) => x, currentSender)
 
   }
 
