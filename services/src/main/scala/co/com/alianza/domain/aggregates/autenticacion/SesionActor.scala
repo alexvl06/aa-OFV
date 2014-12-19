@@ -1,5 +1,7 @@
 package co.com.alianza.domain.aggregates.autenticacion
 
+import java.security.MessageDigest
+
 import akka.actor._
 import akka.cluster.{Member, MemberStatus, Cluster}
 import akka.cluster.ClusterEvent.{CurrentClusterState, MemberUp}
@@ -27,14 +29,14 @@ class SesionActorSupervisor extends Actor with ActorLogging {
 
     // When a new session joins the cluster
     case message: ClusterRegistration if !sessions.contains(sender()) =>
-      log.info("Registrando sesion en el cluster ...")
       context watch sender()
       sessions = sessions :+ sender()
+      log.info("Registrando sesion en el cluster. Sesiones {}", sessions)
 
     // When a session died or is stopped
     case Terminated(a) =>
-      log.info("Eliminando sesion del cluster ...")
       sessions = sessions.filterNot(_ == a)
+      log.info("Eliminando sesion del cluster ...")
 
     // When an user authenticates
     case message: CrearSesionUsuario =>
@@ -63,14 +65,16 @@ class SesionActorSupervisor extends Actor with ActorLogging {
   }
 
   private def buscarSesion(token: String): Future[ActorRef] = {
-    val actor: List[ActorRef] = sessions.toList.filter(act => act.path.name == token.split("\\.")(2))
+    val name = MessageDigest.getInstance("MD5").digest(token.split("\\.")(2).getBytes).toString
+    val actor: IndexedSeq[ActorRef] = sessions.filter(ar => ar.path.name == name)
     if (actor.nonEmpty) context.actorSelection(actor(0).path).resolveOne()
     else Future.failed(new Throwable)
   }
 
   private def crearSesion(token: String, expiration: Int) = {
+    val name = MessageDigest.getInstance("MD5").digest(token.split("\\.")(2).getBytes).toString
+    context.actorOf(SesionActor.props(expiration), name)
     log.info("Creando sesion de usuario. Tiempo de expiracion: " + expiration + " minutos")
-    context.actorOf(SesionActor.props(expiration), token.split("\\.")(2))
   }
 
 }
