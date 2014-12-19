@@ -6,6 +6,8 @@ import co.com.alianza.infrastructure.messages._
 import spray.http.StatusCodes._
 
 import co.com.alianza.infrastructure.dto.UsuarioEmpresarial
+import co.com.alianza.util.json.JsonUtil
+import co.com.alianza.infrastructure.dto.{UsuarioEmpresarial, UsuarioEmpresarialAdmin}
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => usDataAdapter}
 import co.com.alianza.infrastructure.anticorruption.recursos.{DataAccessAdapter => rDataAccessAdapter}
 import scala.concurrent.duration._
@@ -27,10 +29,21 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
       val currentSender = sender()
       val future = (for {
         usuarioOption <- ValidationT(validarToken(message.token))
+        result <- ValidationT(Future.successful(Validation.success(ResponseMessage(OK, JsonUtil.toJson(usuarioOption)))))
       } yield {
-        usuarioOption
+        result
       }).run
-      resolveFutureValidation(future, (x: Option[UsuarioEmpresarial]) => x, currentSender)
+      resolveFutureValidation(future, (x: ResponseMessage) => x, currentSender)
+
+    case message: AutorizarUsuarioEmpresarialAdminMessage =>
+      val currentSender = sender()
+      val future = (for {
+        usuarioOption <- ValidationT(validarTokenAdmin(message.token))
+        result <- ValidationT(Future.successful(Validation.success(ResponseMessage(OK, JsonUtil.toJson(usuarioOption)))))
+      } yield {
+        result
+      }).run
+      resolveFutureValidation(future, (x: ResponseMessage) => x, currentSender)
 
   }
 
@@ -56,6 +69,26 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
   }
 
   /**
+   * Realiza la validación del Token, llamando a [[Token.autorizarToken]]
+   * Retorna un futuro con un Validationm, donde el caso de contiene el Option[Usuario]
+   *
+   *
+   * @param token El token para realizar validación
+   */
+  private def validarTokenAdmin(token: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = {
+    Token.autorizarToken(token) match {
+      case true =>
+        usDataAdapter.obtenerUsuarioEmpresarialAdminToken(token).flatMap { x =>
+          val y: Validation[PersistenceException, Future[Option[UsuarioEmpresarialAdmin]]] = x.map { userOpt =>
+            guardaTokenAdminCache(userOpt, token)
+          }
+          co.com.alianza.util.transformers.Validation.sequence(y)
+        }
+      case false =>
+        Future.successful(Validation.success(None))
+    }
+  }
+  /**
    *
    * Si usuarioOption tiene un valor se guarda en cache y retorna el usuario sin el campo contraseña
    * @param usuarioOption Option con el usuario
@@ -63,6 +96,22 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
    * @return
    */
   private def guardaTokenCache(usuarioOption: Option[UsuarioEmpresarial], token: String): Future[Option[UsuarioEmpresarial]] = {
+
+    val validacionSesion: Future[Boolean] = ask(MainActors.sesionActorSupervisor, ValidarSesion(token)).mapTo[Boolean]
+    validacionSesion.map {
+      case true => usuarioOption.map ( usuario =>usuario.copy(contrasena = None))
+      case false => None
+    }
+  }
+
+  /**
+   *
+   * Si usuarioOption tiene un valor se guarda en cache y retorna el usuario sin el campo contraseña
+   * @param usuarioOption Option con el usuario
+   * @param token El token
+   * @return
+   */
+  private def guardaTokenAdminCache(usuarioOption: Option[UsuarioEmpresarialAdmin], token: String): Future[Option[UsuarioEmpresarialAdmin]] = {
 
     val validacionSesion: Future[Boolean] = ask(MainActors.sesionActorSupervisor, ValidarSesion(token)).mapTo[Boolean]
     validacionSesion.map {

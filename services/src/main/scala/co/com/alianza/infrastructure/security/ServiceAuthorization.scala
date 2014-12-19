@@ -44,17 +44,25 @@ trait ServiceAuthorization {
           case Success(Some(usuario)) =>
             val uf = MainActors.autorizacionActorSupervisor ? AutorizarUrl(token.get.value, "")
             log info ("Individual: "+usuario.toString)
-            uf onSuccess { case _ => p.trySuccess(_) }
-            uf onFailure { case _ => p.tryFailure(_) }
+            uf onSuccess { case r => p.trySuccess(r) }
+            uf onFailure { case t => p.tryFailure(t) }
           case Success(None) =>
             MainActors.usuariosActorSupervisor ? ConsultaUsuarioEmpresarialMessage(token = Some(token.get.value)) onComplete {
               case Success(Some(usuario)) =>
-                log info ("Empresarial: " + usuario.toString)
                 val uf = MainActors.autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialMessage(token.get.value)
-                uf onSuccess { case _ => p.trySuccess(_) }
-                uf onFailure { case _ => p.tryFailure(_) }
+                uf onSuccess { case r => p.trySuccess(r) }
+                uf onFailure { case t => p.tryFailure(t) }
               case Success(None) =>
-                p.trySuccess(None)
+                MainActors.usuariosActorSupervisor ? ConsultaUsuarioEmpresarialAdminMessage(token = Some(token.get.value)) onComplete {
+                  case Success(Some(usuario)) =>
+                    val uf = MainActors.autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialAdminMessage(token.get.value)
+                    uf onSuccess { case r =>  p.trySuccess(r) }
+                    uf onFailure { case _ => p.tryFailure(_) }
+                  case Success(None) =>
+                    p.trySuccess(None)
+                  case Failure(t) =>
+                    p.tryFailure(t)
+                }
               case Failure(t) =>
                 p.tryFailure(t)
             }
@@ -63,7 +71,6 @@ trait ServiceAuthorization {
         }
         p.future map {
           case r: ResponseMessage =>
-            log info ("Hay respuesta: "+r.toString)
             r.statusCode match {
               case Unauthorized => Left(AuthenticationFailedRejection(CredentialsRejected, List()))
               case OK =>
@@ -75,7 +82,6 @@ trait ServiceAuthorization {
 
             }
           case _ =>
-            log info ("No hay respuesta!!")
             Left(AuthenticationFailedRejection(CredentialsRejected, List()))
         }
 

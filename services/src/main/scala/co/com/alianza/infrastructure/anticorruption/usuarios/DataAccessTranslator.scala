@@ -1,7 +1,7 @@
 package co.com.alianza.infrastructure.anticorruption.usuarios
 
-import co.com.alianza.persistence.entities.{Usuario => dUsuario, UsuarioEmpresarial => eUsuarioEmpresarial}
-import co.com.alianza.infrastructure.dto.{Usuario, UsuarioEmpresarial}
+import co.com.alianza.persistence.entities.{Usuario => dUsuario, UsuarioEmpresarial => eUsuarioEmpresarial, UsuarioEmpresarialAdmin => eUsuarioEmpresarialAdmin}
+import co.com.alianza.infrastructure.dto._
 import java.util.Date
 
 /**
@@ -21,4 +21,6 @@ object  DataAccessTranslator {
   def translateUsuarioEmpresarial (ue: eUsuarioEmpresarial) =
     UsuarioEmpresarial(ue.id, ue.correo, ue.fechaActualizacion, ue.identificacion, ue.tipoIdentificacion, ue.usuario, ue.estado, ue.contrasena, ue.numeroIngresosErroneos, ue.ipUltimoIngreso, ue.fechaUltimoIngreso)
 
+  def translateUsuarioEmpresarialAdmin (ue: eUsuarioEmpresarialAdmin) =
+    UsuarioEmpresarialAdmin(ue.id, ue.correo, ue.fechaActualizacion, ue.identificacion, ue.tipoIdentificacion, ue.usuario, ue.estado, ue.contrasena, ue.numeroIngresosErroneos, ue.ipUltimoIngreso, ue.fechaUltimoIngreso)
 }
