@@ -59,7 +59,6 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor {
 
    //Mensaje de autenticación de usuario cliente de empresa
     case message: AutenticarUsuarioEmpresarialAgenteMessage =>
-      log info (message toString)
       val currentSender = sender()
       val result = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtieneUsuarioEmpresarialPorNitYUsuario(message.nit, message.usuario)
       result onComplete {
@@ -169,7 +168,6 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor {
           case zSuccess(response: Option[Cliente]) =>
             response match {
               case Some(valueResponseCliente) =>
-                log info (valueResponseCliente toString)
                 if (getTipoPersona(messageTipoIdentificacion) != valueResponseCliente.wcli_person)
                   currentSender ! ResponseMessage(Unauthorized, errorClienteNoExisteSP)
                 else if (valueResponseCliente.wcli_estado != EstadosCliente.bloqueoContraseña) {
