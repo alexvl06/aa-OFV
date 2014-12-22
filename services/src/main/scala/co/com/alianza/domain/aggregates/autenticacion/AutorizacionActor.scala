@@ -41,6 +41,7 @@ class AutorizacionActorSupervisor extends Actor with ActorLogging {
   def receive = {
 
     case m: AutorizarUsuarioEmpresarialMessage => autorizacionUsuarioEmpresarialActor forward m; log info (m toString)
+    case m: AutorizarUsuarioEmpresarialAdminMessage => autorizacionUsuarioEmpresarialActor forward m; log info (m toString)
 
     case message: Any =>
       autorizacionActor forward message; log info (message toString)
@@ -76,30 +77,8 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
         resultAutorizar <- ValidationT(validarRecurso(usuarioOption, message.url))
       } yield {
         resultAutorizar
-      }).run /*onComplete {
-        case Failure(failure) => currentSender ! failure
-        case Success(value) =>
-          value match {
-            case zSuccess(response) =>
-              try {
-                val f = (r: ResponseMessage) => {
-                  if (r.statusCode == Unauthorized || r.statusCode == Forbidden)
-                    MainActors.autorizacionActorSupervisor ! AutorizarUsuarioEmpresarialUrl(message.token, message.url, currentSender)
-                  else
-                    currentSender ! r
-                }
-                f(response)
-              }catch {
-                case error:Exception =>
-                  currentSender ! error
-              }
-            case zFailure(error) =>
-              currentSender ! error
-          }
-    }
-*/
-      resolveFutureValidation(future, (x: ResponseMessage) => x, MainActors.autorizacionActorSupervisor)
-
+      }).run
+      resolveFutureValidation(future, (x: ResponseMessage) => x, currentSender)
 
     case message: InvalidarToken =>
 

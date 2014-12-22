@@ -18,3 +18,17 @@ case class UsuarioEmpresarial(
                     ipUltimoIngreso:Option[String],
                     fechaUltimoIngreso:Option[Date]
                                )
+
+case class UsuarioEmpresarialAdmin(
+                               id: Int,
+                               correo: String,
+                               fechaCaducidad: Date,
+                               identificacion: String,
+                               tipoIdentificacion: Int,
+                               usuario: String,
+                               estado: Int,
+                               contrasena: Option[String],
+                               numeroIngresosErroneos:Int,
+                               ipUltimoIngreso:Option[String],
+                               fechaUltimoIngreso:Option[Date]
+                               )
