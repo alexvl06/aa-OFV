@@ -1,5 +1,6 @@
 package co.com.alianza.util.token
 
+import co.com.alianza.constants.TiposCliente
 import org.joda.time.{DateTime}
 import java.util.Date
 import enumerations.AppendPasswordUser
@@ -19,7 +20,7 @@ object Token {
   private val ISSUER = "http://fiduciaria.alianza.com.co"
   private val SIGNING_KEY = "556878763f1ea3bddfd1bed5b15daa2fc6d2db5a98290dd9f91ddfd22d77d1e" + AppendPasswordUser.appendUsuariosFiducia
 
-  def generarToken(nombreUsuarioLogueado: String, correoUsuarioLogueado: String, tipoIdentificacion: String, ultimaIpIngreso: String, ultimaFechaIngreso: Date): String = {
+  def generarToken(nombreUsuarioLogueado: String, correoUsuarioLogueado: String, tipoIdentificacion: String, ultimaIpIngreso: String, ultimaFechaIngreso: Date, tipoCliente: TiposCliente.TiposCliente = TiposCliente.clienteIndividual): String = {
 
     val claimsSet = new JWTClaimsSet()
     claimsSet.setIssueTime(new Date())
@@ -34,7 +35,9 @@ object Token {
       "nombreUsuario" -> nombreUsuarioLogueado,
       "tipoIdentificacion" -> tipoIdentificacion,
       "ultimaIpIngreso" -> ultimaIpIngreso,
-      "ultimaFechaIngreso" -> formater.format(ultimaFechaIngreso))
+      "ultimaFechaIngreso" -> formater.format(ultimaFechaIngreso),
+      "tipoCliente" -> tipoCliente.toString
+    )
 
     claimsSet.setCustomClaims(customData)
 
