@@ -68,7 +68,7 @@ class ContrasenasEmpresaActor extends Actor with ActorLogging with AlianzaActors
 
       val currentSender = sender()
       val ReiniciarContrasenaAgenteEmpresarialFuture = (for {
-        idUsuarioAgenteEmpresarial <- ValidationT(validacionAgenteEmpresarial(message.numIdentificacionAgenteEmpresarial, message.correoUsuarioAgenteEmpresarial, message.tipoIdentiAgenteEmpresarial))
+        idUsuarioAgenteEmpresarial <- ValidationT(validacionAgenteEmpresarial(message.numIdentificacionAgenteEmpresarial, message.correoUsuarioAgenteEmpresarial, message.tipoIdentiAgenteEmpresarial, message.idClienteAdmin.get))
         idEjecucion <- ValidationT(CambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial, EstadosEmpresaEnum.pendienteReiniciarContrasena))
       } yield {
         (idUsuarioAgenteEmpresarial, idEjecucion)
@@ -105,7 +105,7 @@ class ContrasenasEmpresaActor extends Actor with ActorLogging with AlianzaActors
                     case zFailure(fail) => currentSender ! fail
                     case zSuccess(intResult) =>
                       if(intResult == 1){
-                        new SmtpServiceClient().send(buildMessage(pin, UsuarioMessageCorreo(message.correoUsuarioAgenteEmpresarial, message.numIdentificacionAgenteEmpresarial, message.tipoIdentiAgenteEmpresarial), "alianza.smtp.templatepin.reiniciarContrasenaEmpresa", "alianza.smtp.asunto.reiniciarContrasena"), (_, _) => Unit)
+                        new SmtpServiceClient().send(buildMessage(pin, UsuarioMessageCorreo(message.correoUsuarioAgenteEmpresarial, message.numIdentificacionAgenteEmpresarial, message.tipoIdentiAgenteEmpresarial), "alianza.smtp.templatepin.reiniciarContrasenaEmpresa", "alianza.smtp.asunto.reiniciarContrasenaEmpresa"), (_, _) => Unit)
                         currentSender ! ResponseMessage(Created)
                       }
                   }
@@ -115,7 +115,7 @@ class ContrasenasEmpresaActor extends Actor with ActorLogging with AlianzaActors
           case zFailure(error) =>
             error match {
               case errorPersistence: ErrorPersistenceEmpresa => currentSender ! errorPersistence.exception
-              case errorVal: ErrorValidacion =>
+              case errorVal: ErrorValidacionEmpresa  =>
                 currentSender ! ResponseMessage(Conflict, errorVal.msg)
             }
         }

@@ -8,4 +8,4 @@ trait MessageService
 
 case class InboxMessage() extends MessageService
 
-case class ResponseMessage(statusCode:StatusCode, responseBody:String = "")
+case class ResponseMessage( statusCode:StatusCode, responseBody:String = "" )

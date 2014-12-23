@@ -22,10 +22,8 @@ class AdministrarContrasenaEmpresaService extends Directives with AlianzaCommons
               //Cambiar contrasena de la cuenta alianza valores
               entity(as[ReiniciarContrasenaAgenteEMessage]) {
                 data =>
-                  println("-------------------------------------")
-                  println(user)
-                  println("-------------------------------------")
-                  requestExecute(data, contrasenasEmpresaActor)
+                  val dataAux: ReiniciarContrasenaAgenteEMessage = data.copy(idClienteAdmin = Some(user.id))
+                  requestExecute(dataAux, contrasenasEmpresaActor)
               }
             }
           }
