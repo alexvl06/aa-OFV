@@ -138,7 +138,6 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
   private def resolveReiniciarContrasenaFuture( validarClienteFuture: Future[Validation[ErrorValidacion, Cliente]],  currentSender: ActorRef, message: OlvidoContrasenaMessage) = {
     validarClienteFuture onComplete{
       case sFailure( failure ) =>
-        println(failure)
         currentSender ! failure
       case sSuccess (value) =>
         value match{
@@ -194,7 +193,6 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
 
     actualizarContrasenaFuture onComplete {
       case sFailure(failure) =>
-        println(failure)
         currentSender ! failure
       case sSuccess(value) =>
         value match {
@@ -299,7 +297,6 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
 
   private def guardarUsuario(message:UsuarioMessage): Future[Validation[ErrorValidacion, Int]] = {
     val passwordUserWithAppend = message.contrasena.concat( AppendPasswordUser.appendUsuariosFiducia );
-    println("Password User Final***->"+passwordUserWithAppend)
     DataAccessAdapterUsuario.crearUsuario(message.toEntityUsuario( Crypto.hashSha512(passwordUserWithAppend))).map(_.leftMap( pe => ErrorPersistence(pe.message,pe)))
   }
 
