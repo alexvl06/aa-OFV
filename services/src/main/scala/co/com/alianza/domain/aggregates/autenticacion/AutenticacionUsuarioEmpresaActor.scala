@@ -3,10 +3,11 @@ package co.com.alianza.domain.aggregates.autenticacion
 import akka.actor.{ ActorRef, Actor, ActorLogging }
 import akka.pattern.ask
 import akka.util.Timeout
+import co.com.alianza.commons.enumerations.TiposCliente
 import scala.concurrent.duration._
 
 import co.com.alianza.app.MainActors
-import co.com.alianza.constants.{TiposCliente, TiposConfiguracion}
+import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.infrastructure.anticorruption.configuraciones.{DataAccessAdapter => confDataAdapter}
 import co.com.alianza.util.transformers.ValidationT
 import co.com.alianza.infrastructure.messages._

@@ -1,4 +1,4 @@
-package co.com.alianza.constants
+package co.com.alianza.commons.enumerations
 
 object TiposCliente extends Enumeration {
 

@@ -1,6 +1,6 @@
 package co.com.alianza.util.token
 
-import co.com.alianza.constants.TiposCliente
+import co.com.alianza.commons.enumerations.TiposCliente
 import org.joda.time.{DateTime}
 import java.util.Date
 import enumerations.AppendPasswordUser
