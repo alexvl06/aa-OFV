@@ -79,11 +79,7 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
       }
       val resultIdUsuarioAE: Try[Option[Int]] = resultTry map {
         case None => None
-        case Some(x) =>
-          println("++++++++++++++++++++++++")
-          println(x)
-          println("++++++++++++++++++++++++")
-          Some(x)
+        case Some(x) => Some(x)
       }
       resolveTry(resultIdUsuarioAE, "Obtiene id agente empresarial de acuerdo a los 3 paramteros dados")
   }
