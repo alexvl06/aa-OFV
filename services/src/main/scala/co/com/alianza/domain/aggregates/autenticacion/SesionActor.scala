@@ -1,9 +1,12 @@
 package co.com.alianza.domain.aggregates.autenticacion
 
+import java.security.MessageDigest
+
 import akka.actor._
 import akka.cluster.{Member, MemberStatus, Cluster}
 import akka.cluster.ClusterEvent.{CurrentClusterState, MemberUp}
 import akka.util.Timeout
+import co.com.alianza.app.MainActors
 
 import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.infrastructure.dto.Configuracion
@@ -26,14 +29,14 @@ class SesionActorSupervisor extends Actor with ActorLogging {
 
     // When a new session joins the cluster
     case message: ClusterRegistration if !sessions.contains(sender()) =>
-      log.info("Registrando sesion en el cluster ...")
       context watch sender()
       sessions = sessions :+ sender()
+      log.info("Registrando sesion en el cluster...")
 
     // When a session died or is stopped
     case Terminated(a) =>
-      log.info("Eliminando sesion del cluster ...")
       sessions = sessions.filterNot(_ == a)
+      log.info("Eliminando sesion del cluster ...")
 
     // When an user authenticates
     case message: CrearSesionUsuario =>
@@ -62,14 +65,16 @@ class SesionActorSupervisor extends Actor with ActorLogging {
   }
 
   private def buscarSesion(token: String): Future[ActorRef] = {
-    val actor: List[ActorRef] = sessions.toList.filter(act => act.path.name == token)
+    val name = MessageDigest.getInstance("MD5").digest(token.split("\\.")(2).getBytes).map{ b => String.format("%02X", java.lang.Byte.valueOf(b)) }.mkString("")
+    val actor: IndexedSeq[ActorRef] = sessions.filter(ar => ar.path.name == name)
     if (actor.nonEmpty) context.actorSelection(actor(0).path).resolveOne()
     else Future.failed(new Throwable)
   }
 
   private def crearSesion(token: String, expiration: Int) = {
+    val name = MessageDigest.getInstance("MD5").digest(token.split("\\.")(2).getBytes).map{ b => String.format("%02X", java.lang.Byte.valueOf(b)) }.mkString("")
+    context.actorOf(SesionActor.props(expiration), name)
     log.info("Creando sesion de usuario. Tiempo de expiracion: " + expiration + " minutos")
-    context.actorOf(Props(new SesionActor(expiration)), token)
   }
 
 }
@@ -78,9 +83,6 @@ class SesionActor(expiracionSesion: Int) extends Actor with ActorLogging {
 
   implicit val _: ExecutionContext = context.dispatcher
 
-  // Cluster instance
-  val cluster = Cluster(context.system)
-
   // System scheduler instance
   private val scheduler: Scheduler = context.system.scheduler
 
@@ -88,10 +90,10 @@ class SesionActor(expiracionSesion: Int) extends Actor with ActorLogging {
   private var killTask: Cancellable = scheduler.scheduleOnce(expiracionSesion.minutes, self, ExpirarSesion())
 
   // PreStart function
-  override def preStart(): Unit = cluster.subscribe(self, classOf[MemberUp])
+  override def preStart(): Unit = MainActors.cluster.subscribe(self, classOf[MemberUp])
 
   // PostStop function
-  override def postStop(): Unit = cluster.unsubscribe(self)
+  override def postStop(): Unit = MainActors.cluster.unsubscribe(self)
 
   // Receive function
   override def receive = {
@@ -113,6 +115,14 @@ class SesionActor(expiracionSesion: Int) extends Actor with ActorLogging {
   // Register itself
   def register(member: Member): Unit = {
     context.actorSelection(RootActorPath(member.address) / "user" / "sesionActorSupervisor") ! ClusterRegistration()
+  }
+
+}
+
+object SesionActor {
+
+  def props(expirationTime: Int) = {
+    Props(new SesionActor(expirationTime))
   }
 
 }
