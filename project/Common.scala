@@ -5,7 +5,7 @@ object Common {
 
 	autoScalaLibrary := false
 
-	lazy val akkaVersion = "2.3.0"
+	lazy val akkaVersion = "2.3.8"
 	lazy val sprayVersion = "1.3.1"
 
 	/**
