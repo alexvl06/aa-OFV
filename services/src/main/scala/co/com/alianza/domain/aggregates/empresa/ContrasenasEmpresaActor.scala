@@ -106,7 +106,7 @@ class ContrasenasEmpresaActor extends Actor with ActorLogging with AlianzaActors
                     case zSuccess(intResult) =>
                       if(intResult == 1){
                         new SmtpServiceClient().send(buildMessage(pin, UsuarioMessageCorreo(message.correoUsuarioAgenteEmpresarial, message.numIdentificacionAgenteEmpresarial, message.tipoIdentiAgenteEmpresarial), "alianza.smtp.templatepin.reiniciarContrasenaEmpresa", "alianza.smtp.asunto.reiniciarContrasenaEmpresa"), (_, _) => Unit)
-                        currentSender ! ResponseMessage(Created)
+                        currentSender ! ResponseMessage(Created, "Reinicio de contraseña agente empresarial OK")
                       }
                   }
               }

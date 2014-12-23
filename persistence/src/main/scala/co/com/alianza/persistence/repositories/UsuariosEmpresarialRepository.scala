@@ -63,23 +63,44 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
   def validacionAgenteEmpresarial(numIdentificacionAgenteEmpresarial: String, correoUsuarioAgenteEmpresarial: String, tipoIdentiAgenteEmpresarial: Int, idClienteAdmin: Int): Future[Validation[PersistenceException, Option[Int]]] = loan {
     implicit session =>
       val resultTry = Try {
-        (
-          for {
+        /*(for {
             (((clienteAdministrador, clienteAdmnistradorEmpresa), agenteEmpresarialEmpresa), agenteEmpresarial) <-
             UsuariosEmpresarialesAdmin join UsuariosEmpresarialesAdminEmpresa on {
-              (ue, ueae) => ue.id === ueae.idUsuarioEmpresarialAdmin && ue.id === idClienteAdmin
+              (uea, ueae) => uea.id === ueae.idUsuarioEmpresarialAdmin && uea.id === idClienteAdmin
             } join UsuariosEmpresarialesEmpresa on {
               (result, uee) => result._2.idEmpresa === uee.idEmpresa
             } join UsuariosEmpresariales on {
-              case (((ca, cae), aee), ae) => ae.identificacion === numIdentificacionAgenteEmpresarial && ae.correo === correoUsuarioAgenteEmpresarial && ae.tipoIdentificacion === tipoIdentiAgenteEmpresarial
+              case (((uea, ueae), uee), ae) => ae.identificacion === numIdentificacionAgenteEmpresarial && ae.correo === correoUsuarioAgenteEmpresarial && ae.tipoIdentificacion === tipoIdentiAgenteEmpresarial
             }
           } yield (agenteEmpresarial.id)
-        ) firstOption
-        //UsuariosEmpresariales.filter(x => x.identificacion === numIdentificacionAgenteEmpresarial && x.correo === correoUsuarioAgenteEmpresarial && x.tipoIdentificacion === tipoIdentiAgenteEmpresarial).list.headOption
+          ).firstOption*/
+        (for {
+          (clienteAdministrador, agenteEmpresarial) <-
+          UsuariosEmpresarialesAdmin join UsuariosEmpresarialesAdminEmpresa on {
+            (uea, ueae) => uea.id === ueae.idUsuarioEmpresarialAdmin && uea.id === idClienteAdmin
+          } join UsuariosEmpresarialesEmpresa on {
+            case ((uea, ueae), uee) => ueae.idEmpresa === uee.idEmpresa
+          } join UsuariosEmpresariales on {
+            case (((uea, ueae), uee), ae) => ae.identificacion === numIdentificacionAgenteEmpresarial && ae.correo === correoUsuarioAgenteEmpresarial && ae.tipoIdentificacion === tipoIdentiAgenteEmpresarial
+          }
+        } yield (agenteEmpresarial)
+          ).list
       }
+
       val resultIdUsuarioAE: Try[Option[Int]] = resultTry map {
-        case None => None
-        case Some(x) => Some(x)
+         x => x match {
+           case _ =>
+             println("zzzzzzzzzzzzzzzzzzz")
+             println(x)
+             println("zzzzzzzzzzzzzzzzzzz")
+             Some(88)
+           /*case None => None
+           case Some(x) =>
+             println("zzzzzzzzzzzzzzzzzzz")
+             println(x)
+             println("zzzzzzzzzzzzzzzzzzz")
+             Some(88)*/
+         }
       }
       resolveTry(resultIdUsuarioAE, "Obtiene id agente empresarial de acuerdo a los 3 paramteros dados")
   }
