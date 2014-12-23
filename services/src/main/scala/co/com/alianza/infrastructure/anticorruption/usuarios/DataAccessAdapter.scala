@@ -2,7 +2,7 @@ package co.com.alianza.infrastructure.anticorruption.usuarios
 
 import java.sql.Timestamp
 
-import co.com.alianza.persistence.repositories.{IpsUsuarioRepository, UsuariosRepository, UsuariosEmpresarialRepository, UsuarioEmpresarialAdminRepository}
+import co.com.alianza.persistence.repositories._
 import scalaz.Validation
 import scala.concurrent.{ExecutionContext, Future}
 import co.com.alianza.exceptions.PersistenceException
@@ -118,6 +118,11 @@ object DataAccessAdapter {
   def obtenerIpsUsuario( idUsuario:Int ) : Future[Validation[PersistenceException, Vector[IpsUsuario]]] = {
     val repo = new IpsUsuarioRepository()
     repo.obtenerIpsUsuario( idUsuario )
+  }
+
+  def obtenerIpsUsuarioEmpresarialAdmin( idUsuario:Int ) : Future[Validation[PersistenceException, Vector[IpsUsuario]]] = {
+    val repo = new IpsUsuarioEmpresarialAdminRepository()
+    repo.obtenerIpsUsuarioEmpresarialAdmin( idUsuario )
   }
 
   def agregarIpUsuario( ip:IpsUsuario ) : Future[Validation[PersistenceException, String]] = {

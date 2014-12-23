@@ -40,8 +40,13 @@ class AutorizacionActorSupervisor extends Actor with ActorLogging {
 
   def receive = {
 
-    case m: AutorizarUsuarioEmpresarialMessage => autorizacionUsuarioEmpresarialActor forward m; log info (m toString)
-    case m: AutorizarUsuarioEmpresarialAdminMessage => autorizacionUsuarioEmpresarialActor forward m; log info (m toString)
+    case m: AutorizarUsuarioEmpresarialMessage =>
+      autorizacionUsuarioEmpresarialActor forward m
+      log info (m toString)
+
+    case m: AutorizarUsuarioEmpresarialAdminMessage =>
+      autorizacionUsuarioEmpresarialActor forward m
+      log info (m toString)
 
     case message: Any =>
       autorizacionActor forward message; log info (message toString)

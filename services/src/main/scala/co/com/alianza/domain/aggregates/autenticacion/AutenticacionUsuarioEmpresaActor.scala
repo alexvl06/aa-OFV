@@ -3,6 +3,7 @@ package co.com.alianza.domain.aggregates.autenticacion
 import akka.actor.{ ActorRef, Actor, ActorLogging }
 import akka.pattern.ask
 import akka.util.Timeout
+import co.com.alianza.commons.enumerations.TiposCliente
 import scala.concurrent.duration._
 
 import co.com.alianza.app.MainActors
@@ -150,7 +151,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor {
                   validarFechaContrasena(usuario.id, usuario.fechaCaducidad, currentSender: ActorRef)
                   //Validacion de control de direccion IP del usuario
                   //TODO:                  validarEmpresaCliente(usuario.id.get, )
-                  validarControlIpUsuario(usuario.identificacion, usuario.id, ip, valueResponseCliente.wcli_nombre, valueResponseCliente.wcli_dir_correo, valueResponseCliente.wcli_person, usuario.ipUltimoIngreso.getOrElse(""), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), currentSender: ActorRef)
+                  validarControlIpUsuarioAgenteEmpresarial(usuario.identificacion, usuario.id, ip, valueResponseCliente.wcli_nombre, valueResponseCliente.wcli_dir_correo, valueResponseCliente.wcli_person, usuario.ipUltimoIngreso.getOrElse(""), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), currentSender: ActorRef)
                 } else
                   currentSender ! ResponseMessage(Unauthorized, errorClienteInactivoSP)
               case None => currentSender ! ResponseMessage(Unauthorized, errorClienteNoExisteSP)
@@ -185,51 +186,16 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor {
     }
   }
 
-  override protected def validarControlIpUsuario(numeroIdentificacion: String, idUsuario: Int, ip: String, nombreCliente: String, correoUsuario: String, tipoIdentificacion: String, ipUltimoIngreso: String, fechaUltimoIngreso: Date, currentSender: ActorRef) = {
-    //Se valida que el control de direcciones IP del usuario se encuentre activo
-    val resultControlIP = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerIpsUsuario(idUsuario)
-
-    val tokenGenerado: String = Token.generarToken(nombreCliente, correoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso)
-    val resultAsociarToken: Future[Validation[PersistenceException, Int]] = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.asociarTokenUsuarioEmpresarial(idUsuario, tokenGenerado)
-    actualizarNumeroIngresosErroneos(numeroIdentificacion, 0, currentSender)
-    actualizarFechaUltimoIngreso(numeroIdentificacion, new Timestamp((new Date).getTime()), currentSender)
-
-    resultControlIP onComplete {
-      case Failure(failure) => currentSender ! failure
-      case Success(value) =>
-        value match {
-          case zSuccess(response: Vector[IpsUsuario]) =>
-
-            if (response.isEmpty) {
-              resultAsociarToken onComplete {
-                case Failure(failure) => currentSender ! failure
-                case Success(value) =>
-
-                  for {
-                    expiracionSesion <- ValidationT(confDataAdapter.obtenerConfiguracionPorLlave(TiposConfiguracion.EXPIRACION_SESION.llave))
-                  } yield {
-                    MainActors.sesionActorSupervisor ! CrearSesionUsuario(tokenGenerado, expiracionSesion)
-                    currentSender ! ResponseMessage(Conflict, ErrorMessage("401.4", "Control IP", "El usuario no tiene activo el control de direcciones ip", tokenGenerado).toJson)
-                  }
-
-              }
-            }
-            else obtenerIpHabitual(numeroIdentificacion, idUsuario, ip, nombreCliente, correoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso, currentSender, tokenGenerado)
-
-          case zFailure(error) =>
-            currentSender ! error
-        }
-    }
-  }
-
   protected def validarControlIpUsuarioEmpresarialAdmin(numeroIdentificacion: String, idUsuario: Int, ip: String, nombreCliente: String, correoUsuario: String, tipoIdentificacion: String, ipUltimoIngreso: String, fechaUltimoIngreso: Date, currentSender: ActorRef) = {
     //Se valida que el control de direcciones IP del usuario se encuentre activo
-    val resultControlIP = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerIpsUsuario(idUsuario)
+    val resultControlIP = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerIpsUsuarioEmpresarialAdmin(idUsuario)
 
-    val tokenGenerado: String = Token.generarToken(nombreCliente, correoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso)
+    val tokenGenerado: String = Token.generarToken(nombreCliente, correoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso, TiposCliente.clienteAdministrador)
     val resultAsociarToken: Future[Validation[PersistenceException, Int]] = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.asociarTokenUsuarioEmpresarialAdmin(idUsuario, tokenGenerado)
-    actualizarNumeroIngresosErroneos(numeroIdentificacion, 0, currentSender)
-    actualizarFechaUltimoIngreso(numeroIdentificacion, new Timestamp((new Date).getTime()), currentSender)
+
+    // TODO: para usuario empresarial Admin
+    //actualizarNumeroIngresosErroneos(numeroIdentificacion, 0, currentSender)
+    //actualizarFechaUltimoIngreso(numeroIdentificacion, new Timestamp((new Date).getTime()), currentSender)
 
     resultControlIP onComplete {
       case Failure(failure) => currentSender ! failure
@@ -258,5 +224,45 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor {
         }
     }
   }
+
+  protected def validarControlIpUsuarioAgenteEmpresarial(numeroIdentificacion: String, idUsuario: Int, ip: String, nombreCliente: String, correoUsuario: String, tipoIdentificacion: String, ipUltimoIngreso: String, fechaUltimoIngreso: Date, currentSender: ActorRef) = {
+    //Se valida que el control de direcciones IP del usuario se encuentre activo
+    val resultControlIP = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerIpsUsuarioEmpresarialAdmin(idUsuario)
+
+    val tokenGenerado: String = Token.generarToken(nombreCliente, correoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso, TiposCliente.agenteEmpresarial)
+    val resultAsociarToken: Future[Validation[PersistenceException, Int]] = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.asociarTokenUsuarioEmpresarialAdmin(idUsuario, tokenGenerado)
+
+    // TODO: para usuario agente empresarial
+    //actualizarNumeroIngresosErroneos(numeroIdentificacion, 0, currentSender)
+    //actualizarFechaUltimoIngreso(numeroIdentificacion, new Timestamp((new Date).getTime()), currentSender)
+
+    resultControlIP onComplete {
+      case Failure(failure) => currentSender ! failure
+      case Success(value) =>
+        value match {
+          case zSuccess(response: Vector[IpsUsuario]) =>
+
+            if (response.isEmpty) {
+              resultAsociarToken onComplete {
+                case Failure(failure) => currentSender ! failure
+                case Success(value) =>
+
+                  for {
+                    expiracionSesion <- ValidationT(confDataAdapter.obtenerConfiguracionPorLlave(TiposConfiguracion.EXPIRACION_SESION.llave))
+                  } yield {
+                    MainActors.sesionActorSupervisor ! CrearSesionUsuario(tokenGenerado, expiracionSesion)
+                    currentSender ! ResponseMessage(Conflict, ErrorMessage("401.4", "Control IP", "El usuario no tiene activo el control de direcciones ip", tokenGenerado).toJson)
+                  }
+
+              }
+            }
+            else obtenerIpHabitual(numeroIdentificacion, idUsuario, ip, nombreCliente, correoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso, currentSender, tokenGenerado)
+
+          case zFailure(error) =>
+            currentSender ! error
+        }
+    }
+  }
+
 
 }
