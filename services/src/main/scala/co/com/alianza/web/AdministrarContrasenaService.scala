@@ -13,7 +13,6 @@ class AdministrarContrasenaService extends Directives with AlianzaCommons {
   import AdministrarContrasenaMessagesJsonSupport._
 
   def secureRoute(user: UsuarioAuth) =
-
     pathPrefix("actualizarContrasena") {
       respondWithMediaType(mediaType) {
         pathEndOrSingleSlash {

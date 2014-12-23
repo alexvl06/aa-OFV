@@ -1,14 +1,15 @@
 package co.com.alianza.app
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSystem, ActorLogging}
 import co.com.alianza.infrastructure.security.ServiceAuthorization
 import co.com.alianza.web._
+import co.com.alianza.web.empresa.AdministrarContrasenaEmpresaService
 import com.typesafe.config.Config
 import spray.routing.{RouteConcatenation, HttpServiceActor}
 import spray.http.StatusCodes
 import StatusCodes._
 
-class AlianzaRouter extends HttpServiceActor with RouteConcatenation with CrossHeaders  with ServiceAuthorization {
+class AlianzaRouter extends HttpServiceActor with RouteConcatenation with CrossHeaders  with ServiceAuthorization with ActorLogging {
 
 
   implicit val conf: Config = MainActors.conf
@@ -28,7 +29,9 @@ class AlianzaRouter extends HttpServiceActor with RouteConcatenation with CrossH
       user =>
         new IpsUsuariosService().route(user) ~
         new AdministrarContrasenaService().secureRoute(user) ~
-        new AutenticacionService().routeAutenticado( user )
+        new AutenticacionService().routeAutenticado( user ) ~
+        //TO-DO Cambiar al authenticate de cliente empresarial o agente
+        new AdministrarContrasenaEmpresaService().secureRouteEmpresa(user)
     }
 
   def receive = runRoute(

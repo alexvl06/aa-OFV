@@ -27,6 +27,30 @@ case class UsuarioMessage(correo: String, identificacion: String, tipoIdentifica
 
 }
 
+case class ConsultaUsuarioMessage(
+                                  tipoIdentificacion: Option[Int] = None,
+                                  identificacion: Option[String] = None,
+                                  correo: Option[String] = None,
+                                  token:Option[String] = None
+                                   ) extends MessageService
+
+case class ConsultaUsuarioEmpresarialMessage(
+                                   tipoIdentificacion: Option[Int] = None,
+                                   identificacion: Option[String] = None,
+                                   nit: Option[String] = None,
+                                   usuario: Option[String] = None,
+                                   correo: Option[String] = None,
+                                   token:Option[String] = None
+                                   ) extends MessageService
+
+case class ConsultaUsuarioEmpresarialAdminMessage(
+                                              tipoIdentificacion: Option[Int] = None,
+                                              identificacion: Option[String] = None,
+                                              nit: Option[String] = None,
+                                              usuario: Option[String] = None,
+                                              correo: Option[String] = None,
+                                              token:Option[String] = None
+                                              ) extends MessageService
 
 case class OlvidoContrasenaMessage(identificacion: String, tipoIdentificacion: Int) extends MessageService{
 
