@@ -2,6 +2,7 @@ package co.com.alianza.persistence.repositories
 
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.persistence.entities.{CustomDriver, UsuarioEmpresarial, UsuarioEmpresarialTable, EmpresaTable, UsuarioEmpresarialEmpresaTable}
+import enumerations.EstadosEmpresaEnum
 import scala.util.Try
 import scalaz.Validation
 import scala.concurrent.{ExecutionContext, Future}
@@ -18,6 +19,7 @@ class UsuariosEmpresarialRepository ( implicit executionContext: ExecutionContex
   val UsuariosEmpresarialesAdmin = TableQuery[UsuarioEmpresarialAdminTable]
   val UsuariosEmpresarialesEmpresa = TableQuery[UsuarioEmpresarialEmpresaTable]
   val UsuariosEmpresarialesAdminEmpresa = TableQuery[UsuarioEmpresarialAdminEmpresaTable]
+  val pinempresa = TableQuery[PinEmpresaTable]
 
   def obtieneUsuarioEmpresaPorNitYUsuario(nit: String, usuario: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = loan {
     implicit session => resolveTry(Try {
@@ -66,10 +68,23 @@ class UsuariosEmpresarialRepository ( implicit executionContext: ExecutionContex
       resolveTry(resultIdUsuarioAE, "Obtiene id agente empresarial de acuerdo a los 3 paramteros dados")
   }
 
+  def CambiarEstadoAgenteEmpresarial( idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa ): Future[Validation[PersistenceException, Int]] = loan {
+    implicit session =>
+      val query = for { u <- UsuariosEmpresariales if u.id === idUsuarioAgenteEmpresarial } yield u.estado
+      val resultTry =  Try { query.update(estado.id)}
+      resolveTry(resultTry, "Cambiar Estado Usuario Agente Empresarial")
+  }
+
   def obtenerUsuarioToken( token:String ): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = loan {
     implicit session =>
       val resultTry = Try{ UsuariosEmpresariales.filter(_.token === token).list.headOption}
       resolveTry(resultTry, "Consulta usuario empresarial por token: " + token)
+  }
+
+  def guardarPinEmpresaAgenteEmpresarial(pinEmpresaAgenteEmpresarial: PinEmpresa): Future[Validation[PersistenceException, Int]] = loan {
+    implicit session =>
+      val resultTry = Try{  (pinempresa += pinEmpresaAgenteEmpresarial) }
+      resolveTry(resultTry, "Agregar pin empresa del agente empresarial")
   }
 
 }

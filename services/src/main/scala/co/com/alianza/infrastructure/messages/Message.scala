@@ -6,9 +6,6 @@ import spray.http.StatusCode
 
 trait MessageService
 
-
-
-
 case class InboxMessage() extends MessageService
 
 case class ResponseMessage(statusCode:StatusCode, responseBody:String = "")

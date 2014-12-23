@@ -12,6 +12,7 @@ case class PinData(token:String, fechaExpiracion:Date, tokenHash:Option[String])
  * @author smontanez
  */
 object TokenPin {
+
  def obtenerToken(fechaExp: Date):PinData = {
 
    val md = MessageDigest.getInstance("SHA-512")
@@ -26,4 +27,5 @@ object TokenPin {
 
    data.copy(tokenHash = Some(hexString.toString))
  }
+
 }
