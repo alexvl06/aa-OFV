@@ -125,6 +125,11 @@ object DataAccessAdapter {
     repo.obtenerIpsUsuarioEmpresarialAdmin( idUsuario )
   }
 
+  def obtenerIpsUsuarioEmpresarial( idUsuario:Int ) : Future[Validation[PersistenceException, Vector[IpsUsuario]]] = {
+    val repo = new IpsUsuarioEmpresarialRepository()
+    repo.obtenerIpsUsuarioEmpresarial( idUsuario )
+  }
+
   def agregarIpUsuario( ip:IpsUsuario ) : Future[Validation[PersistenceException, String]] = {
     val repo = new IpsUsuarioRepository()
     repo.guardar( ip )
