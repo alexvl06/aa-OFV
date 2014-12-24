@@ -2,7 +2,7 @@ package co.com.alianza.web.empresa
 
 import co.com.alianza.app.AlianzaCommons
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
-import co.com.alianza.infrastructure.messages.empresa.ReiniciarContrasenaEmpresaMessage
+import co.com.alianza.infrastructure.messages.empresa.ReiniciarContrasenaAgenteEMessage
 import co.com.alianza.infrastructure.messages.empresa.AdministrarContrasenaEmpresaMessagesJsonSupport
 import spray.routing.Directives
 
@@ -20,12 +20,13 @@ class AdministrarContrasenaEmpresaService extends Directives with AlianzaCommons
           pathEndOrSingleSlash {
             put {
               //Cambiar contrasena de la cuenta alianza valores
-              entity(as[ReiniciarContrasenaEmpresaMessage]) {
+              entity(as[ReiniciarContrasenaAgenteEMessage]) {
                 data =>
-                  println("-------------------------------------")
-                  println(user)
-                  println("-------------------------------------")
-                  requestExecute(data, contrasenasEmpresaActor)
+                  println("$$$$$$$$$$$$$$$$$$$$")
+                  println(user.id)
+                  println("$$$$$$$$$$$$$$$$$$$$")
+                  val dataAux: ReiniciarContrasenaAgenteEMessage = data.copy(idClienteAdmin = Some(user.id))
+                  requestExecute(dataAux, contrasenasEmpresaActor)
               }
             }
           }

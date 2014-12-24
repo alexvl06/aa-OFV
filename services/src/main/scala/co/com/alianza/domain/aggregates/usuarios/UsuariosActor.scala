@@ -213,8 +213,7 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
   private def enviarCorreoOlvidoContrasena( actualizarContrasenaFuture: Future[Validation[ErrorValidacion, Int]], correoCliente:String,  currentSender: ActorRef, message: OlvidoContrasenaMessage, idUsuario:Option[Int] ) = {
 
     actualizarContrasenaFuture onComplete {
-      case sFailure(failure) =>
-        currentSender ! failure
+      case sFailure(failure) => currentSender ! failure
       case sSuccess(value) =>
         value match {
           case zSuccess(response: Int) =>

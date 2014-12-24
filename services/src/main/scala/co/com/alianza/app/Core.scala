@@ -5,7 +5,7 @@ import akka.cluster.Cluster
 
 import co.com.alianza.domain.aggregates.confronta.{ConfrontaActorSupervisor}
 import co.com.alianza.domain.aggregates.autenticacion._
-import co.com.alianza.domain.aggregates.empresa.contrasenasEmpresa.ContrasenasEmpresaActorSupervisor
+import co.com.alianza.domain.aggregates.empresa.ContrasenasEmpresaActorSupervisor
 import co.com.alianza.domain.aggregates.usuarios.UsuariosActorSupervisor
 import co.com.alianza.domain.aggregates.autoregistro.ConsultaClienteActorSupervisor
 import co.com.alianza.domain.aggregates.contrasenas.ContrasenasActorSupervisor
