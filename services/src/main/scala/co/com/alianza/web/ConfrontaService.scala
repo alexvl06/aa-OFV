@@ -38,7 +38,6 @@ class ConfrontaService extends Directives with AlianzaCommons  {
       post {
         entity(as[ValidarCuestionarioDesbloqueoRequestMessage]) {
           message =>
-            println(JsonUtil.toJson(message))
             respondWithMediaType(mediaType) {
               requestExecute(message, confrontaActor)
             }
