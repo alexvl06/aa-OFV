@@ -227,10 +227,10 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor {
 
   protected def validarControlIpUsuarioAgenteEmpresarial(numeroIdentificacion: String, idUsuario: Int, ip: String, nombreCliente: String, correoUsuario: String, tipoIdentificacion: String, ipUltimoIngreso: String, fechaUltimoIngreso: Date, currentSender: ActorRef) = {
     //Se valida que el control de direcciones IP del usuario se encuentre activo
-    val resultControlIP = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerIpsUsuarioEmpresarialAdmin(idUsuario)
+    val resultControlIP = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerIpsUsuarioEmpresarial(idUsuario)
 
     val tokenGenerado: String = Token.generarToken(nombreCliente, correoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso, TiposCliente.agenteEmpresarial)
-    val resultAsociarToken: Future[Validation[PersistenceException, Int]] = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.asociarTokenUsuarioEmpresarialAdmin(idUsuario, tokenGenerado)
+    val resultAsociarToken: Future[Validation[PersistenceException, Int]] = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.asociarTokenUsuarioEmpresarial(idUsuario, tokenGenerado)
 
     // TODO: para usuario agente empresarial
     //actualizarNumeroIngresosErroneos(numeroIdentificacion, 0, currentSender)
