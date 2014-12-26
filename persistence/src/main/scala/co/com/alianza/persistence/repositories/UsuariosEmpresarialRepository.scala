@@ -60,7 +60,7 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
       resolveTry(resultTry, "Actualizar token de usuario empresarial")
   }
 
-  def validacionAgenteEmpresarial(numIdentificacionAgenteEmpresarial: String, correoUsuarioAgenteEmpresarial: String, tipoIdentiAgenteEmpresarial: Int, idClienteAdmin: Int): Future[Validation[PersistenceException, Option[Int]]] = loan {
+  def validacionAgenteEmpresarial(numIdentificacionAgenteEmpresarial: String, correoUsuarioAgenteEmpresarial: String, tipoIdentiAgenteEmpresarial: Int, idClienteAdmin: Int): Future[Validation[PersistenceException, Option[(Int, Int)]]] = loan {
     implicit session =>
       val resultTry = Try {
         (for {
@@ -76,11 +76,11 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
           ).list.headOption
       }
 
-      val resultIdUsuarioAE: Try[Option[Int]] = resultTry map {
+      val resultIdUsuarioAE: Try[Option[(Int, Int)]] = resultTry map {
          x => x match {
            case None => None
            case Some(x) =>
-             Some(x.id)
+             Some((x.id, x.estado))
          }
       }
       resolveTry(resultIdUsuarioAE, "Obtiene id agente empresarial de acuerdo a los 3 paramteros dados")

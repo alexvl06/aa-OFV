@@ -17,7 +17,7 @@ object DataAccessAdapter {
   implicit val ec: ExecutionContext = MainActors.dataAccesEx
   val repo = new UsuariosEmpresarialRepository()
 
-  def validacionAgenteEmpresarial( numIdentificacionAgenteEmpresarial: String, correoUsuarioAgenteEmpresarial: String, tipoIdentiAgenteEmpresarial: Int, idClienteAdmin: Int): Future[Validation[PersistenceException, Option[Int]]] = {
+  def validacionAgenteEmpresarial( numIdentificacionAgenteEmpresarial: String, correoUsuarioAgenteEmpresarial: String, tipoIdentiAgenteEmpresarial: Int, idClienteAdmin: Int): Future[Validation[PersistenceException, Option[(Int,Int)]]] = {
     repo.validacionAgenteEmpresarial(numIdentificacionAgenteEmpresarial: String, correoUsuarioAgenteEmpresarial: String, tipoIdentiAgenteEmpresarial: Int, idClienteAdmin: Int)
   }
 
