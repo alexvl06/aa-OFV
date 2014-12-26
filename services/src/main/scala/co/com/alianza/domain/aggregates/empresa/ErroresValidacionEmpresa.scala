@@ -11,4 +11,5 @@ sealed trait ErrorValidacionEmpresa {
 }
 
 case class ErrorPersistenceEmpresa(msg:String, exception:PersistenceException) extends ErrorValidacionEmpresa
+case class ErrorEstadoAgenteEmpresarial(msg:String) extends ErrorValidacionEmpresa
 case class ErrorAgenteEmpresarialNoExiste(msg:String) extends ErrorValidacionEmpresa
