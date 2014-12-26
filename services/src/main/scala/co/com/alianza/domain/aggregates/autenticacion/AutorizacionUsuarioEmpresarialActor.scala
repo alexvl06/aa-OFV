@@ -1,21 +1,21 @@
 package co.com.alianza.domain.aggregates.autenticacion
 
+import akka.pattern.ask
+
 import co.com.alianza.util.token.Token
 import co.com.alianza.util.transformers.ValidationT
 import co.com.alianza.infrastructure.messages._
-import spray.http.StatusCodes._
-
-import co.com.alianza.infrastructure.dto.UsuarioEmpresarial
+import co.com.alianza.util.json.JsonUtil
+import co.com.alianza.infrastructure.dto.{UsuarioEmpresarial, UsuarioEmpresarialAdmin}
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => usDataAdapter}
-import co.com.alianza.infrastructure.anticorruption.recursos.{DataAccessAdapter => rDataAccessAdapter}
-import scala.concurrent.duration._
-import scala.concurrent.Future
-import scalaz.std.AllInstances._
-import scala.util.{Success, Failure}
-import scalaz.Validation
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.app.MainActors
-import akka.pattern.ask
+
+import scala.concurrent.Future
+import scalaz.std.AllInstances._
+import scalaz.Validation
+
+import spray.http.StatusCodes._
 
 /**
  * Created by manuel on 16/12/14.
@@ -23,31 +23,27 @@ import akka.pattern.ask
 class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
 
   override def receive = {
-    case message: AutorizarUsuarioEmpresarialUrl =>
-      val currentSender = message.sender
-      log info (message toString)
 
+    case message: AutorizarUsuarioEmpresarialMessage =>
+      val currentSender = sender()
       val future = (for {
         usuarioOption <- ValidationT(validarToken(message.token))
-//        resultAutorizar <- ValidationT(validarRecurso(usuarioOption, message.url))
+        result <- ValidationT(validarUsuario(usuarioOption))
       } yield {
-        usuarioOption
+        result
       }).run
+      resolveFutureValidation(future, (x: ResponseMessage) => x, currentSender)
 
-      resolveFutureValidation(future, (x: Option[UsuarioEmpresarial]) => x, currentSender)
+    case message: AutorizarUsuarioEmpresarialAdminMessage =>
+      val currentSender = sender()
+      val future = (for {
+        usuarioOption <- ValidationT(validarTokenAdmin(message.token))
+        result <- ValidationT(validarUsuario(usuarioOption))
+      } yield {
+        result
+      }).run
+      resolveFutureValidation(future, (x: ResponseMessage) => x, currentSender)
 
-
-//    case message: InvalidarToken =>
-//
-//      val currentSender = sender()
-//      val futureInvalidarToken = usDataAdapter.invalidarTokenUsuario(message.token)
-//
-//      futureInvalidarToken onComplete {
-//        case Failure(failure) => currentSender ! failure
-//        case Success(value) =>
-//          MainActors.sesionActorSupervisor ! InvalidarSesion(message.token)
-//          currentSender ! ResponseMessage(OK, "El token ha sido removido")
-//      }
   }
 
   /**
@@ -62,8 +58,28 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
       case true =>
         usDataAdapter.obtenerUsuarioEmpresarialToken(token).flatMap { x =>
           val y: Validation[PersistenceException, Future[Option[UsuarioEmpresarial]]] = x.map { userOpt =>
-            log info (userOpt toString)
             guardaTokenCache(userOpt, token)
+          }
+          co.com.alianza.util.transformers.Validation.sequence(y)
+        }
+      case false =>
+        Future.successful(Validation.success(None))
+    }
+  }
+
+  /**
+   * Realiza la validación del Token, llamando a [[Token.autorizarToken]]
+   * Retorna un futuro con un Validationm, donde el caso de contiene el Option[Usuario]
+   *
+   *
+   * @param token El token para realizar validación
+   */
+  private def validarTokenAdmin(token: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = {
+    Token.autorizarToken(token) match {
+      case true =>
+        usDataAdapter.obtenerUsuarioEmpresarialAdminToken(token).flatMap { x =>
+          val y: Validation[PersistenceException, Future[Option[UsuarioEmpresarialAdmin]]] = x.map { userOpt =>
+            guardaTokenAdminCache(userOpt, token)
           }
           co.com.alianza.util.transformers.Validation.sequence(y)
         }
@@ -83,8 +99,36 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
 
     val validacionSesion: Future[Boolean] = ask(MainActors.sesionActorSupervisor, ValidarSesion(token)).mapTo[Boolean]
     validacionSesion.map {
-      case true => usuarioOption.map ( usuario =>usuario.copy(contrasena = None))
+      case true => usuarioOption.map(usuario => usuario.copy(contrasena = None))
       case false => None
+    }
+  }
+
+  /**
+   *
+   * Si usuarioOption tiene un valor se guarda en cache y retorna el usuario sin el campo contraseña
+   * @param usuarioOption Option con el usuario
+   * @param token El token
+   * @return
+   */
+  private def guardaTokenAdminCache(usuarioOption: Option[UsuarioEmpresarialAdmin], token: String): Future[Option[UsuarioEmpresarialAdmin]] = {
+
+    val validacionSesion: Future[Boolean] = ask(MainActors.sesionActorSupervisor, ValidarSesion(token)).mapTo[Boolean]
+    validacionSesion.map {
+      case true => usuarioOption.map(usuario => usuario.copy(contrasena = None))
+      case false => None
+    }
+  }
+
+  /**
+   * Valida si el usuario existe y responde
+   * @param usuarioOp Option
+   * @return ResponseMessage con el statusCode correspondiente
+   */
+  private def validarUsuario(usuarioOp: Option[Any]) = {
+    usuarioOp match {
+      case None => Future.successful(Validation.success(ResponseMessage(Unauthorized, "Error Validando Token")))
+      case Some(us) => Future.successful(Validation.success(ResponseMessage(OK, JsonUtil.toJson(us))))
     }
   }
 

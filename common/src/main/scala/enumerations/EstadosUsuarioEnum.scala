@@ -1,6 +1,6 @@
 package enumerations
 
-object EstadosUsuarioEnum extends Enumeration {
+object EstadosUsuarioEnum extends Enumeration(0) {
 
   type estadoUsuario = Value
 
