@@ -1,10 +1,9 @@
 package co.com.alianza.infrastructure.anticorruption.empresa.usuarios
 
-import co.com.alianza.constants.{TipoIdentificacion, EstadosUsuarioEnum}
-import co.com.alianza.persistence.entities.{Usuario => dUsuario, UsuarioEmpresarialAdmin => dUsuarioEmpresarialAdmin, UsuarioAdmin => dUsuarioAdmin, PinUsuario=> ePinUsuario, IpUsuario => dIpUsuario}
-import co.com.alianza.infrastructure.dto._
-import java.util.Date
-import java.sql.Timestamp
+
+import co.com.alianza.persistence.entities.{UsuarioEmpresarial => dUsuario}
+import co.com.alianza.infrastructure.dto.UsuarioEmpresarial
+import co.com.alianza.commons.enumerations.TiposCliente
 
 /**
  *
@@ -13,7 +12,7 @@ import java.sql.Timestamp
 object  DataAccessTranslator {
 
   def translateUsuario(usuario:List[dUsuario]) = {
-   usuario map ( usu => Usuario(usu.id, usu.correo,new Date(usu.fechaActualizacion.getTime) , usu.identificacion, tipoIdentificacionDto(usu.tipoIdentificacion, TipoIdentificacion(usu.tipoIdentificacion).toString), estadoUsuario(usu.estado, EstadosUsuarioEnum(usu.estado).toString), Some(""), usu.numeroIngresosErroneos, usu.ipUltimoIngreso, usu.fechaUltimoIngreso ))
+   usuario map ( ue => UsuarioEmpresarial(ue.id, ue.correo, ue.fechaActualizacion, ue.identificacion, ue.tipoIdentificacion, ue.usuario, ue.estado, ue.contrasena, ue.numeroIngresosErroneos, ue.ipUltimoIngreso, ue.fechaUltimoIngreso, TiposCliente.agenteEmpresarial))
   }
 
 }

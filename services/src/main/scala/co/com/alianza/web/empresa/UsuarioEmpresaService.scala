@@ -4,6 +4,7 @@ import spray.routing.Directives
 import co.com.alianza.app.{AlianzaActors, MainActors, CrossHeaders, AlianzaCommons}
 import co.com.alianza.infrastructure.messages.empresa._
 import akka.actor.ActorSystem
+import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 
 /**
  * Created by s4n on 17/12/14.
@@ -12,16 +13,14 @@ class UsuarioEmpresaService extends Directives with AlianzaCommons   with CrossH
 
   import UsuariosEmpresaMessagesJsonSupport._
 
-  val system: ActorSystem = MainActors.system
-
-  def route = {
+  def secureUserRouteEmpresa(user: UsuarioAuth) = {
     pathPrefix("empresa") {
       path("consultarUsuarios") {
         respondWithMediaType(mediaType) {
           get {
-            parameters('correo.?, 'identificacion.?, 'tipoIdentificacion.?, 'estadoUsuario.?) { (correo, identificacion, tipoIdentificacion, estadoUsuario) =>
+            parameters('correo.?, 'usuario.?, 'nombre.?, 'estado.?) { (correo, usuario, nombre, estado) =>
               //Lista de todos los usuarios
-              requestExecute(GetUsuariosEmpresaBusquedaMessage(correo.getOrElse(null), identificacion.getOrElse(null), tipoIdentificacion.getOrElse(null), estadoUsuario.getOrElse(null)), usuariosActor)
+              requestExecute(GetUsuariosEmpresaBusquedaMessage(correo.getOrElse(null), usuario.getOrElse(null), nombre.getOrElse(null), estado.getOrElse(null), user.id), usuariosEmpresarialActor)
             }
           }
         }
