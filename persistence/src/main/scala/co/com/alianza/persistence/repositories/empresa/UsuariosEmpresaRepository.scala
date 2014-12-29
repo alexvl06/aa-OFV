@@ -33,7 +33,7 @@ class UsuariosEmpresaRepository ( implicit executionContext: ExecutionContext) e
   val UsuariosEmpresarialesAdminEmpresa = TableQuery[UsuarioEmpresarialAdminEmpresaTable]
 
 
-  def obtenerUsuariosBusqueda(correoUsuario:String, tipoIdentificacion:Int, numeroIdentificacion:String, estadoUsuario:Int, idClienteAdmin: Int): Future[Validation[PersistenceException, List[UsuarioEmpresarial]]] = loan {
+  def obtenerUsuariosBusqueda(correoUsuario:String, numeroIdentificacion:String, estadoUsuario:Int, idClienteAdmin: Int): Future[Validation[PersistenceException, List[UsuarioEmpresarial]]] = loan {
     implicit session =>
       val resultTry =  Try {
         (for {
@@ -43,7 +43,7 @@ class UsuariosEmpresaRepository ( implicit executionContext: ExecutionContext) e
           } join UsuariosEmpresarialesEmpresa on {
             case ((uea, ueae), uee) => ueae.idEmpresa === uee.idEmpresa
           } join UsuariosEmpresariales on {
-            case (((uea, ueae), uee), ae) => uee.idUsuarioEmpresarial === ae.id && ae.identificacion === numeroIdentificacion && ae.correo === correoUsuario && ae.tipoIdentificacion === tipoIdentificacion && ae.estado === estadoUsuario
+            case (((uea, ueae), uee), ae) => uee.idUsuarioEmpresarial === ae.id && ae.identificacion === numeroIdentificacion && ae.correo === correoUsuario && ae.estado === estadoUsuario
           }
         } yield (agenteEmpresarial)
           ).list
