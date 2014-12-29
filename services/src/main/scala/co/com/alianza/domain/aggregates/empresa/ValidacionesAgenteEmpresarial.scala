@@ -26,6 +26,7 @@ object ValidacionesAgenteEmpresarial {
       (idUsuarioAgenteEmpresarial: Option[(Int,Int)]) => idUsuarioAgenteEmpresarial match{
         case Some(x) => x._2 match {
           case 1 => zSuccess(x._1)
+          case 3 => zSuccess(x._1)
           case _ => zFailure(ErrorEstadoAgenteEmpresarial(errorEstadoAgenteEmpresarial))
         }
         case None => zFailure(ErrorAgenteEmpresarialNoExiste(errorAgenteEmpresarialNoExiste))
