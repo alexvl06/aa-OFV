@@ -27,7 +27,7 @@ object DataAccessAdapter {
 
   def obtenerUsuariosBusqueda(message:GetUsuariosEmpresaBusquedaRequest): Future[Validation[PersistenceException, List[UsuarioEmpresarial]]] = {
     val repo = new UsuariosEmpresaRepository()
-    repo.obtenerUsuariosBusqueda(message.correo, message.identificacion, message.estado, message.idClienteAdmin) map {
+    repo.obtenerUsuariosBusqueda(message.correo, message.usuario, message.nombre, message.estado, message.idClienteAdmin) map {
       x => transformValidationList(x)
     }
   }

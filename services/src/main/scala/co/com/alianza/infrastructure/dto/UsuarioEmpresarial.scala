@@ -21,7 +21,8 @@ case class UsuarioEmpresarial(
                                numeroIngresosErroneos: Int,
                                ipUltimoIngreso: Option[String],
                                fechaUltimoIngreso: Option[Date],
-                               tipoCliente: TiposCliente
+                               tipoCliente: TiposCliente,
+                               nombreUsuario:Option[String]
                                )
 
 case class UsuarioEmpresarialAdmin(
