@@ -14,6 +14,7 @@ import co.com.alianza.domain.aggregates.pin.PinActorSupervisor
 import co.com.alianza.util.ConfigApp
 
 import com.typesafe.config.Config
+import co.com.alianza.domain.aggregates.empresa.contrasenasEmpresa.usuarios.UsuariosEmpresaActorSupervisor
 
 //import co.com.alianza.domain.aggregates.fondos.FondosActorSupervisor
 
@@ -46,6 +47,7 @@ trait BootedCore extends Core {
  */
 trait CoreActors { this: Core =>
   val usuariosActorSupervisor = system.actorOf( Props[ UsuariosActorSupervisor ], "UsuariosActorSupervisor" )
+  val usuariosEmpresaActorSupervisor = system.actorOf( Props[ UsuariosEmpresaActorSupervisor ], "UsuariosEmpresaActorSupervisor" )
   val confrontaActorSupervisor = system.actorOf( Props[ ConfrontaActorSupervisor ], "confrontaActorSupervisor" )
   val consultaClienteActorSupervisor = system.actorOf( Props[ ConsultaClienteActorSupervisor ], "consultaClienteActorSupervisor" )
   val autenticacionActorSupervisor = system.actorOf( Props[ AutenticacionActorSupervisor ], "autenticacionActorSupervisor" )
