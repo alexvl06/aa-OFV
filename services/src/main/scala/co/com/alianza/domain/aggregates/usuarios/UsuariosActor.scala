@@ -321,9 +321,9 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
   private def buildMessage(pinUsuario: PinUsuario, numHorasCaducidad: Int, message: UsuarioMessage, templateBody: String, asuntoTemp: String) = {
     val body: String =new MailMessageUsuario(templateBody).getMessagePin(pinUsuario, numHorasCaducidad)
     val asunto: String = config.getString(asuntoTemp)
-    MailMessage(config.getString("alianza.smtp.from"), "luisaceleita@seven4n.com", List(), asunto, body, "")
+    //MailMessage(config.getString("alianza.smtp.from"), "luisaceleita@seven4n.com", List(), asunto, body, "")
     //MailMessage(config.getString("alianza.smtp.from"), "josegarcia@seven4n.com", List(), asunto, body, "")
-    //MailMessage(config.getString("alianza.smtp.from"), message.correo, List(), asunto, body, "")
+    MailMessage(config.getString("alianza.smtp.from"), message.correo, List(), asunto, body, "")
   }
 
 
