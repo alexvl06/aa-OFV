@@ -15,7 +15,7 @@ import co.com.alianza.microservices.{MailMessage, SmtpServiceClient}
 import co.com.alianza.util.token.{PinData, TokenPin}
 import co.com.alianza.util.transformers.ValidationT
 import com.typesafe.config.Config
-import enumerations.EstadosEmpresaEnum
+import enumerations.{UsoPinEmpresaEnum, EstadosEmpresaEnum}
 import scalaz.std.AllInstances._
 import scala.util.{Failure => sFailure, Success => sSuccess}
 import scalaz.{Failure => zFailure, Success => zSuccess}
@@ -93,10 +93,14 @@ class ContrasenasEmpresaActor extends Actor with ActorLogging with AlianzaActors
               val fechaActual: Calendar = Calendar.getInstance()
               val tokenPin: PinData = TokenPin.obtenerToken(fechaActual.getTime)
 
-              val pin: PinEmpresa = PinEmpresa(None, responseFutureReiniciarContraAE._1, tokenPin.token, tokenPin.fechaExpiracion, tokenPin.tokenHash.get)
+              val pin: PinEmpresa = PinEmpresa(None, responseFutureReiniciarContraAE._1, tokenPin.token, tokenPin.fechaExpiracion, tokenPin.tokenHash.get, UsoPinEmpresaEnum.usoReinicioContrasena.id)
               val pinEmpresaAgenteEmpresarial: entities.PinEmpresa = DataAccessTranslator.translateEntityPinEmpresa(pin)
 
-              val resultCrearPinEmpresaAgenteEmpresarial: Future[Validation[PersistenceException, Int]] = DataAccessAdapter.crearPinEmpresaAgenteEmpresarial(pinEmpresaAgenteEmpresarial)
+              val resultCrearPinEmpresaAgenteEmpresarial = for {
+                idResultGuardarPinEmpresa <- DataAccessAdapter.crearPinEmpresaAgenteEmpresarial(pinEmpresaAgenteEmpresarial)
+              } yield {
+                idResultGuardarPinEmpresa
+              }
 
               resultCrearPinEmpresaAgenteEmpresarial onComplete {
                 case sFailure(fail) => currentSender ! fail

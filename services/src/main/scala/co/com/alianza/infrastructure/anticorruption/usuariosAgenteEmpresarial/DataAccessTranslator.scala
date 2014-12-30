@@ -11,7 +11,7 @@ import co.com.alianza.persistence.entities.{PinEmpresa => ePinEmpresa}
 object DataAccessTranslator {
 
   def translateEntityPinEmpresa(pin: PinEmpresa) = {
-    ePinEmpresa(pin.id, pin.idUsuarioEmpresarial, pin.token,new Timestamp(pin.fechaExpiracion.getTime), pin.tokenHash)
+    ePinEmpresa(pin.id, pin.idUsuarioEmpresarial, pin.token,new Timestamp(pin.fechaExpiracion.getTime), pin.tokenHash, pin.uso)
   }
 
 }

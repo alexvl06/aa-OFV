@@ -6,4 +6,4 @@ package co.com.alianza.infrastructure.dto
 
 import java.util.Date
 
-case class PinEmpresa(id: Option[Int], idUsuarioEmpresarial: Int, token: String, fechaExpiracion: Date, tokenHash: String)
+case class PinEmpresa(id: Option[Int], idUsuarioEmpresarial: Int, token: String, fechaExpiracion: Date, tokenHash: String, uso: Int)
