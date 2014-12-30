@@ -1,5 +1,7 @@
 package co.com.alianza.web.empresa
 
+import co.com.alianza.infrastructure.dto.security.UsuarioAuth
+import co.com.alianza.infrastructure.messages.empresa.{CrearAgenteEMessageJsonSupport, CrearAgenteEMessage}
 import spray.routing.Directives
 import co.com.alianza.app.{AlianzaActors, MainActors, CrossHeaders, AlianzaCommons}
 import co.com.alianza.infrastructure.messages.empresa._
@@ -11,7 +13,7 @@ import co.com.alianza.infrastructure.dto.security.UsuarioAuth
  */
 class UsuarioEmpresaService extends Directives with AlianzaCommons   with CrossHeaders with AlianzaActors {
 
-  import UsuariosEmpresaMessagesJsonSupport._
+  import CrearAgenteEMessageJsonSupport._
 
   def secureUserRouteEmpresa(user: UsuarioAuth) = {
     pathPrefix("empresa") {
@@ -24,7 +26,20 @@ class UsuarioEmpresaService extends Directives with AlianzaCommons   with CrossH
             }
           }
         }
-      }
+      } ~
+        path("usuarioAgenteEmpresarial") {
+          respondWithMediaType(mediaType) {
+            pathEndOrSingleSlash {
+              put {
+                entity(as[CrearAgenteEMessage]) {
+                  data =>
+                    requestExecute(data, agenteEmpresarialActor)
+                }
+              }
+            }
+          }
+        }
     }
+
   }
 }

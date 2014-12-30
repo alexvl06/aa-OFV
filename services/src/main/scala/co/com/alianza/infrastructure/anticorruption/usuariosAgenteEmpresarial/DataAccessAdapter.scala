@@ -1,6 +1,8 @@
 package co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial
 
-import co.com.alianza.persistence.entities.{PinEmpresa => ePinEmpresa}
+import java.sql.Timestamp
+
+import co.com.alianza.persistence.entities.{PinEmpresa => ePinEmpresa, UsuarioEmpresarial}
 import co.com.alianza.persistence.repositories.UsuariosEmpresarialRepository
 import co.com.alianza.app.MainActors
 import co.com.alianza.exceptions.PersistenceException
@@ -27,6 +29,10 @@ object DataAccessAdapter {
 
   def crearPinEmpresaAgenteEmpresarial(pinEmpresaAgenteEmpresarial: ePinEmpresa): Future[Validation[PersistenceException, Int]] = {
     repo.guardarPinEmpresaAgenteEmpresarial(pinEmpresaAgenteEmpresarial)
+  }
+
+  def crearAgenteEmpresarial(nuevoUsuarioAgenteEmpresarial:UsuarioEmpresarial) : Future[Validation[PersistenceException, Int]] = {
+    repo.insertarAgenteEmpresarial(nuevoUsuarioAgenteEmpresarial)
   }
 
 }

@@ -20,7 +20,7 @@ object Token {
   private val ISSUER = "http://fiduciaria.alianza.com.co"
   private val SIGNING_KEY = "556878763f1ea3bddfd1bed5b15daa2fc6d2db5a98290dd9f91ddfd22d77d1e" + AppendPasswordUser.appendUsuariosFiducia
 
-  def generarToken(nombreUsuarioLogueado: String, correoUsuarioLogueado: String, tipoIdentificacion: String, ultimaIpIngreso: String, ultimaFechaIngreso: Date, tipoCliente: TiposCliente.TiposCliente = TiposCliente.clienteIndividual): String = {
+  def generarToken(nombreUsuarioLogueado: String, correoUsuarioLogueado: String, tipoIdentificacion: String, ultimaIpIngreso: String, ultimaFechaIngreso: Date, tipoCliente: TiposCliente.TiposCliente = TiposCliente.clienteIndividual, nit : Option[String] = None): String = {
 
     val claimsSet = new JWTClaimsSet()
     claimsSet.setIssueTime(new Date())
@@ -30,7 +30,7 @@ object Token {
 
     val formater = new java.text.SimpleDateFormat("dd MMMM, yyyy 'a las' hh:mm a", new java.util.Locale("es", "ES"))
 
-    val customData = Map(
+    val customDataBase = Map(
       "correo" -> correoUsuarioLogueado,
       "nombreUsuario" -> nombreUsuarioLogueado,
       "tipoIdentificacion" -> tipoIdentificacion,
@@ -38,6 +38,12 @@ object Token {
       "ultimaFechaIngreso" -> formater.format(ultimaFechaIngreso),
       "tipoCliente" -> tipoCliente.toString
     )
+
+    val empresarialesData = nit match {
+      case Some(x) => Map("nit" -> x)
+      case None => Map()
+    }
+    val customData = customDataBase ++ empresarialesData
 
     claimsSet.setCustomClaims(customData)
 
