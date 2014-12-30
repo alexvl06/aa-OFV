@@ -1,17 +1,20 @@
 package co.com.alianza.domain.aggregates.empresa
 
+import java.sql.Timestamp
 import java.util.Calendar
 
 import akka.actor.{ActorRef, Actor, ActorLogging, Props}
 import akka.routing.RoundRobinPool
 import co.com.alianza.app.{AlianzaActors, MainActors}
-import co.com.alianza.domain.aggregates.usuarios.{MailMessageUsuario, ErrorValidacion}
+import co.com.alianza.domain.aggregates.usuarios.{ErrorPersistence, MailMessageUsuario, ErrorValidacion}
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{DataAccessTranslator, DataAccessAdapter}
+import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.DataAccessAdapter
 import co.com.alianza.infrastructure.dto.PinEmpresa
 import co.com.alianza.infrastructure.messages.{UsuarioMessage, ResponseMessage}
 import co.com.alianza.infrastructure.messages.empresa.{CrearAgenteEMessage, UsuarioMessageCorreo, ReiniciarContrasenaAgenteEMessage}
 import co.com.alianza.microservices.{MailMessage, SmtpServiceClient}
+import co.com.alianza.persistence.entities.UltimaContrasena
+import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.token.{PinData, TokenPin}
 import co.com.alianza.util.transformers.ValidationT
 import com.typesafe.config.Config
@@ -66,18 +69,32 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
 
       val currentSender = sender()
 
-      /*val ReiniciarContrasenaAgenteEmpresarialFuture = (for {
-        idUsuarioAgenteEmpresarial <- ValidationT(validacionAgenteEmpresarial(message.numIdentificacionAgenteEmpresarial, message.correoUsuarioAgenteEmpresarial, message.tipoIdentiAgenteEmpresarial, message.idClienteAdmin.get))
-        idEjecucion <- ValidationT(CambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial, EstadosEmpresaEnum.pendienteReiniciarContrasena))
-      } yield {
-        (idUsuarioAgenteEmpresarial, idEjecucion)
+      val usuarioCreadoFuture : Future[Validation[PersistenceException, Int]] = (for{
+        idUsuarioAgenteEmpresarial <- ValidationT( DataAccessAdapter.crearAgenteEmpresarial(message.toEntityUsuarioAgenteEmpresarial()) )
+      }yield{
+        idUsuarioAgenteEmpresarial
       }).run
 
-      resolveReiniciarContrasenaAEFuture(ReiniciarContrasenaAgenteEmpresarialFuture, currentSender, message)*/
+      resolveCrearAgenteEmpresarialFuture(usuarioCreadoFuture, currentSender)
+  }
 
-      println("Creando agente")
-      currentSender ! "done"
+  private def resolveCrearAgenteEmpresarialFuture(crearAgenteEmpresarialFuture: Future[Validation[PersistenceException, Int]], currentSender: ActorRef) {
+    crearAgenteEmpresarialFuture onComplete {
+      case sFailure(failure) => currentSender ! failure
+      case sSuccess(value) =>
+        value match {
+          case zSuccess(idUsuarioAgenteEmpresarial: Int) =>
 
+            currentSender ! ResponseMessage(OK, s"$idUsuarioAgenteEmpresarial")
+
+          case zFailure(error) =>
+            error match {
+              case errorPersistence: ErrorPersistenceEmpresa => currentSender ! errorPersistence.exception
+              case errorVal: ErrorValidacionEmpresa  =>
+                currentSender ! ResponseMessage(Conflict, errorVal.msg)
+            }
+        }
+    }
   }
 
 }

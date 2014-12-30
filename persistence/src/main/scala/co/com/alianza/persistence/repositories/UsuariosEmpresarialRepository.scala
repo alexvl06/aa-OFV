@@ -111,4 +111,10 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
       resolveTry(resultTry, "Agregar pin empresa del agente empresarial")
   }
 
+  def insertarAgenteEmpresarial(agenteEmpresarial : UsuarioEmpresarial): Future[Validation[PersistenceException, Int]] = loan {
+    implicit session =>
+      val resultTry = Try{ (UsuariosEmpresariales  returning UsuariosEmpresariales.map(_.id)) += agenteEmpresarial }
+      resolveTry(resultTry, "Agregar agente empresarial")
+  }
+
 }
