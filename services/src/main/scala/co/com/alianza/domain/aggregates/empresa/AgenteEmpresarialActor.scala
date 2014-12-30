@@ -13,7 +13,7 @@ import co.com.alianza.infrastructure.dto.PinEmpresa
 import co.com.alianza.infrastructure.messages.{UsuarioMessage, ResponseMessage}
 import co.com.alianza.infrastructure.messages.empresa.{CrearAgenteEMessage, UsuarioMessageCorreo, ReiniciarContrasenaAgenteEMessage}
 import co.com.alianza.microservices.{MailMessage, SmtpServiceClient}
-import co.com.alianza.persistence.entities.{IpsUsuario, UltimaContrasena}
+import co.com.alianza.persistence.entities.{UsuarioEmpresarialEmpresa, Empresa, IpsUsuario, UltimaContrasena}
 import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.token.{PinData, TokenPin}
 import co.com.alianza.util.transformers.ValidationT
@@ -61,12 +61,14 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
   implicit private val config: Config = MainActors.conf
 
   def receive = {
-
+//toUsuarioEmpresarialEmpresa(empresa, idUsuarioAgenteEmpresarial)
     case message: CrearAgenteEMessage => {
       val currentSender = sender()
       val usuarioCreadoFuture: Future[Validation[PersistenceException, Int]] = (for {
         idUsuarioAgenteEmpresarial <- ValidationT(DataAccessAdapter.crearAgenteEmpresarial(message.toEntityUsuarioAgenteEmpresarial()))
-        u <- ValidationT(DataAccessAdapter.crearIpsAgenteEmpresarial(toIpsUsuarioArray(message.ips, idUsuarioAgenteEmpresarial)))
+        empresa <- ValidationT(DataAccessAdapter.obtenerEmpresaPorNit(message.nit))
+        resultAsociarEmpresa <- ValidationT(DataAccessAdapter.asociarAgenteEmpresarialConEmpresa(UsuarioEmpresarialEmpresa(empresa.get.id, idUsuarioAgenteEmpresarial)))
+        resultCreacionIps <- ValidationT(DataAccessAdapter.crearIpsAgenteEmpresarial(toIpsUsuarioArray(message.ips, idUsuarioAgenteEmpresarial)))
       } yield {
         idUsuarioAgenteEmpresarial
       }).run

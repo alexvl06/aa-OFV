@@ -130,4 +130,16 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
       resolveTry(resultTry, "Agregar ips agente empresarial")
   }
 
+  def obtenerEmpresaPorNit(nit : String) : Future[Validation[PersistenceException, Option[Empresa]]] = loan {
+    implicit session =>
+      val resultTry = Try{ (Empresas.filter(_.nit === nit).list.headOption ) }
+      resolveTry(resultTry, "Agregar ips agente empresarial")
+  }
+
+  def asociarAgenteEmpresarialConEmpresa(usuarioEmpresarialEmpresa: UsuarioEmpresarialEmpresa) = loan {
+    implicit session =>
+      val resultTry = Try{ (UsuariosEmpresarialesEmpresa += usuarioEmpresarialEmpresa) }
+      resolveTry(resultTry, "Asociar usuario agente empresarial a la empresa")
+  }
+
 }
