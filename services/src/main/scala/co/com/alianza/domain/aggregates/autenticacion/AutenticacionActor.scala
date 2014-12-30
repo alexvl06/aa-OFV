@@ -78,8 +78,8 @@ class AutenticacionActor extends Actor with ActorLogging {
                     currentSender ! ResponseMessage(Unauthorized, errorUsuarioBloqueadoIntentosErroneos)
                   else if(valueResponse.estado == EstadosUsuarioEnum.pendienteActivacion.id)
                     currentSender ! ResponseMessage(Unauthorized, errorUsuarioBloqueadoPendienteActivacion)
-                  else if(valueResponse.estado == EstadosUsuarioEnum.pendienteConfronta.id)
-                    currentSender ! ResponseMessage(Unauthorized, errorUsuarioBloqueadoPendienteConfronta)
+                  //else if(valueResponse.estado == EstadosUsuarioEnum.pendienteConfronta.id)
+                    //currentSender ! ResponseMessage(Unauthorized, errorUsuarioBloqueadoPendienteConfronta)
                   else if(valueResponse.estado == EstadosUsuarioEnum.pendienteReinicio.id)
                     currentSender ! ResponseMessage(Unauthorized, errorUsuarioBloqueadoPendienteReinicio)
                   else {
