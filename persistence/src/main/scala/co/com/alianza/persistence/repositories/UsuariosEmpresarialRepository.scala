@@ -19,6 +19,7 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
   val UsuariosEmpresarialesAdmin = TableQuery[UsuarioEmpresarialAdminTable]
   val UsuariosEmpresarialesEmpresa = TableQuery[UsuarioEmpresarialEmpresaTable]
   val UsuariosEmpresarialesAdminEmpresa = TableQuery[UsuarioEmpresarialAdminEmpresaTable]
+  val ipsUsuarioEmpresarial = TableQuery[IpsUsuarioEmpresarialTable]
   val pinempresa = TableQuery[PinEmpresaTable]
 
   def obtieneUsuarioEmpresaPorNitYUsuario(nit: String, usuario: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = loan {
@@ -115,6 +116,18 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
     implicit session =>
       val resultTry = Try{ (UsuariosEmpresariales  returning UsuariosEmpresariales.map(_.id)) += agenteEmpresarial }
       resolveTry(resultTry, "Agregar agente empresarial")
+  }
+
+  def insertarIpAgenteEmpresarial(ip: IpsUsuario): Future[Validation[PersistenceException, Int]] = loan {
+    implicit session =>
+      val resultTry = Try{ (ipsUsuarioEmpresarial += ip) }
+      resolveTry(resultTry, "Agregar ip agente empresarial")
+  }
+
+  def insertarIpsAgenteEmpresarial(ips: Seq[IpsUsuario]) = loan {
+    implicit session =>
+      val resultTry = Try{ (ipsUsuarioEmpresarial ++= ips) }
+      resolveTry(resultTry, "Agregar ips agente empresarial")
   }
 
 }

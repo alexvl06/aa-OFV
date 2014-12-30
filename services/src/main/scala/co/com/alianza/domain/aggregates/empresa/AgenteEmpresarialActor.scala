@@ -13,7 +13,7 @@ import co.com.alianza.infrastructure.dto.PinEmpresa
 import co.com.alianza.infrastructure.messages.{UsuarioMessage, ResponseMessage}
 import co.com.alianza.infrastructure.messages.empresa.{CrearAgenteEMessage, UsuarioMessageCorreo, ReiniciarContrasenaAgenteEMessage}
 import co.com.alianza.microservices.{MailMessage, SmtpServiceClient}
-import co.com.alianza.persistence.entities.UltimaContrasena
+import co.com.alianza.persistence.entities.{IpsUsuario, UltimaContrasena}
 import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.token.{PinData, TokenPin}
 import co.com.alianza.util.transformers.ValidationT
@@ -39,10 +39,7 @@ class AgenteEmpresarialActorSupervisor extends Actor with ActorLogging {
   val agenteEmpresarialActor = context.actorOf(Props[AgenteEmpresarialActor].withRouter(RoundRobinPool(nrOfInstances = 2)), "agenteEmpresarialActor")
 
   def receive = {
-
-    case message: Any =>
-      agenteEmpresarialActor forward message
-
+    case message: Any => agenteEmpresarialActor forward message
   }
 
   override val supervisorStrategy = OneForOneStrategy() {
@@ -65,17 +62,16 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
 
   def receive = {
 
-    case message: CrearAgenteEMessage =>
-
+    case message: CrearAgenteEMessage => {
       val currentSender = sender()
-
-      val usuarioCreadoFuture : Future[Validation[PersistenceException, Int]] = (for{
-        idUsuarioAgenteEmpresarial <- ValidationT( DataAccessAdapter.crearAgenteEmpresarial(message.toEntityUsuarioAgenteEmpresarial()) )
-      }yield{
+      val usuarioCreadoFuture: Future[Validation[PersistenceException, Int]] = (for {
+        idUsuarioAgenteEmpresarial <- ValidationT(DataAccessAdapter.crearAgenteEmpresarial(message.toEntityUsuarioAgenteEmpresarial()))
+        u <- ValidationT(DataAccessAdapter.crearIpsAgenteEmpresarial(toIpsUsuarioArray(message.ips, idUsuarioAgenteEmpresarial)))
+      } yield {
         idUsuarioAgenteEmpresarial
       }).run
-
       resolveCrearAgenteEmpresarialFuture(usuarioCreadoFuture, currentSender)
+    }
   }
 
   private def resolveCrearAgenteEmpresarialFuture(crearAgenteEmpresarialFuture: Future[Validation[PersistenceException, Int]], currentSender: ActorRef) {
@@ -96,5 +92,7 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
         }
     }
   }
+
+  private def toIpsUsuarioArray(ips : Array[String], idUsuarioAgenteEmpresarial : Int) : Array[IpsUsuario] = ips.map(ip => IpsUsuario(idUsuarioAgenteEmpresarial, ip))
 
 }
