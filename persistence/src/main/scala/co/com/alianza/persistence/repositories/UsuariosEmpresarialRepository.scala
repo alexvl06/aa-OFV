@@ -28,9 +28,9 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
         for {
           ((usuarioEmpresarial, usuarioEmpresarialEmpresa), empresa) <-
           UsuariosEmpresariales join UsuariosEmpresarialesEmpresa on {
-            (ue, uee) => ue.id === uee.idUsuarioEmpresarial
+            (ue, uee) => ue.id === uee.idUsuarioEmpresarial  && ue.usuario === usuario
           } join Empresas on {
-            case ((ue, uee), e) => e.nit === nit && ue.usuario === usuario
+            case ((ue, uee), e) => e.nit === nit && uee.idEmpresa === e.id
           }
         } yield (usuarioEmpresarial)
         ) firstOption
@@ -43,9 +43,9 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
         for {
           ((usuarioEmpresarial, usuarioEmpresarialEmpresa), empresa) <-
           UsuariosEmpresarialesAdmin join UsuariosEmpresarialesAdminEmpresa on {
-            (ue, uee) => ue.id === uee.idUsuarioEmpresarialAdmin
+            (ue, uee) => ue.id === uee.idUsuarioEmpresarialAdmin && ue.usuario === usuario
           } join Empresas on {
-            case ((ue, uee), e) => e.nit === nit && ue.usuario === usuario
+            case ((ue, uee), e) => e.nit === nit  && uee.idEmpresa === e.id
           }
         } yield (usuarioEmpresarial)
         ) firstOption
