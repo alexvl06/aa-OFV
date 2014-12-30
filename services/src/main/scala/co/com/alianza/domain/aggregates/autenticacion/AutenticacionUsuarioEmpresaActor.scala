@@ -85,7 +85,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor {
                     if (passwordFrontEnd.contentEquals(passwordDB)) {
                       //Una vez el usuario se encuentre activo en el sistema, se valida por su estado en el core de alianza.
                       val futureCliente = obtenerClienteAlianza(valueResponse.tipoIdentificacion, valueResponse.identificacion, currentSender: ActorRef)
-                      realizarValidacionesClienteEmpresa(futureCliente, valueResponse, valueResponse.tipoIdentificacion, message.clientIp.get, currentSender: ActorRef)
+                      realizarValidacionesClienteEmpresa(futureCliente, valueResponse, valueResponse.tipoIdentificacion, message.clientIp.get, message.nit, currentSender: ActorRef)
                     } else
                       currentSender ! ejecutarExcepcionPasswordInvalido(valueResponse.identificacion, valueResponse.numeroIngresosErroneos, currentSender)
                   }
@@ -122,7 +122,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor {
                     if (passwordFrontEnd.contentEquals(passwordDB)) {
                       //Una vez el usuario se encuentre activo en el sistema, se valida por su estado en el core de alianza.
                       val futureCliente = obtenerClienteAlianza(valueResponse.tipoIdentificacion, valueResponse.identificacion, currentSender: ActorRef)
-                      realizarValidacionesUsuarioEmpresarialAdmin(futureCliente, valueResponse, valueResponse.tipoIdentificacion, message.clientIp.get, currentSender: ActorRef)
+                      realizarValidacionesUsuarioEmpresarialAdmin(futureCliente, valueResponse, valueResponse.tipoIdentificacion, message.clientIp.get, message.nit, currentSender: ActorRef)
                     } else
                       currentSender ! ejecutarExcepcionPasswordInvalido(valueResponse.identificacion, valueResponse.numeroIngresosErroneos, currentSender)
                   }
@@ -136,7 +136,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor {
   }
 
 
-  private def realizarValidacionesClienteEmpresa(futureCliente: Future[Validation[PersistenceException, Option[Cliente]]], usuario: UsuarioEmpresarial, messageTipoIdentificacion: Int, ip: String, currentSender: ActorRef) {
+  private def realizarValidacionesClienteEmpresa(futureCliente: Future[Validation[PersistenceException, Option[Cliente]]], usuario: UsuarioEmpresarial, messageTipoIdentificacion: Int, ip: String, nit : String, currentSender: ActorRef) {
     futureCliente onComplete {
       case Failure(failure) => currentSender ! failure
       case Success(value) =>
@@ -151,7 +151,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor {
                   validarFechaContrasena(usuario.id, usuario.fechaCaducidad, currentSender: ActorRef)
                   //Validacion de control de direccion IP del usuario
                   //TODO:                  validarEmpresaCliente(usuario.id.get, )
-                  validarControlIpUsuarioAgenteEmpresarial(usuario.identificacion, usuario.id, ip, valueResponseCliente.wcli_nombre, valueResponseCliente.wcli_dir_correo, valueResponseCliente.wcli_person, usuario.ipUltimoIngreso.getOrElse(""), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), currentSender: ActorRef)
+                  validarControlIpUsuarioAgenteEmpresarial(usuario.identificacion, usuario.id, ip, valueResponseCliente.wcli_nombre, valueResponseCliente.wcli_dir_correo, valueResponseCliente.wcli_person, usuario.ipUltimoIngreso.getOrElse(""), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), nit, currentSender: ActorRef)
                 } else
                   currentSender ! ResponseMessage(Unauthorized, errorClienteInactivoSP)
               case None => currentSender ! ResponseMessage(Unauthorized, errorClienteNoExisteSP)
@@ -161,7 +161,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor {
     }
   }
 
-  private def realizarValidacionesUsuarioEmpresarialAdmin(futureCliente: Future[Validation[PersistenceException, Option[Cliente]]], usuario: UsuarioEmpresarialAdmin, messageTipoIdentificacion: Int, ip: String, currentSender: ActorRef) {
+  private def realizarValidacionesUsuarioEmpresarialAdmin(futureCliente: Future[Validation[PersistenceException, Option[Cliente]]], usuario: UsuarioEmpresarialAdmin, messageTipoIdentificacion: Int, ip: String, nit : String, currentSender: ActorRef) {
     futureCliente onComplete {
       case Failure(failure) => currentSender ! failure
       case Success(value) =>
@@ -176,7 +176,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor {
                   validarFechaContrasena(usuario.id, usuario.fechaCaducidad, currentSender: ActorRef)
                   //Validacion de control de direccion IP del usuario
                   //TODO:                  validarEmpresaCliente(usuario.id.get, )
-                  validarControlIpUsuarioEmpresarialAdmin(usuario.identificacion, usuario.id, ip, valueResponseCliente.wcli_nombre, valueResponseCliente.wcli_dir_correo, valueResponseCliente.wcli_person, usuario.ipUltimoIngreso.getOrElse(""), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), currentSender: ActorRef)
+                  validarControlIpUsuarioEmpresarialAdmin(usuario.identificacion, usuario.id, ip, valueResponseCliente.wcli_nombre, valueResponseCliente.wcli_dir_correo, valueResponseCliente.wcli_person, usuario.ipUltimoIngreso.getOrElse(""), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), nit, currentSender: ActorRef)
                 } else
                   currentSender ! ResponseMessage(Unauthorized, errorClienteInactivoSP)
               case None => currentSender ! ResponseMessage(Unauthorized, errorClienteNoExisteSP)
@@ -186,11 +186,11 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor {
     }
   }
 
-  protected def validarControlIpUsuarioEmpresarialAdmin(numeroIdentificacion: String, idUsuario: Int, ip: String, nombreCliente: String, correoUsuario: String, tipoIdentificacion: String, ipUltimoIngreso: String, fechaUltimoIngreso: Date, currentSender: ActorRef) = {
+  protected def validarControlIpUsuarioEmpresarialAdmin(numeroIdentificacion: String, idUsuario: Int, ip: String, nombreCliente: String, correoUsuario: String, tipoIdentificacion: String, ipUltimoIngreso: String, fechaUltimoIngreso: Date, nit : String, currentSender: ActorRef) = {
     //Se valida que el control de direcciones IP del usuario se encuentre activo
     val resultControlIP = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerIpsUsuarioEmpresarialAdmin(idUsuario)
 
-    val tokenGenerado: String = Token.generarToken(nombreCliente, correoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso, TiposCliente.clienteAdministrador)
+    val tokenGenerado: String = Token.generarToken(nombreCliente, correoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso, TiposCliente.clienteAdministrador, Some(nit))
     val resultAsociarToken: Future[Validation[PersistenceException, Int]] = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.asociarTokenUsuarioEmpresarialAdmin(idUsuario, tokenGenerado)
 
     // TODO: para usuario empresarial Admin
@@ -225,11 +225,11 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor {
     }
   }
 
-  protected def validarControlIpUsuarioAgenteEmpresarial(numeroIdentificacion: String, idUsuario: Int, ip: String, nombreCliente: String, correoUsuario: String, tipoIdentificacion: String, ipUltimoIngreso: String, fechaUltimoIngreso: Date, currentSender: ActorRef) = {
+  protected def validarControlIpUsuarioAgenteEmpresarial(numeroIdentificacion: String, idUsuario: Int, ip: String, nombreCliente: String, correoUsuario: String, tipoIdentificacion: String, ipUltimoIngreso: String, fechaUltimoIngreso: Date, nit : String, currentSender: ActorRef) = {
     //Se valida que el control de direcciones IP del usuario se encuentre activo
     val resultControlIP = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerIpsUsuarioEmpresarial(idUsuario)
 
-    val tokenGenerado: String = Token.generarToken(nombreCliente, correoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso, TiposCliente.agenteEmpresarial)
+    val tokenGenerado: String = Token.generarToken(nombreCliente, correoUsuario, tipoIdentificacion, ipUltimoIngreso, fechaUltimoIngreso, TiposCliente.agenteEmpresarial, Some(nit))
     val resultAsociarToken: Future[Validation[PersistenceException, Int]] = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.asociarTokenUsuarioEmpresarial(idUsuario, tokenGenerado)
 
     // TODO: para usuario agente empresarial
