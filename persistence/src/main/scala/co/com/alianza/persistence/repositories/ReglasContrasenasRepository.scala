@@ -41,7 +41,6 @@ class ReglasContrasenasRepository(implicit executionContext: ExecutionContext) e
   }
 
   private def obtenerReglaTry(implicit session: Session, llave: String): Try[Option[ReglasContrasenas]] = Try {
-    println(reglasContrasenas)
     val result: Option[ReglasContrasenas] = reglasContrasenas.withFilter(x => x.llave.like(llave)).list.headOption
     result
   }

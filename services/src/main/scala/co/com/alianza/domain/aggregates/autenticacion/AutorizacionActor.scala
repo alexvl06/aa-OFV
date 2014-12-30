@@ -28,6 +28,7 @@ import scala.concurrent.Future
 import scalaz.std.AllInstances._
 import scala.util.{Success, Failure}
 import scalaz.Validation
+import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
 
 class AutorizacionActorSupervisor extends Actor with ActorLogging {
 
@@ -35,11 +36,20 @@ class AutorizacionActorSupervisor extends Actor with ActorLogging {
   import akka.actor.OneForOneStrategy
 
   val autorizacionActor = context.actorOf(Props[AutorizacionActor].withRouter(RoundRobinPool(nrOfInstances = 1)), "autorizacionActor")
+  val autorizacionUsuarioEmpresarialActor = context.actorOf(Props[AutorizacionUsuarioEmpresarialActor].withRouter(RoundRobinPool(nrOfInstances = 1)), "autorizacionUsuarioEmpresarialActor")
 
   def receive = {
 
+    case m: AutorizarUsuarioEmpresarialMessage =>
+      autorizacionUsuarioEmpresarialActor forward m
+      log info (m toString)
+
+    case m: AutorizarUsuarioEmpresarialAdminMessage =>
+      autorizacionUsuarioEmpresarialActor forward m
+      log info (m toString)
+
     case message: Any =>
-      autorizacionActor forward message
+      autorizacionActor forward message; log info (message toString)
 
   }
 
@@ -73,10 +83,7 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
       } yield {
         resultAutorizar
       }).run
-
       resolveFutureValidation(future, (x: ResponseMessage) => x, currentSender)
-
-
     case message: InvalidarToken =>
 
       val currentSender = sender()

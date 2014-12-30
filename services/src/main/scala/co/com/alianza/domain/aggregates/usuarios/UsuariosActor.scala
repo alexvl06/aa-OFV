@@ -49,8 +49,15 @@ class UsuariosActorSupervisor extends Actor with ActorLogging {
   import akka.actor.OneForOneStrategy
 
   val usuariosActor = context.actorOf(Props[UsuariosActor].withRouter(RoundRobinPool(nrOfInstances = 2)), "usuariosActor")
+  val usuarioEmpresarialActor = context.actorOf(Props[UsuarioEmpresarialActor].withRouter(RoundRobinPool(nrOfInstances = 2)), "usuarioEmpresarialActor")
 
   def receive = {
+
+    case message: ConsultaUsuarioEmpresarialMessage =>
+      usuarioEmpresarialActor forward message
+
+    case message: ConsultaUsuarioEmpresarialAdminMessage =>
+      usuarioEmpresarialActor forward message
 
     case message: Any =>
       usuariosActor forward message
@@ -131,6 +138,20 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
 
       resolveReiniciarContrasenaFuture(validarClienteFuture, currentSender, message)
 
+    case message: ConsultaUsuarioMessage =>
+      val currentSender = sender
+      if(message.token.isDefined)
+        co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerUsuarioToken(message.token.get) onComplete {
+          case sFailure( failure ) =>
+            currentSender ! failure
+          case sSuccess (value) => value match {
+            case zSuccess (response) => currentSender ! response
+            case zFailure( error ) => currentSender ! error
+          }
+        }
+      else
+        currentSender ! None
+
   }
 
 
@@ -192,8 +213,7 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
   private def enviarCorreoOlvidoContrasena( actualizarContrasenaFuture: Future[Validation[ErrorValidacion, Int]], correoCliente:String,  currentSender: ActorRef, message: OlvidoContrasenaMessage, idUsuario:Option[Int] ) = {
 
     actualizarContrasenaFuture onComplete {
-      case sFailure(failure) =>
-        currentSender ! failure
+      case sFailure(failure) => currentSender ! failure
       case sSuccess(value) =>
         value match {
           case zSuccess(response: Int) =>
