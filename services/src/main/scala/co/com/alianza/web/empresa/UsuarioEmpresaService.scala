@@ -13,7 +13,7 @@ import co.com.alianza.infrastructure.dto.security.UsuarioAuth
  */
 class UsuarioEmpresaService extends Directives with AlianzaCommons   with CrossHeaders with AlianzaActors {
 
-  import UsuariosEmpresaMessagesJsonSupport._
+  import CrearAgenteEMessageJsonSupport._
 
   def secureUserRouteEmpresa(user: UsuarioAuth) = {
     pathPrefix("empresa") {
@@ -26,21 +26,19 @@ class UsuarioEmpresaService extends Directives with AlianzaCommons   with CrossH
             }
           }
         }
-      }
-    } ~
-    pathPrefix("empresa") {
-      path("usuarioAgenteEmpresarial") {
-        respondWithMediaType(mediaType) {
-          pathEndOrSingleSlash {
-            put {
-              entity(as[CrearAgenteEMessage]) {
-                data =>
-                  requestExecute(data, agenteEmpresarialActor)
+      } ~
+        path("usuarioAgenteEmpresarial") {
+          respondWithMediaType(mediaType) {
+            pathEndOrSingleSlash {
+              put {
+                entity(as[CrearAgenteEMessage]) {
+                  data =>
+                    requestExecute(data, agenteEmpresarialActor)
+                }
               }
             }
           }
         }
-      }
     }
 
   }

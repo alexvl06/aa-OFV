@@ -12,7 +12,7 @@ import co.com.alianza.commons.enumerations.TiposCliente
 object  DataAccessTranslator {
 
   def translateUsuario(usuario:List[dUsuario]) = {
-   usuario map ( ue => UsuarioEmpresarial(ue.id, ue.correo, ue.fechaActualizacion, ue.identificacion, ue.tipoIdentificacion, ue.usuario, ue.estado, ue.contrasena, ue.numeroIngresosErroneos, ue.ipUltimoIngreso, ue.fechaUltimoIngreso, TiposCliente.agenteEmpresarial, ue.nombreUsuario))
+   usuario map ( ue => UsuarioEmpresarial(ue.id, ue.correo, ue.fechaActualizacion, ue.identificacion, ue.tipoIdentificacion, ue.usuario, ue.estado, ue.contrasena, ue.numeroIngresosErroneos, ue.ipUltimoIngreso, ue.fechaUltimoIngreso, TiposCliente.agenteEmpresarial, Some(ue.nombreUsuario)))
   }
 
 }
