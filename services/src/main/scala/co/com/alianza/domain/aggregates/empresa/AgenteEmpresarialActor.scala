@@ -122,7 +122,7 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
           case zSuccess(intResult) =>
             if(intResult == 1){
               new SmtpServiceClient().send(buildMessage(pin, UsuarioMessageCorreo(message.correo, message.nit, TipoIdentificacion.NIT.id), "alianza.smtp.templatepin.creacionAgenteEmpresarial", "alianza.smtp.asunto.creacionAgenteEmpresarial"), (_, _) => Unit)
-              currentSender ! ResponseMessage(Created, "Creación de agente empresarial y envío de correo OK")
+              currentSender ! ResponseMessage(Created, idUsuarioAgenteEmpresarial.toString)
             }
         }
     }
