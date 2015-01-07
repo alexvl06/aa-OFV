@@ -155,10 +155,16 @@ object DataAccessAdapter {
     repo.actualizarEstadoUsuario( idUsuario, estado )
   }
 
+  def actualizarEstadoUsuarioEmpresarialAdmin( idUsuario:Int, estado:Int ) : Future[Validation[PersistenceException, Int]] =
+    new UsuarioEmpresarialAdminRepository() actualizarEstadoUsuario ( idUsuario, estado )
+
   def cambiarPassword (idUsuario: Int, password: String): Future[Validation[PersistenceException, Int]] = {
     val repo = new UsuariosRepository()
     repo.cambiarPassword(idUsuario, password)
   }
+
+  def cambiarPasswordUsuarioEmpresarialAdmin (idUsuario: Int, password: String): Future[Validation[PersistenceException, Int]] =
+    new UsuarioEmpresarialAdminRepository() cambiarPassword (idUsuario, password)
 
   def asociarPerfiles (perfiles:List[PerfilUsuario]): Future[Validation[PersistenceException, List[Int]]] = {
     val repo = new UsuariosRepository()
