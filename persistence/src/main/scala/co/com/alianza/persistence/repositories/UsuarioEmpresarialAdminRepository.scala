@@ -29,4 +29,16 @@ class UsuarioEmpresarialAdminRepository ( implicit executionContext: ExecutionCo
       resolveTry(resultTry, "Actualizar token de usuario empresarial")
   }
 
+  def actualizarEstadoUsuario( idUsuario:Int, estado:Int ): Future[Validation[PersistenceException, Int]] = loan {
+    implicit session =>
+      val resultTry = Try{ UsuariosEmpresarialesAdmin.filter( _.id === idUsuario ).map(_.estado ).update(estado)  }
+      resolveTry(resultTry, "Actualizar estado de usuario cliente admin")
+  }
+
+  def cambiarPassword (idUsuario: Int, password: String): Future[Validation[PersistenceException, Int]] = loan {
+    implicit session =>
+      val resultTry = Try { UsuariosEmpresarialesAdmin.filter(_.id === idUsuario).map(_.contrasena).update(Some (password)) }
+      resolveTry(resultTry, "Cambiar la contraseña de usuario cliente admin")
+  }
+
 }

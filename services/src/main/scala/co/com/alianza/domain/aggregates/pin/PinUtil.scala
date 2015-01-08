@@ -8,7 +8,7 @@ import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.domain.aggregates.usuarios.{ErrorPersistence, ErrorValidacion, ErrorPin}
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.configuraciones.{DataAccessTranslator => dataAccessTransConf, DataAccessAdapter => dataAccesAdaptarConf}
-import co.com.alianza.infrastructure.dto.{Configuracion, PinUsuario}
+import co.com.alianza.infrastructure.dto.{Configuracion, PinUsuario, PinUsuarioEmpresarialAdmin}
 import co.com.alianza.infrastructure.messages.{ErrorMessage, ResponseMessage}
 import co.com.alianza.util.json.MarshallableImplicits._
 import spray.http.StatusCodes._
@@ -50,7 +50,39 @@ object PinUtil {
     }
   }
 
+  def validarPinUsuarioEmpresarialAdmin(response: Option[PinUsuarioEmpresarialAdmin]) = {
+    response match {
+      case Some(valueResponse) =>
+        val pinHash = deserializarPin(valueResponse.token, valueResponse.fechaExpiracion)
+        if (pinHash == valueResponse.tokenHash) {
+          val fecha = new Date()
+          if (fecha.getTime < valueResponse.fechaExpiracion.getTime)
+            ResponseMessage(OK)
+          else
+            ResponseMessage(Conflict, errorPinNoEncontrado)
+        }
+        else {
+          ResponseMessage(Conflict, errorPinNoEncontrado)
+        }
+      case None => ResponseMessage(Conflict, errorPinNoEncontrado)
+    }
+  }
+
   def validarPinFuture(response: Option[PinUsuario]): Future[Validation[ErrorValidacion, PinUsuario]] = Future {
+    response match {
+      case Some(valueResponse) =>
+        val pinHash = deserializarPin(valueResponse.token, valueResponse.fechaExpiracion)
+        if (pinHash == valueResponse.tokenHash) {
+          val fecha = new Date()
+          if (fecha.getTime < valueResponse.fechaExpiracion.getTime) zSuccess(valueResponse)
+          else zFailure(ErrorPin(errorPinNoEncontrado))
+        }
+        else zFailure(ErrorPin(errorPinNoEncontrado))
+      case None => zFailure(ErrorPin(errorPinNoEncontrado))
+    }
+  }
+
+  def validarPinUsuarioEmpresarialAdminFuture(response: Option[PinUsuarioEmpresarialAdmin]): Future[Validation[ErrorValidacion, PinUsuarioEmpresarialAdmin]] = Future {
     response match {
       case Some(valueResponse) =>
         val pinHash = deserializarPin(valueResponse.token, valueResponse.fechaExpiracion)

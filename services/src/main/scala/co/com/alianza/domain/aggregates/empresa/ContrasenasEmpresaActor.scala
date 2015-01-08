@@ -97,6 +97,7 @@ class ContrasenasEmpresaActor extends Actor with ActorLogging with AlianzaActors
               val pinEmpresaAgenteEmpresarial: entities.PinEmpresa = DataAccessTranslator.translateEntityPinEmpresa(pin)
 
               val resultCrearPinEmpresaAgenteEmpresarial = for {
+                idResultEliminarPinesEmpresaAnteriores <- DataAccessAdapter.eliminarPinEmpresaReiniciarAnteriores(responseFutureReiniciarContraAE._1, UsoPinEmpresaEnum.usoReinicioContrasena.id)
                 idResultGuardarPinEmpresa <- DataAccessAdapter.crearPinEmpresaAgenteEmpresarial(pinEmpresaAgenteEmpresarial)
               } yield {
                 idResultGuardarPinEmpresa
@@ -108,12 +109,16 @@ class ContrasenasEmpresaActor extends Actor with ActorLogging with AlianzaActors
                   valueResult match {
                     case zFailure(fail) => currentSender ! fail
                     case zSuccess(intResult) =>
-                      if(intResult == 1){
+                      if(intResult == 1) {
                         new SmtpServiceClient().send(buildMessage(pin, UsuarioMessageCorreo(message.correoUsuarioAgenteEmpresarial, message.numIdentificacionAgenteEmpresarial, message.tipoIdentiAgenteEmpresarial), "alianza.smtp.templatepin.reiniciarContrasenaEmpresa", "alianza.smtp.asunto.reiniciarContrasenaEmpresa"), (_, _) => Unit)
                         currentSender ! ResponseMessage(Created, "Reinicio de contraseña agente empresarial OK")
+                      } else {
+                        log.info("Error... Al momento de guardar el pin empresa")
                       }
                   }
               }
+            } else {
+              log.info("Error... Al momento de cambiar el estado a pendiente de reinicio de contraseña")
             }
 
           case zFailure(error) =>

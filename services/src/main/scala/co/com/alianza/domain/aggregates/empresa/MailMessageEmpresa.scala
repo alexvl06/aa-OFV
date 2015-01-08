@@ -10,7 +10,7 @@ import com.typesafe.config.Config
  */
 class MailMessageEmpresa(templateBody: String) extends MailTemplate {
   def getMessagePin(datos: PinEmpresa)(implicit config: Config): String = {
-    val medida = "hora/s"
+    val medida = "hora(s)"
     engine.layout(config.getString(templateBody), Map("pin" -> datos.tokenHash, "medida" -> medida))
   }
 }

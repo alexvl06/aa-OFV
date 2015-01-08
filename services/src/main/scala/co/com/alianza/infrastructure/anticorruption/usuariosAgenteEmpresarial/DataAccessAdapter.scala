@@ -43,6 +43,10 @@ object DataAccessAdapter {
     repo.insertarIpsAgenteEmpresarial(ipAgenteEmpresarial)
   }
 
+  def eliminarPinEmpresaReiniciarAnteriores(idUsuarioAgenteEmpresarial: Int, usoPinEmpresa: Int): Future[Validation[PersistenceException, Int]] = {
+    repo.eliminarPinEmpresaReiniciarAnteriores(idUsuarioAgenteEmpresarial, usoPinEmpresa)
+  }
+
   def obtenerEmpresaPorNit(nit: String) : Future[Validation[PersistenceException, Option[Empresa]]] = {
     repo.obtenerEmpresaPorNit(nit)
   }
