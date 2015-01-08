@@ -40,7 +40,7 @@ import co.com.alianza.util.token.PinData
 import co.com.alianza.infrastructure.messages.UsuarioMessage
 import co.com.alianza.infrastructure.messages.ResponseMessage
 import com.asobancaria.cifinpruebas.cifin.confrontav2plusws.services.ConfrontaUltraWS.{ConfrontaUltraWSSoapBindingStub, ConfrontaUltraWebServiceServiceLocator}
-import co.cifin.confrontaultra.dto.ultra.{CuestionarioULTRADTO, ParametrosULTRADTO, ParametrosSeguridadULTRADTO}
+import co.cifin.confrontaultra.dto.ultra.{ResultadoEvaluacionCuestionarioULTRADTO, CuestionarioULTRADTO, ParametrosULTRADTO, ParametrosSeguridadULTRADTO}
 import co.com.alianza.util.json.JsonUtil
 
 
@@ -257,7 +257,15 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
       parametrosUltra.setFechaExpedicion(message.fechaExpedicion.get)
 
       val response: CuestionarioULTRADTO = stub.obtenerCuestionario(parametros, parametrosUltra)
-      currentSender ! JsonUtil.toJson(response)
+      if(response.getRespuestaProceso.getCodigoRespuesta == 1){
+        currentSender ! JsonUtil.toJson(response)
+      } else {
+        val respToSender = new ResultadoEvaluacionCuestionarioULTRADTO()
+        respToSender.setRespuestaProceso(response.getRespuestaProceso)
+        respToSender.getRespuestaProceso.setDescripcionRespuesta("No es posible realizar el registro, por favor llamar a la línea de atención 6447700 ext 1104")
+        currentSender !  respToSender.toJson
+      }
+
   }
 
   private def validaSolicitudCliente(message: OlvidoContrasenaMessage): Future[Validation[ErrorValidacion, Cliente]] = {
