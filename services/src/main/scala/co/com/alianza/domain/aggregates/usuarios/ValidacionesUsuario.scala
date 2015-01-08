@@ -127,6 +127,7 @@ object  ValidacionesUsuario {
     })
   }
 
+
   private def getTipoPersona(message:UsuarioMessage):String = {
     message.tipoIdentificacion match{
       case  TipoIdentificacion.FID.identificador => "F"
