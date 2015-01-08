@@ -9,9 +9,9 @@ import co.com.alianza.persistence.entities.{PermisoTransaccionalUsuarioEmpresari
 object PermisoTransaccionalDataAccessTranslator {
 
   def aDTO(e: ePermisoTransaccionalUsuarioEmpresarial) =
-    PermisoTransaccionalUsuarioEmpresarial(e.idEncargo, e.idAgente, e.tipo, e.montoMaximoTransaccion, e.montoMaximoDiario, e.minimoNumeroPersonas)
+    PermisoTransaccionalUsuarioEmpresarial(e.idEncargo, e.idAgente, e.tipoTransaccion, e.tipoPermiso, e.montoMaximoTransaccion, e.montoMaximoDiario, e.minimoNumeroPersonas)
 
   def aEntity(dto: PermisoTransaccionalUsuarioEmpresarial) =
-    ePermisoTransaccionalUsuarioEmpresarial(dto.idEncargo, dto.idAgente, dto.tipo, dto.montoMaximoTransaccion, dto.montoMaximoDiario, dto.minimoNumeroPersonas)
+    ePermisoTransaccionalUsuarioEmpresarial(dto.idEncargo, dto.idAgente, dto.tipoTransaccion , dto.tipoPermiso, dto.montoMaximoTransaccion, dto.montoMaximoDiario, dto.minimoNumeroPersonas)
 
 }

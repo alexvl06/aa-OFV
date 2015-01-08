@@ -24,12 +24,13 @@ class PermisoTransaccionalRepository ( implicit executionContext: ExecutionConte
       resolveTry(
         Try {
           val q = for {
-            p <- tabla if p.idEncargo === permiso.idEncargo && p.idAgente === permiso.idAgente
+            p <- tabla if p.idEncargo === permiso.idEncargo && p.idAgente === permiso.idAgente && p.tipoTransaccion === permiso.tipoTransaccion
           } yield (p.montoMaximoTransaccion, p.montoMaximoDiario, p.minimoNumeroPersonas)
-          val regMod = q.update((permiso.montoMaximoTransaccion, permiso.montoMaximoDiario, permiso.minimoNumeroPersonas))
-          if(regMod==0)
-            (tabla returning tabla.map(_=>1)) += permiso
-          else
+          val regMod = q update ((permiso.montoMaximoTransaccion, permiso.montoMaximoDiario, permiso.minimoNumeroPersonas))
+          if(regMod==0){
+            tabla += permiso
+            1
+          } else
             regMod
         },
         "Guardar permiso transaccional de agente"

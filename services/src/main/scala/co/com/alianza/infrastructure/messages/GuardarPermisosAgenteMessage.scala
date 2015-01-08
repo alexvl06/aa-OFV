@@ -10,6 +10,6 @@ import co.com.alianza.infrastructure.dto.PermisoTransaccionalUsuarioEmpresarial
 case class GuardarPermisosAgenteMessage (permisos: List[PermisoTransaccionalUsuarioEmpresarial]) extends MessageService
 
 object PermisosTransaccionalesJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
-  implicit val PermisoTransaccionalUsuarioEmpresarialFormat = jsonFormat6(PermisoTransaccionalUsuarioEmpresarial)
+  implicit val PermisoTransaccionalUsuarioEmpresarialFormat = jsonFormat7(PermisoTransaccionalUsuarioEmpresarial)
   implicit val GuardarPermisosAgenteFormat = jsonFormat1(GuardarPermisosAgenteMessage)
 }

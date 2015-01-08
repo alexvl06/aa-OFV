@@ -39,19 +39,21 @@ class PermisoTransaccionalActorSupervisor extends Actor with ActorLogging {
 class PermisoTransaccionalActor extends Actor with ActorLogging with FutureResponse {
 
   implicit val _: ExecutionContext = context.dispatcher
-  implicit val timeout: Timeout = 10 seconds
+  implicit val timeout: Timeout = 120 seconds
 
   var numeroPermisos = 0
 
   def receive = {
     case GuardarPermisosAgenteMessage(permisos) =>
+      log info ("Llegó mensaje de permisos: "+permisos.length)
       val currentSender = sender()
       numeroPermisos = permisos.length
       permisos foreach { p => self ! ((p, currentSender): (PermisoTransaccionalUsuarioEmpresarial, ActorRef)) }
 
     case (permiso: PermisoTransaccionalUsuarioEmpresarial, currentSender: ActorRef) =>
-      DataAccessAdapter.guardarPermiso(permiso)
-      numeroPermisos-=1
+      log info ("Llegó permiso: "+permiso.toString)
+      DataAccessAdapter guardaPermiso(permiso)
+      numeroPermisos -= 1
       if (numeroPermisos==0) {
         val future = (for {
           result <- ValidationT(Future.successful(Validation.success(ResponseMessage(OK, "Guardado de permisos correcto"))))
@@ -59,7 +61,7 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
           result
         }).run
         resolveFutureValidation(future, (x: ResponseMessage) => x, currentSender)
-        context.stop(self)
+        context stop self
       }
 
   }

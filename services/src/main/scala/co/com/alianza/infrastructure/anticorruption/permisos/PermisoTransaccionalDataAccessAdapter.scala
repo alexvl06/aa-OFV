@@ -17,7 +17,7 @@ object PermisoTransaccionalDataAccessAdapter {
 
   val DataAccessTranslator = PermisoTransaccionalDataAccessTranslator
 
-  def guardarPermiso (permiso: PermisoTransaccionalUsuarioEmpresarial) : Future[Validation[PersistenceException, Int]] =
+  def guardaPermiso (permiso: PermisoTransaccionalUsuarioEmpresarial) : Future[Validation[PersistenceException, Int]] =
     new PermisoTransaccionalRepository guardarPermiso (DataAccessTranslator aEntity permiso )
 
 }
