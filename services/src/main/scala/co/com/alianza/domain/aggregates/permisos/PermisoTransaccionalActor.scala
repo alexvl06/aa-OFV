@@ -45,13 +45,11 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
 
   def receive = {
     case GuardarPermisosAgenteMessage(permisos) =>
-      log info ("Llegó mensaje de permisos: "+permisos.length)
       val currentSender = sender()
       numeroPermisos = permisos.length
       permisos foreach { p => self ! ((p, currentSender): (PermisoTransaccionalUsuarioEmpresarial, ActorRef)) }
 
     case (permiso: PermisoTransaccionalUsuarioEmpresarial, currentSender: ActorRef) =>
-      log info ("Llegó permiso: "+permiso.toString)
       DataAccessAdapter guardaPermiso(permiso)
       numeroPermisos -= 1
       if (numeroPermisos==0) {
