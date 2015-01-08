@@ -6,8 +6,8 @@
         </encoder>
     </appender>
 
-    <logger name="akka.remote.EndpointWriter" level="ERROR"/>
-    <logger name="spray.can.server.HttpServerConnection" level="ERROR" />
+    <logger name="akka.remote.EndpointWriter" level="INFO"/>
+    <logger name="spray.can.server.HttpServerConnection" level="INFO" />
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <!--See also http://logback.qos.ch/manual/appenders.html#RollingFileAppender-->
@@ -20,8 +20,10 @@
         </layout>
     </appender>
 
+    <logger name="spray.can.server" level="ERROR"/>
 
-    <root level="ERROR">
+
+    <root level="INFO">
         <appender-ref ref="FILE" />
         <appender-ref ref="STDOUT" />
     </root>
