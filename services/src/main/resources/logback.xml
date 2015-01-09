@@ -20,7 +20,10 @@
         </layout>
     </appender>
 
-    <logger name="spray.can.server" level="ERROR"/>
+    <logger name="spray.can.server.HttpServerConnection" level="OFF">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="FILE" />
+    </logger>
 
 
     <root level="INFO">
