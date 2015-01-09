@@ -44,8 +44,9 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
   case class RestaVerificacionMessage(currentSender: ActorRef)
 
   def receive = {
-    case GuardarPermisosAgenteMessage(permisos) =>
+    case GuardarPermisosAgenteMessage(idAgente, encargosPermisos) =>
       val currentSender = sender()
+      val permisos = encargosPermisos flatMap {e => e.permisos.map(_.copy(idEncargo = e.wspf_plan, idAgente = idAgente))}
       numeroPermisos = permisos.length
       permisos foreach { p => self ! ((p, currentSender): (PermisoTransaccionalUsuarioEmpresarial, ActorRef)) }
 
