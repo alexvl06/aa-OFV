@@ -79,13 +79,16 @@ object  ValidacionesUsuario {
 
   def validaCaptcha(message:UsuarioMessage): Future[Validation[ErrorValidacion, Unit.type]] = {
     val validador = new ValidarCaptcha()
-
     val validacionFuture = validador.validarCaptcha(message.clientIp.get, message.challenge,message.uresponse)
 
     validacionFuture.map(_.leftMap(pe => ErrorCaptcha(errorCaptcha)).flatMap{
       (x:Boolean) => x match{
-        case true => zSuccess(Unit)
-        case _ => zFailure(ErrorCaptcha(errorCaptcha))
+        case true =>
+          println("{{{{{   SUCCESS   }}}}}}}}}")
+          zSuccess(Unit)
+        case _ =>
+          println("{{{{{   FAILURE   }}}}}}}}}")
+          zFailure(ErrorCaptcha(errorCaptcha))
       }
     })
   }
@@ -97,6 +100,16 @@ object  ValidacionesUsuario {
       (x:Option[Usuario]) => x match{
         case None => zSuccess(Unit)
         case _ => zFailure(ErrorDocumentoExiste(errorUsuarioExiste))
+      }
+    })
+  }
+
+  def validacionUsuarioNumDoc(message:UsuarioMessage): Future[Validation[ErrorValidacion, Option[Usuario]]] = {
+    val usuarioFuture = DataAccessAdapterUsuario.obtenerUsuarioNumeroIdentificacion(message.identificacion)
+    usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message,pe)).flatMap{
+      (x:Option[Usuario]) => x match{
+        case Some(usuarioEncontrado) => zSuccess(Some(usuarioEncontrado))
+        case _ => zFailure(ErrorUsuarioNoExiste(errorUsuarioNoExiste))
       }
     })
   }
@@ -164,5 +177,6 @@ object  ValidacionesUsuario {
   private val errorCaptcha = ErrorMessage("409.6", "Valor captcha incorrecto", "Valor captcha incorrecto").toJson
   private val errorContrasenaActualNoExiste = ErrorMessage("409.7", "No existe la contrasena actual", "No existe la contrasena actual").toJson
   private val errorPin = ErrorMessage("409.8", "Error en el pin", "Ocurrió un error al obtener el tiempo de expiracion del pin").toJson
+  private val errorUsuarioNoExiste = ErrorMessage("409.9", "No existe el usuario", "No existe el usuario").toJson
 
 }
