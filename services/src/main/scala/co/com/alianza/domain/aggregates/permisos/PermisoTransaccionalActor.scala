@@ -23,8 +23,6 @@ import co.com.alianza.infrastructure.anticorruption.permisos.{PermisoTransaccion
  */
 class PermisoTransaccionalActorSupervisor extends Actor with ActorLogging {
 
-//  val permisoTransaccionalActor = context.actorOf(Props[PermisoTransaccionalActor], "permisoTransaccionalActor")
-
   def receive = { case message: GuardarPermisosAgenteMessage =>  context actorOf(Props[PermisoTransaccionalActor]) forward message }
 
   override val supervisorStrategy = OneForOneStrategy() {
@@ -42,6 +40,8 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
   implicit val timeout: Timeout = 120 seconds
 
   var numeroPermisos = 0
+  
+  case class RestaVerificacionMessage(currentSender: ActorRef)
 
   def receive = {
     case GuardarPermisosAgenteMessage(permisos) =>
@@ -50,14 +50,17 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
       permisos foreach { p => self ! ((p, currentSender): (PermisoTransaccionalUsuarioEmpresarial, ActorRef)) }
 
     case (permiso: PermisoTransaccionalUsuarioEmpresarial, currentSender: ActorRef) =>
-      DataAccessAdapter guardaPermiso(permiso)
+      val future = (for {
+        result <- ValidationT(DataAccessAdapter guardaPermiso permiso)
+      } yield result).run
+      resolveFutureValidation(future, (x: Int) => RestaVerificacionMessage(currentSender), self)
+
+    case RestaVerificacionMessage(currentSender) =>
       numeroPermisos -= 1
       if (numeroPermisos==0) {
         val future = (for {
           result <- ValidationT(Future.successful(Validation.success(ResponseMessage(OK, "Guardado de permisos correcto"))))
-        } yield {
-          result
-        }).run
+        } yield result).run
         resolveFutureValidation(future, (x: ResponseMessage) => x, currentSender)
         context stop self
       }
