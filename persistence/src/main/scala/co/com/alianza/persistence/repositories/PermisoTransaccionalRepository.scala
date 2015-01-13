@@ -30,29 +30,38 @@ class PermisoTransaccionalRepository ( implicit executionContext: ExecutionConte
           val regMod = q update ((permiso.montoMaximoTransaccion, permiso.montoMaximoDiario, permiso.minimoNumeroPersonas))
           if(regMod==0){
             tabla += permiso
+            guardarAgentesPermiso(permiso, idsAgentes)
             1
-          } else
+          } else {
+            guardarAgentesPermiso(permiso, idsAgentes)
             regMod
+          }
         },
         "Guardar permiso transaccional de agente"
       )
   }
 
-  private[this] def guardarAgentesPermiso(permiso: PermisoTransaccionalUsuarioEmpresarial, idsAgentes: Option[List[Int]] = None) = {
-    if(idsAgentes.isDefined && !idsAgentes.get.isEmpty){
+  private[this] def guardarAgentesPermiso(permiso: PermisoTransaccionalUsuarioEmpresarial, idsAgentes: Option[List[Int]] = None)(implicit s: Session) = {
+    if(idsAgentes.isDefined && !idsAgentes.get.isEmpty && idsAgentes.get.head!=0){
       val ids = idsAgentes.get
       val q = for {
         au <- tablaAutorizadores if au.idEncargo === permiso.idEncargo && au.idAgente === permiso.idAgente && au.tipoTransaccion === permiso.tipoTransaccion
       } yield au
-      val ausentes = ids.diff(q.list.map(_.idAutorizador))
-      val q2 = for{
-        aut <- tablaAutorizadores if aut.idAutorizador in ausentes
-      } yield _
-      if(regMod==0){
-        tabla += permiso
-        1
-      } else
-        regMod
+      val nuevos = ids.diff(q.list.map{_.idAutorizador})
+      println("Nuevos: "+nuevos.toString)
+      val removidos = q.list.map{_.idAutorizador}.diff(ids)
+      println("Removidos: "+nuevos.toString)
+      nuevos foreach {
+        id =>
+          tablaAutorizadores += PermisoTransaccionalUsuarioEmpresarialAutorizador(permiso.idEncargo, permiso.idAgente, permiso.tipoTransaccion, id)
+      }
+      removidos foreach {
+        id =>
+          q filter {_.idAutorizador===id} delete
+      }
+//      val q2 = for{
+//        aut <- tablaAutorizadores if aut.idAutorizador in ausentes
+//      } yield _
     }
   }
 
