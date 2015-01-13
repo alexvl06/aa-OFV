@@ -43,12 +43,20 @@ class UsuariosEmpresaRepository ( implicit executionContext: ExecutionContext) e
           } join UsuariosEmpresarialesEmpresa on {
             case ((uea, ueae), uee) => ueae.idEmpresa === uee.idEmpresa
           } join UsuariosEmpresariales on {
-            case (((uea, ueae), uee), ae) => uee.idUsuarioEmpresarial === ae.id || ae.correo === correoUsuario || ae.usuario === usuario || ae.estado === estadoUsuario || ae.nombreUsuario === nombreUsuario
+            case (((uea, ueae), uee), ae) => (uee.idUsuarioEmpresarial === ae.id && ueae.idEmpresa === uee.idEmpresa && uea.id === ueae.idUsuarioEmpresarialAdmin && uea.id === idClienteAdmin ) && ( if( correoUsuario != null && !correoUsuario.isEmpty ) ae.correo === correoUsuario else if( usuario != null && !usuario.isEmpty )  ae.usuario === usuario  else if( nombreUsuario != null && !nombreUsuario.isEmpty ) ae.nombreUsuario === nombreUsuario else ae.estado inSet obtenerListaEstados( estadoUsuario ) )
           }
         } yield (agenteEmpresarial)
           ).list
       }
       resolveTry(resultTry, "Consulta agentes empresariales que pertenezcan a la empresa del cliente administrador y cumpla con parametros de busqueda")
+  }
+
+
+  private def obtenerListaEstados( estadoUsuarioBusqueda:Int ) : List[Int] = {
+    if( estadoUsuarioBusqueda == -1 )
+      List( 0, 1, 2, 3 )
+    else
+      List( estadoUsuarioBusqueda )
   }
 
 

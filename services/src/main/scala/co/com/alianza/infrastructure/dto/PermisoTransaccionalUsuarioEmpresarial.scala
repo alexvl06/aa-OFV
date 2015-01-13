@@ -6,4 +6,4 @@ package co.com.alianza.infrastructure.dto
 case class PermisoTransaccionalUsuarioEmpresarial (
                                                     idEncargo: String, idAgente: Int, tipoTransaccion: Int,
                                                     tipoPermiso: Int, montoMaximoTransaccion: Option[Double],
-                                                    montoMaximoDiario: Option[Double], minimoNumeroPersonas: Option[Int])
+                                                    montoMaximoDiario: Option[Double], minimoNumeroPersonas: Option[Int], seleccionado: Boolean = false)
