@@ -13,13 +13,14 @@ import scala.util.Try
 class PermisoTransaccionalRepository ( implicit executionContext: ExecutionContext) extends AlianzaRepository {
 
   val tabla = TableQuery[PermisoTransaccionalUsuarioEmpresarialTable]
+  val tablaAutorizadores = TableQuery[PermisoTransaccionalUsuarioEmpresarialAutorizadorTable]
 
   /**
    * Crea o actualiza un permiso
    * @param permiso
    * @return
    */
-  def guardarPermiso(permiso: PermisoTransaccionalUsuarioEmpresarial) = loan {
+  def guardarPermiso(permiso: PermisoTransaccionalUsuarioEmpresarial, idsAgentes: Option[List[Int]] = None) = loan {
     implicit session =>
       resolveTry(
         Try {
@@ -29,12 +30,32 @@ class PermisoTransaccionalRepository ( implicit executionContext: ExecutionConte
           val regMod = q update ((permiso.montoMaximoTransaccion, permiso.montoMaximoDiario, permiso.minimoNumeroPersonas))
           if(regMod==0){
             tabla += permiso
+            guardarAgentesPermiso(permiso, idsAgentes)
             1
-          } else
+          } else {
+            guardarAgentesPermiso(permiso, idsAgentes)
             regMod
+          }
         },
         "Guardar permiso transaccional de agente"
       )
+  }
+
+  private[this] def guardarAgentesPermiso(permiso: PermisoTransaccionalUsuarioEmpresarial, idsAgentes: Option[List[Int]] = None)(implicit s: Session) = {
+    if(idsAgentes.isDefined && !idsAgentes.get.isEmpty && idsAgentes.get.head!=0){
+      val ids = idsAgentes.get
+      val q = for {
+        au <- tablaAutorizadores if au.idEncargo === permiso.idEncargo && au.idAgente === permiso.idAgente && au.tipoTransaccion === permiso.tipoTransaccion
+      } yield au
+      val existentes = q.list.map{_.idAutorizador}
+      val nuevos = ids.diff(existentes)
+      val removidos = existentes.diff(ids)
+      nuevos foreach {
+        id =>
+          tablaAutorizadores += PermisoTransaccionalUsuarioEmpresarialAutorizador(permiso.idEncargo, permiso.idAgente, permiso.tipoTransaccion, id)
+      }
+      removidos foreach { id => q filter {_.idAutorizador===id} delete }
+    }
   }
 
 }
