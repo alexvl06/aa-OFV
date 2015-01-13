@@ -261,7 +261,9 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
       val response: CuestionarioULTRADTO = stub.obtenerCuestionario(parametros, parametrosUltra)
       if(response.getRespuestaProceso.getCodigoRespuesta == 1){
         currentSender ! JsonUtil.toJson(response)
-      } else {
+      }else if(response.getRespuestaProceso.getCodigoRespuesta == 25){
+        currentSender !  ResponseMessage(Conflict, errorUsuarioExiste)
+      }else {
         val respToSender = new ResultadoEvaluacionCuestionarioULTRADTO()
         respToSender.setRespuestaProceso(response.getRespuestaProceso)
         respToSender.getRespuestaProceso.setDescripcionRespuesta("No es posible realizar el registro, por favor llamar a la línea de atención 6447700 ext 1104")
@@ -339,5 +341,7 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
 
   private val errorEstadoReinicioContrasena = ErrorMessage("409.8", "El usuario se encuentra en proceso de reinicio de contrasena", "El usuario se encuentra en proceso de reinicio de contrasena").toJson
   private val errorEstadoUsuarioNoPermitido = ErrorMessage("409.9", "El estado del usuario no permite reiniciar la contrasena", "El estado del usuario no permite reiniciar la contrasena").toJson
+
+  private val errorUsuarioExiste = ErrorMessage("409.10", "Fecha de Expedición Invalida", "Fecha de Expedición Invalida").toJson
 
 }
