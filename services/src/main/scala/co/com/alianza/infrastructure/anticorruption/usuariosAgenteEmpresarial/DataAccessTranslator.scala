@@ -3,7 +3,7 @@ package co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial
 import java.sql.Timestamp
 
 import co.com.alianza.infrastructure.dto.{UsuarioEmpresarial, PinEmpresa}
-import co.com.alianza.persistence.entities.{PinEmpresa => ePinEmpresa, UsuarioEmpresarial}
+import co.com.alianza.persistence.entities.{PinEmpresa => ePinEmpresa}
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.persistence.entities.{UsuarioEmpresarial => dUsuario}
 

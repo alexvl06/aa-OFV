@@ -17,7 +17,6 @@ import co.com.alianza.persistence.entities.IpsUsuario
 import co.com.alianza.persistence.entities.Empresa
 import co.com.alianza.persistence.messages.empresa.GetAgentesEmpresarialesRequest
 import co.com.alianza.persistence.entities.UsuarioEmpresarialEmpresa
-import co.com.alianza.infrastructure.anticorruption.empresa.usuarios.DataAccessTranslator
 import co.com.alianza.persistence.entities.{UsuarioEmpresarial => eUsuario}
 import scalaz.{Failure => zFailure, Success => zSuccess}
 import co.com.alianza.persistence.entities.IpsUsuario

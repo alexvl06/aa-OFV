@@ -15,8 +15,6 @@ import co.com.alianza.domain.aggregates.permisos.PermisoTransaccionalActorSuperv
 import co.com.alianza.util.ConfigApp
 
 import com.typesafe.config.Config
-import co.com.alianza.domain.aggregates.empresa.contrasenasEmpresa.usuarios.UsuariosEmpresaActorSupervisor
-
 //import co.com.alianza.domain.aggregates.fondos.FondosActorSupervisor
 
 

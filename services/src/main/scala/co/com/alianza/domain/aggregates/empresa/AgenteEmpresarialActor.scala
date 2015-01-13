@@ -27,9 +27,9 @@ import co.com.alianza.persistence.entities
 import scala.concurrent.{ExecutionContext, Future}
 import scalaz.Validation
 import spray.http.StatusCodes._
-import co.com.alianza.infrastructure.anticorruption.empresa.usuarios.{DataAccessAdapter => dataAccessUsuariosEmpresariales}
 import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.DataAccessAdapter
 import co.com.alianza.util.FutureResponse
+import co.com.alianza.util.json.MarshallableImplicits._
 
 /**
  * Created by S4N on 17/12/14.
