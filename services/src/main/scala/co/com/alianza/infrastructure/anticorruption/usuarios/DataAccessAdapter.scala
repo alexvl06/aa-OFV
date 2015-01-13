@@ -34,7 +34,7 @@ object DataAccessAdapter {
     repo.guardar(IpsUsuario(idUsuario, ip))
   }
 
-
+//***
   def obtenerUsuarioNumeroIdentificacion( numeroIdentificacion:String): Future[Validation[PersistenceException, Option[Usuario]]] = {
     val repo = new UsuariosRepository()
     repo.obtenerUsuarioNumeroIdentificacion( numeroIdentificacion ) map {
