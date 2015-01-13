@@ -5,17 +5,16 @@ import akka.cluster.Cluster
 
 import co.com.alianza.domain.aggregates.confronta.{ConfrontaActorSupervisor}
 import co.com.alianza.domain.aggregates.autenticacion._
-import co.com.alianza.domain.aggregates.empresa.{AgenteEmpresarialActorSupervisor, ContrasenasEmpresaActorSupervisor}
+import co.com.alianza.domain.aggregates.empresa.{AgenteEmpresarialActorSupervisor, ContrasenasAgenteEmpresarialActorSupervisor}
 import co.com.alianza.domain.aggregates.usuarios.UsuariosActorSupervisor
 import co.com.alianza.domain.aggregates.autoregistro.ConsultaClienteActorSupervisor
 import co.com.alianza.domain.aggregates.contrasenas.ContrasenasActorSupervisor
 import co.com.alianza.domain.aggregates.ips.IpsUsuarioActorSupervisor
 import co.com.alianza.domain.aggregates.pin.PinActorSupervisor
+import co.com.alianza.domain.aggregates.permisos.PermisoTransaccionalActorSupervisor
 import co.com.alianza.util.ConfigApp
 
 import com.typesafe.config.Config
-import co.com.alianza.domain.aggregates.empresa.contrasenasEmpresa.usuarios.UsuariosEmpresaActorSupervisor
-
 //import co.com.alianza.domain.aggregates.fondos.FondosActorSupervisor
 
 
@@ -47,17 +46,17 @@ trait BootedCore extends Core {
  */
 trait CoreActors { this: Core =>
   val usuariosActorSupervisor = system.actorOf( Props[ UsuariosActorSupervisor ], "UsuariosActorSupervisor" )
-  val usuariosEmpresaActorSupervisor = system.actorOf( Props[ UsuariosEmpresaActorSupervisor ], "UsuariosEmpresaActorSupervisor" )
   val confrontaActorSupervisor = system.actorOf( Props[ ConfrontaActorSupervisor ], "confrontaActorSupervisor" )
   val consultaClienteActorSupervisor = system.actorOf( Props[ ConsultaClienteActorSupervisor ], "consultaClienteActorSupervisor" )
   val autenticacionActorSupervisor = system.actorOf( Props[ AutenticacionActorSupervisor ], "autenticacionActorSupervisor" )
   val autorizacionActorSupervisor = system.actorOf( Props[ AutorizacionActorSupervisor ], "autorizacionActorSupervisor" )
   val contrasenasActorSupervisor = system.actorOf( Props[ ContrasenasActorSupervisor ], "contrasenasActorSupervisor" )
-  val contrasenasEmpresaActorSupervisor = system.actorOf( Props[ ContrasenasEmpresaActorSupervisor ], "contrasenasEmpresaActorSupervisor" )
+  val contrasenasAgenteEmpresarialActorSupervisor = system.actorOf( Props[ ContrasenasAgenteEmpresarialActorSupervisor ], "contrasenasAgenteEmpresarialActorSupervisor" )
   val ipsUsuarioActorSupervisor  = system.actorOf( Props[ IpsUsuarioActorSupervisor ], "ipsUsuarioActorSupervisor" )
   val pinActorSupervisor = system.actorOf( Props[ PinActorSupervisor ], "PinActorSupervisor" )
   val sesionActorSupervisor = system.actorOf( Props[ SesionActorSupervisor ], "sesionActorSupervisor" )
   val agenteEmpresarialActorSupervisor = system.actorOf( Props[ AgenteEmpresarialActorSupervisor ], "agenteEmpresarialActorSupervisor" )
+  val permisoTransaccionalActorSupervisor = system.actorOf( Props[ PermisoTransaccionalActorSupervisor ], "permisoTransaccionalActorSupervisor" )
 }
 
 /**
