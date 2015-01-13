@@ -95,7 +95,6 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
       val crearUsuarioFuture = (for{
         captchaVal <-  ValidationT(validaCaptcha(message))
         cliente <- ValidationT(validaSolicitud(message))
-        //idUsuario <- ValidationT(guardarUsuario(message))
       }yield{
         cliente
       }).run
