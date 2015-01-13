@@ -18,6 +18,6 @@ object PermisoTransaccionalDataAccessAdapter {
   val DataAccessTranslator = PermisoTransaccionalDataAccessTranslator
 
   def guardaPermiso (permiso: PermisoTransaccionalUsuarioEmpresarial, idsAgentes: Option[List[Int]] = None) : Future[Validation[PersistenceException, Int]] =
-    new PermisoTransaccionalRepository guardarPermiso ( DataAccessTranslator aEntity permiso, idsAgentes)
+    new PermisoTransaccionalRepository guardarPermiso ( DataAccessTranslator aEntity permiso, permiso.seleccionado,  idsAgentes)
 
 }
