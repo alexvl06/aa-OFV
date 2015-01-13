@@ -28,15 +28,15 @@ class PermisoTransaccionalRepository ( implicit executionContext: ExecutionConte
         Try {
           val q = for {
             p <- tabla if p.idEncargo === permiso.idEncargo && p.idAgente === permiso.idAgente && p.tipoTransaccion === permiso.tipoTransaccion
-          } yield (p.montoMaximoTransaccion, p.montoMaximoDiario, p.minimoNumeroPersonas)
+          } yield (p.tipoPermiso, p.montoMaximoTransaccion, p.montoMaximoDiario, p.minimoNumeroPersonas)
           var regMod = 0
-          if(estaSeleccionado)
-            regMod = q update ((permiso.montoMaximoTransaccion, permiso.montoMaximoDiario, permiso.minimoNumeroPersonas))
-          else {
+          regMod = q update ((permiso.tipoPermiso, permiso.montoMaximoTransaccion, permiso.montoMaximoDiario, permiso.minimoNumeroPersonas))
+          if(!estaSeleccionado) {
             guardarAgentesPermiso(permiso, estaSeleccionado, Some(List()))
             regMod = (for {
               p <- tabla if p.idEncargo === permiso.idEncargo && p.idAgente === permiso.idAgente && p.tipoTransaccion === permiso.tipoTransaccion
             } yield p).delete
+            regMod
           }
           if(regMod==0 && estaSeleccionado){
             tabla += permiso
@@ -58,8 +58,8 @@ class PermisoTransaccionalRepository ( implicit executionContext: ExecutionConte
         au <- tablaAutorizadores if au.idEncargo === permiso.idEncargo && au.idAgente === permiso.idAgente && au.tipoTransaccion === permiso.tipoTransaccion
       } yield au
       val existentes = q.list.map{_.idAutorizador}
-      val nuevos = if(estaSeleccionado) ids.diff(existentes) else List()
-      val removidos = if(estaSeleccionado) existentes.diff(ids) else ids
+      val nuevos = if(estaSeleccionado && (permiso.tipoPermiso==2 || permiso.tipoPermiso==3)) ids.diff(existentes) else List()
+      val removidos = if(estaSeleccionado && (permiso.tipoPermiso==2 || permiso.tipoPermiso==3)) existentes.diff(ids) else existentes
       nuevos foreach {
         id =>
           tablaAutorizadores += PermisoTransaccionalUsuarioEmpresarialAutorizador(permiso.idEncargo, permiso.idAgente, permiso.tipoTransaccion, id)
