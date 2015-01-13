@@ -46,13 +46,13 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
   def receive = {
     case GuardarPermisosAgenteMessage(idAgente, encargosPermisos) =>
       val currentSender = sender()
-      val permisos = encargosPermisos flatMap {e => e.permisos.map(_.copy(idEncargo = e.wspf_plan, idAgente = idAgente))}
+      val permisos = encargosPermisos flatMap {e => e.permisos.map(p => p.copy(permiso = p.permiso.map{_.copy(idEncargo = e.wspf_plan, idAgente = idAgente)}))}
       numeroPermisos = permisos.length
-      permisos foreach { p => self ! ((p, currentSender): (PermisoTransaccionalUsuarioEmpresarial, ActorRef)) }
+      permisos foreach { p => self ! ((p, currentSender): (PermisoTransaccionalUsuarioEmpresarialAgentes, ActorRef)) }
 
-    case (permiso: PermisoTransaccionalUsuarioEmpresarial, currentSender: ActorRef) =>
+    case (permisoAgentes: PermisoTransaccionalUsuarioEmpresarialAgentes, currentSender: ActorRef) =>
       val future = (for {
-        result <- ValidationT(DataAccessAdapter guardaPermiso permiso)
+        result <- ValidationT(DataAccessAdapter guardaPermiso (permisoAgentes.permiso.get, permisoAgentes.agentes.map(_.map(_.id))))
       } yield result).run
       resolveFutureValidation(future, (x: Int) => RestaVerificacionMessage(currentSender), self)
 
