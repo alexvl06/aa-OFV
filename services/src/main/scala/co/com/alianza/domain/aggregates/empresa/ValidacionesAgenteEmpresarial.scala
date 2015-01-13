@@ -1,10 +1,14 @@
 package co.com.alianza.domain.aggregates.empresa
 
 import co.com.alianza.app.MainActors
+import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.domain.aggregates.empresa.ErrorValidacionEmpresa
+import co.com.alianza.domain.aggregates.usuarios.{ErrorPersistence, ErrorValidacion}
 import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{DataAccessAdapter => DataAccessAdapterUsuarioAE}
+import co.com.alianza.infrastructure.dto.Configuracion
 import co.com.alianza.infrastructure.messages.ErrorMessage
 import enumerations.EstadosEmpresaEnum
+import co.com.alianza.infrastructure.anticorruption.configuraciones.{DataAccessTranslator => dataAccessTransConf, DataAccessAdapter => dataAccesAdaptarConf}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scalaz.{Validation, Failure => zFailure, Success => zSuccess}
@@ -30,6 +34,15 @@ object ValidacionesAgenteEmpresarial {
           case _ => zFailure(ErrorEstadoAgenteEmpresarial(errorEstadoAgenteEmpresarial))
         }
         case None => zFailure(ErrorAgenteEmpresarialNoExiste(errorAgenteEmpresarialNoExiste))
+      }
+    })
+  }
+
+  def validacionConsultaTiempoExpiracion(): Future[Validation[ErrorValidacionEmpresa, Configuracion]] = {
+    val configuracionFuture = dataAccesAdaptarConf.obtenerConfiguracionPorLlave( TiposConfiguracion.EXPIRACION_PIN.llave )
+    configuracionFuture.map(_.leftMap(pe => ErrorPersistenceEmpresa(pe.message,pe)).flatMap{
+      (x:Option[Configuracion]) => x match{
+        case Some(c) => zSuccess(c)
       }
     })
   }
