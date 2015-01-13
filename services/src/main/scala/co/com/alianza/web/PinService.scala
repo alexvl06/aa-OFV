@@ -1,4 +1,4 @@
-package co.com.alianza.web
+package co.com.alianza.webvalidarPinClienteAdmin
 
 import co.com.alianza.app.{CrossHeaders, AlianzaCommons}
 import co.com.alianza.infrastructure.messages.PinMessages._
