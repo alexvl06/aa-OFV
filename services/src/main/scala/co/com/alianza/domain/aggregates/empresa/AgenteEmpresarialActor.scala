@@ -10,9 +10,9 @@ import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial._
 import co.com.alianza.domain.aggregates.usuarios.{ErrorPersistence, MailMessageUsuario, ErrorValidacion}
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{DataAccessTranslator, DataAccessAdapter}
-import co.com.alianza.infrastructure.dto.{Configuracion, PinEmpresa}
+import co.com.alianza.infrastructure.dto.{Configuracion, UsuarioEmpresarial, PinEmpresa}
 import co.com.alianza.infrastructure.messages.{UsuarioMessage, ResponseMessage}
-import co.com.alianza.infrastructure.messages.empresa.{CrearAgenteEMessage, UsuarioMessageCorreo, ReiniciarContrasenaAgenteEMessage}
+import co.com.alianza.infrastructure.messages.empresa.{GetAgentesEmpresarialesMessage, CrearAgenteEMessage, UsuarioMessageCorreo, ReiniciarContrasenaAgenteEMessage}
 import co.com.alianza.microservices.{MailMessage, SmtpServiceClient}
 import co.com.alianza.persistence.entities.{UsuarioEmpresarialEmpresa, Empresa, IpsUsuario, UltimaContrasena}
 import co.com.alianza.util.clave.Crypto
@@ -28,6 +28,9 @@ import co.com.alianza.persistence.entities
 import scala.concurrent.{ExecutionContext, Future}
 import scalaz.Validation
 import spray.http.StatusCodes._
+import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.DataAccessAdapter
+import co.com.alianza.util.FutureResponse
+import co.com.alianza.util.json.MarshallableImplicits._
 
 /**
  * Created by S4N on 17/12/14.
@@ -52,7 +55,7 @@ class AgenteEmpresarialActorSupervisor extends Actor with ActorLogging {
 
 }
 
-class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors {
+class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors with FutureResponse {
 
   import scala.concurrent.ExecutionContext
 
@@ -75,6 +78,11 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
       }).run
       resolveCrearAgenteEmpresarialFuture(usuarioCreadoFuture, message, currentSender)
     }
+
+    case message: GetAgentesEmpresarialesMessage =>
+      val currentSender = sender()
+      val future: Future[Validation[PersistenceException, List[UsuarioEmpresarial]]] = DataAccessAdapter.obtenerUsuariosBusqueda(message.toGetUsuariosEmpresaBusquedaRequest)
+      resolveFutureValidation(future, (response: List[UsuarioEmpresarial]) => response.toJson, currentSender)
   }
 
   private def resolveCrearAgenteEmpresarialFuture(crearAgenteEmpresarialFuture: Future[Validation[PersistenceException, Int]], message : CrearAgenteEMessage, currentSender: ActorRef) {

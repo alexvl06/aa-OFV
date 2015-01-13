@@ -1,6 +1,6 @@
 package co.com.alianza.domain.aggregates.autenticacion
 
-import akka.actor.{ ActorRef, Actor, ActorLogging }
+import akka.actor.{ActorRef, Actor, ActorLogging}
 import akka.pattern.ask
 import akka.util.Timeout
 import co.com.alianza.commons.enumerations.TiposCliente
@@ -12,21 +12,21 @@ import co.com.alianza.infrastructure.anticorruption.configuraciones.{DataAccessA
 import co.com.alianza.util.transformers.ValidationT
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.util.json.JsonUtil
-import co.com.alianza.exceptions.{ PersistenceException, AlianzaException, TechnicalLevel }
+import co.com.alianza.exceptions.{PersistenceException, AlianzaException, TechnicalLevel}
 import co.com.alianza.util.clave.Crypto
 import co.com.alianza.infrastructure.dto._
 import co.com.alianza.util.token.Token
 import co.com.alianza.persistence.messages.ConsultaClienteRequest
-import co.com.alianza.persistence.entities.{ ReglasContrasenas, IpsUsuario }
+import co.com.alianza.persistence.entities.{ReglasContrasenas, IpsUsuario}
 import enumerations.{AppendPasswordUser, TipoIdentificacion, EstadosUsuarioEnum, EstadosCliente}
 
 import java.sql.Timestamp
-import java.util.{ Date, Calendar }
+import java.util.{Date, Calendar}
 
 import scala.concurrent._
-import scala.util.{ Success, Failure }
+import scala.util.{Success, Failure}
 
-import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
+import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
 import scalaz.std.AllInstances._
 
 import spray.http.StatusCodes._
@@ -35,7 +35,9 @@ import spray.http.StatusCodes._
  * Created by manuel on 10/12/14.
  */
 class AutenticacionUsuarioEmpresaActor extends AutenticacionActor {
+
   import co.com.alianza.util.json.MarshallableImplicits._
+
   implicit val timeout: Timeout = Timeout(10 seconds)
 
   override def receive = {
@@ -58,7 +60,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor {
           currentSender ! t
       }
 
-   //Mensaje de autenticación de usuario cliente de empresa
+    //Mensaje de autenticación de usuario cliente de empresa
     case message: AutenticarUsuarioEmpresarialAgenteMessage =>
       val currentSender = sender()
       val result = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtieneUsuarioEmpresarialPorNitYUsuario(message.nit, message.usuario)
@@ -71,21 +73,20 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor {
                 case Some(valueResponse) =>
                   if (valueResponse.estado == EstadosUsuarioEnum.bloqueContraseña.id)
                     currentSender ! ResponseMessage(Unauthorized, errorUsuarioBloqueadoIntentosErroneos)
-                  else if(valueResponse.estado == EstadosUsuarioEnum.pendienteActivacion.id)
+                  else if (valueResponse.estado == EstadosUsuarioEnum.pendienteActivacion.id)
                     currentSender ! ResponseMessage(Unauthorized, errorUsuarioBloqueadoPendienteActivacion)
                   //else if(valueResponse.estado == EstadosUsuarioEnum.pendienteConfronta.id)
-                    //currentSender ! ResponseMessage(Unauthorized, errorUsuarioBloqueadoPendienteConfronta)
-                  else if(valueResponse.estado == EstadosUsuarioEnum.pendienteReinicio.id)
+                  //currentSender ! ResponseMessage(Unauthorized, errorUsuarioBloqueadoPendienteConfronta)
+                  else if (valueResponse.estado == EstadosUsuarioEnum.pendienteReinicio.id)
                     currentSender ! ResponseMessage(Unauthorized, errorUsuarioBloqueadoPendienteReinicio)
                   else {
                     //Se pone un "pase" para que no sea tan facil hacer unHashSha512 de los password planos
-                    val passwordFrontEnd = Crypto.hashSha512( message.password.concat( AppendPasswordUser.appendUsuariosFiducia ) )
+                    val passwordFrontEnd = Crypto.hashSha512(message.password.concat(AppendPasswordUser.appendUsuariosFiducia))
                     val passwordDB = valueResponse.contrasena.getOrElse("")
                     //Crypto.hashSha512(message.contrasena))
                     if (passwordFrontEnd.contentEquals(passwordDB)) {
-                      //Una vez el usuario se encuentre activo en el sistema, se valida por su estado en el core de alianza.
-                      val futureCliente = obtenerClienteAlianza(valueResponse.tipoIdentificacion, valueResponse.identificacion, currentSender: ActorRef)
-                      realizarValidacionesClienteEmpresa(futureCliente, valueResponse, valueResponse.tipoIdentificacion, message.clientIp.get, message.nit, currentSender: ActorRef)
+                      validarFechaContrasena(valueResponse.id, valueResponse.fechaCaducidad, currentSender: ActorRef)
+                      validarControlIpUsuarioAgenteEmpresarial(valueResponse.identificacion, valueResponse.id, message.clientIp.get, valueResponse.nombreUsuario.get, valueResponse.correo, getTipoPersona(valueResponse.tipoIdentificacion), valueResponse.ipUltimoIngreso.getOrElse(""), valueResponse.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), message.nit, currentSender: ActorRef)
                     } else
                       currentSender ! ejecutarExcepcionPasswordInvalido(valueResponse.identificacion, valueResponse.numeroIngresosErroneos, currentSender)
                   }
@@ -108,15 +109,15 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor {
                 case Some(valueResponse) =>
                   if (valueResponse.estado == EstadosUsuarioEnum.bloqueContraseña.id)
                     currentSender ! ResponseMessage(Unauthorized, errorUsuarioBloqueadoIntentosErroneos)
-                  else if(valueResponse.estado == EstadosUsuarioEnum.pendienteActivacion.id)
+                  else if (valueResponse.estado == EstadosUsuarioEnum.pendienteActivacion.id)
                     currentSender ! ResponseMessage(Unauthorized, errorUsuarioBloqueadoPendienteActivacion)
                   //else if(valueResponse.estado == EstadosUsuarioEnum.pendienteConfronta.id)
-                    //currentSender ! ResponseMessage(Unauthorized, errorUsuarioBloqueadoPendienteConfronta)
-                  else if(valueResponse.estado == EstadosUsuarioEnum.pendienteReinicio.id)
+                  //currentSender ! ResponseMessage(Unauthorized, errorUsuarioBloqueadoPendienteConfronta)
+                  else if (valueResponse.estado == EstadosUsuarioEnum.pendienteReinicio.id)
                     currentSender ! ResponseMessage(Unauthorized, errorUsuarioBloqueadoPendienteReinicio)
                   else {
                     //Se pone un "pase" para que no sea tan facil hacer unHashSha512 de los password planos
-                    val passwordFrontEnd = Crypto.hashSha512( message.password.concat( AppendPasswordUser.appendUsuariosFiducia ) )
+                    val passwordFrontEnd = Crypto.hashSha512(message.password.concat(AppendPasswordUser.appendUsuariosFiducia))
                     val passwordDB = valueResponse.contrasena.getOrElse("")
                     //Crypto.hashSha512(message.contrasena))
                     if (passwordFrontEnd.contentEquals(passwordDB)) {
@@ -135,33 +136,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor {
 
   }
 
-
-  private def realizarValidacionesClienteEmpresa(futureCliente: Future[Validation[PersistenceException, Option[Cliente]]], usuario: UsuarioEmpresarial, messageTipoIdentificacion: Int, ip: String, nit : String, currentSender: ActorRef) {
-    futureCliente onComplete {
-      case Failure(failure) => currentSender ! failure
-      case Success(value) =>
-        value match {
-          case zSuccess(response: Option[Cliente]) =>
-            response match {
-              case Some(valueResponseCliente) =>
-                if (getTipoPersona(messageTipoIdentificacion) != valueResponseCliente.wcli_person)
-                  currentSender ! ResponseMessage(Unauthorized, errorClienteNoExisteSP)
-                else if (valueResponseCliente.wcli_estado != EstadosCliente.bloqueoContraseña) {
-                  //Se valida la caducidad de la contraseña
-                  validarFechaContrasena(usuario.id, usuario.fechaCaducidad, currentSender: ActorRef)
-                  //Validacion de control de direccion IP del usuario
-                  //TODO:                  validarEmpresaCliente(usuario.id.get, )
-                  validarControlIpUsuarioAgenteEmpresarial(usuario.identificacion, usuario.id, ip, valueResponseCliente.wcli_nombre, valueResponseCliente.wcli_dir_correo, valueResponseCliente.wcli_person, usuario.ipUltimoIngreso.getOrElse(""), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), nit, currentSender: ActorRef)
-                } else
-                  currentSender ! ResponseMessage(Unauthorized, errorClienteInactivoSP)
-              case None => currentSender ! ResponseMessage(Unauthorized, errorClienteNoExisteSP)
-            }
-          case zFailure(error) => currentSender ! error
-        }
-    }
-  }
-
-  private def realizarValidacionesUsuarioEmpresarialAdmin(futureCliente: Future[Validation[PersistenceException, Option[Cliente]]], usuario: UsuarioEmpresarialAdmin, messageTipoIdentificacion: Int, ip: String, nit : String, currentSender: ActorRef) {
+  private def realizarValidacionesUsuarioEmpresarialAdmin(futureCliente: Future[Validation[PersistenceException, Option[Cliente]]], usuario: UsuarioEmpresarialAdmin, messageTipoIdentificacion: Int, ip: String, nit: String, currentSender: ActorRef) {
     futureCliente onComplete {
       case Failure(failure) => currentSender ! failure
       case Success(value) =>
@@ -186,7 +161,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor {
     }
   }
 
-  protected def validarControlIpUsuarioEmpresarialAdmin(numeroIdentificacion: String, idUsuario: Int, ip: String, nombreCliente: String, correoUsuario: String, tipoIdentificacion: String, ipUltimoIngreso: String, fechaUltimoIngreso: Date, nit : String, currentSender: ActorRef) = {
+  protected def validarControlIpUsuarioEmpresarialAdmin(numeroIdentificacion: String, idUsuario: Int, ip: String, nombreCliente: String, correoUsuario: String, tipoIdentificacion: String, ipUltimoIngreso: String, fechaUltimoIngreso: Date, nit: String, currentSender: ActorRef) = {
     //Se valida que el control de direcciones IP del usuario se encuentre activo
     val resultControlIP = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerIpsUsuarioEmpresarialAdmin(idUsuario)
 
@@ -225,7 +200,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor {
     }
   }
 
-  protected def validarControlIpUsuarioAgenteEmpresarial(numeroIdentificacion: String, idUsuario: Int, ip: String, nombreCliente: String, correoUsuario: String, tipoIdentificacion: String, ipUltimoIngreso: String, fechaUltimoIngreso: Date, nit : String, currentSender: ActorRef) = {
+  protected def validarControlIpUsuarioAgenteEmpresarial(numeroIdentificacion: String, idUsuario: Int, ip: String, nombreCliente: String, correoUsuario: String, tipoIdentificacion: String, ipUltimoIngreso: String, fechaUltimoIngreso: Date, nit: String, currentSender: ActorRef) = {
     //Se valida que el control de direcciones IP del usuario se encuentre activo
     val resultControlIP = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerIpsUsuarioEmpresarial(idUsuario)
 

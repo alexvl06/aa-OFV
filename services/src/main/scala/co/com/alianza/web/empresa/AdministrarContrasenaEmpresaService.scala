@@ -23,7 +23,7 @@ class AdministrarContrasenaEmpresaService extends Directives with AlianzaCommons
               entity(as[ReiniciarContrasenaAgenteEMessage]) {
                 data =>
                   val dataAux: ReiniciarContrasenaAgenteEMessage = data.copy(idClienteAdmin = Some(user.id))
-                  requestExecute(dataAux, contrasenasEmpresaActor)
+                  requestExecute(dataAux, contrasenasAgenteEmpresarialActor)
               }
             }
           }

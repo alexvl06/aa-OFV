@@ -28,12 +28,12 @@ import spray.http.StatusCodes._
 /**
  * Created by S4N on 17/12/14.
  */
-class ContrasenasEmpresaActorSupervisor extends Actor with ActorLogging {
+class ContrasenasAgenteEmpresarialActorSupervisor extends Actor with ActorLogging {
 
   import akka.actor.OneForOneStrategy
   import akka.actor.SupervisorStrategy._
 
-  val contrasenasEmpresaActor = context.actorOf(Props[ContrasenasEmpresaActor].withRouter(RoundRobinPool(nrOfInstances = 2)), "contrasenasEmpresaActor")
+  val contrasenasEmpresaActor = context.actorOf(Props[ContrasenasAgenteEmpresarialActor].withRouter(RoundRobinPool(nrOfInstances = 2)), "contrasenasAgenteEmpresarialActor")
 
   def receive = {
 
@@ -51,7 +51,10 @@ class ContrasenasEmpresaActorSupervisor extends Actor with ActorLogging {
 
 }
 
-class ContrasenasEmpresaActor extends Actor with ActorLogging with AlianzaActors {
+/** *
+  * Actor que se encarga de procesar los mensajes relacionados con la administración de contraseñas de los usuarios emopresa (Cliente Administrador y Agente Empresarial)
+  */
+class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors {
 
   import scala.concurrent.ExecutionContext
 

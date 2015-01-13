@@ -8,6 +8,7 @@ import com.typesafe.config.Config
 import spray.routing.{RouteConcatenation, HttpServiceActor}
 import spray.http.StatusCodes
 import StatusCodes._
+import co.com.alianza.webvalidarPinClienteAdmin.PinService
 
 class AlianzaRouter extends HttpServiceActor with RouteConcatenation with CrossHeaders  with ServiceAuthorization with ActorLogging {
 
