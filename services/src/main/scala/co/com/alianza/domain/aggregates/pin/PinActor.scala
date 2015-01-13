@@ -36,6 +36,7 @@ class PinActorSupervisor extends Actor with ActorLogging {
   import akka.actor.OneForOneStrategy
 
   val pinActor = context.actorOf(Props[PinActor].withRouter(RoundRobinPool(nrOfInstances = 2)), "pinActor")
+  val pinUsuarioAgenteEmpresarialActor = context.actorOf(Props[PinUsuarioAgenteEmpresarialActor].withRouter(RoundRobinPool(nrOfInstances = 2)), "pinUsuarioAgenteEmpresarialActor")
   val pinUsuarioEmpresarialAdminActor = context.actorOf(Props[PinUsuarioEmpresarialAdminActor].withRouter(RoundRobinPool(nrOfInstances = 2)), "pinUsuarioEmpresarialAdminActor")
 
   def receive = {

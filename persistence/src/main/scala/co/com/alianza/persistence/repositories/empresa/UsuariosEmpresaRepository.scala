@@ -59,7 +59,16 @@ class UsuariosEmpresaRepository ( implicit executionContext: ExecutionContext) e
       List( estadoUsuarioBusqueda )
   }
 
+  def cambiarPassword (idUsuario: Int, password: String): Future[Validation[PersistenceException, Int]] = loan {
+    implicit session =>
+      val resultTry = Try { UsuariosEmpresariales.filter(_.id === idUsuario).map(_.contrasena).update(Some (password)) }
+      resolveTry(resultTry, "Cambiar la contraseña de usuario agente empresarial")
+  }
 
-
+  def actualizarEstadoUsuario( idUsuario:Int, estado:Int ): Future[Validation[PersistenceException, Int]] = loan {
+    implicit session =>
+      val resultTry = Try{ UsuariosEmpresariales.filter( _.id === idUsuario ).map(_.estado ).update(estado)  }
+      resolveTry(resultTry, "Actualizar estado de usuario agente empresarial")
+  }
 
 }

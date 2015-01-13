@@ -131,6 +131,7 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
 
   private def enviarCorreo( numHorasCaducidad: Int, message : CrearAgenteEMessage, idUsuarioAgenteEmpresarial : Int, currentSender: ActorRef) = {
     val fechaActual: Calendar = Calendar.getInstance()
+    fechaActual.add(Calendar.HOUR_OF_DAY, numHorasCaducidad)
     val tokenPin: PinData = TokenPin.obtenerToken(fechaActual.getTime)
 
     val pin: PinEmpresa = PinEmpresa(None, idUsuarioAgenteEmpresarial, tokenPin.token, tokenPin.fechaExpiracion, tokenPin.tokenHash.get, UsoPinEmpresaEnum.creacionAgenteEmpresarial.id)

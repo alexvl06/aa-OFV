@@ -21,6 +21,7 @@ trait AlianzaActors {
   val ipsUsuarioActor = MainActors.system.actorSelection(MainActors.ipsUsuarioActorSupervisor.path + "/ipsUsuarioActor")
   val pinActor = MainActors.system.actorSelection(MainActors.pinActorSupervisor.path + "/pinActor")
   val pinUsuarioEmpresarialAdminActor = MainActors.system.actorSelection(MainActors.pinActorSupervisor.path + "/pinUsuarioEmpresarialAdminActor")
+  val pinUsuarioAgenteEmpresarialActor = MainActors.system.actorSelection(MainActors.pinActorSupervisor.path + "/pinUsuarioAgenteEmpresarialActor")
   val sesionActor = MainActors.system.actorSelection(MainActors.sesionActorSupervisor.path + "/sesionActor")
   val agenteEmpresarialActor = MainActors.system.actorSelection(MainActors.agenteEmpresarialActorSupervisor.path + "/agenteEmpresarialActor")
   val permisoTransaccionalActor = MainActors.system.actorSelection(MainActors.permisoTransaccionalActorSupervisor.path + "/permisoTransaccionalActor")
