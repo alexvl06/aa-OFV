@@ -47,21 +47,14 @@ class PermisoTransaccionalRepository ( implicit executionContext: ExecutionConte
       val q = for {
         au <- tablaAutorizadores if au.idEncargo === permiso.idEncargo && au.idAgente === permiso.idAgente && au.tipoTransaccion === permiso.tipoTransaccion
       } yield au
-      val nuevos = ids.diff(q.list.map{_.idAutorizador})
-      println("Nuevos: "+nuevos.toString)
-      val removidos = q.list.map{_.idAutorizador}.diff(ids)
-      println("Removidos: "+nuevos.toString)
+      val existentes = q.list.map{_.idAutorizador}
+      val nuevos = ids.diff(existentes)
+      val removidos = existentes.diff(ids)
       nuevos foreach {
         id =>
           tablaAutorizadores += PermisoTransaccionalUsuarioEmpresarialAutorizador(permiso.idEncargo, permiso.idAgente, permiso.tipoTransaccion, id)
       }
-      removidos foreach {
-        id =>
-          q filter {_.idAutorizador===id} delete
-      }
-//      val q2 = for{
-//        aut <- tablaAutorizadores if aut.idAutorizador in ausentes
-//      } yield _
+      removidos foreach { id => q filter {_.idAutorizador===id} delete }
     }
   }
 
