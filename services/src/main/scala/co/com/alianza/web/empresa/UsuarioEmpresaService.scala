@@ -22,7 +22,7 @@ class UsuarioEmpresaService extends Directives with AlianzaCommons   with CrossH
           get {
             parameters('correo.?, 'usuario.?, 'nombre.?, 'estado.?) { (correo, usuario, nombre, estado) =>
               //Lista de todos los usuarios
-              requestExecute(GetUsuariosEmpresaBusquedaMessage(correo.getOrElse(null), usuario.getOrElse(null), nombre.getOrElse(null), estado.get.toInt, user.id), usuariosEmpresarialActor)
+              requestExecute(GetAgentesEmpresarialesMessage(correo.getOrElse(null), usuario.getOrElse(null), nombre.getOrElse(null), estado.get.toInt, user.id), agenteEmpresarialActor)
             }
           }
         }
