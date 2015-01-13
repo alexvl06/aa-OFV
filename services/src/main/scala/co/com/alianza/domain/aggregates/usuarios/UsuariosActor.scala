@@ -104,26 +104,16 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
 
     case message: DesbloquarMessage =>
       val currentSender = sender()
+      val toUsuarioMessageAux: UsuarioMessage = message.toUsuarioMessage
 
-      val futureCliente = (for{
-        captchaVal <-  validaCaptcha(message.toUsuarioMessage)
-        cliente <- co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerUsuarioNumeroIdentificacion(message.identificacion)
-      }yield{
+      val futureCliente = (for {
+        captchaVal <- ValidationT(validaCaptcha(toUsuarioMessageAux))
+        cliente <- ValidationT(validacionUsuarioNumDoc(toUsuarioMessageAux))
+      } yield {
         cliente
-      })
+      }).run
 
-      futureCliente onComplete{
-        case sFailure( failure ) =>
-          currentSender ! failure
-        case sSuccess (value) =>
-          value match{
-            case zSuccess( response ) =>
-              var mensajeCuestionario = message.toUsuarioMessage.copy(tipoIdentificacion = response.get.tipoIdentificacion)
-              obtenerCuestionario(currentSender,mensajeCuestionario)
-            case zFailure (error) =>
-              currentSender ! error
-          }
-      }
+      resolveDesbloquearContrasenaFuture(futureCliente, currentSender, message)
 
     case message: OlvidoContrasenaMessage =>
 
@@ -328,6 +318,26 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
           case zSuccess(response) =>
             obtenerCuestionario(currentSender,message)
           case zFailure(error)  =>
+            error match {
+              case errorPersistence:ErrorPersistence  => currentSender !  errorPersistence.exception
+              case errorVal:ErrorValidacion =>
+                currentSender !  ResponseMessage(Conflict, errorVal.msg)
+            }
+        }
+    }
+  }
+
+  private def resolveDesbloquearContrasenaFuture(futureCliente: Future[Validation[ErrorValidacion, Option[Usuario]]], currentSender: ActorRef, message: DesbloquarMessage) = {
+
+    futureCliente onComplete {
+      case sFailure( failure ) =>
+        currentSender ! failure
+      case sSuccess (value) =>
+        value match{
+          case zSuccess( response ) =>
+            val mensajeCuestionario = message.toUsuarioMessage.copy(tipoIdentificacion = response.get.tipoIdentificacion)
+            obtenerCuestionario(currentSender,mensajeCuestionario)
+          case zFailure (error) =>
             error match {
               case errorPersistence:ErrorPersistence  => currentSender !  errorPersistence.exception
               case errorVal:ErrorValidacion =>
