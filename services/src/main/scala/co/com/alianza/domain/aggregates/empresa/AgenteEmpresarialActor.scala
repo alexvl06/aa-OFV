@@ -6,10 +6,11 @@ import java.util.Calendar
 import akka.actor.{ActorRef, Actor, ActorLogging, Props}
 import akka.routing.RoundRobinPool
 import co.com.alianza.app.{AlianzaActors, MainActors}
+import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial._
 import co.com.alianza.domain.aggregates.usuarios.{ErrorPersistence, MailMessageUsuario, ErrorValidacion}
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{DataAccessTranslator, DataAccessAdapter}
-import co.com.alianza.infrastructure.dto.{UsuarioEmpresarial, PinEmpresa}
+import co.com.alianza.infrastructure.dto.{Configuracion, UsuarioEmpresarial, PinEmpresa}
 import co.com.alianza.infrastructure.messages.{UsuarioMessage, ResponseMessage}
 import co.com.alianza.infrastructure.messages.empresa.{GetAgentesEmpresarialesMessage, CrearAgenteEMessage, UsuarioMessageCorreo, ReiniciarContrasenaAgenteEMessage}
 import co.com.alianza.microservices.{MailMessage, SmtpServiceClient}
@@ -90,8 +91,27 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
         currentSender ! failure
       case sSuccess(value) =>
         value match {
+
           case zSuccess(idUsuarioAgenteEmpresarial: Int) =>{
-            enviarCorreo(message, idUsuarioAgenteEmpresarial, currentSender)
+
+            val validacionConsulta = validacionConsultaTiempoExpiracion()
+
+            validacionConsulta onComplete {
+              case sFailure(failure) => currentSender ! failure
+              case sSuccess(value) =>
+                value match {
+                  case zSuccess(responseConf: Configuracion) =>
+
+                    enviarCorreo(responseConf.valor.toInt, message, idUsuarioAgenteEmpresarial, currentSender)
+
+                  case zFailure(error) =>
+                    error match {
+                      case errorPersistence: ErrorPersistence => currentSender ! errorPersistence.exception
+                      case errorFail => currentSender ! ResponseMessage(Conflict, errorFail.msg)
+                    }
+                }
+            }
+
           }
           case zFailure(error) =>
             error match {
@@ -99,18 +119,19 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
                 currentSender ! ResponseMessage(Conflict, "Usuario o Correo ya existentes.")
               }
               case unknownError @ _  => {
-                println(unknownError.toString)
                 currentSender ! ResponseMessage(InternalServerError, "Se ha producido un error inesperado.")
               }
             }
+
         }
     }
   }
 
   private def toIpsUsuarioArray(ips : Array[String], idUsuarioAgenteEmpresarial : Int) : Array[IpsUsuario] = ips.map(ip => IpsUsuario(idUsuarioAgenteEmpresarial, ip))
 
-  private def enviarCorreo(message : CrearAgenteEMessage, idUsuarioAgenteEmpresarial : Int, currentSender: ActorRef) = {
+  private def enviarCorreo( numHorasCaducidad: Int, message : CrearAgenteEMessage, idUsuarioAgenteEmpresarial : Int, currentSender: ActorRef) = {
     val fechaActual: Calendar = Calendar.getInstance()
+    fechaActual.add(Calendar.HOUR_OF_DAY, numHorasCaducidad)
     val tokenPin: PinData = TokenPin.obtenerToken(fechaActual.getTime)
 
     val pin: PinEmpresa = PinEmpresa(None, idUsuarioAgenteEmpresarial, tokenPin.token, tokenPin.fechaExpiracion, tokenPin.tokenHash.get, UsoPinEmpresaEnum.creacionAgenteEmpresarial.id)
@@ -129,19 +150,19 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
           case zFailure(fail) => currentSender ! fail
           case zSuccess(intResult) =>
             if(intResult == 1){
-              new SmtpServiceClient().send(buildMessage(pin, UsuarioMessageCorreo(message.correo, message.nit, TipoIdentificacion.NIT.id), "alianza.smtp.templatepin.creacionAgenteEmpresarial", "alianza.smtp.asunto.creacionAgenteEmpresarial"), (_, _) => Unit)
+              new SmtpServiceClient().send(buildMessage(numHorasCaducidad, pin, UsuarioMessageCorreo(message.correo, message.nit, TipoIdentificacion.NIT.id), "alianza.smtp.templatepin.creacionAgenteEmpresarial", "alianza.smtp.asunto.creacionAgenteEmpresarial"), (_, _) => Unit)
               currentSender ! ResponseMessage(Created, idUsuarioAgenteEmpresarial.toString)
             }
         }
     }
   }
 
-  private def buildMessage(pinEmpresa: PinEmpresa, message: UsuarioMessageCorreo, templateBody: String, asuntoTemp: String) = {
-    val body: String = new MailMessageEmpresa(templateBody).getMessagePin(pinEmpresa)
+  private def buildMessage(numHorasCaducidad : Int, pinEmpresa: PinEmpresa, message: UsuarioMessageCorreo, templateBody: String, asuntoTemp: String) = {
+    val body: String = new MailMessageEmpresa(templateBody).getMessagePin(pinEmpresa, numHorasCaducidad)
     val asunto: String = config.getString(asuntoTemp)
     //MailMessage(config.getString("alianza.smtp.from"), "sergiopena@seven4n.com", List(), asunto, body, "")
-    //MailMessage(config.getString("alianza.smtp.from"), "luisaceleita@seven4n.com", List(), asunto, body, "")
-    MailMessage(config.getString("alianza.smtp.from"), "davidmontano@seven4n.com", List(), asunto, body, "")
+    MailMessage(config.getString("alianza.smtp.from"), "luisaceleita@seven4n.com", List(), asunto, body, "")
+    //MailMessage(config.getString("alianza.smtp.from"), "davidmontano@seven4n.com", List(), asunto, body, "")
     //MailMessage(config.getString("alianza.smtp.from"), message.correo, List(), asunto, body, "")
   }
 

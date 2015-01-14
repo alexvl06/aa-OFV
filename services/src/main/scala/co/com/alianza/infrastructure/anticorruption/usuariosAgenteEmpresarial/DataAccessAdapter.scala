@@ -3,7 +3,7 @@ package co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial
 import java.sql.Timestamp
 
 import co.com.alianza.persistence.entities.{PinEmpresa => ePinEmpresa, _}
-import co.com.alianza.persistence.repositories.UsuariosEmpresarialRepository
+import co.com.alianza.persistence.repositories.{UsuariosRepository, UsuarioEmpresarialAdminRepository, UsuariosEmpresarialRepository}
 import co.com.alianza.app.MainActors
 import co.com.alianza.exceptions.PersistenceException
 import enumerations.EstadosEmpresaEnum
@@ -73,6 +73,14 @@ object DataAccessAdapter {
     repo.obtenerUsuariosBusqueda(message.correo, message.usuario, message.nombre, message.estado, message.idClienteAdmin) map {
       x => transformValidationList(x)
     }
+  }
+
+  def cambiarPasswordUsuarioAgenteEmpresarial (idUsuario: Int, password: String): Future[Validation[PersistenceException, Int]] =
+    new UsuariosEmpresaRepository() cambiarPassword (idUsuario, password)
+
+  def actualizarEstadoUsuarioAgenteEmpresarial( idUsuario:Int, estado:Int ) : Future[Validation[PersistenceException, Int]] = {
+    val repo = new UsuariosEmpresaRepository()
+    repo.actualizarEstadoUsuario( idUsuario, estado )
   }
 
   private def transformValidationList(origin: Validation[PersistenceException, List[eUsuario]]): Validation[PersistenceException, List[dtoUsuario]] = {

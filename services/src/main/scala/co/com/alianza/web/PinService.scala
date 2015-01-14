@@ -40,6 +40,22 @@ class PinService extends Directives with AlianzaCommons with CrossHeaders {
           }
         }
       }
+    } ~ path("validarPinAgenteEmpresarial" / Segment) {
+      pin => {
+        post {
+          requestExecute(ValidarPin(pin), pinUsuarioAgenteEmpresarialActor)
+        }
+      }
+    } ~ path("cambiarPwAgenteEmpresarial" / Segment) {
+      pin => {
+        entity(as[UserPw]) {
+          userPw => {
+            post {
+              requestExecute(CambiarPw(pin, userPw.pw), pinUsuarioAgenteEmpresarialActor)
+            }
+          }
+        }
+      }
     }
   }
 
