@@ -16,7 +16,6 @@ case class CrearAgenteEMessage(
                                  nit: String,
                                  usuario: String,
                                  nombre: String,
-                                 apellido: String,
                                  cargo: String,
                                  correo: String,
                                  descripcion: String,
@@ -24,11 +23,11 @@ case class CrearAgenteEMessage(
                               ) extends MessageService {
 
   def toEntityUsuarioAgenteEmpresarial():UsuarioEmpresarial = {
-    UsuarioEmpresarial(0, correo, new Timestamp(System.currentTimeMillis()), nit, tipoIdentificacion = TipoIdentificacion.NIT.id, usuario, EstadosUsuarioEnum.pendienteActivacion.id, contrasena = None, token = None, numeroIngresosErroneos = 0, ipUltimoIngreso = None, fechaUltimoIngreso = None, nombre, apellido, cargo, descripcion)
+    UsuarioEmpresarial(0, correo, new Timestamp(System.currentTimeMillis()), nit, tipoIdentificacion = TipoIdentificacion.NIT.id, usuario, EstadosUsuarioEnum.pendienteActivacion.id, contrasena = None, token = None, numeroIngresosErroneos = 0, ipUltimoIngreso = None, fechaUltimoIngreso = None, nombre, cargo, descripcion)
   }
 
 }
 
 object CrearAgenteEMessageJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
-  implicit val CrearAgenteEMessageMessageFormat = jsonFormat8(CrearAgenteEMessage)
+  implicit val CrearAgenteEMessageMessageFormat = jsonFormat7(CrearAgenteEMessage)
 }
