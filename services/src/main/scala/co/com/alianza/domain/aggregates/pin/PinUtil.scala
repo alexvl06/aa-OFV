@@ -105,12 +105,12 @@ object PinUtil {
           if (fecha.getTime < valueResponse.fechaExpiracion.getTime)
             ResponseMessage(OK)
           else
-            ResponseMessage(Conflict, errorPinNoEncontrado)
+            ResponseMessage(Conflict, errorPinNoEncontradoAgenteEmpresarial)
         }
         else {
-          ResponseMessage(Conflict, errorPinNoEncontrado)
+          ResponseMessage(Conflict, errorPinNoEncontradoAgenteEmpresarial)
         }
-      case None => ResponseMessage(Conflict, errorPinNoEncontrado)
+      case None => ResponseMessage(Conflict, errorPinNoEncontradoAgenteEmpresarial)
     }
   }
 
@@ -121,13 +121,14 @@ object PinUtil {
         if (pinHash == valueResponse.tokenHash) {
           val fecha = new Date()
           if (fecha.getTime < valueResponse.fechaExpiracion.getTime) zSuccess(valueResponse)
-          else zFailure(ErrorPin(errorPinNoEncontrado))
+          else zFailure(ErrorPin(errorPinNoEncontradoAgenteEmpresarial))
         }
-        else zFailure(ErrorPin(errorPinNoEncontrado))
-      case None => zFailure(ErrorPin(errorPinNoEncontrado))
+        else zFailure(ErrorPin(errorPinNoEncontradoAgenteEmpresarial))
+      case None => zFailure(ErrorPin(errorPinNoEncontradoAgenteEmpresarial))
     }
   }
 
   private val errorPinNoEncontrado = ErrorMessage("409.1", "Pin invalido", "El proceso para la definición de la contraseña está vencido, si requiere una nueva contraseña solicítela <a href=\"/#!/olvidarContrasena\" target=\"_blank\" >AQUÍ</a>.").toJson
+  private val errorPinNoEncontradoAgenteEmpresarial = ErrorMessage("409.1", "Pin invalido", "El proceso para la definición de la contraseña está vencido.").toJson
 
 }
