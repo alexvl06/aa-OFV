@@ -95,6 +95,7 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
             if (responseFutureReiniciarContraAE._2 == 1) {
 
               val fechaActual: Calendar = Calendar.getInstance()
+              fechaActual.add(Calendar.HOUR_OF_DAY, responseFutureReiniciarContraAE._3.valor.toInt)
               val tokenPin: PinData = TokenPin.obtenerToken(fechaActual.getTime)
 
               val pin: PinEmpresa = PinEmpresa(None, responseFutureReiniciarContraAE._1, tokenPin.token, tokenPin.fechaExpiracion, tokenPin.tokenHash.get, UsoPinEmpresaEnum.usoReinicioContrasena.id)
