@@ -12,11 +12,11 @@ import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{D
 import co.com.alianza.infrastructure.dto.{PinUsuarioAgenteEmpresarial}
 import co.com.alianza.infrastructure.messages.PinMessages._
 import co.com.alianza.infrastructure.messages.ResponseMessage
-import co.com.alianza.persistence.entities.{UltimaContrasenaUsuarioAgenteEmpresarial}
+import co.com.alianza.persistence.entities.{PerfilUsuario, UltimaContrasenaUsuarioAgenteEmpresarial}
 import co.com.alianza.util.FutureResponse
 import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.transformers.ValidationT
-import enumerations.AppendPasswordUser
+import enumerations.{PerfilesUsuario, AppendPasswordUser}
 import spray.http.StatusCodes._
 import scalaz.std.AllInstances._
 
@@ -34,9 +34,10 @@ class PinUsuarioAgenteEmpresarialActor extends Actor with ActorLogging with Alia
 
   def receive = {
     case message: ValidarPin => validarPin(message.tokenHash)
+
     case message: CambiarPw =>
       val currentSender = sender()
-      cambiarPw(message.tokenHash, message.pw, currentSender)
+      cambiarPw(message.tokenHash, message.pw, currentSender, PerfilesUsuario.agenteEmpresarial)
   }
 
   private def validarPin(tokenHash: String) = {
@@ -46,7 +47,7 @@ class PinUsuarioAgenteEmpresarialActor extends Actor with ActorLogging with Alia
   }
 
 
-  private def cambiarPw(tokenHash: String, pw: String, currentSender: ActorRef) = {
+  private def cambiarPw(tokenHash: String, pw: String, currentSender: ActorRef, perfilUsuario: PerfilesUsuario.perfilUsuario) = {
 
     val obtenerPinFuture: Future[Validation[ErrorValidacion, Option[PinUsuarioAgenteEmpresarial]]] = pDataAccessAdapter.obtenerPin(tokenHash).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
     val passwordAppend = pw.concat( AppendPasswordUser.appendUsuariosFiducia )
@@ -55,7 +56,7 @@ class PinUsuarioAgenteEmpresarialActor extends Actor with ActorLogging with Alia
     val finalResultFuture = (for {
       pin <- ValidationT(obtenerPinFuture)
       pinValidacion <- ValidationT(PinUtil.validarPinUsuarioAgenteEmpresarialFuture(pin))
-      rvalidacionClave <- ValidationT(validacionReglasClave(pw, pinValidacion.idUsuario))
+      rvalidacionClave <- ValidationT(validacionReglasClave(pw, pinValidacion.idUsuario, perfilUsuario))
       rCambiarPss <- ValidationT(cambiarPassword(pinValidacion.idUsuario, passwordAppend))
       resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(pinValidacion.idUsuario, Crypto.hashSha512(passwordAppend)))
       rCambiarEstado <- ValidationT(cambiarEstado(pinValidacion.idUsuario))

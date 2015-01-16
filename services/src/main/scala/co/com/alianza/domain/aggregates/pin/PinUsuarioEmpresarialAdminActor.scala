@@ -28,7 +28,7 @@ import scalaz.Validation
 
 import akka.actor.Props
 import akka.routing.RoundRobinPool
-import enumerations.AppendPasswordUser
+import enumerations.{PerfilesUsuario, AppendPasswordUser}
 /**
  * Created by manuel on 6/01/15.
  */
@@ -60,7 +60,7 @@ class PinUsuarioEmpresarialAdminActor extends Actor with ActorLogging with Alian
     val finalResultFuture = (for {
       pin <- ValidationT(obtenerPinFuture)
       pinValidacion <- ValidationT(PinUtil.validarPinUsuarioEmpresarialAdminFuture(pin))
-      rvalidacionClave <- ValidationT(validacionReglasClave(pw, pinValidacion.idUsuario))
+      rvalidacionClave <- ValidationT(validacionReglasClave(pw, pinValidacion.idUsuario, PerfilesUsuario.clienteAdministrador))
       rCambiarPss <- ValidationT(cambiarPassword(pinValidacion.idUsuario, passwordAppend))
       resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(pinValidacion.idUsuario, Crypto.hashSha512(passwordAppend)))
       rCambiarEstado <- ValidationT(cambiarEstado(pinValidacion.idUsuario))
