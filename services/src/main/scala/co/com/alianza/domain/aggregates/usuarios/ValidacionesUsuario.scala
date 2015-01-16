@@ -13,7 +13,7 @@ import co.com.alianza.infrastructure.anticorruption.clientes.{DataAccessAdapter 
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => DataAccessAdapterUsuario }
 import co.com.alianza.infrastructure.anticorruption.configuraciones.{DataAccessTranslator => dataAccessTransConf, DataAccessAdapter => dataAccesAdaptarConf}
 
-import enumerations.{TipoIdentificacion, EstadosCliente}
+import enumerations.{PerfilesUsuario, TipoIdentificacion, EstadosCliente}
 
 import scalaz.Validation.FlatMap._
 
@@ -35,7 +35,7 @@ object  ValidacionesUsuario {
 
   def validacionReglasClaveAutoregistro(message:UsuarioMessage): Future[Validation[ErrorValidacion, Unit.type]] = {
 
-    val usuarioFuture: Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = ValidarClave.aplicarReglas(message.contrasena, None, ValidarClave.reglasGeneralesAutoregistro: _*)
+    val usuarioFuture: Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = ValidarClave.aplicarReglas(message.contrasena, None, PerfilesUsuario.clienteIndividual, ValidarClave.reglasGeneralesAutoregistro: _*)
 
     usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message,pe)).flatMap{
       (x:List[ErrorValidacionClave]) => x match{
@@ -49,7 +49,7 @@ object  ValidacionesUsuario {
 
   def validacionReglasClave(message:UsuarioMessage): Future[Validation[ErrorValidacion, Unit.type]] = {
 
-    val usuarioFuture: Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = ValidarClave.aplicarReglas(message.contrasena, None, ValidarClave.reglasGenerales: _*)
+    val usuarioFuture: Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = ValidarClave.aplicarReglas(message.contrasena, None, PerfilesUsuario.clienteIndividual, ValidarClave.reglasGenerales: _*)
 
     usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message,pe)).flatMap{
       (x:List[ErrorValidacionClave]) => x match{
@@ -62,9 +62,9 @@ object  ValidacionesUsuario {
   }
 
 
-  def validacionReglasClave(contrasena:String, idUsuario: Int): Future[Validation[ErrorValidacion, Unit.type]] = {
+  def validacionReglasClave(contrasena:String, idUsuario: Int, perfilUsuario: PerfilesUsuario.perfilUsuario): Future[Validation[ErrorValidacion, Unit.type]] = {
 
-    val usuarioFuture: Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = ValidarClave.aplicarReglas(contrasena, Some(idUsuario), ValidarClave.reglasGenerales: _*)
+    val usuarioFuture: Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = ValidarClave.aplicarReglas(contrasena, Some(idUsuario), perfilUsuario, ValidarClave.reglasGenerales: _*)
 
     usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message,pe)).flatMap{
       (x:List[ErrorValidacionClave]) => x match{
@@ -84,10 +84,8 @@ object  ValidacionesUsuario {
     validacionFuture.map(_.leftMap(pe => ErrorCaptcha(errorCaptcha)).flatMap{
       (x:Boolean) => x match{
         case true =>
-          println("{{{{{   SUCCESS   }}}}}}}}}")
           zSuccess(Unit)
         case _ =>
-          println("{{{{{   FAILURE   }}}}}}}}}")
           zFailure(ErrorCaptcha(errorCaptcha))
       }
     })
