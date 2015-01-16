@@ -95,6 +95,7 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
             if (responseFutureReiniciarContraAE._2 == 1) {
 
               val fechaActual: Calendar = Calendar.getInstance()
+              fechaActual.add(Calendar.HOUR_OF_DAY, responseFutureReiniciarContraAE._3.valor.toInt)
               val tokenPin: PinData = TokenPin.obtenerToken(fechaActual.getTime)
 
               val pin: PinEmpresa = PinEmpresa(None, responseFutureReiniciarContraAE._1, tokenPin.token, tokenPin.fechaExpiracion, tokenPin.tokenHash.get, UsoPinEmpresaEnum.usoReinicioContrasena.id)
@@ -138,7 +139,7 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
   private def buildMessage(numHorasCaducidad : Int, pinEmpresa: PinEmpresa, message: UsuarioMessageCorreo, templateBody: String, asuntoTemp: String) = {
     val body: String = new MailMessageEmpresa(templateBody).getMessagePin(pinEmpresa, numHorasCaducidad)
     val asunto: String = config.getString(asuntoTemp)
-    //MailMessage(config.getString("alianza.smtp.from"), "sergiopena@seven4n.com", List(), asunto, body, "")
+    MailMessage(config.getString("alianza.smtp.from"), "sergiopena@seven4n.com", List(), asunto, body, "")
     MailMessage(config.getString("alianza.smtp.from"), "johannasaavedra@seven4n.com", List(), asunto, body, "")
     //MailMessage(config.getString("alianza.smtp.from"), "davidmontano@seven4n.com", List(), asunto, body, "")
     //MailMessage(config.getString("alianza.smtp.from"), message.correo, List(), asunto, body, "")
