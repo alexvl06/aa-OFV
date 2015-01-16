@@ -23,7 +23,7 @@ case class CrearAgenteEMessage(
                               ) extends MessageService {
 
   def toEntityUsuarioAgenteEmpresarial():UsuarioEmpresarial = {
-    UsuarioEmpresarial(0, correo, new Timestamp(System.currentTimeMillis()), nit, tipoIdentificacion = TipoIdentificacion.NIT.id, usuario, EstadosUsuarioEnum.pendienteActivacion.id, contrasena = None, token = None, numeroIngresosErroneos = 0, ipUltimoIngreso = None, fechaUltimoIngreso = None, nombre, cargo, descripcion)
+    UsuarioEmpresarial(0, correo, new Timestamp(System.currentTimeMillis()), nit, tipoIdentificacion = TipoIdentificacion.NIT.identificador, usuario, EstadosUsuarioEnum.pendienteActivacion.id, contrasena = None, token = None, numeroIngresosErroneos = 0, ipUltimoIngreso = None, fechaUltimoIngreso = None, nombre, cargo, descripcion)
   }
 
 }

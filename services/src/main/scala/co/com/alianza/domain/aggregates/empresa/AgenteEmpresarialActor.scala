@@ -116,7 +116,7 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
           case zFailure(error) =>
             error match {
               case errorPersistence: PersistenceException => {
-                currentSender ! ResponseMessage(Conflict, "Usuario o Correo ya existentes.")
+                currentSender ! ResponseMessage(Conflict, s"Usuario ya registrado para el NIT: ${message.nit}")
               }
               case unknownError @ _  => {
                 currentSender ! ResponseMessage(InternalServerError, "Se ha producido un error inesperado.")
