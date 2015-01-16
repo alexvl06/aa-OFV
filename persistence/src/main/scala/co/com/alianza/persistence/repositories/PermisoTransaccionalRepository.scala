@@ -51,6 +51,22 @@ class PermisoTransaccionalRepository ( implicit executionContext: ExecutionConte
       )
   }
 
+  def consultaPermisosAgente(idAgente: Int) = loan {
+    implicit session =>
+      resolveTry(
+        Try {
+          val joinPermisosAutorizadores = for {
+            (permiso, autorizador) <- tabla.filter(_.idAgente===idAgente) join tablaAutorizadores on {
+              (permiso, autorizador) =>
+                permiso.idEncargo===autorizador.idEncargo && permiso.idAgente===autorizador.idAgente && permiso.tipoTransaccion===autorizador.tipoTransaccion
+            }
+          } yield (permiso, autorizador)
+          joinPermisosAutorizadores.list groupBy {i => i._1} map {p => (p._1, p._2.map{a => a._2})} toList
+        },
+        "Consultar permiso transaccional de agente"
+      )
+  }
+
   private[this] def guardarAgentesPermiso(permiso: PermisoTransaccionalUsuarioEmpresarial, estaSeleccionado: Boolean, idsAgentes: Option[List[Int]] = None)(implicit s: Session) = {
     if(idsAgentes.isDefined && idsAgentes.get.headOption.isDefined && idsAgentes.get.headOption.get!=0){
       val ids = idsAgentes.get

@@ -7,3 +7,10 @@ case class PermisoTransaccionalUsuarioEmpresarial (
                                                     idEncargo: String, idAgente: Int, tipoTransaccion: Int,
                                                     tipoPermiso: Int, montoMaximoTransaccion: Option[Double],
                                                     montoMaximoDiario: Option[Double], minimoNumeroPersonas: Option[Int], seleccionado: Boolean = false)
+
+case class EncargoPermisos (wspf_plan: String, permisos: List[PermisoTransaccionalUsuarioEmpresarialAgentes])
+
+case class PermisoTransaccionalUsuarioEmpresarialAgentes(permiso: Option[PermisoTransaccionalUsuarioEmpresarial],
+                                                         agentes: Option[List[Agente]] = None)
+case class Agente(id: Int)
+
