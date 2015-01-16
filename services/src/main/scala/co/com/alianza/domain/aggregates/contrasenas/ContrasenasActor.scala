@@ -23,7 +23,7 @@ import co.com.alianza.infrastructure.dto.Usuario
 import co.com.alianza.util.FutureResponse
 import akka.actor.Props
 import akka.routing.RoundRobinPool
-import enumerations.AppendPasswordUser
+import enumerations.{PerfilesUsuario, AppendPasswordUser}
 
 
 class ContrasenasActorSupervisor extends Actor with ActorLogging {
@@ -88,7 +88,7 @@ class ContrasenasActor extends Actor with ActorLogging with AlianzaActors {
       val passwordNewAppend = message.pw_nuevo.concat(AppendPasswordUser.appendUsuariosFiducia)
       val CambiarContrasenaFuture = (for {
         usuarioContrasenaActual <- ValidationT(validacionConsultaContrasenaActual(passwordActualAppend, message.idUsuario.get))
-        idValReglasContra <- ValidationT(validacionReglasClave(message.pw_nuevo, message.idUsuario.get))
+        idValReglasContra <- ValidationT(validacionReglasClave(message.pw_nuevo, message.idUsuario.get, PerfilesUsuario.clienteIndividual))
         idUsuario <- ValidationT(ActualizarContrasena(passwordNewAppend, usuarioContrasenaActual))
         resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(message.idUsuario.get, Crypto.hashSha512(passwordNewAppend)))
       } yield {
@@ -112,7 +112,7 @@ class ContrasenasActor extends Actor with ActorLogging with AlianzaActors {
 
           val CambiarContrasenaFuture = (for {
             usuarioContrasenaActual <- ValidationT(validacionConsultaContrasenaActual(passwordActualAppend, us_id))
-            idValReglasContra <- ValidationT(validacionReglasClave(message.pw_nuevo, us_id))
+            idValReglasContra <- ValidationT(validacionReglasClave(message.pw_nuevo, us_id, PerfilesUsuario.clienteIndividual))
             idUsuario <- ValidationT(ActualizarContrasena(passwordNewAppend, usuarioContrasenaActual))
             resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(us_id, Crypto.hashSha512(passwordNewAppend)))
           } yield {
