@@ -29,8 +29,8 @@ object PermisoTransaccionalDataAccessAdapter {
 
   def consultaPermisosAgente (idAgente: Int) : Future[Validation[PersistenceException, List[EncargoPermisos]]] =
     repository consultaPermisosAgente idAgente map {
-      case zSuccess(listaPermisos: List[(ePermisoTransaccionalUsuarioEmpresarial, List[ePermisoTransaccionalUsuarioEmpresarialAutorizador])]) =>
-        zSuccess(listaPermisos map (DataAccessTranslator aEncargoPermisosDTO))
+      case zSuccess(listaPermisos: List[(String, List[(ePermisoTransaccionalUsuarioEmpresarial, List[Option[ePermisoTransaccionalUsuarioEmpresarialAutorizador]])])]) =>
+        zSuccess(listaPermisos map { e => DataAccessTranslator aEncargoPermisosDTO(e._1, e._2) })
       case zFailure(error) => zFailure(error)
     }
 

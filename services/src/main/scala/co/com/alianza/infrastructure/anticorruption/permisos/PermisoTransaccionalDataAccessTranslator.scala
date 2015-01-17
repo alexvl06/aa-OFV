@@ -17,14 +17,14 @@ object PermisoTransaccionalDataAccessTranslator {
   def aEntity(dto: PermisoTransaccionalUsuarioEmpresarial) =
     ePermisoTransaccionalUsuarioEmpresarial(dto.idEncargo, dto.idAgente, dto.tipoTransaccion , dto.tipoPermiso, dto.montoMaximoTransaccion, dto.montoMaximoDiario, dto.minimoNumeroPersonas)
 
-  def aEncargoPermisosDTO(e: (ePermisoTransaccionalUsuarioEmpresarial, List[ePermisoTransaccionalUsuarioEmpresarialAutorizador])) =
+  def aEncargoPermisosDTO(idEncargo: String, e: List[(ePermisoTransaccionalUsuarioEmpresarial, List[Option[ePermisoTransaccionalUsuarioEmpresarialAutorizador]])]) =
     EncargoPermisos(
-      wspf_plan = e._1.idEncargo,
-      permisos = e._2 map {aut => aPermisoTransaccionalUsuarioEmpresarialAgentes(e)}
+      wspf_plan = idEncargo,
+      permisos = e map aPermisoTransaccionalUsuarioEmpresarialAgentes
     )
 
-  def aPermisoTransaccionalUsuarioEmpresarialAgentes(permiso: (ePermisoTransaccionalUsuarioEmpresarial, List[ePermisoTransaccionalUsuarioEmpresarialAutorizador])) =
-    PermisoTransaccionalUsuarioEmpresarialAgentes(Some(aDTO(permiso._1)), Some(permiso._2.map(aAgenteDTO)))
+  def aPermisoTransaccionalUsuarioEmpresarialAgentes(permiso: (ePermisoTransaccionalUsuarioEmpresarial, List[Option[ePermisoTransaccionalUsuarioEmpresarialAutorizador]])) =
+    PermisoTransaccionalUsuarioEmpresarialAgentes(Some(aDTO(permiso._1)), if(permiso._2.isEmpty) None else Some(permiso._2.filter{ _.isDefined }.map{ o => aAgenteDTO(o.get) }))
 
   def aAgenteDTO (a: ePermisoTransaccionalUsuarioEmpresarialAutorizador) = Agente(a.idAutorizador)
 

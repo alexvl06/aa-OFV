@@ -16,4 +16,5 @@ class PermisoTransaccionalUsuarioEmpresarialAutorizadorTable (tag: Tag) extends 
   def pk = primaryKey("PERMISO_TX_USUARIO_EMPRESARIAL_AUTORIZADOR_PK", (idEncargo, idAgente, tipoTransaccion, idAutorizador))
 
   def * = (idEncargo, idAgente, tipoTransaccion, idAutorizador) <> (PermisoTransaccionalUsuarioEmpresarialAutorizador.tupled, PermisoTransaccionalUsuarioEmpresarialAutorizador.unapply)
+  def ? = (idEncargo.?, idAgente.?, tipoTransaccion.?, idAutorizador.?).shaped.<>({r=>import r._; _1.map(_=> PermisoTransaccionalUsuarioEmpresarialAutorizador.tupled((_1.get, _2.get, _3.get, _4.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 }
