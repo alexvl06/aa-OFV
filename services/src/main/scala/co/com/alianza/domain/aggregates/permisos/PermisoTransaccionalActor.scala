@@ -14,16 +14,17 @@ import scalaz.std.AllInstances._
 
 import co.com.alianza.app.MainActors
 import co.com.alianza.infrastructure.messages._
-import co.com.alianza.infrastructure.dto.PermisoTransaccionalUsuarioEmpresarial
+import co.com.alianza.infrastructure.dto._
 import co.com.alianza.util.FutureResponse
 import co.com.alianza.util.transformers.ValidationT
 import co.com.alianza.infrastructure.anticorruption.permisos.{PermisoTransaccionalDataAccessAdapter => DataAccessAdapter}
+import co.com.alianza.util.json.MarshallableImplicits._
 /**
  * Created by manuel on 8/01/15.
  */
 class PermisoTransaccionalActorSupervisor extends Actor with ActorLogging {
 
-  def receive = { case message: GuardarPermisosAgenteMessage =>  context actorOf(Props[PermisoTransaccionalActor]) forward message }
+  def receive = { case message: MessageService =>  context actorOf(Props[PermisoTransaccionalActor]) forward message }
 
   override val supervisorStrategy = OneForOneStrategy() {
     case exception: Exception =>
@@ -45,7 +46,7 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
 
   def receive = {
     case GuardarPermisosAgenteMessage(idAgente, encargosPermisos) =>
-      val currentSender = sender()
+      val currentSender = sender
       val permisos = encargosPermisos flatMap {e => e.permisos.map(p => p.copy(permiso = p.permiso.map{_.copy(idEncargo = e.wspf_plan, idAgente = idAgente)}))}
       numeroPermisos = permisos.length
       permisos foreach { p => self ! ((p, currentSender): (PermisoTransaccionalUsuarioEmpresarialAgentes, ActorRef)) }
@@ -66,5 +67,11 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
         context stop self
       }
 
+    case ConsultarPermisosAgenteMessage(idAgente) =>
+      val currentSender = sender
+      resolveFutureValidation(DataAccessAdapter consultaPermisosAgente idAgente, (x: List[EncargoPermisos]) => x.toJson, currentSender)
+
   }
+
+
 }
