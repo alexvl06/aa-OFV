@@ -51,7 +51,7 @@ class UsuariosEmpresaRepository ( implicit executionContext: ExecutionContext) e
           )
 
         val usuariosEmpresarialesLista = new ListBuffer[UsuarioEmpresarial]()
-        if( (correoUsuario == null || correoUsuario.isEmpty) && ( usuario!= null || usuario.isEmpty ) && ( nombreUsuario!= null || nombreUsuario.isEmpty ) )
+        if( (correoUsuario == null || correoUsuario.isEmpty) && ( usuario == null || usuario.isEmpty ) && ( nombreUsuario== null || nombreUsuario.isEmpty ) )
           usuariosEmpresarialesLista ++= usuariosQuery.list
         else {
           if (correoUsuario != null && !correoUsuario.isEmpty && usuariosQuery != null ) {
