@@ -161,7 +161,7 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
     val body: String = new MailMessageEmpresa(templateBody).getMessagePin(pinEmpresa, numHorasCaducidad)
     val asunto: String = config.getString(asuntoTemp)
     //MailMessage(config.getString("alianza.smtp.from"), "sergiopena@seven4n.com", List(), asunto, body, "")
-    MailMessage(config.getString("alianza.smtp.from"), "luisaceleita@seven4n.com", List(), asunto, body, "")
+    MailMessage(config.getString("alianza.smtp.from"), "luisaceleita@seven4n.com",  List(), asunto, body, "")
     //MailMessage(config.getString("alianza.smtp.from"), "davidmontano@seven4n.com", List(), asunto, body, "")
     //MailMessage(config.getString("alianza.smtp.from"), message.correo, List(), asunto, body, "")
   }
