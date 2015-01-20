@@ -49,7 +49,10 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
       val currentSender = sender
       val permisos = encargosPermisos flatMap {e => e.permisos.map(p => p.copy(permiso = p.permiso.map{_.copy(idEncargo = e.wspf_plan, idAgente = idAgente)}))}
       numeroPermisos = permisos.length
-      permisos foreach { p => self ! ((p, currentSender): (PermisoTransaccionalUsuarioEmpresarialAgentes, ActorRef)) }
+      if(numeroPermisos==0)
+        self ! RestaVerificacionMessage(currentSender)
+      else
+        permisos foreach { p => self ! ((p, currentSender): (PermisoTransaccionalUsuarioEmpresarialAgentes, ActorRef)) }
 
     case (permisoAgentes: PermisoTransaccionalUsuarioEmpresarialAgentes, currentSender: ActorRef) =>
       val future = (for {
@@ -59,7 +62,7 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
 
     case RestaVerificacionMessage(currentSender) =>
       numeroPermisos -= 1
-      if (numeroPermisos==0) {
+      if (numeroPermisos<=0) {
         val future = (for {
           result <- ValidationT(Future.successful(Validation.success(ResponseMessage(OK, "Guardado de permisos correcto"))))
         } yield result).run
