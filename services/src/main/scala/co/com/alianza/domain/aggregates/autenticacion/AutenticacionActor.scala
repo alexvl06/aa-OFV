@@ -33,7 +33,7 @@ class AutenticacionActorSupervisor extends Actor with ActorLogging {
   import akka.actor.SupervisorStrategy._
   import akka.actor.OneForOneStrategy
 
-  val autenticacionActor = context.actorOf(Props[AutenticacionActor].withRouter(RoundRobinPool(nrOfInstances = 5)), "autenticacionActor")
+  val autenticacionActor = context.actorOf(Props[Actor2].withRouter(RoundRobinPool(nrOfInstances = 5)), "autenticacionActor")
   val autenticacionUsuarioEmpresaActor = context.actorOf(Props[AutenticacionUsuarioEmpresaActor].withRouter(RoundRobinPool(nrOfInstances = 5)), "autenticacionUsuarioEmpresaActor")
 
   def receive = {
