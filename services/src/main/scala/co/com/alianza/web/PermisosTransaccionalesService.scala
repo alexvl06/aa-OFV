@@ -1,7 +1,9 @@
 package co.com.alianza.web
 
 import spray.routing.Directives
+
 import co.com.alianza.app.{AlianzaActors, MainActors, CrossHeaders, AlianzaCommons}
+import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.infrastructure.messages.{PermisosTransaccionalesJsonSupport, GuardarPermisosAgenteMessage, ConsultarPermisosAgenteMessage}
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 
@@ -18,7 +20,7 @@ class PermisosTransaccionalesService extends Directives with AlianzaCommons with
     respondWithMediaType(mediaType) {
       post {
         entity(as[GuardarPermisosAgenteMessage]){
-          permisosMessage => requestExecute(permisosMessage, permisoTransaccionalActorSupervisor)
+          permisosMessage => requestExecute(permisosMessage.copy(idClienteAdmin = if(user.tipoCliente==clienteAdministrador) Some(user.id) else None), permisoTransaccionalActorSupervisor)
         }
       }
     } ~ path(IntNumber) {

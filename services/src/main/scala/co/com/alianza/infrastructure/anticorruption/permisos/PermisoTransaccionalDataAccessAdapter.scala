@@ -24,8 +24,8 @@ object PermisoTransaccionalDataAccessAdapter {
 
   private[this] def repository = new PermisoTransaccionalRepository
 
-  def guardaPermiso (permiso: PermisoTransaccionalUsuarioEmpresarial, idsAgentes: Option[List[Int]] = None) : Future[Validation[PersistenceException, Int]] =
-     repository guardarPermiso ( DataAccessTranslator aEntity permiso, permiso.seleccionado,  idsAgentes)
+  def guardaPermiso (permiso: PermisoTransaccionalUsuarioEmpresarial, idsAgentes: Option[List[Int]] = None, idClienteAdmin: Int) : Future[Validation[PersistenceException, Int]] =
+     repository guardarPermiso ( DataAccessTranslator aEntity permiso, permiso.seleccionado,  idsAgentes, idClienteAdmin)
 
   def consultaPermisosAgente (idAgente: Int) : Future[Validation[PersistenceException, List[EncargoPermisos]]] =
     repository consultaPermisosAgente idAgente map {
