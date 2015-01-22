@@ -70,6 +70,10 @@ case class AgregarIPHabitualUsuario(idUsuario: Option[Int], clientIp:Option[Stri
   def toAgregarClienteRequest:AgregarIpHabitualRequest = AgregarIpHabitualRequest(idUsuario.get, clientIp)
 }
 
+case class AgregarIPHabitualUsuarioEmpresarialAdmin(idUsuario: Option[Int], clientIp:Option[String] = None)  extends MessageService
+
+case class AgregarIPHabitualUsuarioEmpresarialAgente(idUsuario: Option[Int], clientIp:Option[String] = None)  extends MessageService
+
 //
 // Mensajes para el manejo de las sesiones
 //

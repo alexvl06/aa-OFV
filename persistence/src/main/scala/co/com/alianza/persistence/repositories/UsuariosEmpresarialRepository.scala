@@ -1,5 +1,7 @@
 package co.com.alianza.persistence.repositories
 
+import java.sql.Timestamp
+
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.persistence.entities.{CustomDriver, UsuarioEmpresarial, UsuarioEmpresarialTable, EmpresaTable, UsuarioEmpresarialEmpresaTable}
 import enumerations.EstadosEmpresaEnum
@@ -148,6 +150,36 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
     implicit session =>
       val resultTry = Try{ (UsuariosEmpresarialesEmpresa += usuarioEmpresarialEmpresa) }
       resolveTry(resultTry, "Asociar usuario agente empresarial a la empresa")
+  }
+
+  def actualizarNumeroIngresosErroneos( idUsuario:Int, numeroIntentos:Int ): Future[Validation[PersistenceException, Int]] = loan {
+    implicit session =>
+      val resultTry = Try{ UsuariosEmpresariales.filter( _.id === idUsuario ).map(_.numeroIngresosErroneos).update(numeroIntentos )  }
+      resolveTry(resultTry, "Actualizar usuario empresarial admin en numeroIngresosErroneos ")
+  }
+
+  def actualizarIpUltimoIngreso( idUsuario:Int, ipActual:String ): Future[Validation[PersistenceException, Int]] = loan {
+    implicit session =>
+      val resultTry = Try{ UsuariosEmpresariales.filter( _.id === idUsuario ).map(_.ipUltimoIngreso ).update(Some(ipActual))  }
+      resolveTry(resultTry, "Actualizar usuario empresarial admin en ipUltimoIngreso ")
+  }
+
+  def actualizarFechaUltimoIngreso( idUsuario:Int, fechaActual : Timestamp ): Future[Validation[PersistenceException, Int]] = loan {
+    implicit session =>
+      val resultTry = Try{ UsuariosEmpresariales.filter( _.id === idUsuario ).map(_.fechaUltimoIngreso ).update(Some(fechaActual))  }
+      resolveTry(resultTry, "Actualizar usuario empresarial admin en fechaUltimoIngreso ")
+  }
+
+  def obtenerUsuarioEmpresarialAgentePorId(idUsuario: Int): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = loan {
+    implicit session =>
+      val resultTry = Try{ UsuariosEmpresariales.filter( _.id === idUsuario ).firstOption  }
+      resolveTry(resultTry, "Actualizar usuario empresarial admin en fechaUltimoIngreso ")
+  }
+
+  def actualizarEstadoUsuario( idUsuario:Int, estado:Int ): Future[Validation[PersistenceException, Int]] = loan {
+    implicit session =>
+      val resultTry = Try{ UsuariosEmpresariales.filter( _.id === idUsuario ).map(_.estado ).update(estado)  }
+      resolveTry(resultTry, "Actualizar estado de usuario empresarial agente")
   }
 
 }

@@ -20,7 +20,7 @@ case class ErrorCredencialesInvalidas() extends ErrorAutenticacion {
   override def msg = ErrorMessage("401.3", "Error Credenciales", "Credenciales invalidas para acceder al portal de alianza fiduciaria").toJson
 }
 
-case class ErrorPasswordInvalido() extends ErrorAutenticacion {
+case class ErrorPasswordInvalido(identificacionUsuario: Option[String], idUsuario: Option[Int], numIngresosErroneosUsuario: Int) extends ErrorAutenticacion {
   override def msg = ErrorMessage("401.3", "Error Credenciales", "Credenciales invalidas para acceder al portal de alianza fiduciaria").toJson
 }
 

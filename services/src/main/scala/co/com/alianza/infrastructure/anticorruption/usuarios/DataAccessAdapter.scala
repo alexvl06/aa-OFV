@@ -34,6 +34,16 @@ object DataAccessAdapter {
     repo.guardar(IpsUsuario(idUsuario, ip))
   }
 
+  def relacionarIpUsuarioEmpresarialAdmin(idUsuario:Int, ip:String): Future[Validation[PersistenceException, String]] = {
+    val repo = new IpsUsuarioEmpresarialAdminRepository()
+    repo.guardar(IpsUsuario(idUsuario, ip))
+  }
+
+  def relacionarIpUsuarioEmpresarialAgente(idUsuario:Int, ip:String): Future[Validation[PersistenceException, String]] = {
+    val repo = new IpsUsuarioEmpresarialRepository()
+    repo.guardar(IpsUsuario(idUsuario, ip))
+  }
+
 //***
   def obtenerUsuarioNumeroIdentificacion( numeroIdentificacion:String): Future[Validation[PersistenceException, Option[Usuario]]] = {
     val repo = new UsuariosRepository()
@@ -100,14 +110,54 @@ object DataAccessAdapter {
     repo.actualizarNumeroIngresosErroneos( numeroIdentificacion, numeroIntentos )
   }
 
+  def actualizarNumeroIngresosErroneosUsuarioEmpresarialAdmin( idUsuario:Int, numeroIntentos:Int  ): Future[Validation[PersistenceException, Int]] = {
+    val repo = new UsuarioEmpresarialAdminRepository()
+    repo.actualizarNumeroIngresosErroneos( idUsuario, numeroIntentos )
+  }
+
+  def actualizarNumeroIngresosErroneosUsuarioEmpresarialAgente( idUsuario:Int, numeroIntentos:Int  ): Future[Validation[PersistenceException, Int]] = {
+    val repo = new UsuariosEmpresarialRepository()
+    repo.actualizarNumeroIngresosErroneos( idUsuario, numeroIntentos )
+  }
+
   def actualizarIpUltimoIngreso( numeroIdentificacion:String, ipActual:String  ): Future[Validation[PersistenceException, Int]] = {
     val repo = new UsuariosRepository()
     repo.actualizarIpUltimoIngreso( numeroIdentificacion, ipActual )
   }
 
+  def actualizarIpUltimoIngresoUsuarioEmpresarialAdmin( idUsuario:Int, ipActual:String ): Future[Validation[PersistenceException, Int]] = {
+    val repo = new UsuarioEmpresarialAdminRepository()
+    repo.actualizarIpUltimoIngreso( idUsuario, ipActual )
+  }
+
+  def actualizarIpUltimoIngresoUsuarioEmpresarialAgente( idUsuario:Int, ipActual:String  ): Future[Validation[PersistenceException, Int]] = {
+    val repo = new UsuariosEmpresarialRepository()
+    repo.actualizarIpUltimoIngreso( idUsuario, ipActual )
+  }
+
   def actualizarFechaUltimoIngreso( numeroIdentificacion:String, fechaActual: Timestamp  ): Future[Validation[PersistenceException, Int]] = {
     val repo = new UsuariosRepository()
     repo.actualizarFechaUltimoIngreso( numeroIdentificacion, fechaActual )
+  }
+
+  def actualizarFechaUltimoIngresoUsuarioEmpresarialAdmin( idUsuario:Int, fechaActual: Timestamp  ): Future[Validation[PersistenceException, Int]] = {
+    val repo = new UsuarioEmpresarialAdminRepository()
+    repo.actualizarFechaUltimoIngreso( idUsuario, fechaActual )
+  }
+
+  def actualizarFechaUltimoIngresoUsuarioEmpresarialAgente( idUsuario:Int, fechaActual: Timestamp  ): Future[Validation[PersistenceException, Int]] = {
+    val repo = new UsuariosEmpresarialRepository()
+    repo.actualizarFechaUltimoIngreso( idUsuario, fechaActual )
+  }
+
+  def obtenerUsuarioEmpresarialAdminPorId(idUsuario: Int): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = {
+    val repo = new UsuarioEmpresarialAdminRepository()
+    repo.obtenerUsuarioEmpresarialAdminPorId(idUsuario) map transformValidationUsuarioEmpresarialAdmin
+  }
+
+  def obtenerUsuarioEmpresarialAgentePorId(idUsuario: Int): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = {
+    val repo = new UsuariosEmpresarialRepository()
+    repo.obtenerUsuarioEmpresarialAgentePorId(idUsuario) map transformValidationUsuarioEmpresarial
   }
 
   def actualizarEstadoConfronta( numeroIdentificacion:String): Future[Validation[PersistenceException, Int]] = {
@@ -157,6 +207,9 @@ object DataAccessAdapter {
 
   def actualizarEstadoUsuarioEmpresarialAdmin( idUsuario:Int, estado:Int ) : Future[Validation[PersistenceException, Int]] =
     new UsuarioEmpresarialAdminRepository() actualizarEstadoUsuario ( idUsuario, estado )
+
+  def actualizarEstadoUsuarioEmpresarialAgente( idUsuario:Int, estado:Int ) : Future[Validation[PersistenceException, Int]] =
+    new UsuariosEmpresarialRepository() actualizarEstadoUsuario ( idUsuario, estado )
 
   def cambiarPassword (idUsuario: Int, password: String): Future[Validation[PersistenceException, Int]] = {
     val repo = new UsuariosRepository()
