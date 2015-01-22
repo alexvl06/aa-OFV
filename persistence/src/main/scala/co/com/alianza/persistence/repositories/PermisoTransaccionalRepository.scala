@@ -71,7 +71,7 @@ class PermisoTransaccionalRepository ( implicit executionContext: ExecutionConte
 
   private[this] def guardarAgentesPermiso(permiso: PermisoTransaccionalUsuarioEmpresarial, estaSeleccionado: Boolean, idsAgentes: Option[List[Int]] = None)(implicit s: Session) = {
     if(idsAgentes.isDefined && idsAgentes.get.headOption.isDefined && idsAgentes.get.headOption.get!=0){
-      val ids = idsAgentes.get
+      val ids = idsAgentes.get.filter{_!=0}
       val q = for {
         au <- tablaAutorizadores if au.idEncargo === permiso.idEncargo && au.idAgente === permiso.idAgente && au.tipoTransaccion === permiso.tipoTransaccion
       } yield au
