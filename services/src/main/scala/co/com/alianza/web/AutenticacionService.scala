@@ -1,5 +1,6 @@
 package co.com.alianza.web
 
+import co.com.alianza.commons.enumerations.TiposCliente
 import spray.routing.Directives
 import co.com.alianza.app.{ CrossHeaders, AlianzaCommons }
 import co.com.alianza.infrastructure.messages._
@@ -44,8 +45,20 @@ class AutenticacionService extends Directives with AlianzaCommons with CrossHead
           ponerIpHabitual =>
             respondWithMediaType(mediaType) {
               clientIP { ip =>
-                val nuevoPonerIpHabitual: AgregarIPHabitualUsuario = ponerIpHabitual.copy(clientIp = Some(ip.value), idUsuario =  Some(user.id) )
-                requestExecute(nuevoPonerIpHabitual, autenticacionActor)
+
+                if (user.tipoCliente.id == TiposCliente.clienteAdministrador.id) {
+                  requestExecute(AgregarIPHabitualUsuarioEmpresarialAdmin(Some(user.id), Some(ip.value)), autenticacionUsuarioEmpresaActor)
+                }
+
+                else if (user.tipoCliente.id == TiposCliente.agenteEmpresarial.id) {
+                  requestExecute(AgregarIPHabitualUsuarioEmpresarialAgente(Some(user.id), Some(ip.value)), autenticacionUsuarioEmpresaActor)
+                }
+
+                else {
+                  val nuevoPonerIpHabitual: AgregarIPHabitualUsuario = ponerIpHabitual.copy(clientIp = Some(ip.value), idUsuario =  Some(user.id) )
+                  requestExecute(nuevoPonerIpHabitual, autenticacionActor)
+                }
+
               }
             }
         }

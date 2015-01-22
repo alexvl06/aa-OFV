@@ -1,5 +1,7 @@
 package co.com.alianza.persistence.repositories
 
+import java.sql.Timestamp
+
 import scala.concurrent.{ExecutionContext, Future}
 import scalaz.Validation
 import scala.concurrent.{ExecutionContext, Future}
@@ -39,6 +41,31 @@ class UsuarioEmpresarialAdminRepository ( implicit executionContext: ExecutionCo
     implicit session =>
       val resultTry = Try { UsuariosEmpresarialesAdmin.filter(_.id === idUsuario).map(_.contrasena).update(Some (password)) }
       resolveTry(resultTry, "Cambiar la contraseña de usuario cliente admin")
+  }
+
+  def actualizarNumeroIngresosErroneos( idUsuario:Int, numeroIntentos:Int ): Future[Validation[PersistenceException, Int]] = loan {
+    implicit session =>
+      val resultTry = Try{ UsuariosEmpresarialesAdmin.filter( _.id === idUsuario ).map(_.numeroIngresosErroneos).update(numeroIntentos )  }
+      resolveTry(resultTry, "Actualizar usuario empresarial admin en numeroIngresosErroneos ")
+  }
+
+  def actualizarIpUltimoIngreso( idUsuario:Int, ipActual:String ): Future[Validation[PersistenceException, Int]] = loan {
+    implicit session =>
+      val resultTry = Try{ UsuariosEmpresarialesAdmin.filter( _.id === idUsuario ).map(_.ipUltimoIngreso ).update(Some(ipActual))  }
+      resolveTry(resultTry, "Actualizar usuario empresarial admin en ipUltimoIngreso ")
+  }
+
+
+  def actualizarFechaUltimoIngreso( idUsuario:Int, fechaActual : Timestamp ): Future[Validation[PersistenceException, Int]] = loan {
+    implicit session =>
+      val resultTry = Try{ UsuariosEmpresarialesAdmin.filter( _.id === idUsuario ).map(_.fechaUltimoIngreso ).update(Some(fechaActual))  }
+      resolveTry(resultTry, "Actualizar usuario empresarial admin en fechaUltimoIngreso ")
+  }
+
+  def obtenerUsuarioEmpresarialAdminPorId(idUsuario: Int): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = loan {
+    implicit session =>
+      val resultTry = Try{ UsuariosEmpresarialesAdmin.filter( _.id === idUsuario ).firstOption  }
+      resolveTry(resultTry, "Actualizar usuario empresarial admin en fechaUltimoIngreso ")
   }
 
 }
