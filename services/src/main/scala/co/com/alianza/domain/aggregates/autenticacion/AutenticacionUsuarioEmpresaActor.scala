@@ -28,6 +28,7 @@ import spray.http.StatusCodes._
 
 import scalaz.std.AllInstances._
 import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
+import scalaz.Validation.FlatMap._
 
 class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogging {
 

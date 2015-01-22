@@ -34,6 +34,7 @@ import scala.util.{Success => sSuccess, Failure => sFailure}
 
 import scalaz.std.AllInstances._
 import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
+import scalaz.Validation.FlatMap._
 
 class AutenticacionActorSupervisor extends Actor with ActorLogging {
   import akka.actor.SupervisorStrategy._
