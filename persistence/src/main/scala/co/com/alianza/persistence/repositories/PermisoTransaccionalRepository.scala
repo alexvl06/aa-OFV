@@ -61,17 +61,17 @@ class PermisoTransaccionalRepository ( implicit executionContext: ExecutionConte
               (permiso, autorizador) =>
                 permiso.idEncargo===autorizador.idEncargo && permiso.tipoTransaccion===autorizador.tipoTransaccion && permiso.idAgente===autorizador.idAgente
             }
-          } yield (permiso, autorizador.?)
+          } yield (permiso, autorizador.?, false)
 
           val joinPermisosAutorizadoresAdmin = for {
             (permiso, autorizador) <- tabla.filter(_.idAgente===idAgente) leftJoin tablaAutorizadoresAdmins on {
               (permiso, autorizador) =>
                 permiso.idEncargo===autorizador.idEncargo && permiso.tipoTransaccion===autorizador.tipoTransaccion && permiso.idAgente===autorizador.idAgente
             }
-          } yield (permiso, autorizador.?)
+          } yield (permiso, autorizador.?, true)
           val union = joinPermisosAutorizadores ++ joinPermisosAutorizadoresAdmin
           union.list groupBy {_._1.idEncargo} map {
-            e => ( e._1, e._2.groupBy {_._1}.map {a => (a._1, a._2.map{_._2})} toList )
+            e => ( e._1, e._2.groupBy {_._1}.map {a => (a._1, a._2.map{x => (x._2, Some(x._3))})} toList )
           } toList
         },
         "Consultar permiso transaccional de agente"
