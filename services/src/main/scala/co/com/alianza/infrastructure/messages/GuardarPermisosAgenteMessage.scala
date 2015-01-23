@@ -13,7 +13,7 @@ case class GuardarPermisosAgenteMessage (idAgente: Int, encargosPermisos: List[E
 case class ConsultarPermisosAgenteMessage(idAgente: Int) extends MessageService
 
 object PermisosTransaccionalesJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
-  implicit val AgenteFormat = jsonFormat1(Agente)
+  implicit val AgenteFormat = jsonFormat2(Autorizador)
   implicit val PermisoTransaccionalUsuarioEmpresarialFormat = new RootJsonFormat[PermisoTransaccionalUsuarioEmpresarial]{
     def read(json: JsValue) = {
       val fields = json.asJsObject.fields

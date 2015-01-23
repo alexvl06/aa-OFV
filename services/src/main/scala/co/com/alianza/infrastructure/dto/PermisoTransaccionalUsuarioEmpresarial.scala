@@ -11,6 +11,6 @@ case class PermisoTransaccionalUsuarioEmpresarial (
 case class EncargoPermisos (wspf_plan: String, permisos: List[PermisoTransaccionalUsuarioEmpresarialAgentes])
 
 case class PermisoTransaccionalUsuarioEmpresarialAgentes(permiso: Option[PermisoTransaccionalUsuarioEmpresarial],
-                                                         agentes: Option[List[Agente]] = None)
-case class Agente(id: Int)
+                                                         agentes: Option[List[Autorizador]] = None)
+case class Autorizador(id: Int, esAdmin: Option[Boolean])
 
