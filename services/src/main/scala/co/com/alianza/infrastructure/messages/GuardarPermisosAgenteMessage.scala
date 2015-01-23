@@ -9,7 +9,7 @@ import co.com.alianza.infrastructure.dto._
 /**
  * Created by manuel on 7/01/15.
  */
-case class GuardarPermisosAgenteMessage (idAgente: Int, encargosPermisos: List[EncargoPermisos]) extends MessageService
+case class GuardarPermisosAgenteMessage (idAgente: Int, encargosPermisos: List[EncargoPermisos], idClienteAdmin: Option[Int]) extends MessageService
 case class ConsultarPermisosAgenteMessage(idAgente: Int) extends MessageService
 
 object PermisosTransaccionalesJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
@@ -38,19 +38,8 @@ object PermisosTransaccionalesJsonSupport extends DefaultJsonProtocol with Spray
     }
     def write(p: PermisoTransaccionalUsuarioEmpresarialAgentes) = jsonFormat2(PermisoTransaccionalUsuarioEmpresarialAgentes).write(p)
   }
-  //TODO: Agregarlo en el adapter
-    implicit val EncargoPermisosFormat = jsonFormat2(EncargoPermisos)
 
-//  implicit val EncargoPermisosFormat = new RootJsonFormat[EncargoPermisos]{
-//    def read(json: JsValue) = {
-//      val encargo = jsonFormat2(EncargoPermisos).read(json)
-//      EncargoPermisos(
-//        encargo.wspf_plan,
-//        encargo.permisos.filter{p => if(p.permiso.isDefined) p.permiso.get.seleccionado else false}
-//      )
-//    }
-//    def write(p: EncargoPermisos) = jsonFormat2(EncargoPermisos).write(p)
-//  }
+  implicit val EncargoPermisosFormat = jsonFormat2(EncargoPermisos)
 
-  implicit val GuardarPermisosAgenteFormat = jsonFormat2(GuardarPermisosAgenteMessage)
+  implicit val GuardarPermisosAgenteFormat = jsonFormat3(GuardarPermisosAgenteMessage)
 }

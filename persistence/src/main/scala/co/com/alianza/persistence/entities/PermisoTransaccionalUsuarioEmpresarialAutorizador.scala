@@ -18,3 +18,17 @@ class PermisoTransaccionalUsuarioEmpresarialAutorizadorTable (tag: Tag) extends 
   def * = (idEncargo, idAgente, tipoTransaccion, idAutorizador) <> (PermisoTransaccionalUsuarioEmpresarialAutorizador.tupled, PermisoTransaccionalUsuarioEmpresarialAutorizador.unapply)
   def ? = (idEncargo.?, idAgente.?, tipoTransaccion.?, idAutorizador.?).shaped.<>({r=>import r._; _1.map(_=> PermisoTransaccionalUsuarioEmpresarialAutorizador.tupled((_1.get, _2.get, _3.get, _4.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 }
+
+case class PermisoTransaccionalUsuarioEmpresarialAutorizadorAdmin (idEncargo: String, idAgente: Int, tipoTransaccion: Int, idAutorizador: Int)
+class PermisoTransaccionalUsuarioEmpresarialAutorizadorAdminTable (tag: Tag) extends Table[PermisoTransaccionalUsuarioEmpresarialAutorizadorAdmin](tag, "PERMISO_TX_USUARIO_EMPRESARIAL_AUTORIZADOR_ADMIN") {
+
+  def idEncargo  = column[String]("ID_ENCARGO")
+  def idAgente   = column[Int]("ID_USUARIO_EMPRESARIAL")
+  def tipoTransaccion   = column[Int]("TIPO_TRANSACCION")
+  def idAutorizadorAdmin   = column[Int]("ID_AUTORIZADOR_ADMIN")
+
+  def pk = primaryKey("PERMISO_TX_USUARIO_EMPRESARIAL_AUTORIZADOR_ADMIN_PK", (idEncargo, idAgente, tipoTransaccion, idAutorizadorAdmin))
+
+  def * = (idEncargo, idAgente, tipoTransaccion, idAutorizadorAdmin) <> (PermisoTransaccionalUsuarioEmpresarialAutorizadorAdmin.tupled, PermisoTransaccionalUsuarioEmpresarialAutorizadorAdmin.unapply)
+  def ? = (idEncargo.?, idAgente.?, tipoTransaccion.?, idAutorizadorAdmin.?).shaped.<>({r=>import r._; _1.map(_=> PermisoTransaccionalUsuarioEmpresarialAutorizadorAdmin.tupled((_1.get, _2.get, _3.get, _4.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+}
