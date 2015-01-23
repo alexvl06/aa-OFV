@@ -62,7 +62,15 @@ class PermisoTransaccionalRepository ( implicit executionContext: ExecutionConte
                 permiso.idEncargo===autorizador.idEncargo && permiso.tipoTransaccion===autorizador.tipoTransaccion && permiso.idAgente===autorizador.idAgente
             }
           } yield (permiso, autorizador.?)
-          joinPermisosAutorizadores.list groupBy {_._1.idEncargo} map {
+
+          val joinPermisosAutorizadoresAdmin = for {
+            (permiso, autorizador) <- tabla.filter(_.idAgente===idAgente) leftJoin tablaAutorizadoresAdmins on {
+              (permiso, autorizador) =>
+                permiso.idEncargo===autorizador.idEncargo && permiso.tipoTransaccion===autorizador.tipoTransaccion && permiso.idAgente===autorizador.idAgente
+            }
+          } yield (permiso, autorizador.?)
+          val union = joinPermisosAutorizadores ++ joinPermisosAutorizadoresAdmin
+          union.list groupBy {_._1.idEncargo} map {
             e => ( e._1, e._2.groupBy {_._1}.map {a => (a._1, a._2.map{_._2})} toList )
           } toList
         },
@@ -100,9 +108,9 @@ class PermisoTransaccionalRepository ( implicit executionContext: ExecutionConte
       val adminsRemovidos = if(estaSeleccionado && esConAutorizadores) adminsExistentes.diff(adminsIds) else adminsExistentes
       adminsNuevos foreach {
         id =>
-          tablaAutorizadoresAdmins += PermisoTransaccionalUsuarioEmpresarialAutorizadorAdmin(permiso.idEncargo, permiso.idAgente, permiso.tipoTransaccion, id)
+          tablaAutorizadoresAdmins += PermisoTransaccionalUsuarioEmpresarialAutorizador(permiso.idEncargo, permiso.idAgente, permiso.tipoTransaccion, id)
       }
-      adminsRemovidos foreach { id => queryAdmins filter {_.idAutorizadorAdmin===id} delete }
+      adminsRemovidos foreach { id => queryAdmins filter {_.idAutorizador===id} delete }
     }
   }
 
