@@ -20,7 +20,7 @@ class IpsUsuariosService extends Directives with AlianzaCommons with CrossHeader
     path(ipsUsuarios) {
       get {
         respondWithMediaType(mediaType) {
-          requestExecute(new ObtenerIpsUsuarioMessage(user.id), ipsUsuarioActor)
+          requestExecute(new ObtenerIpsUsuarioMessage(user.id, user.tipoCliente), ipsUsuarioActor)
         }
       } ~
       put {
