@@ -10,7 +10,7 @@ import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial._
 import co.com.alianza.domain.aggregates.usuarios.{ErrorPersistence, MailMessageUsuario, ErrorValidacion}
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{DataAccessTranslator, DataAccessAdapter}
-import co.com.alianza.infrastructure.dto.{Configuracion, UsuarioEmpresarial, PinEmpresa}
+import co.com.alianza.infrastructure.dto.{UsuarioEmpresarialEstado, Configuracion, UsuarioEmpresarial, PinEmpresa}
 import co.com.alianza.infrastructure.messages.{UsuarioMessage, ResponseMessage}
 import co.com.alianza.infrastructure.messages.empresa.{GetAgentesEmpresarialesMessage, CrearAgenteEMessage, UsuarioMessageCorreo, ReiniciarContrasenaAgenteEMessage}
 import co.com.alianza.microservices.{MailMessage, SmtpServiceClient}
@@ -81,8 +81,8 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
 
     case message: GetAgentesEmpresarialesMessage =>
       val currentSender = sender()
-      val future: Future[Validation[PersistenceException, List[UsuarioEmpresarial]]] = DataAccessAdapter.obtenerUsuariosBusqueda(message.toGetUsuariosEmpresaBusquedaRequest)
-      resolveFutureValidation(future, (response: List[UsuarioEmpresarial]) => response.toJson, currentSender)
+      val future: Future[Validation[PersistenceException, List[UsuarioEmpresarialEstado]]] = DataAccessAdapter.obtenerUsuariosBusqueda(message.toGetUsuariosEmpresaBusquedaRequest)
+      resolveFutureValidation(future, (response: List[UsuarioEmpresarialEstado]) => response.toJson, currentSender)
   }
 
   private def resolveCrearAgenteEmpresarialFuture(crearAgenteEmpresarialFuture: Future[Validation[PersistenceException, Int]], message : CrearAgenteEMessage, currentSender: ActorRef) {
