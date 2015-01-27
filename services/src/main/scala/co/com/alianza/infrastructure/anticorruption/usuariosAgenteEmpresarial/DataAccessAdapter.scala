@@ -11,7 +11,7 @@ import enumerations.EstadosEmpresaEnum
 import scala.concurrent.{ExecutionContext, Future}
 import scalaz.{Failure, Success, Validation}
 import co.com.alianza.persistence.messages.empresa.GetAgentesEmpresarialesRequest
-import co.com.alianza.infrastructure.dto.{UsuarioEmpresarial => dtoUsuario}
+import co.com.alianza.infrastructure.dto.{UsuarioEmpresarial => dtoUsuario, UsuarioEmpresarialEstado => dtoEstadoUsuario}
 import co.com.alianza.persistence.repositories.empresa.UsuariosEmpresaRepository
 import co.com.alianza.persistence.entities.IpsUsuario
 import co.com.alianza.persistence.entities.Empresa
@@ -68,7 +68,7 @@ object DataAccessAdapter {
     repo.asociarAgenteEmpresarialConEmpresa(usuarioEmpresarialEmpresa)
   }
 
-  def obtenerUsuariosBusqueda(message:GetAgentesEmpresarialesRequest): Future[Validation[PersistenceException, List[dtoUsuario]]] = {
+  def obtenerUsuariosBusqueda(message:GetAgentesEmpresarialesRequest): Future[Validation[PersistenceException, List[dtoEstadoUsuario]]] = {
     val repo = new UsuariosEmpresaRepository()
     repo.obtenerUsuariosBusqueda(message.correo, message.usuario, message.nombre, message.estado, message.idClienteAdmin) map {
       x => transformValidationList(x)
@@ -83,9 +83,9 @@ object DataAccessAdapter {
     repo.actualizarEstadoUsuario( idUsuario, estado )
   }
 
-  private def transformValidationList(origin: Validation[PersistenceException, List[eUsuario]]): Validation[PersistenceException, List[dtoUsuario]] = {
+  private def transformValidationList(origin: Validation[PersistenceException, List[eUsuario]]): Validation[PersistenceException, List[dtoEstadoUsuario]] = {
     origin match {
-      case zSuccess(response: List[eUsuario]) => zSuccess(DataAccessTranslator.translateUsuario(response))
+      case zSuccess(response: List[eUsuario]) => zSuccess(DataAccessTranslator.translateUsuarioEstado(response))
       case zFailure(error)    =>  zFailure(error)
     }
   }
