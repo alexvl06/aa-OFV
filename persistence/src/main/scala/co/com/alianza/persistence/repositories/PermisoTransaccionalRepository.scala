@@ -15,6 +15,7 @@ class PermisoTransaccionalRepository ( implicit executionContext: ExecutionConte
   val tabla = TableQuery[PermisoTransaccionalUsuarioEmpresarialTable]
   val tablaAutorizadores = TableQuery[PermisoTransaccionalUsuarioEmpresarialAutorizadorTable]
   val tablaAutorizadoresAdmins = TableQuery[PermisoTransaccionalUsuarioEmpresarialAutorizadorAdminTable]
+  val tablaAgentes = TableQuery[UsuarioEmpresarialTable]
 
   /**
    * Crea, actualiza o borra un permiso
@@ -57,9 +58,12 @@ class PermisoTransaccionalRepository ( implicit executionContext: ExecutionConte
       resolveTry(
         Try {
           val joinPermisosAutorizadores = for {
-            (permiso, autorizador) <- tabla.filter(_.idAgente===idAgente) leftJoin tablaAutorizadores on {
+            ((permiso, autorizador), agente) <- tabla.filter(_.idAgente===idAgente) leftJoin tablaAutorizadores on {
               (permiso, autorizador) =>
                 permiso.idEncargo===autorizador.idEncargo && permiso.tipoTransaccion===autorizador.tipoTransaccion && permiso.idAgente===autorizador.idAgente
+            } join tablaAgentes on {
+              case ((permiso, autorizador), agente) =>
+                autorizador.idAutorizador===agente.id && agente.estado===1
             }
           } yield (permiso, autorizador.?, false)
 
