@@ -1,25 +1,21 @@
 package co.com.alianza.domain.aggregates.ips
 
-import akka.actor.{Actor, ActorLogging}
+import akka.actor.{Actor, ActorLogging, Props}
 import co.com.alianza.app.AlianzaActors
+import co.com.alianza.commons.enumerations.TiposCliente
+import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.persistence.entities.IpsUsuario
 import spray.http.StatusCodes._
 
+import scala.util.{Failure, Success}
 import scalaz.{Failure => zFailure, Success => zSuccess}
-import scala.util.{Success, Failure}
-
-
-import akka.actor.Props
-import akka.routing.RoundRobinPool
 
 
 
 
 class IpsUsuarioActorSupervisor extends Actor with ActorLogging {
-  import akka.actor.SupervisorStrategy._
-  import akka.actor.OneForOneStrategy
 
   val ipsUsuarioActor = context.actorOf(Props[IpsUsuarioActor].withRouter(RoundRobinPool(nrOfInstances = 2)), "ipsUsuarioActor")
 
@@ -48,14 +44,21 @@ class IpsUsuarioActor extends Actor with ActorLogging with AlianzaActors {
   import co.com.alianza.util.json.MarshallableImplicits._
 
   def receive = {
-    case message: ObtenerIpsUsuarioMessage  => obtenerIpsUsuario(message.idUsuario)
+    case message: ObtenerIpsUsuarioMessage  => obtenerIpsUsuario(message.idUsuario, message.tipoCliente)
     case message: AgregarIpsUsuarioMessage => agregarIpsUsuarioMessage(message.toEntityIpsUsuario)
     case message: EliminarIpsUsuarioMessage => eliminarIpsUsuarioMessage(message.toEntityIpsUsuario)
   }
 
-  def obtenerIpsUsuario(idUsuario : Int) = {
+  def obtenerIpsUsuario(idUsuario : Int, tipoCliente: TiposCliente) = {
     val currentSender = sender()
-    val result = DataAccessAdapter.obtenerIpsUsuario(idUsuario)
+    val result = {
+      if (tipoCliente.equals(TiposCliente.clienteAdministrador))
+        DataAccessAdapter.obtenerIpsUsuarioEmpresarialAdmin(idUsuario)
+      else if (tipoCliente.equals(TiposCliente.agenteEmpresarial))
+        DataAccessAdapter.obtenerIpsUsuarioEmpresarial(idUsuario)
+      else
+        DataAccessAdapter.obtenerIpsUsuario(idUsuario)
+    }
 
     result  onComplete {
       case Failure(failure)  =>    currentSender ! failure
