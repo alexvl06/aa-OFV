@@ -1,6 +1,8 @@
 package co.com.alianza.domain.aggregates.ips
 
-import akka.actor.{Actor, ActorLogging, Props}
+import akka.actor.{Actor, ActorLogging, Props, OneForOneStrategy}
+import akka.actor.SupervisorStrategy._
+import akka.routing.RoundRobinPool
 import co.com.alianza.app.AlianzaActors
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente._
