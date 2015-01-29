@@ -189,7 +189,7 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
               case errorPersistence: ErrorPersistence => currentSender ! errorPersistence.exception
               case errorVal: ErrorValidacion =>
                 currentSender ! ResponseMessage(Conflict, errorVal.msg)
-              case errorClienteNoExiste:ErrorClienteNoExiste  => currentSender !errorClienteNoExiste
+              case errorClienteNoExiste:ErrorClienteNoExiste  => currentSender ! errorClienteNoExiste
             }
         }
     }

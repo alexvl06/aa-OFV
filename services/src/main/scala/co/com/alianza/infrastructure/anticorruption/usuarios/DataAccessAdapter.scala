@@ -185,8 +185,18 @@ object DataAccessAdapter {
     repo.guardar( ip )
   }
 
+  def agregarIpUsuarioEmpresarialAdmin( ip:IpsUsuario ) : Future[Validation[PersistenceException, String]] = {
+    val repo = new IpsUsuarioEmpresarialAdminRepository()
+    repo.guardar( ip )
+  }
+
   def eliminarIpUsuario( ip:IpsUsuario ) : Future[Validation[PersistenceException, Int]] = {
     val repo = new IpsUsuarioRepository()
+    repo.eliminar(ip)
+  }
+
+  def eliminarIpUsuarioEmpresarialAdmin( ip:IpsUsuario ) : Future[Validation[PersistenceException, Int]] = {
+    val repo = new IpsUsuarioEmpresarialAdminRepository()
     repo.eliminar(ip)
   }
 
