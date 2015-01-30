@@ -40,8 +40,7 @@ class SesionActorSupervisor extends Actor with ActorLogging {
 
     // When an user authenticates
     case message: CrearSesionUsuario =>
-      val config = message.tiempoExpiracion.getOrElse(Configuracion(TiposConfiguracion.EXPIRACION_SESION.llave, "5"))
-      crearSesion(message.token, config.valor.toInt)
+      crearSesion(message.token, message.tiempoExpiracion)
 
     // When a user logout
     case message: InvalidarSesion =>

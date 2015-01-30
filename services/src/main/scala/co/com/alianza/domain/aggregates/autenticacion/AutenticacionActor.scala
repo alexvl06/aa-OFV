@@ -86,7 +86,7 @@ class AutenticacionActor extends Actor with ActorLogging {
     case message: AutenticarMessage =>
       val originalSender = sender()
 
-      def validaciones: Future[Validation[ErrorAutenticacion, String]] = (for {
+      val validaciones: Future[Validation[ErrorAutenticacion, String]] = (for {
         usuario <- ValidationT(obtenerUsuario(message.numeroIdentificacion))
         estadoValido <- ValidationT(validarEstadosUsuario(usuario.estado))
         passwordValido <- ValidationT(validarPasswords(message.password, usuario.contrasena.getOrElse(""), Some(usuario.identificacion), None, usuario.numeroIngresosErroneos))
@@ -94,8 +94,9 @@ class AutenticacionActor extends Actor with ActorLogging {
         cienteValido <- ValidationT(validarClienteSP(usuario.tipoIdentificacion, cliente))
         passwordCaduco <- ValidationT(validarCaducidadPassword(usuario.id.get, usuario.fechaCaducidad))
         actualizacionInfo <- ValidationT(actualizarInformacionUsuario(usuario.identificacion, message.clientIp.get))
-        token <- ValidationT(generarYAsociarToken(cliente, usuario))
-        sesion <- ValidationT(crearSesion(token))
+        inactividadConfig <- ValidationT(buscarConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave))
+        token <- ValidationT(generarYAsociarToken(cliente, usuario, inactividadConfig.valor))
+        sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
         validacionIps <- ValidationT(validarControlIpsUsuario(usuario.id.get, message.clientIp.get, token))
       } yield validacionIps).run
 
@@ -324,9 +325,9 @@ class AutenticacionActor extends Actor with ActorLogging {
    * Success => Token generado y asociado
    * ErrorAutenticacion => ErrorPersistencia
    */
-  def generarYAsociarToken(cliente: Cliente, usuario: Usuario): Future[Validation[ErrorAutenticacion, String]] = {
+  def generarYAsociarToken(cliente: Cliente, usuario: Usuario, expiracionInactividad: String): Future[Validation[ErrorAutenticacion, String]] = {
     log.info("Generando y asociando token usuario individual")
-    val token: String = Token.generarToken(cliente.wcli_nombre, cliente.wcli_dir_correo, cliente.wcli_person, usuario.ipUltimoIngreso.getOrElse(""), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())))
+    val token: String = Token.generarToken(cliente.wcli_nombre, cliente.wcli_dir_correo, cliente.wcli_person, usuario.ipUltimoIngreso.getOrElse(""), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), expiracionInactividad)
     val future: Future[Validation[PersistenceException, Int]] = UsDataAdapter.asociarTokenUsuario(usuario.identificacion, token)
     future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap { _ =>
       Validation.success(token)
@@ -340,13 +341,10 @@ class AutenticacionActor extends Actor with ActorLogging {
    * Success => True
    * ErrorAutenticacion => ErrorPersistencia
    */
-  def crearSesion(token: String): Future[Validation[ErrorAutenticacion, Boolean]] = {
+  def crearSesion(token: String, expiracionInactividad: Int): Future[Validation[ErrorAutenticacion, Boolean]] = {
     log.info("Creando sesion")
-    val future: Future[Validation[PersistenceException, Option[Configuracion]]] = ConfDataAdapter.obtenerConfiguracionPorLlave(TiposConfiguracion.EXPIRACION_SESION.llave)
-    future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap { conf =>
-      MainActors.sesionActorSupervisor ! CrearSesionUsuario(token, conf)
-      Validation.success(true)
-    })
+    MainActors.sesionActorSupervisor ! CrearSesionUsuario(token, expiracionInactividad)
+    Future.successful(Validation.success(true))
   }
 
   /**
@@ -392,6 +390,21 @@ class AutenticacionActor extends Actor with ActorLogging {
     future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap {
       case None => Validation.failure(ErrorRegla(llave))
       case Some(regla) => Validation.success(regla)
+    })
+  }
+
+  /**
+   * Busca una configuracion dado una llave por parametro
+   * @param llave llave de la configuracion a buscar
+   * @return Future[Validation[ErrorAutenticacion, Configuracion] ]
+   * Success => Configuracion
+   * ErrorAutenticacion => ErrorPersistencia | ErrorRegla
+   */
+  def buscarConfiguracion(llave: String): Future[Validation[ErrorAutenticacion, Configuracion]] = {
+    val future = ConfDataAdapter.obtenerConfiguracionPorLlave(llave)
+    future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap {
+      case None => Validation.failure(ErrorRegla(llave))
+      case Some(conf) => Validation.success(conf)
     })
   }
 
