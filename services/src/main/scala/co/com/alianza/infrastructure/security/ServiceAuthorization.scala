@@ -6,11 +6,13 @@ import akka.event.Logging
 import akka.util.Timeout
 
 import co.com.alianza.app.MainActors
+import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.infrastructure.dto.{Usuario, UsuarioEmpresarial}
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.util.json.JsonUtil
+import co.com.alianza.util.token.Token
 
 import com.typesafe.config.Config
 
@@ -34,42 +36,21 @@ trait ServiceAuthorization {
 
   def authenticateUser: ContextAuthenticator[UsuarioAuth] = {
     ctx =>
-
       val token = ctx.request.headers.find(header => header.name equals "token")
+      log info(token toString)
       if (token.isEmpty) {
         Future(Left(AuthenticationFailedRejection(CredentialsMissing, List())))
       } else {
+        val tipoCliente = Token.getToken(token.get.value).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
         val p = promise[Any]
-        MainActors.usuariosActorSupervisor ? ConsultaUsuarioMessage(token = Some(token.get.value)) onComplete {
-          case Success(Some(usuario)) =>
-            val uf = MainActors.autorizacionActorSupervisor ? AutorizarUrl(token.get.value, "")
-            log info ("Individual: "+usuario.toString)
-            uf onSuccess { case r => p.trySuccess(r) }
-            uf onFailure { case t => p.tryFailure(t) }
-          case Success(None) =>
-            MainActors.usuariosActorSupervisor ? ConsultaUsuarioEmpresarialMessage(token = Some(token.get.value)) onComplete {
-              case Success(Some(usuario)) =>
-                val uf = MainActors.autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialMessage(token.get.value)
-                uf onSuccess { case r => p.trySuccess(r) }
-                uf onFailure { case t => p.tryFailure(t) }
-              case Success(None) =>
-                MainActors.usuariosActorSupervisor ? ConsultaUsuarioEmpresarialAdminMessage(token = Some(token.get.value)) onComplete {
-                  case Success(Some(usuario)) =>
-                    val uf = MainActors.autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialAdminMessage(token.get.value)
-                    uf onSuccess { case r =>  p.trySuccess(r) }
-                    uf onFailure { case _ => p.tryFailure(_) }
-                  case Success(None) =>
-                    p.trySuccess(None)
-                  case Failure(t) =>
-                    p.tryFailure(t)
-                }
-              case Failure(t) =>
-                p.tryFailure(t)
-            }
-          case Failure(t) =>
-            p.tryFailure(t)
-        }
-        p.future map {
+        var futuro: Future[Any] = null
+        if (tipoCliente == TiposCliente.agenteEmpresarial.toString)
+          futuro = MainActors.autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialMessage(token.get.value)
+        else if (tipoCliente == TiposCliente.clienteAdministrador.toString)
+          futuro = MainActors.autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialAdminMessage(token.get.value)
+        else
+          futuro = MainActors.autorizacionActorSupervisor ? AutorizarUrl(token.get.value, "")
+        futuro map {
           case r: ResponseMessage =>
             r.statusCode match {
               case Unauthorized => Left(AuthenticationFailedRejection(CredentialsRejected, List()))
@@ -84,7 +65,6 @@ trait ServiceAuthorization {
           case _ =>
             Left(AuthenticationFailedRejection(CredentialsRejected, List()))
         }
-
       }
   }
 
