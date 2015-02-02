@@ -16,9 +16,13 @@ case class ReiniciarContrasenaAgenteEMessage(numIdentificacionAgenteEmpresarial:
 
 case class CambiarContrasenaClienteAdminMessage(pw_actual: String, pw_nuevo: String, idUsuario: Option[Int]) extends MessageService
 
+case class CambiarContrasenaAgenteEmpresarialMessage(pw_actual: String, pw_nuevo: String, idUsuario: Option[Int]) extends MessageService
+
 object AdministrarContrasenaEmpresaMessagesJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val ReiniciarContrasenaEmpresaMessageFormat = jsonFormat4(ReiniciarContrasenaAgenteEMessage)
   implicit val CambiarContrasenaClienteAdminMessageFormat = jsonFormat3(CambiarContrasenaClienteAdminMessage)
+  implicit val CambiarContrasenaAgenteEmpresarialMessageFormat = jsonFormat3(CambiarContrasenaAgenteEmpresarialMessage)
+
 }
 
 case class UsuarioMessageCorreo(correo: String, identificacion: String, tipoIdentificacion: Int) extends MessageService{

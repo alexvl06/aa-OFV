@@ -2,23 +2,17 @@ package co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial
 
 import java.sql.Timestamp
 
-import co.com.alianza.persistence.entities.{PinEmpresa => ePinEmpresa, _}
-import co.com.alianza.persistence.repositories.{UsuariosRepository, UsuarioEmpresarialAdminRepository, UsuariosEmpresarialRepository}
+import co.com.alianza.persistence.entities.{PinEmpresa => ePinEmpresa, UsuarioEmpresarial => eUsuario, _}
+import co.com.alianza.persistence.repositories.UsuariosEmpresarialRepository
 import co.com.alianza.app.MainActors
 import co.com.alianza.exceptions.PersistenceException
 import enumerations.EstadosEmpresaEnum
-
 import scala.concurrent.{ExecutionContext, Future}
 import scalaz.{Failure, Success, Validation}
-import co.com.alianza.persistence.messages.empresa.GetAgentesEmpresarialesRequest
 import co.com.alianza.infrastructure.dto.{UsuarioEmpresarial => dtoUsuario, UsuarioEmpresarialEstado => dtoEstadoUsuario}
 import co.com.alianza.persistence.repositories.empresa.UsuariosEmpresaRepository
-import co.com.alianza.persistence.entities.IpsUsuario
-import co.com.alianza.persistence.entities.Empresa
-import co.com.alianza.persistence.messages.empresa.GetAgentesEmpresarialesRequest
-import co.com.alianza.persistence.entities.UsuarioEmpresarialEmpresa
-import co.com.alianza.persistence.entities.{UsuarioEmpresarial => eUsuario}
 import scalaz.{Failure => zFailure, Success => zSuccess}
+import co.com.alianza.util.clave.Crypto
 import co.com.alianza.persistence.entities.IpsUsuario
 import co.com.alianza.persistence.entities.Empresa
 import co.com.alianza.persistence.messages.empresa.GetAgentesEmpresarialesRequest
@@ -32,8 +26,20 @@ object DataAccessAdapter {
   implicit val ec: ExecutionContext = MainActors.dataAccesEx
   val repo = new UsuariosEmpresarialRepository()
 
+  def consultaContrasenaActualAgenteEmpresarial( pw_actual: String, idUsuario: Int): Future[Validation[PersistenceException, Option[dtoUsuario]]] = {
+    val repo = new UsuariosEmpresaRepository()
+    repo.consultaContrasenaActualAgenteEmpresarial( pw_actual, idUsuario ) map {
+      x => transformValidation(x)
+    }
+  }
+
   def validacionAgenteEmpresarial( numIdentificacionAgenteEmpresarial: String, correoUsuarioAgenteEmpresarial: String, tipoIdentiAgenteEmpresarial: Int, idClienteAdmin: Int): Future[Validation[PersistenceException, Option[(Int,Int)]]] = {
     repo.validacionAgenteEmpresarial(numIdentificacionAgenteEmpresarial: String, correoUsuarioAgenteEmpresarial: String, tipoIdentiAgenteEmpresarial: Int, idClienteAdmin: Int)
+  }
+
+  def actualizarContrasenaAgenteEmpresarial(pw_nuevo: String, idUsuario: Int): Future[Validation[PersistenceException, Int]] = {
+    val repo = new UsuariosEmpresaRepository()
+    repo.actualizarContrasenaAgenteEmpresarial(Crypto.hashSha512(pw_nuevo), idUsuario)
   }
 
   def CambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial: Int, estado : EstadosEmpresaEnum.estadoEmpresa): Future[Validation[PersistenceException, Int]] = {
@@ -81,6 +87,18 @@ object DataAccessAdapter {
   def actualizarEstadoUsuarioAgenteEmpresarial( idUsuario:Int, estado:Int ) : Future[Validation[PersistenceException, Int]] = {
     val repo = new UsuariosEmpresaRepository()
     repo.actualizarEstadoUsuario( idUsuario, estado )
+  }
+
+  private def transformValidation(origin: Validation[PersistenceException, Option[eUsuario]]): Validation[PersistenceException, Option[dtoUsuario]] = {
+    origin match {
+      case zSuccess(response) =>
+        response match {
+          case Some(usuario) => zSuccess(Some(DataAccessTranslator.translateUsuarioEmpresarial(usuario)))
+          case _ => zSuccess(None)
+        }
+
+      case zFailure(error)    =>  zFailure(error)
+    }
   }
 
   private def transformValidationList(origin: Validation[PersistenceException, List[eUsuario]]): Validation[PersistenceException, List[dtoEstadoUsuario]] = {

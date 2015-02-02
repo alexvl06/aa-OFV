@@ -29,13 +29,10 @@ object ValidacionesClienteAdmin {
     contrasenaActualFuture.map(_.leftMap(pe => ErrorPersistence(pe.message,pe)).flatMap{
       (x:Option[UsuarioEmpresarialAdmin]) => x match{
         case Some(c) =>
-          println("S---"+x)
           zSuccess(x)
         case None =>
-          println("N---"+x)
           zFailure(ErrorContrasenaNoExiste(errorContrasenaActualNoExiste))
         case _ =>
-          println("_---"+x)
           zFailure(ErrorContrasenaNoExiste(errorContrasenaActualNoContempla))
       }
     })
