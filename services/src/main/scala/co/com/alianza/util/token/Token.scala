@@ -1,6 +1,8 @@
 package co.com.alianza.util.token
 
 import co.com.alianza.commons.enumerations.TiposCliente
+import co.com.alianza.commons.enumerations.TiposCliente
+import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import org.joda.time.{DateTime}
 import java.util.Date
 import enumerations.AppendPasswordUser
@@ -54,7 +56,7 @@ object Token {
     jwt
   }
 
-  def generarTokenCaducidadContrasena(idUsuario: Int) = {
+  def generarTokenCaducidadContrasena(tipoUsuario: TiposCliente, idUsuario: Int) = {
 
     val claimsSet = new JWTClaimsSet()
     claimsSet.setIssueTime(new Date())
@@ -63,7 +65,8 @@ object Token {
     claimsSet.setIssuer(ISSUER)
 
     val customData = Map(
-      "us_id" -> idUsuario.toString
+      "us_id" -> idUsuario.toString,
+      "us_tipo" -> tipoUsuario.toString
     )
 
     claimsSet.setCustomClaims(customData)

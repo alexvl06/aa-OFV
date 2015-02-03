@@ -4,6 +4,9 @@ import akka.actor.{Props, ActorLogging, Actor}
 import akka.routing.RoundRobinPool
 
 import co.com.alianza.app.MainActors
+import co.com.alianza.commons.enumerations.TiposCliente
+import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
+import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import co.com.alianza.constants.TiposConfiguracion
 
 import co.com.alianza.domain.aggregates.autenticacion.errores._
@@ -92,7 +95,7 @@ class AutenticacionActor extends Actor with ActorLogging {
         passwordValido <- ValidationT(validarPasswords(message.password, usuario.contrasena.getOrElse(""), Some(usuario.identificacion), None, usuario.numeroIngresosErroneos))
         cliente <- ValidationT(obtenerClienteSP(usuario.tipoIdentificacion, usuario.identificacion))
         cienteValido <- ValidationT(validarClienteSP(usuario.tipoIdentificacion, cliente))
-        passwordCaduco <- ValidationT(validarCaducidadPassword(usuario.id.get, usuario.fechaCaducidad))
+        passwordCaduco <- ValidationT(validarCaducidadPassword(TiposCliente.clienteIndividual, usuario.id.get, usuario.fechaCaducidad))
         actualizacionInfo <- ValidationT(actualizarInformacionUsuario(usuario.identificacion, message.clientIp.get))
         token <- ValidationT(generarYAsociarToken(cliente, usuario))
         sesion <- ValidationT(crearSesion(token))
@@ -281,14 +284,14 @@ class AutenticacionActor extends Actor with ActorLogging {
    * Success => True
    * ErrorAutenticacion => ErrorPersistencia | ErrorRegla | ErrorPasswordCaducado
    */
-  def validarCaducidadPassword(idUsuario: Int, fechaActualizacionUsuario: Date): Future[Validation[ErrorAutenticacion, Boolean]] = {
+  def validarCaducidadPassword(tipoCliente : TiposCliente, idUsuario: Int, fechaActualizacionUsuario: Date): Future[Validation[ErrorAutenticacion, Boolean]] = {
     log.info("Validando fecha de caducidad del password")
     val future: Future[Validation[PersistenceException, Option[ReglasContrasenas]]] = RgDataAdapter.obtenerRegla("DIAS_VALIDA")
     future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap {
       case None => Validation.failure(ErrorRegla("DIAS_VALIDA"))
       case Some(regla) =>
         if (new DateTime().isAfter(new DateTime(fechaActualizacionUsuario.getTime).plusDays(regla.valor.toInt))) {
-          val token: String = Token.generarTokenCaducidadContrasena(idUsuario)
+          val token: String = Token.generarTokenCaducidadContrasena(tipoCliente, idUsuario)
           Validation.failure(ErrorPasswordCaducado(token))
         }
         else {
