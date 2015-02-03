@@ -180,17 +180,20 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
    * @param url la url a validar
    * @return
    */
-  private def filtrarRecursos(recurso: RecursoUsuario, url: String): Boolean = {
-    if (recurso.urlRecurso.equals(url))
-      recurso.acceso
-    else if (recurso.urlRecurso.endsWith("/*")) {
-      val urlC = recurso.urlRecurso.substring(0, recurso.urlRecurso.lastIndexOf("*"))
-      if (urlC.equals(url + "/")) recurso.acceso
+  private def filtrarRecursos(recurso: RecursoUsuario, url: String): Boolean =
+    filtrarRecursos(recurso.urlRecurso, recurso.acceso, url)
+
+  protected def filtrarRecursos(urlRecurso: String, acceso: Boolean, url: String) = {
+    if (urlRecurso.equals(url))
+      acceso
+    else if (urlRecurso.endsWith("/*")) {
+      val urlC = urlRecurso.substring(0, urlRecurso.lastIndexOf("*"))
+      if (urlC.equals(url + "/")) acceso
       else {
         if (url.length >= urlC.length) {
           val ends = if (url.endsWith("/")) "" else ""
           val urlSuffix = url.substring(0, urlC.length) + ends
-          if (urlSuffix.equals(urlC)) recurso.acceso
+          if (urlSuffix.equals(urlC)) acceso
           else false
         } else false
       }

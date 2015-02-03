@@ -45,9 +45,9 @@ trait ServiceAuthorization {
         val p = promise[Any]
         var futuro: Future[Any] = null
         if (tipoCliente == TiposCliente.agenteEmpresarial.toString)
-          futuro = MainActors.autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialMessage(token.get.value)
+          futuro = MainActors.autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialMessage(token.get.value, None)
         else if (tipoCliente == TiposCliente.clienteAdministrador.toString)
-          futuro = MainActors.autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialAdminMessage(token.get.value)
+          futuro = MainActors.autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialAdminMessage(token.get.value, None)
         else
           futuro = MainActors.autorizacionActorSupervisor ? AutorizarUrl(token.get.value, "")
         futuro map {

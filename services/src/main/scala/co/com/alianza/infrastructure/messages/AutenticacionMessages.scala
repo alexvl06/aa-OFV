@@ -54,11 +54,11 @@ case class AutorizarUrl(token:String, url:String)  extends MessageService{
   def toValidarTokenRequest:ValidarTokenRequest = ValidarTokenRequest( token )
 }
 
-case class AutorizarUsuarioEmpresarialMessage(token:String)  extends MessageService{
+case class AutorizarUsuarioEmpresarialMessage(token:String, url: Option[String])  extends MessageService{
   def toValidarTokenRequest:ValidarTokenRequest = ValidarTokenRequest( token )
 }
 
-case class AutorizarUsuarioEmpresarialAdminMessage(token:String)  extends MessageService{
+case class AutorizarUsuarioEmpresarialAdminMessage(token:String, url: Option[String])  extends MessageService{
   def toValidarTokenRequest:ValidarTokenRequest = ValidarTokenRequest( token )
 }
 

@@ -7,7 +7,7 @@ import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.app.MainActors
 import scalaz.{Failure => zFailure, Success => zSuccess}
 import co.com.alianza.infrastructure.dto.RecursoUsuario
-import co.com.alianza.persistence.entities.{RecursoPerfil => eRecursoUsuario}
+import co.com.alianza.persistence.entities.{RecursoPerfil => eRecursoPerfil}
 
 object DataAccessAdapter {
 
@@ -20,9 +20,9 @@ object DataAccessAdapter {
     }
   }
 
-  private def transformValidationList(origin: Validation[PersistenceException, List[eRecursoUsuario]]): Validation[PersistenceException, List[RecursoUsuario]] = {
+  private def transformValidationList(origin: Validation[PersistenceException, List[eRecursoPerfil]]): Validation[PersistenceException, List[RecursoUsuario]] = {
     origin match {
-      case zSuccess(response: List[eRecursoUsuario]) => zSuccess(DataAccessTranslator.translate(response))
+      case zSuccess(response: List[eRecursoPerfil]) => zSuccess(DataAccessTranslator.translate(response))
       case zFailure(error)    =>  zFailure(error)
     }
   }

@@ -27,25 +27,18 @@ class AutorizacionService extends Directives with AlianzaCommons with CacheHelpe
       token =>
         get {
           respondWithMediaType(mediaType) {
+            parameters('url) {
+              url =>
+                val tipoCliente = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
 
-            val tipoCliente = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
-
-            if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
-              requestExecute(AutorizarUsuarioEmpresarialMessage(token), autorizacionUsuarioEmpresarialActor)
-            }
-            else if (tipoCliente == TiposCliente.clienteAdministrador.toString) {
-              requestExecute(AutorizarUsuarioEmpresarialAdminMessage(token), autorizacionUsuarioEmpresarialActor)
-            }
-            else {
-              parameters('url) {
-                url =>
-                  respondWithMediaType(mediaType) {
-                    requestExecute(AutorizarUrl(token, url), autorizacionActor)
-                  }
-              }
-            }
+                if (tipoCliente == TiposCliente.agenteEmpresarial.toString)
+                  requestExecute(AutorizarUsuarioEmpresarialMessage(token, Some(url)), autorizacionUsuarioEmpresarialActor)
+                else if (tipoCliente == TiposCliente.clienteAdministrador.toString)
+                  requestExecute(AutorizarUsuarioEmpresarialAdminMessage(token, Some(url)), autorizacionUsuarioEmpresarialActor)
+                else
+                  requestExecute(AutorizarUrl(token, url), autorizacionActor)
+             }
           }
-
         }
     } ~ path("invalidarToken" / Segment) {
       token =>

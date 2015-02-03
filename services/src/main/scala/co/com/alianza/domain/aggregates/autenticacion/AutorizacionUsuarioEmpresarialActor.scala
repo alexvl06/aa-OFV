@@ -6,7 +6,9 @@ import co.com.alianza.util.token.Token
 import co.com.alianza.util.transformers.ValidationT
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.util.json.JsonUtil
-import co.com.alianza.infrastructure.dto.{UsuarioEmpresarial, UsuarioEmpresarialAdmin}
+import co.com.alianza.infrastructure.dto.{UsuarioEmpresarial, UsuarioEmpresarialAdmin, RecursoPerfilAgente}
+import co.com.alianza.infrastructure.anticorruption.recursosAgenteEmpresarial.{DataAccessAdapter => raDataAccessAdapter}
+import co.com.alianza.infrastructure.anticorruption.recursosClienteAdmin.{DataAccessAdapter => rcaDataAccessAdapter}
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => usDataAdapter}
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.app.MainActors
@@ -28,7 +30,7 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
       val currentSender = sender()
       val future = (for {
         usuarioOption <- ValidationT(validarToken(message.token))
-        result <- ValidationT(validarUsuario(usuarioOption))
+        result <- ValidationT(validarRecursoAgente(usuarioOption, message.url))
       } yield {
         result
       }).run
@@ -38,7 +40,7 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
       val currentSender = sender()
       val future = (for {
         usuarioOption <- ValidationT(validarTokenAdmin(message.token))
-        result <- ValidationT(validarUsuario(usuarioOption))
+        result <- ValidationT(validarRecursoClienteAdmin(usuarioOption, message.url))
       } yield {
         result
       }).run
@@ -132,4 +134,77 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
     }
   }
 
+  private def validarRecursoAgente(agente: Option[UsuarioEmpresarial], url: Option[String]) =
+    agente match {
+      case Some(usuario) =>
+        val recursosFuturo = raDataAccessAdapter obtenerRecursos usuario.id
+        recursosFuturo.map(_.map(x => resolveMessageRecursosAgente(usuario, x.filter(filtrarRecursos(_, url.getOrElse(""))))))
+      case _ =>
+        Future.successful(Validation.success(ResponseMessage(Unauthorized, "Error Validando Token")))
+    }
+
+  /**
+   * De acuerdo si la lista tiene contenido retorna un ResponseMessage
+   *
+   * @param recursos Listado de recursos
+   * @return
+   */
+  private def resolveMessageRecursosAgente(usuario: UsuarioEmpresarial, recursos: List[RecursoPerfilAgente]) = {
+    recursos.isEmpty match {
+      case true => ResponseMessage(Forbidden, JsonUtil.toJson(ForbiddenAgenteMessage(usuario, None, "403.1")))
+      case false =>
+        val recurso = recursos.head
+
+        recurso.filtro match {
+          case Some(filtro) => ResponseMessage(Forbidden, JsonUtil.toJson(ForbiddenAgenteMessage(usuario, recurso.filtro, "403.2")))
+          case None => ResponseMessage(OK, JsonUtil.toJson(usuario))
+
+        }
+
+    }
+  }
+
+  private def validarRecursoClienteAdmin(agente: Option[UsuarioEmpresarialAdmin], url: Option[String]) =
+    agente match {
+      case Some(usuario) =>
+        val recursosFuturo = raDataAccessAdapter obtenerRecursos usuario.id
+        recursosFuturo.map(_.map(x => resolveMessageRecursosClienteAdmin(usuario, x.filter(filtrarRecursos(_, url.getOrElse(""))))))
+      case _ =>
+        Future.successful(Validation.success(ResponseMessage(Unauthorized, "Error Validando Token")))
+    }
+
+  /**
+   * De acuerdo si la lista tiene contenido retorna un ResponseMessage
+   *
+   * @param recursos Listado de recursos
+   * @return
+   */
+  private def resolveMessageRecursosClienteAdmin(usuario: UsuarioEmpresarialAdmin, recursos: List[RecursoPerfilAgente]) = {
+    recursos.isEmpty match {
+      case true => ResponseMessage(Forbidden, JsonUtil.toJson(ForbiddenClienteAdminMessage(usuario, None, "403.1")))
+      case false =>
+        val recurso = recursos.head
+
+        recurso.filtro match {
+          case Some(filtro) => ResponseMessage(Forbidden, JsonUtil.toJson(ForbiddenClienteAdminMessage(usuario, recurso.filtro, "403.2")))
+          case None => ResponseMessage(OK, JsonUtil.toJson(usuario))
+
+        }
+
+    }
+  }
+
+  /**
+   * Filtra el listado de recursos que concuerden con la url
+   *
+   * @param recurso recursos asociados al agente
+   * @param url la url a validar
+   * @return
+   */
+  private def filtrarRecursos(recurso: RecursoPerfilAgente, url: String): Boolean =
+    filtrarRecursos(recurso.urlRecurso, recurso.acceso, url)
+
 }
+
+case class ForbiddenAgenteMessage(usuario: UsuarioEmpresarial, filtro: Option[String], code: String)
+case class ForbiddenClienteAdminMessage(usuario: UsuarioEmpresarialAdmin, filtro: Option[String], code: String)
