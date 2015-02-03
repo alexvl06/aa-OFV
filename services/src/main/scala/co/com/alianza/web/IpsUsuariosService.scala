@@ -27,7 +27,7 @@ class IpsUsuariosService extends Directives with AlianzaCommons with CrossHeader
         entity(as[AgregarIpsUsuarioMessage]) {
           agregarIpsUsuarioMessage =>
             respondWithMediaType(mediaType) {
-              val agregarIpsUsuarioMessageAux: AgregarIpsUsuarioMessage = agregarIpsUsuarioMessage.copy(idUsuario = Some(user.id))
+              val agregarIpsUsuarioMessageAux: AgregarIpsUsuarioMessage = agregarIpsUsuarioMessage.copy(idUsuario = Some(user.id), tipoCliente = Some(user.tipoCliente.id))
               requestExecute(agregarIpsUsuarioMessageAux, ipsUsuarioActor)
             }
         }
@@ -36,7 +36,7 @@ class IpsUsuariosService extends Directives with AlianzaCommons with CrossHeader
         entity(as[EliminarIpsUsuarioMessage]) {
           eliminarIpsUsuarioMessage =>
             respondWithMediaType(mediaType) {
-              val eliminarIpsUsuarioMessageAux: EliminarIpsUsuarioMessage = eliminarIpsUsuarioMessage.copy(idUsuario = Some(user.id))
+              val eliminarIpsUsuarioMessageAux: EliminarIpsUsuarioMessage = eliminarIpsUsuarioMessage.copy(idUsuario = Some(user.id), tipoCliente = Some(user.tipoCliente.id))
               requestExecute(eliminarIpsUsuarioMessageAux, ipsUsuarioActor)
             }
         }

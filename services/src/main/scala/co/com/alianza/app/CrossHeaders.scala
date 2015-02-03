@@ -6,7 +6,7 @@ import spray.http.HttpMethods._
 
 trait CrossHeaders {
 
-  val domain: String = "http://fiduciaria.alianza.com.co"
+  val domain: String = "http://fiduciaria.alianzaenlinea.com.co"
 
   def listCrossHeaders: List[spray.http.HttpHeader] = {
 

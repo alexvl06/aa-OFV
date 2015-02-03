@@ -5,17 +5,18 @@ import java.util.Calendar
 import akka.actor.{ActorRef, Actor, ActorLogging, Props}
 import akka.routing.RoundRobinPool
 import co.com.alianza.app.{AlianzaActors, MainActors}
-import co.com.alianza.domain.aggregates.usuarios.{MailMessageUsuario, ErrorValidacion}
+import co.com.alianza.domain.aggregates.usuarios.{ErrorPersistence, MailMessageUsuario, ErrorValidacion}
 import co.com.alianza.exceptions.PersistenceException
+import co.com.alianza.infrastructure.anticorruption.ultimasContrasenasAgenteEmpresarial.{DataAccessAdapter => dataAccessUltimasContrasenasAgente}
 import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{DataAccessTranslator, DataAccessAdapter}
-import co.com.alianza.infrastructure.dto.{Configuracion, PinEmpresa}
+import co.com.alianza.infrastructure.dto.{UsuarioEmpresarial, Configuracion, PinEmpresa}
 import co.com.alianza.infrastructure.messages.{UsuarioMessage, ResponseMessage}
-import co.com.alianza.infrastructure.messages.empresa.{UsuarioMessageCorreo, ReiniciarContrasenaAgenteEMessage}
+import co.com.alianza.infrastructure.messages.empresa.{CambiarContrasenaAgenteEmpresarialMessage, UsuarioMessageCorreo, ReiniciarContrasenaAgenteEMessage}
 import co.com.alianza.microservices.{MailMessage, SmtpServiceClient}
 import co.com.alianza.util.token.{PinData, TokenPin}
 import co.com.alianza.util.transformers.ValidationT
 import com.typesafe.config.Config
-import enumerations.{UsoPinEmpresaEnum, EstadosEmpresaEnum}
+import enumerations.{PerfilesUsuario, AppendPasswordUser, UsoPinEmpresaEnum, EstadosEmpresaEnum}
 import scalaz.std.AllInstances._
 import scala.util.{Failure => sFailure, Success => sSuccess}
 import scalaz.{Failure => zFailure, Success => zSuccess}
@@ -24,6 +25,9 @@ import co.com.alianza.persistence.entities
 import scala.concurrent.{ExecutionContext, Future}
 import scalaz.Validation
 import spray.http.StatusCodes._
+import co.com.alianza.util.clave.Crypto
+import co.com.alianza.persistence.entities.UltimaContrasenaUsuarioAgenteEmpresarial
+import java.sql.Timestamp
 
 /**
  * Created by S4N on 17/12/14.
@@ -65,6 +69,25 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
 
   import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial._
 
+  import scalaz._
+  import scalaz.std.string._
+
+  // to get `Monoid[String]`
+
+  import scalaz.std.list._
+
+  // to get `Traverse[List]`
+
+  import scalaz.syntax.traverse._
+
+  // to get the `sequence` method
+
+  import scala.concurrent.ExecutionContext
+
+  //implicit val _: ExecutionContext = context.dispatcher
+
+  import co.com.alianza.util.json.MarshallableImplicits._
+
   def receive = {
 
     case message: ReiniciarContrasenaAgenteEMessage =>
@@ -80,6 +103,47 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
 
       resolveReiniciarContrasenaAEFuture(reiniciarContrasenaAgenteEmpresarialFuture, currentSender, message)
 
+    case message: CambiarContrasenaAgenteEmpresarialMessage =>
+        val currentSender = sender()
+        val passwordActualAppend = message.pw_actual.concat(AppendPasswordUser.appendUsuariosFiducia)
+        val passwordNewAppend = message.pw_nuevo.concat(AppendPasswordUser.appendUsuariosFiducia)
+        val CambiarContrasenaFuture = (for {
+          usuarioContrasenaActual <- ValidationT(validacionConsultaContrasenaActualAgenteEmpresarial(passwordActualAppend, message.idUsuario.get))
+          idValReglasContra <- ValidationT(validacionReglasClave(message.pw_nuevo, message.idUsuario.get, PerfilesUsuario.agenteEmpresarial))
+          idUsuario <- ValidationT(ActualizarContrasena(passwordNewAppend, usuarioContrasenaActual))
+          resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(message.idUsuario.get, Crypto.hashSha512(passwordNewAppend)))
+        } yield {
+          idUsuario
+        }).run
+
+        resolveCambiarContrasenaFuture(CambiarContrasenaFuture, currentSender)
+
+}
+
+  private def resolveCambiarContrasenaFuture(CambiarContrasenaFuture: Future[Validation[ErrorValidacion, Int]], currentSender: ActorRef) = {
+      CambiarContrasenaFuture onComplete {
+      case sFailure(failure) =>
+      currentSender ! failure
+      case sSuccess(value) =>
+      value match {
+      case zSuccess(response: Int) =>
+      currentSender ! ResponseMessage(OK, response.toJson)
+      case zFailure(error) =>
+      error match {
+      case errorPersistence: ErrorPersistence => currentSender ! errorPersistence.exception
+      case errorVal: ErrorValidacion =>
+      currentSender ! ResponseMessage(Conflict, errorVal.msg)
+      }
+      }
+      }
+  }
+
+  private def guardarUltimaContrasena(idUsuario: Int, uContrasena: String): Future[Validation[ErrorValidacion, Unit]] = {
+    dataAccessUltimasContrasenasAgente.guardarUltimaContrasena(UltimaContrasenaUsuarioAgenteEmpresarial(None, idUsuario , uContrasena, new Timestamp(System.currentTimeMillis()))).map(_.leftMap( pe => ErrorPersistence(pe.message, pe)))
+  }
+
+  private def ActualizarContrasena(pw_nuevo: String, usuario: Option[UsuarioEmpresarial]): Future[Validation[ErrorValidacion, Int]] = {
+    DataAccessAdapter.actualizarContrasenaAgenteEmpresarial(pw_nuevo, usuario.get.id).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
   }
 
   private def CambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa): Future[Validation[ErrorValidacionEmpresa, Int]] = {
