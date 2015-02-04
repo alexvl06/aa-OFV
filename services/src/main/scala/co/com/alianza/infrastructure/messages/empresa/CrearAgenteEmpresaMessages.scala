@@ -18,8 +18,7 @@ case class CrearAgenteEMessage(
                                  nombre: String,
                                  cargo: String,
                                  correo: String,
-                                 descripcion: String,
-                                 ips: Array[String]
+                                 descripcion: String
                               ) extends MessageService {
 
   def toEntityUsuarioAgenteEmpresarial():UsuarioEmpresarial = {
@@ -29,5 +28,5 @@ case class CrearAgenteEMessage(
 }
 
 object CrearAgenteEMessageJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
-  implicit val CrearAgenteEMessageMessageFormat = jsonFormat7(CrearAgenteEMessage)
+  implicit val CrearAgenteEMessageMessageFormat = jsonFormat6(CrearAgenteEMessage)
 }

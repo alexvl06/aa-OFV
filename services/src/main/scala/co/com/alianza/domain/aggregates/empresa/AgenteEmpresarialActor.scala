@@ -73,7 +73,6 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
         resultAsociarPerfiles <- ValidationT(DataAccessAdapter.asociarPerfiles(idUsuarioAgenteEmpresarial, PerfilesAgente.agente.id :: Nil))
         empresa <- ValidationT(DataAccessAdapter.obtenerEmpresaPorNit(message.nit))
         resultAsociarEmpresa <- ValidationT(DataAccessAdapter.asociarAgenteEmpresarialConEmpresa(UsuarioEmpresarialEmpresa(empresa.get.id, idUsuarioAgenteEmpresarial)))
-        resultCreacionIps <- ValidationT(DataAccessAdapter.crearIpsAgenteEmpresarial(toIpsUsuarioArray(message.ips, idUsuarioAgenteEmpresarial)))
       } yield {
         idUsuarioAgenteEmpresarial
       }).run
