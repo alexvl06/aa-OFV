@@ -19,7 +19,7 @@ import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.token.{PinData, TokenPin}
 import co.com.alianza.util.transformers.ValidationT
 import com.typesafe.config.Config
-import enumerations.{TipoIdentificacion, UsoPinEmpresaEnum, EstadosEmpresaEnum}
+import enumerations.{TipoIdentificacion, UsoPinEmpresaEnum, EstadosEmpresaEnum, PerfilesAgente}
 import scalaz.std.AllInstances._
 import scala.util.{Failure => sFailure, Success => sSuccess}
 import scalaz.{Failure => zFailure, Success => zSuccess}
@@ -70,6 +70,7 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
       val currentSender = sender()
       val usuarioCreadoFuture: Future[Validation[PersistenceException, Int]] = (for {
         idUsuarioAgenteEmpresarial <- ValidationT(DataAccessAdapter.crearAgenteEmpresarial(message.toEntityUsuarioAgenteEmpresarial()))
+        resultAsociarPerfiles <- ValidationT(DataAccessAdapter.asociarPerfiles(idUsuarioAgenteEmpresarial, PerfilesAgente.agente.id :: Nil))
         empresa <- ValidationT(DataAccessAdapter.obtenerEmpresaPorNit(message.nit))
         resultAsociarEmpresa <- ValidationT(DataAccessAdapter.asociarAgenteEmpresarialConEmpresa(UsuarioEmpresarialEmpresa(empresa.get.id, idUsuarioAgenteEmpresarial)))
         resultCreacionIps <- ValidationT(DataAccessAdapter.crearIpsAgenteEmpresarial(toIpsUsuarioArray(message.ips, idUsuarioAgenteEmpresarial)))

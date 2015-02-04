@@ -89,6 +89,9 @@ object DataAccessAdapter {
     repo.actualizarEstadoUsuario( idUsuario, estado )
   }
 
+  def asociarPerfiles(idAgente: Int, idsPerfiles: List[Int])  : Future[Validation[PersistenceException, List[Int]]] =
+    new UsuariosEmpresaRepository() asociarPerfiles(idsPerfiles map {PerfilAgenteAgente(idAgente, _)})
+
   private def transformValidation(origin: Validation[PersistenceException, Option[eUsuario]]): Validation[PersistenceException, Option[dtoUsuario]] = {
     origin match {
       case zSuccess(response) =>

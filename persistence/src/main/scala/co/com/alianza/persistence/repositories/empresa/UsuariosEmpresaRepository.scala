@@ -32,7 +32,7 @@ class UsuariosEmpresaRepository ( implicit executionContext: ExecutionContext) e
   val UsuariosEmpresarialesAdmin = TableQuery[UsuarioEmpresarialAdminTable]
   val UsuariosEmpresarialesEmpresa = TableQuery[UsuarioEmpresarialEmpresaTable]
   val UsuariosEmpresarialesAdminEmpresa = TableQuery[UsuarioEmpresarialAdminEmpresaTable]
-
+  val perfilesAgentes = TableQuery[PerfilAgenteAgenteTable]
 
   def obtenerUsuariosBusqueda(correoUsuario:String, usuario:String, nombreUsuario:String, estadoUsuario:Int, idClienteAdmin: Int): Future[Validation[PersistenceException, List[UsuarioEmpresarial]]] = loan {
     implicit session =>
@@ -134,6 +134,12 @@ class UsuariosEmpresaRepository ( implicit executionContext: ExecutionContext) e
       resolveTry(resultTry, "Actualizar Contrasena agente empresariales y fecha de actualizacion")
   }
 
+
+  def asociarPerfiles( perfiles: List[PerfilAgenteAgente] ) : Future[Validation[PersistenceException, List[Int]]] = loan {
+    implicit session =>
+      val resultTry = Try{(perfilesAgentes  ++= perfiles).toList}
+      resolveTry(resultTry, "Asociar perfiles del cliente administrador")
+  }
 
 
 

@@ -13,3 +13,11 @@ object PerfilesUsuario extends Enumeration(1) {
     val agenteEmpresarial= Value("agente empresarial") //valor id = 3
 
 }
+
+object PerfilesAgente extends Enumeration(1) {
+
+  type perfilUsuario = Value
+
+  val agente = Value("Agente") //valor id = 1
+
+}
