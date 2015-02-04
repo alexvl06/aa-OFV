@@ -15,7 +15,7 @@ import CustomDriver.simple._
 class RecursoPerfilClienteAdminRepository ( implicit executionContext: ExecutionContext) extends AlianzaRepository {
 
   val recursosPerfilesClientesAdmins = TableQuery[RecursoPerfilClienteAdminTable]
-  val clientesAdmins = TableQuery[UsuarioEmpresarialTable]
+  val clientesAdmins = TableQuery[UsuarioEmpresarialAdminTable]
   val perfilesClientesAdmins = TableQuery[PerfilClienteAdminClienteAdminTable]
 
   /**
