@@ -100,4 +100,43 @@ class UsuariosEmpresaRepository ( implicit executionContext: ExecutionContext) e
       resolveTry(resultTry, "Actualizar estado de usuario agente empresarial")
   }
 
+  def consultaContrasenaActual( pw_actual:String, idUsuario:Int ): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = loan {
+    implicit session =>
+      val resultTry = Try{ UsuariosEmpresarialesAdmin.filter(x => x.id === idUsuario && x.contrasena === pw_actual ).list.headOption}
+      resolveTry(resultTry, "Consulta contrasena actual de cliente admin  " + pw_actual)
+  }
+
+  def actualizarContrasena(pw_nuevo: String, idUsuario: Int): Future[Validation[PersistenceException, Int]] = loan {
+    implicit session =>
+      val query = for {u <- UsuariosEmpresarialesAdmin if u.id === idUsuario} yield (u.contrasena, u.fechaActualizacion)
+      val fechaAct= new org.joda.time.DateTime().getMillis
+      val act = ( Some(pw_nuevo), new Timestamp(fechaAct) )
+      val resultTry = Try {
+        query.update(act)
+      }
+      resolveTry(resultTry, "Actualizar Contrasena clientes admin y fecha de actualizacion")
+  }
+
+  def consultaContrasenaActualAgenteEmpresarial( pw_actual:String, idUsuario:Int ): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = loan {
+    implicit session =>
+      val resultTry = Try{ UsuariosEmpresariales.filter(x => x.id === idUsuario && x.contrasena === pw_actual ).list.headOption}
+      resolveTry(resultTry, "Consulta contrasena actual de cliente admin  " + pw_actual)
+  }
+
+  def actualizarContrasenaAgenteEmpresarial(pw_nuevo: String, idUsuario: Int): Future[Validation[PersistenceException, Int]] = loan {
+    implicit session =>
+      val query = for {u <- UsuariosEmpresariales if u.id === idUsuario} yield (u.contrasena, u.fechaActualizacion)
+      val fechaAct= new org.joda.time.DateTime().getMillis
+      val act = ( Some(pw_nuevo), new Timestamp(fechaAct) )
+      val resultTry = Try {
+        query.update(act)
+      }
+      resolveTry(resultTry, "Actualizar Contrasena agente empresariales y fecha de actualizacion")
+  }
+
+
+
+
+
+
 }
