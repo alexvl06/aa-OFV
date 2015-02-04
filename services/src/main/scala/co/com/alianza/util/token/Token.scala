@@ -1,6 +1,8 @@
 package co.com.alianza.util.token
 
 import co.com.alianza.commons.enumerations.TiposCliente
+import co.com.alianza.commons.enumerations.TiposCliente
+import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import org.joda.time.{DateTime}
 import java.util.Date
 import enumerations.AppendPasswordUser
@@ -20,7 +22,7 @@ object Token {
   private val ISSUER = "http://fiduciaria.alianza.com.co"
   private val SIGNING_KEY = "556878763f1ea3bddfd1bed5b15daa2fc6d2db5a98290dd9f91ddfd22d77d1e" + AppendPasswordUser.appendUsuariosFiducia
 
-  def generarToken(nombreUsuarioLogueado: String, correoUsuarioLogueado: String, tipoIdentificacion: String, ultimaIpIngreso: String, ultimaFechaIngreso: Date, tipoCliente: TiposCliente.TiposCliente = TiposCliente.clienteIndividual, nit : Option[String] = None): String = {
+  def generarToken(nombreUsuarioLogueado: String, correoUsuarioLogueado: String, tipoIdentificacion: String, ultimaIpIngreso: String, ultimaFechaIngreso: Date, expiracionInactividad: String, tipoCliente: TiposCliente.TiposCliente = TiposCliente.clienteIndividual, nit : Option[String] = None): String = {
 
     val claimsSet = new JWTClaimsSet()
     claimsSet.setIssueTime(new Date())
@@ -36,7 +38,8 @@ object Token {
       "tipoIdentificacion" -> tipoIdentificacion,
       "ultimaIpIngreso" -> ultimaIpIngreso,
       "ultimaFechaIngreso" -> formater.format(ultimaFechaIngreso),
-      "tipoCliente" -> tipoCliente.toString
+      "tipoCliente" -> tipoCliente.toString,
+      "expiracionInactividad" -> expiracionInactividad
     )
 
     val empresarialesData = nit match {
@@ -54,7 +57,7 @@ object Token {
     jwt
   }
 
-  def generarTokenCaducidadContrasena(idUsuario: Int) = {
+  def generarTokenCaducidadContrasena(tipoUsuario: TiposCliente, idUsuario: Int) = {
 
     val claimsSet = new JWTClaimsSet()
     claimsSet.setIssueTime(new Date())
@@ -63,7 +66,8 @@ object Token {
     claimsSet.setIssuer(ISSUER)
 
     val customData = Map(
-      "us_id" -> idUsuario.toString
+      "us_id" -> idUsuario.toString,
+      "us_tipo" -> tipoUsuario.toString
     )
 
     claimsSet.setCustomClaims(customData)
