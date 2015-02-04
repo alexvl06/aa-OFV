@@ -28,7 +28,7 @@ class RecursoPerfilClienteAdminRepository ( implicit executionContext: Execution
     implicit session =>
 
       val usuariosRecursosJoin = for {
-        ((usu: UsuarioTable, per:PerfilUsuarioTable), rec:RecursoPerfilTable) <- clientesAdmins innerJoin perfilesClientesAdmins on (_.id === _.idUsuario) innerJoin recursosPerfilesClientesAdmins on(_._2.idPerfil === _.idPerfil)
+        ((usu, per), rec) <- clientesAdmins innerJoin perfilesClientesAdmins on (_.id === _.idUsuario) innerJoin recursosPerfilesClientesAdmins on(_._2.idPerfil === _.idPerfil)
         if usu.id === idUsuario
       } yield rec
 

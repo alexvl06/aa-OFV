@@ -6,7 +6,7 @@ import co.com.alianza.util.token.Token
 import co.com.alianza.util.transformers.ValidationT
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.util.json.JsonUtil
-import co.com.alianza.infrastructure.dto.{UsuarioEmpresarial, UsuarioEmpresarialAdmin, RecursoPerfilAgente}
+import co.com.alianza.infrastructure.dto.{UsuarioEmpresarial, UsuarioEmpresarialAdmin, RecursoPerfilAgente, RecursoPerfilClienteAdmin}
 import co.com.alianza.infrastructure.anticorruption.recursosAgenteEmpresarial.{DataAccessAdapter => raDataAccessAdapter}
 import co.com.alianza.infrastructure.anticorruption.recursosClienteAdmin.{DataAccessAdapter => rcaDataAccessAdapter}
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => usDataAdapter}
@@ -31,6 +31,7 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
       val future = (for {
         usuarioOption <- ValidationT(validarToken(message.token))
         result <- ValidationT(validarRecursoAgente(usuarioOption, message.url))
+//        result <- ValidationT(validarUsuario(usuarioOption))
       } yield {
         result
       }).run
@@ -41,6 +42,7 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
       val future = (for {
         usuarioOption <- ValidationT(validarTokenAdmin(message.token))
         result <- ValidationT(validarRecursoClienteAdmin(usuarioOption, message.url))
+//        result <- ValidationT(validarUsuario(usuarioOption))
       } yield {
         result
       }).run
@@ -138,7 +140,7 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
     agente match {
       case Some(usuario) =>
         val recursosFuturo = raDataAccessAdapter obtenerRecursos usuario.id
-        recursosFuturo.map(_.map(x => resolveMessageRecursosAgente(usuario, x.filter(filtrarRecursos(_, url.getOrElse(""))))))
+        recursosFuturo.map(_.map(x => resolveMessageRecursosAgente(usuario, x.filter(filtrarRecursosPerfilAgente(_, url.getOrElse(""))))))
       case _ =>
         Future.successful(Validation.success(ResponseMessage(Unauthorized, "Error Validando Token")))
     }
@@ -164,11 +166,11 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
     }
   }
 
-  private def validarRecursoClienteAdmin(agente: Option[UsuarioEmpresarialAdmin], url: Option[String]) =
-    agente match {
+  private def validarRecursoClienteAdmin(clienteAdmin: Option[UsuarioEmpresarialAdmin], url: Option[String]) =
+    clienteAdmin match {
       case Some(usuario) =>
-        val recursosFuturo = raDataAccessAdapter obtenerRecursos usuario.id
-        recursosFuturo.map(_.map(x => resolveMessageRecursosClienteAdmin(usuario, x.filter(filtrarRecursos(_, url.getOrElse(""))))))
+        val recursosFuturo = rcaDataAccessAdapter obtenerRecursos usuario.id
+        recursosFuturo.map(_.map(x => resolveMessageRecursosClienteAdmin(usuario, x.filter(filtrarRecursosPerfilClienteAdmin(_, url.getOrElse(""))))))
       case _ =>
         Future.successful(Validation.success(ResponseMessage(Unauthorized, "Error Validando Token")))
     }
@@ -179,7 +181,7 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
    * @param recursos Listado de recursos
    * @return
    */
-  private def resolveMessageRecursosClienteAdmin(usuario: UsuarioEmpresarialAdmin, recursos: List[RecursoPerfilAgente]) = {
+  private def resolveMessageRecursosClienteAdmin(usuario: UsuarioEmpresarialAdmin, recursos: List[RecursoPerfilClienteAdmin]) = {
     recursos.isEmpty match {
       case true => ResponseMessage(Forbidden, JsonUtil.toJson(ForbiddenClienteAdminMessage(usuario, None, "403.1")))
       case false =>
@@ -201,7 +203,17 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
    * @param url la url a validar
    * @return
    */
-  private def filtrarRecursos(recurso: RecursoPerfilAgente, url: String): Boolean =
+  private def filtrarRecursosPerfilAgente(recurso: RecursoPerfilAgente, url: String): Boolean =
+    filtrarRecursos(recurso.urlRecurso, recurso.acceso, url)
+
+  /**
+   * Filtra el listado de recursos que concuerden con la url
+   *
+   * @param recurso recursos asociados al cliente administrador
+   * @param url la url a validar
+   * @return
+   */
+  private def filtrarRecursosPerfilClienteAdmin(recurso: RecursoPerfilClienteAdmin, url: String): Boolean =
     filtrarRecursos(recurso.urlRecurso, recurso.acceso, url)
 
 }

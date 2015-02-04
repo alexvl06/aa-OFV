@@ -7,7 +7,7 @@ import CustomDriver.simple._
  */
 case class PerfilAgenteAgente(idUsuario: Int, idPerfil: Int)
 
-class PerfilAgenteAgenteTable(tag: Tag) extends Table[PerfilUsuario](tag, "PERFILAGENTE_AGENTE") {
+class PerfilAgenteAgenteTable(tag: Tag) extends Table[PerfilAgenteAgente](tag, "PERFILAGENTE_AGENTE") {
 
   def idUsuario      = column[Int]("ID_USUARIO", O.PrimaryKey)
   def idPerfil  = column[Int]("ID_PERFIL",O.PrimaryKey)
