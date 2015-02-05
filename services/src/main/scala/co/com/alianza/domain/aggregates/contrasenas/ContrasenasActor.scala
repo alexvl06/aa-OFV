@@ -107,7 +107,7 @@ class ContrasenasActor extends Actor with ActorLogging with AlianzaActors {
         case true =>
           val claim = Token.getToken(message.token).getJWTClaimsSet()
           val us_id = claim.getCustomClaim("us_id").toString.toInt
-          val us_tipo = claim.getCustomClaim("us_tipo").toString.toInt
+          val us_tipo = claim.getCustomClaim("us_tipo").toString
 
           val passwordActualAppend = message.pw_actual.concat(AppendPasswordUser.appendUsuariosFiducia)
           val passwordNewAppend = message.pw_nuevo.concat(AppendPasswordUser.appendUsuariosFiducia)
@@ -125,6 +125,8 @@ class ContrasenasActor extends Actor with ActorLogging with AlianzaActors {
 
         case false => currentSender ! ResponseMessage(Conflict, tokenValidationFailure)
       }
+
+
 
   }
 
