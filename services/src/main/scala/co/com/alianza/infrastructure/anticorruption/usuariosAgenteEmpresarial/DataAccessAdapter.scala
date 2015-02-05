@@ -54,14 +54,6 @@ object DataAccessAdapter {
     repo.insertarAgenteEmpresarial(nuevoUsuarioAgenteEmpresarial)
   }
 
-  def crearIpAgenteEmpresarial(ipAgenteEmpresarial:IpsUsuario) : Future[Validation[PersistenceException, Int]] = {
-    repo.insertarIpAgenteEmpresarial(ipAgenteEmpresarial)
-  }
-
-  def crearIpsAgenteEmpresarial(ipAgenteEmpresarial:Seq[IpsUsuario]) : Future[Validation[PersistenceException, Option[Int]]] = {
-    repo.insertarIpsAgenteEmpresarial(ipAgenteEmpresarial)
-  }
-
   def eliminarPinEmpresaReiniciarAnteriores(idUsuarioAgenteEmpresarial: Int, usoPinEmpresa: Int): Future[Validation[PersistenceException, Int]] = {
     repo.eliminarPinEmpresaReiniciarAnteriores(idUsuarioAgenteEmpresarial, usoPinEmpresa)
   }

@@ -21,7 +21,6 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
   val UsuariosEmpresarialesAdmin = TableQuery[UsuarioEmpresarialAdminTable]
   val UsuariosEmpresarialesEmpresa = TableQuery[UsuarioEmpresarialEmpresaTable]
   val UsuariosEmpresarialesAdminEmpresa = TableQuery[UsuarioEmpresarialAdminEmpresaTable]
-  val ipsUsuarioEmpresarial = TableQuery[IpsUsuarioEmpresarialTable]
   val pinempresa = TableQuery[PinEmpresaTable]
 
   def obtieneUsuarioEmpresaPorNitYUsuario(nit: String, usuario: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = loan {
@@ -46,6 +45,21 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
           ((usuarioEmpresarial, usuarioEmpresarialEmpresa), empresa) <-
           UsuariosEmpresarialesAdmin join UsuariosEmpresarialesAdminEmpresa on {
             (ue, uee) => ue.id === uee.idUsuarioEmpresarialAdmin && ue.usuario === usuario
+          } join Empresas on {
+            case ((ue, uee), e) => e.nit === nit  && uee.idEmpresa === e.id
+          }
+        } yield (usuarioEmpresarial)
+        ) firstOption
+    }, "Consulta usuario empresarial administrador por nit y usuario")
+  }
+
+  def obtieneUsuarioEmpresaAdminPorNit(nit: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = loan {
+    implicit session => resolveTry(Try {
+      (
+        for {
+          ((usuarioEmpresarial, usuarioEmpresarialEmpresa), empresa) <-
+          UsuariosEmpresarialesAdmin join UsuariosEmpresarialesAdminEmpresa on {
+            (ue, uee) => ue.id === uee.idUsuarioEmpresarialAdmin
           } join Empresas on {
             case ((ue, uee), e) => e.nit === nit  && uee.idEmpresa === e.id
           }
@@ -126,18 +140,6 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
     implicit session =>
       val resultTry = Try{ (UsuariosEmpresariales  returning UsuariosEmpresariales.map(_.id)) += agenteEmpresarial }
       resolveTry(resultTry, "Agregar agente empresarial")
-  }
-
-  def insertarIpAgenteEmpresarial(ip: IpsUsuario): Future[Validation[PersistenceException, Int]] = loan {
-    implicit session =>
-      val resultTry = Try{ (ipsUsuarioEmpresarial += ip) }
-      resolveTry(resultTry, "Agregar ip agente empresarial")
-  }
-
-  def insertarIpsAgenteEmpresarial(ips: Seq[IpsUsuario]) = loan {
-    implicit session =>
-      val resultTry = Try{ (ipsUsuarioEmpresarial ++= ips) }
-      resolveTry(resultTry, "Agregar ips agente empresarial")
   }
 
   def obtenerEmpresaPorNit(nit : String) : Future[Validation[PersistenceException, Option[Empresa]]] = loan {
