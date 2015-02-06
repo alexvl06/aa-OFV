@@ -9,10 +9,10 @@ import co.com.alianza.domain.aggregates.usuarios.{ErrorPersistence, MailMessageU
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{DataAccessAdapter, DataAccessTranslator }
 import co.com.alianza.infrastructure.dto.{UsuarioEmpresarialAdmin, Configuracion, PinEmpresa}
-import co.com.alianza.infrastructure.messages.{CambiarContrasenaMessage, UsuarioMessage, ResponseMessage}
-import co.com.alianza.infrastructure.messages.empresa.{CambiarContrasenaClienteAdminMessage, UsuarioMessageCorreo, ReiniciarContrasenaAgenteEMessage}
+import co.com.alianza.infrastructure.messages._
+import co.com.alianza.infrastructure.messages.empresa.{CambiarContrasenaCaducadaClienteAdminMessage, CambiarContrasenaClienteAdminMessage, UsuarioMessageCorreo}
 import co.com.alianza.microservices.{MailMessage, SmtpServiceClient}
-import co.com.alianza.util.token.{PinData, TokenPin}
+import co.com.alianza.util.token.{Token, PinData, TokenPin}
 import co.com.alianza.util.transformers.ValidationT
 import com.typesafe.config.Config
 import enumerations.{PerfilesUsuario, AppendPasswordUser, UsoPinEmpresaEnum, EstadosEmpresaEnum}
@@ -25,7 +25,6 @@ import scala.concurrent.{ExecutionContext, Future}
 import scalaz.Validation
 import spray.http.StatusCodes._
 import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario._
-import co.com.alianza.infrastructure.messages.CambiarContrasenaMessage
 import akka.routing.RoundRobinPool
 import co.com.alianza.util.transformers.ValidationT
 import co.com.alianza.util.clave.Crypto
@@ -110,6 +109,34 @@ class ContrasenasClienteAdminActor extends Actor with ActorLogging with AlianzaA
 
       resolveCambiarContrasenaFuture(CambiarContrasenaFuture, currentSender)
 
+    case message: CambiarContrasenaCaducadaClienteAdminMessage =>
+
+      val currentSender = sender()
+      val tk_validation = Token.autorizarToken(message.token)
+
+      tk_validation match {
+        case true =>
+          val claim = Token.getToken(message.token).getJWTClaimsSet()
+          val us_id = claim.getCustomClaim("us_id").toString.toInt
+          val us_tipo = claim.getCustomClaim("us_tipo").toString
+
+          val passwordActualAppend = message.pw_actual.concat(AppendPasswordUser.appendUsuariosFiducia)
+          val passwordNewAppend = message.pw_nuevo.concat(AppendPasswordUser.appendUsuariosFiducia)
+
+          val CambiarContrasenaFuture = (for {
+            usuarioContrasenaActual <- ValidationT(validacionConsultaContrasenaActualClienteAdmin(passwordActualAppend, us_id))
+            idValReglasContra <- ValidationT(validacionReglasClave(message.pw_nuevo, us_id, PerfilesUsuario.clienteAdministrador))
+            idUsuario <- ValidationT(ActualizarContrasena(passwordNewAppend, usuarioContrasenaActual))
+            resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(us_id, Crypto.hashSha512(passwordNewAppend)))
+          } yield {
+            idUsuario
+          }).run
+
+          resolveCambiarContrasenaFuture(CambiarContrasenaFuture, currentSender)
+
+        case false => currentSender ! ResponseMessage(Conflict, tokenValidationFailure)
+      }
+
   }
 
   private def resolveCambiarContrasenaFuture(CambiarContrasenaFuture: Future[Validation[ErrorValidacion, Int]], currentSender: ActorRef) = {
@@ -138,5 +165,6 @@ class ContrasenasClienteAdminActor extends Actor with ActorLogging with AlianzaA
     DataAccessAdapter.actualizarContrasena(pw_nuevo, usuario.get.id).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
   }
 
+  private val tokenValidationFailure = ErrorMessage("409.11", "Token invalido", "El token de caducidad es invalido").toJson
 
 }

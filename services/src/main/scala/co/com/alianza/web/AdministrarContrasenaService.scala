@@ -1,7 +1,7 @@
 package co.com.alianza.web
 
 import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.infrastructure.messages.empresa.{CambiarContrasenaAgenteEmpresarialMessage, CambiarContrasenaClienteAdminMessage}
+import co.com.alianza.infrastructure.messages.empresa.{CambiarContrasenaCaducadaClienteAdminMessage, CambiarContrasenaCaducadaAgenteEmpresarialMessage, CambiarContrasenaAgenteEmpresarialMessage, CambiarContrasenaClienteAdminMessage}
 import spray.routing.Directives
 import co.com.alianza.app.AlianzaCommons
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
@@ -46,9 +46,9 @@ class AdministrarContrasenaService extends Directives with AlianzaCommons {
 
                 tipoCliente match {
                   case TiposCliente.agenteEmpresarial =>
-                    requestExecute(CambiarContrasenaAgenteEmpresarialMessage(data.pw_actual, data.pw_nuevo, Some(us_id)), contrasenasAgenteEmpresarialActor)
+                    requestExecute(CambiarContrasenaCaducadaAgenteEmpresarialMessage(data.token, data.pw_actual, data.pw_nuevo, Some(us_id)), contrasenasAgenteEmpresarialActor)
                   case TiposCliente.clienteAdministrador =>
-                    requestExecute(CambiarContrasenaClienteAdminMessage(data.pw_actual, data.pw_nuevo, Some(us_id)), contrasenasClienteAdminActor)
+                    requestExecute(CambiarContrasenaCaducadaClienteAdminMessage(data.token, data.pw_actual, data.pw_nuevo, Some(us_id)), contrasenasClienteAdminActor)
                   case TiposCliente.clienteIndividual =>
                     requestExecute(CambiarContrasenaCaducadaMessage(data.token, data.pw_actual, data.pw_nuevo, us_id , us_tipo ), contrasenasActor)
                 }
