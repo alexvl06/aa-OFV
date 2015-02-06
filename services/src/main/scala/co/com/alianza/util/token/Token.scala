@@ -62,7 +62,7 @@ object Token {
     val claimsSet = new JWTClaimsSet()
     claimsSet.setIssueTime(new Date())
     claimsSet.setNotBeforeTime(new Date())
-    claimsSet.setExpirationTime(new DateTime().plus(1).toDate)
+    claimsSet.setExpirationTime(new DateTime().plus(60000).toDate)
     claimsSet.setIssuer(ISSUER)
 
     val customData = Map(
