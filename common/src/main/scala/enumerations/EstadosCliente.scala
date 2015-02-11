@@ -1,7 +1,7 @@
 package enumerations
 
 object EstadosCliente {
-  val bloqueoContraseña = "IN"
+  val inactivo = "IN"
   val activo = "AC"
   val pendienteActivacion = "PA"
   val pendienteConfronta = "PC"

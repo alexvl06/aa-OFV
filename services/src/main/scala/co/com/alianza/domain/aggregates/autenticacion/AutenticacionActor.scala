@@ -273,7 +273,7 @@ class AutenticacionActor extends Actor with ActorLogging {
   def validarClienteSP(tipoIdentificacionUsuario: Int, cliente: Cliente): Future[Validation[ErrorAutenticacion, Boolean]] = Future {
     log.info("Validando los estados del cliente del core")
     if (getTipoPersona(tipoIdentificacionUsuario) != cliente.wcli_person) Validation.failure(ErrorClienteNoExisteCore())
-    else if (cliente.wcli_estado == EstadosCliente.bloqueoContraseña) Validation.failure(ErrorClienteInactivoCore())
+    else if (cliente.wcli_estado == EstadosCliente.inactivo) Validation.failure(ErrorClienteInactivoCore())
     else Validation.success(true)
   }
 

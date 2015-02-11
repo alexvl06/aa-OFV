@@ -128,10 +128,12 @@ object  ValidacionesUsuario {
       (x:Option[Cliente]) => x match{
         case None => zFailure(ErrorClienteNoExiste(errorClienteNoExiste))
         case Some(c) =>
-          if(c.wcli_estado == EstadosCliente.bloqueoContraseña)
+          if(c.wcli_estado == EstadosCliente.inactivo)
             zFailure(ErrorClienteNoExiste(errorClienteInactivo))
           else if(getTipoPersona(message) != c.wcli_person)
             zFailure(ErrorClienteNoExiste(errorClienteNoExiste))
+          else if(c.wcli_dir_correo == null || c.wcli_dir_correo.isEmpty)
+            zFailure(ErrorClienteNoExiste(errorCorreoNoExiste))
           else
             zSuccess(c)
       }
@@ -167,14 +169,15 @@ object  ValidacionesUsuario {
     })
   }
 
-  private val errorUsuarioExiste = ErrorMessage("409.1", "Usuario ya existe", "Usuario ya existe").toJson
-  private val errorUsuarioCorreoExiste = ErrorMessage("409.3", "Correo ya existe", "Correo ya existe").toJson
-  private val errorClienteNoExiste = ErrorMessage("409.2", "No existe el cliente", "No existe el cliente").toJson
-  private val errorClienteInactivo = ErrorMessage("409.4", "Cliente inactivo", "Cliente inactivo").toJson
-  private def errorClave(error:String) = ErrorMessage("409.5", "Error clave", error).toJson
-  private val errorCaptcha = ErrorMessage("409.6", "Valor captcha incorrecto", "Valor captcha incorrecto").toJson
+  private val errorUsuarioExiste =            ErrorMessage("409.1", "Usuario ya existe", "Usuario ya existe").toJson
+  private val errorClienteNoExiste =          ErrorMessage("409.2", "No existe el cliente", "No existe el cliente").toJson
+  private val errorUsuarioCorreoExiste =      ErrorMessage("409.3", "Correo ya existe", "Correo ya existe").toJson
+  private val errorClienteInactivo =          ErrorMessage("409.4", "Cliente inactivo", "Cliente inactivo").toJson
+  private def errorClave(error:String) =      ErrorMessage("409.5", "Error clave", error).toJson
+  private val errorCaptcha =                  ErrorMessage("409.6", "Valor captcha incorrecto", "Valor captcha incorrecto").toJson
   private val errorContrasenaActualNoExiste = ErrorMessage("409.7", "No existe la contrasena actual", "No existe la contrasena actual").toJson
-  private val errorPin = ErrorMessage("409.8", "Error en el pin", "Ocurrió un error al obtener el tiempo de expiracion del pin").toJson
-  private val errorUsuarioNoExiste = ErrorMessage("409.9", "No existe el usuario", "No existe el usuario").toJson
+  private val errorPin =                      ErrorMessage("409.8", "Error en el pin", "Ocurrió un error al obtener el tiempo de expiracion del pin").toJson
+  private val errorUsuarioNoExiste =          ErrorMessage("409.9", "No existe el usuario", "No existe el usuario").toJson
+  private val errorCorreoNoExiste =           ErrorMessage("409.10", "No hay correo registrado", "No hay correo registrado en la base de datos de Alianza").toJson
 
 }
