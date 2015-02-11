@@ -33,7 +33,7 @@ trait BootedCore extends Core {
 
   implicit lazy val conf: Config = ConfigApp.conf
 
-  implicit lazy val system = ActorSystem( "alianza-service" )
+  implicit lazy val system = ActorSystem( "alianza-fid-auth-service" )
   implicit lazy val ex: ExecutionContext = system.dispatcher
   implicit lazy val cluster = Cluster(system)
   implicit lazy val dataAccesEx: ExecutionContext = system.dispatcher
