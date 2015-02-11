@@ -92,7 +92,10 @@ class SesionActor(expiracionSesion: Int) extends Actor with ActorLogging {
   override def preStart(): Unit = MainActors.cluster.subscribe(self, classOf[MemberUp])
 
   // PostStop function
-  override def postStop(): Unit = MainActors.cluster.unsubscribe(self)
+  override def postStop(): Unit = {
+    killTask.cancel()
+    MainActors.cluster.unsubscribe(self)
+  }
 
   // Receive function
   override def receive = {
