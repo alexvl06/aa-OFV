@@ -117,7 +117,7 @@ object  ValidacionesUsuario {
       (x:Option[Cliente]) => x match{
         case None => zFailure(ErrorClienteNoExiste(errorClienteNoExiste))
         case Some(c) =>
-          if(c.wcli_estado == EstadosCliente.inactivo)
+          if(c.wcli_estado != EstadosCliente.activo)
             zFailure(ErrorClienteNoExiste(errorClienteInactivo))
           else if(getTipoPersona(message) != c.wcli_person)
             zFailure(ErrorClienteNoExiste(errorClienteNoExiste))
