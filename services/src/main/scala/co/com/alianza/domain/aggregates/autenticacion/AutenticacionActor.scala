@@ -10,6 +10,7 @@ import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import co.com.alianza.constants.TiposConfiguracion
 
 import co.com.alianza.domain.aggregates.autenticacion.errores._
+import co.com.alianza.domain.aggregates.usuarios.ErrorClienteNoExiste
 import co.com.alianza.exceptions.PersistenceException
 
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => UsDataAdapter}
@@ -272,8 +273,12 @@ class AutenticacionActor extends Actor with ActorLogging {
    */
   def validarClienteSP(tipoIdentificacionUsuario: Int, cliente: Cliente): Future[Validation[ErrorAutenticacion, Boolean]] = Future {
     log.info("Validando los estados del cliente del core")
-    if (getTipoPersona(tipoIdentificacionUsuario) != cliente.wcli_person) Validation.failure(ErrorClienteNoExisteCore())
-    else if (cliente.wcli_estado == EstadosCliente.inactivo) Validation.failure(ErrorClienteInactivoCore())
+    if (getTipoPersona(tipoIdentificacionUsuario) != cliente.wcli_person)
+      Validation.failure(ErrorClienteNoExisteCore())
+    else if (cliente.wcli_estado != EstadosCliente.activo)
+      Validation.failure(ErrorClienteInactivoCore())
+    else if(cliente.wcli_dir_correo == null || cliente.wcli_dir_correo.isEmpty)
+      zFailure(ErrorUsuarioBloqueadoCorreoVacio())
     else Validation.success(true)
   }
 
