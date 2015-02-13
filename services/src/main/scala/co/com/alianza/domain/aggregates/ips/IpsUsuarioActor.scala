@@ -6,13 +6,17 @@ import akka.routing.RoundRobinPool
 import co.com.alianza.app.AlianzaActors
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente._
+import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
 import co.com.alianza.infrastructure.messages._
-import co.com.alianza.persistence.entities.IpsUsuario
+import co.com.alianza.persistence.entities.{IpsEmpresa, Empresa, IpsUsuario}
+import co.com.alianza.util.transformers.ValidationT
 import spray.http.StatusCodes._
 
 import scala.util.{Failure, Success}
-import scalaz.{Failure => zFailure, Success => zSuccess}
+import scala.concurrent.Future
+import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
+import scalaz.std.AllInstances._
 
 
 class IpsUsuarioActorSupervisor extends Actor with ActorLogging {
@@ -42,22 +46,27 @@ class IpsUsuarioActor extends Actor with ActorLogging with AlianzaActors {
   import co.com.alianza.util.json.MarshallableImplicits._
 
   def receive = {
-    case message: ObtenerIpsUsuarioMessage  => obtenerIpsUsuario(message.idUsuario, message.tipoCliente)
-    case message: AgregarIpsUsuarioMessage => agregarIpsUsuarioMessage(message.toEntityIpsUsuario, obtenerEnumTipoCliente(message.tipoCliente))
-    case message: EliminarIpsUsuarioMessage => eliminarIpsUsuarioMessage(message.toEntityIpsUsuario, obtenerEnumTipoCliente(message.tipoCliente))
+    case message: ObtenerIpsUsuarioMessage  => obtenerIpsUsuario(message.idUsuario, message.nit, message.tipoCliente)
+    case message: AgregarIpsUsuarioMessage => agregarIpsUsuarioMessage(message.idUsuario.get, message.nit, message.ip, obtenerEnumTipoCliente(message.tipoCliente))
+    case message: EliminarIpsUsuarioMessage => eliminarIpsUsuarioMessage(message.idUsuario.get, message.nit, message.ip, obtenerEnumTipoCliente(message.tipoCliente))
   }
 
   def obtenerEnumTipoCliente(tipoCliente: Option[Int]) = {
     TiposCliente.apply(tipoCliente.get)
   }
 
-  def obtenerIpsUsuario(idUsuario : Int, tipoCliente: TiposCliente) = {
+  def obtenerIpsUsuario(idUsuario : Int, nit : String, tipoCliente: TiposCliente) = {
     val currentSender = sender()
     val result = {
       if (tipoCliente.equals(TiposCliente.clienteIndividual))
         DataAccessAdapter.obtenerIpsUsuario(idUsuario)
-      else
-        DataAccessAdapter.obtenerIpsUsuarioEmpresarialAdmin(idUsuario)
+      else{
+        (for {
+            empresa <- ValidationT(DataAccessAdapter.obtenerEmpresaPorNit(nit))
+            vectorIpsEmpresa <- ValidationT(DataAccessAdapter.obtenerIpsEmpresa(empresa.get.id))
+        } yield (vectorIpsEmpresa)).run
+      }
+
     }
 
     result  onComplete {
@@ -66,18 +75,23 @@ class IpsUsuarioActor extends Actor with ActorLogging with AlianzaActors {
         value match {
           case zSuccess(response: Vector[IpsUsuario]) =>
             currentSender !  ResponseMessage(OK, response.toJson)
+          case zSuccess(response: Vector[IpsEmpresa]) =>
+            currentSender !  ResponseMessage(OK, response.toJson)
           case zFailure(error)                 =>  currentSender !  error
         }
     }
   }
 
-  def agregarIpsUsuarioMessage(ipUsuario : IpsUsuario, tipoCliente: TiposCliente) = {
+  def agregarIpsUsuarioMessage(idUsuario : Int, nit : String, ip : String, tipoCliente: TiposCliente) = {
     val currentSender = sender()
     val result = {
       if (tipoCliente.equals(TiposCliente.clienteIndividual))
-        DataAccessAdapter.agregarIpUsuario(ipUsuario)
+        DataAccessAdapter.agregarIpUsuario(new IpsUsuario(idUsuario, ip))
       else
-        DataAccessAdapter.agregarIpUsuarioEmpresarialAdmin(ipUsuario)
+        (for {
+          empresa <- ValidationT(DataAccessAdapter.obtenerEmpresaPorNit(nit))
+          mensaje <- ValidationT(DataAccessAdapter.agregarIpEmpresa(new IpsEmpresa(empresa.get.id, ip)))
+        } yield (mensaje)).run
     }
     result  onComplete {
       case Failure(failure)  =>    currentSender ! failure
@@ -88,16 +102,18 @@ class IpsUsuarioActor extends Actor with ActorLogging with AlianzaActors {
           case zFailure(error)                 =>  currentSender !  error
         }
     }
-
   }
 
-  def eliminarIpsUsuarioMessage(ipUsuario : IpsUsuario, tipoCliente: TiposCliente) = {
+  def eliminarIpsUsuarioMessage(idUsuario : Int, nit : String, ip : String, tipoCliente: TiposCliente) = {
     val currentSender = sender()
     val result = {
       if (tipoCliente.equals(TiposCliente.clienteIndividual))
-        DataAccessAdapter.eliminarIpUsuario(ipUsuario)
+        DataAccessAdapter.eliminarIpUsuario(new IpsUsuario(idUsuario, ip))
       else
-        DataAccessAdapter.eliminarIpUsuarioEmpresarialAdmin(ipUsuario)
+        (for {
+          empresa <- ValidationT(DataAccessAdapter.obtenerEmpresaPorNit(nit))
+          mensaje <- ValidationT(DataAccessAdapter.eliminarIpEmpresa(new IpsEmpresa(empresa.get.id, ip)))
+        } yield (mensaje)).run
     }
     result  onComplete {
       case Failure(failure)  =>    currentSender ! failure
@@ -108,7 +124,6 @@ class IpsUsuarioActor extends Actor with ActorLogging with AlianzaActors {
           case zFailure(error)                 =>  currentSender !  error
         }
     }
-
   }
 
 }
