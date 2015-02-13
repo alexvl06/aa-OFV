@@ -47,7 +47,7 @@ class IpsUsuarioActor extends Actor with ActorLogging with AlianzaActors {
 
   def receive = {
     case message: ObtenerIpsUsuarioMessage  => obtenerIpsUsuario(message.idUsuario, message.nit, message.tipoCliente)
-    case message: AgregarIpsUsuarioMessage => agregarIpsUsuarioMessage(message.idUsuario.get, message.nit, message.ip, obtenerEnumTipoCliente(message.tipoCliente))
+    case message: AgregarIpsUsuarioMessage  => agregarIpsUsuarioMessage(message.idUsuario.get, message.nit, message.ip, obtenerEnumTipoCliente(message.tipoCliente))
     case message: EliminarIpsUsuarioMessage => eliminarIpsUsuarioMessage(message.idUsuario.get, message.nit, message.ip, obtenerEnumTipoCliente(message.tipoCliente))
   }
 
@@ -66,9 +66,7 @@ class IpsUsuarioActor extends Actor with ActorLogging with AlianzaActors {
             vectorIpsEmpresa <- ValidationT(DataAccessAdapter.obtenerIpsEmpresa(empresa.get.id))
         } yield (vectorIpsEmpresa)).run
       }
-
     }
-
     result  onComplete {
       case Failure(failure)  =>    currentSender ! failure
       case Success(value)    =>
