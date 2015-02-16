@@ -32,9 +32,7 @@ class SesionActorSupervisor extends Actor with ActorLogging {
     case message: InvalidarSesion => invalidarSesion(message.token)
 
     // When system validate token
-    case message: ValidarSesion =>
-      MainActors.cluster.publishCurrentClusterState()
-      validarSesion(message.token)
+    case message: ValidarSesion => validarSesion(message.token)
 
     //
     // Internal messages
