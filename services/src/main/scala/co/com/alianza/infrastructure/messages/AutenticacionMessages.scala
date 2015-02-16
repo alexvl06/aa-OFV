@@ -41,7 +41,7 @@ case class AgregarIPHabitualUsuario(idUsuario: Option[Int], clientIp:Option[Stri
 
 case class ActualizarSesion()
 
-case class CrearSesionUsuario(token: String, tiempoExpiracion: Option[Configuracion])
+case class CrearSesionUsuario(token: String, tiempoExpiracion: Int)
 
 case class InvalidarSesion(token: String)
 

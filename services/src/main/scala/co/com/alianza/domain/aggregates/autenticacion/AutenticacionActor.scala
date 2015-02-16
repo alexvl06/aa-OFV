@@ -211,7 +211,7 @@ class AutenticacionActor extends Actor with ActorLogging {
                   for {
                     expiracionSesion <- ValidationT(confDataAdapter.obtenerConfiguracionPorLlave(TiposConfiguracion.EXPIRACION_SESION.llave))
                   } yield {
-                    MainActors.sesionActorSupervisor ! CrearSesionUsuario(tokenGenerado, expiracionSesion)
+                    MainActors.sesionActorSupervisor ! CrearSesionUsuario(tokenGenerado, expiracionSesion.get.valor.toInt)
                     currentSender ! ResponseMessage(Conflict, ErrorMessage("401.4", "Control IP", "El usuario no tiene activo el control de direcciones ip", tokenGenerado).toJson)
                   }
 
@@ -241,7 +241,7 @@ class AutenticacionActor extends Actor with ActorLogging {
                   asociar <- ValidationT(co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.asociarTokenUsuario(numeroIdentificacion, tokenGenerado))
                   expiracionSesion <- ValidationT(confDataAdapter.obtenerConfiguracionPorLlave(TiposConfiguracion.EXPIRACION_SESION.llave))
                 } yield {
-                  MainActors.sesionActorSupervisor ! CrearSesionUsuario(tokenGenerado, expiracionSesion)
+                  MainActors.sesionActorSupervisor ! CrearSesionUsuario(tokenGenerado, expiracionSesion.get.valor.toInt)
                   currentSender ! ResponseMessage(Conflict, ErrorMessage("401.4", "Control IP", "El usuario no tiene activo el control de direcciones ip", tokenGenerado).toJson)
                 }
             }
@@ -265,7 +265,7 @@ class AutenticacionActor extends Actor with ActorLogging {
       asociar <- ValidationT(resultAsociarToken)
       expiracionSesion <- ValidationT(confDataAdapter.obtenerConfiguracionPorLlave(TiposConfiguracion.EXPIRACION_SESION.llave))
     } yield {
-      MainActors.sesionActorSupervisor ! CrearSesionUsuario(tokenGenerado, expiracionSesion)
+      MainActors.sesionActorSupervisor ! CrearSesionUsuario(tokenGenerado, expiracionSesion.get.valor.toInt)
       currentSender ! tokenGenerado
     }
     
