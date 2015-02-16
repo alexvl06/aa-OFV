@@ -129,7 +129,7 @@ class AutenticacionActor extends Actor with ActorLogging {
               case Some(valueResponseCliente) =>
                 if (getTipoPersona(messageTipoIdentificacion) != valueResponseCliente.wcli_person)
                   currentSender ! ResponseMessage(Unauthorized, errorClienteNoExisteSP)
-                else if (valueResponseCliente.wcli_estado != EstadosCliente.bloqueoContraseña) {
+                else if (valueResponseCliente.wcli_estado != EstadosCliente.inactivo) {
                   //Se valida la caducidad de la contraseña
                   validarFechaContrasena(usuario.id.get, usuario.fechaCaducidad, currentSender: ActorRef)
                   //Validacion de control de direccion IP del usuario
@@ -172,7 +172,7 @@ class AutenticacionActor extends Actor with ActorLogging {
           case zSuccess(response: Option[Cliente]) =>
             response match {
               case Some(valueResponseCliente) =>
-                if (valueResponseCliente.wcli_estado != EstadosCliente.bloqueoContraseña) {
+                if (valueResponseCliente.wcli_estado != EstadosCliente.inactivo) {
                   //Se asocia la direccion IP a las habituales del usuario
                   val result = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.relacionarIp(idUsuario, ip)
                   currentSender ! "Registro de IP Exitoso"
