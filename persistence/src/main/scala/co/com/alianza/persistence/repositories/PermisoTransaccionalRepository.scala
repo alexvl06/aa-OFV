@@ -12,9 +12,12 @@ import scala.util.Try
  */
 class PermisoTransaccionalRepository ( implicit executionContext: ExecutionContext) extends AlianzaRepository {
 
-  val tabla = TableQuery[PermisoTransaccionalUsuarioEmpresarialTable]
-  val tablaAutorizadores = TableQuery[PermisoTransaccionalUsuarioEmpresarialAutorizadorTable]
-  val tablaAutorizadoresAdmins = TableQuery[PermisoTransaccionalUsuarioEmpresarialAutorizadorAdminTable]
+  val tablaPermisosEncargos = TableQuery[PermisoTransaccionalUsuarioEmpresarialTable]
+  val tablaPermisosEncargosAutorizadores = TableQuery[PermisoTransaccionalUsuarioEmpresarialAutorizadorTable]
+  val tablaPermisosEncargosAutorizadoresAdmins = TableQuery[PermisoTransaccionalUsuarioEmpresarialAutorizadorAdminTable]
+  val tablaPermisos = TableQuery[PermisoAgenteTable]
+  val tablaPermisosAutorizadores = TableQuery[PermisoAgenteAutorizadorTable]
+  val tablaPermisosAutorizadoresAdmins = TableQuery[PermisoAgenteAutorizadorAdminTable]
   val tablaAgentes = TableQuery[UsuarioEmpresarialTable]
 
   /**
@@ -29,19 +32,19 @@ class PermisoTransaccionalRepository ( implicit executionContext: ExecutionConte
       resolveTry(
         Try {
           val q = for {
-            p <- tabla if p.idEncargo === permiso.idEncargo && p.idAgente === permiso.idAgente && p.tipoTransaccion === permiso.tipoTransaccion
+            p <- tablaPermisosEncargos if p.idEncargo === permiso.idEncargo && p.idAgente === permiso.idAgente && p.tipoTransaccion === permiso.tipoTransaccion
           } yield (p.tipoPermiso, p.montoMaximoTransaccion, p.montoMaximoDiario, p.minimoNumeroPersonas)
           var regMod = 0
           regMod = q update ((permiso.tipoPermiso, permiso.montoMaximoTransaccion, permiso.montoMaximoDiario, permiso.minimoNumeroPersonas))
           if(!estaSeleccionado) {
             guardarAgentesPermiso(permiso, estaSeleccionado, Some(List()), idClienteAdmin)
             regMod = (for {
-              p <- tabla if p.idEncargo === permiso.idEncargo && p.idAgente === permiso.idAgente && p.tipoTransaccion === permiso.tipoTransaccion
+              p <- tablaPermisosEncargos if p.idEncargo === permiso.idEncargo && p.idAgente === permiso.idAgente && p.tipoTransaccion === permiso.tipoTransaccion
             } yield p).delete
             regMod
           }
           if(regMod==0 && estaSeleccionado){
-            tabla += permiso
+            tablaPermisosEncargos += permiso
             guardarAgentesPermiso(permiso, estaSeleccionado, idsAgentes, idClienteAdmin)
             1
           } else {
@@ -57,8 +60,26 @@ class PermisoTransaccionalRepository ( implicit executionContext: ExecutionConte
     implicit session =>
       resolveTry(
         Try {
-          val joinPermisosAutorizadores = for {
-            ((permiso, autorizador), agente) <- tabla.filter(_.idAgente===idAgente) leftJoin tablaAutorizadores on {
+          val joinPermisosTransaccionalesAutorizadores = for {
+            ((permiso, autorizador), agente) <- tablaPermisos.filter(_.idAgente===idAgente) leftJoin tablaPermisosAutorizadores on {
+              (permiso, autorizador) =>
+                permiso.tipoTransaccion===autorizador.tipoTransaccion && permiso.idAgente===autorizador.idAgente
+            } join tablaAgentes on {
+              case ((permiso, autorizador), agente) =>
+                autorizador.idAutorizador===agente.id && agente.estado===1
+            }
+          } yield (permiso, autorizador.?, false)
+
+          val joinPermisosTransaccionalesAutorizadoresAdmin = for {
+            (permiso, autorizador) <- tablaPermisos.filter(_.idAgente===idAgente) leftJoin tablaPermisosAutorizadores on {
+              (permiso, autorizador) =>
+                permiso.tipoTransaccion===autorizador.tipoTransaccion && permiso.idAgente===autorizador.idAgente
+            }
+          } yield (permiso, autorizador.?, true)
+          val unionPermisos = joinPermisosTransaccionalesAutorizadores ++ joinPermisosTransaccionalesAutorizadoresAdmin
+
+          val joinPermisosTransaccionalesEncargosAutorizadores = for {
+            ((permiso, autorizador), agente) <- tablaPermisosEncargos.filter(_.idAgente===idAgente) leftJoin tablaPermisosEncargosAutorizadores on {
               (permiso, autorizador) =>
                 permiso.idEncargo===autorizador.idEncargo && permiso.tipoTransaccion===autorizador.tipoTransaccion && permiso.idAgente===autorizador.idAgente
             } join tablaAgentes on {
@@ -67,16 +88,22 @@ class PermisoTransaccionalRepository ( implicit executionContext: ExecutionConte
             }
           } yield (permiso, autorizador.?, false)
 
-          val joinPermisosAutorizadoresAdmin = for {
-            (permiso, autorizador) <- tabla.filter(_.idAgente===idAgente) leftJoin tablaAutorizadoresAdmins on {
+          val joinPermisosTransaccionalesEncargosAutorizadoresAdmin = for {
+            (permiso, autorizador) <- tablaPermisosEncargos.filter(_.idAgente===idAgente) leftJoin tablaPermisosEncargosAutorizadoresAdmins on {
               (permiso, autorizador) =>
                 permiso.idEncargo===autorizador.idEncargo && permiso.tipoTransaccion===autorizador.tipoTransaccion && permiso.idAgente===autorizador.idAgente
             }
           } yield (permiso, autorizador.?, true)
-          val union = joinPermisosAutorizadores ++ joinPermisosAutorizadoresAdmin
-          union.list groupBy {_._1.idEncargo} map {
-            e => ( e._1, e._2.groupBy {_._1}.map {a => (a._1, a._2.map{x => (x._2, Some(x._3))})} toList )
-          } toList
+          val unionPermisosEncargos = joinPermisosTransaccionalesEncargosAutorizadores ++ joinPermisosTransaccionalesEncargosAutorizadoresAdmin
+
+          (
+            unionPermisos.list groupBy {_._1} map {
+              e => ( e._1, e._2.map {a => (a._2, Some(a._3))} toList )
+            } toList,
+            unionPermisosEncargos.list groupBy {_._1.idEncargo} map {
+              e => ( e._1, e._2.groupBy {_._1}.map {a => (a._1, a._2.map{x => (x._2, Some(x._3))})} toList )
+            } toList
+          )
         },
         "Consultar permiso transaccional de agente"
       )
@@ -91,20 +118,20 @@ class PermisoTransaccionalRepository ( implicit executionContext: ExecutionConte
       val ids = idsAgentes.get.filter{id => id!=0 && id!=(-1)}
       val esConAutorizadores = (permiso.tipoPermiso==2 || permiso.tipoPermiso==3)
       val queryAgentes = for {
-        au <- tablaAutorizadores if au.idEncargo === permiso.idEncargo && au.idAgente === permiso.idAgente && au.tipoTransaccion === permiso.tipoTransaccion
+        au <- tablaPermisosEncargosAutorizadores if au.idEncargo === permiso.idEncargo && au.idAgente === permiso.idAgente && au.tipoTransaccion === permiso.tipoTransaccion
       } yield au
       val existentes = queryAgentes.list.map{_.idAutorizador}
       val nuevos = if(estaSeleccionado && esConAutorizadores) ids.diff(existentes) else List()
       val removidos = if(estaSeleccionado && esConAutorizadores) existentes.diff(ids) else existentes
       nuevos foreach {
         id =>
-          tablaAutorizadores += PermisoTransaccionalUsuarioEmpresarialAutorizador(permiso.idEncargo, permiso.idAgente, permiso.tipoTransaccion, id)
+          tablaPermisosEncargosAutorizadores += PermisoTransaccionalUsuarioEmpresarialAutorizador(permiso.idEncargo, permiso.idAgente, permiso.tipoTransaccion, id)
       }
       removidos foreach { id => queryAgentes filter {_.idAutorizador===id} delete }
 
       val incluidoClienteAdmin = idsAgentes.get.filter{_!=0}.contains(-1)
       val queryAdmins = for {
-        au <- tablaAutorizadoresAdmins if au.idEncargo === permiso.idEncargo && au.idAgente === permiso.idAgente && au.tipoTransaccion === permiso.tipoTransaccion
+        au <- tablaPermisosEncargosAutorizadoresAdmins if au.idEncargo === permiso.idEncargo && au.idAgente === permiso.idAgente && au.tipoTransaccion === permiso.tipoTransaccion
       } yield au
       val adminsIds = if(incluidoClienteAdmin) List(idClienteAdmin) else List()
       val adminsExistentes = queryAdmins.list.map{_.idAutorizador}
@@ -112,7 +139,7 @@ class PermisoTransaccionalRepository ( implicit executionContext: ExecutionConte
       val adminsRemovidos = if(estaSeleccionado && esConAutorizadores) adminsExistentes.diff(adminsIds) else adminsExistentes
       adminsNuevos foreach {
         id =>
-          tablaAutorizadoresAdmins += PermisoTransaccionalUsuarioEmpresarialAutorizador(permiso.idEncargo, permiso.idAgente, permiso.tipoTransaccion, id)
+          tablaPermisosEncargosAutorizadoresAdmins += PermisoTransaccionalUsuarioEmpresarialAutorizador(permiso.idEncargo, permiso.idAgente, permiso.tipoTransaccion, id)
       }
       adminsRemovidos foreach { id => queryAdmins filter {_.idAutorizador===id} delete }
     }

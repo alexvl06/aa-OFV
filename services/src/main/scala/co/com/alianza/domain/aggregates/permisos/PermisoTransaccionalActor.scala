@@ -72,7 +72,9 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
 
     case ConsultarPermisosAgenteMessage(idAgente) =>
       val currentSender = sender
-      resolveFutureValidation(DataAccessAdapter consultaPermisosAgente idAgente, (x: List[EncargoPermisos]) => x.toJson, currentSender)
+      resolveFutureValidation(DataAccessAdapter consultaPermisosAgente idAgente,
+        (x: (List[co.com.alianza.infrastructure.dto.Permiso], List[co.com.alianza.infrastructure.dto.EncargoPermisos])) => PermisosRespuesta(x._1, x._2).toJson,
+        currentSender)
 
   }
 

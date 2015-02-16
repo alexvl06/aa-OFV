@@ -14,3 +14,6 @@ case class PermisoTransaccionalUsuarioEmpresarialAgentes(permiso: Option[Permiso
                                                          agentes: Option[List[Autorizador]] = None)
 case class Autorizador(id: Int, esAdmin: Option[Boolean])
 
+case class PermisoAgente(idAgente: Int, tipoTransaccion: Int, minimoNumeroPersonas: Option[Int], seleccionado: Boolean = false)
+
+case class Permiso(permisoAgente: PermisoAgente, autorizadores: Option[List[Autorizador]] = None)
