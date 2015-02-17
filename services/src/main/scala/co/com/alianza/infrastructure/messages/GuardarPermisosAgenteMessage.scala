@@ -9,12 +9,13 @@ import co.com.alianza.infrastructure.dto._
 /**
  * Created by manuel on 7/01/15.
  */
-case class GuardarPermisosAgenteMessage (idAgente: Int, encargosPermisos: List[EncargoPermisos], idClienteAdmin: Option[Int]) extends MessageService
-case class ConsultarPermisosAgenteMessage(idAgente: Int) extends MessageService
+case class GuardarPermisosAgenteMessage (idAgente: Int, permisos: List[Permiso], encargosPermisos: List[EncargoPermisos], idClienteAdmin: Option[Int]) extends MessageService
+case class ConsultarPermisosAgenteMessage (idAgente: Int) extends MessageService
 case class PermisosRespuesta (permisos: List[Permiso], encargosPermisos: List[EncargoPermisos])
 
 object PermisosTransaccionalesJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val AgenteFormat = jsonFormat2(Autorizador)
+
   implicit val PermisoTransaccionalUsuarioEmpresarialFormat = new RootJsonFormat[PermisoTransaccionalUsuarioEmpresarial]{
     def read(json: JsValue) = {
       val fields = json.asJsObject.fields
@@ -28,9 +29,18 @@ object PermisosTransaccionalesJsonSupport extends DefaultJsonProtocol with Spray
     }
     def write(p: PermisoTransaccionalUsuarioEmpresarial) = jsonFormat8(PermisoTransaccionalUsuarioEmpresarial).write(p)
   }
+
+  implicit val PermisoAgenteFormat = jsonFormat4(PermisoAgente)
+  implicit val PermisoFormat = new RootJsonFormat[Permiso] {
+    def read(json: JsValue) = {
+      val permiso = jsonFormat2(Permiso).read(json)
+      Permiso( permisoAgente = Some(json.asJsObject.convertTo[PermisoAgente]), autorizadores = permiso.autorizadores )
+    }
+    def write(p: Permiso) = jsonFormat2(Permiso).write(p)
+  }
+
   implicit val PermisoTransaccionalUsuarioEmpresarialAgentesFormat = new RootJsonFormat[PermisoTransaccionalUsuarioEmpresarialAgentes]{
     def read(json: JsValue) = {
-      val fields = json.asJsObject.fields
       val permisoAgentes = jsonFormat2(PermisoTransaccionalUsuarioEmpresarialAgentes).read(json)
       PermisoTransaccionalUsuarioEmpresarialAgentes(
         Some(json.asJsObject.convertTo[PermisoTransaccionalUsuarioEmpresarial]),
@@ -41,9 +51,7 @@ object PermisosTransaccionalesJsonSupport extends DefaultJsonProtocol with Spray
   }
 
   implicit val EncargoPermisosFormat = jsonFormat2(EncargoPermisos)
-  implicit val GuardarPermisosAgenteFormat = jsonFormat3(GuardarPermisosAgenteMessage)
-  implicit val PermisoAgenteFormat = jsonFormat4(PermisoAgente)
-  implicit val PermisoFormat = jsonFormat2(Permiso)
+  implicit val GuardarPermisosAgenteFormat = jsonFormat4(GuardarPermisosAgenteMessage)
   implicit val PermisosFormat = jsonFormat2(PermisosRespuesta)
 
 }

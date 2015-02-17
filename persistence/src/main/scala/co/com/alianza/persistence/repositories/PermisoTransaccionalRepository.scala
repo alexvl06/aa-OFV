@@ -21,13 +21,49 @@ class PermisoTransaccionalRepository ( implicit executionContext: ExecutionConte
   val tablaAgentes = TableQuery[UsuarioEmpresarialTable]
 
   /**
-   * Crea, actualiza o borra un permiso
+   * Crea, actualiza o borra un permiso general
    * @param permiso Datos permiso
    * @param estaSeleccionado Se encuentra seleccionado?
    * @param idsAgentes Autorizadores
    * @return
    */
-  def guardarPermiso(permiso: PermisoTransaccionalUsuarioEmpresarial, estaSeleccionado: Boolean, idsAgentes: Option[List[Int]] = None, idClienteAdmin: Int) = loan {
+  def guardarPermiso(permiso: PermisoAgente, estaSeleccionado: Boolean, idsAgentes: Option[List[Int]] = None, idClienteAdmin: Int) = loan {
+    implicit session =>
+      resolveTry(
+        Try {
+          val q = for {
+            p <- tablaPermisos if p.idAgente === permiso.idAgente && p.tipoTransaccion === permiso.tipoTransaccion
+          } yield p.minimoNumeroPersonas
+          var regMod = 0
+          regMod = q update ((permiso.minimoNumeroPersonas))
+          if(!estaSeleccionado) {
+            guardarAgentesPermiso(permiso, estaSeleccionado, Some(List()), idClienteAdmin)
+            regMod = (for {
+              p <- tablaPermisos if p.idAgente === permiso.idAgente && p.tipoTransaccion === permiso.tipoTransaccion
+            } yield p).delete
+            regMod
+          }
+          if(regMod==0 && estaSeleccionado){
+            tablaPermisos += permiso
+            guardarAgentesPermiso(permiso, estaSeleccionado, idsAgentes, idClienteAdmin)
+            1
+          } else {
+            guardarAgentesPermiso(permiso, estaSeleccionado, idsAgentes, idClienteAdmin)
+            regMod
+          }
+        },
+        "Guardar permiso transaccional general de agente"
+      )
+  }
+
+  /**
+   * Crea, actualiza o borra un permiso de un encargo
+   * @param permiso Datos permiso
+   * @param estaSeleccionado Se encuentra seleccionado?
+   * @param idsAgentes Autorizadores
+   * @return
+   */
+  def guardarPermisoEncargo(permiso: PermisoTransaccionalUsuarioEmpresarial, estaSeleccionado: Boolean, idsAgentes: Option[List[Int]] = None, idClienteAdmin: Int) = loan {
     implicit session =>
       resolveTry(
         Try {
@@ -37,7 +73,7 @@ class PermisoTransaccionalRepository ( implicit executionContext: ExecutionConte
           var regMod = 0
           regMod = q update ((permiso.tipoPermiso, permiso.montoMaximoTransaccion, permiso.montoMaximoDiario, permiso.minimoNumeroPersonas))
           if(!estaSeleccionado) {
-            guardarAgentesPermiso(permiso, estaSeleccionado, Some(List()), idClienteAdmin)
+            guardarAgentesPermisoEncargo(permiso, estaSeleccionado, Some(List()), idClienteAdmin)
             regMod = (for {
               p <- tablaPermisosEncargos if p.idEncargo === permiso.idEncargo && p.idAgente === permiso.idAgente && p.tipoTransaccion === permiso.tipoTransaccion
             } yield p).delete
@@ -45,14 +81,14 @@ class PermisoTransaccionalRepository ( implicit executionContext: ExecutionConte
           }
           if(regMod==0 && estaSeleccionado){
             tablaPermisosEncargos += permiso
-            guardarAgentesPermiso(permiso, estaSeleccionado, idsAgentes, idClienteAdmin)
+            guardarAgentesPermisoEncargo(permiso, estaSeleccionado, idsAgentes, idClienteAdmin)
             1
           } else {
-            guardarAgentesPermiso(permiso, estaSeleccionado, idsAgentes, idClienteAdmin)
+            guardarAgentesPermisoEncargo(permiso, estaSeleccionado, idsAgentes, idClienteAdmin)
             regMod
           }
         },
-        "Guardar permiso transaccional de agente"
+        "Guardar permiso transaccional por encargo de agente"
       )
   }
 
@@ -109,7 +145,42 @@ class PermisoTransaccionalRepository ( implicit executionContext: ExecutionConte
       )
   }
 
-  private[this] def guardarAgentesPermiso(permiso: PermisoTransaccionalUsuarioEmpresarial,
+  private[this] def guardarAgentesPermiso(permiso: PermisoAgente,
+                                          estaSeleccionado: Boolean,
+                                          idsAgentes: Option[List[Int]] = None,
+                                          idClienteAdmin: Int)
+                                         (implicit s: Session) = {
+    if(idsAgentes.isDefined && idsAgentes.get.headOption.isDefined && idsAgentes.get.headOption.get!=0){
+      val ids = idsAgentes.get.filter{id => id!=0 && id!=(-1)}
+      val queryAgentes = for {
+        au <- tablaPermisosAutorizadores if au.idAgente === permiso.idAgente && au.tipoTransaccion === permiso.tipoTransaccion
+      } yield au
+      val existentes = queryAgentes.list.map{_.idAutorizador}
+      val nuevos = if(estaSeleccionado) ids.diff(existentes) else List()
+      val removidos = if(estaSeleccionado) existentes.diff(ids) else existentes
+      nuevos foreach {
+        id =>
+          tablaPermisosAutorizadores += PermisoAgenteAutorizador(permiso.idAgente, permiso.tipoTransaccion, id)
+      }
+      removidos foreach { id => queryAgentes filter {_.idAutorizador===id} delete }
+
+      val incluidoClienteAdmin = idsAgentes.get.filter{_!=0}.contains(-1)
+      val queryAdmins = for {
+        au <- tablaPermisosAutorizadoresAdmins if au.idAgente === permiso.idAgente && au.tipoTransaccion === permiso.tipoTransaccion
+      } yield au
+      val adminsIds = if(incluidoClienteAdmin) List(idClienteAdmin) else List()
+      val adminsExistentes = queryAdmins.list.map{_.idAutorizador}
+      val adminsNuevos = if(estaSeleccionado) adminsIds.diff(adminsExistentes) else List()
+      val adminsRemovidos = if(estaSeleccionado) adminsExistentes.diff(adminsIds) else adminsExistentes
+      adminsNuevos foreach {
+        id =>
+          tablaPermisosAutorizadoresAdmins += PermisoAgenteAutorizador(permiso.idAgente, permiso.tipoTransaccion, id)
+      }
+      adminsRemovidos foreach { id => queryAdmins filter {_.idAutorizador===id} delete }
+    }
+  }
+
+  private[this] def guardarAgentesPermisoEncargo(permiso: PermisoTransaccionalUsuarioEmpresarial,
                                           estaSeleccionado: Boolean,
                                           idsAgentes: Option[List[Int]] = None,
                                           idClienteAdmin: Int)
