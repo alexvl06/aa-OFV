@@ -2,7 +2,7 @@ package co.com.alianza.web.empresa
 
 import co.com.alianza.app.AlianzaCommons
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
-import co.com.alianza.infrastructure.messages.empresa.{CambiarContrasenaAgenteEmpresarialMessage, CambiarContrasenaClienteAdminMessage, ReiniciarContrasenaAgenteEMessage, AdministrarContrasenaEmpresaMessagesJsonSupport}
+import co.com.alianza.infrastructure.messages.empresa._
 import spray.routing.Directives
 
 /**
@@ -53,7 +53,17 @@ class AdministrarContrasenaEmpresaService extends Directives with AlianzaCommons
             }
           }
         }
-      }
+      } ~ pathPrefix("asignarContrasena") {
+          respondWithMediaType(mediaType) {
+            pathEndOrSingleSlash {
+              put {
+                entity(as[AsignarContrasenaMessage]) {
+                  data => requestExecute(data, contrasenasAgenteEmpresarialActor)
+                }
+              }
+            }
+          }
+        }
     }
   }
 
