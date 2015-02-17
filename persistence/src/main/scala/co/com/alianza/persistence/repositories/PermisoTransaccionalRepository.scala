@@ -107,7 +107,7 @@ class PermisoTransaccionalRepository ( implicit executionContext: ExecutionConte
           } yield (permiso, autorizador.?, false)
 
           val joinPermisosTransaccionalesAutorizadoresAdmin = for {
-            (permiso, autorizador) <- tablaPermisos.filter(_.idAgente===idAgente) leftJoin tablaPermisosAutorizadores on {
+            (permiso, autorizador) <- tablaPermisos.filter(_.idAgente===idAgente) leftJoin tablaPermisosAutorizadoresAdmins on {
               (permiso, autorizador) =>
                 permiso.tipoTransaccion===autorizador.tipoTransaccion && permiso.idAgente===autorizador.idAgente
             }
@@ -134,7 +134,7 @@ class PermisoTransaccionalRepository ( implicit executionContext: ExecutionConte
 
           (
             unionPermisos.list groupBy {_._1} map {
-              e => ( e._1, e._2.map {a => (a._2, Some(a._3))} toList )
+              e => ( e._1, e._2.map{x => (x._2, Some(x._3))} toList )
             } toList,
             unionPermisosEncargos.list groupBy {_._1.idEncargo} map {
               e => ( e._1, e._2.groupBy {_._1}.map {a => (a._1, a._2.map{x => (x._2, Some(x._3))})} toList )
