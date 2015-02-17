@@ -90,7 +90,7 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
             case (((uea, ueae), uee), ae) => uee.idUsuarioEmpresarial === ae.id && ae.identificacion === numIdentificacionAgenteEmpresarial && ae.correo === correoUsuarioAgenteEmpresarial && ae.tipoIdentificacion === tipoIdentiAgenteEmpresarial
           }
         } yield (agenteEmpresarial)
-          ).list.headOption
+        ).list.headOption
       }
 
       val resultIdUsuarioAE: Try[Option[(Int, Int)]] = resultTry map {
