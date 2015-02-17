@@ -35,7 +35,7 @@ trait BootedCore extends Core {
 
   implicit lazy val system = ActorSystem( "alianza-fid-auth-service" )
   implicit lazy val ex: ExecutionContext = system.dispatcher
-  implicit lazy val cluster = Cluster(system)
+  implicit lazy val cluster = Cluster.get(system)
   implicit lazy val dataAccesEx: ExecutionContext = system.dispatcher
 
   sys.addShutdownHook( system.shutdown( ) )
