@@ -28,6 +28,7 @@ import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
 import scalaz.std.AllInstances._
 
 import spray.http.StatusCodes._
+import co.com.alianza.domain.aggregates.usuarios.ErrorClienteNoExiste
 
 class AutenticacionActorSupervisor extends Actor with ActorLogging {
   import akka.actor.SupervisorStrategy._
@@ -127,14 +128,20 @@ class AutenticacionActor extends Actor with ActorLogging {
           case zSuccess(response: Option[Cliente]) =>
             response match {
               case Some(valueResponseCliente) =>
-                if (getTipoPersona(messageTipoIdentificacion) != valueResponseCliente.wcli_person)
-                  currentSender ! ResponseMessage(Unauthorized, errorClienteNoExisteSP)
-                else if (valueResponseCliente.wcli_estado != EstadosCliente.inactivo) {
+                if (getTipoPersona(messageTipoIdentificacion) != valueResponseCliente.wcli_person){
+                  currentSender ! ResponseMessage(Unauthorized, errorClienteNoExisteSP)}
+                else if (valueResponseCliente.wcli_estado == EstadosCliente.activo) {
                   //Se valida la caducidad de la contraseña
-                  validarFechaContrasena(usuario.id.get, usuario.fechaCaducidad, currentSender: ActorRef)
-                  //Validacion de control de direccion IP del usuario
-                  validarControlIpUsuario(usuario.identificacion, usuario.id.get, ip, valueResponseCliente.wcli_nombre, valueResponseCliente.wcli_dir_correo, valueResponseCliente.wcli_person, usuario.ipUltimoIngreso.getOrElse(""), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), currentSender: ActorRef)
-                } else
+                  println("ESTA AQUI: " + valueResponseCliente.toJson)
+                  if(valueResponseCliente.wcli_dir_correo == null || valueResponseCliente.wcli_dir_correo.isEmpty) {
+                    currentSender ! ResponseMessage(Unauthorized,errorCorreoNoExiste)
+                  }else{
+                    validarFechaContrasena(usuario.id.get, usuario.fechaCaducidad, currentSender: ActorRef)
+                    //Validacion de control de direccion IP del usuario
+                    validarControlIpUsuario(usuario.identificacion, usuario.id.get, ip, valueResponseCliente.wcli_nombre, valueResponseCliente.wcli_dir_correo, valueResponseCliente.wcli_person, usuario.ipUltimoIngreso.getOrElse(""), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), currentSender: ActorRef)
+                  }
+                }
+                else
                   currentSender ! ResponseMessage(Unauthorized, errorClienteInactivoSP)
               case None => currentSender ! ResponseMessage(Unauthorized, errorClienteNoExisteSP)
             }
@@ -377,4 +384,5 @@ class AutenticacionActor extends Actor with ActorLogging {
   private val errorUsuarioBloqueadoPendienteActivacion = ErrorMessage("401.10", "Usuario Bloqueado", "El usuario se encuentra pendiente de activación").toJson
   private val errorUsuarioBloqueadoPendienteConfronta = ErrorMessage("401.11", "Usuario Bloqueado", "El usuario se encuentra bloqueado pendiente preguntas de seguridad").toJson
   private val errorUsuarioBloqueadoPendienteReinicio = ErrorMessage("401.12", "Usuario Bloqueado", "El usuario se encuentra bloqueado pendiente de reiniciar contraseña").toJson
+  private val errorCorreoNoExiste =           ErrorMessage("401.13", "No hay correo registrado", "No hay correo registrado en la base de datos de Alianza").toJson
 }
