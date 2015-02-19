@@ -195,7 +195,8 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
         usuarioAdmin <- ValidationT(obtenerUsuarioEmpresarialAdmin(message.idUsuario.get))
         cliente <- ValidationT(obtenerClienteSP(usuarioAdmin.tipoIdentificacion, usuarioAdmin.identificacion))
         cienteValido <- ValidationT(validarClienteSP(usuarioAdmin.tipoIdentificacion, cliente))
-        relacionarIp <- ValidationT(asociarIpEmpresa(message.idUsuario.get, message.clientIp.get))
+        idEmpresa <- ValidationT(obtenerEmpresaIdUsuarioAdmin(message.idUsuario.get))
+        relacionarIp <- ValidationT(asociarIpEmpresa(idEmpresa, message.clientIp.get))
       } yield relacionarIp).run
 
       resultadoIp.onComplete {
@@ -240,9 +241,19 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
     )
   }
 
+  def obtenerEmpresaIdUsuarioAdmin(idUsuario: Int): Future[Validation[ErrorAutenticacion, Int]] ={
+    log.info("Obteniendo empresa por idUsuario empresarial Admin")
+    val future : Future[Validation[PersistenceException, Int]] = UsDataAdapter.obtenerIdEmpresa(idUsuario, TiposCliente.clienteAdministrador)
+    future.map(
+      _.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap{
+        idEmpresa => Validation.success(idEmpresa)
+      }
+    )
+  }
+
   /**
    * Asocia la ip al usuario empresarial admin
-   * @param idUsuario id del usuario
+   * @param idEmpresa id de la empresa
    * @param ipPeticion ip a asociar
    * @return Future[Validation[ErrorAutenticacion, Boolean] ]
    * Success => True
@@ -334,8 +345,9 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
   }
 
   /**
-   * Valida si el usuario tiene alguna ip guardada
-   * @param idUsuario el id del usuario a validar
+   * Valida si la empresa tiene alguna ip guardada
+   * @param idEmpresa el id de la empresa a validar
+   * @param ipPeticion ip a buscar
    * @return Future[Validation[ErrorAutenticacion, Boolean] ]
    * Success => El token si el usuario tiene la ip en su lista de ips
    * ErrorAutenticacion => ErrorPersistencia | ErrorControlIpsDesactivado

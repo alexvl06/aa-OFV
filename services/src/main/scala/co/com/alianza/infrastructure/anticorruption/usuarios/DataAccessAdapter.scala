@@ -2,6 +2,8 @@ package co.com.alianza.infrastructure.anticorruption.usuarios
 
 import java.sql.Timestamp
 
+import co.com.alianza.commons.enumerations.TiposCliente
+import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.persistence.repositories._
 import scalaz.Validation
 import scala.concurrent.{ExecutionContext, Future}
@@ -55,6 +57,14 @@ object DataAccessAdapter {
 
   def obtenerEmpresaPorNit(nit: String): Future[Validation[PersistenceException,Option[Empresa]]] ={
     new EmpresaRepository().obtenerEmpresa(nit)
+  }
+
+  def obtenerIdEmpresa(idUsuario: Int, tipoCliente: TiposCliente): Future[Validation[PersistenceException, Int]] = {
+    //new EmpresaRepository().obtenerEmpresa(nit)
+    tipoCliente match{
+      case TiposCliente.agenteEmpresarial => new EmpresaUsuarioRepository().obtenerIdEmpresa(idUsuario)
+      case TiposCliente.clienteAdministrador => new EmpresaUsuarioAdminRepository().obtenerIdEmpresa(idUsuario)
+    }
   }
 
   def obtieneUsuarioEmpresarialPorNitYUsuario (nit: String, usuario: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] =
@@ -258,7 +268,6 @@ object DataAccessAdapter {
           case Some(usuario) => zSuccess(Some(DataAccessTranslator.translateUsuarioEmpresarial(usuario)))
           case _ => zSuccess(None)
         }
-
       case zFailure(error)    =>  zFailure(error)
     }
   }
@@ -273,8 +282,4 @@ object DataAccessAdapter {
         }
       case zFailure(error)    =>  zFailure(error)
     }
-
-
 }
-
-

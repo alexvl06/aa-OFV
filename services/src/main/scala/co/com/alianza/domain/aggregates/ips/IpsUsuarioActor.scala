@@ -46,49 +46,51 @@ class IpsUsuarioActor extends Actor with ActorLogging with AlianzaActors {
   import co.com.alianza.util.json.MarshallableImplicits._
 
   def receive = {
-    case message: ObtenerIpsUsuarioMessage  => obtenerIpsUsuario(message.idUsuario, message.nit, message.tipoCliente)
-    case message: AgregarIpsUsuarioMessage  => agregarIpsUsuarioMessage(message.idUsuario.get, message.nit, message.ip, obtenerEnumTipoCliente(message.tipoCliente))
-    case message: EliminarIpsUsuarioMessage => eliminarIpsUsuarioMessage(message.idUsuario.get, message.nit, message.ip, obtenerEnumTipoCliente(message.tipoCliente))
+    case message: ObtenerIpsUsuarioMessage  => obtenerIpsUsuario(message.idUsuario, message.tipoCliente)
+    case message: AgregarIpsUsuarioMessage  => agregarIpsUsuarioMessage(message.idUsuario.get, message.ip, obtenerEnumTipoCliente(message.tipoCliente))
+    case message: EliminarIpsUsuarioMessage => eliminarIpsUsuarioMessage(message.idUsuario.get, message.ip, obtenerEnumTipoCliente(message.tipoCliente))
   }
 
   def obtenerEnumTipoCliente(tipoCliente: Option[Int]) = {
     TiposCliente.apply(tipoCliente.get)
   }
 
-  def obtenerIpsUsuario(idUsuario : Int, nit : String, tipoCliente: TiposCliente) = {
+  def obtenerIpsUsuario(idUsuario : Int, tipoCliente: TiposCliente) = {
     val currentSender = sender()
     val result = {
       if (tipoCliente.equals(TiposCliente.clienteIndividual))
         DataAccessAdapter.obtenerIpsUsuario(idUsuario)
       else{
         (for {
-            empresa <- ValidationT(DataAccessAdapter.obtenerEmpresaPorNit(nit))
-            vectorIpsEmpresa <- ValidationT(DataAccessAdapter.obtenerIpsEmpresa(empresa.get.id))
+            idEmpresa <- ValidationT(DataAccessAdapter.obtenerIdEmpresa(idUsuario, tipoCliente))
+            vectorIpsEmpresa <- ValidationT(DataAccessAdapter.obtenerIpsEmpresa(idEmpresa))
         } yield (vectorIpsEmpresa)).run
       }
     }
     result  onComplete {
-      case Failure(failure)  =>    currentSender ! failure
+      case Failure(failure)  =>
+        currentSender ! failure
       case Success(value)    =>
         value match {
           case zSuccess(response: Vector[IpsUsuario]) =>
-            currentSender !  ResponseMessage(OK, response.toJson)
+              currentSender !  ResponseMessage(OK, response.toJson)
           case zSuccess(response: Vector[IpsEmpresa]) =>
-            currentSender !  ResponseMessage(OK, response.toJson)
-          case zFailure(error)                 =>  currentSender !  error
+              currentSender !  ResponseMessage(OK, response.toJson)
+          case zFailure(error)   =>
+            currentSender !  error
         }
     }
   }
 
-  def agregarIpsUsuarioMessage(idUsuario : Int, nit : String, ip : String, tipoCliente: TiposCliente) = {
+  def agregarIpsUsuarioMessage(idUsuario : Int, ip : String, tipoCliente: TiposCliente) = {
     val currentSender = sender()
     val result = {
       if (tipoCliente.equals(TiposCliente.clienteIndividual))
         DataAccessAdapter.agregarIpUsuario(new IpsUsuario(idUsuario, ip))
       else
         (for {
-          empresa <- ValidationT(DataAccessAdapter.obtenerEmpresaPorNit(nit))
-          mensaje <- ValidationT(DataAccessAdapter.agregarIpEmpresa(new IpsEmpresa(empresa.get.id, ip)))
+          idEmpresa <- ValidationT(DataAccessAdapter.obtenerIdEmpresa(idUsuario, tipoCliente))
+          mensaje <- ValidationT(DataAccessAdapter.agregarIpEmpresa(new IpsEmpresa(idEmpresa, ip)))
         } yield (mensaje)).run
     }
     result  onComplete {
@@ -102,15 +104,15 @@ class IpsUsuarioActor extends Actor with ActorLogging with AlianzaActors {
     }
   }
 
-  def eliminarIpsUsuarioMessage(idUsuario : Int, nit : String, ip : String, tipoCliente: TiposCliente) = {
+  def eliminarIpsUsuarioMessage(idUsuario : Int, ip : String, tipoCliente: TiposCliente) = {
     val currentSender = sender()
     val result = {
       if (tipoCliente.equals(TiposCliente.clienteIndividual))
         DataAccessAdapter.eliminarIpUsuario(new IpsUsuario(idUsuario, ip))
       else
         (for {
-          empresa <- ValidationT(DataAccessAdapter.obtenerEmpresaPorNit(nit))
-          mensaje <- ValidationT(DataAccessAdapter.eliminarIpEmpresa(new IpsEmpresa(empresa.get.id, ip)))
+          idEmpresa <- ValidationT(DataAccessAdapter.obtenerIdEmpresa(idUsuario, tipoCliente))
+          mensaje <- ValidationT(DataAccessAdapter.eliminarIpEmpresa(new IpsEmpresa(idEmpresa, ip)))
         } yield (mensaje)).run
     }
     result  onComplete {
