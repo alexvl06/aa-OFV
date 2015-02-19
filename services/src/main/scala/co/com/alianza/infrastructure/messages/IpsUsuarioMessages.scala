@@ -15,8 +15,7 @@ object IpsUsuarioMessagesJsonSupport extends DefaultJsonProtocol with SprayJsonS
   implicit val EliminarIpsUsuarioMessageFormat = jsonFormat3(EliminarIpsUsuarioMessage)
 }
 
-case class ObtenerIpsUsuarioMessage(idUsuario: Int, tipoCliente: TiposCliente) extends MessageService{
-}
+case class ObtenerIpsUsuarioMessage(idUsuario: Int, tipoCliente: TiposCliente) extends MessageService
 
 case class AgregarIpsUsuarioMessage(idUsuario: Option[Int], ip: String, tipoCliente: Option[Int]) extends MessageService{
   def toEntityIpsUsuario : IpsUsuario = {
