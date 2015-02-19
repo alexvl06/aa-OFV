@@ -14,6 +14,8 @@ import co.com.alianza.persistence.entities.{Usuario => eUsuario}
 
 case class ReiniciarContrasenaAgenteEMessage(numIdentificacionAgenteEmpresarial: String, correoUsuarioAgenteEmpresarial: String, tipoIdentiAgenteEmpresarial: Int, idClienteAdmin: Option[Int]) extends MessageService
 
+case class BloquearDesbloquearAgenteEMessage(numIdentificacionAgenteEmpresarial: String, correoUsuarioAgenteEmpresarial: String, tipoIdentiAgenteEmpresarial: Int, idClienteAdmin: Option[Int]) extends MessageService
+
 case class CambiarContrasenaClienteAdminMessage(pw_actual: String, pw_nuevo: String, idUsuario: Option[Int]) extends MessageService
 
 case class CambiarContrasenaAgenteEmpresarialMessage(pw_actual: String, pw_nuevo: String, idUsuario: Option[Int]) extends MessageService
@@ -26,6 +28,7 @@ case class AsignarContrasenaMessage(password: String, idUsuario: Int) extends Me
 
 object AdministrarContrasenaEmpresaMessagesJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val ReiniciarContrasenaEmpresaMessageFormat = jsonFormat4(ReiniciarContrasenaAgenteEMessage)
+  implicit val BloquearDesbloquearAgenteEMessageFormat = jsonFormat4(BloquearDesbloquearAgenteEMessage)
   implicit val CambiarContrasenaClienteAdminMessageFormat = jsonFormat3(CambiarContrasenaClienteAdminMessage)
   implicit val CambiarContrasenaAgenteEmpresarialMessageFormat = jsonFormat3(CambiarContrasenaAgenteEmpresarialMessage)
   implicit val CambiarContrasenaCaducadaClienteAdminMessageFormat = jsonFormat4(CambiarContrasenaCaducadaClienteAdminMessage)
