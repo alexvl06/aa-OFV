@@ -1,6 +1,7 @@
 package co.com.alianza.persistence.repositories.empresa
 
 import java.sql.Timestamp
+import java.util.Calendar
 
 import scala.concurrent.{ExecutionContext, Future}
 import co.com.alianza.exceptions.PersistenceException
@@ -141,8 +142,16 @@ class UsuariosEmpresaRepository ( implicit executionContext: ExecutionContext) e
       resolveTry(resultTry, "Asociar perfiles del cliente administrador")
   }
 
-
-
+  def caducarFechaUltimoCambioContrasenaAgenteEmpresarial(idUsuario : Int) : Future[Validation[PersistenceException, Int]] = loan {
+    implicit session =>
+      val calendar = Calendar.getInstance()
+      calendar.clear(Calendar.YEAR)
+      val time = calendar.getTimeInMillis
+      val timestamp = new Timestamp(time)
+      val query = for { u <- UsuariosEmpresariales if u.id === idUsuario} yield u.fechaActualizacion
+      val resultTry =  Try { query.update(timestamp)}
+      resolveTry(resultTry, "Caducar Contrasena usuario Agente empresarial")
+  }
 
 
 }
