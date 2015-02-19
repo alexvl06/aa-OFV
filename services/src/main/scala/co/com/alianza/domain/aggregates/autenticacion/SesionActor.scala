@@ -73,6 +73,7 @@ class SesionActorSupervisor extends Actor with ActorLogging {
         case SessionFound(session) =>
           numResp += 1
           resp = Some(session)
+          session ! ActualizarSesion()
           replyIfReady()
         case _ =>
           numResp += 1
@@ -134,11 +135,12 @@ class SesionActor(expiracionSesion: Int) extends Actor with ActorLogging {
   override def receive = {
 
     case msg: ActualizarSesion =>
+      log.debug("Actualizando sesión de usuario: " + self.path.name)
       killTask.cancel()
       killTask = scheduler.scheduleOnce(expiracionSesion.minutes, self, ExpirarSesion())
 
     case msg: ExpirarSesion =>
-      log.info("Eliminando sesion de usuario: " + self.path.name)
+      log.info("Eliminando sesión de usuario: " + self.path.name)
       context.stop(self)
   }
 
