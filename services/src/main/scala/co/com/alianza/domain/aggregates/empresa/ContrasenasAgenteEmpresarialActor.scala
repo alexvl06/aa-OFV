@@ -146,7 +146,41 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
         case false => currentSender ! ResponseMessage(Conflict, tokenValidationFailure)
       }
 
+    case message: AsignarContrasenaMessage => asignarContrasena(message)
+
 }
+
+  private def asignarContrasena(mensaje : AsignarContrasenaMessage)  = {
+
+    val currentSender = sender()
+
+    val nuevoPass = mensaje.password.concat(AppendPasswordUser.appendUsuariosFiducia)
+
+    val actualizarContrasenaFuture = (for {
+      cantidadFilasActualizadas <- ValidationT(DataAccessAdapter.actualizarContrasenaAgenteEmpresarial(nuevoPass, mensaje.idUsuario).map(_.leftMap(pe => ErrorPersistence(pe.message, pe))))
+      res <- ValidationT( DataAccessAdapter.caducarFechaUltimoCambioContrasenaAgenteEmpresarial( mensaje.idUsuario ).map(_.leftMap(pe => ErrorPersistence(pe.message, pe))) )
+    } yield {
+      cantidadFilasActualizadas
+    }).run
+    resolveActualizarContrasenaFuture(actualizarContrasenaFuture, currentSender, mensaje)
+
+  }
+
+  private def resolveActualizarContrasenaFuture(actualizarContrasenaFuture: Future[Validation[ErrorValidacion, Int]], currentSender: ActorRef, message: AsignarContrasenaMessage) = {
+    actualizarContrasenaFuture onComplete {
+      case sFailure(failure) => currentSender ! failure
+      case sSuccess(value) =>
+        value match {
+          case zSuccess(response: Int) =>
+            currentSender ! ResponseMessage(OK, response.toString)
+          case zFailure(error) =>
+            error match {
+              case errorPersistence: ErrorPersistence => currentSender ! errorPersistence.exception
+              case errorVal: ErrorValidacion => currentSender ! ResponseMessage(Conflict, errorVal.msg)
+            }
+        }
+    }
+  }
 
   private def resolveCambiarContrasenaFuture(CambiarContrasenaFuture: Future[Validation[ErrorValidacion, Int]], currentSender: ActorRef) = {
       CambiarContrasenaFuture onComplete {

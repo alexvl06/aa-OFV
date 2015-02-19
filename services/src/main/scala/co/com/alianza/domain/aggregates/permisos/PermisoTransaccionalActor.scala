@@ -45,18 +45,26 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
   case class RestaVerificacionMessage(currentSender: ActorRef)
 
   def receive = {
-    case GuardarPermisosAgenteMessage(idAgente, encargosPermisos, idClienteAdmin) =>
+    case GuardarPermisosAgenteMessage(idAgente, permisosGenerales, encargosPermisos, idClienteAdmin) =>
       val currentSender = sender
-      val permisos = encargosPermisos flatMap {e => e.permisos.map(p => p.copy(permiso = p.permiso.map{_.copy(idEncargo = e.wspf_plan, idAgente = idAgente)}))}
-      numeroPermisos = permisos.length
+      val permisosEncargos = encargosPermisos flatMap {e => e.permisos.map(p => p.copy(permiso = p.permiso.map{_.copy(idEncargo = e.wspf_plan, idAgente = idAgente)}))}
+      numeroPermisos = permisosGenerales.length + permisosEncargos.length
       if(numeroPermisos==0)
         self ! RestaVerificacionMessage(currentSender)
-      else
-        permisos foreach { p => self ! ((p, idClienteAdmin, currentSender): (PermisoTransaccionalUsuarioEmpresarialAgentes, Option[Int], ActorRef)) }
+      else {
+        permisosGenerales foreach { p => self ! ((p, idClienteAdmin, currentSender): (Permiso, Option[Int], ActorRef)) }
+        permisosEncargos foreach { p => self ! ((p, idClienteAdmin, currentSender): (PermisoTransaccionalUsuarioEmpresarialAgentes, Option[Int], ActorRef)) }
+      }
+
+    case (permiso: Permiso, idClienteAdmin: Option[Int], currentSender: ActorRef) =>
+      val future = (for {
+        result <- ValidationT(DataAccessAdapter guardaPermiso (permiso.permisoAgente.get, permiso.autorizadores.map(_.map(_.id)), idClienteAdmin.get))
+      } yield result).run
+      resolveFutureValidation(future, (x: Int) => RestaVerificacionMessage(currentSender), self)
 
     case (permisoAgentes: PermisoTransaccionalUsuarioEmpresarialAgentes, idClienteAdmin: Option[Int], currentSender: ActorRef) =>
       val future = (for {
-        result <- ValidationT(DataAccessAdapter guardaPermiso (permisoAgentes.permiso.get, permisoAgentes.agentes.map(_.map(_.id)), idClienteAdmin.get))
+        result <- ValidationT(DataAccessAdapter guardaPermisoEncargo (permisoAgentes.permiso.get, permisoAgentes.agentes.map(_.map(_.id)), idClienteAdmin.get))
       } yield result).run
       resolveFutureValidation(future, (x: Int) => RestaVerificacionMessage(currentSender), self)
 
@@ -72,7 +80,9 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
 
     case ConsultarPermisosAgenteMessage(idAgente) =>
       val currentSender = sender
-      resolveFutureValidation(DataAccessAdapter consultaPermisosAgente idAgente, (x: List[EncargoPermisos]) => x.toJson, currentSender)
+      resolveFutureValidation(DataAccessAdapter consultaPermisosAgente idAgente,
+        (x: (List[co.com.alianza.infrastructure.dto.Permiso], List[co.com.alianza.infrastructure.dto.EncargoPermisos])) => PermisosRespuesta(x._1, x._2).toJson,
+        currentSender)
 
   }
 
