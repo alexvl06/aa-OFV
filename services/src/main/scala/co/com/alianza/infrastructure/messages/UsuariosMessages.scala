@@ -15,7 +15,7 @@ object UsuariosMessagesJsonSupport extends DefaultJsonProtocol with SprayJsonSup
   implicit val UsuarioMessageormat = jsonFormat10(UsuarioMessage)
   implicit val DesbloquearFormat = jsonFormat10(DesbloquarMessage)
   implicit val DesbloquearWebFormat = jsonFormat7(DesbloquarWebMessage)
-  implicit val OlvidoContrasenaMessageFormat = jsonFormat2(OlvidoContrasenaMessage)
+  implicit val OlvidoContrasenaMessageFormat = jsonFormat4(OlvidoContrasenaMessage)
 }
 
 
@@ -49,7 +49,7 @@ case class ConsultaUsuarioEmpresarialAdminMessage(
                                               token:Option[String] = None
                                               ) extends MessageService
 
-case class OlvidoContrasenaMessage(identificacion: String, tipoIdentificacion: Int) extends MessageService{
+case class OlvidoContrasenaMessage(perfilCliente:Int, identificacion: String, tipoIdentificacion: Int, usuarioClienteAdmin:String) extends MessageService{
 
 }
 

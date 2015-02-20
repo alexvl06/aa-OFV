@@ -42,6 +42,7 @@ import co.com.alianza.infrastructure.messages.ResponseMessage
 import com.asobancaria.cifinpruebas.cifin.confrontav2plusws.services.ConfrontaUltraWS.{ConfrontaUltraWSSoapBindingStub, ConfrontaUltraWebServiceServiceLocator}
 import co.cifin.confrontaultra.dto.ultra.{ResultadoEvaluacionCuestionarioULTRADTO, CuestionarioULTRADTO, ParametrosULTRADTO, ParametrosSeguridadULTRADTO}
 import co.com.alianza.util.json.JsonUtil
+import co.com.alianza.exceptions.{BusinessLevel, PersistenceException}
 
 
 class UsuariosActorSupervisor extends Actor with ActorLogging {
@@ -119,13 +120,23 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
       val currentSender = sender()
 
 
-      val validarClienteFuture = ( for {
+      //Así debe quedar el procesamiento del futuro
+      val futureGetUsuarios: Future[Validation[PersistenceException, Option[Any]]] = message.perfilCliente match {
+        case 1 => co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerUsuarioEmpresarialAdminPorId(message.identificacion.toInt)
+        case 2 => co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerUsuarioNumeroIdentificacion(message.identificacion)
+        case _ => Future.successful(Validation.failure(PersistenceException(new Exception, BusinessLevel, "El perfil del usuario no es soportado por la aplicacion")))
+      }
+      //resolveConsultarUsuariosFuture(futureGetUsuarios, currentSender)
+
+
+      /*val validarClienteFuture = ( for {
         cliente <- ValidationT(validaSolicitudCliente(message))
       } yield {
         cliente
       }).run
+      */
 
-      resolveReiniciarContrasenaFuture(validarClienteFuture, currentSender, message)
+      resolveReiniciarContrasenaFuture(futureGetUsuarios, currentSender, message)
 
     case message: ConsultaUsuarioMessage =>
       val currentSender = sender
@@ -145,7 +156,7 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
 
 
 
-  private def resolveReiniciarContrasenaFuture( validarClienteFuture: Future[Validation[ErrorValidacion, Cliente]],  currentSender: ActorRef, message: OlvidoContrasenaMessage) = {
+  private def resolveReiniciarContrasenaFuture( validarClienteFuture: Future[Validation[PersistenceException, Option[Any]]],  currentSender: ActorRef, message: OlvidoContrasenaMessage) = {
     validarClienteFuture onComplete{
       case sFailure( failure ) =>
         currentSender ! failure
