@@ -90,8 +90,8 @@ object ValidacionesAgenteEmpresarial {
           zFailure(ErrorFormatoClave(errorClave(errores)))
       }
     })
-  }
 
+  }
 
   //Los mensajes de error en empresa se relacionaran como 01-02-03 << Ejemplo: 409.01 >>
   private val errorAgenteEmpresarialNoExiste = ErrorMessage("409.01", "No existe el Agente Empresarial", "No existe el Agente Empresarial").toJson
