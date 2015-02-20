@@ -150,7 +150,7 @@ class PermisoTransaccionalRepository ( implicit executionContext: ExecutionConte
                                           idsAgentes: Option[List[Int]] = None,
                                           idClienteAdmin: Int)
                                          (implicit s: Session) = {
-    if(idsAgentes.isDefined && idsAgentes.get.headOption.isDefined && idsAgentes.get.headOption.get!=0){
+    if(idsAgentes.isDefined){
       val ids = idsAgentes.get.filter{id => id!=0 && id!=(-1)}
       val queryAgentes = for {
         au <- tablaPermisosAutorizadores if au.idAgente === permiso.idAgente && au.tipoTransaccion === permiso.tipoTransaccion

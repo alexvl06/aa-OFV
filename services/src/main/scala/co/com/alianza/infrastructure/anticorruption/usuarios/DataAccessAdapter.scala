@@ -2,6 +2,8 @@ package co.com.alianza.infrastructure.anticorruption.usuarios
 
 import java.sql.Timestamp
 
+import co.com.alianza.commons.enumerations.TiposCliente
+import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.persistence.repositories._
 import scalaz.Validation
 import scala.concurrent.{ExecutionContext, Future}
@@ -9,7 +11,7 @@ import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.app.MainActors
 import scalaz.{Failure => zFailure, Success => zSuccess}
 import co.com.alianza.infrastructure.dto._
-import co.com.alianza.persistence.entities.{Usuario => eUsuario, PinUsuario => ePinUsuario , PerfilUsuario, IpsUsuario, UsuarioEmpresarial => eUsuarioEmpresarial, UsuarioEmpresarialAdmin => eUsuarioEmpresarialAdmin}
+import co.com.alianza.persistence.entities.{Usuario => eUsuario, PinUsuario => ePinUsuario, UsuarioEmpresarial => eUsuarioEmpresarial, UsuarioEmpresarialAdmin => eUsuarioEmpresarialAdmin, Empresa, IpsEmpresa, PerfilUsuario, IpsUsuario}
 import co.com.alianza.persistence.messages.AutenticacionRequest
 import enumerations.EstadosUsuarioEnum
 
@@ -34,9 +36,9 @@ object DataAccessAdapter {
     repo.guardar(IpsUsuario(idUsuario, ip))
   }
 
-  def relacionarIpUsuarioEmpresarialAdmin(idUsuario:Int, ip:String): Future[Validation[PersistenceException, String]] = {
-    val repo = new IpsUsuarioEmpresarialAdminRepository()
-    repo.guardar(IpsUsuario(idUsuario, ip))
+  def relacionarIpEmpresa(idEmpresa:Int, ip:String): Future[Validation[PersistenceException, String]] = {
+    val repo = new IpsEmpresaRepository()
+    repo.guardar(IpsEmpresa(idEmpresa, ip))
   }
 
   def obtenerUsuarioNumeroIdentificacion( numeroIdentificacion:String): Future[Validation[PersistenceException, Option[Usuario]]] = {
@@ -53,14 +55,23 @@ object DataAccessAdapter {
     }
   }
 
+  def obtenerEmpresaPorNit(nit: String): Future[Validation[PersistenceException,Option[Empresa]]] ={
+    new EmpresaRepository().obtenerEmpresa(nit)
+  }
+
+  def obtenerIdEmpresa(idUsuario: Int, tipoCliente: TiposCliente): Future[Validation[PersistenceException, Int]] = {
+    //new EmpresaRepository().obtenerEmpresa(nit)
+    tipoCliente match{
+      case TiposCliente.agenteEmpresarial => new EmpresaUsuarioRepository().obtenerIdEmpresa(idUsuario)
+      case TiposCliente.clienteAdministrador => new EmpresaUsuarioAdminRepository().obtenerIdEmpresa(idUsuario)
+    }
+  }
+
   def obtieneUsuarioEmpresarialPorNitYUsuario (nit: String, usuario: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] =
     new UsuariosEmpresarialRepository().obtieneUsuarioEmpresaPorNitYUsuario(nit, usuario) map transformValidationUsuarioEmpresarial
 
   def obtieneUsuarioEmpresarialAdminPorNitYUsuario (nit: String, usuario: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] =
     new UsuariosEmpresarialRepository().obtieneUsuarioEmpresaAdminPorNitYUsuario(nit, usuario) map transformValidationUsuarioEmpresarialAdmin
-
-  def obtieneUsuarioEmpresarialAdminPorNit(nit: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] =
-    new UsuariosEmpresarialRepository().obtieneUsuarioEmpresaAdminPorNit(nit) map transformValidationUsuarioEmpresarialAdmin
 
   def obtenerUsuarioToken( token:String ): Future[Validation[PersistenceException, Option[Usuario]]] =
     new UsuariosRepository().obtenerUsuarioToken( token ) map transformValidation
@@ -167,9 +178,8 @@ object DataAccessAdapter {
     repo.obtenerIpsUsuario( idUsuario )
   }
 
-  def obtenerIpsUsuarioEmpresarialAdmin( idUsuario:Int ) : Future[Validation[PersistenceException, Vector[IpsUsuario]]] = {
-    val repo = new IpsUsuarioEmpresarialAdminRepository()
-    repo.obtenerIpsUsuarioEmpresarialAdmin( idUsuario )
+  def obtenerIpsEmpresa( idEmpresa:Int ) : Future[Validation[PersistenceException, Vector[IpsEmpresa]]] = {
+    new IpsEmpresaRepository().obtenerIpsEmpresa(idEmpresa)
   }
 
   def agregarIpUsuario( ip:IpsUsuario ) : Future[Validation[PersistenceException, String]] = {
@@ -177,18 +187,18 @@ object DataAccessAdapter {
     repo.guardar( ip )
   }
 
-  def agregarIpUsuarioEmpresarialAdmin( ip:IpsUsuario ) : Future[Validation[PersistenceException, String]] = {
-    val repo = new IpsUsuarioEmpresarialAdminRepository()
+  def agregarIpEmpresa( ip:IpsEmpresa ) : Future[Validation[PersistenceException, String]] = {
+    val repo = new IpsEmpresaRepository()
     repo.guardar( ip )
+  }
+
+  def eliminarIpEmpresa( ip:IpsEmpresa ) : Future[Validation[PersistenceException, Int]] = {
+    val repo = new IpsEmpresaRepository()
+    repo.eliminar(ip)
   }
 
   def eliminarIpUsuario( ip:IpsUsuario ) : Future[Validation[PersistenceException, Int]] = {
     val repo = new IpsUsuarioRepository()
-    repo.eliminar(ip)
-  }
-
-  def eliminarIpUsuarioEmpresarialAdmin( ip:IpsUsuario ) : Future[Validation[PersistenceException, Int]] = {
-    val repo = new IpsUsuarioEmpresarialAdminRepository()
     repo.eliminar(ip)
   }
 
@@ -258,7 +268,6 @@ object DataAccessAdapter {
           case Some(usuario) => zSuccess(Some(DataAccessTranslator.translateUsuarioEmpresarial(usuario)))
           case _ => zSuccess(None)
         }
-
       case zFailure(error)    =>  zFailure(error)
     }
   }
@@ -273,8 +282,4 @@ object DataAccessAdapter {
         }
       case zFailure(error)    =>  zFailure(error)
     }
-
-
 }
-
-
