@@ -27,6 +27,19 @@ class AdministrarContrasenaEmpresaService extends Directives with AlianzaCommons
             }
           }
         }
+      } ~ pathPrefix("bloquearDesbloquearAgente") {
+        respondWithMediaType(mediaType) {
+          pathEndOrSingleSlash {
+            put {
+              //Cambiar contrasena de la cuenta alianza valores
+              entity(as[BloquearDesbloquearAgenteEMessage]) {
+                data =>
+                  val dataAux: BloquearDesbloquearAgenteEMessage = data.copy(idClienteAdmin = Some(user.id))
+                  requestExecute(dataAux, contrasenasAgenteEmpresarialActor)
+              }
+            }
+          }
+        }
       } ~ pathPrefix("actualizarPwClienteAdmin") {
         respondWithMediaType(mediaType) {
           pathEndOrSingleSlash {

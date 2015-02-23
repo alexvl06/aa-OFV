@@ -8,7 +8,7 @@ import co.com.alianza.app.{AlianzaActors, MainActors}
 import co.com.alianza.domain.aggregates.usuarios.{ErrorPersistence, MailMessageUsuario, ErrorValidacion}
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.ultimasContrasenasAgenteEmpresarial.{DataAccessAdapter => dataAccessUltimasContrasenasAgente}
-import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{DataAccessTranslator, DataAccessAdapter}
+import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{DataAccessAdapter, DataAccessTranslator}
 import co.com.alianza.infrastructure.dto.{UsuarioEmpresarial, Configuracion, PinEmpresa}
 import co.com.alianza.infrastructure.messages.{ErrorMessage, UsuarioMessage, ResponseMessage}
 import co.com.alianza.infrastructure.messages.empresa._
@@ -16,7 +16,7 @@ import co.com.alianza.microservices.{MailMessage, SmtpServiceClient}
 import co.com.alianza.util.token.{Token, PinData, TokenPin}
 import co.com.alianza.util.transformers.ValidationT
 import com.typesafe.config.Config
-import enumerations.{PerfilesUsuario, AppendPasswordUser, UsoPinEmpresaEnum, EstadosEmpresaEnum}
+import enumerations._
 import scalaz.std.AllInstances._
 import scala.util.{Failure => sFailure, Success => sSuccess}
 import scalaz.{Failure => zFailure, Success => zSuccess}
@@ -28,6 +28,22 @@ import spray.http.StatusCodes._
 import co.com.alianza.util.clave.Crypto
 import co.com.alianza.persistence.entities.UltimaContrasenaUsuarioAgenteEmpresarial
 import java.sql.Timestamp
+import co.com.alianza.infrastructure.messages.empresa.CambiarContrasenaAgenteEmpresarialMessage
+import co.com.alianza.infrastructure.dto.PinEmpresa
+import co.com.alianza.util.transformers.ValidationT
+import co.com.alianza.infrastructure.messages.empresa.BloquearDesbloquearAgenteEMessage
+import co.com.alianza.infrastructure.dto.Configuracion
+import co.com.alianza.microservices.MailMessage
+import co.com.alianza.domain.aggregates.usuarios.ErrorPersistence
+import akka.routing.RoundRobinPool
+import co.com.alianza.infrastructure.messages.empresa.AsignarContrasenaMessage
+import co.com.alianza.infrastructure.messages.empresa.CambiarContrasenaCaducadaAgenteEmpresarialMessage
+import co.com.alianza.infrastructure.dto.UsuarioEmpresarial
+import co.com.alianza.persistence.entities.UltimaContrasenaUsuarioAgenteEmpresarial
+import co.com.alianza.util.token.PinData
+import co.com.alianza.infrastructure.messages.ResponseMessage
+import co.com.alianza.infrastructure.messages.empresa.UsuarioMessageCorreo
+import co.com.alianza.infrastructure.messages.empresa.ReiniciarContrasenaAgenteEMessage
 
 /**
  * Created by S4N on 17/12/14.
@@ -102,6 +118,18 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
       }).run
 
       resolveReiniciarContrasenaAEFuture(reiniciarContrasenaAgenteEmpresarialFuture, currentSender, message)
+
+    case message: BloquearDesbloquearAgenteEMessage =>
+      val currentSender = sender()
+      val bloquearDesbloquearAgenteEmpresarialFuture = (for {
+        estadoAgenteEmpresarial <- ValidationT(validacionEstadoAgenteEmpresarial(message.numIdentificacionAgenteEmpresarial, message.correoUsuarioAgenteEmpresarial, message.tipoIdentiAgenteEmpresarial, message.idClienteAdmin.get))
+        idEjecucion <- ValidationT(BloquearDesbloquearAgenteEmpresarial(estadoAgenteEmpresarial))
+        numHorasCaducidad <- ValidationT(validacionConsultaTiempoExpiracion())
+      } yield {
+        (estadoAgenteEmpresarial, idEjecucion, numHorasCaducidad)
+      }).run
+
+      resolveBloquearDesbloquearAgenteFuture(bloquearDesbloquearAgenteEmpresarialFuture, currentSender, message)
 
     case message: CambiarContrasenaAgenteEmpresarialMessage =>
         val currentSender = sender()
@@ -212,6 +240,11 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
     DataAccessAdapter.CambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial, estado).map(_.leftMap(pe => ErrorPersistenceEmpresa(pe.message, pe)))
   }
 
+  private def BloquearDesbloquearAgenteEmpresarial(idUsuarioAgenteEmpresarial: (Int,Int)): Future[Validation[ErrorValidacionEmpresa, Int]] = {
+    val estadoNuevo = if(idUsuarioAgenteEmpresarial._2 == EstadosEmpresaEnum.activo.id) {EstadosEmpresaEnum.bloqueContraseña} else {EstadosEmpresaEnum.activo}
+    DataAccessAdapter.CambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial._1, estadoNuevo).map(_.leftMap(pe => ErrorPersistenceEmpresa(pe.message, pe)))
+  }
+
   private def resolveReiniciarContrasenaAEFuture(ReiniciarContrasenaAEFuture: Future[Validation[ErrorValidacionEmpresa, (Int, Int, Configuracion)]], currentSender: ActorRef, message: ReiniciarContrasenaAgenteEMessage) = {
     ReiniciarContrasenaAEFuture onComplete {
       case sFailure(failure) => currentSender ! failure
@@ -252,6 +285,23 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
               log.info("Error... Al momento de cambiar el estado a pendiente de reinicio de contraseña")
             }
 
+          case zFailure(error) =>
+            error match {
+              case errorPersistence: ErrorPersistenceEmpresa => currentSender ! errorPersistence.exception
+              case errorVal: ErrorValidacionEmpresa  =>
+                currentSender ! ResponseMessage(Conflict, errorVal.msg)
+            }
+        }
+    }
+  }
+
+  private def resolveBloquearDesbloquearAgenteFuture(bloquearDesbloquearAgenteFuture: Future[Validation[ErrorValidacionEmpresa, ((Int,Int), Int, Configuracion)]], currentSender: ActorRef, message: BloquearDesbloquearAgenteEMessage ) = {
+    bloquearDesbloquearAgenteFuture onComplete {
+      case sFailure(failure) => currentSender ! failure
+      case sSuccess(value) =>
+        value match {
+          case zSuccess(responseFutureReiniciarContraAE: ((Int,Int), Int, Configuracion)) =>
+            currentSender ! ResponseMessage(OK, "La operacion de Bloqueo/Desbloqueo sobre el Agente empresarial se ha realizado con exio")
           case zFailure(error) =>
             error match {
               case errorPersistence: ErrorPersistenceEmpresa => currentSender ! errorPersistence.exception

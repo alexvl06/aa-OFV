@@ -52,6 +52,9 @@ case class ErrorUsuarioBloqueadoPendienteReinicio() extends ErrorAutenticacion {
   override def msg = ErrorMessage("401.12", "Usuario Bloqueado", "El usuario se encuentra bloqueado pendiente de reiniciar contraseña").toJson
 }
 
+case class ErrorUsuarioBloqueadoCorreoVacio() extends ErrorAutenticacion {
+  override def msg = ErrorMessage("401.13", "Usuario Bloqueado", "No hay correo registrado en la base de datos de Alianza").toJson
+}
 // Error de persistencia
 case class ErrorPersistencia(msg: String, e: PersistenceException) extends ErrorAutenticacion
 

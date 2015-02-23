@@ -9,6 +9,8 @@ import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.dto._
 import co.com.alianza.persistence.repositories.PermisoTransaccionalRepository
 import co.com.alianza.persistence.entities.{
+  PermisoAgente => ePermisoAgente,
+  PermisoAgenteAutorizador => ePermisoAgenteAutorizador,
   PermisoTransaccionalUsuarioEmpresarial => ePermisoTransaccionalUsuarioEmpresarial,
   PermisoTransaccionalUsuarioEmpresarialAutorizador => ePermisoTransaccionalUsuarioEmpresarialAutorizador
 }
@@ -24,13 +26,19 @@ object PermisoTransaccionalDataAccessAdapter {
 
   private[this] def repository = new PermisoTransaccionalRepository
 
-  def guardaPermiso (permiso: PermisoTransaccionalUsuarioEmpresarial, idsAgentes: Option[List[Int]] = None, idClienteAdmin: Int) : Future[Validation[PersistenceException, Int]] =
-     repository guardarPermiso ( DataAccessTranslator aEntity permiso, permiso.seleccionado,  idsAgentes, idClienteAdmin)
+  def guardaPermiso (permiso: PermisoAgente, idsAutorizadores: Option[List[Int]] = None, idClienteAdmin: Int) : Future[Validation[PersistenceException, Int]] =
+    repository guardarPermiso ( DataAccessTranslator aEntity permiso, permiso.seleccionado,  idsAutorizadores, idClienteAdmin)
 
-  def consultaPermisosAgente (idAgente: Int) : Future[Validation[PersistenceException, List[EncargoPermisos]]] =
+  def guardaPermisoEncargo (permiso: PermisoTransaccionalUsuarioEmpresarial, idsAgentes: Option[List[Int]] = None, idClienteAdmin: Int) : Future[Validation[PersistenceException, Int]] =
+     repository guardarPermisoEncargo ( DataAccessTranslator aEntity permiso, permiso.seleccionado,  idsAgentes, idClienteAdmin)
+
+  def consultaPermisosAgente (idAgente: Int) : Future[Validation[PersistenceException, (List[Permiso], List[EncargoPermisos])]] =
     repository consultaPermisosAgente idAgente map {
-      case zSuccess(listaPermisos: List[(String, List[(ePermisoTransaccionalUsuarioEmpresarial, List[Option[ePermisoTransaccionalUsuarioEmpresarialAutorizador]])])]) =>
-        zSuccess(listaPermisos map { e => DataAccessTranslator aEncargoPermisosDTO(e._1, e._2) })
+      case zSuccess(p: (
+        List[(ePermisoAgente, List[(Option[ePermisoAgenteAutorizador], Option[Boolean])])],
+        List[(String, List[(ePermisoTransaccionalUsuarioEmpresarial, List[(Option[ePermisoTransaccionalUsuarioEmpresarialAutorizador], Option[Boolean])])])])
+      ) =>
+        zSuccess(DataAccessTranslator aPermisos (p._1, p._2))
       case zFailure(error) => zFailure(error)
     }
 

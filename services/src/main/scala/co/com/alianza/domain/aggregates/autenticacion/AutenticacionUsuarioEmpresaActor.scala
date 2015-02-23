@@ -12,7 +12,7 @@ import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => UsDataAdapter}
 import co.com.alianza.infrastructure.dto.{Cliente, UsuarioEmpresarialAdmin, UsuarioEmpresarial}
 import co.com.alianza.infrastructure.messages._
-import co.com.alianza.persistence.entities.ReglasContrasenas
+import co.com.alianza.persistence.entities.{Empresa, ReglasContrasenas}
 import co.com.alianza.util.token.Token
 import co.com.alianza.util.transformers.ValidationT
 
@@ -93,7 +93,8 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
         inactividadConfig <- ValidationT(buscarConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave))
         token <- ValidationT(generarYAsociarTokenUsuarioEmpresarialAdmin(cliente, usuarioAdmin, message.nit, inactividadConfig.valor))
         sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
-        validacionIps <- ValidationT(validarControlIpsUsuarioEmpresarialAdmin(usuarioAdmin.id, message.clientIp.get, token))
+        empresa <- ValidationT(obtenerEmpresaPorNit(message.nit))
+        validacionIps <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token))
       } yield validacionIps).run
 
       validaciones.onComplete{
@@ -147,9 +148,9 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
         actualizacionInfo <- ValidationT(actualizarInformacionUsuarioEmpresarialAgente(usuarioAgente.id, message.clientIp.get))
         inactividadConfig <- ValidationT(buscarConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave))
         token <- ValidationT(generarYAsociarTokenUsuarioEmpresarialAgente(usuarioAgente, message.nit, inactividadConfig.valor))
-        usuarioAdmin <- ValidationT(obtenerUsuarioEmpresarialAdmin(message.nit))
+        empresa <- ValidationT(obtenerEmpresaPorNit(message.nit))
         sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
-        validacionIps <- ValidationT(validarControlIpsUsuarioEmpresarialAdmin(usuarioAdmin.id, message.clientIp.get, token))
+        validacionIps <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token))
       } yield validacionIps).run
 
       validaciones.onComplete {
@@ -194,7 +195,8 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
         usuarioAdmin <- ValidationT(obtenerUsuarioEmpresarialAdmin(message.idUsuario.get))
         cliente <- ValidationT(obtenerClienteSP(usuarioAdmin.tipoIdentificacion, usuarioAdmin.identificacion))
         cienteValido <- ValidationT(validarClienteSP(usuarioAdmin.tipoIdentificacion, cliente))
-        relacionarIp <- ValidationT(asociarIpUsuarioEmpresarialAdmin(message.idUsuario.get, message.clientIp.get))
+        idEmpresa <- ValidationT(obtenerEmpresaIdUsuarioAdmin(message.idUsuario.get))
+        relacionarIp <- ValidationT(asociarIpEmpresa(idEmpresa, message.clientIp.get))
       } yield relacionarIp).run
 
       resultadoIp.onComplete {
@@ -228,17 +230,38 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
     })
   }
 
+  def obtenerEmpresaPorNit(nit: String): Future[Validation[ErrorAutenticacion, Empresa]] ={
+    log.info("Obteniendo empresa por nit")
+    val future : Future[Validation[PersistenceException, Option[Empresa]]] = UsDataAdapter.obtenerEmpresaPorNit(nit)
+    future.map(
+      _.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap{
+        case Some(empresa) => Validation.success(empresa)
+        case None => Validation.failure(ErrorCredencialesInvalidas())
+      }
+    )
+  }
+
+  def obtenerEmpresaIdUsuarioAdmin(idUsuario: Int): Future[Validation[ErrorAutenticacion, Int]] ={
+    log.info("Obteniendo empresa por idUsuario empresarial Admin")
+    val future : Future[Validation[PersistenceException, Int]] = UsDataAdapter.obtenerIdEmpresa(idUsuario, TiposCliente.clienteAdministrador)
+    future.map(
+      _.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap{
+        idEmpresa => Validation.success(idEmpresa)
+      }
+    )
+  }
+
   /**
    * Asocia la ip al usuario empresarial admin
-   * @param idUsuario id del usuario
+   * @param idEmpresa id de la empresa
    * @param ipPeticion ip a asociar
    * @return Future[Validation[ErrorAutenticacion, Boolean] ]
    * Success => True
    * ErrorAutenticacion => PersistenceException
    */
-  def asociarIpUsuarioEmpresarialAdmin(idUsuario: Int, ipPeticion: String): Future[Validation[ErrorAutenticacion, Boolean]] = {
-    log.info("Asociando ip usuario empresarial admin")
-    val future: Future[Validation[PersistenceException, String]] = UsDataAdapter.relacionarIpUsuarioEmpresarialAdmin(idUsuario, ipPeticion)
+  def asociarIpEmpresa(idEmpresa: Int, ipPeticion: String): Future[Validation[ErrorAutenticacion, Boolean]] = {
+    log.info("Asociando ip empresa")
+    val future: Future[Validation[PersistenceException, String]] = UsDataAdapter.relacionarIpEmpresa(idEmpresa, ipPeticion)
     future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap { _ =>
       Validation.success(true)
     })
@@ -286,22 +309,6 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
   }
 
   /**
-   * Se obtiene el usuario empresarial admin por nit
-   * @param nit Nit del usuario
-   * @return Future[Validation[ErrorAutenticacion, UsuarioEmpresarialAdmin] ]
-   * Success => UsuarioEmpresarialAdmin
-   * ErrorAutenticacion => ErrorPersistencia || ErrorCredencialesInvalidas
-   */
-  def obtenerUsuarioEmpresarialAdmin(nit: String): Future[Validation[ErrorAutenticacion, UsuarioEmpresarialAdmin]] = {
-    log.info("Obteniendo usuario empresarial admin")
-    val future: Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = UsDataAdapter.obtieneUsuarioEmpresarialAdminPorNit(nit)
-    future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap {
-      case Some(usuarioEmpresarialAdmin) => Validation.success(usuarioEmpresarialAdmin)
-      case None => Validation.failure(ErrorCredencialesInvalidas())
-    })
-  }
-
-  /**
    * Actualiza la informacion de inicio de sesion del usuario empresarial admin
    * @param idUsuario Id del usuario
    * @param ipPeticion Ip de la peticion
@@ -338,15 +345,16 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
   }
 
   /**
-   * Valida si el usuario tiene alguna ip guardada
-   * @param idUsuario el id del usuario a validar
+   * Valida si la empresa tiene alguna ip guardada
+   * @param idEmpresa el id de la empresa a validar
+   * @param ipPeticion ip a buscar
    * @return Future[Validation[ErrorAutenticacion, Boolean] ]
    * Success => El token si el usuario tiene la ip en su lista de ips
    * ErrorAutenticacion => ErrorPersistencia | ErrorControlIpsDesactivado
    */
-  def validarControlIpsUsuarioEmpresarialAdmin(idUsuario: Int, ipPeticion: String, token: String): Future[Validation[ErrorAutenticacion, String]] = {
-    log.info("Validando control de ips usuario empresarial admin")
-    val future = UsDataAdapter.obtenerIpsUsuarioEmpresarialAdmin(idUsuario)
+  def validarControlIpsUsuarioEmpresarial(idEmpresa: Int, ipPeticion: String, token: String): Future[Validation[ErrorAutenticacion, String]] = {
+    log.info("Validando control de ips usuario empresarial")
+    val future = UsDataAdapter.obtenerIpsEmpresa(idEmpresa)
     future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap { ips =>
       if (ips.filter(_.ip == ipPeticion).isEmpty) Validation.failure(ErrorControlIpsDesactivado(token))
       else Validation.success(token)
