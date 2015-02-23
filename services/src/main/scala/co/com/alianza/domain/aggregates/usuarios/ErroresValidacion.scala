@@ -18,3 +18,4 @@ case class ErrorCaptcha(msg:String)   extends ErrorValidacion
 case class ErrorPin(msg:String)   extends ErrorValidacion
 case class ErrorEstadoUsuarioOlvidoContrasena(msg:String)   extends ErrorValidacion
 case class ErrorAgenteEmpresarialNoExiste(msg:String) extends ErrorValidacion
+case class ErrorUsuarioClienteAdmin(msg:String) extends ErrorValidacion

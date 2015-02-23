@@ -69,10 +69,11 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
     case message: CrearAgenteEMessage => {
       val currentSender = sender()
       val usuarioCreadoFuture: Future[Validation[PersistenceException, Int]] = (for {
-        idUsuarioAgenteEmpresarial <- ValidationT(DataAccessAdapter.crearAgenteEmpresarial(message.toEntityUsuarioAgenteEmpresarial()))
-        resultAsociarPerfiles <- ValidationT(DataAccessAdapter.asociarPerfiles(idUsuarioAgenteEmpresarial, PerfilesAgente.agente.id :: Nil))
-        empresa <- ValidationT(DataAccessAdapter.obtenerEmpresaPorNit(message.nit))
-        resultAsociarEmpresa <- ValidationT(DataAccessAdapter.asociarAgenteEmpresarialConEmpresa(UsuarioEmpresarialEmpresa(empresa.get.id, idUsuarioAgenteEmpresarial)))
+        clienteAdmin <- ValidationT(validarUsuarioClienteAdmin(message.nit, message.usuario))
+        idUsuarioAgenteEmpresarial <- ValidationT(crearAgenteEmpresarial(message))
+        resultAsociarPerfiles <- ValidationT(asociarPerfiles(idUsuarioAgenteEmpresarial))
+        empresa <- ValidationT(obtenerEmpresaPorNit(message.nit))
+        resultAsociarEmpresa <- ValidationT()
       } yield {
         idUsuarioAgenteEmpresarial
       }).run
@@ -85,7 +86,19 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
       resolveFutureValidation(future, (response: List[UsuarioEmpresarialEstado]) => response.toJson, currentSender)
   }
 
-  private def resolveCrearAgenteEmpresarialFuture(crearAgenteEmpresarialFuture: Future[Validation[PersistenceException, Int]], message : CrearAgenteEMessage, currentSender: ActorRef) {
+  private def crearAgenteEmpresarial(message: CrearAgenteEMessage) : Future[Validation[ErrorValidacion, Int]] =
+    DataAccessAdapter.crearAgenteEmpresarial(message.toEntityUsuarioAgenteEmpresarial()).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
+
+  private def asociarPerfiles(idUsuarioAgenteEmpresarial: Int) : Future[Validation[ErrorValidacion, List[Int]]] =
+    DataAccessAdapter.asociarPerfiles(idUsuarioAgenteEmpresarial, PerfilesAgente.agente.id :: Nil).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
+
+  private def obtenerEmpresaPorNit(nit: String) : Future[Validation[ErrorValidacion, Option[Empresa]]] =
+    DataAccessAdapter.obtenerEmpresaPorNit(nit).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
+
+  private def asociarAgenteEmpresarialConEmpresa(uee: UsuarioEmpresarialEmpresa) =
+    DataAccessAdapter.asociarAgenteEmpresarialConEmpresa(UsuarioEmpresarialEmpresa(empresa.get.id, idUsuarioAgenteEmpresarial)).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
+
+  private def resolveCrearAgenteEmpresarialFuture(crearAgenteEmpresarialFuture: Future[Validation[ErrorValidacion, Int]], message : CrearAgenteEMessage, currentSender: ActorRef) {
     crearAgenteEmpresarialFuture onComplete {
       case sFailure(failure) =>
         currentSender ! failure

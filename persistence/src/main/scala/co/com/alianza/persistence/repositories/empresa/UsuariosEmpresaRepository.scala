@@ -153,5 +153,9 @@ class UsuariosEmpresaRepository ( implicit executionContext: ExecutionContext) e
       resolveTry(resultTry, "Caducar Contrasena usuario Agente empresarial")
   }
 
+  def obtieneClientePorNitYUsuario(nit: String, usuario: String) : Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = loan {
+    implicit session =>
+      resolveTry(Try(UsuariosEmpresarialesAdmin.filter(u => u.identificacion===nit && u.usuario===usuario).list.headOption), "Consulta cliente admin")
+  }
 
 }

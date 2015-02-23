@@ -33,6 +33,9 @@ object DataAccessAdapter {
     repo.actualizarContrasena(Crypto.hashSha512(pw_nuevo), idUsuario)
   }
 
+  def obtieneClientePorNitYUsuario(nit: String, usuario: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] =
+    new UsuariosEmpresaRepository().obtieneClientePorNitYUsuario(nit, usuario) map transformValidation
+
   private def transformValidation(origin: Validation[PersistenceException, Option[eUsuarioAdmin]]): Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]] = {
     origin match {
       case zSuccess(response) =>
