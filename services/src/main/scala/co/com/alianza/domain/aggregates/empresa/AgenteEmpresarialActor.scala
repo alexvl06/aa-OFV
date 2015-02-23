@@ -68,12 +68,12 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
 //toUsuarioEmpresarialEmpresa(empresa, idUsuarioAgenteEmpresarial)
     case message: CrearAgenteEMessage => {
       val currentSender = sender()
-      val usuarioCreadoFuture: Future[Validation[PersistenceException, Int]] = (for {
+      val usuarioCreadoFuture: Future[Validation[ErrorValidacion, Int]] = (for {
         clienteAdmin <- ValidationT(validarUsuarioClienteAdmin(message.nit, message.usuario))
         idUsuarioAgenteEmpresarial <- ValidationT(crearAgenteEmpresarial(message))
         resultAsociarPerfiles <- ValidationT(asociarPerfiles(idUsuarioAgenteEmpresarial))
         empresa <- ValidationT(obtenerEmpresaPorNit(message.nit))
-        resultAsociarEmpresa <- ValidationT()
+        resultAsociarEmpresa <- ValidationT(asociarAgenteEmpresarialConEmpresa(empresa.get.id, idUsuarioAgenteEmpresarial))
       } yield {
         idUsuarioAgenteEmpresarial
       }).run
@@ -95,8 +95,8 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
   private def obtenerEmpresaPorNit(nit: String) : Future[Validation[ErrorValidacion, Option[Empresa]]] =
     DataAccessAdapter.obtenerEmpresaPorNit(nit).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
 
-  private def asociarAgenteEmpresarialConEmpresa(uee: UsuarioEmpresarialEmpresa) =
-    DataAccessAdapter.asociarAgenteEmpresarialConEmpresa(UsuarioEmpresarialEmpresa(empresa.get.id, idUsuarioAgenteEmpresarial)).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
+  private def asociarAgenteEmpresarialConEmpresa(idEmpresa: Int, idAgente: Int) : Future[Validation[ErrorValidacion, Int]] =
+    DataAccessAdapter.asociarAgenteEmpresarialConEmpresa(UsuarioEmpresarialEmpresa(idEmpresa, idAgente)).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
 
   private def resolveCrearAgenteEmpresarialFuture(crearAgenteEmpresarialFuture: Future[Validation[ErrorValidacion, Int]], message : CrearAgenteEMessage, currentSender: ActorRef) {
     crearAgenteEmpresarialFuture onComplete {
@@ -128,7 +128,9 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
           }
           case zFailure(error) =>
             error match {
-              case errorPersistence: PersistenceException => {
+              case errorValidacion: ErrorValidacion  =>
+                currentSender ! ResponseMessage(Conflict, errorValidacion.msg)
+              case errorPersistence: ErrorPersistence => {
                 currentSender ! ResponseMessage(Conflict, s"Usuario ya registrado para el NIT: ${message.nit}")
               }
               case unknownError @ _  => {
