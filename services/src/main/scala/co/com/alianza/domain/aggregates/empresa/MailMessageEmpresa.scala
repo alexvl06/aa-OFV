@@ -14,4 +14,10 @@ class MailMessageEmpresa(templateBody: String) extends MailTemplate {
     val medida = if (numHorasCaducidad > 1) "horas" else "hora"
     engine.layout(config.getString(templateBody), Map("pin" -> datos.tokenHash, "numHorasCaducidad" -> numHorasCaducidad, "medida" -> medida))
   }
+
+  def getMessagePinCreacionAgente(datos: PinEmpresa, numHorasCaducidad: Int, usuario : String)(implicit config: Config): String = {
+    val medida = if (numHorasCaducidad > 1) "horas" else "hora"
+    engine.layout(config.getString(templateBody), Map("pin" -> datos.tokenHash, "numHorasCaducidad" -> numHorasCaducidad, "medida" -> medida, "usuario" -> usuario))
+  }
+
 }

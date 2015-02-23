@@ -150,15 +150,15 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
           case zFailure(fail) => currentSender ! fail
           case zSuccess(intResult) =>
             if(intResult == 1){
-              new SmtpServiceClient().send(buildMessage(numHorasCaducidad, pin, UsuarioMessageCorreo(message.correo, message.nit, TipoIdentificacion.NIT.id), "alianza.smtp.templatepin.creacionAgenteEmpresarial", "alianza.smtp.asunto.creacionAgenteEmpresarial"), (_, _) => Unit)
+              new SmtpServiceClient().send(buildMessage(numHorasCaducidad, pin, UsuarioMessageCorreo(message.correo, message.nit, TipoIdentificacion.NIT.id), "alianza.smtp.templatepin.creacionAgenteEmpresarial", "alianza.smtp.asunto.creacionAgenteEmpresarial", message.usuario), (_, _) => Unit)
               currentSender ! ResponseMessage(Created, idUsuarioAgenteEmpresarial.toString)
             }
         }
     }
   }
 
-  private def buildMessage(numHorasCaducidad : Int, pinEmpresa: PinEmpresa, message: UsuarioMessageCorreo, templateBody: String, asuntoTemp: String) = {
-    val body: String = new MailMessageEmpresa(templateBody).getMessagePin(pinEmpresa, numHorasCaducidad)
+  private def buildMessage(numHorasCaducidad : Int, pinEmpresa: PinEmpresa, message: UsuarioMessageCorreo, templateBody: String, asuntoTemp: String, usuario : String) = {
+    val body: String = new MailMessageEmpresa(templateBody).getMessagePinCreacionAgente(pinEmpresa, numHorasCaducidad, usuario)
     val asunto: String = config.getString(asuntoTemp)
     //MailMessage(config.getString("alianza.smtp.from"), "sergiopena@seven4n.com", List(), asunto, body, "")
     MailMessage(config.getString("alianza.smtp.from"), "luisaceleita@seven4n.com",  List(), asunto, body, "")
