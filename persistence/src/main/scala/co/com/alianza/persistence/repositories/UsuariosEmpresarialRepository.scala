@@ -121,7 +121,7 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
       resolveTry(resultTry, "Eliminar pin(es) empresa anteriores del agente empresarial asociado cuando el uso es reiniciar contrasena")
   }
 
-  def insertarAgenteEmpres  arial(agenteEmpresarial : UsuarioEmpresarial): Future[Validation[PersistenceException, Int]] = loan {
+  def insertarAgenteEmpresarial(agenteEmpresarial : UsuarioEmpresarial): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
       val resultTry = Try{ (UsuariosEmpresariales  returning UsuariosEmpresariales.map(_.id)) += agenteEmpresarial }
       resolveTry(resultTry, "Agregar agente empresarial")
