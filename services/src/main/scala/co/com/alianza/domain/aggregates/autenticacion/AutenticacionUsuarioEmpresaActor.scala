@@ -19,7 +19,7 @@ import co.com.alianza.util.transformers.ValidationT
 import java.sql.Timestamp
 import java.util.Date
 
-import enumerations.EstadosUsuarioEnum
+import enumerations.EstadosEmpresaEnum
 
 import scala.concurrent.duration._
 import scala.concurrent.Future
@@ -387,7 +387,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
    */
   def bloquearUsuarioEmpresarialAdmin(idUsuario: Int, numIngresosErroneos: Int, regla: ReglasContrasenas): Future[Validation[ErrorAutenticacion, Boolean]] = {
     if( numIngresosErroneos + 1 == regla.valor.toInt) {
-      val future = UsDataAdapter.actualizarEstadoUsuarioEmpresarialAdmin(idUsuario, EstadosUsuarioEnum.bloqueContraseña.id)
+      val future = UsDataAdapter.actualizarEstadoUsuarioEmpresarialAdmin(idUsuario, EstadosEmpresaEnum.bloqueContraseña.id)
       future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap { _ =>
         Validation.failure(ErrorIntentosIngresoInvalidos())
       })
@@ -477,7 +477,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
    */
   def bloquearUsuarioEmpresarialAgente(idUsuario: Int, numIngresosErroneos: Int, regla: ReglasContrasenas): Future[Validation[ErrorAutenticacion, Boolean]] = {
     if( numIngresosErroneos + 1 == regla.valor.toInt) {
-      val future = UsDataAdapter.actualizarEstadoUsuarioEmpresarialAgente(idUsuario, EstadosUsuarioEnum.bloqueContraseña.id)
+      val future = UsDataAdapter.actualizarEstadoUsuarioEmpresarialAgente(idUsuario, .bloqueContraseña.id)
       future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap { _ =>
         Validation.failure(ErrorIntentosIngresoInvalidos())
       })
