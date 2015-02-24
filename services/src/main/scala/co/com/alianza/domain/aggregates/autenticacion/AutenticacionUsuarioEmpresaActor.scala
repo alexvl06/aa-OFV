@@ -477,12 +477,27 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
    */
   def bloquearUsuarioEmpresarialAgente(idUsuario: Int, numIngresosErroneos: Int, regla: ReglasContrasenas): Future[Validation[ErrorAutenticacion, Boolean]] = {
     if( numIngresosErroneos + 1 == regla.valor.toInt) {
-      val future = UsDataAdapter.actualizarEstadoUsuarioEmpresarialAgente(idUsuario, .bloqueContraseña.id)
+      val future = UsDataAdapter.actualizarEstadoUsuarioEmpresarialAgente(idUsuario, EstadosEmpresaEnum.bloqueContraseña.id)
       future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap { _ =>
         Validation.failure(ErrorIntentosIngresoInvalidos())
       })
     }
     else Future.successful(Validation.success(false))
+  }
+
+  /**
+   * Valida el estado del usuario
+   * @param estadoUsuario El estado del usuario a validar
+   * @return Future[Validation[ErrorAutenticacion, Boolean] ]
+   * Success => True
+   * ErrorAutenticacion => ErrorUsuarioBloqueadoIntentosErroneos || ErrorUsuarioBloqueadoPendienteActivacion || ErrorUsuarioBloqueadoPendienteReinicio
+   */
+  override def validarEstadosUsuario(estadoUsuario: Int): Future[Validation[ErrorAutenticacion, Boolean]] = Future {
+    log.info("Validando estados usuario")
+    if (estadoUsuario == EstadosEmpresaEnum.bloqueContraseña.id) Validation.failure(ErrorUsuarioBloqueadoIntentosErroneos())
+    else if (estadoUsuario == EstadosEmpresaEnum.pendienteActivacion.id) Validation.failure(ErrorUsuarioBloqueadoPendienteActivacion())
+    else if (estadoUsuario == EstadosEmpresaEnum.pendienteReiniciarContrasena.id) Validation.failure(ErrorUsuarioBloqueadoPendienteReinicio())
+    else Validation.success(true)
   }
 
 }
