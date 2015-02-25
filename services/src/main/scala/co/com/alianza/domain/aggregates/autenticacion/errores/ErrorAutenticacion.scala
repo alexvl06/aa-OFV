@@ -44,10 +44,6 @@ case class ErrorUsuarioBloqueadoPendienteActivacion() extends ErrorAutenticacion
   override def msg = ErrorMessage("401.10", "Usuario Bloqueado", "El usuario se encuentra pendiente de activación").toJson
 }
 
-case class ErrorUsuarioBloqueadoPendienteConfronta() extends ErrorAutenticacion {
-  override def msg = ErrorMessage("401.11", "Usuario Bloqueado", "El usuario se encuentra bloqueado pendiente preguntas de seguridad").toJson
-}
-
 case class ErrorUsuarioBloqueadoPendienteReinicio() extends ErrorAutenticacion {
   override def msg = ErrorMessage("401.12", "Usuario Bloqueado", "El usuario se encuentra bloqueado pendiente de reiniciar contraseña").toJson
 }

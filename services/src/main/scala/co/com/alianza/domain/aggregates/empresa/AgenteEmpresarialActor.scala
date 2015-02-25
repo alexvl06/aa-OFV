@@ -68,11 +68,12 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
 //toUsuarioEmpresarialEmpresa(empresa, idUsuarioAgenteEmpresarial)
     case message: CrearAgenteEMessage => {
       val currentSender = sender()
-      val usuarioCreadoFuture: Future[Validation[PersistenceException, Int]] = (for {
-        idUsuarioAgenteEmpresarial <- ValidationT(DataAccessAdapter.crearAgenteEmpresarial(message.toEntityUsuarioAgenteEmpresarial()))
-        resultAsociarPerfiles <- ValidationT(DataAccessAdapter.asociarPerfiles(idUsuarioAgenteEmpresarial, PerfilesAgente.agente.id :: Nil))
-        empresa <- ValidationT(DataAccessAdapter.obtenerEmpresaPorNit(message.nit))
-        resultAsociarEmpresa <- ValidationT(DataAccessAdapter.asociarAgenteEmpresarialConEmpresa(UsuarioEmpresarialEmpresa(empresa.get.id, idUsuarioAgenteEmpresarial)))
+      val usuarioCreadoFuture: Future[Validation[ErrorValidacion, Int]] = (for {
+        clienteAdmin <- ValidationT(validarUsuarioClienteAdmin(message.nit, message.usuario))
+        idUsuarioAgenteEmpresarial <- ValidationT(crearAgenteEmpresarial(message))
+        resultAsociarPerfiles <- ValidationT(asociarPerfiles(idUsuarioAgenteEmpresarial))
+        empresa <- ValidationT(obtenerEmpresaPorNit(message.nit))
+        resultAsociarEmpresa <- ValidationT(asociarAgenteEmpresarialConEmpresa(empresa.get.id, idUsuarioAgenteEmpresarial))
       } yield {
         idUsuarioAgenteEmpresarial
       }).run
@@ -85,7 +86,19 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
       resolveFutureValidation(future, (response: List[UsuarioEmpresarialEstado]) => response.toJson, currentSender)
   }
 
-  private def resolveCrearAgenteEmpresarialFuture(crearAgenteEmpresarialFuture: Future[Validation[PersistenceException, Int]], message : CrearAgenteEMessage, currentSender: ActorRef) {
+  private def crearAgenteEmpresarial(message: CrearAgenteEMessage) : Future[Validation[ErrorValidacion, Int]] =
+    DataAccessAdapter.crearAgenteEmpresarial(message.toEntityUsuarioAgenteEmpresarial()).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
+
+  private def asociarPerfiles(idUsuarioAgenteEmpresarial: Int) : Future[Validation[ErrorValidacion, List[Int]]] =
+    DataAccessAdapter.asociarPerfiles(idUsuarioAgenteEmpresarial, PerfilesAgente.agente.id :: Nil).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
+
+  private def obtenerEmpresaPorNit(nit: String) : Future[Validation[ErrorValidacion, Option[Empresa]]] =
+    DataAccessAdapter.obtenerEmpresaPorNit(nit).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
+
+  private def asociarAgenteEmpresarialConEmpresa(idEmpresa: Int, idAgente: Int) : Future[Validation[ErrorValidacion, Int]] =
+    DataAccessAdapter.asociarAgenteEmpresarialConEmpresa(UsuarioEmpresarialEmpresa(idEmpresa, idAgente)).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
+
+  private def resolveCrearAgenteEmpresarialFuture(crearAgenteEmpresarialFuture: Future[Validation[ErrorValidacion, Int]], message : CrearAgenteEMessage, currentSender: ActorRef) {
     crearAgenteEmpresarialFuture onComplete {
       case sFailure(failure) =>
         currentSender ! failure
@@ -115,7 +128,9 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
           }
           case zFailure(error) =>
             error match {
-              case errorPersistence: PersistenceException => {
+              case errorValidacion: ErrorValidacion  =>
+                currentSender ! ResponseMessage(Conflict, errorValidacion.msg)
+              case errorPersistence: ErrorPersistence => {
                 currentSender ! ResponseMessage(Conflict, s"Usuario ya registrado para el NIT: ${message.nit}")
               }
               case unknownError @ _  => {
@@ -150,15 +165,15 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
           case zFailure(fail) => currentSender ! fail
           case zSuccess(intResult) =>
             if(intResult == 1){
-              new SmtpServiceClient().send(buildMessage(numHorasCaducidad, pin, UsuarioMessageCorreo(message.correo, message.nit, TipoIdentificacion.NIT.id), "alianza.smtp.templatepin.creacionAgenteEmpresarial", "alianza.smtp.asunto.creacionAgenteEmpresarial"), (_, _) => Unit)
+              new SmtpServiceClient().send(buildMessage(numHorasCaducidad, pin, UsuarioMessageCorreo(message.correo, message.nit, TipoIdentificacion.NIT.id), "alianza.smtp.templatepin.creacionAgenteEmpresarial", "alianza.smtp.asunto.creacionAgenteEmpresarial", message.usuario), (_, _) => Unit)
               currentSender ! ResponseMessage(Created, idUsuarioAgenteEmpresarial.toString)
             }
         }
     }
   }
 
-  private def buildMessage(numHorasCaducidad : Int, pinEmpresa: PinEmpresa, message: UsuarioMessageCorreo, templateBody: String, asuntoTemp: String) = {
-    val body: String = new MailMessageEmpresa(templateBody).getMessagePin(pinEmpresa, numHorasCaducidad)
+  private def buildMessage(numHorasCaducidad : Int, pinEmpresa: PinEmpresa, message: UsuarioMessageCorreo, templateBody: String, asuntoTemp: String, usuario : String) = {
+    val body: String = new MailMessageEmpresa(templateBody).getMessagePinCreacionAgente(pinEmpresa, numHorasCaducidad, usuario)
     val asunto: String = config.getString(asuntoTemp)
     //MailMessage(config.getString("alianza.smtp.from"), "sergiopena@seven4n.com", List(), asunto, body, "")
     MailMessage(config.getString("alianza.smtp.from"), "luisaceleita@seven4n.com",  List(), asunto, body, "")

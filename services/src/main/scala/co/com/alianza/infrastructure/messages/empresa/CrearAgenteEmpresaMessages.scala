@@ -4,7 +4,7 @@ import java.sql.Timestamp
 
 import co.com.alianza.infrastructure.messages.MessageService
 import co.com.alianza.persistence.entities.UsuarioEmpresarial
-import enumerations.{TipoIdentificacion, EstadosUsuarioEnum}
+import enumerations.{TipoIdentificacion, EstadosEmpresaEnum}
 import spray.json.DefaultJsonProtocol
 import spray.httpx.SprayJsonSupport
 
@@ -22,7 +22,7 @@ case class CrearAgenteEMessage(
                               ) extends MessageService {
 
   def toEntityUsuarioAgenteEmpresarial():UsuarioEmpresarial = {
-    UsuarioEmpresarial(0, correo, new Timestamp(System.currentTimeMillis()), nit, tipoIdentificacion = TipoIdentificacion.NIT.identificador, usuario, EstadosUsuarioEnum.pendienteActivacion.id, contrasena = None, token = None, numeroIngresosErroneos = 0, ipUltimoIngreso = None, fechaUltimoIngreso = None, nombre, cargo, descripcion)
+    UsuarioEmpresarial(0, correo, new Timestamp(System.currentTimeMillis()), nit, tipoIdentificacion = TipoIdentificacion.NIT.identificador, usuario, EstadosEmpresaEnum.pendienteActivacion.id, contrasena = None, token = None, numeroIngresosErroneos = 0, ipUltimoIngreso = None, fechaUltimoIngreso = None, nombre, cargo, descripcion)
   }
 
 }
