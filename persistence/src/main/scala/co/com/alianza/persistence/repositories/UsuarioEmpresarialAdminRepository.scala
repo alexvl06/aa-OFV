@@ -9,6 +9,7 @@ import co.com.alianza.persistence.entities._
 import co.com.alianza.exceptions.PersistenceException
 import CustomDriver.simple._
 import scala.util.Try
+import scala.slick.lifted.TableQuery
 
 /**
  * Created by manuel on 18/12/14.
@@ -17,6 +18,8 @@ class UsuarioEmpresarialAdminRepository ( implicit executionContext: ExecutionCo
 
 
   val UsuariosEmpresarialesAdmin = TableQuery[UsuarioEmpresarialAdminTable]
+
+  val pinusuariosEmpresarialesAdmin = TableQuery[PinUsuarioEmpresarialAdminTable]
 
   def obtenerUsuarioToken( token:String ): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = loan {
     implicit session =>
@@ -66,6 +69,12 @@ class UsuarioEmpresarialAdminRepository ( implicit executionContext: ExecutionCo
     implicit session =>
       val resultTry = Try{ UsuariosEmpresarialesAdmin.filter( _.id === idUsuario ).firstOption  }
       resolveTry(resultTry, "Actualizar usuario empresarial admin en fechaUltimoIngreso ")
+  }
+
+  def guardarPinUsuarioClienteAdmin(pinUsuario:PinUsuarioEmpresarialAdmin): Future[Validation[PersistenceException, Int]] = loan {
+    implicit session =>
+      val resultTry = Try{  (pinusuariosEmpresarialesAdmin returning pinusuariosEmpresarialesAdmin.map(_.id.get)) +=pinUsuario }
+      resolveTry(resultTry, "Agregar pin usuario empresarial administrador")
   }
 
 }

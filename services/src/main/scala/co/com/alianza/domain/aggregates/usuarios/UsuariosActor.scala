@@ -9,9 +9,10 @@ import spray.http.StatusCodes._
 import scala.concurrent.Future
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => DataAccessAdapterUsuario}
 import co.com.alianza.infrastructure.anticorruption.pin.{ DataAccessTranslator => DataAccessTranslatorPin }
+import co.com.alianza.infrastructure.anticorruption.pinclienteadmin.{ DataAccessTranslator => DataAccessTranslatorPinClienteAdmin }
 import co.com.alianza.util.clave.Crypto
 import com.typesafe.config.Config
-import enumerations.{EstadosUsuarioEnum, AppendPasswordUser}
+import enumerations.{EstadosEmpresaEnum, EstadosUsuarioEnum, AppendPasswordUser}
 
 import akka.actor.Props
 import co.com.alianza.util.token.{TokenPin, PinData}
@@ -43,6 +44,9 @@ import com.asobancaria.cifinpruebas.cifin.confrontav2plusws.services.ConfrontaUl
 import co.cifin.confrontaultra.dto.ultra.{ResultadoEvaluacionCuestionarioULTRADTO, CuestionarioULTRADTO, ParametrosULTRADTO, ParametrosSeguridadULTRADTO}
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.exceptions.{BusinessLevel, PersistenceException}
+import co.com.alianza.domain.aggregates.autenticacion.errores.{ErrorCredencialesInvalidas, ErrorPersistencia, ErrorAutenticacion}
+import co.com.alianza.persistence.entities.Empresa
+import enumerations.empresa.EstadosDeEmpresaEnum
 
 
 class UsuariosActorSupervisor extends Actor with ActorLogging {
@@ -120,23 +124,21 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
       val currentSender = sender()
 
 
-      //Así debe quedar el procesamiento del futuro
-      val futureGetUsuarios: Future[Validation[PersistenceException, Option[Any]]] = message.perfilCliente match {
-        case 1 => co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerUsuarioEmpresarialAdminPorId(message.identificacion.toInt)
-        case 2 => co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerUsuarioNumeroIdentificacion(message.identificacion)
+      //Se obtiene el usuario dado el perfil que llegue de presentacion, en caso de perfil no correcto se devuelve excepcion
+      val futureConsultaUsuarios: Future[Validation[PersistenceException, Option[Any]]] = message.perfilCliente match {
+        case 1 => co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerUsuarioNumeroIdentificacion(message.identificacion)
+        case 2 => co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtieneUsuarioEmpresarialAdminPorNitYUsuario(message.identificacion, message.usuarioClienteAdmin)
         case _ => Future.successful(Validation.failure(PersistenceException(new Exception, BusinessLevel, "El perfil del usuario no es soportado por la aplicacion")))
       }
-      //resolveConsultarUsuariosFuture(futureGetUsuarios, currentSender)
 
-
-      /*val validarClienteFuture = ( for {
+      val validarClienteFuture = ( for {
         cliente <- ValidationT(validaSolicitudCliente(message))
       } yield {
         cliente
       }).run
-      */
 
-      resolveReiniciarContrasenaFuture(futureGetUsuarios, currentSender, message)
+
+      resolveReiniciarContrasenaFuture(validarClienteFuture, futureConsultaUsuarios, currentSender, message)
 
     case message: ConsultaUsuarioMessage =>
       val currentSender = sender
@@ -154,61 +156,114 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
 
   }
 
+  private def resolveReiniciarContrasenaFuture( validarClienteFuture: Future[Validation[ErrorValidacion, Any]],
+                                                validarUsuarioFuture: Future[Validation[PersistenceException, Option[Any]]],
+                                                currentSender: ActorRef, message: OlvidoContrasenaMessage) = {
+    validarUsuarioFuture onComplete {
+      case sFailure(failure) => currentSender ! failure
+      case sSuccess(value) =>
+        value match {
+          case zSuccess(response: Option[Any]) =>
+            response match {
+              case Some(valueResponse) =>
+                validarClienteFuture onComplete{
+                  case sFailure( failure ) =>
+                    currentSender ! failure
+                  case sSuccess (value) =>
+                    value match{
+                      case zSuccess( responseCliente:Cliente ) =>
+                        response.get match {
+                          case valueResponseUsuarioEmpresarial:UsuarioEmpresarialAdmin =>
+
+                            val empresaValidacionFuture = (for {
+                              empresa <- ValidationT(esEmpresaActiva(valueResponseUsuarioEmpresarial.identificacion))
+                            } yield {
+                              empresa
+                            }).run
+
+                            empresaValidacionFuture.onComplete {
+                              case sFailure(ex) => currentSender ! ex
+                              case sSuccess(resp) =>
+                                resp match {
+                                  case zFailure(errorValidacion) => currentSender ! ResponseMessage(Conflict,errorEstadoEmpresa)
+                                  case zSuccess(_) =>
+                                }
+                            }
+
+                            //El olvido de contrasena queda para usuarios en estado activo, pendiente de activacion, pendiente de reinicio de contrasena
+                            if( valueResponseUsuarioEmpresarial.estado == EstadosEmpresaEnum.activo.id ||
+                              valueResponseUsuarioEmpresarial.estado == EstadosEmpresaEnum.pendienteActivacion.id ||
+                              valueResponseUsuarioEmpresarial.estado == EstadosEmpresaEnum.pendienteReiniciarContrasena.id  ) {
+
+                              val actualizarContrasenaFuture = (for {
+                                idUsuario <- ValidationT(cambiarEstadoUsuarioEmpresarial(valueResponseUsuarioEmpresarial.id,EstadosEmpresaEnum.pendienteReiniciarContrasena))
+                              } yield {
+                                idUsuario
+                              }).run
+
+                              enviarCorreoOlvidoContrasena(actualizarContrasenaFuture, responseCliente.wcli_dir_correo, currentSender, message, Some(valueResponseUsuarioEmpresarial.id))
+                            }
+/*                            else if( valueResponseUsuarioEmpresarial.estado == EstadosEmpresaEnum.nuevoEstado.id )
+                              currentSender ! ResponseMessage(Conflict,errorEstadoReinicioContrasena)*/
+                            else
+                              currentSender ! ResponseMessage(Conflict,errorEstadoUsuarioNoPermitido)
 
 
-  private def resolveReiniciarContrasenaFuture( validarClienteFuture: Future[Validation[PersistenceException, Option[Any]]],  currentSender: ActorRef, message: OlvidoContrasenaMessage) = {
-    validarClienteFuture onComplete{
-      case sFailure( failure ) =>
-        currentSender ! failure
-      case sSuccess (value) =>
-        value match{
-          case zSuccess( responseCliente:Cliente ) =>
+                          case valueResponse:Usuario =>
 
-            val resultUsuario = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerUsuarioNumeroIdentificacion(message.identificacion);
+                            //El olvido de contrasena queda para usuarios en estado bloqueado por contrasena y activos
+                            if( valueResponse.estado == EstadosUsuarioEnum.activo.id || valueResponse.estado == EstadosUsuarioEnum.bloqueContraseña.id  ) {
 
-            resultUsuario onComplete {
-              case sFailure(failure) => currentSender ! failure
-              case sSuccess(value) =>
-                value match {
-                  case zSuccess(response: Option[Usuario]) =>
-                    response match {
-                      case Some(valueResponse) =>
+                              val actualizarContrasenaFuture = (for {
+                                idUsuario <- ValidationT(cambiarEstadoUsuario(message.identificacion, EstadosUsuarioEnum.pendienteReinicio))
+                              } yield {
+                                idUsuario
+                              }).run
 
-                        //El olvido de contrasena queda para usuarios en estado bloqueado por contrasena y activos
-                        if( valueResponse.estado == EstadosUsuarioEnum.activo.id || valueResponse.estado == EstadosUsuarioEnum.bloqueContraseña.id  ) {
+                              enviarCorreoOlvidoContrasena(actualizarContrasenaFuture, responseCliente.wcli_dir_correo, currentSender, message, valueResponse.id)
+                            }
+                            else if( valueResponse.estado == EstadosUsuarioEnum.pendienteReinicio.id )
+                              currentSender ! ResponseMessage(Conflict,errorEstadoReinicioContrasena)
+                            else
+                              currentSender ! ResponseMessage(Conflict,errorEstadoUsuarioNoPermitido)
 
-                          val actualizarContrasenaFuture = (for {
-                            idUsuario <- ValidationT(cambiarEstadoUsuario(message.identificacion, EstadosUsuarioEnum.pendienteReinicio))
-                          } yield {
-                            idUsuario
-                          }).run
 
-                          enviarCorreoOlvidoContrasena(actualizarContrasenaFuture, responseCliente.wcli_dir_correo, currentSender, message, valueResponse.id)
+
+                          case _ => log.info("Error al obtener usuario para olvido de contrasena")
                         }
-                        else if( valueResponse.estado == EstadosUsuarioEnum.pendienteReinicio.id )
-                          currentSender ! ResponseMessage(Conflict,errorEstadoReinicioContrasena)
-                        else
-                          currentSender ! ResponseMessage(Conflict,errorEstadoUsuarioNoPermitido)
-
-                      case None => currentSender ! ResponseMessage(Unauthorized, "Error al obtener usuario por numero de identificacion")
+                      case zFailure(error) =>
+                        error match {
+                          case errorPersistence: ErrorPersistence => currentSender ! errorPersistence.exception
+                          case errorVal: ErrorValidacion =>
+                            currentSender ! ResponseMessage(Conflict, errorVal.msg)
+                          case errorClienteNoExiste:ErrorClienteNoExiste  => currentSender ! errorClienteNoExiste
+                        }
                     }
-                  case zFailure(error) => currentSender ! error
                 }
+              case None => currentSender ! ResponseMessage(Conflict, errorUsuarioNoExistePerfilClienteNiEmpresaAdmin)
             }
-          case zFailure(error) =>
-            error match {
-              case errorPersistence: ErrorPersistence => currentSender ! errorPersistence.exception
-              case errorVal: ErrorValidacion =>
-                currentSender ! ResponseMessage(Conflict, errorVal.msg)
-              case errorClienteNoExiste:ErrorClienteNoExiste  => currentSender ! errorClienteNoExiste
-            }
+          case zFailure(error) => currentSender ! error
         }
     }
-
-
-
   }
 
+
+  private def esEmpresaActiva(nit: String): Future[Validation[ErrorValidacion, Empresa]] = {
+    log.info("Validando el estado de la empresa")
+    val future : Future[Validation[PersistenceException, Option[Empresa]]] = DataAccessAdapterUsuario.obtenerEmpresaPorNit(nit)
+    future.map(
+      _.leftMap(pe => ErrorPersistence(pe.message, pe)).flatMap{
+        (x:Option[Empresa]) => x match {
+          case Some(empresa) =>
+            log.info("Estado de la empresa->"+empresa.estadoEmpresa)
+            if (empresa.estadoEmpresa == EstadosDeEmpresaEnum.activa.id) zSuccess(empresa)
+            else
+              zFailure(ErrorEstadoInvalidoEmpresa(errorEstadoEmpresa))
+          case None => zFailure(ErrorEmpresaNoExiste(errorEmpresaNoExiste))
+        }
+      }
+    )
+  }
 
   private def enviarCorreoOlvidoContrasena( actualizarContrasenaFuture: Future[Validation[ErrorValidacion, Int]], correoCliente:String,  currentSender: ActorRef, message: OlvidoContrasenaMessage, idUsuario:Option[Int] ) = {
 
@@ -231,14 +286,38 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
                       fechaActual.add(Calendar.HOUR_OF_DAY, responseConf.valor.toInt)
                       val tokenPin: PinData = TokenPin.obtenerToken(fechaActual.getTime)
 
-                      val pin: PinUsuario = PinUsuario(None, idUsuario.get, tokenPin.token, tokenPin.fechaExpiracion, tokenPin.tokenHash.get)
-                      val pinUsuario: entities.PinUsuario = DataAccessTranslatorPin.translateEntityPinUsuario(pin)
+                      val pin = message.perfilCliente match {
+                        case 1 => PinUsuario(None, idUsuario.get, tokenPin.token, tokenPin.fechaExpiracion, tokenPin.tokenHash.get)
+                        case 2 => PinUsuarioEmpresarialAdmin(None, idUsuario.get, tokenPin.token, tokenPin.fechaExpiracion, tokenPin.tokenHash.get)
+                      }
 
-                      DataAccessAdapterUsuario.crearUsuarioPin(pinUsuario)
+                      val resultCrearPinUsuario: Future[Validation[PersistenceException, Int]] = pin match {
+                        case pinUsuarioDto @ PinUsuario(param1, param2, param3, param4, param5) =>
+                          val puPersistence: entities.PinUsuario = DataAccessTranslatorPin.translateEntityPinUsuario(pinUsuarioDto)
+                          DataAccessAdapterUsuario.crearUsuarioPin(puPersistence)
+                        case pinUsuarioEmpresarialAdminDto @ PinUsuarioEmpresarialAdmin(param1, param2, param3, param4, param5) =>
+                          val pueaPersistence: entities.PinUsuarioEmpresarialAdmin = DataAccessTranslatorPinClienteAdmin.translateEntityPinUsuario(pinUsuarioEmpresarialAdminDto)
+                          DataAccessAdapterUsuario.crearUsuarioClienteAdministradorPin(pueaPersistence)
+                        case _ => Future.successful(Validation.failure(PersistenceException(new Exception, BusinessLevel, "Error ... por verifique los datos y vuelva a intentarlo")))
+                      }
 
-                      new SmtpServiceClient().send(buildMessage(pin, responseConf.valor.toInt, UsuarioMessage(correoCliente, message.identificacion, message.tipoIdentificacion,null, false, None), "alianza.smtp.templatepin.reiniciarContrasena", "alianza.smtp.asunto.reiniciarContrasena"), (_, _) => Unit)
-                      currentSender ! ResponseMessage(Created, response.toJson)
+                      resultCrearPinUsuario onComplete {
+                        case sFailure(fail) => currentSender ! fail
+                        case sSuccess(valueResult) =>
+                          valueResult match {
+                            case zFailure(fail) => currentSender ! fail
+                            case zSuccess(intResult) =>
+                              pin match {
+                                case pinUsuarioDto @ PinUsuario(param1, param2, param3, param4, param5) =>
+                                  new SmtpServiceClient().send(buildMessage(pinUsuarioDto, responseConf.valor.toInt, UsuarioMessage(correoCliente, message.identificacion, message.tipoIdentificacion,null, false, None), "alianza.smtp.templatepin.reiniciarContrasena", "alianza.smtp.asunto.reiniciarContrasena"), (_, _) => Unit)
+                                  currentSender ! ResponseMessage(Created)
 
+                                case pinUsuarioEmpresarialAdminDto @ PinUsuarioEmpresarialAdmin(param1, param2, param3, param4, param5) =>
+                                  new SmtpServiceClient().send(buildMessage(pinUsuarioEmpresarialAdminDto, responseConf.valor.toInt, UsuarioMessage(correoCliente, message.identificacion, message.tipoIdentificacion,null, false, None), "alianza.smtp.templatepin.reiniciarContrasena", "alianza.smtp.asunto.reiniciarContrasena"), (_, _) => Unit)
+                                  currentSender ! ResponseMessage(Created)
+                              }
+                          }
+                      }
                     case zFailure(error) =>
                       error match {
                         case errorPersistence: ErrorPersistence => currentSender ! errorPersistence.exception
@@ -259,34 +338,34 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
   }
 
   private def obtenerCuestionario(sender:ActorRef, message:UsuarioMessage) = {
-      val currentSender = sender
+    val currentSender = sender
 
-      val locator: ConfrontaUltraWebServiceServiceLocator = new ConfrontaUltraWebServiceServiceLocator(config.getString("confronta.service.obtenerCuestionario.location"))
-      val stub: ConfrontaUltraWSSoapBindingStub = locator.getConfrontaUltraWS.asInstanceOf[ConfrontaUltraWSSoapBindingStub]
-      val parametros: ParametrosSeguridadULTRADTO = new ParametrosSeguridadULTRADTO
-      parametros.setClaveCIFIN(config.getString("confronta.service.claveCIFIN"))
-      parametros.setPassword(config.getString("confronta.service.password"))
-      val parametrosUltra: ParametrosULTRADTO = new ParametrosULTRADTO
-      parametrosUltra.setCodigoDepartamento(config.getInt("confronta.service.departamento"))
-      parametrosUltra.setCodigoCuestionario(config.getInt("confronta.service.cuestionario"))
-      parametrosUltra.setTelefono("");
-      parametrosUltra.setCodigoCiudad(config.getInt("confronta.service.ciudad"))
-      parametrosUltra.setPrimerApellido(message.primerApellido.get.toUpperCase())
-      parametrosUltra.setCodigoTipoIdentificacion(if(message.tipoIdentificacion.toString.equals("1")){"1"}else{"3"})
-      parametrosUltra.setNumeroIdentificacion(message.identificacion)
-      parametrosUltra.setFechaExpedicion(message.fechaExpedicion.get)
+    val locator: ConfrontaUltraWebServiceServiceLocator = new ConfrontaUltraWebServiceServiceLocator(config.getString("confronta.service.obtenerCuestionario.location"))
+    val stub: ConfrontaUltraWSSoapBindingStub = locator.getConfrontaUltraWS.asInstanceOf[ConfrontaUltraWSSoapBindingStub]
+    val parametros: ParametrosSeguridadULTRADTO = new ParametrosSeguridadULTRADTO
+    parametros.setClaveCIFIN(config.getString("confronta.service.claveCIFIN"))
+    parametros.setPassword(config.getString("confronta.service.password"))
+    val parametrosUltra: ParametrosULTRADTO = new ParametrosULTRADTO
+    parametrosUltra.setCodigoDepartamento(config.getInt("confronta.service.departamento"))
+    parametrosUltra.setCodigoCuestionario(config.getInt("confronta.service.cuestionario"))
+    parametrosUltra.setTelefono("");
+    parametrosUltra.setCodigoCiudad(config.getInt("confronta.service.ciudad"))
+    parametrosUltra.setPrimerApellido(message.primerApellido.get.toUpperCase())
+    parametrosUltra.setCodigoTipoIdentificacion(if(message.tipoIdentificacion.toString.equals("1")){"1"}else{"3"})
+    parametrosUltra.setNumeroIdentificacion(message.identificacion)
+    parametrosUltra.setFechaExpedicion(message.fechaExpedicion.get)
 
-      val response: CuestionarioULTRADTO = stub.obtenerCuestionario(parametros, parametrosUltra)
-      if(response.getRespuestaProceso.getCodigoRespuesta == 1){
-        currentSender ! JsonUtil.toJson(response)
-      }else if(response.getRespuestaProceso.getCodigoRespuesta == 25){
-        currentSender !  ResponseMessage(Conflict, errorUsuarioExiste)
-      }else {
-        val respToSender = new ResultadoEvaluacionCuestionarioULTRADTO()
-        respToSender.setRespuestaProceso(response.getRespuestaProceso)
-        respToSender.getRespuestaProceso.setDescripcionRespuesta("No es posible realizar el registro, por favor llamar a la línea de atención 6447700 ext 1104")
-        currentSender !  respToSender.toJson
-      }
+    val response: CuestionarioULTRADTO = stub.obtenerCuestionario(parametros, parametrosUltra)
+    if(response.getRespuestaProceso.getCodigoRespuesta == 1){
+      currentSender ! JsonUtil.toJson(response)
+    }else if(response.getRespuestaProceso.getCodigoRespuesta == 25){
+      currentSender !  ResponseMessage(Conflict, errorUsuarioExiste)
+    }else {
+      val respToSender = new ResultadoEvaluacionCuestionarioULTRADTO()
+      respToSender.setRespuestaProceso(response.getRespuestaProceso)
+      respToSender.getRespuestaProceso.setDescripcionRespuesta("No es posible realizar el registro, por favor llamar a la línea de atención 6447700 ext 1104")
+      currentSender !  respToSender.toJson
+    }
 
   }
 
@@ -304,6 +383,10 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
 
   private def cambiarEstadoUsuario(numeroIdentificacion: String, estado: EstadosUsuarioEnum.estadoUsuario): Future[Validation[ErrorValidacion, Int]] = {
     DataAccessAdapterUsuario.actualizarEstadoUsuario(numeroIdentificacion, estado.id).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)));
+  }
+
+  private def cambiarEstadoUsuarioEmpresarial(numeroIdentificacion: Int, estado: EstadosEmpresaEnum.estadoEmpresa): Future[Validation[ErrorValidacion, Int]] = {
+    DataAccessAdapterUsuario.actualizarEstadoUsuarioEmpresarialAdmin(numeroIdentificacion, estado.id).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)));
   }
 
 
@@ -368,10 +451,15 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
   }
 
 
-  private def buildMessage(pinUsuario: PinUsuario, numHorasCaducidad: Int, message: UsuarioMessage, templateBody: String, asuntoTemp: String) = {
-    val body: String =new MailMessageUsuario(templateBody).getMessagePin(pinUsuario, numHorasCaducidad)
+  private def buildMessage(pinUsuario: Any, numHorasCaducidad: Int, message: UsuarioMessage, templateBody: String, asuntoTemp: String) = {
+    val body: String = pinUsuario match {
+      case pinUsuarioDto @ PinUsuario(param1, param2, param3, param4, param5) =>
+        new MailMessageUsuario(templateBody).getMessagePin(pinUsuarioDto, numHorasCaducidad, "1")
+      case pinUsuarioEmpresarialAdminDto @ PinUsuarioEmpresarialAdmin(param1, param2, param3, param4, param5) =>
+        new MailMessageUsuario(templateBody).getMessagePin(pinUsuarioEmpresarialAdminDto, numHorasCaducidad, "2")
+    }
     val asunto: String = config.getString(asuntoTemp)
-    MailMessage(config.getString("alianza.smtp.from"), "luisaceleita@seven4n.com",  List() , asunto, body, "")
+    MailMessage(config.getString("alianza.smtp.from"), "josegarcia@seven4n.com",  List() , asunto, body, "")
     //MailMessage(config.getString("alianza.smtp.from"), "josegarcia@seven4n.com", List(), asunto, body, "")
     //MailMessage(config.getString("alianza.smtp.from"), message.correo, List(), asunto, body, "")
   }
@@ -381,5 +469,8 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
   private val errorEstadoUsuarioNoPermitido = ErrorMessage("409.9", "El estado del usuario no permite reiniciar la contrasena", "El estado del usuario no permite reiniciar la contrasena").toJson
 
   private val errorUsuarioExiste = ErrorMessage("409.10", "Fecha de Expedición Invalida", "Fecha de Expedición Invalida").toJson
+  private val errorEstadoEmpresa = ErrorMessage("409.11", "Estado no valido de la empresa", "Estado no valido de la empresa").toJson
+  private val errorEmpresaNoExiste = ErrorMessage("409.12", "Empresa no existe para dicho NIT", "Empresa no existe para dicho NIT").toJson
+  private val errorUsuarioNoExistePerfilClienteNiEmpresaAdmin = ErrorMessage("409.13", "Usuario no existe para perfil cliente, cliente admin", "Usuario no existe para perfil cliente, cliente admin").toJson
 
 }
