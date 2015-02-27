@@ -14,6 +14,7 @@ class AutenticacionService extends Directives with AlianzaCommons with CrossHead
       post {
         entity(as[AutenticarMessage]) {
           autenticacion =>
+          println("LLEGO ACA XXXXXXXXXXXXXXXXXXXXXXXXXXX")
             respondWithMediaType(mediaType) {
               clientIP { ip =>
                 val nuevaAutenticacion = autenticacion.copy(clientIp = Some(ip.value))
