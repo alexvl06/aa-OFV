@@ -29,7 +29,8 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
     case message: AutorizarUsuarioEmpresarialMessage =>
       val currentSender = sender()
       val future = (for {
-        usuarioOption <- ValidationT(validarToken(message.token))
+        usuarioOption <- ValidationT(validarToken(message))
+//        validacionIp <- ValidationT(validarIpEmpresa(message.ip))
         result <- ValidationT(validarRecursoAgente(usuarioOption, message.url))
 //        result <- ValidationT(validarUsuario(usuarioOption))
       } yield {
@@ -55,14 +56,14 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
    * Retorna un futuro con un Validationm, donde el caso de contiene el Option[Usuario]
    *
    *
-   * @param token El token para realizar validación
+   * @param message El token para realizar validación
    */
-  private def validarToken(token: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = {
-    Token.autorizarToken(token) match {
+  private def validarToken(message: AutorizarUsuarioEmpresarialMessage): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = {
+    Token.autorizarToken(message.token) match {
       case true =>
-        usDataAdapter.obtenerUsuarioEmpresarialToken(token).flatMap { x =>
+        usDataAdapter.obtenerUsuarioEmpresarialToken(message.token).flatMap { x =>
           val y: Validation[PersistenceException, Future[Option[UsuarioEmpresarial]]] = x.map { userOpt =>
-            guardaTokenCache(userOpt, token)
+            guardaTokenCache(userOpt, message)
           }
           co.com.alianza.util.transformers.Validation.sequence(y)
         }
@@ -92,16 +93,20 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
     }
   }
 
+  private def validarIpEmpresa(ip: String) = {
+    ask(MainActors.sesionActorSupervisor, ValidarIpEmpresa(ip)).mapTo[Boolean]
+  }
+
   /**
    *
    * Si usuarioOption tiene un valor se guarda en cache y retorna el usuario sin el campo contraseña
    * @param usuarioOption Option con el usuario
-   * @param token El token
+   * @param message El token
    * @return
    */
-  private def guardaTokenCache(usuarioOption: Option[UsuarioEmpresarial], token: String): Future[Option[UsuarioEmpresarial]] = {
+  private def guardaTokenCache(usuarioOption: Option[UsuarioEmpresarial], message: AutorizarUsuarioEmpresarialMessage): Future[Option[UsuarioEmpresarial]] = {
 
-    val validacionSesion: Future[Boolean] = ask(MainActors.sesionActorSupervisor, ValidarSesion(token)).mapTo[Boolean]
+    val validacionSesion: Future[Boolean] = ask(MainActors.sesionActorSupervisor, ValidarSesion(message.token)).mapTo[Boolean]
     validacionSesion.map {
       case true => usuarioOption.map(usuario => usuario.copy(contrasena = None))
       case false => None

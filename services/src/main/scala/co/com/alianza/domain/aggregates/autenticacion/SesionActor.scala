@@ -3,10 +3,12 @@ package co.com.alianza.domain.aggregates.autenticacion
 import java.security.MessageDigest
 
 import akka.actor._
+import akka.pattern.ask
 import akka.cluster.{Member, MemberStatus}
 import akka.util.Timeout
 import co.com.alianza.app.MainActors
 
+import co.com.alianza.infrastructure.dto.Empresa
 import co.com.alianza.infrastructure.messages._
 
 import scala.collection.immutable.SortedSet
@@ -26,13 +28,13 @@ class SesionActorSupervisor extends Actor with ActorLogging {
     //
 
     // When an user authenticates
-    case message: CrearSesionUsuario => crearSesion(message.token, message.tiempoExpiracion)
+    case message: CrearSesionUsuario => crearSesion(message.token, message.tiempoExpiracion, message.empresa)
 
     // When a user logout
     case message: InvalidarSesion => invalidarSesion(message.token)
 
     // When system validate token
-    case message: ValidarSesion => validarSesion(message.token)
+    case message: ValidarSesion => validarSesion(message)
 
     //
     // Internal messages
@@ -50,22 +52,30 @@ class SesionActorSupervisor extends Actor with ActorLogging {
         case Success(session) => session ! ExpirarSesion()
         case Failure(ex) =>
       }
+
+    case OptenerEmpresa(empresaId) =>
+      val currentSender = sender
+      context.actorSelection("akka://alianza-fid-auth-service/user/sesionActorSupervisor/empresa" + empresaId).resolveOne().onComplete {
+        case Success(empresaActor) => currentSender ! empresaActor
+        case Failure(ex) =>
+      }
+
+    case CrearEmpresaActor(empresa) => sender ! context.actorOf(EmpresaActor.props(empresa), s"empresa${empresa.id}")
+
   }
 
-  private def validarSesion(token: String): Unit = {
+  private def validarSesion(message: ValidarSesion): Unit = {
 
     val currentSender = sender()
-    val actorName = MessageDigest.getInstance("MD5").digest(token.split("\\.")(2).getBytes).map { b => String.format("%02X", java.lang.Byte.valueOf(b))}.mkString("") // Actor's name
-    val nodosUnreach: Set[Member] = MainActors.cluster.state.unreachable // Lista de nodos en estado unreachable
-    val nodosUp: SortedSet[Member] = MainActors.cluster.state.members.filter(_.status == MemberStatus.up) // Lista de nodos en estado UP
-    val nodosBusqueda: SortedSet[Member] = nodosUp.filter(m => !nodosUnreach.contains(m)) // Lista de nodos que estan en estado UP y no son estan unreachable
+    val actorName = generarNombreSesionActor(message.token)
+    val nodosBusqueda: SortedSet[Member] = ClusterUtil.obtenerNodos
 
     context.actorOf(Props(new Actor {
 
       var numResp = 0
       var resp: Option[ActorRef] = None
 
-      nodosBusqueda.foreach { member =>
+      nodosBusqueda foreach { member =>
         this.context.actorSelection(RootActorPath(member.address) / "user" / "sesionActorSupervisor") ! GetSession(actorName)
       }
 
@@ -99,28 +109,29 @@ class SesionActorSupervisor extends Actor with ActorLogging {
 
   private def invalidarSesion(token: String): Unit = {
 
-    val actorName = MessageDigest.getInstance("MD5").digest(token.split("\\.")(2).getBytes).map { b => String.format("%02X", java.lang.Byte.valueOf(b))}.mkString("") // Actor's name
-    val nodosUnreach: Set[Member] = MainActors.cluster.state.unreachable // Lista de nodos en estado unreachable
-    val nodosUp: SortedSet[Member] = MainActors.cluster.state.members.filter(_.status == MemberStatus.up) // Lista de nodos en estado UP
-    val nodosBusqueda: SortedSet[Member] = nodosUp.filter(m => !nodosUnreach.contains(m)) // Lista de nodos que estan en estado UP y no son estan unreachable
+    val actorName = generarNombreSesionActor(token)
 
-    nodosBusqueda.foreach { member =>
+    ClusterUtil.obtenerNodos foreach { member =>
       context.actorSelection(RootActorPath(member.address) / "user" / "sesionActorSupervisor") ! DeleteSession(actorName)
     }
 
   }
 
-  private def crearSesion(token: String, expiration: Int) = {
-    val name = MessageDigest.getInstance("MD5").digest(token.split("\\.")(2).getBytes).map { b => String.format("%02X", java.lang.Byte.valueOf(b))}.mkString("")
-    context.actorOf(SesionActor.props(expiration), name)
+  private def crearSesion(token: String, expiration: Int, empresa: Option[Empresa]) = {
+    val name = generarNombreSesionActor(token)
+    context.actorOf(SesionActor.props(expiration, empresa), name)
     log.info("Creando sesion de usuario. Tiempo de expiracion: " + expiration + " minutos.")
   }
 
+  private def generarNombreSesionActor(token: String) =
+    MessageDigest.getInstance("MD5").digest(token.split("\\.")(2).getBytes).map { b => String.format("%02X", java.lang.Byte.valueOf(b))}.mkString("") // Actor's name
+
 }
 
-class SesionActor(expiracionSesion: Int) extends Actor with ActorLogging {
+class SesionActor(expiracionSesion: Int, empresa: Option[Empresa]) extends Actor with ActorLogging {
 
   implicit val _: ExecutionContext = context.dispatcher
+  implicit val timeout: Timeout = Timeout(120 seconds)
 
   // System scheduler instance
   private val scheduler: Scheduler = context.system.scheduler
@@ -130,6 +141,10 @@ class SesionActor(expiracionSesion: Int) extends Actor with ActorLogging {
 
   // PostStop function
   override def postStop(): Unit = killTask.cancel()
+
+  var empresaActor: Option[ActorRef] = None
+
+  inicializaEmpresaActor()
 
   // Receive function
   override def receive = {
@@ -142,16 +157,72 @@ class SesionActor(expiracionSesion: Int) extends Actor with ActorLogging {
     case msg: ExpirarSesion =>
       log.info("Eliminando sesión de usuario: " + self.path.name)
       context.stop(self)
+
+    case empresaActor: ActorRef =>
+      this.empresaActor = Some(empresaActor)
+      empresaActor ! AgregarSesion(self)
+
+  }
+
+  def inicializaEmpresaActor() = if(empresa.isDefined){
+    //TODO: Mejorar usando actor anónimo para entender mejor el código
+    val iteradorNodos = ClusterUtil.obtenerNodos.iterator
+    lazy val iteracion: () => Unit = () => {
+      if(iteradorNodos.hasNext && empresaActor.isEmpty)
+        context.actorSelection(RootActorPath(iteradorNodos.next.address) / "user" / "sesionActorSupervisor") ? ObtenerEmpresaActor(empresa.get.id) map {
+          case empresaActor: ActorRef => if(this.empresaActor.isEmpty) this.empresaActor = Some(empresaActor) else empresaActor ! AgregarSesion(self)
+          case _ => iteracion()
+        }
+      else if (!iteradorNodos.hasNext && empresaActor.isEmpty)
+        context.actorSelection(self.path.parent) ? CrearEmpresaActor(empresa.get) map {
+          case empresaActor: ActorRef =>
+            this.empresaActor = Some(empresaActor)
+            empresaActor ! AgregarSesion(self)
+          case _ =>
+        }
+    }
+    iteracion()
   }
 
 }
 
 object SesionActor {
 
-  def props(expirationTime: Int) = {
-    Props(new SesionActor(expirationTime))
+  def props(expirationTime: Int, empresa: Option[Empresa]) = {
+    Props(new SesionActor(expirationTime, empresa))
   }
 
+}
+
+class EmpresaActor(var empresa: Empresa) extends Actor with ActorLogging {
+
+  var sesionesActivas = List[ActorRef]()
+  var ips = List[String]()
+
+  def receive = {
+    case ActualizarEmpresa(empresa) => this.empresa = empresa
+    case AgregarSesion(sesion) =>
+      sesionesActivas = if(!sesionesActivas.contains(sesion)) List(sesion) ::: sesionesActivas else sesionesActivas //TODO: Optimizar
+    case AgregarIp(ip) => ips = if(!ips.contains(ip)) List(ip) ::: ips else ips //TODO: Optimizar
+    case RemoverIp(ip) => ips = if(ips.contains(ip)) ips filterNot{_==ip} else ips //TODO: Optimizar
+    case CerrarSesiones() => {
+      sesionesActivas foreach { _ ! ExpirarSesion }
+      context.stop(self)
+    }
+  }
+
+}
+
+object EmpresaActor {
+  def props(empresa: Empresa) = Props(new EmpresaActor(empresa))
+}
+
+object ClusterUtil {
+  def obtenerNodos = {
+    val nodosUnreach: Set[Member] = MainActors.cluster.state.unreachable // Lista de nodos en estado unreachable
+    val nodosUp: SortedSet[Member] = MainActors.cluster.state.members.filter(_.status == MemberStatus.up) // Lista de nodos en estado UP
+    nodosUp.filter(m => !nodosUnreach.contains(m)) // Lista de nodos que estan en estado UP y no son estan unreachable
+  }
 }
 
 case class GetSession(actorName: String)
@@ -161,3 +232,19 @@ case class SessionFound(session: ActorRef)
 case object SessionNotFound
 
 case class DeleteSession(actorName: String)
+
+case class ActualizarEmpresa(empresa: Empresa)
+
+case class OptenerEmpresa(empresaId: Int)
+
+case class AgregarSesion(sesion: ActorRef)
+
+case class AgregarIp(ip: String)
+
+case class RemoverIp(ip: String)
+
+case class CrearEmpresaActor(empresa: Empresa)
+
+case class ObtenerEmpresaActor(empresaId: Int)
+
+case class CerrarSesiones()

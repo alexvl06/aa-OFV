@@ -21,6 +21,7 @@ import scala.concurrent.{ExecutionContext, Future, promise}
 import scala.util.{Success, Failure}
 
 import spray.http.StatusCodes._
+import spray.routing.RequestContext
 import spray.routing.authentication.ContextAuthenticator
 import spray.routing.AuthenticationFailedRejection
 import spray.routing.AuthenticationFailedRejection.{CredentialsRejected, CredentialsMissing}
@@ -45,7 +46,7 @@ trait ServiceAuthorization {
         val p = promise[Any]
         var futuro: Future[Any] = null
         if (tipoCliente == TiposCliente.agenteEmpresarial.toString)
-          futuro = MainActors.autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialMessage(token.get.value, None)
+          futuro = MainActors.autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialMessage(token.get.value, None, obtenerIp(ctx).map{_.value})
         else if (tipoCliente == TiposCliente.clienteAdministrador.toString)
           futuro = MainActors.autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialAdminMessage(token.get.value, None)
         else
@@ -66,6 +67,11 @@ trait ServiceAuthorization {
             Left(AuthenticationFailedRejection(CredentialsRejected, List()))
         }
       }
+  }
+
+  private def obtenerIp(ctx: RequestContext) = ctx.request.headers.find {
+    header =>
+      header.name.equals("Remote-Address") || header.name.equals("X-Forwarded-For") || header.name.equals("X-Real-IP")//TODO: Mejorar este método
   }
 
 }
