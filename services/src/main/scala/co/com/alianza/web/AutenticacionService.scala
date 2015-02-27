@@ -15,10 +15,10 @@ class AutenticacionService extends Directives with AlianzaCommons with CrossHead
         entity(as[AutenticarMessage]) {
           autenticacion =>
             respondWithMediaType(mediaType) {
-              clientIP { ip =>
-                val nuevaAutenticacion = autenticacion.copy(clientIp = Some(ip.value))
+              //clientIP { ip =>
+                //val nuevaAutenticacion = autenticacion.copy(clientIp = Some(ip.value))
                 requestExecute(nuevaAutenticacion, autenticacionActor)
-              }
+              //}
             }
         }
       }
