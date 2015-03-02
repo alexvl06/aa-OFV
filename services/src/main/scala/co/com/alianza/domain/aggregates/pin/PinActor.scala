@@ -6,7 +6,7 @@ import akka.actor.{ActorRef, ActorLogging, Actor}
 
 import co.com.alianza.app.{MainActors, AlianzaActors}
 import co.com.alianza.domain.aggregates.usuarios.{ErrorPersistence, ErrorValidacion, ValidacionesUsuario}
-import co.com.alianza.exceptions.PersistenceException
+import co.com.alianza.exceptions.{BusinessLevel, PersistenceException}
 import co.com.alianza.infrastructure.anticorruption.pin.{DataAccessAdapter => pDataAccessAdapter}
 import co.com.alianza.infrastructure.anticorruption.ultimasContrasenas.{ DataAccessAdapter => DataAccessAdapterUltimaContrasena }
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => uDataAccessAdapter}
@@ -28,7 +28,7 @@ import scalaz.Validation
 
 import akka.actor.Props
 import akka.routing.RoundRobinPool
-import enumerations.{PerfilesUsuario, AppendPasswordUser}
+import enumerations.{EstadosUsuarioEnum, PerfilesUsuario, AppendPasswordUser}
 
 
 class PinActorSupervisor extends Actor with ActorLogging {
@@ -58,18 +58,32 @@ class PinActor extends Actor with ActorLogging with AlianzaActors with FutureRes
   import ValidacionesUsuario._
 
   def receive = {
-    case message: ValidarPin => validarPin(message.tokenHash)
+    case message: ValidarPin => validarPin(message.tokenHash, message.funcionalidad.get)
     case message: CambiarPw =>
       val currentSender = sender()
       cambiarPw(message.tokenHash, message.pw, currentSender)
   }
 
-  private def validarPin(tokenHash: String) = {
+  private def validarPin(tokenHash: String, funcionalidad:Int) = {
     val currentSender = sender()
     val result: Future[Validation[PersistenceException, Option[PinUsuario]]] = pDataAccessAdapter.obtenerPin(tokenHash)
-    resolveFutureValidation(result, PinUtil.validarPin, currentSender)
+    resolveOlvidoContrasenaFuture(result, funcionalidad, currentSender)
   }
 
+  private def resolveOlvidoContrasenaFuture(finalResultFuture: Future[Validation[PersistenceException, Option[PinUsuario]]], funcionalidad:Int, currentSender: ActorRef) = {
+    finalResultFuture onComplete {
+      case Failure(failure) => currentSender ! failure
+      case Success(value) =>
+        value match {
+          case zSuccess(response:  Option[PinUsuario]) => currentSender ! PinUtil.validarPin(response, funcionalidad)
+          case zFailure(error) =>
+            error match {
+              case errorPersistence: ErrorPersistence => currentSender ! errorPersistence.exception
+              case errorVal: ErrorValidacion => currentSender ! ResponseMessage(Conflict, errorVal.msg)
+            }
+        }
+    }
+  }
 
   private def cambiarPw(tokenHash: String, pw: String, currentSender: ActorRef) = {
 

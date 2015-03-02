@@ -10,7 +10,7 @@ import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.pinclienteadmin.{DataAccessAdapter => pDataAccessAdapter}
 import co.com.alianza.infrastructure.anticorruption.ultimasContrasenasClienteAdmin.{ DataAccessAdapter => DataAccessAdapterUltimaContrasena }
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => uDataAccessAdapter}
-import co.com.alianza.infrastructure.dto.PinUsuarioEmpresarialAdmin
+import co.com.alianza.infrastructure.dto.{PinUsuario, PinUsuarioEmpresarialAdmin}
 import co.com.alianza.infrastructure.messages.PinMessages._
 import co.com.alianza.infrastructure.messages.ResponseMessage
 import co.com.alianza.persistence.entities.UltimaContrasenaUsuarioEmpresarialAdmin
@@ -38,16 +38,32 @@ class PinUsuarioEmpresarialAdminActor extends Actor with ActorLogging with Alian
   import ValidacionesUsuario._
 
   def receive = {
-    case message: ValidarPin => validarPin(message.tokenHash)
+    case message: ValidarPin => validarPin(message.tokenHash, message.funcionalidad.get)
     case message: CambiarPw =>
       val currentSender = sender()
       cambiarPw(message.tokenHash, message.pw, currentSender)
   }
 
-  private def validarPin(tokenHash: String) = {
+  private def validarPin(tokenHash: String, funcionalidad:Int) = {
     val currentSender = sender()
     val result: Future[Validation[PersistenceException, Option[PinUsuarioEmpresarialAdmin]]] = pDataAccessAdapter.obtenerPin(tokenHash)
-    resolveFutureValidation(result, PinUtil.validarPinUsuarioEmpresarialAdmin, currentSender)
+    resolveOlvidoContrasenaFuture(result, funcionalidad, currentSender)
+  }
+
+
+  private def resolveOlvidoContrasenaFuture(finalResultFuture: Future[Validation[PersistenceException, Option[PinUsuarioEmpresarialAdmin]]], funcionalidad:Int, currentSender: ActorRef) = {
+    finalResultFuture onComplete {
+      case Failure(failure) => currentSender ! failure
+      case Success(value) =>
+        value match {
+          case zSuccess(response:  Option[PinUsuario]) => currentSender ! PinUtil.validarPinUsuarioEmpresarialAdmin(response, funcionalidad)
+          case zFailure(error) =>
+            error match {
+              case errorPersistence: ErrorPersistence => currentSender ! errorPersistence.exception
+              case errorVal: ErrorValidacion => currentSender ! ResponseMessage(Conflict, errorVal.msg)
+            }
+        }
+    }
   }
 
 
