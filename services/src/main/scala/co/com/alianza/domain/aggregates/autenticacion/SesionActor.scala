@@ -72,20 +72,16 @@ class SesionActorSupervisor extends Actor with ActorLogging {
   private def validarSesion(message: ValidarSesion): Unit = {
     val currentSender = sender()
     val actorName = generarNombreSesionActor(message.token)
-    MainActors.system.actorOf(Props(new BuscadorSesionActor)) ? BuscarSesionActor(actorName) onComplete {
-      case Success(Some(sesionActor: ActorRef)) =>
-        log info ("Encontró sesion: "+sesionActor.path)
-        /*sesionActor ? ActualizarSesion() onComplete { case _ =>*/ currentSender ! true /*}*/
-      case Success(algo) => log info ("Encontró sesion: "+algo)
-      case Failure(error) => log info ("No encontró sesion: "+error); currentSender ! false
-      case _ => log info "Ninguna ocurrencia"
+    context.actorOf(Props(new BuscadorSesionActor)) ? BuscarSesionActor(actorName) map {
+      case Some(sesionActor: ActorRef) => sesionActor ? ActualizarSesion() onComplete { case _ => currentSender ! true }
+      case None => currentSender ! false
     }
   }
 
   private def buscarSesion(token: String) = {
     val currentSender = sender()
     val actorName = generarNombreSesionActor(token)
-    MainActors.system.actorOf(Props(new BuscadorSesionActor)) ? BuscarSesionActor(actorName) map {
+    context.actorOf(Props(new BuscadorSesionActor)) ? BuscarSesionActor(actorName) map {
       case _ =>  currentSender ! _
     }
   }
@@ -111,7 +107,7 @@ class SesionActorSupervisor extends Actor with ActorLogging {
     val currentSender = sender()
     val actorName = generarNombreSesionActor(token)
     context.actorOf(Props(new BuscadorSesionActor)) ? BuscarSesionActor(actorName) map {
-      case Some(sesion: ActorRef) => sesion tell (OptenerEmpresaActor(), currentSender)
+      case Some(sesion: ActorRef) => sesion ! (OptenerEmpresaActor(), currentSender)
       case None => currentSender ! None
     }
   }
@@ -142,6 +138,7 @@ class SesionActor(expiracionSesion: Int, empresa: Option[Empresa]) extends Actor
       log.debug("Actualizando sesión de usuario: " + self.path.name)
       killTask.cancel()
       killTask = scheduler.scheduleOnce(expiracionSesion.minutes, self, ExpirarSesion())
+      sender ! true
 
     case msg: ExpirarSesion =>
       log.info("Eliminando sesión de usuario: " + self.path.name)
@@ -160,8 +157,9 @@ class SesionActor(expiracionSesion: Int, empresa: Option[Empresa]) extends Actor
     val iteradorNodos = ClusterUtil.obtenerNodos.iterator
     lazy val iteracion: () => Unit = () => {
       if(iteradorNodos.hasNext && empresaActor.isEmpty)
-        context.actorSelection(RootActorPath(iteradorNodos.next.address) / "user" / "sesionActorSupervisor") ? OptenerEmpresaActorPorId(empresa.get.id) map {
+        context.actorSelection(RootActorPath(iteradorNodos.next.address) / "user" / "sesionActorSupervisor") ? OptenerEmpresaActorPorId(empresa.get.id) onComplete {
           case empresaActor: ActorRef => if(this.empresaActor.isEmpty) this.empresaActor = Some(empresaActor) else empresaActor ! AgregarSesion(self)
+          case Failure(error) => log info ("Empresa no encontrada: "+error)
           case _ => iteracion()
         }
       else if (!iteradorNodos.hasNext && empresaActor.isEmpty)
@@ -169,6 +167,7 @@ class SesionActor(expiracionSesion: Int, empresa: Option[Empresa]) extends Actor
           case empresaActor: ActorRef =>
             this.empresaActor = Some(empresaActor)
             empresaActor ! AgregarSesion(self)
+          case Failure(error) => log info ("Empresa no encontrada: "+error)
           case _ =>
         }
     }
@@ -217,14 +216,16 @@ object ClusterUtil {
   }
 }
 
-class BuscadorSesionActor extends Actor with ActorLogging {
+class BuscadorSesionActor extends Actor {
 
   var numResp = 0
   var resp: Option[ActorRef] = None
   val nodosBusqueda: SortedSet[Member] = ClusterUtil.obtenerNodos
+  var interesado: ActorRef = null
 
   def receive: Receive = {
     case BuscarSesionActor(actorName) =>
+      interesado = sender;
       nodosBusqueda foreach { member =>
         this.context.actorSelection(RootActorPath(member.address) / "user" / "sesionActorSupervisor") ! GetSession(actorName)
       }
@@ -239,8 +240,7 @@ class BuscadorSesionActor extends Actor with ActorLogging {
 
   def replyIfReady() = {
     if(numResp == nodosBusqueda.size) {
-      log info ("+++++ Sesión:: "+resp.isDefined)
-      sender ! resp
+      interesado ! resp
       this.context.stop(self)
     }
   }
