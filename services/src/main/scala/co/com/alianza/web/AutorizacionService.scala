@@ -32,7 +32,7 @@ class AutorizacionService extends Directives with AlianzaCommons with CacheHelpe
                 val tipoCliente = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
 
                 if (tipoCliente == TiposCliente.agenteEmpresarial.toString)
-                  requestExecute(AutorizarUsuarioEmpresarialMessage(token, Some(url)), autorizacionUsuarioEmpresarialActor)
+                  requestExecute(AutorizarUsuarioEmpresarialMessage(token, Some(url), ""/*TODO: Obtener correctamente la ip*/), autorizacionUsuarioEmpresarialActor)
                 else if (tipoCliente == TiposCliente.clienteAdministrador.toString)
                   requestExecute(AutorizarUsuarioEmpresarialAdminMessage(token, Some(url)), autorizacionUsuarioEmpresarialActor)
                 else

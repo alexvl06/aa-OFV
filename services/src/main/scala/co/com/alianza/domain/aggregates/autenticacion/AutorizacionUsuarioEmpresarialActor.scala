@@ -1,6 +1,7 @@
 package co.com.alianza.domain.aggregates.autenticacion
 
 import akka.pattern.ask
+import akka.actor.ActorRef
 
 import co.com.alianza.util.token.Token
 import co.com.alianza.util.transformers.ValidationT
@@ -30,7 +31,7 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
       val currentSender = sender()
       val future = (for {
         usuarioOption <- ValidationT(validarToken(message))
-//        validacionIp <- ValidationT(validarIpEmpresa(message.ip))
+        validacionIp <- ValidationT(validarIpEmpresa(message.token, message.ip))
         result <- ValidationT(validarRecursoAgente(usuarioOption, message.url))
 //        result <- ValidationT(validarUsuario(usuarioOption))
       } yield {
@@ -93,8 +94,16 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
     }
   }
 
-  private def validarIpEmpresa(ip: String) = {
-    ask(MainActors.sesionActorSupervisor, ValidarIpEmpresa(ip)).mapTo[Boolean]
+  private def validarIpEmpresa(token: String, ip: String) = {
+    MainActors.sesionActorSupervisor ? OptenerEmpresaSesionActor(token) map {
+      case Some(empresaSesionActor: ActorRef) =>
+        Validation.success(None)
+//        empresaSesionActor ? ObtenerIps() map {
+//          case ips: List[String] if ips.contains(ip) =>
+//            Validation.success(true)
+//        }
+      case None => Validation.success(ResponseMessage(Unauthorized, "Error Validando Token"))
+    }
   }
 
   /**

@@ -53,64 +53,42 @@ class SesionActorSupervisor extends Actor with ActorLogging {
         case Failure(ex) =>
       }
 
-    case OptenerEmpresa(empresaId) =>
+    case OptenerEmpresaActorPorId(empresaId) =>
       val currentSender = sender
       context.actorSelection("akka://alianza-fid-auth-service/user/sesionActorSupervisor/empresa" + empresaId).resolveOne().onComplete {
         case Success(empresaActor) => currentSender ! empresaActor
         case Failure(ex) =>
       }
 
+    case BuscarSesion(token) => buscarSesion(token)
+
+    case OptenerEmpresaSesionActor(token) => obtenerEmpresaSesion(token)
+
     case CrearEmpresaActor(empresa) => sender ! context.actorOf(EmpresaActor.props(empresa), s"empresa${empresa.id}")
+
 
   }
 
   private def validarSesion(message: ValidarSesion): Unit = {
-
     val currentSender = sender()
     val actorName = generarNombreSesionActor(message.token)
-    val nodosBusqueda: SortedSet[Member] = ClusterUtil.obtenerNodos
+    context.actorOf(Props(new BuscadorSesionActor)) ? BuscarSesionActor(actorName) map {
+      case Some(sesionActor: ActorRef) =>
+        /*sesionActor ? ActualizarSesion() onComplete { case _ =>*/ currentSender ! true /*}*/
+      case None => currentSender ! false
+    }
+  }
 
-    context.actorOf(Props(new Actor {
-
-      var numResp = 0
-      var resp: Option[ActorRef] = None
-
-      nodosBusqueda foreach { member =>
-        this.context.actorSelection(RootActorPath(member.address) / "user" / "sesionActorSupervisor") ! GetSession(actorName)
-      }
-
-      def receive: Receive = {
-        case SessionFound(session) =>
-          numResp += 1
-          resp = Some(session)
-          session ! ActualizarSesion()
-          replyIfReady()
-        case _ =>
-          numResp += 1
-          replyIfReady()
-      }
-
-      def replyIfReady() = {
-        if(numResp == nodosBusqueda.size) {
-          resp match {
-            case Some(_) =>
-              currentSender ! true
-              this.context.stop(self)
-            case None =>
-              currentSender ! false
-              this.context.stop(self)
-          }
-        }
-      }
-
-    }))
-
+  private def buscarSesion(token: String) = {
+    val currentSender = sender()
+    val actorName = generarNombreSesionActor(token)
+    context.actorOf(Props(new BuscadorSesionActor)) ? BuscarSesionActor(actorName) map {
+      case _ =>  currentSender ! _
+    }
   }
 
   private def invalidarSesion(token: String): Unit = {
-
     val actorName = generarNombreSesionActor(token)
-
     ClusterUtil.obtenerNodos foreach { member =>
       context.actorSelection(RootActorPath(member.address) / "user" / "sesionActorSupervisor") ! DeleteSession(actorName)
     }
@@ -126,6 +104,14 @@ class SesionActorSupervisor extends Actor with ActorLogging {
   private def generarNombreSesionActor(token: String) =
     MessageDigest.getInstance("MD5").digest(token.split("\\.")(2).getBytes).map { b => String.format("%02X", java.lang.Byte.valueOf(b))}.mkString("") // Actor's name
 
+  private def obtenerEmpresaSesion(token: String) = {
+    val currentSender = sender()
+    val actorName = generarNombreSesionActor(token)
+    context.actorOf(Props(new BuscadorSesionActor)) ? BuscarSesionActor(actorName) map {
+      case Some(sesion: ActorRef) => sesion tell (OptenerEmpresaActor(), currentSender)
+      case None => currentSender ! None
+    }
+  }
 }
 
 class SesionActor(expiracionSesion: Int, empresa: Option[Empresa]) extends Actor with ActorLogging {
@@ -162,6 +148,8 @@ class SesionActor(expiracionSesion: Int, empresa: Option[Empresa]) extends Actor
       this.empresaActor = Some(empresaActor)
       empresaActor ! AgregarSesion(self)
 
+    case ObtenerEmpresaActor() => sender ! empresaActor
+
   }
 
   def inicializaEmpresaActor() = if(empresa.isDefined){
@@ -169,7 +157,7 @@ class SesionActor(expiracionSesion: Int, empresa: Option[Empresa]) extends Actor
     val iteradorNodos = ClusterUtil.obtenerNodos.iterator
     lazy val iteracion: () => Unit = () => {
       if(iteradorNodos.hasNext && empresaActor.isEmpty)
-        context.actorSelection(RootActorPath(iteradorNodos.next.address) / "user" / "sesionActorSupervisor") ? ObtenerEmpresaActor(empresa.get.id) map {
+        context.actorSelection(RootActorPath(iteradorNodos.next.address) / "user" / "sesionActorSupervisor") ? OptenerEmpresaActorPorId(empresa.get.id) map {
           case empresaActor: ActorRef => if(this.empresaActor.isEmpty) this.empresaActor = Some(empresaActor) else empresaActor ! AgregarSesion(self)
           case _ => iteracion()
         }
@@ -209,6 +197,7 @@ class EmpresaActor(var empresa: Empresa) extends Actor with ActorLogging {
       sesionesActivas foreach { _ ! ExpirarSesion }
       context.stop(self)
     }
+    case ObtenerIps() => sender ! ips
   }
 
 }
@@ -225,7 +214,39 @@ object ClusterUtil {
   }
 }
 
+class BuscadorSesionActor extends Actor with ActorLogging{
+
+  var numResp = 0
+  var resp: Option[ActorRef] = None
+  val nodosBusqueda: SortedSet[Member] = ClusterUtil.obtenerNodos
+
+  def receive: Receive = {
+    case BuscarSesionActor(actorName) =>
+      nodosBusqueda foreach { member =>
+        this.context.actorSelection(RootActorPath(member.address) / "user" / "sesionActorSupervisor") ! GetSession(actorName)
+      }
+    case SessionFound(session) =>
+      numResp += 1
+      resp = Some(session)
+      replyIfReady()
+    case _ =>
+      numResp += 1
+      replyIfReady()
+  }
+
+  def replyIfReady() = {
+    if(numResp == nodosBusqueda.size) {
+      log info("Termino la busqueda de la sesión: "+resp.get.path)
+      sender ! resp
+      this.context.stop(self)
+    }
+  }
+
+}
+
 case class GetSession(actorName: String)
+
+case class BuscarSesionActor(actorName: String)
 
 case class SessionFound(session: ActorRef)
 
@@ -235,7 +256,7 @@ case class DeleteSession(actorName: String)
 
 case class ActualizarEmpresa(empresa: Empresa)
 
-case class OptenerEmpresa(empresaId: Int)
+case class OptenerEmpresaActor()
 
 case class AgregarSesion(sesion: ActorRef)
 
@@ -243,8 +264,10 @@ case class AgregarIp(ip: String)
 
 case class RemoverIp(ip: String)
 
+case class ObtenerIps()
+
 case class CrearEmpresaActor(empresa: Empresa)
 
-case class ObtenerEmpresaActor(empresaId: Int)
+case class ObtenerEmpresaActor()
 
 case class CerrarSesiones()

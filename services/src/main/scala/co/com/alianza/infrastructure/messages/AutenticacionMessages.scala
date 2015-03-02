@@ -86,8 +86,12 @@ case class InvalidarSesion(token: String)
 
 case class ExpirarSesion()
 
+case class BuscarSesion(token: String)
+
+case class OptenerEmpresaSesionActor(token: String)
+
 case class ValidarSesion(token: String)
 
-case class ValidarIpEmpresa(ip: String)
+case class OptenerEmpresaActorPorId(empresaId: Int)
 
 
