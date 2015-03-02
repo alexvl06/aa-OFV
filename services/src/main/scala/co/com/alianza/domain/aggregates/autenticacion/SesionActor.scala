@@ -72,17 +72,20 @@ class SesionActorSupervisor extends Actor with ActorLogging {
   private def validarSesion(message: ValidarSesion): Unit = {
     val currentSender = sender()
     val actorName = generarNombreSesionActor(message.token)
-    context.actorOf(Props(new BuscadorSesionActor)) ? BuscarSesionActor(actorName) map {
-      case Some(sesionActor: ActorRef) =>
+    MainActors.system.actorOf(Props(new BuscadorSesionActor)) ? BuscarSesionActor(actorName) onComplete {
+      case Success(Some(sesionActor: ActorRef)) =>
+        log info ("Encontró sesion: "+sesionActor.path)
         /*sesionActor ? ActualizarSesion() onComplete { case _ =>*/ currentSender ! true /*}*/
-      case None => currentSender ! false
+      case Success(algo) => log info ("Encontró sesion: "+algo)
+      case Failure(error) => log info ("No encontró sesion: "+error); currentSender ! false
+      case _ => log info "Ninguna ocurrencia"
     }
   }
 
   private def buscarSesion(token: String) = {
     val currentSender = sender()
     val actorName = generarNombreSesionActor(token)
-    context.actorOf(Props(new BuscadorSesionActor)) ? BuscarSesionActor(actorName) map {
+    MainActors.system.actorOf(Props(new BuscadorSesionActor)) ? BuscarSesionActor(actorName) map {
       case _ =>  currentSender ! _
     }
   }
@@ -214,7 +217,7 @@ object ClusterUtil {
   }
 }
 
-class BuscadorSesionActor extends Actor with ActorLogging{
+class BuscadorSesionActor extends Actor with ActorLogging {
 
   var numResp = 0
   var resp: Option[ActorRef] = None
@@ -236,7 +239,7 @@ class BuscadorSesionActor extends Actor with ActorLogging{
 
   def replyIfReady() = {
     if(numResp == nodosBusqueda.size) {
-      log info("Termino la busqueda de la sesión: "+resp.get.path)
+      log info ("+++++ Sesión:: "+resp.isDefined)
       sender ! resp
       this.context.stop(self)
     }
