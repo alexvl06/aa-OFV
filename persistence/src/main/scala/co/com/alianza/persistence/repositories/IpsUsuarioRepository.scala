@@ -28,10 +28,7 @@ class IpsUsuarioRepository ( implicit executionContext: ExecutionContext) extend
   }
 
   private def obtenerIpsUsuarioTry(implicit session: Session): Try[Vector[IpsUsuario]] = Try {
-    val result: Vector[IpsUsuario] = {
-      ipsUsuario.list.toVector
-    }
-    result
+    ipsUsuario.list.toVector
   }
 
   def obtenerIpsUsuario(idUsuario : Int): Future[Validation[PersistenceException, Vector[IpsUsuario]]] = loan {
