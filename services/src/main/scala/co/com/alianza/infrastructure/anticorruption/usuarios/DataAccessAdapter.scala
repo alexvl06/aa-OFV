@@ -14,6 +14,7 @@ import co.com.alianza.infrastructure.dto._
 import co.com.alianza.persistence.entities.{Usuario => eUsuario, PinUsuario => ePinUsuario, UsuarioEmpresarial => eUsuarioEmpresarial, UsuarioEmpresarialAdmin => eUsuarioEmpresarialAdmin, Empresa, IpsEmpresa, PerfilUsuario, IpsUsuario}
 import co.com.alianza.persistence.messages.AutenticacionRequest
 import enumerations.EstadosUsuarioEnum
+import co.com.alianza.persistence.entities
 
 object DataAccessAdapter {
 
@@ -241,6 +242,12 @@ object DataAccessAdapter {
     val repo = new UsuariosRepository()
     repo.guardarPinUsuario(pinUsuario)
   }
+
+  def crearUsuarioClienteAdministradorPin(pinUsuario:entities.PinUsuarioEmpresarialAdmin): Future[Validation[PersistenceException, Int]] = {
+    val repo = new UsuarioEmpresarialAdminRepository()
+    repo.guardarPinUsuarioClienteAdmin(pinUsuario)
+  }
+
 
   private def transformValidationList(origin: Validation[PersistenceException, List[eUsuario]]): Validation[PersistenceException, List[Usuario]] = {
     origin match {
