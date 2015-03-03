@@ -195,13 +195,8 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
                               valueResponseUsuarioEmpresarial.estado == EstadosEmpresaEnum.pendienteActivacion.id ||
                               valueResponseUsuarioEmpresarial.estado == EstadosEmpresaEnum.pendienteReiniciarContrasena.id  ) {
 
-                              val actualizarContrasenaFuture = (for {
-                                idUsuario <- ValidationT(cambiarEstadoUsuarioEmpresarial(valueResponseUsuarioEmpresarial.id,EstadosEmpresaEnum.pendienteReiniciarContrasena))
-                              } yield {
-                                idUsuario
-                              }).run
-
-                              enviarCorreoOlvidoContrasena(actualizarContrasenaFuture, responseCliente.wcli_dir_correo, currentSender, message, Some(valueResponseUsuarioEmpresarial.id))
+                              //Se cambia a estado reinicio de contraseña cuando el cliente hace click en el enlace del correo
+                              enviarCorreoOlvidoContrasena(responseCliente.wcli_dir_correo, currentSender, message, Some(valueResponseUsuarioEmpresarial.id))
                             }
 /*                            else if( valueResponseUsuarioEmpresarial.estado == EstadosEmpresaEnum.nuevoEstado.id )
                               currentSender ! ResponseMessage(Conflict,errorEstadoReinicioContrasena)*/
@@ -214,13 +209,13 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
                             //El olvido de contrasena queda para usuarios en estado bloqueado por contrasena y activos
                             if( valueResponse.estado == EstadosUsuarioEnum.activo.id || valueResponse.estado == EstadosUsuarioEnum.bloqueContraseña.id  ) {
 
-                              val actualizarContrasenaFuture = (for {
+                              /*val actualizarContrasenaFuture = (for {
                                 idUsuario <- ValidationT(cambiarEstadoUsuario(message.identificacion, EstadosUsuarioEnum.pendienteReinicio))
                               } yield {
                                 idUsuario
-                              }).run
+                              }).run*/
 
-                              enviarCorreoOlvidoContrasena(actualizarContrasenaFuture, responseCliente.wcli_dir_correo, currentSender, message, valueResponse.id)
+                              enviarCorreoOlvidoContrasena(responseCliente.wcli_dir_correo, currentSender, message, valueResponse.id)
                             }
                             else if( valueResponse.estado == EstadosUsuarioEnum.pendienteReinicio.id )
                               currentSender ! ResponseMessage(Conflict,errorEstadoReinicioContrasena)
@@ -265,14 +260,10 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
     )
   }
 
-  private def enviarCorreoOlvidoContrasena( actualizarContrasenaFuture: Future[Validation[ErrorValidacion, Int]], correoCliente:String,  currentSender: ActorRef, message: OlvidoContrasenaMessage, idUsuario:Option[Int] ) = {
+  //actualizarContrasenaFuture: Future[Validation[ErrorValidacion, Int]]
+  private def enviarCorreoOlvidoContrasena( correoCliente:String,  currentSender: ActorRef, message: OlvidoContrasenaMessage, idUsuario:Option[Int] ) = {
 
-    actualizarContrasenaFuture onComplete {
-      case sFailure(failure) => currentSender ! failure
-      case sSuccess(value) =>
-        value match {
-          case zSuccess(response: Int) =>
-            if (response == 1) {
+
 
               val validacionConsulta = validacionConsultaTiempoExpiracion()
 
@@ -325,16 +316,6 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
                       }
                   }
               }
-            }
-          case zFailure(error) =>
-            error match {
-              case errorPersistence: ErrorPersistence => currentSender ! errorPersistence.exception
-              case errorVal: ErrorValidacion =>
-                currentSender ! ResponseMessage(Conflict, errorVal.msg)
-            }
-        }
-    }
-
   }
 
   private def obtenerCuestionario(sender:ActorRef, message:UsuarioMessage) = {
@@ -454,12 +435,12 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
   private def buildMessage(pinUsuario: Any, numHorasCaducidad: Int, message: UsuarioMessage, templateBody: String, asuntoTemp: String) = {
     val body: String = pinUsuario match {
       case pinUsuarioDto @ PinUsuario(param1, param2, param3, param4, param5) =>
-        new MailMessageUsuario(templateBody).getMessagePin(pinUsuarioDto, numHorasCaducidad, "1")
+        new MailMessageUsuario(templateBody).getMessagePin(pinUsuarioDto, numHorasCaducidad, "1", "1")
       case pinUsuarioEmpresarialAdminDto @ PinUsuarioEmpresarialAdmin(param1, param2, param3, param4, param5) =>
-        new MailMessageUsuario(templateBody).getMessagePin(pinUsuarioEmpresarialAdminDto, numHorasCaducidad, "2")
+        new MailMessageUsuario(templateBody).getMessagePin(pinUsuarioEmpresarialAdminDto, numHorasCaducidad, "2", "1")
     }
     val asunto: String = config.getString(asuntoTemp)
-    MailMessage(config.getString("alianza.smtp.from"), "josegarcia@seven4n.com",  List() , asunto, body, "")
+    MailMessage(config.getString("alianza.smtp.from"), "luisaceleita@seven4n.com",  List() , asunto, body, "")
     //MailMessage(config.getString("alianza.smtp.from"), "josegarcia@seven4n.com", List(), asunto, body, "")
     //MailMessage(config.getString("alianza.smtp.from"), message.correo, List(), asunto, body, "")
   }

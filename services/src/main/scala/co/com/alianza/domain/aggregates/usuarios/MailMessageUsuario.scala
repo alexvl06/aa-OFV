@@ -9,13 +9,13 @@ import co.com.alianza.mail.MailTemplate
  * @author smontanez
  */
 class MailMessageUsuario(templateBody: String) extends MailTemplate {
-  def getMessagePin(datos: PinUsuario, numHorasCaducidad: Int, ut: String)(implicit config: Config): String = {
+  def getMessagePin(datos: PinUsuario, numHorasCaducidad: Int, ut: String, funcionalidad:String)(implicit config: Config): String = {
     val medida = if (numHorasCaducidad > 1) "horas" else "hora"
-    engine.layout(config.getString(templateBody), Map("pin" -> datos.tokenHash, "numHorasCaducidad" -> numHorasCaducidad, "medida" -> medida, "ut" -> ut))
+    engine.layout(config.getString(templateBody), Map("pin" -> datos.tokenHash, "numHorasCaducidad" -> numHorasCaducidad, "medida" -> medida, "ut" -> ut, "ft" -> funcionalidad))
   }
-  def getMessagePin(datos: PinUsuarioEmpresarialAdmin, numHorasCaducidad: Int, ut: String)(implicit config: Config): String = {
+  def getMessagePin(datos: PinUsuarioEmpresarialAdmin, numHorasCaducidad: Int, ut: String, funcionalidad:String)(implicit config: Config): String = {
     val medida = if (numHorasCaducidad > 1) "horas" else "hora"
-    engine.layout(config.getString(templateBody), Map("pin" -> datos.tokenHash, "numHorasCaducidad" -> numHorasCaducidad, "medida" -> medida, "ut" -> ut))
+    engine.layout(config.getString(templateBody), Map("pin" -> datos.tokenHash, "numHorasCaducidad" -> numHorasCaducidad, "medida" -> medida, "ut" -> ut, "ft" -> funcionalidad))
   }
 }
 

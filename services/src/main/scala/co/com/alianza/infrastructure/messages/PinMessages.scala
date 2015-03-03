@@ -5,7 +5,7 @@ import spray.json.DefaultJsonProtocol
 
 object PinMessages {
 
-  case class ValidarPin(tokenHash: String) extends MessageService
+  case class ValidarPin(tokenHash: String, funcionalidad: Option[Int]) extends MessageService
   case class CambiarPw(tokenHash: String, pw: String) extends MessageService
   case class UserPw(pw: String)
 

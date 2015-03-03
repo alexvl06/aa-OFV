@@ -6,7 +6,7 @@ import java.util.Date
 import co.com.alianza.app.MainActors
 import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.domain.aggregates.usuarios.{ErrorPersistence, ErrorValidacion, ErrorPin}
-import co.com.alianza.exceptions.PersistenceException
+import co.com.alianza.exceptions.{BusinessLevel, PersistenceException}
 import co.com.alianza.infrastructure.anticorruption.configuraciones.{DataAccessTranslator => dataAccessTransConf, DataAccessAdapter => dataAccesAdaptarConf}
 import co.com.alianza.infrastructure.dto.{PinUsuarioAgenteEmpresarial, Configuracion, PinUsuario, PinUsuarioEmpresarialAdmin}
 import co.com.alianza.infrastructure.messages.{ErrorMessage, ResponseMessage}
@@ -17,6 +17,9 @@ import scala.util.{Success, Failure}
 import scalaz.{Failure => zFailure, Success => zSuccess}
 import scala.concurrent.{ExecutionContext, Future}
 import scalaz.Validation
+import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
+import enumerations.{EstadosEmpresaEnum, EstadosUsuarioEnum}
+import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => uDataAccessAdapter}
 
 object PinUtil {
 
@@ -32,14 +35,21 @@ object PinUtil {
     hexString.toString
   }
 
-  def validarPin(response: Option[PinUsuario]) = {
+  def validarPin(response: Option[PinUsuario], funcionalidad:Int ) = {
    response match {
       case Some(valueResponse) =>
         val pinHash = deserializarPin(valueResponse.token, valueResponse.fechaExpiracion)
         if (pinHash == valueResponse.tokenHash) {
           val fecha = new Date()
-          if (fecha.getTime < valueResponse.fechaExpiracion.getTime)
+          if (fecha.getTime < valueResponse.fechaExpiracion.getTime){
+            //Se comprueba que la funcionalidad desde donde se genero el PIN es Olvido de Contrasena, para actualizar el estado del
+            //Usuario
+            val futureConsultaUsuarios: Future[Validation[PersistenceException, Int]] = funcionalidad match {
+              case 1 =>  uDataAccessAdapter.actualizarEstadoUsuario(valueResponse.idUsuario, EstadosUsuarioEnum.pendienteReinicio.id)
+              case _ => Future.successful(Validation.failure(PersistenceException(new Exception, BusinessLevel, "La funcionalidad no permite cambio de estado del usuario al que pertenece el PIN")))
+            }
             ResponseMessage(OK)
+          }
           else
             ResponseMessage(Conflict, errorPinNoEncontrado)
         }
@@ -50,14 +60,19 @@ object PinUtil {
     }
   }
 
-  def validarPinUsuarioEmpresarialAdmin(response: Option[PinUsuarioEmpresarialAdmin]) = {
+  def validarPinUsuarioEmpresarialAdmin(response: Option[PinUsuarioEmpresarialAdmin], funcionalidad:Int) = {
     response match {
       case Some(valueResponse) =>
         val pinHash = deserializarPin(valueResponse.token, valueResponse.fechaExpiracion)
         if (pinHash == valueResponse.tokenHash) {
           val fecha = new Date()
-          if (fecha.getTime < valueResponse.fechaExpiracion.getTime)
+          if (fecha.getTime < valueResponse.fechaExpiracion.getTime){
+            val futureConsultaUsuarios: Future[Validation[PersistenceException, Int]] = funcionalidad match {
+              case 1 =>  uDataAccessAdapter.actualizarEstadoUsuarioEmpresarialAdmin(valueResponse.idUsuario, EstadosEmpresaEnum.pendienteReiniciarContrasena.id)
+              case _ => Future.successful(Validation.failure(PersistenceException(new Exception, BusinessLevel, "La funcionalidad no permite cambio de estado del usuario al que pertenece el PIN")))
+            }
             ResponseMessage(OK)
+          }
           else
             ResponseMessage(Conflict, errorPinNoEncontradoClienteAdmin)
         }
