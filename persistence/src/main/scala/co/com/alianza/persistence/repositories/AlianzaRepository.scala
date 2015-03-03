@@ -7,10 +7,8 @@ import scala.util.{Failure, Success, Try}
 import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
 import co.com.alianza.exceptions.{LevelException, TimeoutLevel, TechnicalLevel, PersistenceException}
 import co.com.alianza.persistence.conn.DataBaseAccessAlianza
-
 import scala.slick.jdbc.JdbcBackend.Database
 import scala.slick.jdbc.JdbcBackend.Session
-import java.sql.SQLException
 import com.mchange.v2.resourcepool.TimeoutException
 
 /**
