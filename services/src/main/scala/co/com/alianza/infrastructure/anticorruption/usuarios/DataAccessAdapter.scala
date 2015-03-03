@@ -61,7 +61,6 @@ object DataAccessAdapter {
   }
 
   def obtenerIdEmpresa(idUsuario: Int, tipoCliente: TiposCliente): Future[Validation[PersistenceException, Int]] = {
-    //new EmpresaRepository().obtenerEmpresa(nit)
     tipoCliente match{
       case TiposCliente.agenteEmpresarial => new EmpresaUsuarioRepository().obtenerIdEmpresa(idUsuario)
       case TiposCliente.clienteAdministrador => new EmpresaUsuarioAdminRepository().obtenerIdEmpresa(idUsuario)
@@ -178,7 +177,7 @@ object DataAccessAdapter {
     new HorarioEmpresaRepository().obtenerHorarioEmpresa(idEmpresa)
   }
 
-  def agregarHorarioEmpresa(horarioEmpresa: HorarioEmpresa): Future[Validation[PersistenceException, Int]] ={
+  def agregarHorarioEmpresa(horarioEmpresa: HorarioEmpresa): Future[Validation[PersistenceException, Boolean]] ={
     new HorarioEmpresaRepository().agregarHorarioEmpresa(horarioEmpresa)
   }
 

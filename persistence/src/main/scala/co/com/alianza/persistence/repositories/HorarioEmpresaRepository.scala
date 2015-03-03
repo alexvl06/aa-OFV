@@ -27,9 +27,16 @@ class HorarioEmpresaRepository ( implicit executionContext: ExecutionContext) ex
     horarioEmpresa.filter(x => x.idEmpresa === idEmpresa).list.headOption
   }
 
-  def agregarHorarioEmpresa(horario: HorarioEmpresa): Future[Validation[PersistenceException, Int]] = loan {
+  def agregarHorarioEmpresa(horario: HorarioEmpresa): Future[Validation[PersistenceException, Boolean]] = loan {
     implicit session =>
-      val resultTry = Try{ (horarioEmpresa  returning horarioEmpresa.map( _.idEmpresa)) += horario }
+      val resultTry = Try{
+        val query = horarioEmpresa.filter(_.idEmpresa === horario.idEmpresa)
+        val result = {
+          if (query.exists.run) query.update(horario)
+          else (horarioEmpresa  returning horarioEmpresa.map( _.idEmpresa)) += horario
+        }
+        result > 0
+      }
       resolveTry(resultTry, "Agregar Horario Empresa")
   }
 

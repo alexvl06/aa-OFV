@@ -25,8 +25,7 @@ class HorarioEmpresaActorSupervisor extends Actor with ActorLogging {
   val horarioEmpresaActor = context.actorOf(Props[HorarioEmpresaActor].withRouter(RoundRobinPool(nrOfInstances = 2)), "horarioEmpresaActor")
 
   def receive = {
-    case message: Any =>
-      horarioEmpresaActor forward message
+    case message: Any =>horarioEmpresaActor forward message
   }
 
   override val supervisorStrategy = OneForOneStrategy() {
@@ -53,6 +52,7 @@ class HorarioEmpresaActor extends Actor with ActorLogging with AlianzaActors {
   }
 
   def obtenerHorarioEmpresa(message: ObtenerHorarioEmpresaMessage) = {
+    val currentSender = sender()
     val result = {
       (for {
         idEmpresa <- ValidationT(DataAccessAdapter.obtenerIdEmpresa(message.idUsuario, message.tipoCliente))
@@ -61,39 +61,39 @@ class HorarioEmpresaActor extends Actor with ActorLogging with AlianzaActors {
     }
     result onComplete {
       case Failure(failure)  =>
-        sender() ! failure
+        currentSender ! failure
       case Success(value)    =>
         value match {
           case zSuccess(response: Option[HorarioEmpresa]) =>
-            sender() !  ResponseMessage(OK, response.toJson)
+            currentSender !  ResponseMessage(OK, response.toJson)
           case zFailure(error)   =>
-            sender() !  error
+            currentSender !  error
         }
     }
   }
 
-  implicit def toTime(hora: String) : Time = Time.valueOf(hora)
-
-  implicit def toEntity(message: AgregarHorarioEmpresaMessage): HorarioEmpresa ={
-    new HorarioEmpresa(0, message.diaHabil, message.sabado, message.horaInicio, message.horaFin)
+  def toEntity(message: AgregarHorarioEmpresaMessage, idEmpresa: Int): HorarioEmpresa ={
+    implicit def toTime(hora: String) : Time = Time.valueOf(hora)
+    new HorarioEmpresa(idEmpresa, message.diaHabil, message.sabado, message.horaInicio, message.horaFin)
   }
 
   def agregarHorarioEmpresa(message: AgregarHorarioEmpresaMessage) = {
+    val currentSender = sender()
     val result = {
       (for {
         idEmpresa <- ValidationT(DataAccessAdapter.obtenerIdEmpresa(message.idUsuario.get, message.tipoCliente))
-        horarioEmpresa <- ValidationT(DataAccessAdapter.agregarHorarioEmpresa(message))
+        horarioEmpresa <- ValidationT(DataAccessAdapter.agregarHorarioEmpresa(toEntity(message, idEmpresa)))
       } yield (horarioEmpresa)).run
     }
     result onComplete {
       case Failure(failure)  =>
-        sender() ! failure
+        currentSender ! failure
       case Success(value)    =>
         value match {
-          case zSuccess(response: Int) =>
-            sender() !  ResponseMessage(OK, response.toJson)
+          case zSuccess(response: Boolean) =>
+            currentSender !  ResponseMessage(OK, response.toJson)
           case zFailure(error)   =>
-            sender() !  error
+            currentSender !  error
         }
     }
   }

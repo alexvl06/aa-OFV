@@ -53,7 +53,9 @@ trait CoreActors { this: Core =>
   val contrasenasActorSupervisor = system.actorOf( Props[ ContrasenasActorSupervisor ], "contrasenasActorSupervisor" )
   val contrasenasAgenteEmpresarialActorSupervisor = system.actorOf( Props[ ContrasenasAgenteEmpresarialActorSupervisor ], "contrasenasAgenteEmpresarialActorSupervisor" )
   val contrasenasClienteAdminActorSupervisor = system.actorOf( Props[ ContrasenasClienteAdminActorSupervisor ], "contrasenasClienteAdminActorSupervisor" )
+
   val ipsUsuarioActorSupervisor  = system.actorOf( Props[ IpsUsuarioActorSupervisor ], "ipsUsuarioActorSupervisor" )
+
   val horarioEmpresaActorSupervisor  = system.actorOf( Props[ HorarioEmpresaActorSupervisor ], "horarioEmpresaActorSupervisor" )
   val pinActorSupervisor = system.actorOf( Props[ PinActorSupervisor ], "PinActorSupervisor" )
   val sesionActorSupervisor = system.actorOf( Props[ SesionActorSupervisor ], "sesionActorSupervisor" )
