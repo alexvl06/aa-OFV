@@ -4,21 +4,22 @@ import akka.actor.{ActorLogging, Actor, ActorRef}
 import akka.actor.Props
 import akka.actor.SupervisorStrategy._
 import akka.actor.OneForOneStrategy
-import akka.routing.RoundRobinPool
 import akka.util.Timeout
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scalaz.Validation
 import spray.http.StatusCodes._
 import scalaz.std.AllInstances._
-
-import co.com.alianza.app.MainActors
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.infrastructure.dto._
 import co.com.alianza.util.FutureResponse
 import co.com.alianza.util.transformers.ValidationT
 import co.com.alianza.infrastructure.anticorruption.permisos.{PermisoTransaccionalDataAccessAdapter => DataAccessAdapter}
 import co.com.alianza.util.json.MarshallableImplicits._
+import scalaz.{Success => zSuccess, Failure => zFailure}
+import co.com.alianza.util.json.JsonUtil
+import co.com.alianza.commons.enumerations.TiposCliente
+
 /**
  * Created by manuel on 8/01/15.
  */
@@ -83,6 +84,16 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
       resolveFutureValidation(DataAccessAdapter consultaPermisosAgente idAgente,
         (x: (List[co.com.alianza.infrastructure.dto.Permiso], List[co.com.alianza.infrastructure.dto.EncargoPermisos])) => PermisosRespuesta(x._1, x._2).toJson,
         currentSender)
+
+    case ConsultarPermisosAgenteLoginMessage(agente) =>
+      val currentSender = sender
+      if(agente.tipoCliente == TiposCliente.agenteEmpresarial){
+        println("Llego aca SIIII")
+        val permisosFuture = DataAccessAdapter.consultaPermisosAgenteLogin(agente.id)
+        resolveFutureValidation(permisosFuture,(listaPermisos: List[Int]) => PermisosLoginRespuesta(listaPermisos.contains(2), listaPermisos.contains(4), listaPermisos.contains(3), listaPermisos.contains(1)).toJson,currentSender)
+      }else {
+        currentSender ! JsonUtil.toJson(PermisosLoginRespuesta(true,true,true,true))
+      }
 
   }
 
