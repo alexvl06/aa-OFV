@@ -127,7 +127,7 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
       //Se obtiene el usuario dado el perfil que llegue de presentacion, en caso de perfil no correcto se devuelve excepcion
       val futureConsultaUsuarios: Future[Validation[PersistenceException, Option[Any]]] = message.perfilCliente match {
         case 1 => co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerUsuarioNumeroIdentificacion(message.identificacion)
-        case 2 => co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtieneUsuarioEmpresarialAdminPorNitYUsuario(message.identificacion, message.usuarioClienteAdmin)
+        case 2 => co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtieneUsuarioEmpresarialAdminPorNitYUsuario(message.identificacion, message.usuarioClienteAdmin.get)
         case _ => Future.successful(Validation.failure(PersistenceException(new Exception, BusinessLevel, "El perfil del usuario no es soportado por la aplicacion")))
       }
 
