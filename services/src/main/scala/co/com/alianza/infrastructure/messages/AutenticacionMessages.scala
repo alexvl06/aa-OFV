@@ -88,7 +88,7 @@ case class ExpirarSesion()
 
 case class BuscarSesion(token: String)
 
-case class OptenerEmpresaSesionActor(token: String)
+case class ObtenerEmpresaSesionActor(token: String)
 
 case class ValidarSesion(token: String)
 

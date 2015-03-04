@@ -6,8 +6,8 @@ import akka.actor._
 import akka.pattern.ask
 import akka.cluster.{Member, MemberStatus}
 import akka.util.Timeout
-import co.com.alianza.app.MainActors
 
+import co.com.alianza.app.MainActors
 import co.com.alianza.infrastructure.dto.Empresa
 import co.com.alianza.infrastructure.messages._
 
@@ -19,7 +19,7 @@ import scala.util.{Failure, Success}
 class SesionActorSupervisor extends Actor with ActorLogging {
 
   implicit val _: ExecutionContext = context.dispatcher
-  implicit val timeout: Timeout = 10.seconds
+  implicit val timeout: Timeout = 10 seconds
 
   def receive = {
 
@@ -53,16 +53,16 @@ class SesionActorSupervisor extends Actor with ActorLogging {
         case Failure(ex) =>
       }
 
-    case OptenerEmpresaActorPorId(empresaId) =>
+    case EncontrarActor(actorName) =>
       val currentSender = sender
-      context.actorSelection("akka://alianza-fid-auth-service/user/sesionActorSupervisor/empresa" + empresaId).resolveOne().onComplete {
-        case Success(empresaActor) => currentSender ! empresaActor
-        case Failure(ex) =>
+      context.actorSelection("akka://alianza-fid-auth-service/user/sesionActorSupervisor/" + actorName).resolveOne().onComplete {
+        case Success(actor) => currentSender ! ActorEncontrado(actor)
+        case Failure(ex) => currentSender ! ActorNoEncontrado()
       }
 
     case BuscarSesion(token) => buscarSesion(token)
 
-    case OptenerEmpresaSesionActor(token) => obtenerEmpresaSesion(token)
+    case ObtenerEmpresaSesionActor(token) => obtenerEmpresaSesion(token)
 
     case CrearEmpresaActor(empresa) => sender ! context.actorOf(EmpresaActor.props(empresa), s"empresa${empresa.id}")
 
@@ -107,8 +107,8 @@ class SesionActorSupervisor extends Actor with ActorLogging {
     val currentSender = sender()
     val actorName = generarNombreSesionActor(token)
     context.actorOf(Props(new BuscadorSesionActor)) ? BuscarSesionActor(actorName) map {
-      case Some(sesion: ActorRef) => sesion ! (OptenerEmpresaActor(), currentSender)
-      case None => currentSender ! None
+      case Some(sesion: ActorRef) => log info "Encuentra la sesión a consultar!!"; sesion tell (ObtenerEmpresaActor(), currentSender)
+      case None => log info "No se encuentra la sesión a consultar!!"; currentSender ! None
     }
   }
 }
@@ -144,34 +144,23 @@ class SesionActor(expiracionSesion: Int, empresa: Option[Empresa]) extends Actor
       log.info("Eliminando sesión de usuario: " + self.path.name)
       context.stop(self)
 
-    case empresaActor: ActorRef =>
-      this.empresaActor = Some(empresaActor)
-      empresaActor ! AgregarSesion(self)
+    case o: Option[ActorRef] if o.isDefined =>
+      this.empresaActor = o
+      empresaActor.get ! AgregarSesion(self)
 
-    case ObtenerEmpresaActor() => sender ! empresaActor
+    case ObtenerEmpresaActor() => log info "+++Entrega empresa actor"; sender ! empresaActor
 
   }
 
-  def inicializaEmpresaActor() = if(empresa.isDefined){
-    //TODO: Mejorar usando actor anónimo para entender mejor el código
-    val iteradorNodos = ClusterUtil.obtenerNodos.iterator
-    lazy val iteracion: () => Unit = () => {
-      if(iteradorNodos.hasNext && empresaActor.isEmpty)
-        context.actorSelection(RootActorPath(iteradorNodos.next.address) / "user" / "sesionActorSupervisor") ? OptenerEmpresaActorPorId(empresa.get.id) onComplete {
-          case empresaActor: ActorRef => if(this.empresaActor.isEmpty) this.empresaActor = Some(empresaActor) else empresaActor ! AgregarSesion(self)
-          case Failure(error) => log info ("Empresa no encontrada: "+error)
-          case _ => iteracion()
-        }
-      else if (!iteradorNodos.hasNext && empresaActor.isEmpty)
-        context.actorSelection(self.path.parent) ? CrearEmpresaActor(empresa.get) map {
-          case empresaActor: ActorRef =>
-            this.empresaActor = Some(empresaActor)
-            empresaActor ! AgregarSesion(self)
-          case Failure(error) => log info ("Empresa no encontrada: "+error)
-          case _ =>
+  def inicializaEmpresaActor() = if(empresa.isDefined) {
+    context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(s"empresa${empresa.get.id}") map {
+      case Some(empresaActor: ActorRef) => empresaActor ! AgregarSesion(self)
+      case None =>
+        MainActors.sesionActorSupervisor ? CrearEmpresaActor(empresa.get) map {
+          case empresaActor: ActorRef => log info ("Actor empresa creado"); self ! Some(empresaActor)
+          case None => log info ("Empresa no creada!!")
         }
     }
-    iteracion()
   }
 
 }
@@ -182,38 +171,6 @@ object SesionActor {
     Props(new SesionActor(expirationTime, empresa))
   }
 
-}
-
-class EmpresaActor(var empresa: Empresa) extends Actor with ActorLogging {
-
-  var sesionesActivas = List[ActorRef]()
-  var ips = List[String]()
-
-  def receive = {
-    case ActualizarEmpresa(empresa) => this.empresa = empresa
-    case AgregarSesion(sesion) =>
-      sesionesActivas = if(!sesionesActivas.contains(sesion)) List(sesion) ::: sesionesActivas else sesionesActivas //TODO: Optimizar
-    case AgregarIp(ip) => ips = if(!ips.contains(ip)) List(ip) ::: ips else ips //TODO: Optimizar
-    case RemoverIp(ip) => ips = if(ips.contains(ip)) ips filterNot{_==ip} else ips //TODO: Optimizar
-    case CerrarSesiones() => {
-      sesionesActivas foreach { _ ! ExpirarSesion }
-      context.stop(self)
-    }
-    case ObtenerIps() => sender ! ips
-  }
-
-}
-
-object EmpresaActor {
-  def props(empresa: Empresa) = Props(new EmpresaActor(empresa))
-}
-
-object ClusterUtil {
-  def obtenerNodos = {
-    val nodosUnreach: Set[Member] = MainActors.cluster.state.unreachable // Lista de nodos en estado unreachable
-    val nodosUp: SortedSet[Member] = MainActors.cluster.state.members.filter(_.status == MemberStatus.up) // Lista de nodos en estado UP
-    nodosUp.filter(m => !nodosUnreach.contains(m)) // Lista de nodos que estan en estado UP y no son estan unreachable
-  }
 }
 
 class BuscadorSesionActor extends Actor {
@@ -258,8 +215,6 @@ case object SessionNotFound
 case class DeleteSession(actorName: String)
 
 case class ActualizarEmpresa(empresa: Empresa)
-
-case class OptenerEmpresaActor()
 
 case class AgregarSesion(sesion: ActorRef)
 

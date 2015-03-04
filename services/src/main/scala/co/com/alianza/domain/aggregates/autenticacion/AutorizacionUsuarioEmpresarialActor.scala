@@ -6,6 +6,7 @@ import akka.actor.ActorRef
 import co.com.alianza.util.token.Token
 import co.com.alianza.util.transformers.ValidationT
 import co.com.alianza.infrastructure.messages._
+import co.com.alianza.domain.aggregates.autenticacion.errores._
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.infrastructure.dto.{UsuarioEmpresarial, UsuarioEmpresarialAdmin, RecursoPerfilAgente, RecursoPerfilClienteAdmin}
 import co.com.alianza.infrastructure.anticorruption.recursosAgenteEmpresarial.{DataAccessAdapter => raDataAccessAdapter}
@@ -31,7 +32,7 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
       val currentSender = sender()
       val future = (for {
         usuarioOption <- ValidationT(validarToken(message))
-        validacionIp <- ValidationT(validarIpEmpresa(message.token, message.ip))
+        validacionIp <- ValidationT(validarIpEmpresa(message.token, usuarioOption, message.ip))
         result <- ValidationT(validarRecursoAgente(usuarioOption, message.url))
 //        result <- ValidationT(validarUsuario(usuarioOption))
       } yield {
@@ -94,15 +95,36 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
     }
   }
 
-  private def validarIpEmpresa(token: String, ip: String) = {
-    MainActors.sesionActorSupervisor ? OptenerEmpresaSesionActor(token) map {
+  private def validarToken(token: String) : Future[Validation[ErrorAutorizacion, String]] = Token.autorizarToken(token) match {
+      case true =>
+        Validation.success(token)
+      case false =>
+        Validation.failure(TokenInvalido())
+    }
+
+
+  private def obtieneSesion(idEmpresa: Int, ipPeticion: String, token: String) : Future[Validation[ErrorAutorizacion, ActorRef]] = {
+    MainActors.sesionActorSupervisor ? BuscarSesion(token) map {
+      case Some(sesionActor: ActorRef) => Validation.success(sesionActor)
+      case None => Validation.failure(ErrorSesionNoEncontrada())
+    }
+  }
+
+  private def obtieneUsuarioEmpresarial
+
+  private def validaSesion(sesionActor: Int, ipPeticion: String, token: String) : Future[Validation[ErrorAutorizacion, Boolean]] = ???
+
+
+  private def validarIpEmpresa(token: String, usuario: Option[UsuarioEmpresarial], ip: String) = {
+    MainActors.sesionActorSupervisor ? ObtenerEmpresaSesionActor(token) flatMap {
       case Some(empresaSesionActor: ActorRef) =>
-        Validation.success(None)
-//        empresaSesionActor ? ObtenerIps() map {
-//          case ips: List[String] if ips.contains(ip) =>
-//            Validation.success(true)
-//        }
-      case None => Validation.success(ResponseMessage(Unauthorized, "Error Validando Token"))
+        log info "+++Encontrado empresa actor"
+        empresaSesionActor ? ObtenerIps() map {
+          case ips @ List() if ips.contains(ip) => log info ("+++Validando ip: "+ip); Validation.success(ResponseMessage(OK, ""))
+          case ips @ List() if ips.isEmpty || !ips.contains(ip) => log info ("+++Validacion de ip incorrecta: "+ip); /*Validation.failure(ErrorSesionIpInvalida());*/ Validation.success(ResponseMessage(Forbidden, JsonUtil.toJson(ForbiddenAgenteMessage(usuario.get, None, "403.2"))))
+        }
+//      case scala.util.Failure(error) => log info ("No encontrado sesión actor."+error); Future.successful(Validation.success(ResponseMessage(Unauthorized, "Error Validando Token")))
+      case None => log info ("+++No encontrado empresa actor."); Future.successful(Validation.success(ResponseMessage(Forbidden, JsonUtil.toJson(ForbiddenAgenteMessage(usuario.get, None, "403.2")))))
     }
   }
 
