@@ -96,7 +96,7 @@ class IpsUsuarioActor extends Actor with ActorLogging with AlianzaActors {
         (for {
           idEmpresa <- ValidationT(DataAccessAdapter.obtenerIdEmpresa(idUsuario, tipoCliente))
           mensaje <- ValidationT(DataAccessAdapter.agregarIpEmpresa(new IpsEmpresa(idEmpresa, ip)))
-          agregarIpSesion <- ValidationT(agregarSesionIpEmpresa(idEmpresa, ip))
+          agregarIpSesion <- ValidationT(agregarIpSesionEmpresa(idEmpresa, ip))
         } yield (mensaje)).run
     }
     result  onComplete {
@@ -119,7 +119,7 @@ class IpsUsuarioActor extends Actor with ActorLogging with AlianzaActors {
         (for {
           idEmpresa <- ValidationT(DataAccessAdapter.obtenerIdEmpresa(idUsuario, tipoCliente))
           mensaje <- ValidationT(DataAccessAdapter.eliminarIpEmpresa(new IpsEmpresa(idEmpresa, ip)))
-          removerIpSesion <- ValidationT(removerSesionIpEmpresa(idEmpresa, ip))
+          removerIpSesion <- ValidationT(removerIpSesionEmpresa(idEmpresa, ip))
         } yield (mensaje)).run
     }
     result  onComplete {
@@ -134,13 +134,13 @@ class IpsUsuarioActor extends Actor with ActorLogging with AlianzaActors {
     }
   }
 
-  private def removerSesionIpEmpresa(empresaId: Int, ip: String) =
+  private def agregarIpSesionEmpresa(empresaId: Int, ip: String) =
     MainActors.sesionActorSupervisor ? ObtenerEmpresaSesionActorId(empresaId) map {
       case Some(empresaSesionActor: ActorRef) => empresaSesionActor ! AgregarIp(ip); zSuccess(():Unit)
       case _ => zFailure(PersistenceException(new Exception(),BusinessLevel,"Error"))
     }
 
-  private def agregarSesionIpEmpresa(empresaId: Int, ip: String) =
+  private def removerIpSesionEmpresa(empresaId: Int, ip: String) =
     MainActors.sesionActorSupervisor ? ObtenerEmpresaSesionActorId(empresaId) map {
       case Some(empresaSesionActor: ActorRef) => empresaSesionActor ! RemoverIp(ip); zSuccess(():Unit)
       case _ => zFailure(PersistenceException(new Exception(),BusinessLevel,"Error"))

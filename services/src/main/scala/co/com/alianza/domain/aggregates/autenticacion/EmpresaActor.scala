@@ -31,11 +31,11 @@ class EmpresaActor(var empresa: Empresa) extends Actor with ActorLogging {
     case ActualizarEmpresa(empresa) => this.empresa = empresa
 
     case AgregarSesion(sesion) =>
-      sesionesActivas = if(!sesionesActivas.contains(sesion)) List(sesion) ::: sesionesActivas else sesionesActivas //TODO: Optimizar
+      sesionesActivas = if(!sesionesActivas.contains(sesion)) List(sesion) ::: sesionesActivas else sesionesActivas
 
-    case AgregarIp(ip) => ips = if(!ips.contains(ip)) List(ip) ::: ips else ips //TODO: Optimizar
+    case AgregarIp(ip) => ips = if(!ips.contains(ip)) List(ip) ::: ips else ips
 
-    case RemoverIp(ip) => ips = if(ips.contains(ip)) ips filterNot{_==ip} else ips //TODO: Optimizar
+    case RemoverIp(ip) => ips = if(ips.contains(ip)) ips filterNot{_==ip} else ips
 
     case CerrarSesiones() => {
       sesionesActivas foreach { _ ! ExpirarSesion }
@@ -46,19 +46,16 @@ class EmpresaActor(var empresa: Empresa) extends Actor with ActorLogging {
 
     case ObtenerIps() =>
       val currentSender = sender
-      log info "*** Obteniendo ips"
       self ? CargarIps() onComplete {
-        case Success(true) => log info "*** Ips cargadas"; currentSender ! ips
-        case Success(false) => log info "*++*+ Falló la carga de ips"
-        case Failure(error) => log info "+++ Falló la carga de ips"+error
-        case algo => log info "+++Fallo de x: "+algo
+        case Success(true) => currentSender ! ips
+        case Success(false) => log error "*++*+ Falló la carga de ips"
+        case Failure(error) => log error ("+++ Falló la carga de ips de la empresa", error)
       }
 
   }
 
   private def cargaIpsEmpresa() = {
     val currentSender = sender
-    log info "-+* Cargando ips empresa"
     if(ips.isEmpty)
       usuarioAdaptador obtenerIpsEmpresa empresa.id onComplete {
         case Failure(failure) =>

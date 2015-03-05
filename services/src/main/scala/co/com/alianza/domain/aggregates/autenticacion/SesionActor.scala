@@ -82,7 +82,7 @@ class SesionActorSupervisor extends Actor with ActorLogging {
     val currentSender = sender()
     val actorName = generarNombreSesionActor(token)
     context.actorOf(Props(new BuscadorSesionActor)) ? BuscarSesionActor(actorName) onComplete {
-      case Failure(error) => log info "Error al obtener la sesion: "+error
+      case Failure(error) => log error ("Error al obtener la sesión", error)
       case Success(actor) => currentSender ! actor
     }
   }
@@ -108,15 +108,15 @@ class SesionActorSupervisor extends Actor with ActorLogging {
     val currentSender = sender()
     val actorName = generarNombreSesionActor(token)
     context.actorOf(Props(new BuscadorSesionActor)) ? BuscarSesionActor(actorName) map {
-      case Some(sesion: ActorRef) => log info "Encuentra la sesión a consultar!!"; sesion tell (ObtenerEmpresaActor(), currentSender)
-      case None => log info "No se encuentra la sesión a consultar!!"; currentSender ! None
+      case Some(sesion: ActorRef) => sesion tell (ObtenerEmpresaActor(), currentSender)
+      case None => currentSender ! None
     }
   }
 
   private def obtenerEmpresaSesionActorId(empresaId: Int) = {
     val currentSender = sender()
     context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(s"empresa$empresaId") onComplete {
-      case Failure(error) => log info "/*/ Error al obtener la sesion de empresa: "+error
+      case Failure(error) => log error ("/*/ Error al obtener la sesion de empresa ", error)
       case Success(actor) => currentSender ! actor
     }
   }
@@ -153,21 +153,21 @@ class SesionActor(expiracionSesion: Int, empresa: Option[Empresa]) extends Actor
       log.info("Eliminando sesión de usuario: " + self.path.name)
       context.stop(self)
 
-    case o: Option[ActorRef] if o.isDefined =>
-      this.empresaActor = o
-      empresaActor.get ! AgregarSesion(self)
+    case empresaActor: ActorRef =>
+      this.empresaActor = Some(empresaActor)
+      empresaActor ! AgregarSesion(self)
 
-    case ObtenerEmpresaActor() => log info "+++Entrega empresa actor"; sender ! empresaActor
+    case ObtenerEmpresaActor() => sender ! empresaActor
 
   }
 
-  def inicializaEmpresaActor() = if(empresa.isDefined) {
+  private def inicializaEmpresaActor() = if(empresa.isDefined) {
     context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(s"empresa${empresa.get.id}") map {
-      case Some(empresaActor: ActorRef) => empresaActor ! AgregarSesion(self)
+      case Some(empresaActor: ActorRef) => self ! empresaActor
       case None =>
         MainActors.sesionActorSupervisor ? CrearEmpresaActor(empresa.get) map {
-          case empresaActor: ActorRef => log info ("Actor empresa creado"); self ! Some(empresaActor)
-          case None => log info ("Empresa no creada!!")
+          case empresaActor: ActorRef => self ! empresaActor
+          case None => log error s"Sesión empresa '${empresa.get.id}' no creada!!"
         }
     }
   }

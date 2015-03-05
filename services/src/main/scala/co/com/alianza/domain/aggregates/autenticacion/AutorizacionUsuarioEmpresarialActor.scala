@@ -121,12 +121,11 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
   private def validarIpEmpresa(sesion: ActorRef, ip: String) : Future[Validation[ErrorAutorizacion, String]] = {
     sesion ? ObtenerEmpresaActor() flatMap {
       case Some(empresaSesionActor: ActorRef) =>
-        log info "+++Encontrado empresa actor"
         empresaSesionActor ? ObtenerIps() map {
-          case ips : List[String] if ips.contains(ip) => log info ("+++Validando ip: "+ip); Validation.success(ip)
-          case ips : List[String] if ips.isEmpty || !ips.contains(ip) => log info ("+++Validacion de ip incorrecta: "+ip); Validation.failure(ErrorSesionIpInvalida(ip));
+          case ips : List[String] if ips.contains(ip) => Validation.success(ip)
+          case ips : List[String] if ips.isEmpty || !ips.contains(ip) => Validation.failure(ErrorSesionIpInvalida(ip));
         }
-      case None => log info ("+++No encontrado empresa actor."); Future.successful(Validation.failure(ErrorSesionIpInvalida(ip)))
+      case None => log error ("+++No encontrado empresa actor."); Future.successful(Validation.failure(ErrorSesionIpInvalida(ip)))
     }
   }
 
@@ -150,18 +149,18 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
 
   private def resuelveAutorizacionAgente(futureValidation: Future[Validation[ErrorAutorizacion, UsuarioEmpresarial]], originalSender: ActorRef) =
     futureValidation onComplete {
-      case sFailure(error) => log info ("***+ Error llamada"+error); originalSender ! error
+      case sFailure(error) => originalSender ! error
       case sSuccess(resp) => resp match {
-        case zSuccess(usuario) => log info "***+ Autorización correcta"; originalSender ! ResponseMessage(OK, JsonUtil.toJson(usuario))
+        case zSuccess(usuario) => originalSender ! ResponseMessage(OK, JsonUtil.toJson(usuario))
         case zFailure(errorAutorizacion) => errorAutorizacion match {
           case ErrorSesionNoEncontrada() => originalSender ! ResponseMessage(Unauthorized, "Error Validando Token")
           case TokenInvalido() => originalSender ! ResponseMessage(Unauthorized, "Error Validando Token")
-          case ErrorPersistenciaAutorizacion(_, ep1) => log info "***+ Error validación persistencia"; originalSender ! ep1
-          case RecursoInexistente(usuario) => log info "***+ Error validación recurso inexistente";
+          case ErrorPersistenciaAutorizacion(_, ep1) => originalSender ! ep1
+          case RecursoInexistente(usuario) =>
             originalSender ! ResponseMessage(Forbidden, JsonUtil.toJson(ForbiddenAgenteMessage(usuario, None, "403.1")))
-          case RecursoProhibido(usuario) => log info "***+ Error validación recurso prohibido";
+          case RecursoProhibido(usuario) =>
             originalSender ! ResponseMessage(Forbidden, JsonUtil.toJson(ForbiddenAgenteMessage(usuario, None, "403.2")))
-          case _ => log info "***+ Error validación"; originalSender ! ResponseMessage(Forbidden, errorAutorizacion.msg)
+          case a => log error "***+ Error autorización: "+a.msg; originalSender ! ResponseMessage(Forbidden, errorAutorizacion.msg)
         }
       }
     }
