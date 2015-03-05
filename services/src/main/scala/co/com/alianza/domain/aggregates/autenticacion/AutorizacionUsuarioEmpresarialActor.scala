@@ -160,6 +160,7 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
             originalSender ! ResponseMessage(Forbidden, JsonUtil.toJson(ForbiddenAgenteMessage(usuario, None, "403.1")))
           case RecursoProhibido(usuario) =>
             originalSender ! ResponseMessage(Forbidden, JsonUtil.toJson(ForbiddenAgenteMessage(usuario, None, "403.2")))
+          case e @ ErrorSesionIpInvalida(_) => originalSender ! ResponseMessage(Unauthorized, e.msg)
           case a => log error "***+ Error autorización: "+a.msg; originalSender ! ResponseMessage(Forbidden, errorAutorizacion.msg)
         }
       }

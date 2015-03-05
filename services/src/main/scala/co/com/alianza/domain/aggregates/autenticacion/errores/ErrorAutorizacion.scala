@@ -17,7 +17,7 @@ case class ErrorSesionNoEncontrada() extends ErrorAutorizacion {
 }
 
 case class ErrorSesionIpInvalida(ip: String) extends ErrorAutorizacion {
-  override def msg = ErrorMessage("403.10", "Error sesión", s"La ip de acceso '$ip' no está permitida").toJson
+  override def msg = ErrorMessage("401.21", "Error sesión", s"La ip de acceso '$ip' no está permitida").toJson
 }
 
 case class ErrorPersistenciaAutorizacion(msg: String, e: PersistenceException) extends ErrorAutorizacion
