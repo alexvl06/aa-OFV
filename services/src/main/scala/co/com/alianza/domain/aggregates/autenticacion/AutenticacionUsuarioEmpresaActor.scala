@@ -20,6 +20,7 @@ import java.sql.Timestamp
 import java.util.Date
 
 import enumerations.EstadosEmpresaEnum
+import enumerations.empresa.EstadosDeEmpresaEnum
 
 import scala.concurrent.duration._
 import scala.concurrent.Future
@@ -83,6 +84,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
       val originalSender = sender()
 
       val validaciones: Future[Validation[ErrorAutenticacion, String]] = (for {
+        estadoEmpresaOk <- ValidationT(validarEstadoEmpresa(message.nit))
         usuarioAdmin <- ValidationT(obtenerUsuarioEmpresarialAdmin(message.nit, message.usuario))
         estadoValido <- ValidationT(validarEstadosUsuario(usuarioAdmin.estado))
         passwordValido <- ValidationT(validarPasswords(message.password, usuarioAdmin.contrasena.getOrElse(""), None, Some(usuarioAdmin.id), usuarioAdmin.numeroIngresosErroneos ))
@@ -486,11 +488,32 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
   }
 
   /**
+   * Valida el estado de la empresa luego de ir a consultarlo a la base de datos por el nit asociado
+   * @param nit Nit asociado al cliente administrador
+   * @return Future [ Validation [ ErrorAutenticacion, Boolean] ]
+   * Success => True
+   * ErrorAutenticacion => ErrorEmpresaBloqueada
+   * */
+  def validarEstadoEmpresa(nit: String): Future[Validation[ErrorAutenticacion, Boolean]] = {
+    log.info("Validando estado de la empresa")
+    val empresaActiva : Int = EstadosDeEmpresaEnum.activa.id
+    val estadoEmpresaFuture: Future[Validation[PersistenceException, Option[Empresa]]] = UsDataAdapter.obtenerEstadoEmpresa(nit)
+    estadoEmpresaFuture.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap {
+      case Some(empresa) =>
+        empresa.estadoEmpresa match {
+          case `empresaActiva` => Validation.success(true)
+          case _ => Validation.failure(ErrorEmpresaAccesoDenegado())
+        }
+      case None => Validation.failure(ErrorClienteNoExisteCore())
+    })
+  }
+
+  /**
    * Valida el estado del usuario
    * @param estadoUsuario El estado del usuario a validar
    * @return Future[Validation[ErrorAutenticacion, Boolean] ]
    * Success => True
-   * ErrorAutenticacion => ErrorUsuarioBloqueadoIntentosErroneos || ErrorUsuarioBloqueadoPendienteActivacion || ErrorUsuarioBloqueadoPendienteReinicio
+   * ErrorAutenticacion => ErrorUsuarioBloqueadoIntentosErroneos || ErrorUsuarioBloqueadoPendienteActivacion || ErrorUsuarioBloqueadoPendienteReinicio || ErrorUsuarioDesactivadoSuperAdmin
    */
   override def validarEstadosUsuario(estadoUsuario: Int): Future[Validation[ErrorAutenticacion, Boolean]] = Future {
     log.info("Validando estados usuario")
