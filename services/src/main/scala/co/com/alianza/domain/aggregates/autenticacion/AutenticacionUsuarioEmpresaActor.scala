@@ -486,6 +486,17 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
     }
     else Future.successful(Validation.success(false))
   }
+  /*
+  def obtenerHorarioEmpresaYValidar(idEmpresa: Int): Future[Validation[ErrorAutenticacion, Empresa]] ={
+    log.info("Obteniendo horario empresa")
+    val future : Future[Validation[PersistenceException, Option[Empresa]]] = UsDataAdapter.obtenerEmpresaPorNit(nit)
+    future.map(
+      _.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap{
+        case Some(empresa) => Validation.success(empresa)
+        case None => Validation.failure(ErrorCredencialesInvalidas())
+      }
+    )
+  }*/
 
   /**
    * Valida el estado de la empresa luego de ir a consultarlo a la base de datos por el nit asociado
