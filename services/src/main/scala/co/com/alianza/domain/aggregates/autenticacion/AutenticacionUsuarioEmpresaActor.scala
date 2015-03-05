@@ -484,7 +484,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
     }
     else Future.successful(Validation.success(false))
   }
-
+  /*
   def obtenerHorarioEmpresaYValidar(idEmpresa: Int): Future[Validation[ErrorAutenticacion, Empresa]] ={
     log.info("Obteniendo horario empresa")
     val future : Future[Validation[PersistenceException, Option[Empresa]]] = UsDataAdapter.obtenerEmpresaPorNit(nit)
@@ -494,7 +494,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
         case None => Validation.failure(ErrorCredencialesInvalidas())
       }
     )
-  }
+  }*/
 
   /**
    * Valida el estado del usuario
