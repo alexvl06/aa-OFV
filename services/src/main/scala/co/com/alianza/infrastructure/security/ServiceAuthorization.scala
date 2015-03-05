@@ -21,6 +21,7 @@ import scala.concurrent.{ExecutionContext, Future, promise}
 import scala.util.{Success, Failure}
 
 import spray.http.StatusCodes._
+import spray.http.RemoteAddress
 import spray.routing.RequestContext
 import spray.routing.authentication.ContextAuthenticator
 import spray.routing.AuthenticationFailedRejection
@@ -35,7 +36,7 @@ trait ServiceAuthorization {
   implicit val timeout: Timeout = Timeout(10 seconds)
 //  private[this] val log = Logging(MainActors.system, classOf[ServiceAuthorization])
 
-  def authenticateUser: ContextAuthenticator[UsuarioAuth] = {
+  def authenticateUser : ContextAuthenticator[UsuarioAuth] = {
     ctx =>
       val token = ctx.request.headers.find(header => header.name equals "token")
       log info(token toString)

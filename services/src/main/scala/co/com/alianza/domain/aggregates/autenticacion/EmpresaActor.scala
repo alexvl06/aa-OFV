@@ -4,9 +4,16 @@ import akka.actor._
 import akka.pattern.ask
 import akka.cluster.{Member, MemberStatus}
 import akka.util.Timeout
+import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext
 import scala.collection.immutable.SortedSet
+import scala.collection.immutable.Vector
+import scala.util.{Failure, Success}
+import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
 
+import co.com.alianza.persistence.entities.{IpsEmpresa, IpsUsuario}
 import co.com.alianza.app.MainActors
+import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => usuarioAdaptador}
 import co.com.alianza.infrastructure.dto.Empresa
 import co.com.alianza.infrastructure.messages._
 
@@ -15,20 +22,53 @@ import co.com.alianza.infrastructure.messages._
  */
 class EmpresaActor(var empresa: Empresa) extends Actor with ActorLogging {
 
+  implicit val _: ExecutionContext = context dispatcher
+  implicit val timeout: Timeout = 120 seconds
   var sesionesActivas = List[ActorRef]()
   var ips = List[String]()
 
   def receive = {
     case ActualizarEmpresa(empresa) => this.empresa = empresa
+
     case AgregarSesion(sesion) =>
       sesionesActivas = if(!sesionesActivas.contains(sesion)) List(sesion) ::: sesionesActivas else sesionesActivas //TODO: Optimizar
+
     case AgregarIp(ip) => ips = if(!ips.contains(ip)) List(ip) ::: ips else ips //TODO: Optimizar
+
     case RemoverIp(ip) => ips = if(ips.contains(ip)) ips filterNot{_==ip} else ips //TODO: Optimizar
+
     case CerrarSesiones() => {
       sesionesActivas foreach { _ ! ExpirarSesion }
       context.stop(self)
     }
-    case ObtenerIps() => sender ! ips
+
+    case CargarIps() => cargaIpsEmpresa()
+
+    case ObtenerIps() =>
+      val currentSender = sender
+      log info "*** Obteniendo ips"
+      self ? CargarIps() onComplete {
+        case Success(true) => log info "*** Ips cargadas"; currentSender ! ips
+        case Success(false) => log info "*++*+ Falló la carga de ips"
+        case Failure(error) => log info "+++ Falló la carga de ips"+error
+        case algo => log info "+++Fallo de x: "+algo
+      }
+
+  }
+
+  private def cargaIpsEmpresa() = {
+    val currentSender = sender
+    log info "-+* Cargando ips empresa"
+    if(ips.isEmpty)
+      usuarioAdaptador obtenerIpsEmpresa empresa.id onComplete {
+        case Failure(failure) =>
+          log error (failure.getMessage, failure); currentSender ! false
+        case Success(value)    =>
+          value match {
+            case zSuccess(response: Vector[IpsEmpresa]) => ips = response map (_.ip) toList; currentSender ! true
+            case zFailure(error) => log error (error.message, error); currentSender ! false
+          }
+    } else currentSender ! true
   }
 
 }
@@ -75,3 +115,13 @@ case class BuscarActor(actorName: String)
 case class ActorEncontrado(session: ActorRef)
 case class ActorNoEncontrado()
 case class EncontrarActor(actorName: String)
+case class AgregarSesion(sesion: ActorRef)
+
+case class AgregarIp(ip: String)
+
+case class RemoverIp(ip: String)
+
+case class ObtenerIps()
+
+case class CargarIps()
+

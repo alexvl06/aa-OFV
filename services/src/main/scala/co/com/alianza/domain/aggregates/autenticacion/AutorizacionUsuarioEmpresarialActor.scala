@@ -18,6 +18,8 @@ import co.com.alianza.app.MainActors
 import scala.concurrent.Future
 import scalaz.std.AllInstances._
 import scalaz.Validation
+import scala.util.{Success => sSuccess, Failure => sFailure}
+import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
 
 import spray.http.StatusCodes._
 
@@ -31,21 +33,22 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
     case message: AutorizarUsuarioEmpresarialMessage =>
       val currentSender = sender()
       val future = (for {
-        usuarioOption <- ValidationT(validarToken(message))
-        validacionIp <- ValidationT(validarIpEmpresa(message.token, usuarioOption, message.ip))
-        result <- ValidationT(validarRecursoAgente(usuarioOption, message.url))
-//        result <- ValidationT(validarUsuario(usuarioOption))
+        token <- ValidationT(validarToken(message.token))
+        sesion <- ValidationT(obtieneSesion(token))
+        usuarioOption <- ValidationT(obtieneUsuarioEmpresarial(token))
+        validUs <- ValidationT(validarUsuario(usuarioOption))
+        validacionIp <- ValidationT(validarIpEmpresa(sesion, message.ip))
+        result <- ValidationT(autorizarRecursoAgente(usuarioOption, message.url))
       } yield {
         result
       }).run
-      resolveFutureValidation(future, (x: ResponseMessage) => x, currentSender)
+      resuelveAutorizacionAgente(future, currentSender)
 
     case message: AutorizarUsuarioEmpresarialAdminMessage =>
       val currentSender = sender()
       val future = (for {
         usuarioOption <- ValidationT(validarTokenAdmin(message.token))
         result <- ValidationT(validarRecursoClienteAdmin(usuarioOption, message.url))
-//        result <- ValidationT(validarUsuario(usuarioOption))
       } yield {
         result
       }).run
@@ -95,38 +98,73 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
     }
   }
 
-  private def validarToken(token: String) : Future[Validation[ErrorAutorizacion, String]] = Token.autorizarToken(token) match {
+  private def validarToken(token: String) : Future[Validation[ErrorAutorizacion, String]] =
+    Token.autorizarToken(token) match {
       case true =>
-        Validation.success(token)
+        Future.successful(Validation.success(token))
       case false =>
-        Validation.failure(TokenInvalido())
+        Future.successful(Validation.failure(TokenInvalido()))
     }
 
 
-  private def obtieneSesion(idEmpresa: Int, ipPeticion: String, token: String) : Future[Validation[ErrorAutorizacion, ActorRef]] = {
+  private def obtieneSesion(token: String) : Future[Validation[ErrorAutorizacion, ActorRef]] =
     MainActors.sesionActorSupervisor ? BuscarSesion(token) map {
       case Some(sesionActor: ActorRef) => Validation.success(sesionActor)
       case None => Validation.failure(ErrorSesionNoEncontrada())
     }
-  }
 
-  private def obtieneUsuarioEmpresarial
+  private def obtieneUsuarioEmpresarial(token: String): Future[Validation[ErrorAutorizacion, Option[UsuarioEmpresarial]]] =
+    usDataAdapter.obtenerUsuarioEmpresarialToken(token) map {
+      _.leftMap { pe => ErrorPersistenciaAutorizacion(pe.message, pe) }
+    }
 
-  private def validaSesion(sesionActor: Int, ipPeticion: String, token: String) : Future[Validation[ErrorAutorizacion, Boolean]] = ???
-
-
-  private def validarIpEmpresa(token: String, usuario: Option[UsuarioEmpresarial], ip: String) = {
-    MainActors.sesionActorSupervisor ? ObtenerEmpresaSesionActor(token) flatMap {
+  private def validarIpEmpresa(sesion: ActorRef, ip: String) : Future[Validation[ErrorAutorizacion, String]] = {
+    sesion ? ObtenerEmpresaActor() flatMap {
       case Some(empresaSesionActor: ActorRef) =>
         log info "+++Encontrado empresa actor"
         empresaSesionActor ? ObtenerIps() map {
-          case ips @ List() if ips.contains(ip) => log info ("+++Validando ip: "+ip); Validation.success(ResponseMessage(OK, ""))
-          case ips @ List() if ips.isEmpty || !ips.contains(ip) => log info ("+++Validacion de ip incorrecta: "+ip); /*Validation.failure(ErrorSesionIpInvalida());*/ Validation.success(ResponseMessage(Forbidden, JsonUtil.toJson(ForbiddenAgenteMessage(usuario.get, None, "403.2"))))
+          case ips : List[String] if ips.contains(ip) => log info ("+++Validando ip: "+ip); Validation.success(ip)
+          case ips : List[String] if ips.isEmpty || !ips.contains(ip) => log info ("+++Validacion de ip incorrecta: "+ip); Validation.failure(ErrorSesionIpInvalida(ip));
         }
-//      case scala.util.Failure(error) => log info ("No encontrado sesión actor."+error); Future.successful(Validation.success(ResponseMessage(Unauthorized, "Error Validando Token")))
-      case None => log info ("+++No encontrado empresa actor."); Future.successful(Validation.success(ResponseMessage(Forbidden, JsonUtil.toJson(ForbiddenAgenteMessage(usuario.get, None, "403.2")))))
+      case None => log info ("+++No encontrado empresa actor."); Future.successful(Validation.failure(ErrorSesionIpInvalida(ip)))
     }
   }
+
+  import scalaz.Validation.FlatMap._
+  private def autorizarRecursoAgente(agente: Option[UsuarioEmpresarial], url: Option[String]) : Future[Validation[ErrorAutorizacion, UsuarioEmpresarial]] =
+    raDataAccessAdapter obtenerRecursos agente.get.id map {
+      _.leftMap { pe => ErrorPersistenciaAutorizacion(pe.message, pe) } flatMap { x =>
+        resolveAutorizacionRecursosAgente(agente.get, x.filter(filtrarRecursosPerfilAgente(_, url.getOrElse(""))))
+      }
+    }
+
+  private def resolveAutorizacionRecursosAgente(usuario: UsuarioEmpresarial, recursos: List[RecursoPerfilAgente]) =
+    recursos.isEmpty match {
+      case true => Validation.failure(RecursoInexistente(usuario))
+      case false =>
+        recursos.head.filtro match {
+          case Some(filtro) => Validation.failure(RecursoProhibido(usuario))
+          case None => Validation.success(usuario)
+        }
+    }
+
+  private def resuelveAutorizacionAgente(futureValidation: Future[Validation[ErrorAutorizacion, UsuarioEmpresarial]], originalSender: ActorRef) =
+    futureValidation onComplete {
+      case sFailure(error) => log info ("***+ Error llamada"+error); originalSender ! error
+      case sSuccess(resp) => resp match {
+        case zSuccess(usuario) => log info "***+ Autorización correcta"; originalSender ! ResponseMessage(OK, JsonUtil.toJson(usuario))
+        case zFailure(errorAutorizacion) => errorAutorizacion match {
+          case ErrorSesionNoEncontrada() => originalSender ! ResponseMessage(Unauthorized, "Error Validando Token")
+          case TokenInvalido() => originalSender ! ResponseMessage(Unauthorized, "Error Validando Token")
+          case ErrorPersistenciaAutorizacion(_, ep1) => log info "***+ Error validación persistencia"; originalSender ! ep1
+          case RecursoInexistente(usuario) => log info "***+ Error validación recurso inexistente";
+            originalSender ! ResponseMessage(Forbidden, JsonUtil.toJson(ForbiddenAgenteMessage(usuario, None, "403.1")))
+          case RecursoProhibido(usuario) => log info "***+ Error validación recurso prohibido";
+            originalSender ! ResponseMessage(Forbidden, JsonUtil.toJson(ForbiddenAgenteMessage(usuario, None, "403.2")))
+          case _ => log info "***+ Error validación"; originalSender ! ResponseMessage(Forbidden, errorAutorizacion.msg)
+        }
+      }
+    }
 
   /**
    *
@@ -165,10 +203,10 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
    * @param usuarioOp Option
    * @return ResponseMessage con el statusCode correspondiente
    */
-  private def validarUsuario(usuarioOp: Option[Any]) = {
+  private def validarUsuario(usuarioOp: Option[Any]) : Future[Validation[ErrorAutorizacion, Unit]] = {
     usuarioOp match {
-      case None => Future.successful(Validation.success(ResponseMessage(Unauthorized, "Error Validando Token")))
-      case Some(us) => Future.successful(Validation.success(ResponseMessage(OK, JsonUtil.toJson(us))))
+      case None => Future.successful(Validation.failure(TokenInvalido()))
+      case Some(us) => Future.successful(Validation.success(():Unit))
     }
   }
 

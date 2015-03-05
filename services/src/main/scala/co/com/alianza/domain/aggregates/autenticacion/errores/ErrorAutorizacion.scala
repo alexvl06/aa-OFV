@@ -3,6 +3,7 @@ package co.com.alianza.domain.aggregates.autenticacion.errores
 import co.com.alianza.infrastructure.messages.ErrorMessage
 import co.com.alianza.util.json.MarshallableImplicits._
 import co.com.alianza.exceptions.PersistenceException
+import co.com.alianza.infrastructure.dto.{UsuarioEmpresarial, UsuarioEmpresarialAdmin, RecursoPerfilAgente, RecursoPerfilClienteAdmin}
 
 /**
  * Created by manuel on 3/03/15.
@@ -12,11 +13,23 @@ sealed trait ErrorAutorizacion {
 }
 
 case class ErrorSesionNoEncontrada() extends ErrorAutorizacion {
-  override def msg = ErrorMessage("403.9", "Error Cliente Alianza", "Cliente inactivo en core de alianza").toJson
+  override def msg = ErrorMessage("403.9", "Error sesión", "No se ha encontrado la sesión").toJson
 }
 
-case class ErrorSesionIpInvalida() extends ErrorAutorizacion {
-  override def msg = ErrorMessage("403.10", "Error Cliente Alianza", "Cliente inactivo en core de alianza").toJson
+case class ErrorSesionIpInvalida(ip: String) extends ErrorAutorizacion {
+  override def msg = ErrorMessage("403.10", "Error sesión", s"La ip de acceso '$ip' no está permitida").toJson
 }
 
-case class ErrorPersistencia(msg: String, e: PersistenceException) extends ErrorAutorizacion
+case class ErrorPersistenciaAutorizacion(msg: String, e: PersistenceException) extends ErrorAutorizacion
+
+case class TokenInvalido() extends ErrorAutorizacion {
+  override def msg = ErrorMessage("403.3", "Error token", "El token no es válido").toJson
+}
+
+case class RecursoInexistente(usuario: UsuarioEmpresarial) extends ErrorAutorizacion {
+  override def msg = ErrorMessage("403.1", "Error autorización de recurso", "El recurso no está registrado").toJson
+}
+
+case class RecursoProhibido(usuario: UsuarioEmpresarial) extends ErrorAutorizacion {
+  override def msg = ErrorMessage("403.2", "Error autorización de recurso", "El acceso a este recurso no está permitido").toJson
+}

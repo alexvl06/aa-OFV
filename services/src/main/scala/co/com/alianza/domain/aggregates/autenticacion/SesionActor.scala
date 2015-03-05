@@ -18,7 +18,7 @@ import scala.util.{Failure, Success}
 
 class SesionActorSupervisor extends Actor with ActorLogging {
 
-  implicit val _: ExecutionContext = context.dispatcher
+  implicit val _: ExecutionContext = context dispatcher
   implicit val timeout: Timeout = 10 seconds
 
   def receive = {
@@ -62,11 +62,11 @@ class SesionActorSupervisor extends Actor with ActorLogging {
 
     case BuscarSesion(token) => buscarSesion(token)
 
-    case ObtenerEmpresaSesionActor(token) => obtenerEmpresaSesion(token)
+    case ObtenerEmpresaSesionActorToken(token) => obtenerEmpresaSesion(token)
 
-    case CrearEmpresaActor(empresa) => sender ! context.actorOf(EmpresaActor.props(empresa), s"empresa${empresa.id}")
+    case CrearEmpresaActor(empresa) => log info "Creando empresa Actor: "+s"empresa${empresa.id}"; sender ! context.actorOf(EmpresaActor.props(empresa), s"empresa${empresa.id}")
 
-
+    case ObtenerEmpresaSesionActorId(empresaId) => obtenerEmpresaSesionActorId(empresaId)
   }
 
   private def validarSesion(message: ValidarSesion): Unit = {
@@ -81,8 +81,9 @@ class SesionActorSupervisor extends Actor with ActorLogging {
   private def buscarSesion(token: String) = {
     val currentSender = sender()
     val actorName = generarNombreSesionActor(token)
-    context.actorOf(Props(new BuscadorSesionActor)) ? BuscarSesionActor(actorName) map {
-      case _ =>  currentSender ! _
+    context.actorOf(Props(new BuscadorSesionActor)) ? BuscarSesionActor(actorName) onComplete {
+      case Failure(error) => log info "Error al obtener la sesion: "+error
+      case Success(actor) => currentSender ! actor
     }
   }
 
@@ -111,12 +112,20 @@ class SesionActorSupervisor extends Actor with ActorLogging {
       case None => log info "No se encuentra la sesión a consultar!!"; currentSender ! None
     }
   }
+
+  private def obtenerEmpresaSesionActorId(empresaId: Int) = {
+    val currentSender = sender()
+    context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(s"empresa$empresaId") onComplete {
+      case Failure(error) => log info "/*/ Error al obtener la sesion de empresa: "+error
+      case Success(actor) => currentSender ! actor
+    }
+  }
 }
 
 class SesionActor(expiracionSesion: Int, empresa: Option[Empresa]) extends Actor with ActorLogging {
 
-  implicit val _: ExecutionContext = context.dispatcher
-  implicit val timeout: Timeout = Timeout(120 seconds)
+  implicit val _: ExecutionContext = context dispatcher
+  implicit val timeout: Timeout = 120 seconds
 
   // System scheduler instance
   private val scheduler: Scheduler = context.system.scheduler
@@ -215,14 +224,6 @@ case object SessionNotFound
 case class DeleteSession(actorName: String)
 
 case class ActualizarEmpresa(empresa: Empresa)
-
-case class AgregarSesion(sesion: ActorRef)
-
-case class AgregarIp(ip: String)
-
-case class RemoverIp(ip: String)
-
-case class ObtenerIps()
 
 case class CrearEmpresaActor(empresa: Empresa)
 
