@@ -1,5 +1,8 @@
 package co.com.alianza.domain.aggregates.autenticacion
 
+import java.sql.{Time, Timestamp}
+import java.util.{Calendar, Date}
+
 import akka.actor.ActorLogging
 import akka.pattern.ask
 import akka.util.Timeout
@@ -8,18 +11,17 @@ import co.com.alianza.app.MainActors
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.domain.aggregates.autenticacion.errores._
+import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial._
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => UsDataAdapter}
 import co.com.alianza.infrastructure.dto.{Cliente, UsuarioEmpresarialAdmin, UsuarioEmpresarial}
 import co.com.alianza.infrastructure.messages._
-import co.com.alianza.persistence.entities.{Empresa, ReglasContrasenas}
+import co.com.alianza.persistence.entities.{HorarioEmpresa, Empresa, ReglasContrasenas}
 import co.com.alianza.util.token.Token
 import co.com.alianza.util.transformers.ValidationT
 
-import java.sql.Timestamp
-import java.util.Date
-
 import enumerations.EstadosEmpresaEnum
+import org.joda.time.DateTime
 
 import scala.concurrent.duration._
 import scala.concurrent.Future
@@ -133,24 +135,30 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
      * 4) Se valida la fecha de caducacion del password, si caducó se debe devolver ErrorPasswordCaducado, de lo contrario se prosigue
      * ------- Si pasan las 4 validaciones anteriores, el usuario se considera como usuario autenticado --------
      * 5) Se actualiza la información de numIngresosErroneos, ipUltimoIngreso y fechaUltimoIngreso del usuario
-     * 6) Se genera un token y se asocia al usuario
-     * 7) Se crea la sesion del usuario en el cluster
-     * 8) Se valida si el usuario tiene alguna ip guardada, si es así se procede a validar si es una ip habitual, de lo contrario se genera un token (6), una sesion (7) y se responde con ErrorControlIpsDesactivado
+     * 6) Se busca el tiempo de expiración de la sesión
+     * 7) Se genera un token y se asocia al usuario
+     * 8) Se busca la empresa a la que pertenece el agente
+     * 9) Se busca la configuración de horario de la empresa
+     * 10)Se valida que el horario corresponda
+     * 11)Se crea la sesion del usuario en el cluster
+     * 12)Se valida que el usuario ingrese con una ip valida para la empresa a la que pertenece
      */
     case message: AutenticarUsuarioEmpresarialAgenteMessage =>
       val originalSender = sender()
 
       def validaciones: Future[Validation[ErrorAutenticacion, String]] = (for {
-        usuarioAgente <- ValidationT(obtenerUsuarioEmpresarialAgente(message.nit, message.usuario))
-        estadoValido <- ValidationT(validarEstadosUsuario(usuarioAgente.estado))
-        passwordValido <- ValidationT(validarPasswords(message.password, usuarioAgente.contrasena.getOrElse(""), None, Some(usuarioAgente.id), usuarioAgente.numeroIngresosErroneos))
-        passwordCaduco <- ValidationT(validarCaducidadPassword(TiposCliente.agenteEmpresarial, usuarioAgente.id, usuarioAgente.fechaCaducidad))
+        usuarioAgente     <- ValidationT(obtenerUsuarioEmpresarialAgente(message.nit, message.usuario))
+        estadoValido      <- ValidationT(validarEstadosUsuario(usuarioAgente.estado))
+        passwordValido    <- ValidationT(validarPasswords(message.password, usuarioAgente.contrasena.getOrElse(""), None, Some(usuarioAgente.id), usuarioAgente.numeroIngresosErroneos))
+        passwordCaduco    <- ValidationT(validarCaducidadPassword(TiposCliente.agenteEmpresarial, usuarioAgente.id, usuarioAgente.fechaCaducidad))
         actualizacionInfo <- ValidationT(actualizarInformacionUsuarioEmpresarialAgente(usuarioAgente.id, message.clientIp.get))
         inactividadConfig <- ValidationT(buscarConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave))
-        token <- ValidationT(generarYAsociarTokenUsuarioEmpresarialAgente(usuarioAgente, message.nit, inactividadConfig.valor))
-        empresa <- ValidationT(obtenerEmpresaPorNit(message.nit))
-        sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
-        validacionIps <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token))
+        token             <- ValidationT(generarYAsociarTokenUsuarioEmpresarialAgente(usuarioAgente, message.nit, inactividadConfig.valor))
+        empresa           <- ValidationT(obtenerEmpresaPorNit(message.nit))
+        horario           <- ValidationT(obtenerHorarioEmpresa(empresa.id))
+        horarioValido     <- ValidationT(validarHorarioEmpresa(horario))
+        sesion            <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
+        validacionIps     <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token))
       } yield validacionIps).run
 
       validaciones.onComplete {
@@ -484,17 +492,53 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
     }
     else Future.successful(Validation.success(false))
   }
-  /*
-  def obtenerHorarioEmpresaYValidar(idEmpresa: Int): Future[Validation[ErrorAutenticacion, Empresa]] ={
-    log.info("Obteniendo horario empresa")
-    val future : Future[Validation[PersistenceException, Option[Empresa]]] = UsDataAdapter.obtenerEmpresaPorNit(nit)
+
+  /**
+   * Obtiene el horario
+   * @param idEmpresa
+   * @return
+   */
+  def obtenerHorarioEmpresa(idEmpresa: Int): Future[Validation[ErrorAutenticacion, Option[HorarioEmpresa]]] ={
+    log.info("Obteniendo horario empresa " + idEmpresa)
+    val future : Future[Validation[PersistenceException, Option[HorarioEmpresa]]] = UsDataAdapter.obtenerHorarioEmpresa(idEmpresa)
     future.map(
       _.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap{
-        case Some(empresa) => Validation.success(empresa)
-        case None => Validation.failure(ErrorCredencialesInvalidas())
+        case Some(horarioEmpresa) => Validation.success(Some(horarioEmpresa))
+        case None => Validation.success(None)
       }
     )
-  }*/
+  }
+
+  def validarHorarioEmpresa(horarioEmpresa: Option[HorarioEmpresa]): Future[Validation[ErrorAutenticacion, Boolean]] =  Future {
+    implicit def calendarToTime(c: Calendar): Time = {
+      Time.valueOf(s"$c.get(Calendar.HOUR_OF_DAY):$c.get(Calendar.MINUTE):$c.get(Calendar.SECOND)")
+    }
+    horarioEmpresa match {
+      case None => Validation.success(true)
+      case Some(horario) => {
+        //Obtener la hora actual
+        val calendar = Calendar.getInstance()
+        //1. Validar si es domingo
+        if(calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY)
+          zFailure(ErrorHorarioIngresoEmpresa())
+        //2. Si esta habilitado el sábado, validar
+        else if(horario.sabado && calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY)
+          zFailure(ErrorHorarioIngresoEmpresa())
+        //3. Validar la hora de inicio
+        else if(horario.horaInicio.after(calendar))
+          zFailure(ErrorHorarioIngresoEmpresa())
+        //4. Validar la hora de fin
+        else if(horario.horaFin.before(calendar))
+          zFailure(ErrorHorarioIngresoEmpresa())
+        //5. Validar el día hábil
+
+        //
+        else
+          Validation.success(true)
+      }
+    }
+
+  }
 
   /**
    * Valida el estado del usuario

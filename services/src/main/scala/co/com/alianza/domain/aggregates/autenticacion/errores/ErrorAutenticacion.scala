@@ -55,6 +55,11 @@ case class ErrorUsuarioBloqueadoCorreoVacio() extends ErrorAutenticacion {
 case class ErrorUsuarioDesactivadoSuperAdmin() extends ErrorAutenticacion {
   override def msg = ErrorMessage("401.14", "Usuario Desactivado", "El usuario se encuentra desactivado por superadministrador").toJson
 }
+
+case class ErrorHorarioIngresoEmpresa() extends ErrorAutenticacion {
+  override def msg = ErrorMessage("401.15", "Horario Empresa", "Está intentando ingresar a la aplicación en un horario no hábil.").toJson
+}
+
 // Error de persistencia
 case class ErrorPersistencia(msg: String, e: PersistenceException) extends ErrorAutenticacion
 
