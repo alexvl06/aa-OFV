@@ -1,6 +1,5 @@
 package co.com.alianza.domain.aggregates.empresa
 
-import co.com.alianza.persistence.entities.Empresa
 import enumerations.empresa.EstadosDeEmpresaEnum
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -8,7 +7,7 @@ import scalaz.{Failure, Success, Validation}
 import co.com.alianza.domain.aggregates.usuarios._
 import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{DataAccessAdapter => DataAccessAdapterClienteAdmin}
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => UsDataAdapter}
-import co.com.alianza.infrastructure.dto.Usuario
+import co.com.alianza.infrastructure.dto._
 import co.com.alianza.util.clave.{ValidarClave, ErrorValidacionClave, Crypto}
 import co.com.alianza.app.MainActors
 import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
@@ -73,7 +72,7 @@ object ValidacionesClienteAdmin {
     val estadoEmpresaFuture: Future[Validation[PersistenceException, Option[Empresa]]] = UsDataAdapter.obtenerEstadoEmpresa(nit)
     estadoEmpresaFuture.map(_.leftMap(pe => ErrorPersistence(pe.message, pe)).flatMap {
       case Some(empresa) =>
-        empresa.estadoEmpresa match {
+        empresa.estado match {
           case `empresaActiva` => Validation.success(true)
           case _ => Validation.failure(ErrorEmpresaAccesoDenegado(errorEmpresaAccesoDenegado))
         }
