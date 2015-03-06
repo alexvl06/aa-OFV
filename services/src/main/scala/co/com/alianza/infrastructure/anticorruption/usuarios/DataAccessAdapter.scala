@@ -161,6 +161,7 @@ object DataAccessAdapter {
     repo.actualizarFechaUltimoIngreso( idUsuario, fechaActual )
   }
 
+  //Este metodo esta duplicado, lo encontramos en el dataAccessAdapter de clienteAdmin
   def obtenerUsuarioEmpresarialAdminPorId(idUsuario: Int): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = {
     val repo = new UsuarioEmpresarialAdminRepository()
     repo.obtenerUsuarioEmpresarialAdminPorId(idUsuario) map transformValidationUsuarioEmpresarialAdmin

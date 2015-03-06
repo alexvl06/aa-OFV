@@ -71,6 +71,10 @@ object DataAccessAdapter {
     repo.asociarAgenteEmpresarialConEmpresa(usuarioEmpresarialEmpresa)
   }
 
+  def obtenerUsuarioEmpresarialPorId(idUsuario: Int): Future[Validation[PersistenceException, Option[dtoUsuario]]] = {
+    repo.obtenerUsuarioEmpresarialPorId(idUsuario) map transformValidation
+  }
+
   def obtenerUsuariosBusqueda(message:GetAgentesEmpresarialesRequest): Future[Validation[PersistenceException, List[dtoEstadoUsuario]]] = {
     val repo = new UsuariosEmpresaRepository()
     repo.obtenerUsuariosBusqueda(message.correo, message.usuario, message.nombre, message.estado, message.idClienteAdmin) map {

@@ -10,7 +10,7 @@ import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.pinclienteadmin.{DataAccessAdapter => pDataAccessAdapter}
 import co.com.alianza.infrastructure.anticorruption.ultimasContrasenasClienteAdmin.{ DataAccessAdapter => DataAccessAdapterUltimaContrasena }
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => uDataAccessAdapter}
-import co.com.alianza.infrastructure.dto.{PinUsuario, PinUsuarioEmpresarialAdmin}
+import co.com.alianza.infrastructure.dto.{UsuarioEmpresarialAdmin, PinUsuario, PinUsuarioEmpresarialAdmin}
 import co.com.alianza.infrastructure.messages.PinMessages._
 import co.com.alianza.infrastructure.messages.ResponseMessage
 import co.com.alianza.persistence.entities.UltimaContrasenaUsuarioEmpresarialAdmin
@@ -35,7 +35,8 @@ import enumerations.{PerfilesUsuario, AppendPasswordUser}
 class PinUsuarioEmpresarialAdminActor extends Actor with ActorLogging with AlianzaActors with FutureResponse  {
 
   implicit val ex: ExecutionContext = MainActors.dataAccesEx
-  import ValidacionesUsuario._
+  import co.com.alianza.domain.aggregates.empresa.ValidacionesClienteAdmin._
+  import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario._
 
   def receive = {
     case message: ValidarPin => validarPin(message.tokenHash, message.funcionalidad.get)
@@ -76,7 +77,9 @@ class PinUsuarioEmpresarialAdminActor extends Actor with ActorLogging with Alian
     val finalResultFuture = (for {
       pin <- ValidationT(obtenerPinFuture)
       pinValidacion <- ValidationT(PinUtil.validarPinUsuarioEmpresarialAdminFuture(pin))
-      rvalidacionClave <- ValidationT(validacionReglasClave(pw, pinValidacion.idUsuario, PerfilesUsuario.clienteAdministrador))
+      clienteAdminOk <- ValidationT(validacionObtenerClienteAdminPorId(pinValidacion.idUsuario))
+      estadoEempresaOk <- ValidationT(validarEstadoEmpresa(clienteAdminOk.identificacion))
+      rvalidacionClave <- ValidationT(co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.validacionReglasClave(pw, pinValidacion.idUsuario, PerfilesUsuario.clienteAdministrador))
       rCambiarPss <- ValidationT(cambiarPassword(pinValidacion.idUsuario, passwordAppend))
       resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(pinValidacion.idUsuario, Crypto.hashSha512(passwordAppend)))
       rCambiarEstado <- ValidationT(cambiarEstado(pinValidacion.idUsuario))

@@ -155,6 +155,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
       val originalSender = sender()
 
       def validaciones: Future[Validation[ErrorAutenticacion, String]] = (for {
+        estadoEmpresaOk <- ValidationT(validarEstadoEmpresa(message.nit))
         usuarioAgente     <- ValidationT(obtenerUsuarioEmpresarialAgente(message.nit, message.usuario))
         estadoValido      <- ValidationT(validarEstadosUsuario(usuarioAgente.estado))
         passwordValido    <- ValidationT(validarPasswords(message.password, usuarioAgente.contrasena.getOrElse(""), None, Some(usuarioAgente.id), usuarioAgente.numeroIngresosErroneos))

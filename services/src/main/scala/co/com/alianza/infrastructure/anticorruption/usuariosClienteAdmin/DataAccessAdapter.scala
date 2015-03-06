@@ -4,7 +4,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scalaz.{Failure, Success, Validation}
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.dto.{UsuarioEmpresarialAdmin, Usuario}
-import co.com.alianza.persistence.repositories.UsuariosRepository
+import co.com.alianza.persistence.repositories.{UsuarioEmpresarialAdminRepository, UsuariosRepository}
 import co.com.alianza.app.MainActors
 import co.com.alianza.persistence.entities.{UsuarioEmpresarialAdmin => eUsuarioAdmin}
 import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.DataAccessTranslator
@@ -35,6 +35,11 @@ object DataAccessAdapter {
 
   def obtieneClientePorNitYUsuario(nit: String, usuario: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] =
     new UsuariosEmpresaRepository().obtieneClientePorNitYUsuario(nit, usuario) map transformValidation
+
+  def obtenerUsuarioEmpresarialAdminPorId(idUsuario: Int): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = {
+    val repo = new UsuarioEmpresarialAdminRepository()
+    repo.obtenerUsuarioEmpresarialAdminPorId(idUsuario) map transformValidation
+  }
 
   private def transformValidation(origin: Validation[PersistenceException, Option[eUsuarioAdmin]]): Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]] = {
     origin match {
