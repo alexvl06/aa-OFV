@@ -1,12 +1,14 @@
 package co.com.alianza.app
 
 import akka.actor.{ActorSystem, ActorLogging}
+import co.com.alianza.app.handler.CustomRejectionHandler
 import co.com.alianza.infrastructure.security.ServiceAuthorization
 import co.com.alianza.web._
 import co.com.alianza.web.empresa.{UsuarioEmpresaService, AdministrarContrasenaEmpresaService}
 import com.typesafe.config.Config
-import spray.routing.{RouteConcatenation, HttpServiceActor}
+import spray.routing._
 import spray.http.StatusCodes
+import spray.util.LoggingContext
 import StatusCodes._
 import co.com.alianza.webvalidarPinClienteAdmin.PinService
 
@@ -40,6 +42,10 @@ class AlianzaRouter extends HttpServiceActor with RouteConcatenation with CrossH
   def receive = runRoute(
     respondWithHeaders(listCrossHeaders){
       routes
-    })
+    })(ExceptionHandler.default,
+      CustomRejectionHandler.extended orElse RejectionHandler.Default,
+      context,
+      RoutingSettings.default,
+      LoggingContext.fromActorRefFactory)
 
 }

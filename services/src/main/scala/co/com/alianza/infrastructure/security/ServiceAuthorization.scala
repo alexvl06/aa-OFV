@@ -24,8 +24,8 @@ import spray.http.StatusCodes._
 import spray.http.RemoteAddress
 import spray.routing.RequestContext
 import spray.routing.authentication.ContextAuthenticator
-import spray.routing.AuthenticationFailedRejection
-import spray.routing.AuthenticationFailedRejection.{CredentialsRejected, CredentialsMissing}
+//import spray.routing.AuthenticationFailedRejection
+import AuthenticationFailedRejection.{CredentialsRejected, CredentialsMissing}
 
 trait ServiceAuthorization {
   self : ActorLogging =>
@@ -34,7 +34,6 @@ trait ServiceAuthorization {
   implicit val conf: Config
   implicit val system: ActorSystem
   implicit val timeout: Timeout = Timeout(10 seconds)
-//  private[this] val log = Logging(MainActors.system, classOf[ServiceAuthorization])
 
   def authenticateUser : ContextAuthenticator[UsuarioAuth] = {
     ctx =>
@@ -55,7 +54,7 @@ trait ServiceAuthorization {
         futuro map {
           case r: ResponseMessage =>
             r.statusCode match {
-              case Unauthorized => Left(AuthenticationFailedRejection(CredentialsRejected, List()))
+              case Unauthorized => Left(AuthenticationFailedRejection(CredentialsRejected, List(), Some(Unauthorized.intValue), Some(r.responseBody)))
               case OK =>
                 val user = JsonUtil.fromJson[Usuario](r.responseBody)
                 Right(UsuarioAuth(user.id.get, user.tipoCliente))
@@ -72,7 +71,7 @@ trait ServiceAuthorization {
 
   private def obtenerIp(ctx: RequestContext) = ctx.request.headers.find {
     header =>
-      header.name.equals("Remote-Address") || header.name.equals("X-Forwarded-For") || header.name.equals("X-Real-IP")//TODO: Mejorar este método
+      header.name.equals("X-Forwarded-For") || header.name.equals("X-Real-IP") || header.name.equals("Remote-Address")
   }
 
 }
