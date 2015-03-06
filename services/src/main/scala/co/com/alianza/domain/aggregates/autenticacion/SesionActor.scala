@@ -40,13 +40,6 @@ class SesionActorSupervisor extends Actor with ActorLogging {
     // Internal messages
     //
 
-    case message: GetSession =>
-      val currentSender: ActorRef = sender()
-      context.actorSelection("akka://alianza-fid-auth-service/user/sesionActorSupervisor/" + message.actorName).resolveOne().onComplete {
-        case Success(session) => currentSender ! SessionFound(session)
-        case Failure(ex) => currentSender ! SessionNotFound
-      }
-
     case message: DeleteSession =>
       context.actorSelection("akka://alianza-fid-auth-service/user/sesionActorSupervisor/" + message.actorName).resolveOne().onComplete {
         case Success(session) => session ! ExpirarSesion()
@@ -57,7 +50,7 @@ class SesionActorSupervisor extends Actor with ActorLogging {
       val currentSender = sender
       context.actorSelection("akka://alianza-fid-auth-service/user/sesionActorSupervisor/" + actorName).resolveOne().onComplete {
         case Success(actor) => currentSender ! ActorEncontrado(actor)
-        case Failure(ex) => currentSender ! ActorNoEncontrado()
+        case Failure(ex) => currentSender ! ActorNoEncontrado
       }
 
     case BuscarSesion(token) => buscarSesion(token)
@@ -72,7 +65,7 @@ class SesionActorSupervisor extends Actor with ActorLogging {
   private def validarSesion(message: ValidarSesion): Unit = {
     val currentSender = sender()
     val actorName = generarNombreSesionActor(message.token)
-    context.actorOf(Props(new BuscadorSesionActor)) ? BuscarSesionActor(actorName) map {
+    context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(actorName) map {
       case Some(sesionActor: ActorRef) => sesionActor ? ActualizarSesion() onComplete { case _ => currentSender ! true }
       case None => currentSender ! false
     }
@@ -81,7 +74,7 @@ class SesionActorSupervisor extends Actor with ActorLogging {
   private def buscarSesion(token: String) = {
     val currentSender = sender()
     val actorName = generarNombreSesionActor(token)
-    context.actorOf(Props(new BuscadorSesionActor)) ? BuscarSesionActor(actorName) onComplete {
+    context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(actorName) onComplete {
       case Failure(error) => log error ("Error al obtener la sesión", error)
       case Success(actor) => currentSender ! actor
     }
@@ -107,7 +100,7 @@ class SesionActorSupervisor extends Actor with ActorLogging {
   private def obtenerEmpresaSesion(token: String) = {
     val currentSender = sender()
     val actorName = generarNombreSesionActor(token)
-    context.actorOf(Props(new BuscadorSesionActor)) ? BuscarSesionActor(actorName) map {
+    context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(actorName) map {
       case Some(sesion: ActorRef) => sesion tell (ObtenerEmpresaActor(), currentSender)
       case None => currentSender ! None
     }
@@ -181,45 +174,6 @@ object SesionActor {
   }
 
 }
-
-class BuscadorSesionActor extends Actor {
-
-  var numResp = 0
-  var resp: Option[ActorRef] = None
-  val nodosBusqueda: SortedSet[Member] = ClusterUtil.obtenerNodos
-  var interesado: ActorRef = null
-
-  def receive: Receive = {
-    case BuscarSesionActor(actorName) =>
-      interesado = sender;
-      nodosBusqueda foreach { member =>
-        this.context.actorSelection(RootActorPath(member.address) / "user" / "sesionActorSupervisor") ! GetSession(actorName)
-      }
-    case SessionFound(session) =>
-      numResp += 1
-      resp = Some(session)
-      replyIfReady()
-    case _ =>
-      numResp += 1
-      replyIfReady()
-  }
-
-  def replyIfReady() = {
-    if(numResp == nodosBusqueda.size) {
-      interesado ! resp
-      this.context.stop(self)
-    }
-  }
-
-}
-
-case class GetSession(actorName: String)
-
-case class BuscarSesionActor(actorName: String)
-
-case class SessionFound(session: ActorRef)
-
-case object SessionNotFound
 
 case class DeleteSession(actorName: String)
 

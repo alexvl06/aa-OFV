@@ -110,7 +110,7 @@ object ClusterUtil {
 
 case class BuscarActor(actorName: String)
 case class ActorEncontrado(session: ActorRef)
-case class ActorNoEncontrado()
+case object ActorNoEncontrado
 case class EncontrarActor(actorName: String)
 case class AgregarSesion(sesion: ActorRef)
 
