@@ -8,16 +8,16 @@ import spray.routing.Directives
 class PinService extends Directives with AlianzaCommons with CrossHeaders {
 
   def route = {
-    path("validarPin" / Segment) {
-      pin => {
+    path("validarPin" / Segment / IntNumber) {
+      (pin, ft)  => {
         post {
-          requestExecute(ValidarPin(pin), pinActor)
+          requestExecute(ValidarPin(pin, Some(ft)), pinActor)
         }
       }
-    } ~ path("validarPinClienteAdmin" / Segment) {
-      pin => {
+    } ~ path("validarPinClienteAdmin" / Segment/ IntNumber) {
+      (pin, ft) => {
         post {
-          requestExecute(ValidarPin(pin), pinUsuarioEmpresarialAdminActor)
+          requestExecute(ValidarPin(pin, Some(ft)), pinUsuarioEmpresarialAdminActor)
         }
       }
     } ~ path("cambiarPw" / Segment) {
@@ -43,7 +43,7 @@ class PinService extends Directives with AlianzaCommons with CrossHeaders {
     } ~ path("validarPinAgenteEmpresarial" / Segment) {
       pin => {
         post {
-          requestExecute(ValidarPin(pin), pinUsuarioAgenteEmpresarialActor)
+          requestExecute(ValidarPin(pin, None), pinUsuarioAgenteEmpresarialActor)
         }
       }
     } ~ path("cambiarPwAgenteEmpresarial" / Segment) {

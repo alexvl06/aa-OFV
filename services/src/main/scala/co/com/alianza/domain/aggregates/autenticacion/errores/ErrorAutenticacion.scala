@@ -51,6 +51,15 @@ case class ErrorUsuarioBloqueadoPendienteReinicio() extends ErrorAutenticacion {
 case class ErrorUsuarioBloqueadoCorreoVacio() extends ErrorAutenticacion {
   override def msg = ErrorMessage("401.13", "Usuario Bloqueado", "No hay correo registrado en la base de datos de Alianza").toJson
 }
+
+case class ErrorUsuarioDesactivadoSuperAdmin() extends ErrorAutenticacion {
+  override def msg = ErrorMessage("401.14", "Usuario Desactivado", "El usuario se encuentra desactivado por superadministrador").toJson
+}
+
+case class ErrorEmpresaAccesoDenegado() extends ErrorAutenticacion {
+  override def msg = ErrorMessage("401.15", "Empresa Acceso Denegado", "La empresa actualmente tiene el acceso denegado").toJson
+}
+
 // Error de persistencia
 case class ErrorPersistencia(msg: String, e: PersistenceException) extends ErrorAutenticacion
 

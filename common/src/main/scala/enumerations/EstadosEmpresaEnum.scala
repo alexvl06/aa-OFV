@@ -11,5 +11,6 @@ object EstadosEmpresaEnum extends Enumeration(0) {
   val activo = Value("Activo")
   val pendienteActivacion = Value("Pendiente de Activación")
   val pendienteReiniciarContrasena = Value("Pendiente de Reinicio de Contraseña")
+  val bloqueadoPorSuperAdmin = Value("Bloqueado por superadministrador")
 
 }
