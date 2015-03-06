@@ -1,7 +1,8 @@
 package co.com.alianza.infrastructure.anticorruption.usuarios
 
 import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.persistence.entities.{Usuario => dUsuario, UsuarioEmpresarial => eUsuarioEmpresarial, UsuarioEmpresarialAdmin => eUsuarioEmpresarialAdmin, Empresa => dEmpresa}
+import co.com.alianza.persistence.entities.{Usuario => dUsuario, UsuarioEmpresarial => eUsuarioEmpresarial,
+  UsuarioEmpresarialAdmin => eUsuarioEmpresarialAdmin, Empresa => dEmpresa, HorarioEmpresa => dHorarioEmpresa}
 import co.com.alianza.infrastructure.dto._
 import java.util.Date
 
@@ -17,6 +18,10 @@ object DataAccessTranslator {
 
   def translateEmpresa(emp: dEmpresa) = {
     Empresa(emp.id, emp.nit, emp.estadoEmpresa)
+  }
+
+  def translateHorarioEmpresa(horario: dHorarioEmpresa) = {
+    HorarioEmpresa(horario.diaHabil, horario.sabado, horario.horaInicio, horario.horaFin)
   }
 
   def translateUsuario(usu: dUsuario) = {

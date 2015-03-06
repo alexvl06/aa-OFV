@@ -14,11 +14,10 @@ import co.com.alianza.domain.aggregates.autenticacion.errores._
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => UsDataAdapter}
 import co.com.alianza.infrastructure.anticorruption.empresa.{DataAccessTranslator => EmpDataAccessTranslator}
-import co.com.alianza.infrastructure.dto.{Cliente, UsuarioEmpresarialAdmin, UsuarioEmpresarial, Empresa => EmpresaDTO}
+import co.com.alianza.infrastructure.dto._
 import co.com.alianza.infrastructure.messages._
 
-import co.com.alianza.persistence.entities.{HorarioEmpresa, ReglasContrasenas}
-import co.com.alianza.infrastructure.dto.Empresa
+import co.com.alianza.persistence.entities.ReglasContrasenas
 
 import co.com.alianza.util.token.Token
 import co.com.alianza.util.transformers.ValidationT
@@ -103,6 +102,8 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
         token <- ValidationT(generarYAsociarTokenUsuarioEmpresarialAdmin(cliente, usuarioAdmin, message.nit, inactividadConfig.valor))
         sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
         empresa <- ValidationT(obtenerEmpresaPorNit(message.nit))
+        horario           <- ValidationT(obtenerHorarioEmpresa(empresa.id))
+        horarioValido     <- ValidationT(validarHorarioEmpresa(horario))
         validacionIps <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token))
       } yield validacionIps).run
 
@@ -160,10 +161,12 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
         passwordCaduco    <- ValidationT(validarCaducidadPassword(TiposCliente.agenteEmpresarial, usuarioAgente.id, usuarioAgente.fechaCaducidad))
         actualizacionInfo <- ValidationT(actualizarInformacionUsuarioEmpresarialAgente(usuarioAgente.id, message.clientIp.get))
         inactividadConfig <- ValidationT(buscarConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave))
-        token <- ValidationT(generarYAsociarTokenUsuarioEmpresarialAgente(usuarioAgente, message.nit, inactividadConfig.valor))
-        empresa <- ValidationT(obtenerEmpresaPorNit(message.nit))
-        sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt, empresa))
-        validacionIps <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token))
+        token      			  <- ValidationT(generarYAsociarTokenUsuarioEmpresarialAgente(usuarioAgente, message.nit, inactividadConfig.valor))
+        empresa 	    	  <- ValidationT(obtenerEmpresaPorNit(message.nit))
+		    horario           <- ValidationT(obtenerHorarioEmpresa(empresa.id))
+        horarioValido     <- ValidationT(validarHorarioEmpresa(horario))
+        sesion 			      <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt, empresa))
+        validacionIps 	  <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token))
       } yield validacionIps).run
 
       validaciones.onComplete {
@@ -525,7 +528,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
    * @return
    */
   def obtenerHorarioEmpresa(idEmpresa: Int): Future[Validation[ErrorAutenticacion, Option[HorarioEmpresa]]] ={
-    log.info("Obteniendo horario empresa " + idEmpresa)
+    log.info("Obteniendo horario empresa")
     val future : Future[Validation[PersistenceException, Option[HorarioEmpresa]]] = UsDataAdapter.obtenerHorarioEmpresa(idEmpresa)
     future.map(
       _.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap{
@@ -535,32 +538,42 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
     )
   }
 
-  def validarHorarioEmpresa(horarioEmpresa: Option[HorarioEmpresa]): Future[Validation[ErrorAutenticacion, Boolean]] =  Future {
-    implicit def calendarToTime(c: Calendar): Time = {
-      Time.valueOf(s"$c.get(Calendar.HOUR_OF_DAY):$c.get(Calendar.MINUTE):$c.get(Calendar.SECOND)")
+  def validarHorarioEmpresa(horarioEmpresa: Option[HorarioEmpresa]): Future[Validation[ErrorAutenticacion, Boolean]] =  {
+    log.info("Validando el horario")
+    def calendarToTime(c: Calendar): Time = {
+      Time.valueOf(c.get(Calendar.HOUR_OF_DAY) + ":" + c.get(Calendar.MINUTE) + ":" + c.get(Calendar.SECOND))
+    }
+    def calendarToDate(c: Calendar): java.sql.Date = {
+      java.sql.Date.valueOf(c.get(Calendar.YEAR) + "-" + (c.get(Calendar.MONTH) + 1) + "-" + c.get(Calendar.DAY_OF_MONTH))
     }
     horarioEmpresa match {
-      case None => Validation.success(true)
+      case None => Future.successful(Validation.success(true))
       case Some(horario) => {
         //Obtener la hora actual
         val calendar = Calendar.getInstance()
+        val horaActual = calendarToTime(calendar)
         //1. Validar si es domingo
-        if(calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY)
-          zFailure(ErrorHorarioIngresoEmpresa())
+        if (calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY)
+          Future.successful(Validation.failure(ErrorHorarioIngresoEmpresa()))
         //2. Si esta habilitado el sábado, validar
-        else if(horario.sabado && calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY)
-          zFailure(ErrorHorarioIngresoEmpresa())
-        //3. Validar la hora de inicio
-        else if(horario.horaInicio.after(calendar))
-          zFailure(ErrorHorarioIngresoEmpresa())
-        //4. Validar la hora de fin
-        else if(horario.horaFin.before(calendar))
-          zFailure(ErrorHorarioIngresoEmpresa())
+        else if (!horario.sabado && calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY)
+          Future.successful(Validation.failure(ErrorHorarioIngresoEmpresa()))
+        //3. Validar la hora de inicio y de fin
+        else if (horario.horaInicio.after(horaActual) || horario.horaFin.before(horaActual))
+          Future.successful(Validation.failure(ErrorHorarioIngresoEmpresa()))
         //5. Validar el día hábil
-
-        //
+        else if (horario.diaHabil) {
+          log.info("Validacioin dia habil")
+          log.info("Fecha " + calendarToDate(calendar))
+          UsDataAdapter.existeDiaFestivo(calendarToDate(calendar)).map(
+            _.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap {
+              case true => Validation.failure(ErrorHorarioIngresoEmpresa())
+              case _ => Validation.success(true)
+            }
+          )
+        }
         else
-          Validation.success(true)
+          Future.successful(Validation.success(true))
       }
     }
 
@@ -589,9 +602,10 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
     * Success => True
     * ErrorAutenticacion => ErrorPersistencia
     */
-    def crearSesion(token: String, expiracionInactividad: Int, empresa: EmpresaDTO): Future[Validation[ErrorAutenticacion, Boolean]] = {
+    def crearSesion(token: String, expiracionInactividad: Int, empresa: Empresa): Future[Validation[ErrorAutenticacion, Boolean]] = {
        log.info("Creando sesion")
        MainActors.sesionActorSupervisor ! CrearSesionUsuario(token, expiracionInactividad, Some(empresa))
        Future.successful(Validation.success(true))
     }
+
 }

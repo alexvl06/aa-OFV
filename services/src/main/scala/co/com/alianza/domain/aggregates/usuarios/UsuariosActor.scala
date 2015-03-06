@@ -187,21 +187,22 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
                                 resp match {
                                   case zFailure(errorValidacion) => currentSender ! ResponseMessage(Conflict,errorEstadoEmpresa)
                                   case zSuccess(_) =>
+                                    //El olvido de contrasena queda para usuarios en estado activo, pendiente de activacion, pendiente de reinicio de contrasena
+                                    if( valueResponseUsuarioEmpresarial.estado == EstadosEmpresaEnum.activo.id ||
+                                      valueResponseUsuarioEmpresarial.estado == EstadosEmpresaEnum.pendienteActivacion.id ||
+                                      valueResponseUsuarioEmpresarial.estado == EstadosEmpresaEnum.pendienteReiniciarContrasena.id  ) {
+
+                                      //Se cambia a estado reinicio de contraseña cuando el cliente hace click en el enlace del correo
+                                      enviarCorreoOlvidoContrasena(responseCliente.wcli_dir_correo, currentSender, message, Some(valueResponseUsuarioEmpresarial.id))
+                                    }
+                                    /*                            else if( valueResponseUsuarioEmpresarial.estado == EstadosEmpresaEnum.nuevoEstado.id )
+                                                                  currentSender ! ResponseMessage(Conflict,errorEstadoReinicioContrasena)*/
+                                    else
+                                      currentSender ! ResponseMessage(Conflict,errorEstadoUsuarioNoPermitido)
                                 }
                             }
 
-                            //El olvido de contrasena queda para usuarios en estado activo, pendiente de activacion, pendiente de reinicio de contrasena
-                            if( valueResponseUsuarioEmpresarial.estado == EstadosEmpresaEnum.activo.id ||
-                              valueResponseUsuarioEmpresarial.estado == EstadosEmpresaEnum.pendienteActivacion.id ||
-                              valueResponseUsuarioEmpresarial.estado == EstadosEmpresaEnum.pendienteReiniciarContrasena.id  ) {
 
-                              //Se cambia a estado reinicio de contraseña cuando el cliente hace click en el enlace del correo
-                              enviarCorreoOlvidoContrasena(responseCliente.wcli_dir_correo, currentSender, message, Some(valueResponseUsuarioEmpresarial.id))
-                            }
-/*                            else if( valueResponseUsuarioEmpresarial.estado == EstadosEmpresaEnum.nuevoEstado.id )
-                              currentSender ! ResponseMessage(Conflict,errorEstadoReinicioContrasena)*/
-                            else
-                              currentSender ! ResponseMessage(Conflict,errorEstadoUsuarioNoPermitido)
 
 
                           case valueResponse:Usuario =>
