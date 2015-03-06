@@ -54,7 +54,7 @@ case class AutorizarUrl(token:String, url:String)  extends MessageService{
   def toValidarTokenRequest:ValidarTokenRequest = ValidarTokenRequest( token )
 }
 
-case class AutorizarUsuarioEmpresarialMessage(token:String, url: Option[String])  extends MessageService{
+case class AutorizarUsuarioEmpresarialMessage(token:String, url: Option[String], ip: String)  extends MessageService{
   def toValidarTokenRequest:ValidarTokenRequest = ValidarTokenRequest( token )
 }
 
@@ -80,12 +80,20 @@ case class AgregarIPHabitualUsuarioEmpresarialAgente(idUsuario: Option[Int], cli
 
 case class ActualizarSesion()
 
-case class CrearSesionUsuario(token: String, tiempoExpiracion: Int)
+case class CrearSesionUsuario(token: String, tiempoExpiracion: Int, empresa: Option[Empresa] = None)
 
 case class InvalidarSesion(token: String)
 
 case class ExpirarSesion()
 
+case class BuscarSesion(token: String)
+
+case class ObtenerEmpresaSesionActorToken(token: String)
+
+case class ObtenerEmpresaSesionActorId(empresaId: Int)
+
 case class ValidarSesion(token: String)
+
+case class OptenerEmpresaActorPorId(empresaId: Int)
 
 
