@@ -13,7 +13,8 @@ import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.domain.aggregates.autenticacion.errores._
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => UsDataAdapter}
-import co.com.alianza.infrastructure.dto.{Cliente, UsuarioEmpresarialAdmin, UsuarioEmpresarial}
+import co.com.alianza.infrastructure.anticorruption.empresa.{DataAccessTranslator => EmpDataAccessTranslator}
+import co.com.alianza.infrastructure.dto.{Cliente, UsuarioEmpresarialAdmin, UsuarioEmpresarial, Empresa => EmpresaDTO}
 import co.com.alianza.infrastructure.messages._
 
 import co.com.alianza.persistence.entities.{HorarioEmpresa, ReglasContrasenas}
@@ -161,7 +162,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
         inactividadConfig <- ValidationT(buscarConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave))
         token <- ValidationT(generarYAsociarTokenUsuarioEmpresarialAgente(usuarioAgente, message.nit, inactividadConfig.valor))
         empresa <- ValidationT(obtenerEmpresaPorNit(message.nit))
-        sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
+        sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt, empresa))
         validacionIps <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token))
       } yield validacionIps).run
 
@@ -581,4 +582,16 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
     else Validation.success(true)
   }
 
+    /**
+    * Crea la sesion del usuario en el cluster
+    * @param token Token para crear la sesion
+    * @return Future[Validation[ErrorAutenticacion, Boolean] ]
+    * Success => True
+    * ErrorAutenticacion => ErrorPersistencia
+    */
+    def crearSesion(token: String, expiracionInactividad: Int, empresa: EmpresaDTO): Future[Validation[ErrorAutenticacion, Boolean]] = {
+       log.info("Creando sesion")
+       MainActors.sesionActorSupervisor ! CrearSesionUsuario(token, expiracionInactividad, Some(empresa))
+       Future.successful(Validation.success(true))
+    }
 }
