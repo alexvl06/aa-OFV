@@ -11,7 +11,6 @@ import co.com.alianza.app.MainActors
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.domain.aggregates.autenticacion.errores._
-import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial._
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => UsDataAdapter}
 import co.com.alianza.infrastructure.dto.{Cliente, UsuarioEmpresarialAdmin, UsuarioEmpresarial}
@@ -20,8 +19,11 @@ import co.com.alianza.persistence.entities.{HorarioEmpresa, Empresa, ReglasContr
 import co.com.alianza.util.token.Token
 import co.com.alianza.util.transformers.ValidationT
 
+import java.sql.Timestamp
+import java.util.Date
+
 import enumerations.EstadosEmpresaEnum
-import org.joda.time.DateTime
+import enumerations.empresa.EstadosDeEmpresaEnum
 
 import scala.concurrent.duration._
 import scala.concurrent.Future
@@ -85,6 +87,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
       val originalSender = sender()
 
       val validaciones: Future[Validation[ErrorAutenticacion, String]] = (for {
+        estadoEmpresaOk <- ValidationT(validarEstadoEmpresa(message.nit))
         usuarioAdmin <- ValidationT(obtenerUsuarioEmpresarialAdmin(message.nit, message.usuario))
         estadoValido <- ValidationT(validarEstadosUsuario(usuarioAdmin.estado))
         passwordValido <- ValidationT(validarPasswords(message.password, usuarioAdmin.contrasena.getOrElse(""), None, Some(usuarioAdmin.id), usuarioAdmin.numeroIngresosErroneos ))
@@ -153,12 +156,10 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
         passwordCaduco    <- ValidationT(validarCaducidadPassword(TiposCliente.agenteEmpresarial, usuarioAgente.id, usuarioAgente.fechaCaducidad))
         actualizacionInfo <- ValidationT(actualizarInformacionUsuarioEmpresarialAgente(usuarioAgente.id, message.clientIp.get))
         inactividadConfig <- ValidationT(buscarConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave))
-        token             <- ValidationT(generarYAsociarTokenUsuarioEmpresarialAgente(usuarioAgente, message.nit, inactividadConfig.valor))
-        empresa           <- ValidationT(obtenerEmpresaPorNit(message.nit))
-        horario           <- ValidationT(obtenerHorarioEmpresa(empresa.id))
-        horarioValido     <- ValidationT(validarHorarioEmpresa(horario))
-        sesion            <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
-        validacionIps     <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token))
+        token <- ValidationT(generarYAsociarTokenUsuarioEmpresarialAgente(usuarioAgente, message.nit, inactividadConfig.valor))
+        empresa <- ValidationT(obtenerEmpresaPorNit(message.nit))
+        sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
+        validacionIps <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token))
       } yield validacionIps).run
 
       validaciones.onComplete {
@@ -494,6 +495,27 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
   }
 
   /**
+   * Valida el estado de la empresa luego de ir a consultarlo a la base de datos por el nit asociado
+   * @param nit Nit asociado al cliente administrador
+   * @return Future [ Validation [ ErrorAutenticacion, Boolean] ]
+   * Success => True
+   * ErrorAutenticacion => ErrorEmpresaBloqueada
+   * */
+  def validarEstadoEmpresa(nit: String): Future[Validation[ErrorAutenticacion, Boolean]] = {
+    log.info("Validando estado de la empresa")
+    val empresaActiva : Int = EstadosDeEmpresaEnum.activa.id
+    val estadoEmpresaFuture: Future[Validation[PersistenceException, Option[Empresa]]] = UsDataAdapter.obtenerEstadoEmpresa(nit)
+    estadoEmpresaFuture.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap {
+      case Some(empresa) =>
+        empresa.estadoEmpresa match {
+          case `empresaActiva` => Validation.success(true)
+          case _ => Validation.failure(ErrorEmpresaAccesoDenegado())
+        }
+      case None => Validation.failure(ErrorClienteNoExisteCore())
+    })
+  }
+
+/**
    * Obtiene el horario
    * @param idEmpresa
    * @return
@@ -539,6 +561,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
     }
 
   }
+
 
   /**
    * Valida el estado del usuario

@@ -190,6 +190,10 @@ object DataAccessAdapter {
     new IpsEmpresaRepository().obtenerIpsEmpresa(idEmpresa)
   }
 
+  def obtenerEstadoEmpresa ( nit: String ) : Future[Validation[PersistenceException, Option[Empresa]]] = {
+    new EmpresaRepository().obtenerEmpresa(nit)
+  }
+
   def agregarIpUsuario( ip:IpsUsuario ) : Future[Validation[PersistenceException, String]] = {
     val repo = new IpsUsuarioRepository()
     repo.guardar( ip )
