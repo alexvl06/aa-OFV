@@ -45,7 +45,7 @@ import co.cifin.confrontaultra.dto.ultra.{ResultadoEvaluacionCuestionarioULTRADT
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.exceptions.{BusinessLevel, PersistenceException}
 import co.com.alianza.domain.aggregates.autenticacion.errores.{ErrorCredencialesInvalidas, ErrorPersistencia, ErrorAutenticacion}
-import co.com.alianza.persistence.entities.Empresa
+import co.com.alianza.infrastructure.dto.Empresa
 import enumerations.empresa.EstadosDeEmpresaEnum
 
 
@@ -250,10 +250,8 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
       _.leftMap(pe => ErrorPersistence(pe.message, pe)).flatMap{
         (x:Option[Empresa]) => x match {
           case Some(empresa) =>
-            log.info("Estado de la empresa->"+empresa.estadoEmpresa)
-            if (empresa.estadoEmpresa == EstadosDeEmpresaEnum.activa.id) zSuccess(empresa)
-            else
-              zFailure(ErrorEstadoInvalidoEmpresa(errorEstadoEmpresa))
+            if (empresa.estado == EstadosDeEmpresaEnum.activa.id) zSuccess(empresa)
+            else zFailure(ErrorEstadoInvalidoEmpresa(errorEstadoEmpresa))
           case None => zFailure(ErrorEmpresaNoExiste(errorEmpresaNoExiste))
         }
       }

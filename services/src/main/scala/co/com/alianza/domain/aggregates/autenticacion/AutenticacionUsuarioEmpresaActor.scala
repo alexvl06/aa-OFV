@@ -15,7 +15,10 @@ import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => UsDataAdapter}
 import co.com.alianza.infrastructure.dto.{Cliente, UsuarioEmpresarialAdmin, UsuarioEmpresarial}
 import co.com.alianza.infrastructure.messages._
-import co.com.alianza.persistence.entities.{HorarioEmpresa, Empresa, ReglasContrasenas}
+
+import co.com.alianza.persistence.entities.{HorarioEmpresa, ReglasContrasenas}
+import co.com.alianza.infrastructure.dto.Empresa
+
 import co.com.alianza.util.token.Token
 import co.com.alianza.util.transformers.ValidationT
 
@@ -507,8 +510,8 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
     val estadoEmpresaFuture: Future[Validation[PersistenceException, Option[Empresa]]] = UsDataAdapter.obtenerEstadoEmpresa(nit)
     estadoEmpresaFuture.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap {
       case Some(empresa) =>
-        empresa.estadoEmpresa match {
-          case `empresaActiva` => Validation.success(true)
+        empresa.estado match {
+          case empresaActiva => Validation.success(true)
           case _ => Validation.failure(ErrorEmpresaAccesoDenegado())
         }
       case None => Validation.failure(ErrorClienteNoExisteCore())
