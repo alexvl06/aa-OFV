@@ -33,3 +33,8 @@ case class RecursoInexistente(usuario: UsuarioEmpresarial) extends ErrorAutoriza
 case class RecursoProhibido(usuario: UsuarioEmpresarial) extends ErrorAutorizacion {
   override def msg = ErrorMessage("403.2", "Error autorización de recurso", "El acceso a este recurso no está permitido").toJson
 }
+
+case class ErrorSesionHorarioInvalido() extends ErrorAutorizacion {
+  override def msg = ErrorMessage("401.22", "Error sesión", s"No está permitidio el acceso en este horario.").toJson
+}
+
