@@ -51,6 +51,10 @@ object DataAccessAdapter {
     repo.CambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial, estado)
   }
 
+  def CambiarBloqueoDesbloqueoAgenteEmpresarial(idUsuarioAgenteEmpresarial: Int, estado : EstadosEmpresaEnum.estadoEmpresa,timestamp: Timestamp): Future[Validation[PersistenceException, Int]] = {
+    repo.CambiarBloqueoDesbloqueoAgenteEmpresarial(idUsuarioAgenteEmpresarial, estado,timestamp)
+  }
+
   def crearPinEmpresaAgenteEmpresarial(pinEmpresaAgenteEmpresarial: ePinEmpresa): Future[Validation[PersistenceException, Int]] = {
     repo.guardarPinEmpresaAgenteEmpresarial(pinEmpresaAgenteEmpresarial)
   }

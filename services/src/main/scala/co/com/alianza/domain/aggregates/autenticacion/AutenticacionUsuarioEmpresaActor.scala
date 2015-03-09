@@ -589,7 +589,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
     if (estadoUsuario == EstadosEmpresaEnum.bloqueContraseña.id) Validation.failure(ErrorUsuarioBloqueadoIntentosErroneos())
     else if (estadoUsuario == EstadosEmpresaEnum.pendienteActivacion.id) Validation.failure(ErrorUsuarioBloqueadoPendienteActivacion())
     else if (estadoUsuario == EstadosEmpresaEnum.pendienteReiniciarContrasena.id) Validation.failure(ErrorUsuarioBloqueadoPendienteReinicio())
-    else if (estadoUsuario == EstadosEmpresaEnum.bloqueadoPorSuperAdmin.id) Validation.failure(ErrorUsuarioDesactivadoSuperAdmin())
+    else if (estadoUsuario == EstadosEmpresaEnum.bloqueadoPorAdmin.id) Validation.failure(ErrorUsuarioDesactivadoSuperAdmin())
     else Validation.success(true)
   }
 
