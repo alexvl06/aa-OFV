@@ -144,6 +144,8 @@ class SesionActor(expiracionSesion: Int, empresa: Option[Empresa]) extends Actor
 
     case msg: ExpirarSesion =>
       log.info("Eliminando sesión de usuario: " + self.path.name)
+      if(empresaActor.isDefined)
+        empresaActor.get ! RemoverSesion(self)
       context.stop(self)
 
     case empresaActor: ActorRef =>
