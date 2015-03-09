@@ -11,7 +11,7 @@ import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.app.MainActors
 import scalaz.{Failure => zFailure, Success => zSuccess}
 import co.com.alianza.infrastructure.dto._
-import co.com.alianza.persistence.entities.{Usuario => eUsuario, PinUsuario => ePinUsuario, UsuarioEmpresarial => eUsuarioEmpresarial, UsuarioEmpresarialAdmin => eUsuarioEmpresarialAdmin, Empresa, IpsEmpresa, PerfilUsuario, IpsUsuario}
+import co.com.alianza.persistence.entities.{Usuario => eUsuario, PinUsuario => ePinUsuario, UsuarioEmpresarial => eUsuarioEmpresarial, UsuarioEmpresarialAdmin => eUsuarioEmpresarialAdmin, _}
 import co.com.alianza.persistence.messages.AutenticacionRequest
 import enumerations.EstadosUsuarioEnum
 import co.com.alianza.persistence.entities
@@ -61,7 +61,6 @@ object DataAccessAdapter {
   }
 
   def obtenerIdEmpresa(idUsuario: Int, tipoCliente: TiposCliente): Future[Validation[PersistenceException, Int]] = {
-    //new EmpresaRepository().obtenerEmpresa(nit)
     tipoCliente match{
       case TiposCliente.agenteEmpresarial => new EmpresaUsuarioRepository().obtenerIdEmpresa(idUsuario)
       case TiposCliente.clienteAdministrador => new EmpresaUsuarioAdminRepository().obtenerIdEmpresa(idUsuario)
@@ -172,6 +171,14 @@ object DataAccessAdapter {
   def actualizarEstadoConfronta( numeroIdentificacion:String): Future[Validation[PersistenceException, Int]] = {
     val repo = new UsuariosRepository()
     repo.actualizarEstadoUsuario( numeroIdentificacion,EstadosUsuarioEnum.activo.id )
+  }
+
+  def obtenerHorarioEmpresa(idEmpresa: Int): Future[Validation[PersistenceException, Option[HorarioEmpresa]]] ={
+    new HorarioEmpresaRepository().obtenerHorarioEmpresa(idEmpresa)
+  }
+
+  def agregarHorarioEmpresa(horarioEmpresa: HorarioEmpresa): Future[Validation[PersistenceException, Boolean]] ={
+    new HorarioEmpresaRepository().agregarHorarioEmpresa(horarioEmpresa)
   }
 
   def obtenerIpsUsuario( idUsuario:Int ) : Future[Validation[PersistenceException, Vector[IpsUsuario]]] = {

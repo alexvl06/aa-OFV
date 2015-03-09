@@ -5,7 +5,7 @@ import akka.cluster.Cluster
 
 import co.com.alianza.domain.aggregates.confronta.{ConfrontaActorSupervisor}
 import co.com.alianza.domain.aggregates.autenticacion._
-import co.com.alianza.domain.aggregates.empresa.{ContrasenasClienteAdminActorSupervisor, AgenteEmpresarialActorSupervisor, ContrasenasAgenteEmpresarialActorSupervisor}
+import co.com.alianza.domain.aggregates.empresa.{HorarioEmpresaActorSupervisor, ContrasenasClienteAdminActorSupervisor, AgenteEmpresarialActorSupervisor, ContrasenasAgenteEmpresarialActorSupervisor}
 import co.com.alianza.domain.aggregates.usuarios.UsuariosActorSupervisor
 import co.com.alianza.domain.aggregates.autoregistro.ConsultaClienteActorSupervisor
 import co.com.alianza.domain.aggregates.contrasenas.ContrasenasActorSupervisor
@@ -53,7 +53,10 @@ trait CoreActors { this: Core =>
   val contrasenasActorSupervisor = system.actorOf( Props[ ContrasenasActorSupervisor ], "contrasenasActorSupervisor" )
   val contrasenasAgenteEmpresarialActorSupervisor = system.actorOf( Props[ ContrasenasAgenteEmpresarialActorSupervisor ], "contrasenasAgenteEmpresarialActorSupervisor" )
   val contrasenasClienteAdminActorSupervisor = system.actorOf( Props[ ContrasenasClienteAdminActorSupervisor ], "contrasenasClienteAdminActorSupervisor" )
+
   val ipsUsuarioActorSupervisor  = system.actorOf( Props[ IpsUsuarioActorSupervisor ], "ipsUsuarioActorSupervisor" )
+
+  val horarioEmpresaActorSupervisor  = system.actorOf( Props[ HorarioEmpresaActorSupervisor ], "horarioEmpresaActorSupervisor" )
   val pinActorSupervisor = system.actorOf( Props[ PinActorSupervisor ], "PinActorSupervisor" )
   val sesionActorSupervisor = system.actorOf( Props[ SesionActorSupervisor ], "sesionActorSupervisor" )
   val agenteEmpresarialActorSupervisor = system.actorOf( Props[ AgenteEmpresarialActorSupervisor ], "agenteEmpresarialActorSupervisor" )

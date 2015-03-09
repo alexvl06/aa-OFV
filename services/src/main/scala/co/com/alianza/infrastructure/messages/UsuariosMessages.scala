@@ -49,7 +49,7 @@ case class ConsultaUsuarioEmpresarialAdminMessage(
                                               token:Option[String] = None
                                               ) extends MessageService
 
-case class OlvidoContrasenaMessage(perfilCliente:Int, identificacion: String, tipoIdentificacion: Int, usuarioClienteAdmin:String) extends MessageService{
+case class OlvidoContrasenaMessage(perfilCliente:Int, identificacion: String, tipoIdentificacion: Int, usuarioClienteAdmin:Option[String]) extends MessageService{
 
 }
 
