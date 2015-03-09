@@ -96,9 +96,20 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
 
   def CambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
-      val query = for {u <- UsuariosEmpresariales if u.id === idUsuarioAgenteEmpresarial} yield u.estado
+      val query = for {u <- UsuariosEmpresariales if u.id === idUsuarioAgenteEmpresarial} yield (u.estado)
+
       val resultTry = Try {
         query.update(estado.id)
+      }
+      resolveTry(resultTry, "Cambiar Estado Usuario Agente Empresarial")
+  }
+
+  def CambiarBloqueoDesbloqueoAgenteEmpresarial(idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa,timestamp: Timestamp): Future[Validation[PersistenceException, Int]] = loan {
+    implicit session =>
+      val query = for {u <- UsuariosEmpresariales if u.id === idUsuarioAgenteEmpresarial} yield (u.estado,u.fechaActualizacion)
+
+      val resultTry = Try {
+        query.update(estado.id,timestamp)
       }
       resolveTry(resultTry, "Cambiar Estado Usuario Agente Empresarial")
   }
