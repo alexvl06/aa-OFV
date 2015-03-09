@@ -33,12 +33,17 @@ class EmpresaActor(var empresa: Empresa) extends Actor with ActorLogging {
     case AgregarSesion(sesion) =>
       sesionesActivas = if(!sesionesActivas.contains(sesion)) List(sesion) ::: sesionesActivas else sesionesActivas
 
+    case RemoverSesion(sesion) =>
+      sesionesActivas = sesionesActivas filterNot{_==sesion}
+      if(sesionesActivas.isEmpty) context.stop(self)
+      sender ! Unit
+
     case AgregarIp(ip) => ips = if(!ips.contains(ip)) List(ip) ::: ips else ips
 
     case RemoverIp(ip) => ips = if(ips.contains(ip)) ips filterNot{_==ip} else ips
 
     case CerrarSesiones() => {
-      sesionesActivas foreach { _ ! ExpirarSesion }
+      sesionesActivas foreach { _ ! ExpirarSesion() }
       context.stop(self)
     }
 
@@ -113,6 +118,7 @@ case class ActorEncontrado(session: ActorRef)
 case object ActorNoEncontrado
 case class EncontrarActor(actorName: String)
 case class AgregarSesion(sesion: ActorRef)
+case class RemoverSesion(sesion: ActorRef)
 
 case class AgregarIp(ip: String)
 

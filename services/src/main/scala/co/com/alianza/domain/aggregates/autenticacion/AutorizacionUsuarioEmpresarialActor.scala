@@ -123,9 +123,13 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
       case Some(empresaSesionActor: ActorRef) =>
         empresaSesionActor ? ObtenerIps() map {
           case ips : List[String] if ips.contains(ip) => Validation.success(ip)
-          case ips : List[String] if ips.isEmpty || !ips.contains(ip) => Validation.failure(ErrorSesionIpInvalida(ip));
+          case ips : List[String] if ips.isEmpty || !ips.contains(ip) =>
+            sesion ! ExpirarSesion()
+            Validation.failure(ErrorSesionIpInvalida(ip));
         }
-      case None => log error ("+++No encontrado empresa actor."); Future.successful(Validation.failure(ErrorSesionIpInvalida(ip)))
+      case None =>
+        log error ("+++No encontrado empresa actor.");
+        Future.successful(Validation.failure(ErrorSesionIpInvalida(ip)))
     }
   }
 
