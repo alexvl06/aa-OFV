@@ -187,20 +187,29 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
     val actualizarContrasenaFuture = (for {
       cantidadFilasActualizadas <- ValidationT(DataAccessAdapter.actualizarContrasenaAgenteEmpresarial(nuevoPass, mensaje.idUsuario).map(_.leftMap(pe => ErrorPersistence(pe.message, pe))))
       res <- ValidationT( DataAccessAdapter.caducarFechaUltimoCambioContrasenaAgenteEmpresarial( mensaje.idUsuario ).map(_.leftMap(pe => ErrorPersistence(pe.message, pe))) )
+      usuario <- ValidationT(DataAccessAdapter.obtenerUsuarioEmpresarialPorId(mensaje.idUsuario).map(_.leftMap(pe => ErrorPersistence(pe.message, pe))))
     } yield {
-      cantidadFilasActualizadas
+      (cantidadFilasActualizadas, usuario.get)
     }).run
     resolveActualizarContrasenaFuture(actualizarContrasenaFuture, currentSender, mensaje)
 
   }
 
-  private def resolveActualizarContrasenaFuture(actualizarContrasenaFuture: Future[Validation[ErrorValidacion, Int]], currentSender: ActorRef, message: AsignarContrasenaMessage) = {
+
+
+  private def resolveActualizarContrasenaFuture(actualizarContrasenaFuture: Future[Validation[ErrorValidacion, (Int, UsuarioEmpresarial)]], currentSender: ActorRef, message: AsignarContrasenaMessage) = {
     actualizarContrasenaFuture onComplete {
       case sFailure(failure) => currentSender ! failure
       case sSuccess(value) =>
         value match {
-          case zSuccess(response: Int) =>
-            currentSender ! ResponseMessage(OK, response.toString)
+          case zSuccess((filasActualizadas, usuario)) =>{
+
+            if(usuario.estado != EstadosUsuarioEnum.){
+              DataAccessAdapter.actualizarEstadoUsuarioAgenteEmpresarial( usuario.id, EstadosUsuarioEnum.activo.id )
+            }
+            currentSender ! ResponseMessage(OK, filasActualizadas.toString)
+
+          }
           case zFailure(error) =>
             error match {
               case errorPersistence: ErrorPersistence => currentSender ! errorPersistence.exception
