@@ -14,13 +14,13 @@ import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
 import co.com.alianza.persistence.entities.{IpsEmpresa, IpsUsuario}
 import co.com.alianza.app.MainActors
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => usuarioAdaptador}
-import co.com.alianza.infrastructure.dto.Empresa
+import co.com.alianza.infrastructure.dto.{Empresa, HorarioEmpresa}
 import co.com.alianza.infrastructure.messages._
 
 /**
  * Created by manuel on 3/03/15.
  */
-class EmpresaActor(var empresa: Empresa) extends Actor with ActorLogging {
+class EmpresaActor(var empresa: Empresa, var horario : Option[HorarioEmpresa]) extends Actor with ActorLogging {
 
   implicit val _: ExecutionContext = context dispatcher
   implicit val timeout: Timeout = 120 seconds
@@ -33,24 +33,33 @@ class EmpresaActor(var empresa: Empresa) extends Actor with ActorLogging {
     case AgregarSesion(sesion) =>
       sesionesActivas = if(!sesionesActivas.contains(sesion)) List(sesion) ::: sesionesActivas else sesionesActivas
 
+    case RemoverSesion(sesion) =>
+      sesionesActivas = sesionesActivas filterNot{_==sesion}
+      if(sesionesActivas.isEmpty) context.stop(self)
+      sender ! Unit
+
     case AgregarIp(ip) => ips = if(!ips.contains(ip)) List(ip) ::: ips else ips
 
     case RemoverIp(ip) => ips = if(ips.contains(ip)) ips filterNot{_==ip} else ips
 
-    case CerrarSesiones() => {
-      sesionesActivas foreach { _ ! ExpirarSesion }
+    case CerrarSesiones => {
+      sesionesActivas foreach { _ ! ExpirarSesion() }
       context.stop(self)
     }
 
-    case CargarIps() => cargaIpsEmpresa()
+    case CargarIps => cargaIpsEmpresa()
 
-    case ObtenerIps() =>
+    case ObtenerIps =>
       val currentSender = sender
-      self ? CargarIps() onComplete {
+      self ? CargarIps onComplete {
         case Success(true) => currentSender ! ips
         case Success(false) => log error "*++*+ Falló la carga de ips"
         case Failure(error) => log error ("+++ Falló la carga de ips de la empresa", error)
       }
+
+    case ActualizarHorarioEmpresa(horario) => this.horario = Some(horario)
+
+    case ObtenerHorario => sender ! horario
 
   }
 
@@ -71,7 +80,7 @@ class EmpresaActor(var empresa: Empresa) extends Actor with ActorLogging {
 }
 
 object EmpresaActor {
-  def props(empresa: Empresa) = Props(new EmpresaActor(empresa))
+  def props(empresa: Empresa, horario : Option[HorarioEmpresa]) = Props(new EmpresaActor(empresa, horario))
 }
 
 class BuscadorActorCluster(nombreActorPadre: String) extends Actor {
@@ -113,12 +122,17 @@ case class ActorEncontrado(session: ActorRef)
 case object ActorNoEncontrado
 case class EncontrarActor(actorName: String)
 case class AgregarSesion(sesion: ActorRef)
+case class RemoverSesion(sesion: ActorRef)
 
 case class AgregarIp(ip: String)
 
 case class RemoverIp(ip: String)
 
-case class ObtenerIps()
+case object ObtenerIps
 
-case class CargarIps()
+case object CargarIps
+
+case object ObtenerHorario
+
+case class ActualizarHorarioEmpresa(horario: HorarioEmpresa)
 

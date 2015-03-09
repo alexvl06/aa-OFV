@@ -8,7 +8,7 @@ import co.com.alianza.util.transformers.ValidationT
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.domain.aggregates.autenticacion.errores._
 import co.com.alianza.util.json.JsonUtil
-import co.com.alianza.infrastructure.dto.{UsuarioEmpresarial, UsuarioEmpresarialAdmin, RecursoPerfilAgente, RecursoPerfilClienteAdmin}
+import co.com.alianza.infrastructure.dto._
 import co.com.alianza.infrastructure.anticorruption.recursosAgenteEmpresarial.{DataAccessAdapter => raDataAccessAdapter}
 import co.com.alianza.infrastructure.anticorruption.recursosClienteAdmin.{DataAccessAdapter => rcaDataAccessAdapter}
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => usDataAdapter}
@@ -26,7 +26,7 @@ import spray.http.StatusCodes._
 /**
  * Created by manuel on 16/12/14.
  */
-class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
+class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with ValidacionesAutenticacionUsuarioEmpresarial {
 
   override def receive = {
 
@@ -38,6 +38,7 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
         usuarioOption <- ValidationT(obtieneUsuarioEmpresarial(token))
         validUs <- ValidationT(validarUsuario(usuarioOption))
         validacionIp <- ValidationT(validarIpEmpresa(sesion, message.ip))
+        validacionHorario <- ValidationT(validarHorarioEmpresa(sesion))
         result <- ValidationT(autorizarRecursoAgente(usuarioOption, message.url))
       } yield {
         result
@@ -118,16 +119,40 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
       _.leftMap { pe => ErrorPersistenciaAutorizacion(pe.message, pe) }
     }
 
-  private def validarIpEmpresa(sesion: ActorRef, ip: String) : Future[Validation[ErrorAutorizacion, String]] = {
-    sesion ? ObtenerEmpresaActor() flatMap {
+  private def validarIpEmpresa(sesion: ActorRef, ip: String) : Future[Validation[ErrorAutorizacion, String]] =
+    sesion ? ObtenerEmpresaActor flatMap {
       case Some(empresaSesionActor: ActorRef) =>
-        empresaSesionActor ? ObtenerIps() map {
+        empresaSesionActor ? ObtenerIps map {
           case ips : List[String] if ips.contains(ip) => Validation.success(ip)
-          case ips : List[String] if ips.isEmpty || !ips.contains(ip) => Validation.failure(ErrorSesionIpInvalida(ip));
+          case ips : List[String] if ips.isEmpty || !ips.contains(ip) =>
+            sesion ! ExpirarSesion()
+            Validation.failure(ErrorSesionIpInvalida(ip));
         }
-      case None => log error ("+++No encontrado empresa actor."); Future.successful(Validation.failure(ErrorSesionIpInvalida(ip)))
+      case None =>
+        log error ("+++No encontrado empresa actor.");
+        Future.successful(Validation.failure(ErrorSesionIpInvalida(ip)))
     }
-  }
+
+  private def validarHorarioEmpresa(sesion: ActorRef) : Future[Validation[ErrorAutorizacion, Unit]] =
+    sesion ? ObtenerEmpresaActor flatMap {
+      case Some(empresaSesionActor: ActorRef) =>
+        empresaSesionActor ? ObtenerHorario flatMap {
+          case horario: Option[HorarioEmpresa] =>
+            validarHorarioEmpresa(horario) map {
+              case zSuccess(true) =>
+                Validation success((): Unit)
+              case zSuccess(false) =>
+                sesion ! ExpirarSesion()
+                Validation failure ErrorSesionHorarioInvalido()
+              case zFailure(error) =>
+                sesion ! ExpirarSesion()
+                Validation failure ErrorSesionHorarioInvalido()
+            }
+        }
+      case None =>
+        log error ("+++No encontrado empresa actor.");
+        Future.successful(Validation failure ErrorSesionHorarioInvalido())
+    }
 
   import scalaz.Validation.FlatMap._
   private def autorizarRecursoAgente(agente: Option[UsuarioEmpresarial], url: Option[String]) : Future[Validation[ErrorAutorizacion, UsuarioEmpresarial]] =
@@ -161,6 +186,7 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor {
           case RecursoProhibido(usuario) =>
             originalSender ! ResponseMessage(Forbidden, JsonUtil.toJson(ForbiddenAgenteMessage(usuario, None, "403.2")))
           case e @ ErrorSesionIpInvalida(_) => originalSender ! ResponseMessage(Unauthorized, e.msg)
+          case e @ ErrorSesionHorarioInvalido() => originalSender ! ResponseMessage(Unauthorized, e.msg)
           case a => log error "***+ Error autorización: "+a.msg; originalSender ! ResponseMessage(Forbidden, errorAutorizacion.msg)
         }
       }

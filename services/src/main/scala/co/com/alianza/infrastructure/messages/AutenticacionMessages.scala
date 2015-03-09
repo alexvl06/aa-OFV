@@ -80,7 +80,7 @@ case class AgregarIPHabitualUsuarioEmpresarialAgente(idUsuario: Option[Int], cli
 
 case class ActualizarSesion()
 
-case class CrearSesionUsuario(token: String, tiempoExpiracion: Int, empresa: Option[Empresa] = None)
+case class CrearSesionUsuario(token: String, tiempoExpiracion: Int, empresa: Option[Empresa] = None, horario: Option[HorarioEmpresa] = None)
 
 case class InvalidarSesion(token: String)
 
