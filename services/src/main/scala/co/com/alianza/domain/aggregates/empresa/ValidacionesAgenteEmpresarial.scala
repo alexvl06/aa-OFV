@@ -37,7 +37,7 @@ object ValidacionesAgenteEmpresarial {
           case 3 => zSuccess(x._1)
           case _ => zFailure(ErrorEstadoAgenteEmpresarial(errorEstadoAgenteEmpresarial))
         }
-        case None => zFailure(ErrorAgenteEmpresarialNoExiste(errorAgenteEmpresarialNoExiste))
+        case None => zFailure(ErrorAgenteEmpNoExiste(errorAgenteEmpresarialNoExiste))
       }
     })
   }
@@ -51,7 +51,7 @@ object ValidacionesAgenteEmpresarial {
           case 1 => zSuccess(x)
           case _ => zFailure(ErrorEstadoAgenteEmpresarial(errorEstadoAgenteEmpresarial))
         }
-        case None => zFailure(ErrorAgenteEmpresarialNoExiste(errorAgenteEmpresarialNoExiste))
+        case None => zFailure(ErrorAgenteEmpNoExiste(errorAgenteEmpresarialNoExiste))
       }
     })
   }
@@ -93,6 +93,20 @@ object ValidacionesAgenteEmpresarial {
     })
 
   }
+
+  def validacionObtenerAgenteEmpId( idUsuario: Int ) : Future[Validation[ErrorValidacion, UsuarioEmpresarial]] = {
+
+    val agenteEmpFuture: Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = DataAccessAdapterUsuarioAE.obtenerUsuarioEmpresarialPorId(idUsuario)
+    agenteEmpFuture.map(_.leftMap(pe => ErrorPersistence(pe.message,pe)).flatMap{
+      (agenteEmp: Option[UsuarioEmpresarial]) => agenteEmp match{
+        case None => zFailure(ErrorAgenteEmpresarialNoExiste(errorAgenteEmpresarialNoExiste))
+        case Some(agenteEmp) => zSuccess(agenteEmp)
+      }
+    })
+
+  }
+
+
 
   /**
    * Valida si el cliente ya se encuentra registrado un cliente administrador con el mismo usuario

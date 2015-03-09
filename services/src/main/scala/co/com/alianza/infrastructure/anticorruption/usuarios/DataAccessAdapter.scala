@@ -1,6 +1,6 @@
 package co.com.alianza.infrastructure.anticorruption.usuarios
 
-import java.sql.Timestamp
+import java.sql.{Date, Timestamp}
 
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente._
@@ -11,7 +11,8 @@ import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.app.MainActors
 import scalaz.{Failure => zFailure, Success => zSuccess}
 import co.com.alianza.infrastructure.dto._
-import co.com.alianza.persistence.entities.{Usuario => eUsuario, PinUsuario => ePinUsuario, UsuarioEmpresarial => eUsuarioEmpresarial, UsuarioEmpresarialAdmin => eUsuarioEmpresarialAdmin, _}
+import co.com.alianza.persistence.entities.{Usuario => eUsuario, PinUsuario => ePinUsuario, UsuarioEmpresarial => eUsuarioEmpresarial,
+  UsuarioEmpresarialAdmin => eUsuarioEmpresarialAdmin, Empresa => eEmpresa, HorarioEmpresa => eHorarioEmpresa, _}
 import co.com.alianza.persistence.messages.AutenticacionRequest
 import enumerations.EstadosUsuarioEnum
 import co.com.alianza.persistence.entities
@@ -57,7 +58,9 @@ object DataAccessAdapter {
   }
 
   def obtenerEmpresaPorNit(nit: String): Future[Validation[PersistenceException,Option[Empresa]]] ={
-    new EmpresaRepository().obtenerEmpresa(nit)
+    new EmpresaRepository().obtenerEmpresa(nit) map {
+      x => transformValidationEmpresa(x)
+    }
   }
 
   def obtenerIdEmpresa(idUsuario: Int, tipoCliente: TiposCliente): Future[Validation[PersistenceException, Int]] = {
@@ -158,6 +161,7 @@ object DataAccessAdapter {
     repo.actualizarFechaUltimoIngreso( idUsuario, fechaActual )
   }
 
+  //Este metodo esta duplicado, lo encontramos en el dataAccessAdapter de clienteAdmin
   def obtenerUsuarioEmpresarialAdminPorId(idUsuario: Int): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = {
     val repo = new UsuarioEmpresarialAdminRepository()
     repo.obtenerUsuarioEmpresarialAdminPorId(idUsuario) map transformValidationUsuarioEmpresarialAdmin
@@ -174,10 +178,16 @@ object DataAccessAdapter {
   }
 
   def obtenerHorarioEmpresa(idEmpresa: Int): Future[Validation[PersistenceException, Option[HorarioEmpresa]]] ={
-    new HorarioEmpresaRepository().obtenerHorarioEmpresa(idEmpresa)
+    new HorarioEmpresaRepository().obtenerHorarioEmpresa(idEmpresa) map {
+      x => transformValidationHorario(x)
+    }
   }
 
-  def agregarHorarioEmpresa(horarioEmpresa: HorarioEmpresa): Future[Validation[PersistenceException, Boolean]] ={
+  def existeDiaFestivo(fecha: Date): Future[Validation[PersistenceException, Boolean]] = {
+    new DiaFestivoRepository().exiateDiaFestivo(fecha)
+  }
+
+  def agregarHorarioEmpresa(horarioEmpresa: eHorarioEmpresa): Future[Validation[PersistenceException, Boolean]] ={
     new HorarioEmpresaRepository().agregarHorarioEmpresa(horarioEmpresa)
   }
 
@@ -188,6 +198,12 @@ object DataAccessAdapter {
 
   def obtenerIpsEmpresa( idEmpresa:Int ) : Future[Validation[PersistenceException, Vector[IpsEmpresa]]] = {
     new IpsEmpresaRepository().obtenerIpsEmpresa(idEmpresa)
+  }
+
+  def obtenerEstadoEmpresa ( nit: String ) : Future[Validation[PersistenceException, Option[Empresa]]] = {
+    new EmpresaRepository().obtenerEmpresa(nit) map {
+      x => transformValidationEmpresa(x)
+    }
   }
 
   def agregarIpUsuario( ip:IpsUsuario ) : Future[Validation[PersistenceException, String]] = {
@@ -270,7 +286,28 @@ object DataAccessAdapter {
           case Some(usuario) => zSuccess(Some(DataAccessTranslator.translateUsuario(usuario)))
           case _ => zSuccess(None)
         }
+      case zFailure(error)    =>  zFailure(error)
+    }
+  }
 
+  private def transformValidationHorario(origin: Validation[PersistenceException, Option[eHorarioEmpresa]]): Validation[PersistenceException, Option[HorarioEmpresa]] = {
+    origin match {
+      case zSuccess(response) =>
+        response match {
+          case Some(horario) => zSuccess(Some(DataAccessTranslator.translateHorarioEmpresa(horario)))
+          case _ => zSuccess(None)
+        }
+      case zFailure(error)    =>  zFailure(error)
+    }
+  }
+
+  private def transformValidationEmpresa(origin: Validation[PersistenceException, Option[eEmpresa]]): Validation[PersistenceException, Option[Empresa]] = {
+    origin match {
+      case zSuccess(response) =>
+        response match {
+          case Some(empresa) => zSuccess(Some(DataAccessTranslator.translateEmpresa(empresa)))
+          case _ => zSuccess(None)
+        }
       case zFailure(error)    =>  zFailure(error)
     }
   }

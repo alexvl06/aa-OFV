@@ -1,8 +1,9 @@
 package co.com.alianza.domain.aggregates.ips
 
-import akka.actor.{Actor, ActorLogging, Props, OneForOneStrategy}
+import akka.actor.{Actor, ActorRef, ActorLogging, Props, OneForOneStrategy}
 import akka.actor.SupervisorStrategy._
 import akka.routing.RoundRobinPool
+import akka.pattern._
 import co.com.alianza.app.AlianzaActors
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente._
@@ -11,7 +12,11 @@ import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.persistence.entities.{IpsEmpresa, Empresa, IpsUsuario}
 import co.com.alianza.util.transformers.ValidationT
+import co.com.alianza.app.MainActors
+import co.com.alianza.domain.aggregates.autenticacion.{RemoverIp, AgregarIp}
+import co.com.alianza.exceptions.BusinessLevel
 import spray.http.StatusCodes._
+
 
 import scala.util.{Failure, Success}
 import scala.concurrent.Future
@@ -91,6 +96,7 @@ class IpsUsuarioActor extends Actor with ActorLogging with AlianzaActors {
         (for {
           idEmpresa <- ValidationT(DataAccessAdapter.obtenerIdEmpresa(idUsuario, tipoCliente))
           mensaje <- ValidationT(DataAccessAdapter.agregarIpEmpresa(new IpsEmpresa(idEmpresa, ip)))
+          agregarIpSesion <- ValidationT(agregarIpSesionEmpresa(idEmpresa, ip))
         } yield (mensaje)).run
     }
     result  onComplete {
@@ -113,6 +119,7 @@ class IpsUsuarioActor extends Actor with ActorLogging with AlianzaActors {
         (for {
           idEmpresa <- ValidationT(DataAccessAdapter.obtenerIdEmpresa(idUsuario, tipoCliente))
           mensaje <- ValidationT(DataAccessAdapter.eliminarIpEmpresa(new IpsEmpresa(idEmpresa, ip)))
+          removerIpSesion <- ValidationT(removerIpSesionEmpresa(idEmpresa, ip))
         } yield (mensaje)).run
     }
     result  onComplete {
@@ -120,10 +127,23 @@ class IpsUsuarioActor extends Actor with ActorLogging with AlianzaActors {
       case Success(value)    =>
         value match {
           case zSuccess(response: Int) =>
+
             currentSender !  ResponseMessage(OK, response.toJson)
           case zFailure(error)                 =>  currentSender !  error
         }
     }
   }
+
+  private def agregarIpSesionEmpresa(empresaId: Int, ip: String) =
+    MainActors.sesionActorSupervisor ? ObtenerEmpresaSesionActorId(empresaId) map {
+      case Some(empresaSesionActor: ActorRef) => empresaSesionActor ! AgregarIp(ip); zSuccess(():Unit)
+      case _ => zFailure(PersistenceException(new Exception(),BusinessLevel,"Error"))
+    }
+
+  private def removerIpSesionEmpresa(empresaId: Int, ip: String) =
+    MainActors.sesionActorSupervisor ? ObtenerEmpresaSesionActorId(empresaId) map {
+      case Some(empresaSesionActor: ActorRef) => empresaSesionActor ! RemoverIp(ip); zSuccess(():Unit)
+      case _ => zFailure(PersistenceException(new Exception(),BusinessLevel,"Error"))
+    }
 
 }

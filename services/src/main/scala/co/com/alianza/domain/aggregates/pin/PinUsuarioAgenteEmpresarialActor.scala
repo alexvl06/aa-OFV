@@ -30,7 +30,7 @@ import scalaz.{Validation, Failure => zFailure, Success => zSuccess}
 class PinUsuarioAgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors with FutureResponse  {
 
   implicit val ex: ExecutionContext = MainActors.dataAccesEx
-  import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario._
+  import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial._
 
   def receive = {
     case message: ValidarPin => validarPin(message.tokenHash)
@@ -56,7 +56,9 @@ class PinUsuarioAgenteEmpresarialActor extends Actor with ActorLogging with Alia
     val finalResultFuture = (for {
       pin <- ValidationT(obtenerPinFuture)
       pinValidacion <- ValidationT(PinUtil.validarPinUsuarioAgenteEmpresarialFuture(pin))
-      rvalidacionClave <- ValidationT(validacionReglasClave(pw, pinValidacion.idUsuario, perfilUsuario))
+      clienteAdminOk <- ValidationT(validacionObtenerAgenteEmpId(pinValidacion.idUsuario))
+      estadoEempresaOk <- ValidationT(co.com.alianza.domain.aggregates.empresa.ValidacionesClienteAdmin.validarEstadoEmpresa(clienteAdminOk.identificacion))
+      rvalidacionClave <- ValidationT(co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.validacionReglasClave(pw, pinValidacion.idUsuario, perfilUsuario))
       rCambiarPss <- ValidationT(cambiarPassword(pinValidacion.idUsuario, passwordAppend))
       resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(pinValidacion.idUsuario, Crypto.hashSha512(passwordAppend)))
       rCambiarEstado <- ValidationT(cambiarEstado(pinValidacion.idUsuario))
