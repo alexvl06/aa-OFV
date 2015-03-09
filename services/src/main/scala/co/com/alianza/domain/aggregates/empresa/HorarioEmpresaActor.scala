@@ -1,17 +1,23 @@
 package co.com.alianza.domain.aggregates.empresa
 
-import akka.actor.{Actor, ActorLogging, Props, OneForOneStrategy}
+import akka.actor.{Actor, ActorRef, ActorLogging, Props, OneForOneStrategy}
 import akka.actor.SupervisorStrategy._
+import akka.pattern._
 import akka.routing.RoundRobinPool
 import co.com.alianza.app.AlianzaActors
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
+import co.com.alianza.infrastructure.anticorruption.horario.{DataAccessTranslator => HorarioTrans}
+import co.com.alianza.infrastructure.dto.{HorarioEmpresa => HorarioEmpresaDTO}
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.infrastructure.messages.empresa.{AgregarHorarioEmpresaMessage, ObtenerHorarioEmpresaMessage}
-import co.com.alianza.persistence.entities.{HorarioEmpresa}
+import co.com.alianza.persistence.entities.HorarioEmpresa
 import co.com.alianza.util.transformers.ValidationT
+import co.com.alianza.app.MainActors
+import co.com.alianza.exceptions.BusinessLevel
+import co.com.alianza.domain.aggregates.autenticacion.ActualizarHorarioEmpresa
 import spray.http.StatusCodes._
 
 import java.sql.Time
@@ -83,6 +89,7 @@ class HorarioEmpresaActor extends Actor with ActorLogging with AlianzaActors {
       (for {
         idEmpresa <- ValidationT(DataAccessAdapter.obtenerIdEmpresa(message.idUsuario.get, message.tipoCliente))
         horarioEmpresa <- ValidationT(DataAccessAdapter.agregarHorarioEmpresa(toEntity(message, idEmpresa)))
+        horarioEmpresa <- ValidationT(agregarHorarioSesionEmpresa (idEmpresa, HorarioTrans translateHorarioEmpresa(toEntity(message, idEmpresa))))
       } yield (horarioEmpresa)).run
     }
     result onComplete {
@@ -95,6 +102,14 @@ class HorarioEmpresaActor extends Actor with ActorLogging with AlianzaActors {
           case zFailure(error)   =>
             currentSender !  error
         }
+    }
+  }
+
+  def agregarHorarioSesionEmpresa(empresaId: Int, horario: HorarioEmpresaDTO) : Future[Validation[PersistenceException, Boolean]] = {
+    MainActors.sesionActorSupervisor ? ObtenerEmpresaSesionActorId (empresaId) map {
+      case Some(empresaSesionActor: ActorRef) => empresaSesionActor ! ActualizarHorarioEmpresa(horario); zSuccess(true)
+      case None => zSuccess(false)
+      case _ => zFailure(PersistenceException(new Exception(),BusinessLevel,"Error"))
     }
   }
 
