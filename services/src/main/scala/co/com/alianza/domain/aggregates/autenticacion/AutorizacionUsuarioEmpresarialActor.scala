@@ -126,7 +126,6 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
         empresaSesionActor ? ObtenerIps map {
           case ips : List[String] if ips.contains(ip) => Validation.success(ip)
           case ips : List[String] if ips.isEmpty || !ips.contains(ip) =>
-            sesion ! ExpirarSesion()
             Validation.failure(ErrorSesionIpInvalida(ip));
         }
       case None =>
@@ -165,10 +164,8 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
               case zSuccess(true) =>
                 Validation success((): Unit)
               case zSuccess(false) =>
-                sesion ! ExpirarSesion()
                 Validation failure ErrorSesionHorarioInvalido()
               case zFailure(error) =>
-                sesion ! ExpirarSesion()
                 Validation failure ErrorSesionHorarioInvalido()
             }
         }
