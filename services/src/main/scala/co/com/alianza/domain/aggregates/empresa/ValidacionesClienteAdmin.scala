@@ -42,9 +42,7 @@ object ValidacionesClienteAdmin {
   }
 
   def validacionReglasClave(contrasena:String, idUsuario: Int, perfilUsuario: PerfilesUsuario.perfilUsuario): Future[Validation[ErrorValidacion, Unit.type]] = {
-
     val usuarioFuture: Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = ValidarClave.aplicarReglas(contrasena, Some(idUsuario), perfilUsuario, ValidarClave.reglasGenerales: _*)
-
     usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message,pe)).flatMap{
       (x:List[ErrorValidacionClave]) => x match{
         case List() => zSuccess(Unit)
@@ -56,7 +54,6 @@ object ValidacionesClienteAdmin {
   }
 
   def validacionObtenerClienteAdminPorId( idUsuario: Int ) : Future[Validation[ErrorValidacion, UsuarioEmpresarialAdmin]] = {
-
     val clienteAdminFuture: Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = DataAccessAdapterClienteAdmin.obtenerUsuarioEmpresarialAdminPorId(idUsuario)
     clienteAdminFuture.map(_.leftMap(pe => ErrorPersistence(pe.message,pe)).flatMap{
       (clienteAdmin: Option[UsuarioEmpresarialAdmin]) => clienteAdmin match{
@@ -64,7 +61,6 @@ object ValidacionesClienteAdmin {
         case Some(clienteAdmin) => zSuccess(clienteAdmin)
       }
     })
-
   }
 
   def validarEstadoEmpresa(nit: String): Future[Validation[ErrorValidacion, Boolean]] = {

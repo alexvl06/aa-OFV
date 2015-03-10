@@ -28,7 +28,7 @@ import scalaz.Validation
 
 import akka.actor.Props
 import akka.routing.RoundRobinPool
-import enumerations.{PerfilesUsuario, AppendPasswordUser}
+import enumerations.{EstadosEmpresaEnum, PerfilesUsuario, AppendPasswordUser}
 /**
  * Created by manuel on 6/01/15.
  */
@@ -51,7 +51,6 @@ class PinUsuarioEmpresarialAdminActor extends Actor with ActorLogging with Alian
     resolveOlvidoContrasenaFuture(result, funcionalidad, currentSender)
   }
 
-
   private def resolveOlvidoContrasenaFuture(finalResultFuture: Future[Validation[PersistenceException, Option[PinUsuarioEmpresarialAdmin]]], funcionalidad:Int, currentSender: ActorRef) = {
     finalResultFuture onComplete {
       case Failure(failure) => currentSender ! failure
@@ -67,27 +66,23 @@ class PinUsuarioEmpresarialAdminActor extends Actor with ActorLogging with Alian
     }
   }
 
-
   private def cambiarPw(tokenHash: String, pw: String, currentSender: ActorRef) = {
-
     val obtenerPinFuture: Future[Validation[ErrorValidacion, Option[PinUsuarioEmpresarialAdmin]]] = pDataAccessAdapter.obtenerPin(tokenHash).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
     val passwordAppend = pw.concat( AppendPasswordUser.appendUsuariosFiducia )
-
     //En la funcion los cambios: idUsuario y tokenHash que se encuentran en ROJO, no son realmente un error.
     val finalResultFuture = (for {
-      pin <- ValidationT(obtenerPinFuture)
-      pinValidacion <- ValidationT(PinUtil.validarPinUsuarioEmpresarialAdminFuture(pin))
-      clienteAdminOk <- ValidationT(validacionObtenerClienteAdminPorId(pinValidacion.idUsuario))
-      estadoEempresaOk <- ValidationT(validarEstadoEmpresa(clienteAdminOk.identificacion))
-      rvalidacionClave <- ValidationT(co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.validacionReglasClave(pw, pinValidacion.idUsuario, PerfilesUsuario.clienteAdministrador))
-      rCambiarPss <- ValidationT(cambiarPassword(pinValidacion.idUsuario, passwordAppend))
-      resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(pinValidacion.idUsuario, Crypto.hashSha512(passwordAppend)))
-      rCambiarEstado <- ValidationT(cambiarEstado(pinValidacion.idUsuario))
-      idResult <- ValidationT(eliminarPin(pinValidacion.tokenHash))
+      pin                     <- ValidationT(obtenerPinFuture)
+      pinValidacion           <- ValidationT(PinUtil.validarPinUsuarioEmpresarialAdminFuture(pin))
+      clienteAdminOk          <- ValidationT(validacionObtenerClienteAdminPorId(pinValidacion.idUsuario))
+      estadoEmpresaOk         <- ValidationT(validarEstadoEmpresa(clienteAdminOk.identificacion))
+      rvalidacionClave        <- ValidationT(co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.validacionReglasClave(pw, pinValidacion.idUsuario, PerfilesUsuario.clienteAdministrador))
+      rCambiarPss             <- ValidationT(cambiarPassword(pinValidacion.idUsuario, passwordAppend))
+      guardarUltimaContrasena <- ValidationT(guardarUltimaContrasena(pinValidacion.idUsuario, Crypto.hashSha512(passwordAppend)))
+      rCambiarEstado          <- ValidationT(cambiarEstado(pinValidacion.idUsuario))
+      idResult                <- ValidationT(eliminarPin(pinValidacion.tokenHash))
     } yield {
       idResult
     }).run
-
     resolveCrearUsuarioFuture(finalResultFuture, currentSender)
   }
 
@@ -98,8 +93,10 @@ class PinUsuarioEmpresarialAdminActor extends Actor with ActorLogging with Alian
   private def cambiarPassword(idUsuario: Int, pw: String): Future[Validation[ErrorValidacion, Int]] =
     uDataAccessAdapter cambiarPasswordUsuarioEmpresarialAdmin (idUsuario, Crypto.hashSha512(pw)) map (_.leftMap(pe => ErrorPersistence(pe.message, pe)))
 
-  private def cambiarEstado(idUsuario: Int): Future[Validation[ErrorValidacion, Int]] =
-    uDataAccessAdapter actualizarEstadoUsuarioEmpresarialAdmin (idUsuario, 1) map (_.leftMap(pe => ErrorPersistence(pe.message, pe)))
+  private def cambiarEstado(idUsuario: Int): Future[Validation[ErrorValidacion, Int]] = {
+    val estado = EstadosEmpresaEnum.activo.id
+    uDataAccessAdapter actualizarEstadoUsuarioEmpresarialAdmin (idUsuario, estado) map (_.leftMap(pe => ErrorPersistence(pe.message, pe)))
+  }
 
   private def eliminarPin(tokenHash: String): Future[Validation[ErrorValidacion, Int]] =
     pDataAccessAdapter eliminarPin (tokenHash) map (_.leftMap(pe => ErrorPersistence(pe.message, pe)))
