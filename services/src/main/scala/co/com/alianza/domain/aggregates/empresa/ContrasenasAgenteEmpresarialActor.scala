@@ -203,7 +203,7 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
         value match {
           case zSuccess((filasActualizadas, usuario)) =>{
 
-            if(usuario.estado != EstadosEmpresaEnum.bloqueadoPorSuperAdmin.id){
+            if(usuario.estado != EstadosEmpresaEnum.bloqueadoPorAdmin.id){
               DataAccessAdapter.actualizarEstadoUsuarioAgenteEmpresarial( usuario.id, EstadosUsuarioEnum.activo.id )
             }
             currentSender ! ResponseMessage(OK, filasActualizadas.toString)
