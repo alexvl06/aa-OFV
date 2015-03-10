@@ -5,13 +5,16 @@ import spray.httpx.SprayJsonSupport
 import spray.json.{JsValue, RootJsonFormat}
 
 import co.com.alianza.infrastructure.dto._
+import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 
 /**
  * Created by manuel on 7/01/15.
  */
 case class GuardarPermisosAgenteMessage (idAgente: Int, permisos: List[Permiso], encargosPermisos: List[EncargoPermisos], idClienteAdmin: Option[Int]) extends MessageService
 case class ConsultarPermisosAgenteMessage (idAgente: Int) extends MessageService
+case class ConsultarPermisosAgenteLoginMessage (agente: UsuarioAuth) extends MessageService
 case class PermisosRespuesta (permisos: List[Permiso], encargosPermisos: List[EncargoPermisos])
+case class PermisosLoginRespuesta (permiteInscripciones:Boolean, permiteTransferencias:Boolean, permitePagosMasivos:Boolean, permiteConsultas:Boolean)
 
 object PermisosTransaccionalesJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val AgenteFormat = jsonFormat2(Autorizador)

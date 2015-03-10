@@ -8,7 +8,7 @@ import akka.cluster.{Member, MemberStatus}
 import akka.util.Timeout
 
 import co.com.alianza.app.MainActors
-import co.com.alianza.infrastructure.dto.Empresa
+import co.com.alianza.infrastructure.dto.{Empresa, HorarioEmpresa}
 import co.com.alianza.infrastructure.messages._
 
 import scala.collection.immutable.SortedSet
@@ -57,7 +57,9 @@ class SesionActorSupervisor extends Actor with ActorLogging {
 
     case ObtenerEmpresaSesionActorToken(token) => obtenerEmpresaSesion(token)
 
-    case CrearEmpresaActor(empresa) => log info "Creando empresa Actor: "+s"empresa${empresa.id}"; sender ! context.actorOf(EmpresaActor.props(empresa), s"empresa${empresa.id}")
+    case CrearEmpresaActor(empresa, horario) =>
+      log info "Creando empresa Actor: "+s"empresa${empresa.id}";
+      sender ! context.actorOf(EmpresaActor.props(empresa, horario), s"empresa${empresa.id}")
 
     case ObtenerEmpresaSesionActorId(empresaId) => obtenerEmpresaSesionActorId(empresaId)
   }
@@ -101,7 +103,7 @@ class SesionActorSupervisor extends Actor with ActorLogging {
     val currentSender = sender()
     val actorName = generarNombreSesionActor(token)
     context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(actorName) map {
-      case Some(sesion: ActorRef) => sesion tell (ObtenerEmpresaActor(), currentSender)
+      case Some(sesion: ActorRef) => sesion tell (ObtenerEmpresaActor, currentSender)
       case None => currentSender ! None
     }
   }
@@ -152,7 +154,7 @@ class SesionActor(expiracionSesion: Int, empresa: Option[Empresa]) extends Actor
       this.empresaActor = Some(empresaActor)
       empresaActor ! AgregarSesion(self)
 
-    case ObtenerEmpresaActor() => sender ! empresaActor
+    case ObtenerEmpresaActor => sender ! empresaActor
 
   }
 
@@ -181,8 +183,8 @@ case class DeleteSession(actorName: String)
 
 case class ActualizarEmpresa(empresa: Empresa)
 
-case class CrearEmpresaActor(empresa: Empresa)
+case class CrearEmpresaActor(empresa: Empresa, horarioEmpresa: Option[HorarioEmpresa] = None)
 
-case class ObtenerEmpresaActor()
+case object ObtenerEmpresaActor
 
-case class CerrarSesiones()
+case object CerrarSesiones

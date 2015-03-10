@@ -135,14 +135,15 @@ class IpsUsuarioActor extends Actor with ActorLogging with AlianzaActors {
   }
 
   private def agregarIpSesionEmpresa(empresaId: Int, ip: String) =
-    MainActors.sesionActorSupervisor ? ObtenerEmpresaSesionActorId(empresaId) map {
+    MainActors.sesionActorSupervisor ? ObtenerEmpresaSesionActorId (empresaId) map {
       case Some(empresaSesionActor: ActorRef) => empresaSesionActor ! AgregarIp(ip); zSuccess(():Unit)
       case _ => zFailure(PersistenceException(new Exception(),BusinessLevel,"Error"))
     }
 
   private def removerIpSesionEmpresa(empresaId: Int, ip: String) =
-    MainActors.sesionActorSupervisor ? ObtenerEmpresaSesionActorId(empresaId) map {
+    MainActors.sesionActorSupervisor ? ObtenerEmpresaSesionActorId (empresaId) map {
       case Some(empresaSesionActor: ActorRef) => empresaSesionActor ! RemoverIp(ip); zSuccess(():Unit)
+      case None => zSuccess(():Unit)
       case _ => zFailure(PersistenceException(new Exception(),BusinessLevel,"Error"))
     }
 

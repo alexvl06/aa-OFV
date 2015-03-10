@@ -38,7 +38,7 @@ import scalaz.std.AllInstances._
 import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
 import scalaz.Validation.FlatMap._
 
-class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogging {
+class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogging with ValidacionesAutenticacionUsuarioEmpresarial {
 
   import context.dispatcher
 
@@ -166,7 +166,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
         empresa 	    	  <- ValidationT(obtenerEmpresaPorNit(message.nit))
 		    horario           <- ValidationT(obtenerHorarioEmpresa(empresa.id))
         horarioValido     <- ValidationT(validarHorarioEmpresa(horario))
-        sesion 			      <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt, empresa))
+        sesion 			      <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt, empresa, horario))
         validacionIps 	  <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token))
       } yield validacionIps).run
 
@@ -539,44 +539,6 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
     )
   }
 
-  def validarHorarioEmpresa(horarioEmpresa: Option[HorarioEmpresa]): Future[Validation[ErrorAutenticacion, Boolean]] =  {
-    log.info("Validando el horario")
-    def calendarToTime(c: Calendar): Time = {
-      Time.valueOf(c.get(Calendar.HOUR_OF_DAY) + ":" + c.get(Calendar.MINUTE) + ":" + c.get(Calendar.SECOND))
-    }
-    def calendarToDate(c: Calendar): java.sql.Date = {
-      java.sql.Date.valueOf(c.get(Calendar.YEAR) + "-" + (c.get(Calendar.MONTH) + 1) + "-" + c.get(Calendar.DAY_OF_MONTH))
-    }
-    horarioEmpresa match {
-      case None => Future.successful(Validation.success(true))
-      case Some(horario) => {
-        //Obtener la hora actual
-        val calendar = Calendar.getInstance()
-        val horaActual = calendarToTime(calendar)
-        //1. Validar si es domingo
-        if (calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY)
-          Future.successful(Validation.failure(ErrorHorarioIngresoEmpresa()))
-        //2. Si esta habilitado el sábado, validar
-        else if (!horario.sabado && calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY)
-          Future.successful(Validation.failure(ErrorHorarioIngresoEmpresa()))
-        //3. Validar el día hábil
-        else if (horario.diaHabil)
-          UsDataAdapter.existeDiaFestivo(calendarToDate(calendar)).map(
-            _.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap {
-              case true => Validation.failure(ErrorHorarioIngresoEmpresa())
-              case _ => Validation.success(true)
-            }
-          )
-        //4. Validar la hora de inicio y de fin
-        else if (horario.horaInicio.after(horaActual) || horario.horaFin.before(horaActual))
-          Future.successful(Validation.failure(ErrorHorarioIngresoEmpresa()))
-        else
-          Future.successful(Validation.success(true))
-      }
-    }
-
-  }
-
   /**
    * Valida el estado del usuario
    * @param estadoUsuario El estado del usuario a validar
@@ -589,7 +551,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
     if (estadoUsuario == EstadosEmpresaEnum.bloqueContraseña.id) Validation.failure(ErrorUsuarioBloqueadoIntentosErroneos())
     else if (estadoUsuario == EstadosEmpresaEnum.pendienteActivacion.id) Validation.failure(ErrorUsuarioBloqueadoPendienteActivacion())
     else if (estadoUsuario == EstadosEmpresaEnum.pendienteReiniciarContrasena.id) Validation.failure(ErrorUsuarioBloqueadoPendienteReinicio())
-    else if (estadoUsuario == EstadosEmpresaEnum.bloqueadoPorSuperAdmin.id) Validation.failure(ErrorUsuarioDesactivadoSuperAdmin())
+    else if (estadoUsuario == EstadosEmpresaEnum.bloqueadoPorAdmin.id) Validation.failure(ErrorUsuarioDesactivadoSuperAdmin())
     else Validation.success(true)
   }
 
@@ -600,9 +562,9 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
     * Success => True
     * ErrorAutenticacion => ErrorPersistencia
     */
-    def crearSesion(token: String, expiracionInactividad: Int, empresa: Empresa): Future[Validation[ErrorAutenticacion, Boolean]] = {
+    def crearSesion(token: String, expiracionInactividad: Int, empresa: Empresa, horario: Option[HorarioEmpresa] = None): Future[Validation[ErrorAutenticacion, Boolean]] = {
        log.info("Creando sesion")
-       MainActors.sesionActorSupervisor ! CrearSesionUsuario(token, expiracionInactividad, Some(empresa))
+       MainActors.sesionActorSupervisor ! CrearSesionUsuario(token, expiracionInactividad, Some(empresa), horario)
        Future.successful(Validation.success(true))
     }
 

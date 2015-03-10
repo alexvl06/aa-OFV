@@ -49,6 +49,9 @@ object ValidacionesAgenteEmpresarial {
         case Some(x) => x._2 match {
           case 0 => zSuccess(x)
           case 1 => zSuccess(x)
+          case 2 => zSuccess(x)
+          case 3 => zSuccess(x)
+          case 4 => zSuccess(x)
           case _ => zFailure(ErrorEstadoAgenteEmpresarial(errorEstadoAgenteEmpresarial))
         }
         case None => zFailure(ErrorAgenteEmpNoExiste(errorAgenteEmpresarialNoExiste))

@@ -32,7 +32,7 @@ object PermisoTransaccionalDataAccessAdapter {
   def guardaPermisoEncargo (permiso: PermisoTransaccionalUsuarioEmpresarial, idsAgentes: Option[List[Int]] = None, idClienteAdmin: Int) : Future[Validation[PersistenceException, Int]] =
      repository guardarPermisoEncargo ( DataAccessTranslator aEntity permiso, permiso.seleccionado,  idsAgentes, idClienteAdmin)
 
-  def consultaPermisosAgente (idAgente: Int) : Future[Validation[PersistenceException, (List[Permiso], List[EncargoPermisos])]] =
+  def consultaPermisosAgente (idAgente: Int)  =
     repository consultaPermisosAgente idAgente map {
       case zSuccess(p: (
         List[(ePermisoAgente, List[(Option[ePermisoAgenteAutorizador], Option[Boolean])])],
@@ -41,5 +41,9 @@ object PermisoTransaccionalDataAccessAdapter {
         zSuccess(DataAccessTranslator aPermisos (p._1, p._2))
       case zFailure(error) => zFailure(error)
     }
+
+  def consultaPermisosAgenteLogin (idAgente: Int): Future[Validation[PersistenceException, scala.List[Int]]] = {
+    repository.consultaPermisosAgenteLogin(idAgente)
+  }
 
 }
