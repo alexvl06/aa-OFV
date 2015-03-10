@@ -10,6 +10,7 @@ import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => UsDataAdapter}
 import co.com.alianza.infrastructure.anticorruption.empresa.{DataAccessTranslator => EmpDataAccessTranslator}
 import co.com.alianza.infrastructure.dto._
+import enumerations.empresa.EstadosDeEmpresaEnum
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
@@ -24,6 +25,15 @@ trait ValidacionesAutenticacionUsuarioEmpresarial {
 
   import context.dispatcher
   implicit private [this] val timeout: Timeout = 10 seconds
+
+  def validaEstadoEmpresa(empresa: Empresa): Future[Validation[ErrorAutenticacion, Boolean]] = {
+    log.info("Validando el estado de la empresa")
+    val empresaActiva : Int = EstadosDeEmpresaEnum.activa.id
+    empresa.estado match {
+      case `empresaActiva` => Future.successful(Validation.success(true))
+      case _ => Future.successful(Validation.failure(ErrorEmpresaAccesoDenegado()))
+    }
+  }
 
   def validarHorarioEmpresa(horarioEmpresa: Option[HorarioEmpresa]): Future[Validation[ErrorAutenticacion, Boolean]] =  {
     log.info("Validando el horario")

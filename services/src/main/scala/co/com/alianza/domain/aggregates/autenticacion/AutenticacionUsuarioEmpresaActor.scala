@@ -515,7 +515,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
     estadoEmpresaFuture.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap {
       case Some(empresa) =>
         empresa.estado match {
-          case empresaActiva => Validation.success(true)
+          case `empresaActiva` => Validation.success(true)
           case _ => Validation.failure(ErrorEmpresaAccesoDenegado())
         }
       case None => Validation.failure(ErrorClienteNoExisteCore())
