@@ -84,7 +84,7 @@ class UsuariosEmpresaRepository ( implicit executionContext: ExecutionContext) e
 
   private def obtenerListaEstados( estadoUsuarioBusqueda:Int ) : List[Int] = {
     if( estadoUsuarioBusqueda == -1 )
-      List( 0, 1, 2, 3 )
+      List( 0, 1, 2, 3, 4 )
     else
       List( estadoUsuarioBusqueda )
   }
