@@ -2,7 +2,6 @@ package co.com.alianza.persistence.repositories
 
 import java.sql.Timestamp
 
-import co.com.alianza.constants.EstadosUsuarioClienteAdministradorEnum
 import enumerations.{EstadosEmpresaEnum, EstadosUsuarioEnum}
 
 import scala.concurrent.{ExecutionContext, Future}
