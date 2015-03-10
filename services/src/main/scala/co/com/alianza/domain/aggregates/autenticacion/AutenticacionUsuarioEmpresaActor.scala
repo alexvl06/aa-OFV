@@ -90,21 +90,21 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
       val originalSender = sender()
 
       val validaciones: Future[Validation[ErrorAutenticacion, String]] = (for {
-        estadoEmpresaOk <- ValidationT(validarEstadoEmpresa(message.nit))
-        usuarioAdmin <- ValidationT(obtenerUsuarioEmpresarialAdmin(message.nit, message.usuario))
-        estadoValido <- ValidationT(validarEstadosUsuario(usuarioAdmin.estado))
-        passwordValido <- ValidationT(validarPasswords(message.password, usuarioAdmin.contrasena.getOrElse(""), None, Some(usuarioAdmin.id), usuarioAdmin.numeroIngresosErroneos ))
-        cliente <- ValidationT(obtenerClienteSP(usuarioAdmin.tipoIdentificacion, usuarioAdmin.identificacion))
-        cienteValido <- ValidationT(validarClienteSP(usuarioAdmin.tipoIdentificacion, cliente))
-        passwordCaduco <- ValidationT(validarCaducidadPassword(TiposCliente.clienteAdministrador, usuarioAdmin.id, usuarioAdmin.fechaCaducidad))
+        estadoEmpresaOk   <- ValidationT(validarEstadoEmpresa(message.nit))
+        usuarioAdmin      <- ValidationT(obtenerUsuarioEmpresarialAdmin(message.nit, message.usuario))
+        estadoValido      <- ValidationT(validarEstadosUsuario(usuarioAdmin.estado))
+        passwordValido    <- ValidationT(validarPasswords(message.password, usuarioAdmin.contrasena.getOrElse(""), None, Some(usuarioAdmin.id), usuarioAdmin.numeroIngresosErroneos ))
+        cliente           <- ValidationT(obtenerClienteSP(usuarioAdmin.tipoIdentificacion, usuarioAdmin.identificacion))
+        cienteValido      <- ValidationT(validarClienteSP(usuarioAdmin.tipoIdentificacion, cliente))
+        passwordCaduco    <- ValidationT(validarCaducidadPassword(TiposCliente.clienteAdministrador, usuarioAdmin.id, usuarioAdmin.fechaCaducidad))
         actualizacionInfo <- ValidationT(actualizarInformacionUsuarioEmpresarialAdmin(usuarioAdmin.id, message.clientIp.get))
         inactividadConfig <- ValidationT(buscarConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave))
-        token <- ValidationT(generarYAsociarTokenUsuarioEmpresarialAdmin(cliente, usuarioAdmin, message.nit, inactividadConfig.valor))
-        sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
-        empresa <- ValidationT(obtenerEmpresaPorNit(message.nit))
+        token             <- ValidationT(generarYAsociarTokenUsuarioEmpresarialAdmin(cliente, usuarioAdmin, message.nit, inactividadConfig.valor))
+        sesion            <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
+        empresa           <- ValidationT(obtenerEmpresaPorNit(message.nit))
         horario           <- ValidationT(obtenerHorarioEmpresa(empresa.id))
         horarioValido     <- ValidationT(validarHorarioEmpresa(horario))
-        validacionIps <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token))
+        validacionIps     <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token))
       } yield validacionIps).run
 
       validaciones.onComplete{
@@ -153,9 +153,8 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
      */
     case message: AutenticarUsuarioEmpresarialAgenteMessage =>
       val originalSender = sender()
-
       def validaciones: Future[Validation[ErrorAutenticacion, String]] = (for {
-        estadoEmpresaOk <- ValidationT(validarEstadoEmpresa(message.nit))
+        estadoEmpresaOk   <- ValidationT(validarEstadoEmpresa(message.nit))
         usuarioAgente     <- ValidationT(obtenerUsuarioEmpresarialAgente(message.nit, message.usuario))
         estadoValido      <- ValidationT(validarEstadosUsuario(usuarioAgente.estado))
         passwordValido    <- ValidationT(validarPasswords(message.password, usuarioAgente.contrasena.getOrElse(""), None, Some(usuarioAgente.id), usuarioAgente.numeroIngresosErroneos))

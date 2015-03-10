@@ -70,6 +70,10 @@ object DataAccessAdapter {
     }
   }
 
+  def existeUsuarioEmpresarialAdminActivo(nitEmpresa: String): Future[Validation[PersistenceException, Boolean]] ={
+    new UsuarioEmpresarialAdminRepository().existeUsuarioEmpresarialAdminActivo(nitEmpresa)
+  }
+
   def obtieneUsuarioEmpresarialPorNitYUsuario (nit: String, usuario: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] =
     new UsuariosEmpresarialRepository().obtieneUsuarioEmpresaPorNitYUsuario(nit, usuario) map transformValidationUsuarioEmpresarial
 
