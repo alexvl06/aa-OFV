@@ -28,7 +28,7 @@ class SesionActorSupervisor extends Actor with ActorLogging {
     //
 
     // When an user authenticates
-    case message: CrearSesionUsuario => crearSesion(message.token, message.tiempoExpiracion, message.empresa)
+    case message: CrearSesionUsuario => crearSesion(message.token, message.tiempoExpiracion, message.empresa, message.horario)
 
     // When a user logout
     case message: InvalidarSesion => invalidarSesion(message.token)
@@ -90,9 +90,9 @@ class SesionActorSupervisor extends Actor with ActorLogging {
 
   }
 
-  private def crearSesion(token: String, expiration: Int, empresa: Option[Empresa]) = {
+  private def crearSesion(token: String, expiration: Int, empresa: Option[Empresa], horario: Option[HorarioEmpresa]) = {
     val name = generarNombreSesionActor(token)
-    context.actorOf(SesionActor.props(expiration, empresa), name)
+    context.actorOf(SesionActor.props(expiration, empresa, horario), name)
     log.info("Creando sesion de usuario. Tiempo de expiracion: " + expiration + " minutos.")
   }
 
@@ -117,7 +117,7 @@ class SesionActorSupervisor extends Actor with ActorLogging {
   }
 }
 
-class SesionActor(expiracionSesion: Int, empresa: Option[Empresa]) extends Actor with ActorLogging {
+class SesionActor(expiracionSesion: Int, empresa: Option[Empresa], horario: Option[HorarioEmpresa]) extends Actor with ActorLogging {
 
   implicit val _: ExecutionContext = context dispatcher
   implicit val timeout: Timeout = 120 seconds
@@ -162,7 +162,7 @@ class SesionActor(expiracionSesion: Int, empresa: Option[Empresa]) extends Actor
     context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(s"empresa${empresa.get.id}") map {
       case Some(empresaActor: ActorRef) => self ! empresaActor
       case None =>
-        MainActors.sesionActorSupervisor ? CrearEmpresaActor(empresa.get) map {
+        MainActors.sesionActorSupervisor ? CrearEmpresaActor(empresa.get, horario) map {
           case empresaActor: ActorRef => self ! empresaActor
           case None => log error s"Sesión empresa '${empresa.get.id}' no creada!!"
         }
@@ -173,8 +173,8 @@ class SesionActor(expiracionSesion: Int, empresa: Option[Empresa]) extends Actor
 
 object SesionActor {
 
-  def props(expirationTime: Int, empresa: Option[Empresa]) = {
-    Props(new SesionActor(expirationTime, empresa))
+  def props(expirationTime: Int, empresa: Option[Empresa], horario: Option[HorarioEmpresa]) = {
+    Props(new SesionActor(expirationTime, empresa, horario))
   }
 
 }
