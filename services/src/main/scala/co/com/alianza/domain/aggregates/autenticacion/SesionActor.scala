@@ -58,7 +58,7 @@ class SesionActorSupervisor extends Actor with ActorLogging {
     case ObtenerEmpresaSesionActorToken(token) => obtenerEmpresaSesion(token)
 
     case CrearEmpresaActor(empresa, horario) =>
-      log info "Creando empresa Actor: "+s"empresa${empresa.id}";
+      log info "Creando empresa Actor: "+s"empresa${empresa.id}"
       sender ! context.actorOf(EmpresaActor.props(empresa, horario), s"empresa${empresa.id}")
 
     case ObtenerEmpresaSesionActorId(empresaId) => obtenerEmpresaSesionActorId(empresaId)

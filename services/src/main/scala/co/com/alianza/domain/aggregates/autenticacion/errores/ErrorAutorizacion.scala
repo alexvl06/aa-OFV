@@ -38,3 +38,6 @@ case class ErrorSesionHorarioInvalido() extends ErrorAutorizacion {
   override def msg = ErrorMessage("401.22", "Error sesión", "No está permitido el acceso en este horario.").toJson
 }
 
+case class ErrorSesionEstadoEmpresaDenegado() extends ErrorAutorizacion {
+  override def msg = ErrorMessage("401.23", "Error sesión", "Acceso denegado para esta empresa").toJson
+}

@@ -61,6 +61,7 @@ class EmpresaActor(var empresa: Empresa, var horario : Option[HorarioEmpresa]) e
 
     case ObtenerHorario => sender ! horario
 
+    case obtenerEmpresa => sender ! empresa
   }
 
   private def cargaIpsEmpresa() = {
@@ -133,6 +134,8 @@ case object ObtenerIps
 case object CargarIps
 
 case object ObtenerHorario
+
+case object ObtenerEstadoEmpresa
 
 case class ActualizarHorarioEmpresa(horario: HorarioEmpresa)
 

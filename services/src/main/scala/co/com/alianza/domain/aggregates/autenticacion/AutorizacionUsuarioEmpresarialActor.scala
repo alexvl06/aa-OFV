@@ -38,6 +38,7 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
         usuarioOption <- ValidationT(obtieneUsuarioEmpresarial(token))
         validUs <- ValidationT(validarUsuario(usuarioOption))
         validacionIp <- ValidationT(validarIpEmpresa(sesion, message.ip))
+        //validacionEstadoEmpresa <- ValidationT(validarEstadoEmpresa(sesion))
         validacionHorario <- ValidationT(validarHorarioEmpresa(sesion))
         result <- ValidationT(autorizarRecursoAgente(usuarioOption, message.url))
       } yield {
@@ -132,6 +133,28 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
         Future.successful(Validation.failure(ErrorSesionIpInvalida(ip)))
     }
 
+  private def validarEstadoEmpresa( sesion: ActorRef ) : Future[Validation[ErrorAutorizacion, Boolean]] = {
+    sesion ? ObtenerEmpresaActor flatMap {
+      case Some(empresaSesionActor: ActorRef) =>
+        empresaSesionActor ? ObtenerEstadoEmpresa flatMap {
+         case empresa: Empresa =>
+            validaEstadoEmpresa(empresa).map {
+              case zSuccess(true) =>
+                Validation.success(true)
+              case _ =>
+                sesion ! ExpirarSesion()
+                Validation.failure(ErrorSesionEstadoEmpresaDenegado())
+            }
+          case _ =>
+            log error ("Atributo empresa no encontrado en el actor")
+            Future.successful(Validation.failure(ErrorSesionEstadoEmpresaDenegado()))
+        }
+      case None =>
+        log error ("Actor empresa NO encontrado")
+        Future.successful(Validation.failure(ErrorSesionEstadoEmpresaDenegado()))
+    }
+  }
+
   private def validarHorarioEmpresa(sesion: ActorRef) : Future[Validation[ErrorAutorizacion, Unit]] =
     sesion ? ObtenerEmpresaActor flatMap {
       case Some(empresaSesionActor: ActorRef) =>
@@ -147,7 +170,7 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
             }
         }
       case None =>
-        log error ("+++No encontrado empresa actor.");
+        log error ("+++No encontrado empresa actor.")
         Future.successful(Validation failure ErrorSesionHorarioInvalido())
     }
 
