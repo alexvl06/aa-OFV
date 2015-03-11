@@ -29,6 +29,7 @@ class AutorizacionService extends Directives with AlianzaCommons with CacheHelpe
           respondWithMediaType(mediaType) {
             parameters('url, 'ipRemota) {
               (url, ipRemota) =>
+
                 val tipoCliente = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
 
                 if (tipoCliente == TiposCliente.agenteEmpresarial.toString)
