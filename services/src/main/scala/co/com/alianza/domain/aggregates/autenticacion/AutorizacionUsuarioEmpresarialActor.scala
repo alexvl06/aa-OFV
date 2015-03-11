@@ -38,7 +38,7 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
         usuarioOption <- ValidationT(obtieneUsuarioEmpresarial(token))
         validUs <- ValidationT(validarUsuario(usuarioOption))
         validacionIp <- ValidationT(validarIpEmpresa(sesion, message.ip))
-        validacionEstadoEmpresa <- ValidationT(validarEstadoEmpresa(sesion))
+        //validacionEstadoEmpresa <- ValidationT(validarEstadoEmpresa(sesion))
         validacionHorario <- ValidationT(validarHorarioEmpresa(sesion))
         result <- ValidationT(autorizarRecursoAgente(usuarioOption, message.url))
       } yield {
