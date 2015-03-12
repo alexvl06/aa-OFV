@@ -80,7 +80,7 @@ class ConfrontaActor extends Actor with ActorLogging with AlianzaActors {
       } else {
         val respToSender = new ResultadoEvaluacionCuestionarioULTRADTO()
         respToSender.setRespuestaProceso(response.getRespuestaProceso)
-        respToSender.getRespuestaProceso.setDescripcionRespuesta("No es posible realizar el registro, por favor llamar a la línea de atención 6447700 ext 1104")
+        respToSender.getRespuestaProceso.setDescripcionRespuesta("No es posible realizar el registro, por favor llamar a la línea de atención. ")
         currentSender !  respToSender.toJson
       }
 
@@ -105,7 +105,7 @@ class ConfrontaActor extends Actor with ActorLogging with AlianzaActors {
       } else {
         val respToSender = new ResultadoEvaluacionCuestionarioULTRADTO()
         respToSender.setRespuestaProceso(response.getRespuestaProceso)
-        respToSender.getRespuestaProceso.setDescripcionRespuesta("No es posible realizar el registro, por favor llamar a la línea de atención 6447700 ext 1104")
+        respToSender.getRespuestaProceso.setDescripcionRespuesta("No es posible realizar el registro, por favor llamar a la línea de atención. ")
         currentSender !  respToSender.toJson
       }
 
