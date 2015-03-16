@@ -66,6 +66,17 @@ case class InvalidarToken(token:String)  extends MessageService {
   def toInvalidarTokenRequest:InvalidarTokenRequest = InvalidarTokenRequest( token )
 }
 
+case class InvalidarTokenAgente(token:String)  extends MessageService {
+  def toInvalidarTokenRequest:InvalidarTokenRequest = InvalidarTokenRequest( token )
+}
+
+case class InvalidarTokenClienteAdmin(token:String)  extends MessageService {
+  def toInvalidarTokenRequest:InvalidarTokenRequest = InvalidarTokenRequest( token )
+}
+
+
+
+
 case class AgregarIPHabitualUsuario(idUsuario: Option[Int], clientIp:Option[String] = None)  extends MessageService{
   def toAgregarClienteRequest:AgregarIpHabitualRequest = AgregarIpHabitualRequest(idUsuario.get, clientIp)
 }

@@ -104,6 +104,13 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
       resolveTry(resultTry, "Cambiar Estado Usuario Agente Empresarial")
   }
 
+  def invalidarTokenUsuario( token:String  ) : Future[Validation[PersistenceException, Int]] = loan {
+
+    implicit session =>
+      val resultTry = Try{ UsuariosEmpresariales.filter( _.token === token ).map(_.token ).update(Some(null))  }
+      resolveTry(resultTry, "Invalidar token usuario")
+  }
+
   def CambiarBloqueoDesbloqueoAgenteEmpresarial(idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa,timestamp: Timestamp): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
       val query = for {u <- UsuariosEmpresariales if u.id === idUsuarioAgenteEmpresarial} yield (u.estado,u.fechaActualizacion)

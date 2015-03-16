@@ -84,10 +84,35 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
         resultAutorizar
       }).run
       resolveFutureValidation(future, (x: ResponseMessage) => x, currentSender)
+
     case message: InvalidarToken =>
 
       val currentSender = sender()
       val futureInvalidarToken = usDataAdapter.invalidarTokenUsuario(message.token)
+
+      futureInvalidarToken onComplete {
+        case Failure(failure) => currentSender ! failure
+        case Success(value) =>
+          MainActors.sesionActorSupervisor ! InvalidarSesion(message.token)
+          currentSender ! ResponseMessage(OK, "El token ha sido removido")
+      }
+
+    case message: InvalidarTokenAgente =>
+
+      val currentSender = sender()
+      val futureInvalidarToken = usDataAdapter.invalidarTokenAgente(message.token)
+
+      futureInvalidarToken onComplete {
+        case Failure(failure) => currentSender ! failure
+        case Success(value) =>
+          MainActors.sesionActorSupervisor ! InvalidarSesion(message.token)
+          currentSender ! ResponseMessage(OK, "El token ha sido removido")
+      }
+
+    case message: InvalidarTokenClienteAdmin =>
+
+      val currentSender = sender()
+      val futureInvalidarToken = usDataAdapter.invalidarTokenClienteAdmin(message.token)
 
       futureInvalidarToken onComplete {
         case Failure(failure) => currentSender ! failure
