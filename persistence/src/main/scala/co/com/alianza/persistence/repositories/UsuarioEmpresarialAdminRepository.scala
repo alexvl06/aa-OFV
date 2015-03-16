@@ -29,6 +29,13 @@ class UsuarioEmpresarialAdminRepository ( implicit executionContext: ExecutionCo
       resolveTry(resultTry, "Consulta usuario empresarial admin por token: " + token)
   }
 
+  def invalidarTokenUsuario( token:String  ) : Future[Validation[PersistenceException, Int]] = loan {
+
+    implicit session =>
+      val resultTry = Try{ usuariosEmpresarialesAdmin.filter( _.token === token ).map(_.token ).update(Some(null))  }
+      resolveTry(resultTry, "Invalidar token usuario")
+  }
+
   def asociarTokenUsuario( usuarioId: Int, token: String ) : Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
       val resultTry = Try{ usuariosEmpresarialesAdmin.filter( _.id === usuarioId ).map(_.token ).update(Some(token))  }

@@ -257,7 +257,7 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
     fechaCaducada.setTime(new Date())
     fechaCaducada.add(Calendar.DAY_OF_YEAR,(diasCaducidad.getOrElse(ReglasContrasenas("","0")).valor.toInt * -1))
     val timestamp = new Timestamp(fechaCaducada.getTimeInMillis)
-    val estadoNuevo = if(idUsuarioAgenteEmpresarial._2 == EstadosEmpresaEnum.activo.id || idUsuarioAgenteEmpresarial._2 == EstadosEmpresaEnum.pendienteActivacion.id || idUsuarioAgenteEmpresarial._2 == EstadosEmpresaEnum.pendienteReiniciarContrasena || idUsuarioAgenteEmpresarial._2 == EstadosEmpresaEnum.bloqueContraseña.id) {EstadosEmpresaEnum.bloqueadoPorAdmin} else {EstadosEmpresaEnum.pendienteReiniciarContrasena}
+    val estadoNuevo = if(idUsuarioAgenteEmpresarial._2 == EstadosEmpresaEnum.bloqueContraseña.id || idUsuarioAgenteEmpresarial._2 == EstadosEmpresaEnum.activo.id || idUsuarioAgenteEmpresarial._2 == EstadosEmpresaEnum.pendienteActivacion.id || idUsuarioAgenteEmpresarial._2 == EstadosEmpresaEnum.pendienteReiniciarContrasena.id ) {EstadosEmpresaEnum.bloqueadoPorAdmin} else {EstadosEmpresaEnum.pendienteReiniciarContrasena}
     DataAccessAdapter.CambiarBloqueoDesbloqueoAgenteEmpresarial(idUsuarioAgenteEmpresarial._1, estadoNuevo,timestamp).map(_.leftMap(pe => ErrorPersistenceEmpresa(pe.message, pe)))
   }
 
@@ -317,8 +317,8 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
       case sSuccess(value) =>
         value match {
           case zSuccess(responseFutureBloquearDesbloquearAgenteFuture: ((Int,Int), Int, Configuracion)) =>
-            if(responseFutureBloquearDesbloquearAgenteFuture._2 == EstadosEmpresaEnum.activo.id) {
-              currentSender ! ResponseMessage(OK, "La operacion de Bloqueo/Desbloqueo sobre el Agente empresarial se ha realizado con exio")
+            if(responseFutureBloquearDesbloquearAgenteFuture._2 == EstadosEmpresaEnum.bloqueadoPorAdmin.id) {
+              currentSender ! ResponseMessage(OK, "La operacion de Bloqueo sobre el Agente empresarial se ha realizado con exio")
             } else{
               val fechaActual: Calendar = Calendar.getInstance()
               fechaActual.add(Calendar.HOUR_OF_DAY, responseFutureBloquearDesbloquearAgenteFuture._3.valor.toInt)
@@ -330,9 +330,8 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
               val resultCrearPinEmpresaAgenteEmpresarial = for {
                 idResultEliminarPinesEmpresaAnteriores <- DataAccessAdapter.eliminarPinEmpresaReiniciarAnteriores(responseFutureBloquearDesbloquearAgenteFuture._1._1, UsoPinEmpresaEnum.usoReinicioContrasena.id)
                 idResultGuardarPinEmpresa <- DataAccessAdapter.crearPinEmpresaAgenteEmpresarial(pinEmpresaAgenteEmpresarial)
-              } yield {
-                idResultGuardarPinEmpresa
-              }
+                correoEnviado  <- new SmtpServiceClient().send(buildMessage(responseFutureBloquearDesbloquearAgenteFuture._3.valor.toInt, pin, UsuarioMessageCorreo(message.correoUsuarioAgenteEmpresarial, message.numIdentificacionAgenteEmpresarial, message.tipoIdentiAgenteEmpresarial), "alianza.smtp.templatepin.reiniciarContrasenaEmpresa", "alianza.smtp.asunto.reiniciarContrasenaEmpresa"), (_, _) => Unit)
+              } yield {correoEnviado}
 
               resultCrearPinEmpresaAgenteEmpresarial onComplete {
                 case sFailure(fail) => currentSender ! fail
@@ -340,12 +339,7 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
                   valueResult match {
                     case zFailure(fail) => currentSender ! fail
                     case zSuccess(intResult) =>
-                      if(intResult == 1) {
-                        new SmtpServiceClient().send(buildMessage(responseFutureBloquearDesbloquearAgenteFuture._3.valor.toInt, pin, UsuarioMessageCorreo(message.correoUsuarioAgenteEmpresarial, message.numIdentificacionAgenteEmpresarial, message.tipoIdentiAgenteEmpresarial), "alianza.smtp.templatepin.reiniciarContrasenaEmpresa", "alianza.smtp.asunto.reiniciarContrasenaEmpresa"), (_, _) => Unit)
-                        currentSender ! ResponseMessage(OK, "La operacion de Bloqueo/Desbloqueo sobre el Agente empresarial se ha realizado con exio")
-                      } else {
-                        log.info("Error... Al momento de guardar el pin empresa")
-                      }
+                      currentSender ! ResponseMessage(OK, "La operacion de Desbloqueo sobre el Agente empresarial se ha realizado con exio")
                   }
               }
             }

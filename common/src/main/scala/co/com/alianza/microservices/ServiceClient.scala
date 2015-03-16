@@ -3,7 +3,7 @@ package co.com.alianza.microservices
 import spray.http.{HttpResponse, StatusCode, HttpEntity}
 import scala.concurrent.{ExecutionContext, Future}
 import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
-import co.com.alianza.exceptions.{InternalServiceLevel, TimeoutLevel, TechnicalLevel, ServiceException}
+import co.com.alianza.exceptions.{TimeoutLevel, TechnicalLevel, ServiceException}
 import spray.can.Http.RequestTimeoutException
 import co.com.alianza.infrastructure.messages.MessageService
 
@@ -36,7 +36,7 @@ trait ServiceClient {
         successStatusCodes contains httpResponse.status match {
           case true => zSuccess(successF(httpResponse.entity, httpResponse.status))
           case false =>
-            val ex = ServiceException(new Exception( s"${httpResponse.status} - ${httpResponse.entity.asString}" ), InternalServiceLevel, s"Error consumiendo el servicio $serviceName. StatusCode no interpretado.", httpResponse.status.intValue, httpResponse.entity.asString)
+            val ex = ServiceException(new Exception( s"${httpResponse.status} - ${httpResponse.entity.asString}" ), TechnicalLevel, s"Error consumiendo el servicio $serviceName. StatusCode no interpretado.", httpResponse.status.intValue, httpResponse.entity.asString)
             zFailure(ex)
         }
     } recover {
@@ -54,7 +54,7 @@ trait ServiceClient {
         successStatusCodes contains httpResponse.status match {
           case true => zSuccess(successF(httpResponse.entity, httpResponse.status, message))
           case false =>
-            val ex = ServiceException(new Exception( s"${httpResponse.status} - ${httpResponse.entity.asString}" ), InternalServiceLevel, s"Error consumiendo el servicio $serviceName. StatusCode no interpretado.", httpResponse.status.intValue, httpResponse.entity.asString)
+            val ex = ServiceException(new Exception( s"${httpResponse.status} - ${httpResponse.entity.asString}" ), TechnicalLevel, s"Error consumiendo el servicio $serviceName. StatusCode no interpretado.", httpResponse.status.intValue, httpResponse.entity.asString)
             zFailure(ex)
         }
     } recover {

@@ -120,6 +120,16 @@ object DataAccessAdapter {
     repo.invalidarTokenUsuario( token )
   }
 
+  def invalidarTokenAgente(token:String): Future[Validation[PersistenceException, Int]] = {
+    val repo = new UsuariosEmpresarialRepository()
+    repo.invalidarTokenUsuario( token )
+  }
+
+  def invalidarTokenClienteAdmin(token:String): Future[Validation[PersistenceException, Int]] = {
+    val repo = new UsuarioEmpresarialAdminRepository()
+    repo.invalidarTokenUsuario( token )
+  }
+
   def actualizarNumeroIngresosErroneos( numeroIdentificacion:String, numeroIntentos:Int  ): Future[Validation[PersistenceException, Int]] = {
     val repo = new UsuariosRepository()
     repo.actualizarNumeroIngresosErroneos( numeroIdentificacion, numeroIntentos )
