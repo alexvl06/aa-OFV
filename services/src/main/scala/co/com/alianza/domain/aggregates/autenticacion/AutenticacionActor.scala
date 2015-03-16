@@ -76,31 +76,34 @@ class AutenticacionActor extends Actor with ActorLogging {
     /**
      * Flujo:
      * 1) Busca el usuario en la base de datos, si no se encuentra se devuelve CredencialesInvalidas
-     * 2) Valida los estados del usuario encontrado, esta validacion devuelve un tipo de error por estado, si es exitosa se continúa el proceso
-     * 3) Se comparan los passwords de la petición y el usuario, si coinciden se prosigue de lo contrario se debe ejecutar la excepcion de pw inválido
-     * 4) Se busca el cliente en el core de alianza, si no se encuentra se debe devolver ErrorClienteNoExisteCore
-     * 5) Se valida el cliente encontrado, este metodo devuelve un error de la validacion que no cumple
-     * 6) Se valida la fecha de caducacion del password, si caducó se debe devolver ErrorPasswordCaducado, de lo contrario se prosigue
+     * 2) Se validan los tipos de documentos
+     * 3) Valida los estados del usuario encontrado, esta validacion devuelve un tipo de error por estado, si es exitosa se continúa el proceso
+     * 4) Se comparan los passwords de la petición y el usuario, si coinciden se prosigue de lo contrario se debe ejecutar la excepcion de pw inválido
+     * 5) Se busca el cliente en el core de alianza, si no se encuentra se debe devolver ErrorClienteNoExisteCore
+     * 6) Se valida el cliente encontrado, este metodo devuelve un error de la validacion que no cumple
+     * 7) Se valida la fecha de caducacion del password, si caducó se debe devolver ErrorPasswordCaducado, de lo contrario se prosigue
      * ------- Si pasan las 6 validaciones anteriores, el usuario se considera como usuario autenticado --------
-     * 7) Se actualiza la información de numIngresosErroneos, ipUltimoIngreso y fechaUltimoIngreso del usuario
-     * 8) Se genera un token y se asocia al usuario
-     * 9) Se crea la sesion del usuario en el cluster
-     * 10) Se valida si el usuario tiene alguna ip guardada, si es así se procede a validar si es una ip habitual, de lo contrario se genera un token (10), una sesion (11) y se responde con ErrorControlIpsDesactivado
+     * 8) Se actualiza la información de numIngresosErroneos, ipUltimoIngreso y fechaUltimoIngreso del usuario
+     * 9) Se asigna el tiempo de expiración
+     * 10) Se genera un token y se asocia al usuario
+     * 11) Se crea la sesion del usuario en el cluster
+     * 12) Se valida si el usuario tiene alguna ip guardada, si es así se procede a validar si es una ip habitual, de lo contrario se genera un token (10), una sesion (11) y se responde con ErrorControlIpsDesactivado
      */
     case message: AutenticarMessage =>
       val originalSender = sender()
 
       val validaciones: Future[Validation[ErrorAutenticacion, String]] = (for {
-        usuario <- ValidationT(obtenerUsuario(message.numeroIdentificacion))
-        estadoValido <- ValidationT(validarEstadosUsuario(usuario.estado))
-        passwordValido <- ValidationT(validarPasswords(message.password, usuario.contrasena.getOrElse(""), Some(usuario.identificacion), None, usuario.numeroIngresosErroneos))
-        cliente <- ValidationT(obtenerClienteSP(usuario.tipoIdentificacion, usuario.identificacion))
-        cienteValido <- ValidationT(validarClienteSP(usuario.tipoIdentificacion, cliente))
-        passwordCaduco <- ValidationT(validarCaducidadPassword(TiposCliente.clienteIndividual, usuario.id.get, usuario.fechaCaducidad))
+        usuario           <- ValidationT(obtenerUsuario(message.numeroIdentificacion))
+        tipoIdentiValido  <- ValidationT(validacionTipoIdentificacion(message, usuario))
+        estadoValido      <- ValidationT(validarEstadosUsuario(usuario.estado))
+        passwordValido    <- ValidationT(validarPasswords(message.password, usuario.contrasena.getOrElse(""), Some(usuario.identificacion), None, usuario.numeroIngresosErroneos))
+        cliente           <- ValidationT(obtenerClienteSP(usuario.tipoIdentificacion, usuario.identificacion))
+        cienteValido      <- ValidationT(validarClienteSP(usuario.tipoIdentificacion, cliente))
+        passwordCaduco    <- ValidationT(validarCaducidadPassword(TiposCliente.clienteIndividual, usuario.id.get, usuario.fechaCaducidad))
         actualizacionInfo <- ValidationT(actualizarInformacionUsuario(usuario.identificacion, message.clientIp.get))
         inactividadConfig <- ValidationT(buscarConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave))
-        token <- ValidationT(generarYAsociarToken(cliente, usuario, inactividadConfig.valor))
-        sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
+        token             <- ValidationT(generarYAsociarToken(cliente, usuario, inactividadConfig.valor))
+        sesion            <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
         validacionIps <- ValidationT(validarControlIpsUsuario(usuario.id.get, message.clientIp.get, token))
       } yield validacionIps).run
 
@@ -261,6 +264,15 @@ class AutenticacionActor extends Actor with ActorLogging {
       case Some(cliente) => Validation.success(cliente)
       case None => Validation.failure(ErrorClienteNoExisteCore())
     })
+  }
+
+  def validacionTipoIdentificacion(message: AutenticarMessage, usuario: Usuario): Future[Validation[ErrorAutenticacion, Boolean]] = Future {
+    log.info("Validando que los tipos de documentos concuerden")
+    val validacionTipoIdentificacion = usuario.tipoIdentificacion == message.tipoIdentificacion
+    validacionTipoIdentificacion match {
+      case false => Validation.failure(ErrorCredencialesInvalidas())
+      case true  => Validation.success(true)
+    }
   }
 
   /**
