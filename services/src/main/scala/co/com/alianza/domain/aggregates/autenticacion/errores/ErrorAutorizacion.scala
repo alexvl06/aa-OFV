@@ -23,7 +23,7 @@ case class ErrorSesionIpInvalida(ip: String) extends ErrorAutorizacion {
 case class ErrorPersistenciaAutorizacion(msg: String, e: PersistenceException) extends ErrorAutorizacion
 
 case class TokenInvalido() extends ErrorAutorizacion {
-  override def msg = ErrorMessage("403.3", "Error token", "El token no es válido").toJson
+  override def msg = ErrorMessage("401.3", "Error token", "El token no es válido").toJson
 }
 
 case class RecursoInexistente(usuario: UsuarioEmpresarial) extends ErrorAutorizacion {
