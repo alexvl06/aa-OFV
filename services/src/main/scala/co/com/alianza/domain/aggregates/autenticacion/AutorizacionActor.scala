@@ -10,6 +10,7 @@ import akka.util.Timeout
 
 import co.com.alianza.app.MainActors
 import co.com.alianza.constants.TiposConfiguracion
+import co.com.alianza.domain.aggregates.autenticacion.errores.TokenInvalido
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.configuraciones.{DataAccessAdapter => confDataAdapter}
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => usDataAdapter}
@@ -172,7 +173,7 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
         val recursosFuturo = rDataAccessAdapter.obtenerRecursos(usuario.id.get)
         recursosFuturo.map(_.map(x => resolveMessageRecursos(usuario, x.filter(filtrarRecursos(_, url)))))
       case _ =>
-        Future.successful(Validation.success(ResponseMessage(Unauthorized, "Error Validando Token")))
+        Future.successful(Validation.success(ResponseMessage(Unauthorized, TokenInvalido().msg)))
     }
 
   }
