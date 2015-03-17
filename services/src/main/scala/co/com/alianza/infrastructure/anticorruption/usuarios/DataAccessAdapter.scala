@@ -70,10 +70,6 @@ object DataAccessAdapter {
     }
   }
 
-  def existeUsuarioEmpresarialAdminActivo(nitEmpresa: String): Future[Validation[PersistenceException, Boolean]] ={
-    new UsuarioEmpresarialAdminRepository().existeUsuarioEmpresarialAdminActivo(nitEmpresa)
-  }
-
   def obtieneUsuarioEmpresarialPorNitYUsuario (nit: String, usuario: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] =
     new UsuariosEmpresarialRepository().obtieneUsuarioEmpresaPorNitYUsuario(nit, usuario) map transformValidationUsuarioEmpresarial
 
@@ -274,7 +270,6 @@ object DataAccessAdapter {
     repo.asociarPerfiles(perfiles)
   }
 
-
   def crearUsuarioPin(pinUsuario:ePinUsuario): Future[Validation[PersistenceException, Int]] = {
     val repo = new UsuariosRepository()
     repo.guardarPinUsuario(pinUsuario)
@@ -284,7 +279,6 @@ object DataAccessAdapter {
     val repo = new UsuarioEmpresarialAdminRepository()
     repo.guardarPinUsuarioClienteAdmin(pinUsuario)
   }
-
 
   private def transformValidationList(origin: Validation[PersistenceException, List[eUsuario]]): Validation[PersistenceException, List[Usuario]] = {
     origin match {
