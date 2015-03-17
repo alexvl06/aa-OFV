@@ -47,11 +47,18 @@ class PinUsuarioEmpresarialAdminActor extends Actor with ActorLogging with Alian
 
   private def validarPin(tokenHash: String, funcionalidad:Int) = {
     val currentSender = sender()
-    val result: Future[Validation[PersistenceException, Option[PinUsuarioEmpresarialAdmin]]] = pDataAccessAdapter.obtenerPin(tokenHash)
+    val result = (for {
+      pin                 <- ValidationT(obtenerPin(tokenHash))
+      pinValidacion       <- ValidationT(PinUtil.validarPinUsuarioEmpresarialAdminFuture(pin))
+      clienteAdmin        <- ValidationT(validacionObtenerClienteAdminPorId(pin.get.idUsuario))
+      clienteAdminActivo  <- ValidationT(validarClienteAdminExiste(clienteAdmin))
+    } yield {
+      pin
+    }).run
     resolveOlvidoContrasenaFuture(result, funcionalidad, currentSender)
   }
 
-  private def resolveOlvidoContrasenaFuture(finalResultFuture: Future[Validation[PersistenceException, Option[PinUsuarioEmpresarialAdmin]]], funcionalidad:Int, currentSender: ActorRef) = {
+  private def resolveOlvidoContrasenaFuture(finalResultFuture: Future[Validation[ErrorValidacion, Option[PinUsuarioEmpresarialAdmin]]], funcionalidad:Int, currentSender: ActorRef) = {
     finalResultFuture onComplete {
       case Failure(failure) => currentSender ! failure
       case Success(value) =>
@@ -67,13 +74,13 @@ class PinUsuarioEmpresarialAdminActor extends Actor with ActorLogging with Alian
   }
 
   private def cambiarPw(tokenHash: String, pw: String, currentSender: ActorRef) = {
-    val obtenerPinFuture: Future[Validation[ErrorValidacion, Option[PinUsuarioEmpresarialAdmin]]] = pDataAccessAdapter.obtenerPin(tokenHash).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
     val passwordAppend = pw.concat( AppendPasswordUser.appendUsuariosFiducia )
     //En la funcion los cambios: idUsuario y tokenHash que se encuentran en ROJO, no son realmente un error.
     val finalResultFuture = (for {
-      pin                     <- ValidationT(obtenerPinFuture)
+      pin                     <- ValidationT(obtenerPin(tokenHash))
       pinValidacion           <- ValidationT(PinUtil.validarPinUsuarioEmpresarialAdminFuture(pin))
       clienteAdminOk          <- ValidationT(validacionObtenerClienteAdminPorId(pinValidacion.idUsuario))
+      clienteAdminActivo      <- ValidationT(validarClienteAdminExiste(clienteAdminOk))
       estadoEmpresaOk         <- ValidationT(validarEstadoEmpresa(clienteAdminOk.identificacion))
       rvalidacionClave        <- ValidationT(co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.validacionReglasClave(pw, pinValidacion.idUsuario, PerfilesUsuario.clienteAdministrador))
       rCambiarPss             <- ValidationT(cambiarPassword(pinValidacion.idUsuario, passwordAppend))
@@ -83,11 +90,15 @@ class PinUsuarioEmpresarialAdminActor extends Actor with ActorLogging with Alian
     } yield {
       idResult
     }).run
-    resolveCrearUsuarioFuture(finalResultFuture, currentSender)
+    resolveCambioPwFuture(finalResultFuture, currentSender)
   }
 
   private def guardarUltimaContrasena(idUsuario: Int, uContrasena: String): Future[Validation[ErrorValidacion, Unit]] = {
     DataAccessAdapterUltimaContrasena.guardarUltimaContrasena(UltimaContrasenaUsuarioEmpresarialAdmin(None, idUsuario , uContrasena, new Timestamp(System.currentTimeMillis()))).map(_.leftMap( pe => ErrorPersistence(pe.message, pe)))
+  }
+
+  private def obtenerPin(tokenHash: String): Future[Validation[ErrorValidacion, Option[PinUsuarioEmpresarialAdmin]]]= {
+    pDataAccessAdapter.obtenerPin(tokenHash).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
   }
 
   private def cambiarPassword(idUsuario: Int, pw: String): Future[Validation[ErrorValidacion, Int]] =
@@ -98,10 +109,18 @@ class PinUsuarioEmpresarialAdminActor extends Actor with ActorLogging with Alian
     uDataAccessAdapter actualizarEstadoUsuarioEmpresarialAdmin (idUsuario, estado) map (_.leftMap(pe => ErrorPersistence(pe.message, pe)))
   }
 
+  private def validarClienteAdminExiste(usuario: UsuarioEmpresarialAdmin): Future[Validation[ErrorValidacion, Boolean]] ={
+    val estadoActivo = EstadosEmpresaEnum.activo.id == usuario.estado
+    estadoActivo match {
+      case true  => Future.successful(zSuccess(true))
+      case false => validacionClienteAdminActivo(usuario.identificacion)
+    }
+  }
+
   private def eliminarPin(tokenHash: String): Future[Validation[ErrorValidacion, Int]] =
     pDataAccessAdapter eliminarPin (tokenHash) map (_.leftMap(pe => ErrorPersistence(pe.message, pe)))
 
-  private def resolveCrearUsuarioFuture(finalResultFuture: Future[Validation[ErrorValidacion, Int]], currentSender: ActorRef) = {
+  private def resolveCambioPwFuture(finalResultFuture: Future[Validation[ErrorValidacion, Int]], currentSender: ActorRef) = {
     finalResultFuture onComplete {
       case Failure(failure) => currentSender ! failure
       case Success(value) =>

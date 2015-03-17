@@ -33,6 +33,10 @@ object DataAccessAdapter {
     repo.actualizarContrasena(Crypto.hashSha512(pw_nuevo), idUsuario)
   }
 
+  def existeUsuarioEmpresarialAdminActivo(nitEmpresa: String): Future[Validation[PersistenceException, Boolean]] ={
+    new UsuarioEmpresarialAdminRepository().existeUsuarioEmpresarialAdminActivo(nitEmpresa)
+  }
+
   def obtieneClientePorNitYUsuario(nit: String, usuario: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] =
     new UsuariosEmpresaRepository().obtieneClientePorNitYUsuario(nit, usuario) map transformValidation
 
