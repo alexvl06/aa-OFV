@@ -317,7 +317,7 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
       case sSuccess(value) =>
         value match {
           case zSuccess(responseFutureBloquearDesbloquearAgenteFuture: ((Int,Int), Int, Configuracion)) =>
-            if(responseFutureBloquearDesbloquearAgenteFuture._2 == EstadosEmpresaEnum.bloqueadoPorAdmin.id) {
+            if(responseFutureBloquearDesbloquearAgenteFuture._1._2 != EstadosEmpresaEnum.bloqueadoPorAdmin.id) {
               currentSender ! ResponseMessage(OK, "La operacion de Bloqueo sobre el Agente empresarial se ha realizado con exio")
             } else{
               val fechaActual: Calendar = Calendar.getInstance()
