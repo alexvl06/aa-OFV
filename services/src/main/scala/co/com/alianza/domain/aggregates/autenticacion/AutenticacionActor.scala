@@ -16,6 +16,7 @@ import co.com.alianza.infrastructure.dto.{ Cliente, Usuario }
 import co.com.alianza.util.token.Token
 import co.com.alianza.persistence.messages.ConsultaClienteRequest
 import co.com.alianza.persistence.entities.{ ReglasContrasenas, IpsUsuario }
+import com.typesafe.config.Config
 import enumerations.{AppendPasswordUser, TipoIdentificacion, EstadosUsuarioEnum, EstadosCliente}
 
 import java.sql.Timestamp
@@ -28,7 +29,7 @@ import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
 import scalaz.std.AllInstances._
 
 import spray.http.StatusCodes._
-import co.com.alianza.domain.aggregates.usuarios.ErrorClienteNoExiste
+import co.com.alianza.domain.aggregates.usuarios.{ErrorValidacion, ValidacionesUsuario, ErrorClienteNoExiste}
 
 class AutenticacionActorSupervisor extends Actor with ActorLogging {
   import akka.actor.SupervisorStrategy._
@@ -55,8 +56,11 @@ class AutenticacionActorSupervisor extends Actor with ActorLogging {
 class AutenticacionActor extends Actor with ActorLogging {
 
   import scala.concurrent.ExecutionContext
+  import ExecutionContext.Implicits.global
+
   implicit val _: ExecutionContext = context.dispatcher
   import co.com.alianza.util.json.MarshallableImplicits._
+  import ValidacionesUsuario._
 
   def receive = {
 
@@ -128,34 +132,21 @@ class AutenticacionActor extends Actor with ActorLogging {
           case zSuccess(response: Option[Cliente]) =>
             response match {
               case Some(valueResponseCliente) =>
-                if (getTipoPersona(messageTipoIdentificacion) != valueResponseCliente.wcli_person){
-                  currentSender ! ResponseMessage(Unauthorized, errorClienteNoExisteSP)}
-                else if (valueResponseCliente.wcli_estado == EstadosCliente.activo) {
-                  //Se valida la caducidad de la contraseña
-                  println("ESTA AQUI: " + valueResponseCliente.toJson)
-                  if(valueResponseCliente.wcli_dir_correo == null || valueResponseCliente.wcli_dir_correo.isEmpty) {
-                    currentSender ! ResponseMessage(Unauthorized,errorCorreoNoExiste)
-                  }else{
+
+                //validaciones usuario
+                val validacion = validacionConsultaCliente(valueResponseCliente, messageTipoIdentificacion)
+                validacion match {
+                  case zSuccess(cliente) =>
                     validarFechaContrasena(usuario.id.get, usuario.fechaCaducidad, currentSender: ActorRef)
                     //Validacion de control de direccion IP del usuario
-                    validarControlIpUsuario(usuario.identificacion, usuario.id.get, ip, valueResponseCliente.wcli_nombre, valueResponseCliente.wcli_dir_correo, valueResponseCliente.wcli_person, usuario.ipUltimoIngreso.getOrElse(""), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), currentSender: ActorRef)
-                  }
+                    validarControlIpUsuario(usuario.identificacion, usuario.id.get, ip, cliente.wcli_nombre, cliente.wcli_dir_correo, cliente.wcli_person, usuario.ipUltimoIngreso.getOrElse(""), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), currentSender: ActorRef)
+                  case zFailure (error)  =>
+                    currentSender ! ResponseMessage(Unauthorized, error.msg)
                 }
-                else
-                  currentSender ! ResponseMessage(Unauthorized, errorClienteInactivoSP)
               case None => currentSender ! ResponseMessage(Unauthorized, errorClienteNoExisteSP)
             }
           case zFailure(error) => currentSender ! error
         }
-    }
-  }
-
-  //Se valida la naturalidad de la persona que realiza la autenticaciónS
-  private def getTipoPersona(idTipoIdent: Int): String = {
-    idTipoIdent match {
-      case TipoIdentificacion.FID.identificador => "F"
-      case TipoIdentificacion.NIT.identificador => "J"
-      case _ => "N"
     }
   }
 
