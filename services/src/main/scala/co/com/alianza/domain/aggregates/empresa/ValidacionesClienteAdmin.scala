@@ -93,6 +93,6 @@ object ValidacionesClienteAdmin {
   private val errorUsuarioNoExiste              = ErrorMessage("409.9", "El usuario no existe", "El usuario no existe - validacion cliente admin").toJson
   private val errorClienteNoExiste              = ErrorMessage("409.10", "El Cliente no existe en core", "El Cliente no existe en core - validacion cliente admin").toJson
   private val errorEmpresaAccesoDenegado        = ErrorMessage("409.11", "La empresa tiene el acceso desactivado", "La empresa tiene el acceso desactivado - validacion cliente admin").toJson
-  private val errorUsuarioEmpresaAdminActivo    = ErrorMessage("409.12", "Usuario admin ya existe", "Ya existe un cliente administrador activo asociado al NIT de esta empresa.").toJson
+  private val errorUsuarioEmpresaAdminActivo    = ErrorMessage("409.12", "Usuario admin ya existe", "Ya hay un cliente administrador para ese NIT.").toJson
 
 }
