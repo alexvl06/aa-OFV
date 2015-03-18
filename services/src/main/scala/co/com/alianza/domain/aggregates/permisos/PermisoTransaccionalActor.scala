@@ -88,7 +88,6 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
     case ConsultarPermisosAgenteLoginMessage(agente) =>
       val currentSender = sender
       if(agente.tipoCliente == TiposCliente.agenteEmpresarial){
-        println("Llego aca SIIII")
         val permisosFuture = DataAccessAdapter.consultaPermisosAgenteLogin(agente.id)
         resolveFutureValidation(permisosFuture,(listaPermisos: List[Int]) => PermisosLoginRespuesta(listaPermisos.contains(2), listaPermisos.contains(4), listaPermisos.contains(3), listaPermisos.contains(1)).toJson,currentSender)
       }else {
