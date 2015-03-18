@@ -75,23 +75,33 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
         val future = (for {
           result <- ValidationT(Future.successful(Validation.success(ResponseMessage(OK, "Guardado de permisos correcto"))))
         } yield result).run
-        resolveFutureValidation(future, (x: ResponseMessage) => x, currentSender)
-        context stop self
+        resolveFutureValidation(future, { (x: ResponseMessage) => context stop self; x }, currentSender)
       }
 
     case ConsultarPermisosAgenteMessage(idAgente) =>
       val currentSender = sender
-      resolveFutureValidation(DataAccessAdapter consultaPermisosAgente idAgente,
-        (x: (List[co.com.alianza.infrastructure.dto.Permiso], List[co.com.alianza.infrastructure.dto.EncargoPermisos])) => PermisosRespuesta(x._1, x._2).toJson,
-        currentSender)
+      resolveFutureValidation (
+        DataAccessAdapter consultaPermisosAgente idAgente,
+        {(x: (List[co.com.alianza.infrastructure.dto.Permiso], List[co.com.alianza.infrastructure.dto.EncargoPermisos])) =>
+          context stop self
+          PermisosRespuesta(x._1, x._2) toJson
+        },
+        currentSender
+      )
 
     case ConsultarPermisosAgenteLoginMessage(agente) =>
       val currentSender = sender
       if(agente.tipoCliente == TiposCliente.agenteEmpresarial){
         val permisosFuture = DataAccessAdapter.consultaPermisosAgenteLogin(agente.id)
-        resolveFutureValidation(permisosFuture,(listaPermisos: List[Int]) => PermisosLoginRespuesta(listaPermisos.contains(2), listaPermisos.contains(4), listaPermisos.contains(3), listaPermisos.contains(1)).toJson,currentSender)
-      }else {
+        resolveFutureValidation(permisosFuture,
+          {(listaPermisos: List[Int]) =>
+            context stop self
+            PermisosLoginRespuesta(listaPermisos.contains(2), listaPermisos.contains(4), listaPermisos.contains(3), listaPermisos.contains(1)).toJson
+          },
+          currentSender)
+      } else {
         currentSender ! JsonUtil.toJson(PermisosLoginRespuesta(true,true,true,true))
+        context stop self
       }
 
   }
