@@ -116,21 +116,26 @@ object  ValidacionesUsuario {
     usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message,pe)).flatMap{
       (x:Option[Cliente]) => x match{
         case None => zFailure(ErrorClienteNoExiste(errorClienteNoExiste))
-        case Some(c) =>
-          if(c.wcli_estado != EstadosCliente.activo)
-            zFailure(ErrorClienteNoExiste(errorClienteInactivo))
-          else if(getTipoPersona(message) != c.wcli_person)
-            zFailure(ErrorClienteNoExiste(errorClienteNoExiste))
-          else if(c.wcli_dir_correo == null || c.wcli_dir_correo.isEmpty)
-            zFailure(ErrorClienteNoExiste(errorCorreoNoExiste))
-          else
-            zSuccess(c)
+        case Some(cliente) =>
+          validacionConsultaCliente(cliente, message.tipoIdentificacion)
       }
     })
   }
 
-  private def getTipoPersona(message:UsuarioMessage):String = {
-    message.tipoIdentificacion match{
+  def validacionConsultaCliente(cliente: Cliente, tipoPersona: Int) : Validation[ErrorValidacion, Cliente] ={
+    if(cliente.wcli_estado != EstadosCliente.inactivo && cliente.wcli_estado != EstadosCliente.bloqueado && cliente.wcli_estado != EstadosCliente.activo)
+      zFailure(ErrorClienteNoExiste(errorClienteInactivo))
+    else if(getTipoPersona(tipoPersona) != cliente.wcli_person)
+      zFailure(ErrorClienteNoExiste(errorClienteNoExiste))
+    else if(cliente.wcli_dir_correo == null || cliente.wcli_dir_correo.isEmpty)
+      zFailure(ErrorClienteNoExiste(errorCorreoNoExiste))
+    else
+      zSuccess(cliente)
+  }
+
+  //Se valida la naturalidad de la persona que realiza la autenticaciónS
+  def getTipoPersona(idTipoIdent: Int): String = {
+    idTipoIdent match {
       case TipoIdentificacion.FID.identificador => "F"
       case TipoIdentificacion.NIT.identificador => "J"
       case _ => "N"
@@ -158,14 +163,17 @@ object  ValidacionesUsuario {
     })
   }
 
+  //Errores autorizacion
+  private val errorClienteInactivo =          ErrorMessage("401.1", "Cliente inactivo", "Cliente inactivo").toJson
+  private val errorClienteNoExiste =          ErrorMessage("401.2", "No existe el cliente", "No existe el cliente").toJson
+  private val errorCorreoNoExiste =           ErrorMessage("401.13", "No hay correo registrado", "No hay correo registrado en la base de datos de Alianza").toJson
+
   private val errorUsuarioExiste =            ErrorMessage("409.1", "Usuario ya existe", "Usuario ya existe").toJson
-  private val errorClienteNoExiste =          ErrorMessage("409.2", "No existe el cliente", "No existe el cliente").toJson
   private val errorUsuarioCorreoExiste =      ErrorMessage("409.3", "Correo ya existe", "Correo ya existe").toJson
-  private val errorClienteInactivo =          ErrorMessage("409.4", "Cliente inactivo", "Cliente inactivo").toJson
   private def errorClave(error:String) =      ErrorMessage("409.5", "Error clave", error).toJson
   private val errorCaptcha =                  ErrorMessage("409.6", "Valor captcha incorrecto", "Valor captcha incorrecto").toJson
   private val errorContrasenaActualNoExiste = ErrorMessage("409.7", "No existe la contrasena actual", "No existe la contrasena actual").toJson
   private val errorPin =                      ErrorMessage("409.8", "Error en el pin", "Ocurrió un error al obtener el tiempo de expiracion del pin").toJson
-  private val errorCorreoNoExiste =           ErrorMessage("409.10", "No hay correo registrado", "No hay correo registrado en la base de datos de Alianza").toJson
+
 
 }

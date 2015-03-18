@@ -82,9 +82,7 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
   def receive = {
 
     case message:UsuarioMessage  =>
-
       val currentSender = sender()
-
       val crearUsuarioFuture = (for{
         captchaVal <-  ValidationT(validaCaptcha(message))
         cliente <- ValidationT(validaSolicitud(message))
@@ -92,19 +90,16 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
       }yield{
         cliente
       }).run
-
       resolveCrearUsuarioFuture(crearUsuarioFuture,currentSender,message)
 
     case message: DesbloquarMessage =>
       val currentSender = sender()
-
       val futureCliente = (for{
         captchaVal <-  validaCaptcha(message.toUsuarioMessage)
         cliente <- co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerUsuarioNumeroIdentificacion(message.identificacion)
       }yield{
         cliente
       })
-
       futureCliente onComplete{
         case sFailure( failure ) =>
           currentSender ! failure
@@ -119,16 +114,12 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
       }
 
     case message: OlvidoContrasenaMessage =>
-
       val currentSender = sender()
-
-
       val validarClienteFuture = ( for {
         cliente <- ValidationT(validaSolicitudCliente(message))
       } yield {
         cliente
       }).run
-
       resolveReiniciarContrasenaFuture(validarClienteFuture, currentSender, message)
 
   }
@@ -264,7 +255,7 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
       }else {
         val respToSender = new ResultadoEvaluacionCuestionarioULTRADTO()
         respToSender.setRespuestaProceso(response.getRespuestaProceso)
-        respToSender.getRespuestaProceso.setDescripcionRespuesta("No es posible realizar el registro, por favor llamar a la línea de atención 6447700 ext 1104")
+        respToSender.getRespuestaProceso.setDescripcionRespuesta("No es posible realizar el registro, por favor llamar a la línea de atención. ")
         currentSender !  respToSender.toJson
       }
 
