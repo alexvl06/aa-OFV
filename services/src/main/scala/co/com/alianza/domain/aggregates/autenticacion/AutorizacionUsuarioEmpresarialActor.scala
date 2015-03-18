@@ -198,8 +198,8 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
       case sSuccess(resp) => resp match {
         case zSuccess(usuario) => originalSender ! ResponseMessage(OK, JsonUtil.toJson(usuario))
         case zFailure(errorAutorizacion) => errorAutorizacion match {
-          case ErrorSesionNoEncontrada() => originalSender ! ResponseMessage(Unauthorized, "Error Validando Token")
-          case TokenInvalido() => originalSender ! ResponseMessage(Unauthorized, "Error Validando Token")
+          case e @ ErrorSesionNoEncontrada() => originalSender ! ResponseMessage(Unauthorized, e.msg)
+          case e @ TokenInvalido() => originalSender ! ResponseMessage(Unauthorized, e.msg)
           case ErrorPersistenciaAutorizacion(_, ep1) => originalSender ! ep1
           case RecursoInexistente(usuario) =>
             originalSender ! ResponseMessage(Forbidden, JsonUtil.toJson(ForbiddenAgenteMessage(usuario, None, "403.1")))
@@ -256,15 +256,6 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
     }
   }
 
-  private def validarRecursoAgente(agente: Option[UsuarioEmpresarial], url: Option[String]) =
-    agente match {
-      case Some(usuario) =>
-        val recursosFuturo = raDataAccessAdapter obtenerRecursos usuario.id
-        recursosFuturo.map(_.map(x => resolveMessageRecursosAgente(usuario, x.filter(filtrarRecursosPerfilAgente(_, url.getOrElse(""))))))
-      case _ =>
-        Future.successful(Validation.success(ResponseMessage(Unauthorized, "Error Validando Token")))
-    }
-
   /**
    * De acuerdo si la lista tiene contenido retorna un ResponseMessage
    *
@@ -292,7 +283,7 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
         val recursosFuturo = rcaDataAccessAdapter obtenerRecursos usuario.id
         recursosFuturo.map(_.map(x => resolveMessageRecursosClienteAdmin(usuario, x.filter(filtrarRecursosPerfilClienteAdmin(_, url.getOrElse(""))))))
       case _ =>
-        Future.successful(Validation.success(ResponseMessage(Unauthorized, "Error Validando Token")))
+        Future.successful(Validation.success(ResponseMessage(Unauthorized, TokenInvalido().msg)))
     }
 
   /**

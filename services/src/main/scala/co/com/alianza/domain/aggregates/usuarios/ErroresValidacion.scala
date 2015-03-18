@@ -23,4 +23,5 @@ case class ErrorEmpresaNoExiste(msg:String) extends ErrorValidacion
 case class ErrorClienteNoPerfil(msg:String) extends ErrorValidacion
 case class ErrorUsuarioClienteAdmin(msg:String) extends ErrorValidacion
 case class ErrorEmpresaAccesoDenegado(msg:String) extends ErrorValidacion
+case class ErrorUsuarioEmpresaAdminActivo(msg:String) extends ErrorValidacion
 

@@ -63,6 +63,17 @@ object ValidacionesClienteAdmin {
     })
   }
 
+  //existeUsuarioEmpresarialAdminActivo
+  def validacionClienteAdminActivo(nitEmpresa:String): Future[Validation[ErrorValidacion, Boolean]] = {
+    val existeFuture = DataAccessAdapterClienteAdmin.existeUsuarioEmpresarialAdminActivo(nitEmpresa)
+    existeFuture.map(_.leftMap(pe => ErrorPersistence(pe.message, pe)).flatMap{
+      (existe:Boolean) => existe match {
+        case false => zSuccess(existe)
+        case true  => zFailure(ErrorUsuarioEmpresaAdminActivo(errorUsuarioEmpresaAdminActivo))
+      }
+    })
+  }
+
   def validarEstadoEmpresa(nit: String): Future[Validation[ErrorValidacion, Boolean]] = {
     val empresaActiva : Int = EstadosDeEmpresaEnum.activa.id
     val estadoEmpresaFuture: Future[Validation[PersistenceException, Option[Empresa]]] = UsDataAdapter.obtenerEstadoEmpresa(nit)
@@ -76,11 +87,12 @@ object ValidacionesClienteAdmin {
     })
   }
 
-  private def errorClave(error:String) = ErrorMessage("409.5", "Error clave", error).toJson
-  private val errorContrasenaActualNoExiste = ErrorMessage("409.7", "No existe la contrasena actual", "No existe la contrasena actual").toJson
-  private val errorContrasenaActualNoContempla = ErrorMessage("409.8", "No comtempla la contrasena actual", "No comtempla la contrasena actual").toJson
-  private val errorUsuarioNoExiste = ErrorMessage("409.9", "El usuario no existe", "El usuario no existe - validacion cliente admin").toJson
-  private val errorClienteNoExiste = ErrorMessage("409.10", "El Cliente no existe en core", "El Cliente no existe en core - validacion cliente admin").toJson
-  private val errorEmpresaAccesoDenegado = ErrorMessage("409.11", "La empresa tiene el acceso desactivado", "La empresa tiene el acceso desactivado - validacion cliente admin").toJson
+  private def errorClave(error:String)          = ErrorMessage("409.5", "Error clave", error).toJson
+  private val errorContrasenaActualNoExiste     = ErrorMessage("409.7", "No existe la contrasena actual", "No existe la contrasena actual").toJson
+  private val errorContrasenaActualNoContempla  = ErrorMessage("409.8", "No comtempla la contrasena actual", "No comtempla la contrasena actual").toJson
+  private val errorUsuarioNoExiste              = ErrorMessage("409.9", "El usuario no existe", "El usuario no existe - validacion cliente admin").toJson
+  private val errorClienteNoExiste              = ErrorMessage("409.10", "El Cliente no existe en core", "El Cliente no existe en core - validacion cliente admin").toJson
+  private val errorEmpresaAccesoDenegado        = ErrorMessage("409.11", "La empresa tiene el acceso desactivado", "La empresa tiene el acceso desactivado - validacion cliente admin").toJson
+  private val errorUsuarioEmpresaAdminActivo    = ErrorMessage("409.12", "Usuario admin ya existe", "Ya existe un cliente administrador activo asociado al NIT de esta empresa.").toJson
 
 }
