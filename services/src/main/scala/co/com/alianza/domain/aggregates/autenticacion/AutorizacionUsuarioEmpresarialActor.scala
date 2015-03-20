@@ -35,12 +35,12 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
       val future = (for {
         token <- ValidationT(validarToken(message.token))
         sesion <- ValidationT(obtieneSesion(token))
-        usuarioOption <- ValidationT(obtieneUsuarioEmpresarial(token))
-        validUs <- ValidationT(validarUsuario(usuarioOption))
+        tuplaUsuarioOptionEstadoEmpresa <- ValidationT(obtieneUsuarioEmpresarial(token))
+        validUs <- ValidationT(validarUsuario(tuplaUsuarioOptionEstadoEmpresa match { case None => None case _ => Some(tuplaUsuarioOptionEstadoEmpresa.get._1) }))
         validacionIp <- ValidationT(validarIpEmpresa(sesion, message.ip))
         //validacionEstadoEmpresa <- ValidationT(validarEstadoEmpresa(sesion))
         validacionHorario <- ValidationT(validarHorarioEmpresa(sesion))
-        result <- ValidationT(autorizarRecursoAgente(usuarioOption, message.url))
+        result <- ValidationT(autorizarRecursoAgente(tuplaUsuarioOptionEstadoEmpresa match { case None => None case _ => Some(tuplaUsuarioOptionEstadoEmpresa.get._1) }, message.url))
       } yield {
         result
       }).run
@@ -70,7 +70,7 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
       case true =>
         usDataAdapter.obtenerUsuarioEmpresarialToken(message.token).flatMap { x =>
           val y: Validation[PersistenceException, Future[Option[UsuarioEmpresarial]]] = x.map { userOpt =>
-            guardaTokenCache(userOpt, message)
+            guardaTokenCache( userOpt match { case None => None case _ => Some(userOpt.get._1) }, message)
           }
           co.com.alianza.util.transformers.Validation.sequence(y)
         }
@@ -115,7 +115,7 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
       case None => Validation.failure(ErrorSesionNoEncontrada())
     }
 
-  private def obtieneUsuarioEmpresarial(token: String): Future[Validation[ErrorAutorizacion, Option[UsuarioEmpresarial]]] =
+  private def obtieneUsuarioEmpresarial(token: String): Future[Validation[ErrorAutorizacion, Option[(UsuarioEmpresarial, Int)]]] =
     usDataAdapter.obtenerUsuarioEmpresarialToken(token) map {
       _.leftMap { pe => ErrorPersistenciaAutorizacion(pe.message, pe) }
     }

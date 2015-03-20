@@ -70,8 +70,12 @@ object DataAccessAdapter {
     }
   }
 
-  def obtieneUsuarioEmpresarialPorNitYUsuario (nit: String, usuario: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] =
-    new UsuariosEmpresarialRepository().obtieneUsuarioEmpresaPorNitYUsuario(nit, usuario) map transformValidationUsuarioEmpresarial
+  def obtieneUsuarioEmpresarialPorNitYUsuario (nit: String, usuario: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = {
+    val repo = new UsuariosEmpresarialRepository()
+    repo.obtieneUsuarioEmpresaPorNitYUsuario(nit, usuario) map {
+      x => transformValidationUsuarioEmpresarial(x)
+    }
+  }
 
   def obtieneUsuarioEmpresarialAdminPorNitYUsuario (nit: String, usuario: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] =
     new UsuariosEmpresarialRepository().obtieneUsuarioEmpresaAdminPorNitYUsuario(nit, usuario) map transformValidationUsuarioEmpresarialAdmin
@@ -79,9 +83,15 @@ object DataAccessAdapter {
   def obtenerUsuarioToken( token:String ): Future[Validation[PersistenceException, Option[Usuario]]] =
     new UsuariosRepository().obtenerUsuarioToken( token ) map transformValidation
 
-  def obtenerUsuarioEmpresarialToken( token:String ): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] =
-    new UsuariosEmpresarialRepository().obtenerUsuarioToken( token ) map transformValidationUsuarioEmpresarial
+  def obtenerUsuarioEmpresarialToken( token:String ): Future[Validation[PersistenceException, Option[(UsuarioEmpresarial, Int)]]] = {
+    val repo = new UsuariosEmpresarialRepository()
+    repo.obtenerUsuarioToken( token ) map {
+      x => transformValidationTuplaUsuarioEmpresarialEstadoEmpresa(x)
+    }
+  }
 
+
+  //TODO --> este metodo se esta utilizando en 2 lados ¡PILAS!
   def obtenerUsuarioEmpresarialAdminToken( token:String ): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] =
     new UsuarioEmpresarialAdminRepository().obtenerUsuarioToken( token ) map transformValidationUsuarioEmpresarialAdmin
 
@@ -325,6 +335,20 @@ object DataAccessAdapter {
       case zSuccess(response) =>
         response match {
           case Some(usuario) => zSuccess(Some(DataAccessTranslator.translateUsuarioEmpresarial(usuario)))
+          case _ => zSuccess(None)
+        }
+      case zFailure(error)    =>  zFailure(error)
+    }
+  }
+
+  /**
+   * Devuelvo la tupla del usuario empresarial y el estado de la empresa, ya tranformando la entidad de persistencia UsuarioEmpresarial en el objeto DTO
+   * */
+  private def transformValidationTuplaUsuarioEmpresarialEstadoEmpresa(origin: Validation[PersistenceException, Option[(eUsuarioEmpresarial, Int)]]): Validation[PersistenceException, Option[(UsuarioEmpresarial, Int)]] = {
+    origin match {
+      case zSuccess(response) =>
+        response match {
+          case Some(usuario) => zSuccess(Some(DataAccessTranslator.translateTuplaUsuarioEmpresarialEstadoEmpresa(usuario)))
           case _ => zSuccess(None)
         }
       case zFailure(error)    =>  zFailure(error)
