@@ -12,8 +12,10 @@ import co.com.alianza.infrastructure.dto._
 import co.com.alianza.infrastructure.anticorruption.recursosAgenteEmpresarial.{DataAccessAdapter => raDataAccessAdapter}
 import co.com.alianza.infrastructure.anticorruption.recursosClienteAdmin.{DataAccessAdapter => rcaDataAccessAdapter}
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => usDataAdapter}
-import co.com.alianza.exceptions.PersistenceException
+import co.com.alianza.exceptions.{TechnicalLevel, PersistenceException}
 import co.com.alianza.app.MainActors
+import enumerations.EstadosEmpresaEnum
+import enumerations.empresa.EstadosDeEmpresaEnum
 
 import scala.concurrent.Future
 import scalaz.std.AllInstances._
@@ -37,8 +39,8 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
         sesion <- ValidationT(obtieneSesion(token))
         tuplaUsuarioOptionEstadoEmpresa <- ValidationT(obtieneUsuarioEmpresarial(token))
         validUs <- ValidationT(validarUsuario(tuplaUsuarioOptionEstadoEmpresa match { case None => None case _ => Some(tuplaUsuarioOptionEstadoEmpresa.get._1) }))
+        validacionEstadoEmpresa <- ValidationT(validarEstadoEmpresa(tuplaUsuarioOptionEstadoEmpresa))
         validacionIp <- ValidationT(validarIpEmpresa(sesion, message.ip))
-        //validacionEstadoEmpresa <- ValidationT(validarEstadoEmpresa(sesion))
         validacionHorario <- ValidationT(validarHorarioEmpresa(sesion))
         result <- ValidationT(autorizarRecursoAgente(tuplaUsuarioOptionEstadoEmpresa match { case None => None case _ => Some(tuplaUsuarioOptionEstadoEmpresa.get._1) }, message.url))
       } yield {
@@ -129,29 +131,18 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
             Validation.failure(ErrorSesionIpInvalida(ip));
         }
       case None =>
-        log error ("+++No encontrado empresa actor.");
+        log error ("+++No encontrado empresa actor.")
         Future.successful(Validation.failure(ErrorSesionIpInvalida(ip)))
     }
 
-  private def validarEstadoEmpresa( sesion: ActorRef ) : Future[Validation[ErrorAutorizacion, Boolean]] = {
-    sesion ? ObtenerEmpresaActor flatMap {
-      case Some(empresaSesionActor: ActorRef) =>
-        empresaSesionActor ? ObtenerEstadoEmpresa flatMap {
-         case empresa: Empresa =>
-            validaEstadoEmpresa(empresa).map {
-              case zSuccess(true) =>
-                Validation.success(true)
-              case _ =>
-                sesion ! ExpirarSesion()
-                Validation.failure(ErrorSesionEstadoEmpresaDenegado())
-            }
-          case _ =>
-            log error ("Atributo empresa no encontrado en el actor")
-            Future.successful(Validation.failure(ErrorSesionEstadoEmpresaDenegado()))
-        }
-      case None =>
-        log error ("Actor empresa NO encontrado")
-        Future.successful(Validation.failure(ErrorSesionEstadoEmpresaDenegado()))
+  private def validarEstadoEmpresa( tuplaUsuarioOptionEstadoEmpresa: Option[(UsuarioEmpresarial, Int)] ) : Future[Validation[ErrorAutorizacion, Boolean]] = {
+    val empresaActiva: Int = EstadosDeEmpresaEnum.activa.id
+    tuplaUsuarioOptionEstadoEmpresa match {
+      case None => Future.successful(Validation.failure(ErrorPersistenciaAutorizacion("Error Interno", PersistenceException(new Throwable(), TechnicalLevel, ""))))
+      case Some(tuplaUsuarioOptionEstadoEmpresa) => tuplaUsuarioOptionEstadoEmpresa._2 match {
+        case `empresaActiva` => Future.successful(Validation.success(true))
+        case _ => Future.successful(Validation.failure(ErrorSesionEstadoEmpresaDenegado()))
+      }
     }
   }
 
@@ -207,6 +198,7 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
             originalSender ! ResponseMessage(Forbidden, JsonUtil.toJson(ForbiddenAgenteMessage(usuario, None, "403.2")))
           case e @ ErrorSesionIpInvalida(_) => originalSender ! ResponseMessage(Unauthorized, e.msg)
           case e @ ErrorSesionHorarioInvalido() => originalSender ! ResponseMessage(Unauthorized, e.msg)
+          case e @ ErrorSesionEstadoEmpresaDenegado() => originalSender ! ResponseMessage(Unauthorized, e.msg)
           case a => log error "***+ Error autorización: "+a.msg; originalSender ! ResponseMessage(Forbidden, errorAutorizacion.msg)
         }
       }

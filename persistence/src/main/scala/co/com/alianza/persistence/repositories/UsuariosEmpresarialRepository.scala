@@ -135,11 +135,7 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
       }
 
       val resultTry = Try { query.list.headOption }
-      val x = resolveTry(resultTry, "Consulta usuario empresarial por token: " + token)
-      println("#################")
-      println(x)
-      println("#################")
-      x
+      resolveTry(resultTry, "Consulta usuario empresarial por token: " + token)
   }
 
   def guardarPinEmpresaAgenteEmpresarial(pinEmpresaAgenteEmpresarial: PinEmpresa): Future[Validation[PersistenceException, Int]] = loan {
