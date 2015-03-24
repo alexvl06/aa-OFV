@@ -12,12 +12,12 @@ import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.domain.aggregates.autenticacion.errores._
 import co.com.alianza.exceptions.PersistenceException
-
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => UsDataAdapter}
-import co.com.alianza.infrastructure.dto.{HorarioEmpresa, Cliente, UsuarioEmpresarialAdmin, UsuarioEmpresarial, Empresa}
+import co.com.alianza.infrastructure.anticorruption.empresa.{DataAccessTranslator => EmpDataAccessTranslator}
+import co.com.alianza.infrastructure.dto.{HorarioEmpresa, Cliente, UsuarioEmpresarialAdmin, UsuarioEmpresarial, }
 import co.com.alianza.infrastructure.messages._
 
-import co.com.alianza.persistence.entities.{ReglasContrasenas}
+import co.com.alianza.persistence.entities.ReglasContrasenas
 
 import co.com.alianza.util.token.Token
 import co.com.alianza.util.transformers.ValidationT
@@ -151,6 +151,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
      */
     case message: AutenticarUsuarioEmpresarialAgenteMessage =>
       val originalSender = sender()
+
       def validaciones: Future[Validation[ErrorAutenticacion, String]] = (for {
         usuarioAgente     <- ValidationT(obtenerUsuarioEmpresarialAgente(message.nit, message.usuario))
         estadoValido      <- ValidationT(validarEstadosUsuario(usuarioAgente.estado))
@@ -158,12 +159,12 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
         passwordCaduco    <- ValidationT(validarCaducidadPassword(TiposCliente.agenteEmpresarial, usuarioAgente.id, usuarioAgente.fechaCaducidad))
         actualizacionInfo <- ValidationT(actualizarInformacionUsuarioEmpresarialAgente(usuarioAgente.id, message.clientIp.get))
         inactividadConfig <- ValidationT(buscarConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave))
-        token             <- ValidationT(generarYAsociarTokenUsuarioEmpresarialAgente(usuarioAgente, message.nit, inactividadConfig.valor))
-        empresa           <- ValidationT(obtenerEmpresaPorNit(message.nit))
-        horario           <- ValidationT(obtenerHorarioEmpresa(empresa.id))
+        token 			  <- ValidationT(generarYAsociarTokenUsuarioEmpresarialAgente(usuarioAgente, message.nit, inactividadConfig.valor))
+        empresa 		  <- ValidationT(obtenerEmpresaPorNit(message.nit))
+		horario           <- ValidationT(obtenerHorarioEmpresa(empresa.id))
         horarioValido     <- ValidationT(validarHorarioEmpresa(horario))
-        sesion            <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
-        validacionIps     <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token))
+        sesion 			  <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt, empresa))
+        validacionIps 	  <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token))
       } yield validacionIps).run
 
       validaciones.onComplete {
@@ -591,5 +592,18 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
     else if (estadoUsuario == EstadosEmpresaEnum.bloqueadoPorSuperAdmin.id) Validation.failure(ErrorUsuarioDesactivadoSuperAdmin())
     else Validation.success(true)
   }
+
+    /**
+    * Crea la sesion del usuario en el cluster
+    * @param token Token para crear la sesion
+    * @return Future[Validation[ErrorAutenticacion, Boolean] ]
+    * Success => True
+    * ErrorAutenticacion => ErrorPersistencia
+    */
+    def crearSesion(token: String, expiracionInactividad: Int, empresa: EmpresaDTO): Future[Validation[ErrorAutenticacion, Boolean]] = {
+       log.info("Creando sesion")
+       MainActors.sesionActorSupervisor ! CrearSesionUsuario(token, expiracionInactividad, Some(empresa))
+       Future.successful(Validation.success(true))
+    }
 
 }
