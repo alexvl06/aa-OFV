@@ -11,7 +11,7 @@ import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.app.MainActors
 import scalaz.{Failure => zFailure, Success => zSuccess}
 import co.com.alianza.infrastructure.dto._
-import co.com.alianza.persistence.entities.{Usuario => eUsuario, PinUsuario => ePinUsuario, UsuarioEmpresarial => eUsuarioEmpresarial, UsuarioEmpresarialAdmin => eUsuarioEmpresarialAdmin, _}
+import co.com.alianza.persistence.entities.{Usuario => eUsuario, PinUsuario => ePinUsuario, UsuarioEmpresarial => eUsuarioEmpresarial, UsuarioEmpresarialAdmin => eUsuarioEmpresarialAdmin, Empresa => eEmpresa,_}
 import co.com.alianza.persistence.messages.AutenticacionRequest
 import enumerations.EstadosUsuarioEnum
 import co.com.alianza.persistence.entities
@@ -57,7 +57,9 @@ object DataAccessAdapter {
   }
 
   def obtenerEmpresaPorNit(nit: String): Future[Validation[PersistenceException,Option[Empresa]]] ={
-    new EmpresaRepository().obtenerEmpresa(nit)
+    new EmpresaRepository().obtenerEmpresa(nit) map {
+      x => transformValidationEmpresa(x)
+    }
   }
 
   def obtenerIdEmpresa(idUsuario: Int, tipoCliente: TiposCliente): Future[Validation[PersistenceException, Int]] = {
@@ -191,7 +193,9 @@ object DataAccessAdapter {
   }
 
   def obtenerEstadoEmpresa ( nit: String ) : Future[Validation[PersistenceException, Option[Empresa]]] = {
-    new EmpresaRepository().obtenerEmpresa(nit)
+    new EmpresaRepository().obtenerEmpresa(nit) map {
+      x => transformValidationEmpresa(x)
+    }
   }
 
   def agregarIpUsuario( ip:IpsUsuario ) : Future[Validation[PersistenceException, String]] = {
@@ -274,7 +278,17 @@ object DataAccessAdapter {
           case Some(usuario) => zSuccess(Some(DataAccessTranslator.translateUsuario(usuario)))
           case _ => zSuccess(None)
         }
+      case zFailure(error)    =>  zFailure(error)
+    }
+  }
 
+  private def transformValidationEmpresa(origin: Validation[PersistenceException, Option[eEmpresa]]): Validation[PersistenceException, Option[Empresa]] = {
+    origin match {
+      case zSuccess(response) =>
+        response match {
+          case Some(empresa) => zSuccess(Some(DataAccessTranslator.translateEmpresa(empresa)))
+          case _ => zSuccess(None)
+        }
       case zFailure(error)    =>  zFailure(error)
     }
   }
