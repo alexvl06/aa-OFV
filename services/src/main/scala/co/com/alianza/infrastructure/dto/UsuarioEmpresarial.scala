@@ -9,6 +9,7 @@ import co.com.alianza.commons.enumerations.TiposCliente
 /**
  * Created by manuel on 10/12/14.
  */
+
 case class UsuarioEmpresarialEstado(
                                id: Int,
                                correo: String,
