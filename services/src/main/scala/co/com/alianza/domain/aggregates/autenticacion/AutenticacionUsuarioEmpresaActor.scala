@@ -14,7 +14,7 @@ import co.com.alianza.domain.aggregates.autenticacion.errores._
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => UsDataAdapter}
 import co.com.alianza.infrastructure.anticorruption.empresa.{DataAccessTranslator => EmpDataAccessTranslator}
-import co.com.alianza.infrastructure.dto.{HorarioEmpresa, Cliente, UsuarioEmpresarialAdmin, UsuarioEmpresarial, }
+import co.com.alianza.infrastructure.dto._
 import co.com.alianza.infrastructure.messages._
 
 import co.com.alianza.persistence.entities.ReglasContrasenas
@@ -102,6 +102,8 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
         token <- ValidationT(generarYAsociarTokenUsuarioEmpresarialAdmin(cliente, usuarioAdmin, message.nit, inactividadConfig.valor))
         sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
         empresa <- ValidationT(obtenerEmpresaPorNit(message.nit))
+        horario           <- ValidationT(obtenerHorarioEmpresa(empresa.id))
+        horarioValido     <- ValidationT(validarHorarioEmpresa(horario))
         validacionIps <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token))
       } yield validacionIps).run
 
@@ -159,11 +161,11 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
         passwordCaduco    <- ValidationT(validarCaducidadPassword(TiposCliente.agenteEmpresarial, usuarioAgente.id, usuarioAgente.fechaCaducidad))
         actualizacionInfo <- ValidationT(actualizarInformacionUsuarioEmpresarialAgente(usuarioAgente.id, message.clientIp.get))
         inactividadConfig <- ValidationT(buscarConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave))
-        token 			  <- ValidationT(generarYAsociarTokenUsuarioEmpresarialAgente(usuarioAgente, message.nit, inactividadConfig.valor))
-        empresa 		  <- ValidationT(obtenerEmpresaPorNit(message.nit))
-		horario           <- ValidationT(obtenerHorarioEmpresa(empresa.id))
+        token      			  <- ValidationT(generarYAsociarTokenUsuarioEmpresarialAgente(usuarioAgente, message.nit, inactividadConfig.valor))
+        empresa 	    	  <- ValidationT(obtenerEmpresaPorNit(message.nit))
+		    horario           <- ValidationT(obtenerHorarioEmpresa(empresa.id))
         horarioValido     <- ValidationT(validarHorarioEmpresa(horario))
-        sesion 			  <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt, empresa))
+        sesion 			      <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt, empresa))
         validacionIps 	  <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token))
       } yield validacionIps).run
 
@@ -600,7 +602,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
     * Success => True
     * ErrorAutenticacion => ErrorPersistencia
     */
-    def crearSesion(token: String, expiracionInactividad: Int, empresa: EmpresaDTO): Future[Validation[ErrorAutenticacion, Boolean]] = {
+    def crearSesion(token: String, expiracionInactividad: Int, empresa: Empresa): Future[Validation[ErrorAutenticacion, Boolean]] = {
        log.info("Creando sesion")
        MainActors.sesionActorSupervisor ! CrearSesionUsuario(token, expiracionInactividad, Some(empresa))
        Future.successful(Validation.success(true))
