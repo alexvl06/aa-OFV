@@ -89,7 +89,7 @@ object DataAccessAdapter {
       x => transformValidationTuplaUsuarioEmpresarialEstadoEmpresa(x)
     }
   }
-  //TODO --> este metodo se esta utilizando en 2 lados ¡PILAS!
+
   def obtenerUsuarioEmpresarialAdminToken( token:String ): Future[Validation[PersistenceException, Option[(UsuarioEmpresarialAdmin, Int)]]] = {
     val repo = new UsuarioEmpresarialAdminRepository()
     repo.obtenerUsuarioToken( token ) map {
