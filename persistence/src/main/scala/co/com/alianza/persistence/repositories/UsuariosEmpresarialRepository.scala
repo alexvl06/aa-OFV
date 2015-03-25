@@ -105,7 +105,6 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
   }
 
   def invalidarTokenUsuario( token:String  ) : Future[Validation[PersistenceException, Int]] = loan {
-
     implicit session =>
       val resultTry = Try{ UsuariosEmpresariales.filter( _.token === token ).map(_.token ).update(Some(null))  }
       resolveTry(resultTry, "Invalidar token usuario")
@@ -121,11 +120,21 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
       resolveTry(resultTry, "Cambiar Estado Usuario Agente Empresarial")
   }
 
-  def obtenerUsuarioToken(token: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = loan {
+  //Obtengo como resultado una tupla que me devuelve el usuarioEmpresarial junto con el estado de la empresa
+  def obtenerUsuarioToken(token: String): Future[Validation[PersistenceException, Option[(UsuarioEmpresarial, Int)]]] = loan {
     implicit session =>
-      val resultTry = Try {
-        UsuariosEmpresariales.filter(_.token === token).list.headOption
+      val query = for {
+        (agenteEmpresarial, empresa) <-
+        UsuariosEmpresariales join UsuariosEmpresarialesEmpresa on {
+          (ue, uee) => ue.token === token && ue.id === uee.idUsuarioEmpresarial
+        } join Empresas on {
+          case ((ue, uee), e) => uee.idEmpresa === e.id
+        }
+      } yield {
+        (agenteEmpresarial._1, empresa.estadoEmpresa)
       }
+
+      val resultTry = Try { query.list.headOption }
       resolveTry(resultTry, "Consulta usuario empresarial por token: " + token)
   }
 

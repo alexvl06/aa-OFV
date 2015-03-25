@@ -20,13 +20,25 @@ class UsuarioEmpresarialAdminRepository ( implicit executionContext: ExecutionCo
 
 
   val usuariosEmpresarialesAdmin = TableQuery[UsuarioEmpresarialAdminTable]
-
+  val UsuariosEmpresarialesAdminEmpresa = TableQuery[UsuarioEmpresarialAdminEmpresaTable]
   val pinusuariosEmpresarialesAdmin = TableQuery[PinUsuarioEmpresarialAdminTable]
+  val Empresas = TableQuery[EmpresaTable]
 
-  def obtenerUsuarioToken( token:String ): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = loan {
+  def obtenerUsuarioToken( token:String ): Future[Validation[PersistenceException, Option[(UsuarioEmpresarialAdmin, Int)]]] = loan {
     implicit session =>
-      val resultTry = Try{ usuariosEmpresarialesAdmin.filter(_.token === token).list.headOption}
-      resolveTry(resultTry, "Consulta usuario empresarial admin por token: " + token)
+      val query = for {
+        (clienteAdministrador, empresa) <-
+        usuariosEmpresarialesAdmin join UsuariosEmpresarialesAdminEmpresa on {
+          (uea, ueae) => uea.token === token && uea.id === ueae.idUsuarioEmpresarialAdmin
+        } join Empresas on {
+          case ((uea, ueae), e) => ueae.idEmpresa === e.id
+        }
+      } yield {
+        (clienteAdministrador._1, empresa.estadoEmpresa)
+      }
+
+      val resultTry = Try { query.list.headOption }
+      resolveTry(resultTry, "Consulta cliente administrador por token: " + token)
   }
 
   def invalidarTokenUsuario( token:String  ) : Future[Validation[PersistenceException, Int]] = loan {

@@ -31,6 +31,15 @@ object DataAccessTranslator {
   def translateUsuarioEmpresarial(ue: eUsuarioEmpresarial) =
     UsuarioEmpresarial(ue.id, ue.correo, ue.fechaActualizacion, ue.identificacion, ue.tipoIdentificacion, ue.usuario, ue.estado, ue.contrasena, ue.numeroIngresosErroneos, ue.ipUltimoIngreso, ue.fechaUltimoIngreso, TiposCliente.agenteEmpresarial, Some(ue.nombreUsuario))
 
+  def translateTuplaUsuarioEmpresarialEstadoEmpresa(ue: (eUsuarioEmpresarial, Int)): (UsuarioEmpresarial, Int) = {
+    (UsuarioEmpresarial(ue._1.id, ue._1.correo, ue._1.fechaActualizacion, ue._1.identificacion, ue._1.tipoIdentificacion, ue._1.usuario, ue._1.estado, ue._1.contrasena, ue._1.numeroIngresosErroneos, ue._1.ipUltimoIngreso, ue._1.fechaUltimoIngreso, TiposCliente.agenteEmpresarial, Some(ue._1.nombreUsuario)), ue._2)
+  }
+
   def translateUsuarioEmpresarialAdmin(ue: eUsuarioEmpresarialAdmin) =
     UsuarioEmpresarialAdmin(ue.id, ue.correo, ue.fechaActualizacion, ue.identificacion, ue.tipoIdentificacion, ue.usuario, ue.estado, ue.contrasena, ue.numeroIngresosErroneos, ue.ipUltimoIngreso, ue.fechaUltimoIngreso, TiposCliente.clienteAdministrador)
+
+  def translateUsuarioEmpresarialAdminEstadoEmpresa(ue: (eUsuarioEmpresarialAdmin, Int)): (UsuarioEmpresarialAdmin, Int) = {
+    (UsuarioEmpresarialAdmin(ue._1.id, ue._1.correo, ue._1.fechaActualizacion, ue._1.identificacion, ue._1.tipoIdentificacion, ue._1.usuario, ue._1.estado, ue._1.contrasena, ue._1.numeroIngresosErroneos, ue._1.ipUltimoIngreso, ue._1.fechaUltimoIngreso, TiposCliente.clienteAdministrador), ue._2)
+  }
+
 }
