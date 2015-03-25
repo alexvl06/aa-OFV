@@ -146,7 +146,7 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
   private def validarEstadoEmpresa( optionEstadoEmpresa: Option[Int] ) : Future[Validation[ErrorAutorizacion, Boolean]] = {
     val empresaActiva: Int = EstadosDeEmpresaEnum.activa.id
     optionEstadoEmpresa match {
-      case None => Future.successful(Validation.failure(ErrorPersistenciaAutorizacion("Error Interno", PersistenceException(new Throwable(), TechnicalLevel, ""))))
+      case None => Future.successful(Validation.failure(ErrorPersistenciaAutorizacion("Error Interno", PersistenceException(new Exception("Estado de la empresa nulo"), TechnicalLevel, ""))))
       case Some(estadoEmpresa) => estadoEmpresa match {
         case `empresaActiva` => Future.successful(Validation.success(true))
         case _ => Future.successful(Validation.failure(ErrorSesionEstadoEmpresaDenegado()))
