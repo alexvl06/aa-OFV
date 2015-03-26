@@ -102,12 +102,6 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
       case false =>
         Future.successful(Validation.success(None))
     }
-
-    /**
-     * usDataAdapter.obtenerUsuarioEmpresarialToken(token) map {
-      _.leftMap { pe => ErrorPersistenciaAutorizacion(pe.message, pe) }
-    }
-     * */
   }
 
   private def validarToken(token: String) : Future[Validation[ErrorAutorizacion, String]] =
@@ -143,12 +137,12 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
         Future.successful(Validation.failure(ErrorSesionIpInvalida(ip)))
     }
 
-  private def validarEstadoEmpresa( optionEstadoEmpresa: Option[Int] ) : Future[Validation[ErrorAutorizacion, Boolean]] = {
+  private def validarEstadoEmpresa( optionEstadoEmpresa: Option[Int] ) : Future[Validation[ErrorAutorizacion, ResponseMessage]] = {
     val empresaActiva: Int = EstadosDeEmpresaEnum.activa.id
     optionEstadoEmpresa match {
-      case None => Future.successful(Validation.failure(ErrorPersistenciaAutorizacion("Error Interno", PersistenceException(new Throwable(), TechnicalLevel, ""))))
+      case None => Future.successful(Validation.success(ResponseMessage(Unauthorized, TokenInvalido().msg)))
       case Some(estadoEmpresa) => estadoEmpresa match {
-        case `empresaActiva` => Future.successful(Validation.success(true))
+        case `empresaActiva` => Future.successful(Validation.success(ResponseMessage(OK, "Empresa Activa")))
         case _ => Future.successful(Validation.failure(ErrorSesionEstadoEmpresaDenegado()))
       }
     }
