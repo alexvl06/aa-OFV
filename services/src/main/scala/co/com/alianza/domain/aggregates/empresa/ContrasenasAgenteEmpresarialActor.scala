@@ -5,9 +5,10 @@ import akka.actor.{ActorRef, Actor, ActorLogging, Props}
 import akka.routing.RoundRobinPool
 import co.com.alianza.app.{AlianzaActors, MainActors}
 import co.com.alianza.domain.aggregates.usuarios.{ErrorPersistence, MailMessageUsuario, ErrorValidacion}
-import co.com.alianza.exceptions.PersistenceException
+import co.com.alianza.exceptions.{LevelException, AlianzaException, PersistenceException}
 import co.com.alianza.infrastructure.anticorruption.ultimasContrasenasAgenteEmpresarial.{DataAccessAdapter => dataAccessUltimasContrasenasAgente}
 import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{DataAccessAdapter, DataAccessTranslator}
+import co.com.alianza.infrastructure.anticorruption.empresa.{DataAccessAdapter => EmpresaDataAccessAdapter}
 import co.com.alianza.infrastructure.dto.{UsuarioEmpresarial, Configuracion, PinEmpresa}
 import co.com.alianza.infrastructure.messages.{ErrorMessage, UsuarioMessage, ResponseMessage}
 import co.com.alianza.infrastructure.messages.empresa._
@@ -16,6 +17,7 @@ import co.com.alianza.util.token.{Token, PinData, TokenPin}
 import co.com.alianza.util.transformers.ValidationT
 import com.typesafe.config.Config
 import enumerations._
+import enumerations.empresa.EstadosDeEmpresaEnum
 import scalaz.std.AllInstances._
 import scala.util.{Failure => sFailure, Success => sSuccess}
 import scalaz.{Failure => zFailure, Success => zSuccess}
@@ -24,7 +26,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scalaz.Validation
 import spray.http.StatusCodes._
 import co.com.alianza.util.clave.Crypto
-import co.com.alianza.persistence.entities.{ReglasContrasenas, UltimaContrasenaUsuarioAgenteEmpresarial}
+import co.com.alianza.persistence.entities.{Empresa, ReglasContrasenas, UltimaContrasenaUsuarioAgenteEmpresarial}
 import java.sql.Timestamp
 import java.util.Date
 import co.com.alianza.infrastructure.messages.empresa.CambiarContrasenaAgenteEmpresarialMessage
@@ -183,18 +185,50 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
 
     val nuevoPass = mensaje.password.concat(AppendPasswordUser.appendUsuariosFiducia)
 
-    val actualizarContrasenaFuture = (for {
-      cantidadFilasActualizadas <- ValidationT(DataAccessAdapter.actualizarContrasenaAgenteEmpresarial(nuevoPass, mensaje.idUsuario).map(_.leftMap(pe => ErrorPersistence(pe.message, pe))))
-      res <- ValidationT( DataAccessAdapter.caducarFechaUltimoCambioContrasenaAgenteEmpresarial( mensaje.idUsuario ).map(_.leftMap(pe => ErrorPersistence(pe.message, pe))) )
-      usuario <- ValidationT(DataAccessAdapter.obtenerUsuarioEmpresarialPorId(mensaje.idUsuario).map(_.leftMap(pe => ErrorPersistence(pe.message, pe))))
+    val validarActualizarContrasenaFuture = (for {
+      usuario <- ValidationT( DataAccessAdapter.obtenerUsuarioEmpresarialPorId(mensaje.idUsuario).map(_.leftMap(pe => ErrorPersistence(pe.message, pe))) )
+      empresa <- ValidationT( EmpresaDataAccessAdapter.obtenerEmpresa(usuario.get.identificacion).map(_.leftMap(pe => ErrorPersistence(pe.message, pe))) )
     } yield {
-      (cantidadFilasActualizadas, usuario.get)
-    }).run
-    resolveActualizarContrasenaFuture(actualizarContrasenaFuture, currentSender, mensaje)
+        (empresa.get, usuario.get, nuevoPass)
+      }).run
+    resolveValidarActualizarContrasenaFuture(validarActualizarContrasenaFuture, currentSender, mensaje)
+
 
   }
 
+  private def resolveValidarActualizarContrasenaFuture(validarActualizarContrasenaFuture: Future[Validation[ErrorValidacion, (Empresa, UsuarioEmpresarial, String)]], currentSender: ActorRef, mensaje: AsignarContrasenaMessage) = {
+    validarActualizarContrasenaFuture onComplete {
+      case sFailure(failure) => currentSender ! failure
+      case sSuccess(value) =>
+        value match {
+          case zSuccess((empresa, usuario, nuevoPass)) =>{
 
+            // validar que usuario no está bloqueado y que l empresa no esté inactiva
+            if(usuario.estado == EstadosEmpresaEnum.bloqueadoPorAdmin.id){
+              currentSender ! ResponseMessage(Conflict, "El Agente Empresarial se encuentra inactivo. Actívelo para poder asignarle una contraseña.")
+            }else if(empresa.estadoEmpresa == EstadosDeEmpresaEnum.inactiva){
+              currentSender ! ResponseMessage(Conflict, "El Agente Empresarial pertenece a una empresa bloqueada. Desbloquée la empresa para poder asignarle una contraseña.")
+            }else{
+
+              val actualizarContrasenaFuture = (for {
+                cantidadFilasActualizadas <- ValidationT(DataAccessAdapter.actualizarContrasenaAgenteEmpresarial(nuevoPass, mensaje.idUsuario).map(_.leftMap(pe => ErrorPersistence(pe.message, pe))))
+                res <- ValidationT( DataAccessAdapter.caducarFechaUltimoCambioContrasenaAgenteEmpresarial( mensaje.idUsuario ).map(_.leftMap(pe => ErrorPersistence(pe.message, pe))) )
+              } yield {
+                (cantidadFilasActualizadas, usuario)
+              }).run
+              resolveActualizarContrasenaFuture(actualizarContrasenaFuture, currentSender, mensaje)
+
+            }
+
+          }
+          case zFailure(error) =>
+            error match {
+              case errorPersistence: ErrorPersistence => currentSender ! errorPersistence.exception
+              case errorVal: ErrorValidacion => currentSender ! ResponseMessage(Conflict, errorVal.msg)
+            }
+        }
+    }
+  }
 
   private def resolveActualizarContrasenaFuture(actualizarContrasenaFuture: Future[Validation[ErrorValidacion, (Int, UsuarioEmpresarial)]], currentSender: ActorRef, message: AsignarContrasenaMessage) = {
     actualizarContrasenaFuture onComplete {
