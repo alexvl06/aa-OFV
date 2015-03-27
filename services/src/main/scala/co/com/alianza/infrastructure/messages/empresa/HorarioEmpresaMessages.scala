@@ -4,7 +4,7 @@ import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.infrastructure.messages.MessageService
 import co.com.alianza.persistence.entities.HorarioEmpresa
 import spray.httpx.SprayJsonSupport
-import java.sql.Time
+import java.sql.{Date, Time}
 import spray.json._
 
 /**
@@ -12,9 +12,13 @@ import spray.json._
  */
 object HorarioEmpresaJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
 
+  implicit val DiaFestivoMessageFormat = jsonFormat1(DiaFestivoMessage)
+
   implicit val AgregarHorarioEmpresaMessageFormat = jsonFormat6(AgregarHorarioEmpresaMessage)
 
 }
+
+case class DiaFestivoMessage(fecha: String) extends MessageService
 
 case class ObtenerHorarioEmpresaMessage(idUsuario: Int, tipoCliente: TiposCliente) extends MessageService
 

@@ -12,7 +12,7 @@ import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
 import co.com.alianza.infrastructure.anticorruption.horario.{DataAccessTranslator => HorarioTrans}
 import co.com.alianza.infrastructure.dto.{HorarioEmpresa => HorarioEmpresaDTO}
 import co.com.alianza.infrastructure.messages._
-import co.com.alianza.infrastructure.messages.empresa.{AgregarHorarioEmpresaMessage, ObtenerHorarioEmpresaMessage}
+import co.com.alianza.infrastructure.messages.empresa.{DiaFestivoMessage, AgregarHorarioEmpresaMessage, ObtenerHorarioEmpresaMessage}
 import co.com.alianza.persistence.entities.HorarioEmpresa
 import co.com.alianza.util.transformers.ValidationT
 import co.com.alianza.app.MainActors
@@ -20,7 +20,7 @@ import co.com.alianza.exceptions.BusinessLevel
 import co.com.alianza.domain.aggregates.autenticacion.ActualizarHorarioEmpresa
 import spray.http.StatusCodes._
 
-import java.sql.Time
+import java.sql.{Date, Time}
 import scala.util.{Failure, Success}
 import scala.concurrent.Future
 import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
@@ -51,6 +51,7 @@ class HorarioEmpresaActor extends Actor with ActorLogging with AlianzaActors {
   def receive = {
     case message: ObtenerHorarioEmpresaMessage  => obtenerHorarioEmpresa(message)
     case message: AgregarHorarioEmpresaMessage  => agregarHorarioEmpresa(message)
+    case message: DiaFestivoMessage => esDiaFestivo(message)
   }
 
   implicit def obtenerEnumTipoCliente(tipoCliente: Option[Int]) = {
@@ -78,7 +79,7 @@ class HorarioEmpresaActor extends Actor with ActorLogging with AlianzaActors {
     }
   }
 
-  def toEntity(message: AgregarHorarioEmpresaMessage, idEmpresa: Int): HorarioEmpresa ={
+  def toEntity(message: AgregarHorarioEmpresaMessage, idEmpresa: Int): HorarioEmpresa = {
     implicit def toTime(hora: String) : Time = Time.valueOf(hora)
     new HorarioEmpresa(idEmpresa, message.diaHabil, message.sabado, message.horaInicio, message.horaFin)
   }
@@ -110,6 +111,27 @@ class HorarioEmpresaActor extends Actor with ActorLogging with AlianzaActors {
       case Some(empresaSesionActor: ActorRef) => empresaSesionActor ! ActualizarHorarioEmpresa(horario); zSuccess(true)
       case None => zSuccess(false)
       case _ => zFailure(PersistenceException(new Exception(),BusinessLevel,"Error"))
+    }
+  }
+
+  def esDiaFestivo(message: DiaFestivoMessage) = {
+    implicit def toDate(fecha: String) : Date = Date.valueOf(fecha)
+    val currentSender = sender()
+    val result = {
+      (for {
+        existe <- ValidationT(DataAccessAdapter.existeDiaFestivo(message.fecha))
+      } yield (existe)).run
+    }
+    result onComplete {
+      case Failure(failure)  =>
+        currentSender ! failure
+      case Success(value) =>
+        value match {
+          case zSuccess(response: Boolean) =>
+            currentSender !  ResponseMessage(OK, response.toJson)
+          case zFailure(error)   =>
+            currentSender !  error
+        }
     }
   }
 
