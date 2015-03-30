@@ -9,8 +9,10 @@ import spray.routing.Directives
  * @author hernando on 16/06/15.
  */
 class HorarioEmpresaService extends Directives with AlianzaCommons with CrossHeaders {
+
   import HorarioEmpresaJsonSupport._
 
+  val diaFestivo = "diaFestivo"
   val horarioEmpresa = "horarioEmpresa"
 
   def route(user: UsuarioAuth) = {
@@ -26,6 +28,16 @@ class HorarioEmpresaService extends Directives with AlianzaCommons with CrossHea
           agregarHorarioEmpresaMessage =>
             respondWithMediaType(mediaType) {
               requestExecute(agregarHorarioEmpresaMessage.copy(idUsuario = Some(user.id), tipoCliente = Some(user.tipoCliente.id)), horarioEmpresaActor)
+            }
+        }
+      }
+    } ~
+    path(diaFestivo){
+      post {
+        entity(as[DiaFestivoMessage]){
+          diaFestivoMessage =>
+            respondWithMediaType(mediaType) {
+              requestExecute(diaFestivoMessage, horarioEmpresaActor)
             }
         }
       }

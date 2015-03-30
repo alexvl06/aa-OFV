@@ -206,7 +206,7 @@ object DataAccessAdapter {
   }
 
   def existeDiaFestivo(fecha: Date): Future[Validation[PersistenceException, Boolean]] = {
-    new DiaFestivoRepository().exiateDiaFestivo(fecha)
+    new DiaFestivoRepository().existeDiaFestivo(fecha)
   }
 
   def agregarHorarioEmpresa(horarioEmpresa: eHorarioEmpresa): Future[Validation[PersistenceException, Boolean]] ={

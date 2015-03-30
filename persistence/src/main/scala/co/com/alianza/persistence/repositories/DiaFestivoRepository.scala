@@ -18,7 +18,7 @@ class DiaFestivoRepository ( implicit executionContext: ExecutionContext) extend
 
   val diaFestivo = TableQuery[DiaFestivoTable]
 
-  def exiateDiaFestivo(fecha: Date): Future[Validation[PersistenceException, Boolean]] = loan {
+  def existeDiaFestivo(fecha: Date): Future[Validation[PersistenceException, Boolean]] = loan {
     session =>
       resolveTry(obtenerDiaFestivoTry(session: Session, fecha), "Consulta si existe dia Festivo")
   }
