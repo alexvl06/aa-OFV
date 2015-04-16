@@ -8,8 +8,8 @@ object TiposTransacciones extends Enumeration {
   case class TipoTransaccion(codigo: Int, nombre: String) extends Val(codigo, nombre)
 
   val CONSULTA = TipoTransaccion( 1 ,"Consulta" )
-  val `MATRíCULA` = TipoTransaccion( 2 , "Matrícula" )
-  val `DISPERSIÓN DE PAGOS` = TipoTransaccion( 3 , "Dispersión de pagos" )
-  val TRANSFERENCIA = TipoTransaccion( 4 ,"Transferencia" )
+  val `INSCRIPCIÓN` = TipoTransaccion( 2 , "Inscripción" )
+  val `PAGOS MASIVOS` = TipoTransaccion( 3 , "Pagos Masivos" )
+  val `TRANSFERENCIAS Y RETIROS` = TipoTransaccion( 4 ,"Transferencias y Retiros" )
 
 }
