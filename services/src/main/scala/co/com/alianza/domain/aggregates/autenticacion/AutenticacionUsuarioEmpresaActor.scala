@@ -559,20 +559,17 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
         //2. Si esta habilitado el sábado, validar
         else if (!horario.sabado && calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY)
           Future.successful(Validation.failure(ErrorHorarioIngresoEmpresa()))
-        //3. Validar la hora de inicio y de fin
-        else if (horario.horaInicio.after(horaActual) || horario.horaFin.before(horaActual))
-          Future.successful(Validation.failure(ErrorHorarioIngresoEmpresa()))
-        //5. Validar el día hábil
-        else if (horario.diaHabil) {
-          log.info("Validacioin dia habil")
-          log.info("Fecha " + calendarToDate(calendar))
+        //3. Validar el día hábil
+        else if (horario.diaHabil)
           UsDataAdapter.existeDiaFestivo(calendarToDate(calendar)).map(
             _.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap {
               case true => Validation.failure(ErrorHorarioIngresoEmpresa())
               case _ => Validation.success(true)
             }
           )
-        }
+        //4. Validar la hora de inicio y de fin
+        else if (horario.horaInicio.after(horaActual) || horario.horaFin.before(horaActual))
+          Future.successful(Validation.failure(ErrorHorarioIngresoEmpresa()))
         else
           Future.successful(Validation.success(true))
       }
