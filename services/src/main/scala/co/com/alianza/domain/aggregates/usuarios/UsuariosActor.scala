@@ -82,9 +82,10 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
   def receive = {
 
     case message:UsuarioMessage  =>
+      //TODO quitar el comentario a validar captcha, se coloco temporalmente por pruebas
       val currentSender = sender()
       val crearUsuarioFuture = (for{
-        captchaVal <-  ValidationT(validaCaptcha(message))
+        //captchaVal <-  ValidationT(validaCaptcha(message))
         cliente <- ValidationT(validaSolicitud(message))
         //idUsuario <- ValidationT(guardarUsuario(message))
       }yield{
@@ -93,9 +94,10 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
       resolveCrearUsuarioFuture(crearUsuarioFuture,currentSender,message)
 
     case message: DesbloquarMessage =>
+      //TODO quitar el comentario a validar captcha, se coloco temporalmente por pruebas
       val currentSender = sender()
       val futureCliente = (for{
-        captchaVal <-  validaCaptcha(message.toUsuarioMessage)
+        //captchaVal <-  validaCaptcha(message.toUsuarioMessage)
         cliente <- co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerUsuarioNumeroIdentificacion(message.identificacion)
       }yield{
         cliente
