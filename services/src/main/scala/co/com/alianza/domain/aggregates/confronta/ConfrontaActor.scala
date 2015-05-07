@@ -113,8 +113,6 @@ class ConfrontaActor extends Actor with ActorLogging with AlianzaActors {
 
   private def actualizarEstadoConfronta(message: UsuarioMessage, response:ResultadoEvaluacionCuestionarioULTRADTO, currentSender: ActorRef) = {
     val passwordUserWithAppend = message.contrasena.concat( AppendPasswordUser.appendUsuariosFiducia )
-    //val resultActualizarEstadoConfronta = DataAccessAdapterUsuario.crearUsuario(message.toEntityUsuario( Crypto.hashSha512(passwordUserWithAppend))).map(_.leftMap( pe => ErrorPersistence(pe.message,pe)))
-
     val UsuarioCreadoFuture = (for{
       resultActualizarEstadoConfronta <- ValidationT( DataAccessAdapterUsuario.crearUsuario(message.toEntityUsuario( Crypto.hashSha512(passwordUserWithAppend))).map(_.leftMap( pe => ErrorPersistence(pe.message,pe))) )
       resultGuardarUltimasContrasenas <- ValidationT( DataAccessAdapterUltimaContrasena.guardarUltimaContrasena( UltimaContrasena( None, resultActualizarEstadoConfronta , Crypto.hashSha512(passwordUserWithAppend), new Timestamp(System.currentTimeMillis()))).map(_.leftMap( pe => ErrorPersistence( pe.message, pe ) ) ) )
@@ -129,11 +127,11 @@ class ConfrontaActor extends Actor with ActorLogging with AlianzaActors {
           case zSuccess(code: Int) =>
             val respToSender = new ResultadoEvaluacionCuestionarioULTRADTO()
             respToSender.setRespuestaProceso(response.getRespuestaProceso)
-            currentSender !  respToSender.toJson
             DataAccessAdapterUsuario.asociarPerfiles(PerfilUsuario(code,PerfilesUsuario.clienteIndividual.id)::Nil)
             if(message.activarIP && message.clientIp.isDefined){
-              DataAccessAdapterUsuario.relacionarIp(code,message.clientIp.get)
+              for { a <- DataAccessAdapterUsuario.relacionarIp(code,message.clientIp.get)} yield a
             }
+            currentSender !  respToSender.toJson
           case zFailure(error) =>
             currentSender ! error
         }
