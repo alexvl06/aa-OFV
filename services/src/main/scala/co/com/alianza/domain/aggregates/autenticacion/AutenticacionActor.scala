@@ -170,11 +170,12 @@ class AutenticacionActor extends Actor with ActorLogging {
           case zSuccess(response: Option[Cliente]) =>
             response match {
               case Some(valueResponseCliente) =>
-                if (valueResponseCliente.wcli_estado != EstadosCliente.inactivo) {
+                if (valueResponseCliente.wcli_estado != EstadosCliente.inactivo && valueResponseCliente.wcli_estado != EstadosCliente.bloqueado && valueResponseCliente.wcli_estado != EstadosCliente.activo) currentSender ! ResponseMessage(Unauthorized, errorClienteInactivoSP)
+                 else {
                   //Se asocia la direccion IP a las habituales del usuario
                   val result = co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.relacionarIp(idUsuario, ip)
                   currentSender ! "Registro de IP Exitoso"
-                } else currentSender ! ResponseMessage(Unauthorized, errorClienteInactivoSP)
+                }
               case None => currentSender ! ResponseMessage(Unauthorized, errorClienteNoExisteSP)
             }
           case zFailure(error) => currentSender ! error
