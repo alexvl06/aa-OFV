@@ -25,7 +25,7 @@ class UsuarioService  extends Directives with AlianzaCommons   with CrossHeaders
            usuario =>
             respondWithMediaType(mediaType) {
               clientIP { ip =>
-                val nuevoUsuario = usuario.copy(clientIp = Some(ip.value))
+                val nuevoUsuario: UsuarioMessage = usuario.copy(clientIp = Some(ip.value))
                 requestExecute(nuevoUsuario, usuariosActor)
               }
             }
@@ -38,7 +38,7 @@ class UsuarioService  extends Directives with AlianzaCommons   with CrossHeaders
               respondWithMediaType(mediaType) {
                 clientIP {
                   ip =>
-                    val nuevoUsuario = desbloqueoMsg.toDesbloquarMessage.copy(clientIp = Some(ip.value))
+                    val nuevoUsuario: DesbloquarMessage = desbloqueoMsg.toDesbloquarMessage.copy(clientIp = Some(ip.value))
                     requestExecute(nuevoUsuario, usuariosActor)
                 }
               }
