@@ -26,7 +26,7 @@
 
     <logger name="spray.can.server" level="ERROR"/>
 
-    <root level="INFO">
+    <root level="TRACE">
         <appender-ref ref="FILE" />
         <appender-ref ref="STDOUT" />
     </root>
