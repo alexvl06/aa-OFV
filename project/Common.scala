@@ -111,11 +111,15 @@ object Common {
     "org.jasypt" % "jasypt" % "1.9.2"
   )
 
+	def kafka = Seq(
+		"org.apache.kafka" % "kafka_2.10" % "0.8.1.1" exclude("javax.jms" , "jms") exclude("com.sun.jdmk" , "jmxtools") exclude("com.sun.jmx" , "jmxri")
+	)
+
   /*def scalaEnumerations = Seq(
     "se.radley" %% "play-plugins-enumeration" % "1.1.0"
   )*/
 
-  def commonLibraries   =  testingLibraries ++ commonScalaLibraries ++ apacheCommonsLibraries ++ json ++ functionalProgrammingLibraries ++ jasyptLibraries
+  def commonLibraries   =  testingLibraries ++ commonScalaLibraries ++ apacheCommonsLibraries ++ json ++ functionalProgrammingLibraries ++ jasyptLibraries ++ kafka
  	def reactiveLibraries =   akkaLibraries ++ sprayLibraries ++ oracle ++ jsonWebTokenLibraries
 
 }
