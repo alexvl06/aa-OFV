@@ -3,6 +3,7 @@ package co.com.alianza.infrastructure.auditing
 import akka.actor._
 import co.com.alianza.infrastructure.auditing.AuditingEntities.{AudRequest, AudResponse}
 import co.com.alianza.infrastructure.auditing.AuditingMessages.AuditRequest
+import co.com.alianza.util.json.JsonUtil
 import spray.http.{HttpRequest, HttpResponse}
 import spray.routing._
 
@@ -10,7 +11,7 @@ object AuditingHelper extends AuditingHelper
 
 trait AuditingHelper {
 
-  def requestWithAuiditing(ctx: RequestContext, kafkaTopic: String, elasticIndex: String, ip: String, kafkaActor: ActorSelection): RequestContext = {
+  def requestWithAuiditing(ctx: RequestContext, kafkaTopic: String, elasticIndex: String, ip: String, kafkaActor: ActorSelection, requestParameters : Any): RequestContext = {
     ctx.withRouteResponseMapped {
       case response: HttpResponse =>
 
@@ -21,7 +22,7 @@ trait AuditingHelper {
             AudRequest(
               httpReq.method.toString(),
               httpReq.uri.toRelative.toString(),
-              httpReq.entity.asString,
+              JsonUtil.toJson(requestParameters),
               ip
             ),
             AudResponse(

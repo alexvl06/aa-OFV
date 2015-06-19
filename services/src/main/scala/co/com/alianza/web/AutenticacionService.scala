@@ -1,6 +1,8 @@
 package co.com.alianza.web
 
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
+import co.com.alianza.util.clave.Crypto
+import enumerations.AppendPasswordUser
 import co.com.alianza.commons.enumerations.TiposCliente
 import spray.routing.{RequestContext, Directives}
 import co.com.alianza.app.{ CrossHeaders, AlianzaCommons }
@@ -18,8 +20,8 @@ class AutenticacionService extends Directives with AlianzaCommons with CrossHead
           autenticacion =>
             respondWithMediaType(mediaType) {
               clientIP { ip =>
-                mapRequestContext((r: RequestContext) => requestWithAuiditing(r, "Fiduciaria", "autenticacion-fiduciaria", ip.value, kafkaActor)) {
-	          val nuevaAutenticacion = autenticacion.copy(clientIp = Some(ip.value))
+                mapRequestContext((r: RequestContext) => requestWithAuiditing(r, "Fiduciaria", "autenticacion-fiduciaria", ip.value, kafkaActor, autenticacion.copy( password = Crypto.hashSha512(autenticacion.password.concat(AppendPasswordUser.appendUsuariosFiducia)), clientIp = Some(ip.value)))) {
+                  val nuevaAutenticacion = autenticacion.copy(clientIp = Some(ip.value))
                   requestExecute(nuevaAutenticacion, autenticacionActor)
 		}
               }
