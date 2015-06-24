@@ -96,11 +96,11 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
         resolveFutureValidation(permisosFuture,
           {(listaPermisos: List[Int]) =>
             context stop self
-            PermisosLoginRespuesta(listaPermisos.contains(2), listaPermisos.contains(4), listaPermisos.contains(3), listaPermisos.contains(1)).toJson
+            PermisosLoginRespuesta(listaPermisos.contains(2), listaPermisos.contains(4), listaPermisos.contains(3), listaPermisos.contains(1), listaPermisos.contains(6)).toJson
           },
           currentSender)
       } else {
-        currentSender ! JsonUtil.toJson(PermisosLoginRespuesta(true,true,true,true))
+        currentSender ! JsonUtil.toJson(PermisosLoginRespuesta(true,true,true,true,true))
         context stop self
       }
 
