@@ -1,6 +1,15 @@
 package co.com.alianza.web
 
-import spray.routing.Directives
+import co.com.alianza.exceptions.PersistenceException
+import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
+import co.com.alianza.infrastructure.dto.Usuario
+import co.com.alianza.util.token.Token
+import co.com.alianza.infrastructure.auditing.AuditingHelper._
+import co.com.alianza.infrastructure.dto.security.UsuarioAuth
+import co.com.alianza.util.clave.Crypto
+import com.nimbusds.jwt.{SignedJWT, JWTClaimsSet}
+import enumerations.AppendPasswordUser
+import spray.routing.{RequestContext, Directives}
 import co.com.alianza.app.AlianzaCommons
 import co.com.alianza.infrastructure.messages.{InvalidarToken, AutorizarUrl}
 import co.com.alianza.infrastructure.cache.CacheHelper
@@ -11,7 +20,6 @@ import co.com.alianza.app.MainActors
 import co.com.alianza.infrastructure.cache.CachingDirectiveAlianza
 
 class AutorizacionService extends Directives with AlianzaCommons with CacheHelper{
-  
 
   import CachingDirectiveAlianza._
   implicit val system: ActorSystem = MainActors.system
@@ -36,9 +44,17 @@ class AutorizacionService extends Directives with AlianzaCommons with CacheHelpe
       token =>
         get{
           respondWithMediaType(mediaType) {
-            //cacheAlianza(cacheRequest("fiduciaToken")) { cache =>
-              requestExecute(InvalidarToken(token), autorizacionActor)
-            //}
+            clientIP { ip =>
+              mapRequestContext{
+                r: RequestContext =>
+                  val usuario = DataAccessAdapter.obtenerUsuarioToken(token)
+                  requestWithFutureAuditing[PersistenceException, Usuario](r, "Fiduciaria", "cierre-sesion-fiduciaria", ip.value, kafkaActor, usuario)
+              } {
+                //cacheAlianza(cacheRequest("fiduciaToken")) { cache =>
+                requestExecute(InvalidarToken(token), autorizacionActor)
+                //}
+              }
+            }
           }
         }
 

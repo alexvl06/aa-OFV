@@ -18,6 +18,11 @@ object Token {
 
   private val ISSUER = "http://fiduciaria.alianza.com.co"
   private val SIGNING_KEY = "556878763f1ea3bddfd1bed5b15daa2fc6d2db5a98290dd9f91ddfd22d77d1e" + AppendPasswordUser.appendUsuariosFiducia
+  private val CORREO_DATA_NAME = "correo"
+  private val NOMBRE_USUARIO_DATA_NAME = "nombreUsuario"
+  private val TIPO_IDENTIFICACION_DATA_NAME = "tipoIdentificacion"
+  private val ULTIMA_IP_INGRESO_DATA_NAME = "ultimaIpIngreso"
+  private val ULTIMA_FECHA_INGRESO_DATA_NAME = "ultimaFechaIngreso"
 
   def generarToken(nombreUsuarioLogueado: String, correoUsuarioLogueado: String, tipoIdentificacion: String, ultimaIpIngreso: String, ultimaFechaIngreso: Date): String = {
 
@@ -30,11 +35,11 @@ object Token {
     val formater = new java.text.SimpleDateFormat("dd MMMM, yyyy 'a las' hh:mm a", new java.util.Locale("es", "ES"))
 
     val customData = Map(
-      "correo" -> correoUsuarioLogueado,
-      "nombreUsuario" -> nombreUsuarioLogueado,
-      "tipoIdentificacion" -> tipoIdentificacion,
-      "ultimaIpIngreso" -> ultimaIpIngreso,
-      "ultimaFechaIngreso" -> formater.format(ultimaFechaIngreso))
+      CORREO_DATA_NAME -> correoUsuarioLogueado,
+      NOMBRE_USUARIO_DATA_NAME -> nombreUsuarioLogueado,
+      TIPO_IDENTIFICACION_DATA_NAME -> tipoIdentificacion,
+      ULTIMA_IP_INGRESO_DATA_NAME -> ultimaIpIngreso,
+      ULTIMA_FECHA_INGRESO_DATA_NAME -> formater.format(ultimaFechaIngreso))
 
     claimsSet.setCustomClaims(customData)
 
@@ -71,6 +76,20 @@ object Token {
     SignedJWT.parse(token)
   }
 
+  def getTipoIdentificacionFromToken(token : String) : String = {
+    getClaim(token, TIPO_IDENTIFICACION_DATA_NAME)
+  }
+
+  def getNombreUsuarioFromToken(token : String) : String = {
+    getClaim(token, NOMBRE_USUARIO_DATA_NAME)
+  }
+
+  private def getClaim(token : String, value : String) : String = {
+    val elements : SignedJWT = Token.getToken(token)
+    val claimSet = elements.getJWTClaimsSet()
+    claimSet.getStringClaim(value)
+  }
+
   def autorizarToken(token: String): Boolean = {
     try {
       val signedJWT2 = SignedJWT.parse(token)
@@ -82,7 +101,7 @@ object Token {
     }
   }
 
-  private def validarToken(signedJWT2: SignedJWT) = {
+  private def validarToken(signedJWT2: SignedJWT) : Boolean = {
     val verifier = new MACVerifier(SIGNING_KEY)
     val verify = signedJWT2.verify(verifier)
     verify match {
@@ -91,7 +110,7 @@ object Token {
     }
   }
 
-  private def validarExpiracion(signedJWT2: SignedJWT) = {
+  private def validarExpiracion(signedJWT2: SignedJWT) : Boolean = {
     val expirationTime = signedJWT2.getJWTClaimsSet.getExpirationTime
     val now = new Date()
     expirationTime.after(now)
