@@ -21,13 +21,11 @@ class AutorizacionService extends Directives with AlianzaCommons with CacheHelpe
 
 
   import CachingDirectiveAlianza._
-
   implicit val system: ActorSystem = MainActors.system
   implicit val contextAuthorization: ExecutionContext = MainActors.ex
-  implicit val conf: Config = MainActors.conf
+  implicit val conf: Config= MainActors.conf
 
   def route = {
-
     path("validarToken" / Segment) {
       token =>
         get {
@@ -50,17 +48,22 @@ class AutorizacionService extends Directives with AlianzaCommons with CacheHelpe
       token =>
         get {
           respondWithMediaType(mediaType) {
-            val tipoCliente = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
-
-            if (tipoCliente == TiposCliente.agenteEmpresarial.toString)
-              requestExecute(InvalidarTokenAgente(token), autorizacionActor)
-            else if (tipoCliente == TiposCliente.clienteAdministrador.toString)
-              requestExecute(InvalidarTokenClienteAdmin(token), autorizacionActor)
-            else
-              requestExecute(InvalidarToken(token), autorizacionActor)
-          }
-        }
-
+            clientIP { ip =>
+              mapRequestContext{
+                r: RequestContext =>
+		    val tipoCliente = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
+	            val usuario = DataAccessAdapter.obtenerUsuarioToken(token)
+                  requestWithFutureAuditing[PersistenceException, Usuario](r, "Fiduciaria", "cierre-sesion-fiduciaria", ip.value, kafkaActor, usuario)
+              } {
+		    if (tipoCliente == TiposCliente.agenteEmpresarial.toString)
+		      requestExecute(InvalidarTokenAgente(token), autorizacionActor)
+		    else if (tipoCliente == TiposCliente.clienteAdministrador.toString)
+		      requestExecute(InvalidarTokenClienteAdmin(token), autorizacionActor)
+		    else
+		      requestExecute(InvalidarToken(token), autorizacionActor)
+          	}
+           }
+	}
     }
   }
 }
