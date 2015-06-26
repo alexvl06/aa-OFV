@@ -26,7 +26,7 @@ trait AuditingHelper {
             AudRequest(
               httpReq.method.toString(),
               httpReq.uri.toRelative.toString(),
-              requestParameters.toString,
+              JsonUtil.toJson(requestParameters),
               ip
             ),
             AudResponse(
