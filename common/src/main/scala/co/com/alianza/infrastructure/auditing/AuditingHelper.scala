@@ -58,8 +58,9 @@ trait AuditingHelper {
                     AudRequest(
                       httpReq.method.toString(),
                       httpReq.uri.toRelative.toString(),
-                      usuario,
-                      ip
+                      extraParameters.getOrElse(""),
+                      ip,
+                      usuario
                     ),
                     AudResponse(
                       response.status.intValue.toString,
