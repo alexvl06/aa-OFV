@@ -5,7 +5,7 @@ import co.com.alianza.util.clave.Crypto
 import enumerations.AppendPasswordUser
 import spray.routing.{RequestContext, Directives}
 import co.com.alianza.app.{ CrossHeaders, AlianzaCommons }
-import co.com.alianza.infrastructure.messages.{IpsUsuarioMessagesJsonSupport, AutenticacionMessagesJsonSupport, AutenticarMessage, AgregarIPHabitualUsuario}
+import co.com.alianza.infrastructure.messages.{ AutenticacionMessagesJsonSupport, AutenticarMessage, AgregarIPHabitualUsuario}
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 
 class AutenticacionService extends Directives with AlianzaCommons with CrossHeaders {
