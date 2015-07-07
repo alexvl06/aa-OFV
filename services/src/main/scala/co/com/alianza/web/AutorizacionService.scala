@@ -72,7 +72,7 @@ class AutorizacionService extends Directives with AlianzaCommons with CacheHelpe
               mapRequestContext {
                 r: RequestContext =>
                   val tipoCliente = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
-                  val usuario = DataAccessAdapter.obtenerUsuarioToken(token)
+		  val usuario = DataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token)
                   requestWithFutureAuditing[PersistenceException, Usuario](r, "Fiduciaria", "cierre-sesion-fiduciaria", ip.value, kafkaActor, usuario)
               } {
 
