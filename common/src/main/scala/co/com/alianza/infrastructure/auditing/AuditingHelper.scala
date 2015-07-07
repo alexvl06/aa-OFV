@@ -3,6 +3,7 @@ package co.com.alianza.infrastructure.auditing
 import akka.actor._
 import co.com.alianza.infrastructure.auditing.AuditingEntities.{AudRequest, AudResponse}
 import co.com.alianza.infrastructure.auditing.AuditingMessages.AuditRequest
+import co.com.alianza.infrastructure.auditing.AuditingUser.AuditingUserData
 import co.com.alianza.util.json.JsonUtil
 import spray.http.{HttpRequest, HttpResponse}
 import spray.routing._
@@ -26,7 +27,7 @@ trait AuditingHelper {
             AudRequest(
               httpReq.method.toString(),
               httpReq.uri.toRelative.toString(),
-              JsonUtil.toJson(requestParameters),
+              requestParameters,
               ip
             ),
             AudResponse(
@@ -44,7 +45,7 @@ trait AuditingHelper {
     }
   }
 
-  def requestWithFutureAuditing[E,H](ctx: RequestContext, kafkaTopic: String, elasticIndex: String, ip: String, kafkaActor: ActorSelection, futureAuditParameters : Future[Validation[E,Option[H]]])(implicit executionContext : ExecutionContext): RequestContext = {
+  def requestWithFutureAuditing[E,T](ctx: RequestContext, kafkaTopic: String, elasticIndex: String, ip: String, kafkaActor: ActorSelection, futureAuditParameters : Future[Validation[E,Option[AuditingUserData]]], extraParameters: Option[T] = None)(implicit executionContext : ExecutionContext): RequestContext = {
     ctx.withRouteResponseMapped {
       case response: HttpResponse =>
         futureAuditParameters onComplete {
@@ -57,7 +58,7 @@ trait AuditingHelper {
                     AudRequest(
                       httpReq.method.toString(),
                       httpReq.uri.toRelative.toString(),
-                      usuario.toString,
+                      usuario,
                       ip
                     ),
                     AudResponse(
