@@ -47,7 +47,7 @@ class AutorizacionService extends Directives with AlianzaCommons with CacheHelpe
             clientIP { ip =>
               mapRequestContext{
                 r: RequestContext =>
-                  val usuario = DataAccessAdapter.obtenerUsuarioToken(token)
+                  val usuario = DataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token)
                   requestWithFutureAuditing[PersistenceException, Usuario](r, "Fiduciaria", "cierre-sesion-fiduciaria", ip.value, kafkaActor, usuario)
               } {
                 //cacheAlianza(cacheRequest("fiduciaToken")) { cache =>
