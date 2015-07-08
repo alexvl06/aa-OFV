@@ -48,10 +48,14 @@ class UsuarioService  extends Directives with AlianzaCommons   with CrossHeaders
           //pathEndOrSingleSlash {
             post {
               //Reinicio de contrasena de la cuenta alianza fiduciaria (Implica cambio en el estado del usuario)
-              entity(as[OlvidoContrasenaMessage]) {
-                olvidarContrasena =>
-                  requestExecute(olvidarContrasena, usuariosActor)
-            }
+              clientIP { ip =>
+                entity(as[OlvidoContrasenaMessage]) {
+                  olvidarContrasena =>
+                    mapRequestContext((r: RequestContext) => requestWithAuiditing(r, "Fiduciaria", "olvido-contrasena-fiduciaria", ip.value, kafkaActor, olvidarContrasena)) {
+                      requestExecute(olvidarContrasena, usuariosActor)
+                    }
+                }
+              }
           }
         //}
       }
