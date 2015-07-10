@@ -44,13 +44,13 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
     }, "Consulta usuario empresarial por nit y usuario")
   }
 
-  def obtieneUsuarioEmpresaAdminPorNitYUsuario(nit: String, usuario: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = loan {
+  def obtieneUsuarioEmpresaAdminPorNitYUsuario(nit: String, usuario: String, tipoIdentificacion:Int): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = loan {
     implicit session => resolveTry(Try {
       (
         for {
           ((usuarioEmpresarial, usuarioEmpresarialEmpresa), empresa) <-
           UsuariosEmpresarialesAdmin join UsuariosEmpresarialesAdminEmpresa on {
-            (ue, uee) => ue.id === uee.idUsuarioEmpresarialAdmin && ue.usuario === usuario
+            (ue, uee) => ue.id === uee.idUsuarioEmpresarialAdmin && ue.usuario === usuario && ue.tipoIdentificacion === tipoIdentificacion
           } join Empresas on {
             case ((ue, uee), e) => e.nit === nit  && uee.idEmpresa === e.id
           }
