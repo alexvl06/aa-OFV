@@ -68,12 +68,6 @@ class AutenticacionService extends Directives with AlianzaCommons with CrossHead
             }
         }
       }
-    } ~ path("actualizarInactividad") {
-      post {
-        complete {
-          "ok"
-        }
-      }
     }
   }
 }
