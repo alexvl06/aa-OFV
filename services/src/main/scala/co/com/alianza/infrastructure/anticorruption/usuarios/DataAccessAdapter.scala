@@ -77,8 +77,8 @@ object DataAccessAdapter {
     }
   }
 
-  def obtieneUsuarioEmpresarialAdminPorNitYUsuario (nit: String, usuario: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] =
-    new UsuariosEmpresarialRepository().obtieneUsuarioEmpresaAdminPorNitYUsuario(nit, usuario) map transformValidationUsuarioEmpresarialAdmin
+  def obtieneUsuarioEmpresarialAdminPorNitYUsuario (nit: String, usuario: String, tipoIdentificacion:Int): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] =
+    new UsuariosEmpresarialRepository().obtieneUsuarioEmpresaAdminPorNitYUsuario(nit, usuario, tipoIdentificacion) map transformValidationUsuarioEmpresarialAdmin
 
   def obtenerUsuarioToken( token:String ): Future[Validation[PersistenceException, Option[Usuario]]] =
     new UsuariosRepository().obtenerUsuarioToken( token ) map transformValidation
