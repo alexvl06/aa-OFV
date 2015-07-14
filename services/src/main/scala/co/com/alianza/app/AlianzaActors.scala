@@ -30,4 +30,5 @@ trait AlianzaActors {
   val agenteEmpresarialActor = MainActors.system.actorSelection(MainActors.agenteEmpresarialActorSupervisor.path + "/agenteEmpresarialActor")
   val permisoTransaccionalActor = MainActors.system.actorSelection(MainActors.permisoTransaccionalActorSupervisor.path + "/permisoTransaccionalActor")
 
+  val actualizacionActor = MainActors.system.actorSelection(MainActors.actualizacionActorSupervisor.path + "/actualizacionActor")
 }

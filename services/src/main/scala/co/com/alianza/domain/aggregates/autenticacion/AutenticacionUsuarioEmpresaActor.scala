@@ -59,7 +59,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
         case sSuccess(Some(usuarioEmpresarialAgente)) =>
           self tell(AutenticarUsuarioEmpresarialAgenteMessage(message.tipoIdentificacion, message.numeroIdentificacion, message.nit, message.usuario, message.password, message.clientIp), originalSender)
         case sSuccess(None) =>
-          MainActors.usuariosActorSupervisor ? ConsultaUsuarioEmpresarialAdminMessage(usuario = Some(message.usuario), nit = Some(message.nit)) onComplete {
+          MainActors.usuariosActorSupervisor ? ConsultaUsuarioEmpresarialAdminMessage(tipoIdentificacion = message.tipoIdentificacion,usuario = Some(message.usuario), nit = Some(message.nit)) onComplete {
             case sSuccess(Some(usuarioEmpresarialAdmin)) =>
               self tell(AutenticarUsuarioEmpresarialAdminMessage(message.tipoIdentificacion, message.numeroIdentificacion, message.nit, message.usuario, message.password, message.clientIp), originalSender)
             case sSuccess(None) =>
@@ -91,7 +91,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
 
       val validaciones: Future[Validation[ErrorAutenticacion, String]] = (for {
         estadoEmpresaOk   <- ValidationT(validarEstadoEmpresa(message.nit))
-        usuarioAdmin      <- ValidationT(obtenerUsuarioEmpresarialAdmin(message.nit, message.usuario))
+        usuarioAdmin      <- ValidationT(obtenerUsuarioEmpresarialAdmin(message.nit, message.usuario, message.tipoIdentificacion.get))
         estadoValido      <- ValidationT(validarEstadosUsuario(usuarioAdmin.estado))
         passwordValido    <- ValidationT(validarPasswords(message.password, usuarioAdmin.contrasena.getOrElse(""), None, Some(usuarioAdmin.id), usuarioAdmin.numeroIngresosErroneos ))
         cliente           <- ValidationT(obtenerClienteSP(usuarioAdmin.tipoIdentificacion, usuarioAdmin.identificacion))
@@ -315,9 +315,9 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
    * Success => UsuarioEmpresarialAdmin
    * ErrorAutenticacion => ErrorPersistencia || ErrorCredencialesInvalidas
    */
-  def obtenerUsuarioEmpresarialAdmin(nit: String, usuario: String): Future[Validation[ErrorAutenticacion, UsuarioEmpresarialAdmin]] = {
+  def obtenerUsuarioEmpresarialAdmin(nit: String, usuario: String, tipoIdentificacion:Int): Future[Validation[ErrorAutenticacion, UsuarioEmpresarialAdmin]] = {
     log.info("Obteniendo usuario empresarial admin")
-    val future: Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = UsDataAdapter.obtieneUsuarioEmpresarialAdminPorNitYUsuario(nit, usuario)
+    val future: Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = UsDataAdapter.obtieneUsuarioEmpresarialAdminPorNitYUsuario(nit, usuario, tipoIdentificacion)
     future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap {
       case Some(usuarioEmpresarialAdmin) => Validation.success(usuarioEmpresarialAdmin)
       case None => Validation.failure(ErrorCredencialesInvalidas())
