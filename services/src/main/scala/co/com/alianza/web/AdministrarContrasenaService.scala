@@ -69,9 +69,9 @@ class AdministrarContrasenaService extends Directives with AlianzaCommons {
                   case TiposCliente.clienteAdministrador =>
                     requestExecute(CambiarContrasenaCaducadaClienteAdminMessage(data.token, data.pw_actual, data.pw_nuevo, Some(us_id)), contrasenasClienteAdminActor)
                   case TiposCliente.clienteIndividual =>
-                    requestExecute(CambiarContrasenaCaducadaMessage(data.token, data.pw_actual, data.pw_nuevo, us_id , us_tipo ), contrasenasActor)
+                    requestExecute(CambiarContrasenaCaducadaMessage(data.token, data.pw_actual, data.pw_nuevo, us_id, us_tipo), contrasenasActor)
                 }
-
+              }
               }
             }
           }
