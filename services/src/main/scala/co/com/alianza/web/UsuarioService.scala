@@ -1,12 +1,11 @@
 package co.com.alianza.web
 
-
-import spray.routing.Directives
 import co.com.alianza.app.{CrossHeaders, AlianzaCommons}
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.infrastructure.messages.OlvidoContrasenaMessage
-import scala.Some
 import co.com.alianza.infrastructure.messages.UsuarioMessage
+import spray.routing.{RequestContext, Directives}
+import co.com.alianza.infrastructure.auditing.AuditingHelper._
 
 
 /**
