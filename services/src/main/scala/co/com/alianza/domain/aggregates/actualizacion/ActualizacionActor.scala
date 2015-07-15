@@ -47,14 +47,51 @@ class ActualizacionActor extends Actor with ActorLogging with AlianzaActors {
 
   def receive = {
     case message: ObtenerPaises  => obtenerPaises
-    case message: ObtenerCiudades  => obtenerCiudades
-    case _ => println("no encontro mensaje")
+    case message: ObtenerCiudades  => obtenerCiudades(message.pais)
+    case message: ObtenerTiposCorreo  => obtenerTiposCorreo
+    case message: ObtenerEnvioCorrespondencia  => obtenerEnviosCorrespondencia
+    case message: ObtenerOcupaciones  => obtenerOcupaciones
+    case message: ObtenerActividadesEconomicas  => obtenerActividadesEconomicas
   }
 
   def obtenerPaises = {
     val currentSender = sender()
-    val paises = DataAccessAdapter.consultaPaises
-    paises onComplete {
+    val futuro = DataAccessAdapter.consultaPaises
+    resolverFuturo(futuro, currentSender)
+  }
+
+  def obtenerCiudades(pais: Int) = {
+    val currentSender = sender()
+    val futuro = DataAccessAdapter.consultaCiudades(pais)
+    resolverFuturo(futuro, currentSender)
+  }
+
+  def obtenerTiposCorreo = {
+    val currentSender = sender()
+    val futuro = DataAccessAdapter.consultaTipoCorreo
+    resolverFuturo(futuro, currentSender)
+  }
+
+  def obtenerEnviosCorrespondencia = {
+    val currentSender = sender()
+    val futuro = DataAccessAdapter.consultaEnviosCorrespondencia
+    resolverFuturo(futuro, currentSender)
+  }
+
+  def obtenerOcupaciones = {
+    val currentSender = sender()
+    val futuro = DataAccessAdapter.consultaOcupaciones
+    resolverFuturo(futuro, currentSender)
+  }
+
+  def obtenerActividadesEconomicas = {
+    val currentSender = sender()
+    val futuro = DataAccessAdapter.consultaActividadesEconomicas
+    resolverFuturo(futuro, currentSender)
+  }
+
+  def resolverFuturo(futuro: Future[Validation[PersistenceException, Option[List[Any]]]], currentSender: ActorRef) = {
+    futuro onComplete {
       case Failure(failure) => currentSender ! failure
       case Success(value) =>
         value match {
@@ -62,12 +99,6 @@ class ActualizacionActor extends Actor with ActorLogging with AlianzaActors {
           case zFailure(error) =>  currentSender !  error
         }
     }
-    //currentSender ! ResponseMessage(OK, paises)
-  }
-
-  def obtenerCiudades = {
-    val currentSender = sender()
-    currentSender ! ResponseMessage(OK, "soy una lista de ciudades")
   }
 
 /*

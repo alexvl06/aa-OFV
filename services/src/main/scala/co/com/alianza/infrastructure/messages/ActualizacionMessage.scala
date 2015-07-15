@@ -10,15 +10,11 @@ import spray.json.DefaultJsonProtocol
  */
 
 object ActualizacionMessagesJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
-  implicit val PaisFormat = jsonFormat2(Pais)
-  //implicit val AutenticarRequestMessageFormat = jsonFormat4(AutenticarMessage)
-  //implicit val AutenticarClienteEmpresaMessageFormat = jsonFormat6(AutenticarUsuarioEmpresarialMessage)
-  //implicit val AutorizarUrlRequestMessageFormat = jsonFormat2(AutorizarUrl)
-  //implicit val AgregarIpHabitualRequestMessageFormat = jsonFormat2(AgregarIPHabitualUsuario)
+  implicit val paisFormat = jsonFormat2(Pais)
 }
 
 case class ObtenerPaises extends MessageService
-case class ObtenerCiudades extends MessageService
+case class ObtenerCiudades(pais: Int) extends MessageService
 case class ObtenerTiposCorreo extends MessageService
 case class ObtenerOcupaciones extends MessageService
 case class ObtenerEnvioCorrespondencia extends MessageService

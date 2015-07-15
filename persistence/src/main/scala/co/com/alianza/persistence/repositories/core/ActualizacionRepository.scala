@@ -69,20 +69,21 @@ class ActualizacionRepository(implicit executionContext: ExecutionContext) exten
   }
 
   //Lista ciudades
-  def listarCiudades: Future[Validation[PersistenceException, String]] = loan {
+  def listarCiudades(pais: Int): Future[Validation[PersistenceException, String]] = loan {
     connection =>
       connection.setAutoCommit(false)
-      val operation: Try[String] = listarCiudadesSP(connection)
+      val operation: Try[String] = listarCiudadesSP(connection, pais)
       resolveTry(connection, operation,"Listar ciudades")
   }
 
-  private def listarCiudadesSP(conn: Connection) = Try {
-    val callString = "{ call sf_qportal_web_clientes.Lista_Ciudades(?,?,?) }"
+  private def listarCiudadesSP(conn: Connection, pais: Int) = Try {
+    val callString = "{ call sf_qportal_web_clientes.Lista_ciudades(?,?,?,?) }"
     val callableStatement = conn prepareCall callString
     callableStatement registerOutParameter (1, OracleTypes.VARCHAR)
     callableStatement registerOutParameter (2, OracleTypes.VARCHAR)
-    callableStatement registerOutParameter (3, OracleTypes.CURSOR)
-    buildSpResponse(conn, callableStatement, 3)
+    callableStatement setString (3, pais.toString )
+    callableStatement registerOutParameter (4, OracleTypes.CURSOR)
+    buildSpResponse(conn, callableStatement, 4)
   }
 
   //Lista tipo correo

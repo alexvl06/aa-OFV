@@ -6,15 +6,15 @@ package co.com.alianza.infrastructure.dto
 
 case class Pais(pais_pais: Int, pais_descri: String)
 
-case class Cuidad
+case class Ciudad(ciud_ciud: Int, ciud_descri: String)
 
-case class TipoCorreo
+case class TipoCorreo(codigo: String, descri: String)
 
-case class EnvioCorrespondencia
+case class EnvioCorrespondencia(pais_pais: Int, pais_descri: String)
 
-case class Ocupacion
+case class Ocupacion(codigo: String, descri: String)
 
-case class ActividadEconomica
+case class ActividadEconomica(codigo: String, descri: String)
 
 case class DatosCliente(p_fdpn_nombre2: String,
                         p_fdpn_apell1: String,
