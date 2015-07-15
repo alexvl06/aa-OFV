@@ -30,11 +30,12 @@ object Token {
     val formater = new java.text.SimpleDateFormat("dd MMMM, yyyy 'a las' hh:mm a", new java.util.Locale("es", "ES"))
 
     val customData = Map(
-      "correo" -> correoUsuarioLogueado,
-      "nombreUsuario" -> nombreUsuarioLogueado,
       "tipoIdentificacion" -> tipoIdentificacion,
       "ultimaIpIngreso" -> ultimaIpIngreso,
-      "ultimaFechaIngreso" -> formater.format(ultimaFechaIngreso))
+      "correo" -> correoUsuarioLogueado,
+      "ultimaFechaIngreso" -> formater.format(ultimaFechaIngreso),
+      "nombreUsuarioLogueado" -> nombreUsuarioLogueado
+    )
 
     claimsSet.setCustomClaims(customData)
 
