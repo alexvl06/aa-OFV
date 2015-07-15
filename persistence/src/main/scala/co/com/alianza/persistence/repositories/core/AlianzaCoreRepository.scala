@@ -60,11 +60,14 @@ class AlianzaCoreRepository(implicit val executionContex: ExecutionContext) {
         //log.info
         //log.debug
         connection.commit()
+        connection.close()
         zSuccess(response)
       case Failure(exception:PersistenceException) =>
+        connection.close()
         exception.printStackTrace()
         zFailure(exception)
       case Failure(exception) =>
+        connection.close()
         exception.printStackTrace()
         //log.error
         zFailure(PersistenceException(exception, TechnicalLevel, exception.getMessage))
