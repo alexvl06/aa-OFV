@@ -47,50 +47,68 @@ class ActualizacionActor extends Actor with ActorLogging with AlianzaActors {
 
   def receive = {
     case message: ObtenerPaises  => obtenerPaises
-    case message: ObtenerCiudades  => obtenerCiudades(message.pais)
     case message: ObtenerTiposCorreo  => obtenerTiposCorreo
-    case message: ObtenerEnvioCorrespondencia  => obtenerEnviosCorrespondencia
     case message: ObtenerOcupaciones  => obtenerOcupaciones
+    case message: ObtenerDatos  => obtenerDatos(message.documento)
+    case message: ObtenerCiudades  => obtenerCiudades(message.pais)
+    case message: ObtenerEnvioCorrespondencia  => obtenerEnviosCorrespondencia
     case message: ObtenerActividadesEconomicas  => obtenerActividadesEconomicas
   }
 
   def obtenerPaises = {
     val currentSender = sender()
     val futuro = DataAccessAdapter.consultaPaises
-    resolverFuturo(futuro, currentSender)
+    resolverFuturoLista(futuro, currentSender)
   }
 
   def obtenerCiudades(pais: Int) = {
     val currentSender = sender()
     val futuro = DataAccessAdapter.consultaCiudades(pais)
-    resolverFuturo(futuro, currentSender)
+    resolverFuturoLista(futuro, currentSender)
   }
 
   def obtenerTiposCorreo = {
     val currentSender = sender()
     val futuro = DataAccessAdapter.consultaTipoCorreo
-    resolverFuturo(futuro, currentSender)
+    resolverFuturoLista(futuro, currentSender)
   }
 
   def obtenerEnviosCorrespondencia = {
     val currentSender = sender()
     val futuro = DataAccessAdapter.consultaEnviosCorrespondencia
-    resolverFuturo(futuro, currentSender)
+    resolverFuturoLista(futuro, currentSender)
   }
 
   def obtenerOcupaciones = {
     val currentSender = sender()
     val futuro = DataAccessAdapter.consultaOcupaciones
-    resolverFuturo(futuro, currentSender)
+    resolverFuturoLista(futuro, currentSender)
   }
 
   def obtenerActividadesEconomicas = {
     val currentSender = sender()
     val futuro = DataAccessAdapter.consultaActividadesEconomicas
+    resolverFuturoLista(futuro, currentSender)
+  }
+
+  def obtenerDatos(documento: Int) = {
+    val currentSender = sender()
+    val futuro = DataAccessAdapter.consultaDatosCliente(documento)
     resolverFuturo(futuro, currentSender)
   }
 
-  def resolverFuturo(futuro: Future[Validation[PersistenceException, Option[List[Any]]]], currentSender: ActorRef) = {
+  def resolverFuturo(futuro: Future[Validation[PersistenceException, Option[Any]]], currentSender: ActorRef) = {
+    futuro onComplete {
+      case Failure(failure) => currentSender ! failure
+      case Success(value) =>
+        value match {
+          case zSuccess(response) => currentSender !  ResponseMessage(OK, response.toJson)
+          case zFailure(error) =>  currentSender !  error
+        }
+    }
+  }
+
+  def resolverFuturoLista(futuro: Future[Validation[PersistenceException, Option[List[Any]]]], currentSender: ActorRef) = {
     futuro onComplete {
       case Failure(failure) => currentSender ! failure
       case Success(value) =>

@@ -14,10 +14,11 @@ object ActualizacionMessagesJsonSupport extends DefaultJsonProtocol with SprayJs
 }
 
 case class ObtenerPaises extends MessageService
-case class ObtenerCiudades(pais: Int) extends MessageService
 case class ObtenerTiposCorreo extends MessageService
 case class ObtenerOcupaciones extends MessageService
+case class ObtenerCiudades(pais: Int) extends MessageService
 case class ObtenerEnvioCorrespondencia extends MessageService
+case class ObtenerDatos(documento: Int) extends MessageService
 case class ObtenerActividadesEconomicas extends MessageService
 
 class ActualizacionMessage {

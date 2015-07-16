@@ -11,6 +11,7 @@ import spray.routing.Directives
  */
 class ActualizacionService extends Directives with AlianzaCommons with CrossHeaders {
 
+  val datos = "datos"
   val paises = "paises"
   val ciudades = "ciudades"
   val tiposCorreo = "tiposCorreo"
@@ -43,6 +44,9 @@ class ActualizacionService extends Directives with AlianzaCommons with CrossHead
           } ~
           pathPrefix(actividadesEconomicas){
             requestExecute(new ObtenerActividadesEconomicas, actualizacionActor)
+          } ~
+          pathPrefix(datos){
+            requestExecute(new ObtenerDatos(6052471), actualizacionActor)
           }
         }
       }

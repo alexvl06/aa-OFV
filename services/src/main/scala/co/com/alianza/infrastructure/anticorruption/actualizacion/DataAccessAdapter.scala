@@ -14,6 +14,20 @@ object DataAccessAdapter {
 
   //Adaptador paises
 
+  def consultaDatosCliente(documento: Int) = {
+    new ActualizacionRepository().consultaDatosCliente(documento) map { x => transformValidationDatosCliente(x) }
+  }
+
+  private def transformValidationDatosCliente(origin: Validation[PersistenceException, String]):
+    Validation[PersistenceException, Option[DatosCliente]] = {
+    origin match {
+      case zSuccess(response: String) => zSuccess(DataAccessTranslator.translateDatosCliente(response))
+      case zFailure(error)            => zFailure(error)
+    }
+  }
+
+  //Adaptador paises
+
   def consultaPaises = {
       new ActualizacionRepository().listarPaises map { x => transformValidationPais(x) }
   }

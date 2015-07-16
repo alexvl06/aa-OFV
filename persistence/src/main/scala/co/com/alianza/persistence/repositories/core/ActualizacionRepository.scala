@@ -16,21 +16,22 @@ import scalaz.Validation
 class ActualizacionRepository(implicit executionContext: ExecutionContext) extends AlianzaCoreRepository{
 
   //Consulta datos cliente
-  def consultaDatosCliente(msg:ConsultaClienteRequest): Future[Validation[PersistenceException, String]] = loan {
+  def consultaDatosCliente(documento: Int): Future[Validation[PersistenceException, String]] = loan {
     connection =>
       connection.setAutoCommit(false)
-      val operation: Try[String] = consultarClienteSP(connection,msg)
+      val operation: Try[String] = consultarDatosClienteSP(connection, documento)
       resolveTry(connection,operation,"Consulta Datos Cliente por Número de Identificacón")
   }
 
-  private def consultarClienteSP(conn: Connection, msg:ConsultaClienteRequest) = Try {
-    val callString = "{ call sf_qportal_web.Cliente(?,?,?,?) }"
+  private def consultarDatosClienteSP(conn: Connection, documento: Int) = Try {
+    val callString = "{ call sf_qportal_web_clientes.Consultar_Cliente(?,?,?,?,?) }"
     val callableStatement = conn prepareCall callString
     callableStatement registerOutParameter (1, OracleTypes.VARCHAR)
     callableStatement registerOutParameter (2, OracleTypes.VARCHAR)
-    callableStatement.setString(3, msg.numDocumento)
-    callableStatement registerOutParameter (4, OracleTypes.CURSOR)
-    buildSpResponse(conn, callableStatement, 4)
+    callableStatement.setInt    (3, documento)
+    callableStatement.setString (4, "C")
+    callableStatement registerOutParameter (5, OracleTypes.CURSOR)
+    buildSpResponse(conn, callableStatement, 5)
   }
 
   //Actualizar datos cliente

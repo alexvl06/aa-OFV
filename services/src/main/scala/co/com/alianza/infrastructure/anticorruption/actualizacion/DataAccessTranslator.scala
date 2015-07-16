@@ -9,12 +9,13 @@ import co.com.alianza.infrastructure.dto._
  */
 object  DataAccessTranslator {
 
-  /*
   def translateDatosCliente(clienteJson: String): Option[DatosCliente] = {
-    val result = clienteJson.fromJson[Array[DatosCliente]]
-    if (result nonEmpty) Some(result(0)) else None
+    val datosCliente = clienteJson.fromJson[Array[DatosCliente]]
+    val datosEmpresa = clienteJson.fromJson[Array[DatosEmpresa]]
+    if ((datosCliente nonEmpty) && (datosEmpresa nonEmpty))
+      Some(datosCliente(0).copy(datosEmp = datosEmpresa(0)))
+    else None
   }
-  */
 
   //Traducir paises
   def translatePaises(dataJson: String): Option[List[Pais]] = {
@@ -48,7 +49,7 @@ object  DataAccessTranslator {
 
   //Traducir Actividad Economica
   def translateActividadesEconomicas(dataJson: String): Option[List[ActividadEconomica]] = {
-    val result = datajJson.fromJson[Array[ActividadEconomica]]
+    val result = dataJson.fromJson[Array[ActividadEconomica]]
     if (result nonEmpty) Some(result.toList) else None
   }
   
