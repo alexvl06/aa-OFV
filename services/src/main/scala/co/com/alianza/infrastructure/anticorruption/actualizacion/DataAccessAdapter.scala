@@ -68,7 +68,7 @@ object DataAccessAdapter {
   //Adaptador envio correspondencia
 
   def consultaEnviosCorrespondencia = {
-    new ActualizacionRepository().listarPaises map { x => transformValidationEnvioCorrespondencia(x) }
+    new ActualizacionRepository().listarEnvioCorrespondencia map { x => transformValidationEnvioCorrespondencia(x) }
   }
 
   private def transformValidationEnvioCorrespondencia(origin: Validation[PersistenceException, String]): Validation[PersistenceException, Option[List[EnvioCorrespondencia]]] = {

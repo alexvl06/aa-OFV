@@ -4,17 +4,17 @@ package co.com.alianza.infrastructure.dto
  * Created by hernando on 14/07/15.
  */
 
+case class Ocupacion(codigo: String, descri: String)
+
+case class TipoCorreo(codigo: String, descri: String)
+
 case class Pais(pais_pais: String, pais_descri: String)
 
 case class Ciudad(ciud_ciud: String, ciud_descri: String)
 
-case class TipoCorreo(codigo: String, descri: String)
-
-case class EnvioCorrespondencia(pais_pais: String, pais_descri: String)
-
-case class Ocupacion(codigo: String, descri: String)
-
 case class ActividadEconomica(codigo: String, descri: String)
+
+case class EnvioCorrespondencia(codigo: String, descri: String)
 
 case class DatosCliente(
                          fdpn_nombre1 : String,
