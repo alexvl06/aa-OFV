@@ -20,7 +20,6 @@ object DataBaseAccesCoreAlianza  {
     ds.setURL(config.connectionString)
 		ds.setUser( config.user )
 		ds.setPassword( config.pass )
-    //TODO: Configurar Timeout
     ds.setLoginTimeout(config.checkoutTimeout)
     ds
 	}
