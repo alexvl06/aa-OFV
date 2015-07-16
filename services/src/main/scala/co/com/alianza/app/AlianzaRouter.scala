@@ -21,7 +21,7 @@ class AlianzaRouter extends HttpServiceActor with RouteConcatenation with CrossH
 
   val routes =
     new AutorizacionService().route ~
-    new AutenticacionService( ).route ~
+    new AutenticacionService().route ~
     new ConfrontaService().route ~
     new EnumeracionService().route ~
     new UsuarioService().route ~
