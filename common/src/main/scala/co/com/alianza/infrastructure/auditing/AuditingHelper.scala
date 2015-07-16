@@ -4,13 +4,12 @@ import akka.actor._
 import co.com.alianza.infrastructure.auditing.AuditingEntities.{AudRequest, AudResponse}
 import co.com.alianza.infrastructure.auditing.AuditingMessages.AuditRequest
 import co.com.alianza.infrastructure.auditing.AuditingUser.AuditingUserData
-import co.com.alianza.util.json.JsonUtil
 import spray.http.{HttpRequest, HttpResponse}
 import spray.routing._
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Try, Success, Failure}
-import scalaz.{Validation, Success => zSuccess, Failure => zFailure}
+import scala.util.{Success}
+import scalaz.{Validation, Success => zSuccess}
 
 object AuditingHelper extends AuditingHelper
 
