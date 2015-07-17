@@ -1,6 +1,7 @@
 package co.com.alianza.web
 
 import co.com.alianza.app.{AlianzaCommons, CrossHeaders}
+import co.com.alianza.infrastructure.dto.DatosCliente
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.infrastructure.messages._
 import spray.http.StatusCodes
@@ -22,7 +23,7 @@ class ActualizacionService extends Directives with AlianzaCommons with CrossHead
 
   import ActualizacionMessagesJsonSupport._
 
-  def route/*(user: UsuarioAuth)*/ = {
+  def route(user: UsuarioAuth) = {
     pathPrefix(actualizacion) {
       get {
         respondWithMediaType(mediaType) {
@@ -46,23 +47,18 @@ class ActualizacionService extends Directives with AlianzaCommons with CrossHead
             requestExecute(new ObtenerActividadesEconomicas, actualizacionActor)
           } ~
           pathPrefix(datos){
-            requestExecute(new ObtenerDatos(6052471), actualizacionActor)
+            requestExecute(new ObtenerDatos(user.id), actualizacionActor)
           }
+        }
+      } ~ put {
+        entity(as[ActualizacionMessage]) {
+          actualizacion =>
+            respondWithMediaType(mediaType) {
+              requestExecute(actualizacion.copy(idUsuario = Some(user.id)), actualizacionActor)
+            }
         }
       }
     }
-
-
-      /*~
-      put {
-        entity(as[AgregarIpsUsuarioMessage]) {
-          agregarIpsUsuarioMessage =>
-            respondWithMediaType(mediaType) {
-              val agregarIpsUsuarioMessageAux: AgregarIpsUsuarioMessage = agregarIpsUsuarioMessage.copy(idUsuario = Some(user.id), tipoCliente = Some(user.tipoCliente.id))
-              requestExecute(agregarIpsUsuarioMessageAux, ipsUsuarioActor)
-            }
-        }
-      }*/
    }
 
 }

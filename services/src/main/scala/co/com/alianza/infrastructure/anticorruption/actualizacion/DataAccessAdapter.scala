@@ -1,5 +1,7 @@
 package co.com.alianza.infrastructure.anticorruption.actualizacion
 
+import co.com.alianza.persistence.messages.ActualizacionRequest
+
 import scalaz.Validation
 import scala.concurrent.{ExecutionContext, Future}
 import co.com.alianza.exceptions.PersistenceException
@@ -12,10 +14,10 @@ object DataAccessAdapter {
 
   implicit val ec: ExecutionContext = MainActors.dataAccesEx
 
-  //Adaptador paises
+  //Consulta datos cliente
 
-  def consultaDatosCliente(documento: Int) = {
-    new ActualizacionRepository().consultaDatosCliente(documento) map { x => transformValidationDatosCliente(x) }
+  def consultaDatosCliente(documento: String, tipoDocumento: String) = {
+    new ActualizacionRepository().consultaDatosCliente(documento, tipoDocumento) map { x => transformValidationDatosCliente(x) }
   }
 
   private def transformValidationDatosCliente(origin: Validation[PersistenceException, String]):
@@ -23,6 +25,23 @@ object DataAccessAdapter {
     origin match {
       case zSuccess(response: String) => zSuccess(DataAccessTranslator.translateDatosCliente(response))
       case zFailure(error)            => zFailure(error)
+    }
+  }
+
+  //Actualizar datos cliente
+  def actualizarDatosCliente(datos: ActualizacionRequest) = {
+    new ActualizacionRepository().actualizarCliente(datos) map { x => transformValidationActualizacion(x) }
+  }
+
+  private def transformValidationActualizacion(origin: Validation[PersistenceException, String]):
+  Validation[PersistenceException, Option[String]] = {
+    origin match {
+      case zSuccess(response: String) => zSuccess(Some(response))
+      case zFailure(error)            => {
+        println("************************************************************************************************************************")
+        println(error)
+        zFailure(error)
+      }
     }
   }
 

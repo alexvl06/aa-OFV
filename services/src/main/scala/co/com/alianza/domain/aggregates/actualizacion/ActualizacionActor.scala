@@ -7,16 +7,16 @@ import akka.pattern._
 import co.com.alianza.app.AlianzaActors
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.actualizacion.DataAccessAdapter
-import co.com.alianza.infrastructure.dto.Pais
+import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => UsDataAdapter}
 import co.com.alianza.infrastructure.messages.ActualizacionMessagesJsonSupport._
 import co.com.alianza.infrastructure.messages._
+import co.com.alianza.infrastructure.dto.Usuario
+import co.com.alianza.persistence.messages.{DatosEmpresaRequest, ActualizacionRequest}
 import co.com.alianza.util.transformers.ValidationT
 import co.com.alianza.app.MainActors
-import co.com.alianza.domain.aggregates.autenticacion.{RemoverIp, AgregarIp}
 import co.com.alianza.exceptions.BusinessLevel
+import enumerations.TiposIdentificacionCore
 import spray.http.StatusCodes._
-
-
 import scala.util.{Failure, Success}
 import scala.concurrent.Future
 import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
@@ -49,10 +49,11 @@ class ActualizacionActor extends Actor with ActorLogging with AlianzaActors {
     case message: ObtenerPaises  => obtenerPaises
     case message: ObtenerTiposCorreo  => obtenerTiposCorreo
     case message: ObtenerOcupaciones  => obtenerOcupaciones
-    case message: ObtenerDatos  => obtenerDatos(message.documento)
+    case message: ObtenerDatos  => obtenerDatos(message.idUsuario)
     case message: ObtenerCiudades  => obtenerCiudades(message.pais)
     case message: ObtenerEnvioCorrespondencia  => obtenerEnviosCorrespondencia
     case message: ObtenerActividadesEconomicas  => obtenerActividadesEconomicas
+    case message: ActualizacionMessage => actualizarDatos(message)
   }
 
   def obtenerPaises = {
@@ -91,9 +92,24 @@ class ActualizacionActor extends Actor with ActorLogging with AlianzaActors {
     resolverFuturoLista(futuro, currentSender)
   }
 
-  def obtenerDatos(documento: Int) = {
+  def obtenerDatos(idUsuario: Int) = {
     val currentSender = sender()
-    val futuro = DataAccessAdapter.consultaDatosCliente(documento)
+    val futuro =
+      (for {
+        usuario <- ValidationT(UsDataAdapter.obtenerUsuarioId(idUsuario))
+        datos   <- ValidationT(DataAccessAdapter.consultaDatosCliente
+          (usuario.get.identificacion, TiposIdentificacionCore.getTipoIdentificacion(usuario.get.tipoIdentificacion)))
+      }yield(datos)).run
+    resolverFuturo(futuro, currentSender)
+  }
+
+  def actualizarDatos(message: ActualizacionMessage) = {
+    val currentSender = sender()
+    val futuro =
+      (for {
+        usuario <- ValidationT(UsDataAdapter.obtenerUsuarioId(message.idUsuario.get))
+        result   <- ValidationT(DataAccessAdapter.actualizarDatosCliente(obtenerActualizacionRequest(usuario.get, message)))
+      }yield(result)).run
     resolverFuturo(futuro, currentSender)
   }
 
@@ -119,65 +135,18 @@ class ActualizacionActor extends Actor with ActorLogging with AlianzaActors {
     }
   }
 
-/*
-  def agregarActualizacionMessage(idUsuario : Int, ip : String, tipoCliente: TiposCliente) = {
-    val currentSender = sender()
-    val result = {
-      if (tipoCliente.equals(TiposCliente.clienteIndividual))
-        DataAccessAdapter.agregarIpUsuario(new Actualizacion(idUsuario, ip))
-      else
-        (for {
-          idEmpresa <- ValidationT(DataAccessAdapter.obtenerIdEmpresa(idUsuario, tipoCliente))
-          mensaje <- ValidationT(DataAccessAdapter.agregarIpEmpresa(new IpsEmpresa(idEmpresa, ip)))
-          agregarIpSesion <- ValidationT(agregarIpSesionEmpresa(idEmpresa, ip))
-        } yield (mensaje)).run
-    }
-    result  onComplete {
-      case Failure(failure)  =>    currentSender ! failure
-      case Success(value)    =>
-        value match {
-          case zSuccess(response: String) =>
-            currentSender !  ResponseMessage(OK, response.toJson)
-          case zFailure(error)                 =>  currentSender !  error
-        }
-    }
-  }
+ def obtenerActualizacionRequest(usuario: Usuario, actualizacion: ActualizacionMessage) : ActualizacionRequest = {
+   val datosEmpRequest = new DatosEmpresaRequest(actualizacion.fdpn_ocupacion, actualizacion.fdpn_if_declara_renta,
+     actualizacion.fdpn_pafd_pais, actualizacion.fdpn_ciua, actualizacion.datosEmp.fdpn_nombre_emp,
+     actualizacion.datosEmp.fdpn_nit_emp, actualizacion.datosEmp.fdpn_cargo, actualizacion.datosEmp.fdpn_dire_emp,
+     actualizacion.datosEmp.fdpn_ciud_emp, actualizacion.datosEmp.fdpn_ciud_nombre_emp, actualizacion.datosEmp.fdpn_tele_emp,
+     actualizacion.datosEmp.fdpn_if_vactivos, actualizacion.datosEmp.fdpn_if_vpasivos, actualizacion.datosEmp.fdpn_if_vpatrimonio,
+     actualizacion.datosEmp.fdpn_if_vingresos, actualizacion.datosEmp.fdpn_if_vegresos, actualizacion.datosEmp.fdpn_if_vingresos_noop_mes)
+   new ActualizacionRequest(usuario.identificacion, TiposIdentificacionCore.getTipoIdentificacion(usuario.tipoIdentificacion),
+     actualizacion.fdpn_nombre1, actualizacion.fdpn_nombre2, actualizacion.fdpn_apell1, actualizacion.fdpn_apell2,
+     actualizacion.fdpn_pais_residencia, actualizacion.fdpn_drcl_dire_res, actualizacion.fdpn_drcl_dire_ofi,
+     actualizacion.fdpn_drcl_ciud_res, actualizacion.fdpn_drcl_tele_res, actualizacion.fdpn_dcfd_email, actualizacion.fdpn_dcfd_tipo,
+     actualizacion.fdpn_envio_corresp, actualizacion.fdpn_telefono_movil_1, actualizacion.fdpn_pais_tel_mov_1, datosEmpRequest)
+ }
 
-  def eliminarActualizacionMessage(idUsuario : Int, ip : String, tipoCliente: TiposCliente) = {
-    val currentSender = sender()
-    val result = {
-      if (tipoCliente.equals(TiposCliente.clienteIndividual))
-        DataAccessAdapter.eliminarIpUsuario(new Actualizacion(idUsuario, ip))
-      else
-        (for {
-          idEmpresa <- ValidationT(DataAccessAdapter.obtenerIdEmpresa(idUsuario, tipoCliente))
-          mensaje <- ValidationT(DataAccessAdapter.eliminarIpEmpresa(new IpsEmpresa(idEmpresa, ip)))
-          removerIpSesion <- ValidationT(removerIpSesionEmpresa(idEmpresa, ip))
-        } yield (mensaje)).run
-    }
-    result  onComplete {
-      case Failure(failure)  =>    currentSender ! failure
-      case Success(value)    =>
-        value match {
-          case zSuccess(response: Int) =>
-
-            currentSender !  ResponseMessage(OK, response.toJson)
-          case zFailure(error)                 =>  currentSender !  error
-        }
-    }
-  }
-
-  private def agregarIpSesionEmpresa(empresaId: Int, ip: String) =
-    MainActors.sesionActorSupervisor ? ObtenerEmpresaSesionActorId (empresaId) map {
-      case Some(empresaSesionActor: ActorRef) => empresaSesionActor ! AgregarIp(ip); zSuccess(():Unit)
-      case _ => zFailure(PersistenceException(new Exception(),BusinessLevel,"Error"))
-    }
-
-  private def removerIpSesionEmpresa(empresaId: Int, ip: String) =
-    MainActors.sesionActorSupervisor ? ObtenerEmpresaSesionActorId (empresaId) map {
-      case Some(empresaSesionActor: ActorRef) => empresaSesionActor ! RemoverIp(ip); zSuccess(():Unit)
-      case None => zSuccess(():Unit)
-      case _ => zFailure(PersistenceException(new Exception(),BusinessLevel,"Error"))
-    }
-*/
 }

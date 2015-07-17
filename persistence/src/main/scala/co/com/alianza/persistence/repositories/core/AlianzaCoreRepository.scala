@@ -117,4 +117,18 @@ class AlianzaCoreRepository(implicit val executionContex: ExecutionContext) {
         throw PersistenceException(new Exception(msg), BusinessLevel, msg)
     }
   }
+
+  def buildSpResponse(connection: Connection, callableStatement: CallableStatement): String = {
+    callableStatement.execute()
+    val codeResponse = callableStatement getObject 1
+    val detailResponse = callableStatement getObject 2
+    println(detailResponse)
+    codeResponse match {
+      case "OK" => "FSDAFAS"
+      case _ =>
+        val msg = s"Error ejecutando prodecimiento $codeResponse - $detailResponse"
+        throw PersistenceException(new Exception(msg), BusinessLevel, msg)
+    }
+  }
+
 }
