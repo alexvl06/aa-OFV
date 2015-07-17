@@ -2,6 +2,7 @@ package co.com.alianza.app
 
 import akka.actor.{ Props, ActorSystem }
 import akka.cluster.Cluster
+import co.com.alianza.domain.aggregates.actualizacion.ActualizacionActorSupervisor
 
 import co.com.alianza.domain.aggregates.confronta.{ConfrontaActorSupervisor}
 import co.com.alianza.domain.aggregates.autenticacion._
@@ -9,9 +10,10 @@ import co.com.alianza.domain.aggregates.empresa.{HorarioEmpresaActorSupervisor, 
 import co.com.alianza.domain.aggregates.usuarios.UsuariosActorSupervisor
 import co.com.alianza.domain.aggregates.autoregistro.ConsultaClienteActorSupervisor
 import co.com.alianza.domain.aggregates.contrasenas.ContrasenasActorSupervisor
-import co.com.alianza.domain.aggregates.ips.{ActualizacionActorSupervisor, IpsUsuarioActorSupervisor}
+import co.com.alianza.domain.aggregates.ips.IpsUsuarioActorSupervisor
 import co.com.alianza.domain.aggregates.pin.PinActorSupervisor
 import co.com.alianza.domain.aggregates.permisos.PermisoTransaccionalActorSupervisor
+import co.com.alianza.infrastructure.auditing.KafkaActorSupervisor
 import co.com.alianza.util.ConfigApp
 
 import com.typesafe.config.Config
@@ -63,6 +65,7 @@ trait CoreActors { this: Core =>
   val permisoTransaccionalActorSupervisor = system.actorOf( Props[ PermisoTransaccionalActorSupervisor ], "permisoTransaccionalActorSupervisor" )
 
   val actualizacionActorSupervisor  = system.actorOf( Props[ ActualizacionActorSupervisor ], "actualizacionActorSupervisor" )
+  val kafkaActorSupervisor = system.actorOf( Props[ KafkaActorSupervisor ], "kafkaActorSupervisor" )
 }
 
 /**

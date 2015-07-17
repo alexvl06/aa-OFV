@@ -1,4 +1,4 @@
-package co.com.alianza.domain.aggregates.ips
+package co.com.alianza.domain.aggregates.actualizacion
 
 import akka.actor.{Actor, ActorRef, ActorLogging, Props, OneForOneStrategy}
 import akka.actor.SupervisorStrategy._

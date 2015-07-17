@@ -1,12 +1,11 @@
 package co.com.alianza.web
 
-
-import spray.routing.Directives
 import co.com.alianza.app.{CrossHeaders, AlianzaCommons}
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.infrastructure.messages.OlvidoContrasenaMessage
-import scala.Some
 import co.com.alianza.infrastructure.messages.UsuarioMessage
+import spray.routing.{RequestContext, Directives}
+import co.com.alianza.infrastructure.auditing.AuditingHelper._
 
 
 /**
@@ -48,10 +47,14 @@ class UsuarioService  extends Directives with AlianzaCommons   with CrossHeaders
           //pathEndOrSingleSlash {
             post {
               //Reinicio de contrasena de la cuenta alianza fiduciaria (Implica cambio en el estado del usuario)
-              entity(as[OlvidoContrasenaMessage]) {
-                olvidarContrasena =>
-                  requestExecute(olvidarContrasena, usuariosActor)
-            }
+              clientIP { ip =>
+                entity(as[OlvidoContrasenaMessage]) {
+                  olvidarContrasena =>
+                    mapRequestContext((r: RequestContext) => requestWithAuiditing(r, "Fiduciaria", "olvido-contrasena-fiduciaria", ip.value, kafkaActor, olvidarContrasena)) {
+                      requestExecute(olvidarContrasena, usuariosActor)
+                    }
+                }
+              }
           }
         //}
       }

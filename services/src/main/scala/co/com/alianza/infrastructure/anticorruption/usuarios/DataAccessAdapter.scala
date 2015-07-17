@@ -16,6 +16,17 @@ import co.com.alianza.persistence.entities.{Usuario => eUsuario, PinUsuario => e
 import co.com.alianza.persistence.messages.AutenticacionRequest
 import enumerations.EstadosUsuarioEnum
 import co.com.alianza.persistence.entities
+import co.com.alianza.infrastructure.auditing.AuditingUser.AuditingUserData
+import co.com.alianza.persistence.repositories.{IpsUsuarioRepository, UsuariosRepository}
+import scalaz.Validation
+import scala.concurrent.{ExecutionContext, Future}
+import co.com.alianza.exceptions.PersistenceException
+import co.com.alianza.app.MainActors
+import scalaz.{Failure => zFailure, Success => zSuccess}
+import co.com.alianza.infrastructure.dto.Usuario
+import co.com.alianza.persistence.entities.{Usuario => eUsuario, PinUsuario => ePinUsuario , PerfilUsuario, IpsUsuario}
+import co.com.alianza.persistence.messages.AutenticacionRequest
+import enumerations.EstadosUsuarioEnum
 
 object DataAccessAdapter {
 
@@ -57,6 +68,13 @@ object DataAccessAdapter {
     }
   }
 
+  def obtenerUsuarioToken( token:String ): Future[Validation[PersistenceException, Option[Usuario]]] = {
+    val repo = new UsuariosRepository()
+    repo.obtenerUsuarioToken( token ) map {
+      x => transformValidation(x)
+    }
+  }
+
   def obtenerEmpresaPorNit(nit: String): Future[Validation[PersistenceException,Option[Empresa]]] ={
     new EmpresaRepository().obtenerEmpresa(nit) map {
       x => transformValidationEmpresa(x)
@@ -79,9 +97,6 @@ object DataAccessAdapter {
 
   def obtieneUsuarioEmpresarialAdminPorNitYUsuario (nit: String, usuario: String, tipoIdentificacion:Int): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] =
     new UsuariosEmpresarialRepository().obtieneUsuarioEmpresaAdminPorNitYUsuario(nit, usuario, tipoIdentificacion) map transformValidationUsuarioEmpresarialAdmin
-
-  def obtenerUsuarioToken( token:String ): Future[Validation[PersistenceException, Option[Usuario]]] =
-    new UsuariosRepository().obtenerUsuarioToken( token ) map transformValidation
 
   def obtenerUsuarioEmpresarialToken( token:String ): Future[Validation[PersistenceException, Option[(UsuarioEmpresarial, Int)]]] = {
     val repo = new UsuariosEmpresarialRepository()
@@ -282,9 +297,17 @@ object DataAccessAdapter {
     repo.asociarPerfiles(perfiles)
   }
 
+
   def crearUsuarioPin(pinUsuario:ePinUsuario): Future[Validation[PersistenceException, Int]] = {
     val repo = new UsuariosRepository()
     repo.guardarPinUsuario(pinUsuario)
+  }
+
+  def obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken( token:String ): Future[Validation[PersistenceException, Option[AuditingUserData]]] = {
+    val repo = new UsuariosRepository()
+    repo.obtenerUsuarioToken( token ) map {
+      x => transformValidationTuple(x)
+    }
   }
 
   def crearUsuarioClienteAdministradorPin(pinUsuario:entities.PinUsuarioEmpresarialAdmin): Future[Validation[PersistenceException, Int]] = {
@@ -378,6 +401,21 @@ object DataAccessAdapter {
           case Some(usuario) => zSuccess(Some(DataAccessTranslator.translateUsuarioEmpresarialAdminEstadoEmpresa(usuario)))
           case _ => zSuccess(None)
         }
+      case zFailure(error)    =>  zFailure(error)
+    }
+  }
+
+  private def transformValidationTuple(origin: Validation[PersistenceException, Option[eUsuario]]): Validation[PersistenceException, Option[AuditingUserData]] = {
+    origin match {
+      case zSuccess(response) =>
+        response match {
+          case Some(usuario) => {
+            val user = DataAccessTranslator.translateUsuario(usuario)
+            zSuccess(Some(AuditingUserData(user.tipoIdentificacion,user.identificacion)))
+          }
+          case _ => zSuccess(None)
+        }
+
       case zFailure(error)    =>  zFailure(error)
     }
   }
