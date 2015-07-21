@@ -2,6 +2,7 @@ package co.com.alianza.app
 
 import akka.actor.{ Props, ActorSystem }
 import akka.cluster.Cluster
+import co.com.alianza.domain.aggregates.actualizacion.ActualizacionActorSupervisor
 
 import co.com.alianza.domain.aggregates.confronta.{ConfrontaActorSupervisor}
 import co.com.alianza.domain.aggregates.autenticacion._
@@ -62,6 +63,8 @@ trait CoreActors { this: Core =>
   val sesionActorSupervisor = system.actorOf( Props[ SesionActorSupervisor ], "sesionActorSupervisor" )
   val agenteEmpresarialActorSupervisor = system.actorOf( Props[ AgenteEmpresarialActorSupervisor ], "agenteEmpresarialActorSupervisor" )
   val permisoTransaccionalActorSupervisor = system.actorOf( Props[ PermisoTransaccionalActorSupervisor ], "permisoTransaccionalActorSupervisor" )
+
+  val actualizacionActorSupervisor  = system.actorOf( Props[ ActualizacionActorSupervisor ], "actualizacionActorSupervisor" )
   val kafkaActorSupervisor = system.actorOf( Props[ KafkaActorSupervisor ], "kafkaActorSupervisor" )
 }
 

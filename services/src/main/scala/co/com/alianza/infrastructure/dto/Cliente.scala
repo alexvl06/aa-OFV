@@ -1,5 +1,7 @@
 package co.com.alianza.infrastructure.dto
 
+import org.joda.time.DateTime
+
 /**
  *
  * @author smontanez
