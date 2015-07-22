@@ -15,6 +15,7 @@ class ActualizacionService extends Directives with AlianzaCommons with CrossHead
   val datos = "datos"
   val paises = "paises"
   val ciudades = "ciudades"
+  val comprobar = "comprobar"
   val tiposCorreo = "tiposCorreo"
   val ocupaciones = "ocupaciones"
   val actualizacion = "actualizacion"
@@ -48,13 +49,16 @@ class ActualizacionService extends Directives with AlianzaCommons with CrossHead
           } ~
           pathPrefix(datos){
             requestExecute(new ObtenerDatos(user.id), actualizacionActor)
+          } ~
+          pathPrefix(comprobar){
+            requestExecute(new ComprobarDatos(user.id), actualizacionActor)
           }
         }
       } ~ put {
         entity(as[ActualizacionMessage]) {
           actualizacion =>
             respondWithMediaType(mediaType) {
-              requestExecute(actualizacion.copy(idUsuario = Some(user.id)), actualizacionActor)
+              requestExecute(actualizacion.copy(idUsuario = Some(user.id), tipoCliente = Some(user.tipoCliente.toString)), actualizacionActor)
             }
         }
       }

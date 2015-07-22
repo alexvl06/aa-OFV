@@ -10,8 +10,13 @@ import co.com.alianza.infrastructure.dto._
 object  DataAccessTranslator {
 
   def translateDatosCliente(clienteJson: String): Option[DatosCliente] = {
+    println(clienteJson)
+
     val datosCliente = clienteJson.fromJson[Array[DatosCliente]]
     val datosEmpresa = clienteJson.fromJson[Array[DatosEmpresa]]
+
+    println(datosCliente)
+
     if ((datosCliente nonEmpty) && (datosEmpresa nonEmpty))
       Some(datosCliente(0).copy(datosEmp = datosEmpresa(0)))
     else None

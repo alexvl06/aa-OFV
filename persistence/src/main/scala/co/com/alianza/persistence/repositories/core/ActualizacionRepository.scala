@@ -58,16 +58,16 @@ class ActualizacionRepository(implicit executionContext: ExecutionContext) exten
     callableStatement.setString(11, msg.fdpn_drcl_dire_ofi)
     callableStatement.setString(12, msg.fdpn_drcl_ciud_res)
     callableStatement.setString(13, msg.fdpn_drcl_tele_res)
-    callableStatement.setString(14, msg.fdpn_dcfd_email)//fdpn_dcfd_email_ant
+    callableStatement.setString(14, msg.fdpn_dcfd_email_ant)
     callableStatement.setString(15, msg.fdpn_dcfd_email)
-    callableStatement.setString(16, msg.fdpn_dcfd_tipo)//fdpn_dcfd_tipo_ant
+    callableStatement.setString(16, msg.fdpn_dcfd_tipo_ant)
     callableStatement.setString(17, msg.fdpn_dcfd_tipo)
     callableStatement.setString(18, msg.fdpn_envio_corresp)
     callableStatement.setString(19, msg.fdpn_telefono_movil_1)
     callableStatement.setString(20, msg.fdpn_pais_tel_mov_1)
     callableStatement.setString(21, msg.datosEmp.fdpn_ocupacion)
     callableStatement.setString(22, msg.datosEmp.fdpn_if_declara_renta)
-    callableStatement.setString(23, msg.datosEmp.fdpn_pafd_pais)//fdpn_pafd_pais_ant
+    callableStatement.setString(23, msg.datosEmp.fdpn_pafd_pais_ant)
     callableStatement.setString(24, msg.datosEmp.fdpn_pafd_pais)
     callableStatement.setString(25, msg.datosEmp.fdpn_ciua)
     callableStatement.setString(26, msg.datosEmp.fdpn_nombre_emp)
