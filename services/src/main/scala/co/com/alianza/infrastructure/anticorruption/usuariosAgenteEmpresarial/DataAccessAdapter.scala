@@ -2,6 +2,7 @@ package co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial
 
 import java.sql.Timestamp
 
+import co.com.alianza.infrastructure.auditing.AuditingUser.AuditingUserData
 import co.com.alianza.persistence.entities.{PinEmpresa => ePinEmpresa, UsuarioEmpresarial => eUsuario, _}
 import co.com.alianza.persistence.repositories.UsuariosEmpresarialRepository
 import co.com.alianza.app.MainActors
@@ -79,6 +80,12 @@ object DataAccessAdapter {
     repo.obtenerUsuarioEmpresarialPorId(idUsuario) map transformValidation
   }
 
+  def obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken( token:String ): Future[Validation[PersistenceException, Option[AuditingUserData]]] = {
+    repo.obtenerUsuarioPorToken( token ) map {
+      x => transformValidationTuple(x)
+    }
+  }
+
   def obtenerUsuariosBusqueda(message:GetAgentesEmpresarialesRequest): Future[Validation[PersistenceException, List[dtoEstadoUsuario]]] = {
     val repo = new UsuariosEmpresaRepository()
     repo.obtenerUsuariosBusqueda(message.correo, message.usuario, message.nombre, message.estado, message.idClienteAdmin) map {
@@ -112,6 +119,20 @@ object DataAccessAdapter {
   private def transformValidationList(origin: Validation[PersistenceException, List[eUsuario]]): Validation[PersistenceException, List[dtoEstadoUsuario]] = {
     origin match {
       case zSuccess(response: List[eUsuario]) => zSuccess(DataAccessTranslator.translateUsuarioEstado(response))
+      case zFailure(error)    =>  zFailure(error)
+    }
+  }
+
+  private def transformValidationTuple(origin: Validation[PersistenceException, Option[eUsuario]]): Validation[PersistenceException, Option[AuditingUserData]] = {
+    origin match {
+      case zSuccess(response) =>
+        response match {
+          case Some(usuario) => {
+            zSuccess(Some(AuditingUserData(usuario.tipoIdentificacion,usuario.identificacion)))
+          }
+          case _ => zSuccess(None)
+        }
+
       case zFailure(error)    =>  zFailure(error)
     }
   }
