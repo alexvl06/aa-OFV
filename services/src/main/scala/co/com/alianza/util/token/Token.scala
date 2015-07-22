@@ -1,16 +1,19 @@
 package co.com.alianza.util.token
 
+import java.text.SimpleDateFormat
+
+import com.nimbusds.jose.util.Base64URL
 import org.joda.time.{DateTime}
 import java.util.Date
 import enumerations.AppendPasswordUser
 import com.nimbusds.jwt.JWTClaimsSet
-import com.nimbusds.jose.JWSHeader
-import com.nimbusds.jose.JWSAlgorithm
+import com.nimbusds.jose._
 import com.nimbusds.jose.crypto.MACSigner
 import com.nimbusds.jwt.SignedJWT
 import com.nimbusds.jose.crypto.MACVerifier
 
 import collection.JavaConversions._
+import co.com.alianza.util.json.MarshallableImplicits._
 
 
 object Token {
@@ -21,29 +24,11 @@ object Token {
 
   def generarToken(nombreUsuarioLogueado: String, correoUsuarioLogueado: String, tipoIdentificacion: String, ultimaIpIngreso: String, ultimaFechaIngreso: Date): String = {
 
-    val claimsSet = new JWTClaimsSet()
-    claimsSet.setIssueTime(new Date())
-    claimsSet.setNotBeforeTime(new Date())
-    claimsSet.setExpirationTime(new DateTime().plus(1800000).toDate)
-    claimsSet.setIssuer(ISSUER)
-
-    val formater = new java.text.SimpleDateFormat("dd MMMM, yyyy 'a las' hh:mm a", new java.util.Locale("es", "ES"))
-
-    val customData = Map(
-      "tipoIdentificacion" -> tipoIdentificacion,
-      "ultimaIpIngreso" -> ultimaIpIngreso,
-      "correo" -> correoUsuarioLogueado,
-      "ultimaFechaIngreso" -> formater.format(ultimaFechaIngreso),
-      "nombreUsuarioLogueado" -> nombreUsuarioLogueado
-    )
-
-    claimsSet.setCustomClaims(customData)
-
-    val signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.HS512), claimsSet)
-    val signer = new MACSigner(SIGNING_KEY)
-    signedJWT.sign(signer)
-    val jwt = signedJWT.serialize()
-    jwt
+    val formater: SimpleDateFormat = new java.text.SimpleDateFormat("dd MMMM, yyyy 'a las' hh:mm a", new java.util.Locale("es", "ES"))
+    val headersJWT: String = headersJWToken("HS512", "JWT").toJson
+    val dataJWT: String = dataJWToken(new Date(), new Date(), new DateTime().plus(1800000).toDate, ISSUER, tipoIdentificacion, ultimaIpIngreso, nombreUsuarioLogueado, correoUsuarioLogueado, formater.format(ultimaFechaIngreso)).toJson
+    val signedJWT = new SignedJWT(Base64URL.encode(headersJWT), Base64URL.encode(dataJWT), Base64URL.encode(SIGNING_KEY))
+    signedJWT.serialize()
   }
 
   def generarTokenCaducidadContrasena(idUsuario: Int) = {
@@ -100,3 +85,5 @@ object Token {
 
 }
 
+case class headersJWToken(alg: String, typ: String)
+case class dataJWToken(iat: Date, nbf: Date, exp: Date, iss: String, tipoIdentificacion: String, ultimaIpIngreso: String, nombreUsuarioLogueado: String, correo: String, ultimaFechaIngreso: String)
