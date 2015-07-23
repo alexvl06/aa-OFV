@@ -130,13 +130,9 @@ class ActualizacionActor extends Actor with ActorLogging with AlianzaActors {
             //Obtener fecha actualizacion
             val format = new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss")
             val fechaActualizacion = new DateTime(format.parse(fechaString).getTime)
-
-            //Obtener fecha actual
-            val fechaComparacion = new DateTime().minusYears(1).minusDays(1)
-
-            println(fechaActualizacion)
-            println(fechaComparacion)
-
+            //Obtener fecha comparacion
+            //val fechaComparacion = new DateTime().minusYears(1).minusDays(1)
+            val fechaComparacion = new DateTime().plusYears(1).minusDays(1)
             if(fechaComparacion.isAfter(fechaActualizacion.getMillis))
               currentSender !  ResponseMessage(Conflict, fechaString)
             else
