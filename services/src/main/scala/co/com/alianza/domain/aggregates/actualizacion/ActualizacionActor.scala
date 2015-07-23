@@ -1,13 +1,17 @@
 package co.com.alianza.domain.aggregates.actualizacion
 
+import java.time.format.DateTimeFormatter
+
 import akka.actor.{Actor, ActorRef, ActorLogging, Props, OneForOneStrategy}
 import akka.actor.SupervisorStrategy._
 import akka.routing.RoundRobinPool
 import akka.pattern._
 import co.com.alianza.app.AlianzaActors
+import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.actualizacion.DataAccessAdapter
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => UsDataAdapter}
+import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.infrastructure.messages.ActualizacionMessagesJsonSupport._
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.infrastructure.dto.Usuario
@@ -16,6 +20,7 @@ import co.com.alianza.util.transformers.ValidationT
 import co.com.alianza.app.MainActors
 import co.com.alianza.exceptions.BusinessLevel
 import enumerations.TiposIdentificacionCore
+import org.joda.time.DateTime
 import spray.http.StatusCodes._
 import scala.util.{Failure, Success}
 import scala.concurrent.Future
@@ -46,18 +51,18 @@ class ActualizacionActor extends Actor with ActorLogging with AlianzaActors {
   import co.com.alianza.util.json.MarshallableImplicits._
 
   def receive = {
-    case message: ObtenerPaises  => obtenerPaises
-    case message: ObtenerTiposCorreo  => obtenerTiposCorreo
-    case message: ObtenerOcupaciones  => obtenerOcupaciones
-    case message: ObtenerDatos  => obtenerDatos(message.idUsuario)
-    case message: ComprobarDatos  => comprobarDatos(message.idUsuario)
+    case message: ObtenerPaises  => obtenerPaises()
+    case message: ObtenerTiposCorreo  => obtenerTiposCorreo()
+    case message: ObtenerOcupaciones  => obtenerOcupaciones()
+    case message: ObtenerDatos  => obtenerDatos(message.user)
+    case message: ComprobarDatos  => comprobarDatos(message.user)
     case message: ObtenerCiudades  => obtenerCiudades(message.pais)
-    case message: ObtenerEnvioCorrespondencia  => obtenerEnviosCorrespondencia
-    case message: ObtenerActividadesEconomicas  => obtenerActividadesEconomicas
+    case message: ObtenerEnvioCorrespondencia  => obtenerEnviosCorrespondencia()
+    case message: ObtenerActividadesEconomicas  => obtenerActividadesEconomicas()
     case message: ActualizacionMessage => actualizarDatos(message)
   }
 
-  def obtenerPaises = {
+  def obtenerPaises() = {
     val currentSender = sender()
     val futuro = DataAccessAdapter.consultaPaises
     resolverFuturoLista(futuro, currentSender)
@@ -69,57 +74,73 @@ class ActualizacionActor extends Actor with ActorLogging with AlianzaActors {
     resolverFuturoLista(futuro, currentSender)
   }
 
-  def obtenerTiposCorreo = {
+  def obtenerTiposCorreo() = {
     val currentSender = sender()
     val futuro = DataAccessAdapter.consultaTipoCorreo
     resolverFuturoLista(futuro, currentSender)
   }
 
-  def obtenerEnviosCorrespondencia = {
+  def obtenerEnviosCorrespondencia() = {
     val currentSender = sender()
     val futuro = DataAccessAdapter.consultaEnviosCorrespondencia
     resolverFuturoLista(futuro, currentSender)
   }
 
-  def obtenerOcupaciones = {
+  def obtenerOcupaciones() = {
     val currentSender = sender()
     val futuro = DataAccessAdapter.consultaOcupaciones
     resolverFuturoLista(futuro, currentSender)
   }
 
-  def obtenerActividadesEconomicas = {
+  def obtenerActividadesEconomicas() = {
     val currentSender = sender()
     val futuro = DataAccessAdapter.consultaActividadesEconomicas
     resolverFuturoLista(futuro, currentSender)
   }
 
-  def obtenerDatos(idUsuario: Int) = {
-    val currentSender = sender()
-    val futuro =
+  def obtenerFuturoDatos(user: UsuarioAuth) = {
+    if(user.tipoCliente.equals(TiposCliente.clienteIndividual))
       (for {
-        usuario <- ValidationT(UsDataAdapter.obtenerUsuarioId(idUsuario))
+        usuario <- ValidationT(UsDataAdapter.obtenerUsuarioId(user.id))
         datos   <- ValidationT(DataAccessAdapter.consultaDatosCliente
           (usuario.get.identificacion, TiposIdentificacionCore.getTipoIdentificacion(usuario.get.tipoIdentificacion)))
       }yield(datos)).run
-    resolverFuturo(futuro, currentSender)
+    else
+      (for {
+        usuario <- ValidationT(UsDataAdapter.obtenerUsuarioEmpresa(user.id, user.tipoCliente))
+        datos   <- ValidationT(DataAccessAdapter.consultaDatosCliente
+          (usuario.get.identificacion, TiposIdentificacionCore.getTipoIdentificacion(usuario.get.tipoIdentificacion)))
+      }yield(datos)).run
   }
 
-  def comprobarDatos(idUsuario: Int) = {
+  def obtenerDatos(user: UsuarioAuth) = {
     val currentSender = sender()
-    val futuro =
-      (for {
-        usuario <- ValidationT(UsDataAdapter.obtenerUsuarioId(idUsuario))
-        datos   <- ValidationT(DataAccessAdapter.consultaDatosCliente
-          (usuario.get.identificacion, TiposIdentificacionCore.getTipoIdentificacion(usuario.get.tipoIdentificacion)))
-      }yield(datos)).run
+    resolverFuturo(obtenerFuturoDatos(user), currentSender)
+  }
+
+  def comprobarDatos(user: UsuarioAuth) = {
+    val currentSender = sender()
+    val futuro = obtenerFuturoDatos(user)
     futuro onComplete {
       case Failure(failure) => currentSender ! failure
       case Success(value) =>
         value match {
           case zSuccess(response) => {
-            println("actor response : ")
-            println(response)
-            currentSender !  ResponseMessage(OK, response.toJson)
+            val fechaString = response.get.fdpn_fecha_ult_act
+            //Obtener fecha actualizacion
+            val format = new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss")
+            val fechaActualizacion = new DateTime(format.parse(fechaString).getTime)
+
+            //Obtener fecha actual
+            val fechaComparacion = new DateTime().minusYears(1).minusDays(1)
+
+            println(fechaActualizacion)
+            println(fechaComparacion)
+
+            if(fechaComparacion.isAfter(fechaActualizacion.getMillis))
+              currentSender !  ResponseMessage(Conflict, fechaString)
+            else
+              currentSender !  ResponseMessage(OK, fechaString)
           }
           case zFailure(error) =>  currentSender !  ResponseMessage(Conflict, error.cause.getMessage)
         }

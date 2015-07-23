@@ -11,20 +11,20 @@ import co.com.alianza.commons.enumerations.TiposCliente
  */
 
 case class UsuarioEmpresarialEstado(
-                               id: Int,
-                               correo: String,
-                               fechaCaducidad: Date,
-                               identificacion: String,
-                               tipoIdentificacion: Int,
-                               usuario: String,
-                               estado: estadoUsuario,
-                               contrasena: Option[String],
-                               numeroIngresosErroneos: Int,
-                               ipUltimoIngreso: Option[String],
-                               fechaUltimoIngreso: Option[Date],
-                               tipoCliente: TiposCliente,
-                               nombreUsuario:Option[String]
-                               )
+                                     id: Int,
+                                     correo: String,
+                                     fechaCaducidad: Date,
+                                     identificacion: String,
+                                     tipoIdentificacion: Int,
+                                     usuario: String,
+                                     estado: estadoUsuario,
+                                     contrasena: Option[String],
+                                     numeroIngresosErroneos: Int,
+                                     ipUltimoIngreso: Option[String],
+                                     fechaUltimoIngreso: Option[Date],
+                                     tipoCliente: TiposCliente,
+                                     nombreUsuario: Option[String]
+                                     )
 
 case class UsuarioEmpresarial(
                                id: Int,
@@ -39,7 +39,7 @@ case class UsuarioEmpresarial(
                                ipUltimoIngreso: Option[String],
                                fechaUltimoIngreso: Option[Date],
                                tipoCliente: TiposCliente,
-                               nombreUsuario:Option[String]
+                               nombreUsuario: Option[String]
                                )
 
 case class UsuarioEmpresarialAdmin(
@@ -56,6 +56,12 @@ case class UsuarioEmpresarialAdmin(
                                     fechaUltimoIngreso: Option[Date],
                                     tipoCliente: TiposCliente
                                     )
+
+case class UsuarioEmpresa(
+                          id: Int,
+                          identificacion: String,
+                          tipoIdentificacion: Int
+                          )
 
 
 case class estadoUsuario(id: Int, detalle: String)

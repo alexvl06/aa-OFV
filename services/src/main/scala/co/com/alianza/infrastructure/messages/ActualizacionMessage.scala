@@ -16,21 +16,21 @@ object ActualizacionMessagesJsonSupport extends DefaultJsonProtocol with SprayJs
   implicit val actualizacionMessageFormat = jsonFormat22(ActualizacionMessage)
 }
 
-case class ObtenerPaises extends MessageService
+case class ObtenerPaises() extends MessageService
 
-case class ObtenerTiposCorreo extends MessageService
+case class ObtenerTiposCorreo() extends MessageService
 
-case class ObtenerOcupaciones extends MessageService
+case class ObtenerOcupaciones() extends MessageService
 
 case class ObtenerCiudades(pais: Int) extends MessageService
 
-case class ObtenerEnvioCorrespondencia extends MessageService
+case class ObtenerEnvioCorrespondencia() extends MessageService
 
-case class ObtenerDatos(idUsuario: Int) extends MessageService
+case class ObtenerDatos(user: UsuarioAuth) extends MessageService
 
-case class ComprobarDatos(idUsuario: Int) extends MessageService
+case class ComprobarDatos(user: UsuarioAuth) extends MessageService
 
-case class ObtenerActividadesEconomicas extends MessageService
+case class ObtenerActividadesEconomicas() extends MessageService
 
 case class ActualizacionMessage(
                                  fdpn_nombre1: String,

@@ -29,6 +29,12 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
       resolveTry(resultTry, "Obtener agente empresarial por ID ")
   }
 
+  def obtenerUsuarioEmpresarialAdminPorId(idUsuario: Int): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = loan {
+    implicit session =>
+      val resultTry = Try{ UsuariosEmpresarialesAdmin.filter( _.id === idUsuario ).firstOption  }
+      resolveTry(resultTry, "Obtener agente empresarial admin por ID ")
+  }
+
   def obtieneUsuarioEmpresaPorNitYUsuario(nit: String, usuario: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = loan {
     implicit session => resolveTry(Try {
       (

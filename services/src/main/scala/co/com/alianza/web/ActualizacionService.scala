@@ -48,10 +48,10 @@ class ActualizacionService extends Directives with AlianzaCommons with CrossHead
             requestExecute(new ObtenerActividadesEconomicas, actualizacionActor)
           } ~
           pathPrefix(datos){
-            requestExecute(new ObtenerDatos(user.id), actualizacionActor)
+            requestExecute(new ObtenerDatos(user), actualizacionActor)
           } ~
           pathPrefix(comprobar){
-            requestExecute(new ComprobarDatos(user.id), actualizacionActor)
+            requestExecute(new ComprobarDatos(user), actualizacionActor)
           }
         }
       } ~ put {
