@@ -138,6 +138,12 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
       resolveTry(resultTry, "Consulta usuario empresarial por token: " + token)
   }
 
+  def obtenerUsuarioPorToken( token:String ): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = loan {
+    implicit session =>
+      val resultTry = Try{ UsuariosEmpresariales.filter(_.token === token).list.headOption}
+      resolveTry(resultTry, "Consulta usuario empresarial con token" + token)
+  }
+
   def guardarPinEmpresaAgenteEmpresarial(pinEmpresaAgenteEmpresarial: PinEmpresa): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
       val resultTry = Try {

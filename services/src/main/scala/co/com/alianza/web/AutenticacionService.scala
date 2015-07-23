@@ -23,7 +23,7 @@ class AutenticacionService extends Directives with AlianzaCommons with CrossHead
                 mapRequestContext((r: RequestContext) => requestWithAuiditing(r, "Fiduciaria", "autenticacion-fiduciaria", ip.value, kafkaActor, autenticacion.copy( password = Crypto.hashSha512(autenticacion.password.concat(AppendPasswordUser.appendUsuariosFiducia)), clientIp = Some(ip.value)))) {
                   val nuevaAutenticacion = autenticacion.copy(clientIp = Some(ip.value))
                   requestExecute(nuevaAutenticacion, autenticacionActor)
-		}
+		            }
               }
             }
         }
@@ -34,8 +34,10 @@ class AutenticacionService extends Directives with AlianzaCommons with CrossHead
           autenticacion =>
             respondWithMediaType(mediaType) {
               clientIP { ip =>
-                val nuevaAutenticacion = autenticacion.copy(clientIp = Some(ip.value))
-                requestExecute(nuevaAutenticacion, autenticacionUsuarioEmpresaActor)
+                mapRequestContext((r: RequestContext) => requestWithAuiditing(r, "Fiduciaria", "autenticacion-fiduciaria", ip.value, kafkaActor, autenticacion.copy( password = Crypto.hashSha512(autenticacion.password.concat(AppendPasswordUser.appendUsuariosFiducia)), clientIp = Some(ip.value)))) {
+                  val nuevaAutenticacion = autenticacion.copy(clientIp = Some(ip.value))
+                  requestExecute(nuevaAutenticacion, autenticacionUsuarioEmpresaActor)
+                }
               }
             }
         }
