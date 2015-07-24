@@ -1,7 +1,5 @@
 package co.com.alianza.domain.aggregates.actualizacion
 
-import java.time.format.DateTimeFormatter
-
 import akka.actor.{Actor, ActorRef, ActorLogging, Props, OneForOneStrategy}
 import akka.actor.SupervisorStrategy._
 import akka.routing.RoundRobinPool
