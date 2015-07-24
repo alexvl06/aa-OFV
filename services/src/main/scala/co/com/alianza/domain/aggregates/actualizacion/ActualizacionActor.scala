@@ -14,7 +14,7 @@ import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter 
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.infrastructure.messages.ActualizacionMessagesJsonSupport._
 import co.com.alianza.infrastructure.messages._
-import co.com.alianza.infrastructure.dto.Usuario
+import co.com.alianza.infrastructure.dto.{DatosCliente, Usuario}
 import co.com.alianza.persistence.messages.{DatosEmpresaRequest, ActualizacionRequest}
 import co.com.alianza.util.transformers.ValidationT
 import co.com.alianza.app.MainActors
@@ -122,23 +122,28 @@ class ActualizacionActor extends Actor with ActorLogging with AlianzaActors {
     val currentSender = sender()
     val futuro = obtenerFuturoDatos(user)
     futuro onComplete {
-      case Failure(failure) => currentSender ! failure
+      case Failure(failure) => currentSender ! ResponseMessage(Gone, failure.toJson)
       case Success(value) =>
         value match {
           case zSuccess(response) => {
-            val fechaString = response.get.fdpn_fecha_ult_act
-            //Obtener fecha actualizacion
-            val format = new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss")
-            val fechaActualizacion = new DateTime(format.parse(fechaString).getTime)
-            //Obtener fecha comparacion
-            //val fechaComparacion = new DateTime().minusYears(1).minusDays(1)
-            val fechaComparacion = new DateTime().plusYears(1).minusDays(1)
-            if(fechaComparacion.isAfter(fechaActualizacion.getMillis))
-              currentSender !  ResponseMessage(Conflict, fechaString)
-            else
-              currentSender !  ResponseMessage(OK, fechaString)
+            response match {
+              case None => currentSender !  ResponseMessage(Gone, "")
+              case Some(datos: DatosCliente) => {
+                val fechaString = datos.fdpn_fecha_ult_act
+                //Obtener fecha actualizacion
+                val format = new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss")
+                val fechaActualizacion = new DateTime(format.parse(fechaString).getTime)
+                //Obtener fecha comparacion
+                val fechaComparacion = new DateTime().minusYears(1).minusDays(1)
+
+                if(fechaComparacion.isAfter(fechaActualizacion.getMillis))
+                  currentSender ! ResponseMessage(Conflict, "")
+                else
+                  currentSender ! ResponseMessage(OK, "")
+              }
+            }
           }
-          case zFailure(error) =>  currentSender !  ResponseMessage(Conflict, error.cause.getMessage)
+          case zFailure(error) =>  currentSender ! ResponseMessage(Gone, error.cause.getMessage)
         }
     }
   }
@@ -155,11 +160,15 @@ class ActualizacionActor extends Actor with ActorLogging with AlianzaActors {
 
   def resolverFuturo(futuro: Future[Validation[PersistenceException, Option[Any]]], currentSender: ActorRef) = {
     futuro onComplete {
-      case Failure(failure) => currentSender ! failure
+      case Failure(failure) => currentSender ! ResponseMessage(Gone, "")
       case Success(value) =>
         value match {
-          case zSuccess(response) => currentSender !  ResponseMessage(OK, response.toJson)
-          case zFailure(error) =>  currentSender !  ResponseMessage(Conflict, error.cause.getMessage)
+          case zSuccess(response) =>
+            response match {
+              case None => currentSender ! ResponseMessage(Gone, response.toJson)
+              case Some(datos: DatosCliente) => currentSender !  ResponseMessage(OK, response.toJson)
+            }
+          case zFailure(error) => currentSender ! ResponseMessage(Gone, error.toJson)
         }
     }
   }
