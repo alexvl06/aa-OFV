@@ -164,7 +164,7 @@ class ActualizacionActor extends Actor with ActorLogging with AlianzaActors {
           case zSuccess(response) =>
             response match {
               case None => currentSender ! ResponseMessage(Gone, response.toJson)
-              case Some => currentSender !  ResponseMessage(OK, response.toJson)
+              case Some(x) => currentSender !  ResponseMessage(OK, response.toJson)
             }
           case zFailure(error) => currentSender ! ResponseMessage(Gone, error.toJson)
         }
