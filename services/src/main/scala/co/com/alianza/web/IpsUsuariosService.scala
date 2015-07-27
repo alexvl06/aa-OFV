@@ -3,6 +3,7 @@ package co.com.alianza.web
 import co.com.alianza.app.{CrossHeaders, AlianzaCommons}
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
+import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.infrastructure.messages._
 import spray.routing.{RequestContext, Directives}
@@ -40,7 +41,7 @@ class IpsUsuariosService extends Directives with AlianzaCommons with CrossHeader
                         case _ => ""
                       }
                       val usuario = DataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(stringToken)
-                      requestWithFutureAuditing[PersistenceException, AgregarIpsUsuarioMessage](r, "Fiduciaria", "usuario-agregar-ip-fiduciaria", ip.value, kafkaActor, usuario, Some(agregarIpsUsuarioMessage))
+                      requestWithFutureAuditing[PersistenceException, AgregarIpsUsuarioMessage](r, AuditingHelper.fiduciariaTopic, AuditingHelper.usuarioAgregarIpIndex, ip.value, kafkaActor, usuario, Some(agregarIpsUsuarioMessage))
                   } {
                     val agregarIpsUsuarioMessageAux: AgregarIpsUsuarioMessage = agregarIpsUsuarioMessage.copy(idUsuario = Some(user.id))
                     requestExecute(agregarIpsUsuarioMessageAux, ipsUsuarioActor)
@@ -62,7 +63,7 @@ class IpsUsuariosService extends Directives with AlianzaCommons with CrossHeader
                         case _ => ""
                       }
                       val usuario = DataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(stringToken)
-                      requestWithFutureAuditing[PersistenceException, EliminarIpsUsuarioMessage](r, "Fiduciaria", "usuario-eliminar-ip-fiduciaria", ip.value, kafkaActor, usuario, Some(eliminarIpsUsuarioMessage))
+                      requestWithFutureAuditing[PersistenceException, EliminarIpsUsuarioMessage](r, AuditingHelper.fiduciariaTopic, AuditingHelper.usuarioEliminarIpIndex, ip.value, kafkaActor, usuario, Some(eliminarIpsUsuarioMessage))
                   }{
                         val eliminarIpsUsuarioMessageAux: EliminarIpsUsuarioMessage = eliminarIpsUsuarioMessage.copy(idUsuario = Some(user.id))
                         requestExecute(eliminarIpsUsuarioMessageAux, ipsUsuarioActor)

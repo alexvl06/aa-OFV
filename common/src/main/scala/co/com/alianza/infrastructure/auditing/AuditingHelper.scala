@@ -11,7 +11,15 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Success}
 import scalaz.{Validation, Success => zSuccess}
 
-object AuditingHelper extends AuditingHelper
+object AuditingHelper extends AuditingHelper {
+  val fiduciariaTopic = "Fiduciaria"
+  val cambioContrasenaIndex = "cambio-contrasena-fiduciaria"
+  val autenticacionIndex = "autenticacion-fiduciaria"
+  val cierreSesionIndex = "cierre-sesion-fiduciaria"
+  val usuarioAgregarIpIndex = "usuario-agregar-ip-fiduciaria"
+  val usuarioEliminarIpIndex = "usuario-eliminar-ip-fiduciaria"
+}
+
 
 trait AuditingHelper {
 

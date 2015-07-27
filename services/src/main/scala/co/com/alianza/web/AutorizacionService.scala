@@ -1,7 +1,7 @@
 package co.com.alianza.web
 
 import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.infrastructure.auditing.AuditingUser
+import co.com.alianza.infrastructure.auditing.{AuditingHelper, AuditingUser}
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.infrastructure.messages.AutorizarUsuarioEmpresarialMessage
 import co.com.alianza.infrastructure.messages.AutorizarUsuarioEmpresarialAdminMessage
@@ -65,7 +65,7 @@ class AutorizacionService extends Directives with AlianzaCommons with CacheHelpe
                   } else {
                     DataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token)
                   }
-                  requestWithFutureAuditing[PersistenceException, Usuario](r, "Fiduciaria", "cierre-sesion-fiduciaria", ip.value, kafkaActor, usuario)
+                  requestWithFutureAuditing[PersistenceException, Usuario](r, AuditingHelper.fiduciariaTopic, AuditingHelper.cierreSesionIndex, ip.value, kafkaActor, usuario)
               } {
                 val tipoCliente = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
                 if (tipoCliente == TiposCliente.agenteEmpresarial.toString)
