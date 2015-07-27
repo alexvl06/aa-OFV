@@ -18,6 +18,7 @@ object AuditingHelper extends AuditingHelper {
   val cierreSesionIndex = "cierre-sesion-fiduciaria"
   val usuarioAgregarIpIndex = "usuario-agregar-ip-fiduciaria"
   val usuarioEliminarIpIndex = "usuario-eliminar-ip-fiduciaria"
+  val actualizacionDatosUsuarioIndex = "actualizacion-datos-usuario-fiduciaria"
 }
 
 
