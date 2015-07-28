@@ -158,7 +158,7 @@ class ActualizacionActor extends Actor with ActorLogging with AlianzaActors {
 
   def resolverFuturo(futuro: Future[Validation[PersistenceException, Option[Any]]], currentSender: ActorRef) = {
     futuro onComplete {
-      case Failure(failure) => currentSender ! ResponseMessage(Gone, "")
+      case Failure(failure) => currentSender ! ResponseMessage(Gone, failure.getMessage)
       case Success(value) =>
         value match {
           case zSuccess(response) =>
@@ -166,7 +166,7 @@ class ActualizacionActor extends Actor with ActorLogging with AlianzaActors {
               case None => currentSender ! ResponseMessage(Gone, response.toJson)
               case Some(x) => currentSender !  ResponseMessage(OK, response.toJson)
             }
-          case zFailure(error) => currentSender ! ResponseMessage(Gone, error.toJson)
+          case zFailure(error) => println("entro aca 2!!!");currentSender ! ResponseMessage(Gone, error.cause.getMessage)
         }
     }
   }
