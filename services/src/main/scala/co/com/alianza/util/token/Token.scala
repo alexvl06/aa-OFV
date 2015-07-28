@@ -8,16 +8,14 @@ import java.util.Date
 import enumerations.AppendPasswordUser
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jose._
-import com.nimbusds.jose.crypto.MACSigner
+import com.nimbusds.jose.crypto.{MACSigner, MACVerifier}
 import com.nimbusds.jwt.SignedJWT
-import com.nimbusds.jose.crypto.MACVerifier
 
 import collection.JavaConversions._
 import co.com.alianza.util.json.MarshallableImplicits._
 
 
 object Token {
-
 
   private val ISSUER = "http://fiduciaria.alianza.com.co"
   private val SIGNING_KEY = "556878763f1ea3bddfd1bed5b15daa2fc6d2db5a98290dd9f91ddfd22d77d1e" + AppendPasswordUser.appendUsuariosFiducia
@@ -46,11 +44,11 @@ object Token {
 
     claimsSet.setCustomClaims(customData)
 
-    val signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.HS512), claimsSet)
-    val signer = new MACSigner(SIGNING_KEY)
+    val headersJWT: String = headersJWToken("HS512", "JWT").toJson
+    val signedJWT = new SignedJWT(new JWSHeader(JWSHeader.parse(Base64URL.encode(headersJWT))), claimsSet)
+    val signer: MACSigner = new MACSigner(SIGNING_KEY)
     signedJWT.sign(signer)
-    val jwt = signedJWT.serialize()
-    jwt
+    signedJWT.serialize()
   }
 
   def generarTokenCaducidadContrasena(idUsuario: Int) = {
@@ -108,4 +106,3 @@ object Token {
 }
 
 case class headersJWToken(alg: String, typ: String)
-case class dataJWToken(iat: Date, nbf: Date, exp: Date, iss: String, tipoIdentificacion: String, ultimaIpIngreso: String, nombreUsuarioLogueado: String, correo: String, ultimaFechaIngreso: String)
