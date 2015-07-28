@@ -1,9 +1,13 @@
 package co.com.alianza.webvalidarPinClienteAdmin
 
 import co.com.alianza.app.{CrossHeaders, AlianzaCommons}
+import co.com.alianza.infrastructure.auditing.AuditingHelper
+import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.infrastructure.messages.PinMessages._
 import co.com.alianza.infrastructure.messages.PinMarshallers._
-import spray.routing.Directives
+import co.com.alianza.util.clave.Crypto
+import enumerations.AppendPasswordUser
+import spray.routing.{RequestContext, Directives}
 
 class PinService extends Directives with AlianzaCommons with CrossHeaders {
 
@@ -25,7 +29,12 @@ class PinService extends Directives with AlianzaCommons with CrossHeaders {
         entity(as[UserPw]) {
           userPw => {
             post {
-              requestExecute(CambiarPw(pin, userPw.pw), pinActor)
+              clientIP {
+                ip =>
+                  mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.cambioContrasenaCorreoClienteIndividualIndex, ip.value, kafkaActor, userPw.copy(pw = Crypto.hashSha512(userPw.pw.concat(AppendPasswordUser.appendUsuariosFiducia))))) {
+                    requestExecute(CambiarPw(pin, userPw.pw), pinActor)
+                  }
+              }
             }
           }
         }
@@ -35,7 +44,12 @@ class PinService extends Directives with AlianzaCommons with CrossHeaders {
         entity(as[UserPw]) {
           userPw => {
             post {
-              requestExecute(CambiarPw(pin, userPw.pw), pinUsuarioEmpresarialAdminActor)
+              clientIP {
+                ip =>
+                  mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.cambioContrasenaCorreoClienteAdministradorIndex, ip.value, kafkaActor, userPw.copy(pw = Crypto.hashSha512(userPw.pw.concat(AppendPasswordUser.appendUsuariosFiducia))))) {
+                    requestExecute(CambiarPw(pin, userPw.pw), pinUsuarioEmpresarialAdminActor)
+                  }
+              }
             }
           }
         }
@@ -51,7 +65,12 @@ class PinService extends Directives with AlianzaCommons with CrossHeaders {
         entity(as[UserPw]) {
           userPw => {
             post {
-              requestExecute(CambiarPw(pin, userPw.pw), pinUsuarioAgenteEmpresarialActor)
+              clientIP {
+                ip =>
+                  mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.cambioContrasenaCorreoAgenteEmpresarialIndex, ip.value, kafkaActor, userPw.copy(pw = Crypto.hashSha512(userPw.pw.concat(AppendPasswordUser.appendUsuariosFiducia))))) {
+                    requestExecute(CambiarPw(pin, userPw.pw), pinUsuarioAgenteEmpresarialActor)
+                  }
+              }
             }
           }
         }

@@ -19,6 +19,9 @@ object AuditingHelper extends AuditingHelper {
   val usuarioAgregarIpIndex = "usuario-agregar-ip-fiduciaria"
   val usuarioEliminarIpIndex = "usuario-eliminar-ip-fiduciaria"
   val actualizacionDatosUsuarioIndex = "actualizacion-datos-usuario-fiduciaria"
+  val cambioContrasenaCorreoClienteIndividualIndex = "cambio-contrasena-correo-cliente-individual-fiduciaria"
+  val cambioContrasenaCorreoClienteAdministradorIndex = "cambio-contrasena-correo-cliente-administrador-fiduciaria"
+  val cambioContrasenaCorreoAgenteEmpresarialIndex = "cambio-contrasena-correo-agente-empresarial-fiduciaria"
 }
 
 
