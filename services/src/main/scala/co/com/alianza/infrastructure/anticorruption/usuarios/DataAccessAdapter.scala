@@ -427,7 +427,7 @@ object DataAccessAdapter {
         response match {
           case Some(usuario) => {
             val user = DataAccessTranslator.translateUsuario(usuario)
-            zSuccess(Some(AuditingUserData(user.tipoIdentificacion,user.identificacion)))
+            zSuccess(Some(AuditingUserData(user.tipoIdentificacion,user.identificacion, None)))
           }
           case _ => zSuccess(None)
         }
