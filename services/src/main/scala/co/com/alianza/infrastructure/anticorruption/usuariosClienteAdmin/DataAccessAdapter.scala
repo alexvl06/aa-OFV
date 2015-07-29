@@ -70,7 +70,7 @@ object DataAccessAdapter {
       case zSuccess(response) =>
         response match {
           case Some(usuario) => {
-            zSuccess(Some(AuditingUserData(usuario.tipoIdentificacion,usuario.identificacion)))
+            zSuccess(Some(AuditingUserData(usuario.tipoIdentificacion,usuario.identificacion, Some(usuario.usuario))))
           }
           case _ => zSuccess(None)
         }
