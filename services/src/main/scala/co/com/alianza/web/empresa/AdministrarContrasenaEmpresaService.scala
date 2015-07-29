@@ -29,8 +29,18 @@ class AdministrarContrasenaEmpresaService extends Directives with AlianzaCommons
               //Cambiar contrasena de la cuenta alianza valores
               entity(as[ReiniciarContrasenaAgenteEMessage]) {
                 data =>
-                  val dataAux: ReiniciarContrasenaAgenteEMessage = data.copy(idClienteAdmin = Some(user.id))
-                  requestExecute(dataAux, contrasenasAgenteEmpresarialActor)
+                  clientIP {
+                    ip =>
+                      mapRequestContext {
+                        r: RequestContext =>
+                          val token = r.request.headers.find(header => header.name equals "token")
+                          val usuario = DataAccessAdapterClienteAdmin.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
+                          requestWithFutureAuditing[PersistenceException, ReiniciarContrasenaAgenteEMessage](r, AuditingHelper.fiduciariaTopic, AuditingHelper.reiniciarContrasenaAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, Some(data))
+                      } {
+                        val dataAux: ReiniciarContrasenaAgenteEMessage = data.copy(idClienteAdmin = Some(user.id))
+                        requestExecute(dataAux, contrasenasAgenteEmpresarialActor)
+                      }
+                  }
               }
             }
           }
