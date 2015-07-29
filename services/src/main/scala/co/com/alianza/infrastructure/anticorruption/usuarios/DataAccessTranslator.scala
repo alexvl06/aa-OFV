@@ -42,4 +42,10 @@ object DataAccessTranslator {
     (UsuarioEmpresarialAdmin(ue._1.id, ue._1.correo, ue._1.fechaActualizacion, ue._1.identificacion, ue._1.tipoIdentificacion, ue._1.usuario, ue._1.estado, ue._1.contrasena, ue._1.numeroIngresosErroneos, ue._1.ipUltimoIngreso, ue._1.fechaUltimoIngreso, TiposCliente.clienteAdministrador), ue._2)
   }
 
+  def translateUsuarioEmpresarialEmpresa(ue: eUsuarioEmpresarial) =
+    UsuarioEmpresa(ue.id, ue.identificacion, ue.tipoIdentificacion)
+
+  def translateUsuarioAdminEmpresa(ue: eUsuarioEmpresarialAdmin) =
+    UsuarioEmpresa(ue.id, ue.identificacion, ue.tipoIdentificacion)
+
 }

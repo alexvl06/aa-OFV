@@ -1,5 +1,6 @@
 package co.com.alianza.web
 
+import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.util.clave.Crypto
 import enumerations.AppendPasswordUser
@@ -20,10 +21,10 @@ class AutenticacionService extends Directives with AlianzaCommons with CrossHead
           autenticacion =>
             respondWithMediaType(mediaType) {
               clientIP { ip =>
-                mapRequestContext((r: RequestContext) => requestWithAuiditing(r, "Fiduciaria", "autenticacion-fiduciaria", ip.value, kafkaActor, autenticacion.copy( password = Crypto.hashSha512(autenticacion.password.concat(AppendPasswordUser.appendUsuariosFiducia)), clientIp = Some(ip.value)))) {
+                mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.autenticacionIndex, ip.value, kafkaActor, autenticacion.copy( password = Crypto.hashSha512(autenticacion.password.concat(AppendPasswordUser.appendUsuariosFiducia)), clientIp = Some(ip.value)))) {
                   val nuevaAutenticacion = autenticacion.copy(clientIp = Some(ip.value))
                   requestExecute(nuevaAutenticacion, autenticacionActor)
-		}
+		            }
               }
             }
         }
@@ -34,8 +35,10 @@ class AutenticacionService extends Directives with AlianzaCommons with CrossHead
           autenticacion =>
             respondWithMediaType(mediaType) {
               clientIP { ip =>
-                val nuevaAutenticacion = autenticacion.copy(clientIp = Some(ip.value))
-                requestExecute(nuevaAutenticacion, autenticacionUsuarioEmpresaActor)
+                mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.autenticacionIndex, ip.value, kafkaActor, autenticacion.copy( password = Crypto.hashSha512(autenticacion.password.concat(AppendPasswordUser.appendUsuariosFiducia)), clientIp = Some(ip.value)))) {
+                  val nuevaAutenticacion = autenticacion.copy(clientIp = Some(ip.value))
+                  requestExecute(nuevaAutenticacion, autenticacionUsuarioEmpresaActor)
+                }
               }
             }
         }

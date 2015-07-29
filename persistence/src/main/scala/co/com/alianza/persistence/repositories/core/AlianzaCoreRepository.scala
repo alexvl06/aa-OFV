@@ -123,11 +123,11 @@ class AlianzaCoreRepository(implicit val executionContex: ExecutionContext) {
     val codeResponse = callableStatement getObject 1
     val detailResponse = callableStatement getObject 2
     println(detailResponse)
-    codeResponse match {
-      case "OK" => "FSDAFAS"
+    detailResponse match {
+      case null => codeResponse.toString
       case _ =>
         val msg = s"Error ejecutando prodecimiento $codeResponse - $detailResponse"
-        throw PersistenceException(new Exception(msg), BusinessLevel, msg)
+        throw PersistenceException(new Exception(codeResponse.toString), BusinessLevel, msg)
     }
   }
 

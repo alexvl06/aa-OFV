@@ -1,9 +1,17 @@
 package co.com.alianza.web.empresa
 
 import co.com.alianza.app.AlianzaCommons
+import co.com.alianza.exceptions.PersistenceException
+import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
+import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{DataAccessAdapter => DataAccessAdapterAgenteEmpresarial}
+import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{DataAccessAdapter => DataAccessAdapterClienteAdmin}
+import co.com.alianza.infrastructure.auditing.AuditingHelper
+import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.infrastructure.messages.empresa._
-import spray.routing.Directives
+import co.com.alianza.util.clave.Crypto
+import enumerations.AppendPasswordUser
+import spray.routing.{RequestContext, Directives}
 
 /**
  * Created by S4N on 17/12/14.
@@ -46,8 +54,18 @@ class AdministrarContrasenaEmpresaService extends Directives with AlianzaCommons
               //Cambiar contrasena por el usuario cliente admin
               entity(as[CambiarContrasenaClienteAdminMessage]) {
                 data =>
-                  val dataComplete: CambiarContrasenaClienteAdminMessage = data.copy(idUsuario = Some(user.id))
-                  requestExecute(dataComplete, contrasenasClienteAdminActor)
+                  clientIP {
+                    ip =>
+                      mapRequestContext {
+                        r: RequestContext =>
+                          val token = r.request.headers.find(header => header.name equals "token")
+                          val usuario = DataAccessAdapterClienteAdmin.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
+                          requestWithFutureAuditing[PersistenceException, CambiarContrasenaClienteAdminMessage](r, AuditingHelper.fiduciariaTopic, AuditingHelper.cambioContrasenaClienteAdministradorIndex, ip.value, kafkaActor, usuario, Some(data.copy( pw_nuevo = Crypto.hashSha512(data.pw_nuevo.concat(AppendPasswordUser.appendUsuariosFiducia)), pw_actual = Crypto.hashSha512(data.pw_actual.concat(AppendPasswordUser.appendUsuariosFiducia)))))
+                      } {
+                        val dataComplete: CambiarContrasenaClienteAdminMessage = data.copy(idUsuario = Some(user.id))
+                        requestExecute(dataComplete, contrasenasClienteAdminActor)
+                      }
+                  }
               }
             }
           }
@@ -59,8 +77,18 @@ class AdministrarContrasenaEmpresaService extends Directives with AlianzaCommons
               //Cambiar contrasena por el usuario agente empresarial
               entity(as[CambiarContrasenaAgenteEmpresarialMessage]) {
                 data =>
-                  val dataComplete: CambiarContrasenaAgenteEmpresarialMessage = data.copy(idUsuario = Some(user.id))
-                  requestExecute(dataComplete, contrasenasAgenteEmpresarialActor)
+                  clientIP {
+                    ip =>
+                        mapRequestContext {
+                          r: RequestContext =>
+                            val token = r.request.headers.find(header => header.name equals "token")
+                            val usuario = DataAccessAdapterAgenteEmpresarial.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
+                            requestWithFutureAuditing[PersistenceException, CambiarContrasenaAgenteEmpresarialMessage](r, AuditingHelper.fiduciariaTopic, AuditingHelper.cambioContrasenaAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, Some(data.copy( pw_nuevo = Crypto.hashSha512(data.pw_nuevo.concat(AppendPasswordUser.appendUsuariosFiducia)), pw_actual = Crypto.hashSha512(data.pw_actual.concat(AppendPasswordUser.appendUsuariosFiducia)))))
+                        } {
+                        val dataComplete: CambiarContrasenaAgenteEmpresarialMessage = data.copy(idUsuario = Some(user.id))
+                        requestExecute(dataComplete, contrasenasAgenteEmpresarialActor)
+                      }
+                  }
               }
             }
           }

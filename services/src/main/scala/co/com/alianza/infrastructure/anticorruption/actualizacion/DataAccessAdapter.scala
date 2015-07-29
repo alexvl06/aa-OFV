@@ -37,11 +37,7 @@ object DataAccessAdapter {
   Validation[PersistenceException, Option[String]] = {
     origin match {
       case zSuccess(response: String) => zSuccess(Some(response))
-      case zFailure(error)            => {
-        println("************************************************************************************************************************")
-        println(error)
-        zFailure(error)
-      }
+      case zFailure(error)            => zFailure(error)
     }
   }
 

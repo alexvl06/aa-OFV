@@ -96,6 +96,12 @@ class UsuarioEmpresarialAdminRepository ( implicit executionContext: ExecutionCo
       resolveTry(resultTry, "Agregar pin usuario empresarial administrador")
   }
 
+  def obtenerUsuarioPorToken( token:String ): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = loan {
+    implicit session =>
+      val resultTry = Try{ usuariosEmpresarialesAdmin.filter(_.token === token).list.headOption}
+      resolveTry(resultTry, "Consulta usuario empresarial con token" + token)
+  }
+
   def existeUsuarioEmpresarialAdminActivo(nitEmpresa:String): Future[Validation[PersistenceException, Boolean]] = loan {
     implicit session =>
       val resultTry = Try{

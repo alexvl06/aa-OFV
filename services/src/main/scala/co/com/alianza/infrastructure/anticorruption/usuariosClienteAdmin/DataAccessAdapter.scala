@@ -1,13 +1,14 @@
 package co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin
 
+import co.com.alianza.infrastructure.auditing.AuditingUser.AuditingUserData
+
 import scala.concurrent.{ExecutionContext, Future}
-import scalaz.{Failure, Success, Validation}
+import scalaz.{Validation}
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.infrastructure.dto.{UsuarioEmpresarialAdmin, Usuario}
-import co.com.alianza.persistence.repositories.{UsuarioEmpresarialAdminRepository, UsuariosRepository}
+import co.com.alianza.infrastructure.dto.{UsuarioEmpresarialAdmin}
+import co.com.alianza.persistence.repositories.{UsuarioEmpresarialAdminRepository}
 import co.com.alianza.app.MainActors
 import co.com.alianza.persistence.entities.{UsuarioEmpresarialAdmin => eUsuarioAdmin}
-import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.DataAccessTranslator
 import co.com.alianza.persistence.repositories.empresa.UsuariosEmpresaRepository
 import scalaz.{Failure => zFailure, Success => zSuccess}
 import co.com.alianza.util.clave.Crypto
@@ -45,11 +46,32 @@ object DataAccessAdapter {
     repo.obtenerUsuarioEmpresarialAdminPorId(idUsuario) map transformValidation
   }
 
+  def obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken( token:String ): Future[Validation[PersistenceException, Option[AuditingUserData]]] = {
+    val repo = new UsuarioEmpresarialAdminRepository()
+    repo.obtenerUsuarioPorToken( token ) map {
+      x => transformValidationTuple(x)
+    }
+  }
+
   private def transformValidation(origin: Validation[PersistenceException, Option[eUsuarioAdmin]]): Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]] = {
     origin match {
       case zSuccess(response) =>
         response match {
           case Some(usuario) => zSuccess(Some(DataAccessTranslator.translateUsuario(usuario)))
+          case _ => zSuccess(None)
+        }
+
+      case zFailure(error)    =>  zFailure(error)
+    }
+  }
+
+  private def transformValidationTuple(origin: Validation[PersistenceException, Option[eUsuarioAdmin]]): Validation[PersistenceException, Option[AuditingUserData]] = {
+    origin match {
+      case zSuccess(response) =>
+        response match {
+          case Some(usuario) => {
+            zSuccess(Some(AuditingUserData(usuario.tipoIdentificacion,usuario.identificacion, Some(usuario.usuario))))
+          }
           case _ => zSuccess(None)
         }
 

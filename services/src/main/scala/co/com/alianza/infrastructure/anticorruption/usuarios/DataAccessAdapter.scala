@@ -315,6 +315,22 @@ object DataAccessAdapter {
     repo.guardarPinUsuarioClienteAdmin(pinUsuario)
   }
 
+  def obtenerUsuarioEmpresa(idUsuario: Int, tipoCliente: TiposCliente): Future[Validation[PersistenceException, Option[UsuarioEmpresa]]] = {
+    val repo = new UsuariosEmpresarialRepository()
+    tipoCliente match{
+      case TiposCliente.agenteEmpresarial => {
+        repo.obtenerUsuarioEmpresarialPorId(idUsuario) map {
+          x => transformValidationUsuarioEmpresa(x)
+        }
+      }
+      case TiposCliente.clienteAdministrador => {
+        repo.obtenerUsuarioEmpresarialAdminPorId(idUsuario) map {
+          x => transformValidationUsuarioAdminEmpresa(x)
+        }
+      }
+    }
+  }
+
   private def transformValidationList(origin: Validation[PersistenceException, List[eUsuario]]): Validation[PersistenceException, List[Usuario]] = {
     origin match {
       case zSuccess(response: List[eUsuario]) => zSuccess(DataAccessTranslator.translateUsuario(response))
@@ -411,7 +427,7 @@ object DataAccessAdapter {
         response match {
           case Some(usuario) => {
             val user = DataAccessTranslator.translateUsuario(usuario)
-            zSuccess(Some(AuditingUserData(user.tipoIdentificacion,user.identificacion)))
+            zSuccess(Some(AuditingUserData(user.tipoIdentificacion,user.identificacion, None)))
           }
           case _ => zSuccess(None)
         }
@@ -419,5 +435,26 @@ object DataAccessAdapter {
       case zFailure(error)    =>  zFailure(error)
     }
   }
+
+  private def transformValidationUsuarioEmpresa(origin: Validation[PersistenceException, Option[eUsuarioEmpresarial]]): Validation[PersistenceException, Option[UsuarioEmpresa]] = {
+    origin match {
+      case zSuccess(response) =>
+        response match {
+          case Some(usuario) => zSuccess(Some(DataAccessTranslator.translateUsuarioEmpresarialEmpresa(usuario)))
+          case _ => zSuccess(None)
+        }
+      case zFailure(error)    =>  zFailure(error)
+    }
+  }
+
+  private def transformValidationUsuarioAdminEmpresa(origin: Validation[PersistenceException, Option[eUsuarioEmpresarialAdmin]]): Validation[PersistenceException, Option[UsuarioEmpresa]] =
+    origin match {
+      case zSuccess(response) =>
+        response match {
+          case Some(usuario) => zSuccess(Some(DataAccessTranslator.translateUsuarioAdminEmpresa(usuario)))
+          case _ => zSuccess(None)
+        }
+      case zFailure(error)    =>  zFailure(error)
+    }
 
 }

@@ -32,19 +32,19 @@ case class DatosCliente(
                          fdpn_telefono_movil_1 : String,
                          fdpn_pais_tel_mov_1 : String,
                          fdpn_ocupacion : String,
-                         fdpn_if_declara_renta : String,
-                         fdpn_pafd_pais : String,
                          fdpn_ciua : String,
                          fdpn_fecha_ult_act : String,
                          datosEmp : DatosEmpresa
                         )
 
 case class DatosEmpresa(
+                         fdpn_pafd_pais : String,
                          fdpn_nombre_emp : String,
                          fdpn_nit_emp : String,
                          fdpn_cargo : String,
                          fdpn_dire_emp : String,
                          fdpn_ciud_emp : String,
+                         fdpn_if_declara_renta : String,
                          fdpn_ciud_nombre_emp : String,
                          fdpn_tele_emp : String,
                          fdpn_if_vactivos : String,
