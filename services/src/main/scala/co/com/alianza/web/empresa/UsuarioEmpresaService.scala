@@ -1,11 +1,13 @@
 package co.com.alianza.web.empresa
 
-import co.com.alianza.infrastructure.dto.security.UsuarioAuth
+import co.com.alianza.exceptions.PersistenceException
+import co.com.alianza.infrastructure.auditing.AuditingHelper
+import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.infrastructure.messages.empresa.{CrearAgenteEMessageJsonSupport, CrearAgenteEMessage}
-import spray.routing.Directives
-import co.com.alianza.app.{AlianzaActors, MainActors, CrossHeaders, AlianzaCommons}
+import spray.routing.{RequestContext, Directives}
+import co.com.alianza.app.{AlianzaActors, CrossHeaders, AlianzaCommons}
 import co.com.alianza.infrastructure.messages.empresa._
-import akka.actor.ActorSystem
+import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{DataAccessAdapter => DataAccessAdapterClienteAdmin}
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 
 /**
@@ -33,7 +35,17 @@ class UsuarioEmpresaService extends Directives with AlianzaCommons   with CrossH
               put {
                 entity(as[CrearAgenteEMessage]) {
                   data =>
-                    requestExecute(data, agenteEmpresarialActor)
+                    clientIP {
+                      ip =>
+                        mapRequestContext {
+                          r: RequestContext =>
+                            val token = r.request.headers.find(header => header.name equals "token")
+                            val usuario = DataAccessAdapterClienteAdmin.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
+                            requestWithFutureAuditing[PersistenceException, CrearAgenteEMessage](r, AuditingHelper.fiduciariaTopic, AuditingHelper.crearAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, Some(data))
+                        } {
+                          requestExecute(data, agenteEmpresarialActor)
+                        }
+                    }
                 }
               }
             }

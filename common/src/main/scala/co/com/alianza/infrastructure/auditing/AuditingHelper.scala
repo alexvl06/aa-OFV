@@ -26,6 +26,9 @@ object AuditingHelper extends AuditingHelper {
   val cambioContrasenaClienteAdministradorIndex = "cambio-contrasena-cliente-administrador-fiduciaria"
   val cambioContrasenaAgenteEmpresarialIndex = "cambio-contrasena-agente-empresarial-fiduciaria"
   val cambioHorarioIndex = "cambio-horario-empresa-fiduciaria"
+  val asignarContrasenaAgenteEmpresarialIndex = "asignar-contrasena-agente-empresarial-fiduciaria"
+  val reiniciarContrasenaAgenteEmpresarialIndex = "reiniciar-contrasena-agente-empresarial-fiduciaria"
+  val crearAgenteEmpresarialIndex = "crear-agente-empresarial-fiduciaria"
 }
 
 
