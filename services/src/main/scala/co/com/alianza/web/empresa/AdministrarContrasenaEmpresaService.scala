@@ -98,7 +98,18 @@ class AdministrarContrasenaEmpresaService extends Directives with AlianzaCommons
             pathEndOrSingleSlash {
               put {
                 entity(as[AsignarContrasenaMessage]) {
-                  data => requestExecute(data, contrasenasAgenteEmpresarialActor)
+                  data =>
+                  clientIP {
+                    ip =>
+                      mapRequestContext {
+                        r: RequestContext =>
+                          val token = r.request.headers.find(header => header.name equals "token")
+                          val usuario = DataAccessAdapterClienteAdmin.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
+                          requestWithFutureAuditing[PersistenceException, AsignarContrasenaMessage](r, AuditingHelper.fiduciariaTopic, AuditingHelper.asignarContrasenaAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, Some(data))
+                      } {
+                        requestExecute(data, contrasenasAgenteEmpresarialActor)
+                      }
+                  }
                 }
               }
             }
