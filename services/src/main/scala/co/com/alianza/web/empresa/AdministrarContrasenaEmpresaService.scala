@@ -2,7 +2,6 @@ package co.com.alianza.web.empresa
 
 import co.com.alianza.app.AlianzaCommons
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
 import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{DataAccessAdapter => DataAccessAdapterAgenteEmpresarial}
 import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{DataAccessAdapter => DataAccessAdapterClienteAdmin}
 import co.com.alianza.infrastructure.auditing.AuditingHelper
@@ -51,8 +50,18 @@ class AdministrarContrasenaEmpresaService extends Directives with AlianzaCommons
             put {
               entity(as[BloquearDesbloquearAgenteEMessage]) {
                 data =>
-                  val dataAux: BloquearDesbloquearAgenteEMessage = data.copy(idClienteAdmin = Some(user.id))
-                  requestExecute(dataAux, contrasenasAgenteEmpresarialActor)
+                  clientIP {
+                    ip =>
+                      mapRequestContext {
+                        r: RequestContext =>
+                          val token = r.request.headers.find(header => header.name equals "token")
+                          val usuario = DataAccessAdapterClienteAdmin.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
+                          requestWithFutureAuditing[PersistenceException, BloquearDesbloquearAgenteEMessage](r, AuditingHelper.fiduciariaTopic, AuditingHelper.bloqueoAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, Some(data))
+                      } {
+                        val dataAux: BloquearDesbloquearAgenteEMessage = data.copy(idClienteAdmin = Some(user.id))
+                        requestExecute(dataAux, contrasenasAgenteEmpresarialActor)
+                      }
+                  }
               }
             }
           }

@@ -29,6 +29,9 @@ object AuditingHelper extends AuditingHelper {
   val asignarContrasenaAgenteEmpresarialIndex = "asignar-contrasena-agente-empresarial-fiduciaria"
   val reiniciarContrasenaAgenteEmpresarialIndex = "reiniciar-contrasena-agente-empresarial-fiduciaria"
   val crearAgenteEmpresarialIndex = "crear-agente-empresarial-fiduciaria"
+  val bloqueoAgenteEmpresarialIndex = "bloqueo-agente-empresarial-fiduciaria"
+  val consultaPermisosAgenteEmpresarialIndex = "consulta-permisos-agente-empresarial-fiduciaria"
+  val actualizarPermisosAgenteEmpresarialIndex = "actualizar-permisos-agente-empresarial-fiduciaria"
 }
 
 
@@ -50,7 +53,8 @@ trait AuditingHelper {
             ),
             AudResponse(
               response.status.intValue.toString,
-              response.status.reason
+              response.status.reason,
+              response.entity.data.asString
             ),
             kafkaTopic,
             elasticIndex,
@@ -82,7 +86,8 @@ trait AuditingHelper {
                     ),
                     AudResponse(
                       response.status.intValue.toString,
-                      response.status.reason
+                      response.status.reason,
+                      response.entity.data.asString
                     ),
                     kafkaTopic,
                     elasticIndex,
