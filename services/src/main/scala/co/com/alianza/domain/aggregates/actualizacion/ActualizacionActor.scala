@@ -127,7 +127,11 @@ class ActualizacionActor extends Actor with ActorLogging with AlianzaActors {
             response match {
               case None => currentSender !  ResponseMessage(Gone, "")
               case Some(datos: DatosCliente) => {
-                val fechaString = datos.fdpn_fecha_ult_act
+                val fechaString =
+                  if(datos.fdpn_fecha_ult_act == null
+                    || datos.fdpn_fecha_ult_act.isEmpty)
+                    "1990-01-01 00:00:00"
+                  else datos.fdpn_fecha_ult_act
                 //Obtener fecha actualizacion
                 val format = new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss")
                 val fechaActualizacion = new DateTime(format.parse(fechaString).getTime)
@@ -166,7 +170,7 @@ class ActualizacionActor extends Actor with ActorLogging with AlianzaActors {
               case None => currentSender ! ResponseMessage(Gone, response.toJson)
               case Some(x) => currentSender !  ResponseMessage(OK, response.toJson)
             }
-          case zFailure(error) => println("entro aca 2!!!");currentSender ! ResponseMessage(Gone, error.cause.getMessage)
+          case zFailure(error) => currentSender ! ResponseMessage(Gone, error.cause.getMessage)
         }
     }
   }
