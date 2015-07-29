@@ -18,12 +18,14 @@ object AuditingHelper extends AuditingHelper {
   val cierreSesionIndex = "cierre-sesion-fiduciaria"
   val usuarioAgregarIpIndex = "usuario-agregar-ip-fiduciaria"
   val usuarioEliminarIpIndex = "usuario-eliminar-ip-fiduciaria"
+  val usuarioConsultarIpIndex = "usuario-consultar-ip-fiduciaria"
   val actualizacionDatosUsuarioIndex = "actualizacion-datos-usuario-fiduciaria"
   val cambioContrasenaCorreoClienteIndividualIndex = "cambio-contrasena-correo-cliente-individual-fiduciaria"
   val cambioContrasenaCorreoClienteAdministradorIndex = "cambio-contrasena-correo-cliente-administrador-fiduciaria"
   val cambioContrasenaCorreoAgenteEmpresarialIndex = "cambio-contrasena-correo-agente-empresarial-fiduciaria"
   val cambioContrasenaClienteAdministradorIndex = "cambio-contrasena-cliente-administrador-fiduciaria"
   val cambioContrasenaAgenteEmpresarialIndex = "cambio-contrasena-agente-empresarial-fiduciaria"
+  val cambioHorarioIndex = "cambio-horario-empresa-fiduciaria"
 }
 
 
