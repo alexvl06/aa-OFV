@@ -1,8 +1,10 @@
 package co.com.alianza.web.empresa
 
 import co.com.alianza.exceptions.PersistenceException
+import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
+import co.com.alianza.infrastructure.messages.GuardarPermisosAgenteMessage
 import co.com.alianza.infrastructure.messages.empresa.{CrearAgenteEMessageJsonSupport, CrearAgenteEMessage}
 import spray.routing.{RequestContext, Directives}
 import co.com.alianza.app.{AlianzaActors, CrossHeaders, AlianzaCommons}
@@ -23,8 +25,17 @@ class UsuarioEmpresaService extends Directives with AlianzaCommons   with CrossH
         respondWithMediaType(mediaType) {
           get {
             parameters('correo.?, 'usuario.?, 'nombre.?, 'estado.?) { (correo, usuario, nombre, estado) =>
-              //Lista de todos los usuarios
-              requestExecute(GetAgentesEmpresarialesMessage(correo.getOrElse(null), usuario.getOrElse(null), nombre.getOrElse(null), estado.get.toInt, user.id), agenteEmpresarialActor)
+              clientIP {
+                ip =>
+                  mapRequestContext {
+                    r: RequestContext =>
+                      val token = r.request.headers.find(header => header.name equals "token")
+                      val usuario2 = DataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
+                      requestWithFutureAuditing[PersistenceException, AuditParams](r, AuditingHelper.fiduciariaTopic, AuditingHelper.consultaUsuariosEmpresarialesIndex, ip.value, kafkaActor, usuario2, Some(AuditParams(correo, usuario, nombre, estado)))
+                  } {
+                    requestExecute(GetAgentesEmpresarialesMessage(correo.getOrElse(null), usuario.getOrElse(null), nombre.getOrElse(null), estado.get.toInt, user.id), agenteEmpresarialActor)
+                  }
+              }
             }
           }
         }
@@ -55,3 +66,5 @@ class UsuarioEmpresaService extends Directives with AlianzaCommons   with CrossH
 
   }
 }
+
+case class AuditParams(correo:Option[String], usuario:Option[String], nombre:Option[String], estado:Option[String])
