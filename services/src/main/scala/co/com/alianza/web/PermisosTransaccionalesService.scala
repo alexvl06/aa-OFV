@@ -4,8 +4,6 @@ import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
-import co.com.alianza.util.clave.Crypto
-import enumerations.AppendPasswordUser
 import spray.routing.{RequestContext, Directives}
 
 import co.com.alianza.app.{AlianzaActors, MainActors, CrossHeaders, AlianzaCommons}
