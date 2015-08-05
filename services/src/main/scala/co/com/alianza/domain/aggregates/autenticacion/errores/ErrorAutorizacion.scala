@@ -18,8 +18,8 @@ case class RecursoInexistente(usuario: UsuarioEmpresarial) extends ErrorAutoriza
   override def msg = ErrorMessage("403.1", "Error autorización de recurso", "El recurso no está registrado").toJson
 }
 
-case class RecursoProhibido(usuario: UsuarioEmpresarial) extends ErrorAutorizacion {
-  override def msg = ErrorMessage("403.2", "Error autorización de recurso", "El acceso a este recurso no está permitido").toJson
+case class RecursoRestringido(usuario: UsuarioEmpresarial, filtro: Option[String] = None) extends ErrorAutorizacion {
+  override def msg = ErrorMessage("403.2", "Error autorización de recurso", "El acceso a este recurso está restringido").toJson
 }
 
 case class ErrorSesionNoEncontrada() extends ErrorAutorizacion {

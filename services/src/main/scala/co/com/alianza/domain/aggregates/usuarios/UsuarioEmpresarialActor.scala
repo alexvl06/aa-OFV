@@ -25,15 +25,16 @@ class UsuarioEmpresarialActor extends Actor with ActorLogging with AlianzaActors
             case zFailure( error ) => currentSender ! error
           }
         }
-      else if (message.nit.isDefined && message.usuario.isDefined)
-        co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtieneUsuarioEmpresarialPorNitYUsuario(message.nit.get, message.usuario.get) onComplete {
-          case sFailure( failure ) =>
+      else if (message.nit.isDefined && message.usuario.isDefined) {
+        co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtieneUsuarioEmpresarialPorNitYUsuario(message.nit.get, message.usuario.get, message.tipoIdentificacion.get) onComplete {
+          case sFailure(failure) =>
             currentSender ! failure
-          case sSuccess (value) => value match {
-            case zSuccess (response) => currentSender ! response
-            case zFailure( error ) => currentSender ! error
+          case sSuccess(value) => value match {
+            case zSuccess(response) => currentSender ! response
+            case zFailure(error) => currentSender ! error
           }
         }
+      }
       else
         currentSender ! None
 
