@@ -133,7 +133,6 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
             Validation.failure(ErrorSesionIpInvalida(ip));
         }
       case None =>
-        log error ("+++No encontrado empresa actor.")
         Future.successful(Validation.failure(ErrorSesionIpInvalida(ip)))
     }
 
@@ -163,7 +162,6 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
             }
         }
       case None =>
-        log error ("+++No encontrado empresa actor.")
         Future.successful(Validation failure ErrorSesionHorarioInvalido())
     }
 
@@ -175,15 +173,16 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
       }
     }
 
-  private def resolveAutorizacionRecursosAgente(usuario: UsuarioEmpresarial, recursos: List[RecursoPerfilAgente]) =
+  private def resolveAutorizacionRecursosAgente(usuario: UsuarioEmpresarial, recursos: List[RecursoPerfilAgente]) ={
     recursos.isEmpty match {
       case true => Validation.failure(RecursoInexistente(usuario))
       case false =>
         recursos.head.filtro match {
-          case Some(filtro) => Validation.failure(RecursoProhibido(usuario))
+          case f @ Some(_) => Validation.failure(RecursoRestringido(usuario, f))
           case None => Validation.success(usuario)
         }
     }
+  }
 
   private def resuelveAutorizacionAgente(futureValidation: Future[Validation[ErrorAutorizacion, UsuarioEmpresarial]], originalSender: ActorRef) =
     futureValidation onComplete {
@@ -196,8 +195,8 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
           case ErrorPersistenciaAutorizacion(_, ep1) => originalSender ! ep1
           case RecursoInexistente(usuario) =>
             originalSender ! ResponseMessage(Forbidden, JsonUtil.toJson(ForbiddenAgenteMessage(usuario, None, "403.1")))
-          case RecursoProhibido(usuario) =>
-            originalSender ! ResponseMessage(Forbidden, JsonUtil.toJson(ForbiddenAgenteMessage(usuario, None, "403.2")))
+          case RecursoRestringido(usuario, filtro) =>
+            originalSender ! ResponseMessage(Forbidden, JsonUtil.toJson(ForbiddenAgenteMessage(usuario, filtro, "403.2")))
           case e @ ErrorSesionIpInvalida(_) => originalSender ! ResponseMessage(Unauthorized, e.msg)
           case e @ ErrorSesionHorarioInvalido() => originalSender ! ResponseMessage(Unauthorized, e.msg)
           case e @ ErrorSesionEstadoEmpresaDenegado() => originalSender ! ResponseMessage(Unauthorized, e.msg)
