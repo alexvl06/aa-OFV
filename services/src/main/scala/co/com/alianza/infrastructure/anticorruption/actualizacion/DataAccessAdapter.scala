@@ -23,7 +23,10 @@ object DataAccessAdapter {
   private def transformValidationDatosCliente(origin: Validation[PersistenceException, String]):
     Validation[PersistenceException, Option[DatosCliente]] = {
     origin match {
-      case zSuccess(response: String) => zSuccess(DataAccessTranslator.translateDatosCliente(response))
+      case zSuccess(response: String) =>
+        val datos: Option[DatosCliente] = DataAccessTranslator.translateDatosCliente(response)
+        val fecha = datos.get.`nvl(fdpn_fecha_ult_act,fdpn_fecha_creacion)`
+        zSuccess(Some(datos.get.copy(fdpn_fecha_ult_act = fecha)))
       case zFailure(error)            => zFailure(error)
     }
   }
