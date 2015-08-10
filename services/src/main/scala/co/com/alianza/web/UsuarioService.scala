@@ -1,7 +1,10 @@
 package co.com.alianza.web
 
 
-import spray.routing.Directives
+import co.com.alianza.infrastructure.auditing.AuditingHelper._
+import co.com.alianza.util.clave.Crypto
+import enumerations.AppendPasswordUser
+import spray.routing.{RequestContext, Directives}
 import co.com.alianza.app.{CrossHeaders, AlianzaCommons}
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.infrastructure.messages.OlvidoContrasenaMessage
@@ -25,8 +28,10 @@ class UsuarioService  extends Directives with AlianzaCommons   with CrossHeaders
            usuario =>
             respondWithMediaType(mediaType) {
               clientIP { ip =>
-                val nuevoUsuario: UsuarioMessage = usuario.copy(clientIp = Some(ip.value))
-                requestExecute(nuevoUsuario, usuariosActor)
+                mapRequestContext((r: RequestContext) => requestWithAuiditing(r, "Fiduciaria", "autoregistro-fiduciaria", ip.value, kafkaActor, usuario.copy( contrasena = Crypto.hashSha512(usuario.contrasena.concat(AppendPasswordUser.appendUsuariosFiducia))))) {
+                  val nuevoUsuario: UsuarioMessage = usuario.copy(clientIp = Some(ip.value))
+                  requestExecute(nuevoUsuario, usuariosActor)
+                }
               }
             }
           }
@@ -48,10 +53,14 @@ class UsuarioService  extends Directives with AlianzaCommons   with CrossHeaders
           //pathEndOrSingleSlash {
             post {
               //Reinicio de contrasena de la cuenta alianza fiduciaria (Implica cambio en el estado del usuario)
-              entity(as[OlvidoContrasenaMessage]) {
-                olvidarContrasena =>
-                  requestExecute(olvidarContrasena, usuariosActor)
-            }
+              clientIP { ip =>
+                entity(as[OlvidoContrasenaMessage]) {
+                  olvidarContrasena =>
+                    mapRequestContext((r: RequestContext) => requestWithAuiditing(r, "Fiduciaria", "olvido-contrasena-fiduciaria", ip.value, kafkaActor, olvidarContrasena)) {
+                      requestExecute(olvidarContrasena, usuariosActor)
+                    }
+                }
+              }
           }
         //}
       }

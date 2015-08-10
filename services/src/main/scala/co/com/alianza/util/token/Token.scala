@@ -77,6 +77,20 @@ object Token {
     SignedJWT.parse(token)
   }
 
+  def getTipoIdentificacionFromToken(token : String) : String = {
+    getClaim(token, TIPO_IDENTIFICACION_DATA_NAME)
+  }
+
+  def getNombreUsuarioFromToken(token : String) : String = {
+    getClaim(token, NOMBRE_USUARIO_DATA_NAME)
+  }
+
+  private def getClaim(token : String, value : String) : String = {
+    val elements : SignedJWT = Token.getToken(token)
+    val claimSet = elements.getJWTClaimsSet()
+    claimSet.getStringClaim(value)
+  }
+
   def autorizarToken(token: String): Boolean = {
     try {
       val signedJWT2 = SignedJWT.parse(token)
@@ -88,7 +102,7 @@ object Token {
     }
   }
 
-  private def validarToken(signedJWT2: SignedJWT) = {
+  private def validarToken(signedJWT2: SignedJWT) : Boolean = {
     val verifier = new MACVerifier(SIGNING_KEY)
     val verify = signedJWT2.verify(verifier)
     verify match {
@@ -97,7 +111,7 @@ object Token {
     }
   }
 
-  private def validarExpiracion(signedJWT2: SignedJWT) = {
+  private def validarExpiracion(signedJWT2: SignedJWT) : Boolean = {
     val expirationTime = signedJWT2.getJWTClaimsSet.getExpirationTime
     val now = new Date()
     expirationTime.after(now)
