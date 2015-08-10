@@ -34,6 +34,7 @@ case class DatosCliente(
                          fdpn_ocupacion : String,
                          fdpn_ciua : String,
                          fdpn_fecha_ult_act : String,
+                         `nvl(fdpn_fecha_ult_act,fdpn_fecha_creacion)` : String,
                          datosEmp : DatosEmpresa
                         )
 
