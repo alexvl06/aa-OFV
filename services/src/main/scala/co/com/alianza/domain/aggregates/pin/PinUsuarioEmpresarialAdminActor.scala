@@ -45,12 +45,21 @@ class PinUsuarioEmpresarialAdminActor extends Actor with ActorLogging with Alian
       cambiarPw(message.tokenHash, message.pw, currentSender)
   }
 
+  /**
+   * Validaciones respectivas para la utilización
+   * del pin que se esta utilizando para el cliente.
+   *
+   * @param tokenHash
+   * @param funcionalidad
+   */
   private def validarPin(tokenHash: String, funcionalidad:Int) = {
     val currentSender = sender()
     val result = (for {
       pin                 <- ValidationT(obtenerPin(tokenHash))
       pinValidacion       <- ValidationT(PinUtil.validarPinUsuarioEmpresarialAdminFuture(pin))
       clienteAdmin        <- ValidationT(validacionObtenerClienteAdminPorId(pin.get.idUsuario))
+      estadoEmpresa       <- ValidationT(validarEstadoEmpresa(clienteAdmin.identificacion))
+      estadoUsuario       <- ValidationT(validacionEstadoClienteAdmin(clienteAdmin))
       clienteAdminActivo  <- ValidationT(validarClienteAdminExiste(clienteAdmin))
     } yield {
       pin

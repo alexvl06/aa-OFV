@@ -60,7 +60,7 @@ object PinUtil {
     }
   }
 
-  def validarPinUsuarioEmpresarialAdmin(response: Option[PinUsuarioEmpresarialAdmin], funcionalidad:Int) = {
+  def validarPinUsuarioEmpresarialAdmin(response: Option[PinUsuarioEmpresarialAdmin], funcionalidad: Int) = {
     response match {
       case Some(valueResponse) =>
         val pinHash = deserializarPin(valueResponse.token, valueResponse.fechaExpiracion)
