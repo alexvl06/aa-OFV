@@ -102,7 +102,7 @@ class AutenticacionActor extends Actor with ActorLogging {
         passwordCaduco    <- ValidationT(validarCaducidadPassword(TiposCliente.clienteIndividual, usuario.id.get, usuario.fechaCaducidad))
         actualizacionInfo <- ValidationT(actualizarInformacionUsuario(usuario.identificacion, message.clientIp.get))
         inactividadConfig <- ValidationT(buscarConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave))
-        token             <- ValidationT(generarYAsociarToken(cliente, usuario, inactividadConfig.valor))
+        token             <- ValidationT(generarYAsociarToken(cliente, usuario, inactividadConfig.valor, message.clientIp.get))
         sesion            <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
         validacionIps     <- ValidationT(validarControlIpsUsuario(usuario.id.get, message.clientIp.get, token))
       } yield validacionIps).run
@@ -345,9 +345,9 @@ class AutenticacionActor extends Actor with ActorLogging {
    * Success => Token generado y asociado
    * ErrorAutenticacion => ErrorPersistencia
    */
-  def generarYAsociarToken(cliente: Cliente, usuario: Usuario, expiracionInactividad: String): Future[Validation[ErrorAutenticacion, String]] = {
+  def generarYAsociarToken(cliente: Cliente, usuario: Usuario, expiracionInactividad: String, ipCliente: String): Future[Validation[ErrorAutenticacion, String]] = {
     log.info("Generando y asociando token usuario individual")
-    val token: String = Token.generarToken(cliente.wcli_nombre, cliente.wcli_dir_correo, cliente.wcli_person, usuario.ipUltimoIngreso.getOrElse(""), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), expiracionInactividad)
+    val token: String = Token.generarToken(cliente.wcli_nombre, cliente.wcli_dir_correo, cliente.wcli_person, usuario.ipUltimoIngreso.getOrElse(ipCliente), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), expiracionInactividad)
     val future: Future[Validation[PersistenceException, Int]] = UsDataAdapter.asociarTokenUsuario(usuario.identificacion, token)
     future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap { _ =>
       Validation.success(token)
