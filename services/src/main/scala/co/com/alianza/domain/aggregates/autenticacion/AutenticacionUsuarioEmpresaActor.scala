@@ -55,7 +55,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
     case message: AutenticarUsuarioEmpresarialMessage =>
       val originalSender = sender()
 
-      MainActors.usuariosActorSupervisor ? ConsultaUsuarioEmpresarialMessage(usuario = Some(message.usuario), nit = Some(message.nit)) onComplete {
+      MainActors.usuariosActorSupervisor ? ConsultaUsuarioEmpresarialMessage(usuario = Some(message.usuario), nit = Some(message.nit), tipoIdentificacion = message.tipoIdentificacion) onComplete {
         case sSuccess(Some(usuarioEmpresarialAgente)) =>
           self tell(AutenticarUsuarioEmpresarialAgenteMessage(message.tipoIdentificacion, message.numeroIdentificacion, message.nit, message.usuario, message.password, message.clientIp), originalSender)
         case sSuccess(None) =>
@@ -99,7 +99,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
         passwordCaduco    <- ValidationT(validarCaducidadPassword(TiposCliente.clienteAdministrador, usuarioAdmin.id, usuarioAdmin.fechaCaducidad))
         actualizacionInfo <- ValidationT(actualizarInformacionUsuarioEmpresarialAdmin(usuarioAdmin.id, message.clientIp.get))
         inactividadConfig <- ValidationT(buscarConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave))
-        token             <- ValidationT(generarYAsociarTokenUsuarioEmpresarialAdmin(cliente, usuarioAdmin, message.nit, inactividadConfig.valor))
+        token             <- ValidationT(generarYAsociarTokenUsuarioEmpresarialAdmin(cliente, usuarioAdmin, message.nit, inactividadConfig.valor, message.clientIp.get))
         sesion            <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
         empresa           <- ValidationT(obtenerEmpresaPorNit(message.nit))
         horario           <- ValidationT(obtenerHorarioEmpresa(empresa.id))
@@ -155,13 +155,13 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
       val originalSender = sender()
       def validaciones: Future[Validation[ErrorAutenticacion, String]] = (for {
         estadoEmpresaOk   <- ValidationT(validarEstadoEmpresa(message.nit))
-        usuarioAgente     <- ValidationT(obtenerUsuarioEmpresarialAgente(message.nit, message.usuario))
+        usuarioAgente     <- ValidationT(obtenerUsuarioEmpresarialAgente(message.nit, message.usuario, message.tipoIdentificacion.get))
         estadoValido      <- ValidationT(validarEstadosUsuario(usuarioAgente.estado))
         passwordValido    <- ValidationT(validarPasswords(message.password, usuarioAgente.contrasena.getOrElse(""), None, Some(usuarioAgente.id), usuarioAgente.numeroIngresosErroneos))
         passwordCaduco    <- ValidationT(validarCaducidadPassword(TiposCliente.agenteEmpresarial, usuarioAgente.id, usuarioAgente.fechaCaducidad))
         actualizacionInfo <- ValidationT(actualizarInformacionUsuarioEmpresarialAgente(usuarioAgente.id, message.clientIp.get))
         inactividadConfig <- ValidationT(buscarConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave))
-        token      			  <- ValidationT(generarYAsociarTokenUsuarioEmpresarialAgente(usuarioAgente, message.nit, inactividadConfig.valor))
+        token      			  <- ValidationT(generarYAsociarTokenUsuarioEmpresarialAgente(usuarioAgente, message.nit, inactividadConfig.valor, message.clientIp.get))
         empresa 	    	  <- ValidationT(obtenerEmpresaPorNit(message.nit))
 		    horario           <- ValidationT(obtenerHorarioEmpresa(empresa.id))
         horarioValido     <- ValidationT(validarHorarioEmpresa(horario))
@@ -351,9 +351,9 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
    * Success => Token generado y asociado
    * ErrorAutenticacion => ErrorPersistencia
    */
-  def generarYAsociarTokenUsuarioEmpresarialAdmin(cliente: Cliente, usuario: UsuarioEmpresarialAdmin, nit: String, expiracionInactividad: String): Future[Validation[ErrorAutenticacion, String]] = {
+  def generarYAsociarTokenUsuarioEmpresarialAdmin(cliente: Cliente, usuario: UsuarioEmpresarialAdmin, nit: String, expiracionInactividad: String, ipCliente: String): Future[Validation[ErrorAutenticacion, String]] = {
     log.info("Generando y asociando token usuario empresarial admin")
-    val token: String = Token.generarToken(cliente.wcli_nombre, cliente.wcli_dir_correo, cliente.wcli_person, usuario.ipUltimoIngreso.getOrElse(""), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), expiracionInactividad, TiposCliente.clienteAdministrador, Some(nit))
+    val token: String = Token.generarToken(cliente.wcli_nombre, cliente.wcli_dir_correo, cliente.wcli_person, usuario.ipUltimoIngreso.getOrElse(ipCliente), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), expiracionInactividad, TiposCliente.clienteAdministrador, Some(nit))
     val future: Future[Validation[PersistenceException, Int]] = UsDataAdapter.asociarTokenUsuarioEmpresarialAdmin(usuario.id, token)
     future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap { _ =>
       Validation.success(token)
@@ -423,9 +423,9 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
    * Success => UsuarioEmpresarial
    * ErrorAutenticacion => ErrorPersistencia || ErrorCredencialesInvalidas
    */
-  def obtenerUsuarioEmpresarialAgente(nit: String, usuario: String): Future[Validation[ErrorAutenticacion, UsuarioEmpresarial]] = {
+  def obtenerUsuarioEmpresarialAgente(nit: String, usuario: String, tipoIdentificacion: Int): Future[Validation[ErrorAutenticacion, UsuarioEmpresarial]] = {
     log.info("Obteniendo usuario empresarial agente")
-    val future: Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = UsDataAdapter.obtieneUsuarioEmpresarialPorNitYUsuario(nit, usuario)
+    val future: Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = UsDataAdapter.obtieneUsuarioEmpresarialPorNitYUsuario(nit, usuario, tipoIdentificacion)
     future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap {
       case Some(usuarioEmpresarial) => Validation.success(usuarioEmpresarial)
       case None => Validation.failure(ErrorCredencialesInvalidas())
@@ -458,9 +458,9 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
    * Success => Token generado y asociado
    * ErrorAutenticacion => ErrorPersistencia
    */
-  def generarYAsociarTokenUsuarioEmpresarialAgente(usuario: UsuarioEmpresarial, nit: String, expiracionInactividad: String): Future[Validation[ErrorAutenticacion, String]] = {
+  def generarYAsociarTokenUsuarioEmpresarialAgente(usuario: UsuarioEmpresarial, nit: String, expiracionInactividad: String, ipCliente: String): Future[Validation[ErrorAutenticacion, String]] = {
     log.info("Generando y asociando token usuario empresarial agente")
-    val token: String = Token.generarToken(usuario.nombreUsuario.get, usuario.correo, getTipoPersona(usuario.tipoIdentificacion), usuario.ipUltimoIngreso.getOrElse(""), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), expiracionInactividad, TiposCliente.agenteEmpresarial, Some(nit))
+    val token: String = Token.generarToken(usuario.nombreUsuario.get, usuario.correo, getTipoPersona(usuario.tipoIdentificacion), usuario.ipUltimoIngreso.getOrElse(ipCliente), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), expiracionInactividad, TiposCliente.agenteEmpresarial, Some(nit))
     val future: Future[Validation[PersistenceException, Int]] = UsDataAdapter.asociarTokenUsuarioEmpresarial(usuario.id, token)
     future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap { _ =>
       Validation.success(token)
