@@ -14,7 +14,7 @@ import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
 import com.typesafe.config.Config
 import co.com.alianza.infrastructure.dto.UsuarioEmpresarialAdmin
 import co.com.alianza.infrastructure.messages.ErrorMessage
-import enumerations.PerfilesUsuario
+import enumerations.{EstadosEmpresaEnum, PerfilesUsuario}
 import co.com.alianza.exceptions.PersistenceException
 
 /**
@@ -63,6 +63,18 @@ object ValidacionesClienteAdmin {
     })
   }
 
+  def validacionEstadoClienteAdmin(usuario: UsuarioEmpresarialAdmin) : Future[Validation[ErrorValidacion, Boolean]] = Future {
+    val activo = EstadosEmpresaEnum.activo.id
+    val bloqueoContrasena = EstadosEmpresaEnum.bloqueContraseña.id
+    val pendienteReinicio = EstadosEmpresaEnum.pendienteReiniciarContrasena.id
+    usuario.estado match {
+      case `activo` => zSuccess(true)
+      case `bloqueoContrasena` => zSuccess(true)
+      case `pendienteReinicio` => zSuccess(true)
+      case _ => zFailure(ErrorUsuarioNoExiste(errorEstadoUsuarioEmpresaAdmin))
+    }
+  }
+
   //existeUsuarioEmpresarialAdminActivo
   def validacionClienteAdminActivo(nitEmpresa:String): Future[Validation[ErrorValidacion, Boolean]] = {
     val existeFuture = DataAccessAdapterClienteAdmin.existeUsuarioEmpresarialAdminActivo(nitEmpresa)
@@ -94,5 +106,6 @@ object ValidacionesClienteAdmin {
   private val errorClienteNoExiste              = ErrorMessage("409.10", "El Cliente no existe en core", "El Cliente no existe en core - validacion cliente admin").toJson
   private val errorEmpresaAccesoDenegado        = ErrorMessage("409.11", "La empresa tiene el acceso desactivado", "La empresa tiene el acceso desactivado - validacion cliente admin").toJson
   private val errorUsuarioEmpresaAdminActivo    = ErrorMessage("409.12", "Usuario admin ya existe", "Ya hay un cliente administrador para ese NIT.").toJson
+  private val errorEstadoUsuarioEmpresaAdmin    = ErrorMessage("409.13", "Estado usuario no permite validar pin", "Estado usuario no permite validar pin").toJson
 
 }

@@ -59,6 +59,7 @@ class PinUsuarioEmpresarialAdminActor extends Actor with ActorLogging with Alian
       pinValidacion       <- ValidationT(PinUtil.validarPinUsuarioEmpresarialAdminFuture(pin))
       clienteAdmin        <- ValidationT(validacionObtenerClienteAdminPorId(pin.get.idUsuario))
       estadoEmpresa       <- ValidationT(validarEstadoEmpresa(clienteAdmin.identificacion))
+      estadoUsuario       <- ValidationT(validacionEstadoClienteAdmin(clienteAdmin))
       clienteAdminActivo  <- ValidationT(validarClienteAdminExiste(clienteAdmin))
     } yield {
       pin
