@@ -18,5 +18,6 @@ trait AlianzaActors {
   val ipsUsuarioActor = MainActors.system.actorSelection(MainActors.ipsUsuarioActorSupervisor.path+"/ipsUsuarioActor")
   val pinActor = MainActors.system.actorSelection(MainActors.pinActorSupervisor.path+"/pinActor")
   val sesionActor = MainActors.system.actorSelection(MainActors.sesionActorSupervisor.path+"/sesionActor")
+  val kafkaActor = MainActors.system.actorSelection(MainActors.kafkaActorSupervisor.path)
 
 }

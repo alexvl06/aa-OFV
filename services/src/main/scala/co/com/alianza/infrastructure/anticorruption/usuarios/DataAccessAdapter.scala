@@ -2,6 +2,7 @@ package co.com.alianza.infrastructure.anticorruption.usuarios
 
 import java.sql.Timestamp
 
+import co.com.alianza.infrastructure.auditing.AuditingUser.AuditingUserData
 import co.com.alianza.persistence.repositories.{IpsUsuarioRepository, UsuariosRepository}
 import scalaz.Validation
 import scala.concurrent.{ExecutionContext, Future}
@@ -147,6 +148,13 @@ object DataAccessAdapter {
     repo.guardarPinUsuario(pinUsuario)
   }
 
+  def obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken( token:String ): Future[Validation[PersistenceException, Option[AuditingUserData]]] = {
+    val repo = new UsuariosRepository()
+    repo.obtenerUsuarioToken( token ) map {
+      x => transformValidationTuple(x)
+    }
+  }
+
   private def transformValidationList(origin: Validation[PersistenceException, List[eUsuario]]): Validation[PersistenceException, List[Usuario]] = {
     origin match {
       case zSuccess(response: List[eUsuario]) => zSuccess(DataAccessTranslator.translateUsuario(response))
@@ -166,7 +174,20 @@ object DataAccessAdapter {
     }
   }
 
+  private def transformValidationTuple(origin: Validation[PersistenceException, Option[eUsuario]]): Validation[PersistenceException, Option[AuditingUserData]] = {
+    origin match {
+      case zSuccess(response) =>
+        response match {
+          case Some(usuario) => {
+            val user = DataAccessTranslator.translateUsuario(usuario)
+            zSuccess(Some(AuditingUserData(user.tipoIdentificacion,user.identificacion)))
+          }
+          case _ => zSuccess(None)
+        }
 
+      case zFailure(error)    =>  zFailure(error)
+    }
+  }
 
 }
 
