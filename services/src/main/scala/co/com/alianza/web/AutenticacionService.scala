@@ -14,6 +14,7 @@ class AutenticacionService extends Directives with AlianzaCommons with CrossHead
 
   import AutenticacionMessagesJsonSupport._
 
+
   def route = {
     path("autenticar") {
       post {
@@ -69,6 +70,12 @@ class AutenticacionService extends Directives with AlianzaCommons with CrossHead
 
               }
             }
+        }
+      }
+    } ~ path("actualizarInactividad") {
+      post {
+        complete {
+          "ok"
         }
       }
     }
