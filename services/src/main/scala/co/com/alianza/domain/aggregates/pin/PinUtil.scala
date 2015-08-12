@@ -83,6 +83,27 @@ object PinUtil {
     }
   }
 
+
+  def validarPinAgenteEmpresarial(response: Option[PinUsuarioAgenteEmpresarial]) = {
+    response match {
+      case Some(valueResponse) =>
+        val pinHash = deserializarPin(valueResponse.token, valueResponse.fechaExpiracion)
+        if (pinHash == valueResponse.tokenHash) {
+          val fecha = new Date()
+          if (fecha.getTime < valueResponse.fechaExpiracion.getTime){
+            val futureConsultaUsuarios: Future[Validation[PersistenceException, Int]] = uDataAccessAdapter.actualizarEstadoUsuarioEmpresarialAgente(valueResponse.idUsuario, EstadosEmpresaEnum.pendienteReiniciarContrasena.id)
+            ResponseMessage(OK)
+          }
+          else
+            ResponseMessage(Conflict, errorPinNoEncontradoAgenteEmpresarial)
+        }
+        else {
+          ResponseMessage(Conflict, errorPinNoEncontradoAgenteEmpresarial)
+        }
+      case None => ResponseMessage(Conflict, errorPinNoEncontradoAgenteEmpresarial)
+    }
+  }
+
   def validarPinFuture(response: Option[PinUsuario]): Future[Validation[ErrorValidacion, PinUsuario]] = Future {
     response match {
       case Some(valueResponse) =>
@@ -108,24 +129,6 @@ object PinUtil {
         }
         else zFailure(ErrorPin(errorPinNoEncontradoClienteAdmin))
       case None => zFailure(ErrorPin(errorPinNoEncontradoClienteAdmin))
-    }
-  }
-
-  def validarPinUsuarioAgenteEmpresarial(response: Option[PinUsuarioAgenteEmpresarial]) = {
-    response match {
-      case Some(valueResponse) =>
-        val pinHash = deserializarPin(valueResponse.token, valueResponse.fechaExpiracion)
-        if (pinHash == valueResponse.tokenHash) {
-          val fecha = new Date()
-          if (fecha.getTime < valueResponse.fechaExpiracion.getTime)
-            ResponseMessage(OK)
-          else
-            ResponseMessage(Conflict, errorPinNoEncontradoAgenteEmpresarial)
-        }
-        else {
-          ResponseMessage(Conflict, errorPinNoEncontradoAgenteEmpresarial)
-        }
-      case None => ResponseMessage(Conflict, errorPinNoEncontradoAgenteEmpresarial)
     }
   }
 
