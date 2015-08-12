@@ -6,8 +6,9 @@ import co.com.alianza.domain.aggregates.empresa.ErrorValidacionEmpresa
 import co.com.alianza.domain.aggregates.usuarios._
 import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{DataAccessAdapter => DataAccessAdapterUsuarioAE}
 import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{DataAccessTranslator => CliAdmDataAccessTranslator, DataAccessAdapter => CliAdmDataAccessAdapter}
-import co.com.alianza.infrastructure.dto.{UsuarioEmpresarial, UsuarioEmpresarialAdmin, Configuracion}
+import co.com.alianza.infrastructure.dto.{Empresa, UsuarioEmpresarial, UsuarioEmpresarialAdmin, Configuracion}
 import co.com.alianza.infrastructure.messages.ErrorMessage
+import enumerations.empresa.EstadosDeEmpresaEnum
 import enumerations.{PerfilesUsuario, EstadosEmpresaEnum}
 import co.com.alianza.infrastructure.anticorruption.configuraciones.{DataAccessTranslator => dataAccessTransConf, DataAccessAdapter => dataAccesAdaptarConf}
 
@@ -16,6 +17,7 @@ import scalaz.{Validation, Failure => zFailure, Success => zSuccess}
 import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.DataAccessAdapter
 import co.com.alianza.util.clave.{ValidarClave, ErrorValidacionClave, Crypto}
 import co.com.alianza.exceptions.PersistenceException
+import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => UsDataAdapter}
 
 /**
  * Created by S4N on 16/12/14.
@@ -98,7 +100,6 @@ object ValidacionesAgenteEmpresarial {
   }
 
   def validacionObtenerAgenteEmpId( idUsuario: Int ) : Future[Validation[ErrorValidacion, UsuarioEmpresarial]] = {
-
     val agenteEmpFuture: Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = DataAccessAdapterUsuarioAE.obtenerUsuarioEmpresarialPorId(idUsuario)
     agenteEmpFuture.map(_.leftMap(pe => ErrorPersistence(pe.message,pe)).flatMap{
       (agenteEmp: Option[UsuarioEmpresarial]) => agenteEmp match{
@@ -106,7 +107,31 @@ object ValidacionesAgenteEmpresarial {
         case Some(agenteEmp) => zSuccess(agenteEmp)
       }
     })
+  }
 
+  def validarEstadoEmpresa(nit: String): Future[Validation[ErrorValidacion, Boolean]] = {
+    val empresaActiva : Int = EstadosDeEmpresaEnum.activa.id
+    val estadoEmpresaFuture: Future[Validation[PersistenceException, Option[Empresa]]] = UsDataAdapter.obtenerEstadoEmpresa(nit)
+    estadoEmpresaFuture.map(_.leftMap(pe => ErrorPersistence(pe.message, pe)).flatMap {
+      case Some(empresa) =>
+        empresa.estado match {
+          case `empresaActiva` => Validation.success(true)
+          case _ => Validation.failure(ErrorEmpresaAccesoDenegado(errorEmpresaAccesoDenegado))
+        }
+      case None => Validation.failure(ErrorClienteNoExiste(errorClienteNoExiste ))
+    })
+  }
+
+  def validacionEstadoAgenteEmp(usuario: UsuarioEmpresarial) : Future[Validation[ErrorValidacion, Boolean]] = Future {
+    val activo = EstadosEmpresaEnum.activo.id
+    val bloqueoContrasena = EstadosEmpresaEnum.bloqueContraseña.id
+    val pendienteReinicio = EstadosEmpresaEnum.pendienteReiniciarContrasena.id
+    usuario.estado match {
+      case `activo` => zSuccess(true)
+      case `bloqueoContrasena` => zSuccess(true)
+      case `pendienteReinicio` => zSuccess(true)
+      case _ => zFailure(ErrorUsuarioNoExiste(errorEstadoUsuarioEmpresaAdmin))
+    }
   }
 
 
@@ -133,5 +158,9 @@ object ValidacionesAgenteEmpresarial {
   private val errorContrasenaActualNoExiste     = ErrorMessage("409.7", "No existe la contrasena actual", "No existe la contrasena actual").toJson
   private val errorContrasenaActualNoContempla  = ErrorMessage("409.8", "No comtempla la contrasena actual", "No comtempla la contrasena actual").toJson
   private val errorUsuarioClienteAdmin          = ErrorMessage("409.9", "El usuario ya está registrado en esta empresa.", "El usuario ya está registrado en esta empresa.").toJson
+  private val errorClienteNoExiste              = ErrorMessage("409.10", "El Cliente no existe en core", "El Cliente no existe en core - validacion cliente admin").toJson
+  private val errorEmpresaAccesoDenegado        = ErrorMessage("409.11", "La empresa tiene el acceso desactivado", "La empresa tiene el acceso desactivado - validacion cliente admin").toJson
+  private val errorEstadoUsuarioEmpresaAdmin    = ErrorMessage("409.13", "Estado usuario no permite validar pin", "Estado usuario no permite validar pin").toJson
+
 
 }
