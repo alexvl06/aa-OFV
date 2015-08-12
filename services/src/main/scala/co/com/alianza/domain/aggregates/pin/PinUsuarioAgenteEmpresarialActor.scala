@@ -9,7 +9,7 @@ import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.pinagenteempresarial.{DataAccessAdapter => pDataAccessAdapter}
 import co.com.alianza.infrastructure.anticorruption.ultimasContrasenasAgenteEmpresarial.{DataAccessAdapter => DataAccessAdapterUltimaContrasena}
 import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{DataAccessAdapter => uDataAccessAdapter}
-import co.com.alianza.infrastructure.dto.{PinUsuarioAgenteEmpresarial}
+import co.com.alianza.infrastructure.dto.{PinUsuario, PinUsuarioAgenteEmpresarial}
 import co.com.alianza.infrastructure.messages.PinMessages._
 import co.com.alianza.infrastructure.messages.ResponseMessage
 import co.com.alianza.persistence.entities.{PerfilUsuario, UltimaContrasenaUsuarioAgenteEmpresarial}
@@ -42,8 +42,37 @@ class PinUsuarioAgenteEmpresarialActor extends Actor with ActorLogging with Alia
 
   private def validarPin(tokenHash: String) = {
     val currentSender = sender()
-    val result: Future[Validation[PersistenceException, Option[PinUsuarioAgenteEmpresarial]]] = pDataAccessAdapter.obtenerPin(tokenHash)
-    resolveFutureValidation(result, PinUtil.validarPinUsuarioAgenteEmpresarial, currentSender)
+
+    val result = (for {
+      pin                 <- ValidationT(obtenerPin(tokenHash))
+      pinValidacion       <- ValidationT(PinUtil.validarPinUsuarioAgenteEmpresarialFuture(pin))
+      agenteEmpresarial        <- ValidationT(validacionObtenerAgenteEmpId(pin.get.idUsuario))
+      estadoEmpresa       <- ValidationT(validarEstadoEmpresa(agenteEmpresarial.identificacion))
+      estadoUsuario       <- ValidationT(validacionEstadoAgenteEmp(agenteEmpresarial))
+    } yield {
+      pin
+    }).run
+
+    resolveOlvidoContrasenaFuture(result, currentSender)
+  }
+
+  private def resolveOlvidoContrasenaFuture(finalResultFuture: Future[Validation[ErrorValidacion, Option[PinUsuarioAgenteEmpresarial]]], currentSender: ActorRef) = {
+    finalResultFuture onComplete {
+      case Failure(failure) => currentSender ! failure
+      case Success(value) =>
+        value match {
+          case zSuccess(response:  Option[PinUsuario]) => currentSender ! PinUtil.validarPinAgenteEmpresarial(response)
+          case zFailure(error) =>
+            error match {
+              case errorPersistence: ErrorPersistence => currentSender ! errorPersistence.exception
+              case errorVal: ErrorValidacion => currentSender ! ResponseMessage(Conflict, errorVal.msg)
+            }
+        }
+    }
+  }
+
+  private def obtenerPin(tokenHash: String): Future[Validation[ErrorValidacion, Option[PinUsuarioAgenteEmpresarial]]]= {
+    pDataAccessAdapter.obtenerPin(tokenHash).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
   }
 
 
@@ -63,6 +92,7 @@ class PinUsuarioAgenteEmpresarialActor extends Actor with ActorLogging with Alia
       resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(pinValidacion.idUsuario, Crypto.hashSha512(passwordAppend)))
       rCambiarEstado <- ValidationT(cambiarEstado(pinValidacion.idUsuario))
       idResult <- ValidationT(eliminarPin(pinValidacion.tokenHash))
+      estadoUsuario       <- ValidationT(validacionEstadoAgenteEmp(clienteAdminOk))
     } yield {
       idResult
     }).run
