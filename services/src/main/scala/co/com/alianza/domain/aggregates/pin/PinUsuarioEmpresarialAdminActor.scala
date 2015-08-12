@@ -91,6 +91,7 @@ class PinUsuarioEmpresarialAdminActor extends Actor with ActorLogging with Alian
       clienteAdminOk          <- ValidationT(validacionObtenerClienteAdminPorId(pinValidacion.idUsuario))
       clienteAdminActivo      <- ValidationT(validarClienteAdminExiste(clienteAdminOk))
       estadoEmpresaOk         <- ValidationT(validarEstadoEmpresa(clienteAdminOk.identificacion))
+      estadoUsuario           <- ValidationT(validacionEstadoClienteAdmin(clienteAdminOk))
       rvalidacionClave        <- ValidationT(co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.validacionReglasClave(pw, pinValidacion.idUsuario, PerfilesUsuario.clienteAdministrador))
       rCambiarPss             <- ValidationT(cambiarPassword(pinValidacion.idUsuario, passwordAppend))
       guardarUltimaContrasena <- ValidationT(guardarUltimaContrasena(pinValidacion.idUsuario, Crypto.hashSha512(passwordAppend)))
