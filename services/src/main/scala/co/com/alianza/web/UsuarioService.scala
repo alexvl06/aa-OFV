@@ -16,6 +16,7 @@ class UsuarioService  extends Directives with AlianzaCommons   with CrossHeaders
 
   import UsuariosMessagesJsonSupport._
 
+
   def route = {
      pathPrefix("autoregistro") {
       path("usuario" ) {
