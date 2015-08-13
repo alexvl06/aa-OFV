@@ -14,7 +14,7 @@ import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
 import com.typesafe.config.Config
 import co.com.alianza.infrastructure.dto.UsuarioEmpresarialAdmin
 import co.com.alianza.infrastructure.messages.ErrorMessage
-import enumerations.{EstadosEmpresaEnum, PerfilesUsuario}
+import enumerations.{EstadosUsuarioEnum, EstadosEmpresaEnum, PerfilesUsuario}
 import co.com.alianza.exceptions.PersistenceException
 
 /**
@@ -64,14 +64,14 @@ object ValidacionesClienteAdmin {
   }
 
   def validacionEstadoClienteAdmin(usuario: UsuarioEmpresarialAdmin) : Future[Validation[ErrorValidacion, Boolean]] = Future {
-    val activo = EstadosEmpresaEnum.activo.id
-    val bloqueoContrasena = EstadosEmpresaEnum.bloqueContraseña.id
-    val pendienteReinicio = EstadosEmpresaEnum.pendienteReiniciarContrasena.id
+    val bloqueContraseña    = EstadosUsuarioEnum.bloqueContraseña.id
+    val pendienteActivacion = EstadosUsuarioEnum.pendienteActivacion.id
+    val pendienteReinicio   = EstadosUsuarioEnum.pendienteReinicio.id
     usuario.estado match {
-      case `activo` => zSuccess(true)
-      case `bloqueoContrasena` => zSuccess(true)
-      case `pendienteReinicio` => zSuccess(true)
-      case _ => zFailure(ErrorUsuarioNoExiste(errorEstadoUsuarioEmpresaAdmin))
+      case `bloqueContraseña`    => zFailure(ErrorClienteInactivo(errorEstadoUsuarioEmpresaAdmin))
+      case `pendienteActivacion` => zFailure(ErrorClienteInactivo(errorEstadoUsuarioEmpresaAdmin))
+      case `pendienteReinicio`   => zFailure(ErrorClienteInactivo(errorEstadoUsuarioEmpresaAdmin))
+      case _ => zSuccess(true)
     }
   }
 

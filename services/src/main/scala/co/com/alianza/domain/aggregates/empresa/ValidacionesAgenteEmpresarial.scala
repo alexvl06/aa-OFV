@@ -9,7 +9,7 @@ import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{DataAc
 import co.com.alianza.infrastructure.dto.{Empresa, UsuarioEmpresarial, UsuarioEmpresarialAdmin, Configuracion}
 import co.com.alianza.infrastructure.messages.ErrorMessage
 import enumerations.empresa.EstadosDeEmpresaEnum
-import enumerations.{PerfilesUsuario, EstadosEmpresaEnum}
+import enumerations.{EstadosUsuarioEnum, PerfilesUsuario, EstadosEmpresaEnum}
 import co.com.alianza.infrastructure.anticorruption.configuraciones.{DataAccessTranslator => dataAccessTransConf, DataAccessAdapter => dataAccesAdaptarConf}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -123,14 +123,14 @@ object ValidacionesAgenteEmpresarial {
   }
 
   def validacionEstadoAgenteEmp(usuario: UsuarioEmpresarial) : Future[Validation[ErrorValidacion, Boolean]] = Future {
-    val activo = EstadosEmpresaEnum.activo.id
-    val bloqueoContrasena = EstadosEmpresaEnum.bloqueContraseña.id
-    val pendienteReinicio = EstadosEmpresaEnum.pendienteReiniciarContrasena.id
+    val bloqueContraseña    = EstadosUsuarioEnum.bloqueContraseña.id
+    val pendienteActivacion = EstadosUsuarioEnum.pendienteActivacion.id
+    val pendienteReinicio   = EstadosUsuarioEnum.pendienteReinicio.id
     usuario.estado match {
-      case `activo` => zSuccess(true)
-      case `bloqueoContrasena` => zSuccess(true)
-      case `pendienteReinicio` => zSuccess(true)
-      case _ => zFailure(ErrorUsuarioNoExiste(errorEstadoUsuarioEmpresaAdmin))
+      case `bloqueContraseña`    => zFailure(ErrorClienteInactivo(errorEstadoUsuarioEmpresaAdmin))
+      case `pendienteActivacion` => zFailure(ErrorClienteInactivo(errorEstadoUsuarioEmpresaAdmin))
+      case `pendienteReinicio`   => zFailure(ErrorClienteInactivo(errorEstadoUsuarioEmpresaAdmin))
+      case _ => zSuccess(true)
     }
   }
 
