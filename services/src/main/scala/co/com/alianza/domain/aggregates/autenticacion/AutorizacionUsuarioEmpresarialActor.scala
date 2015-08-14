@@ -35,9 +35,9 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
     case message: AutorizarUsuarioEmpresarialMessage =>
       val currentSender = sender()
       val future = (for {
-        token <- ValidationT(validarToken(message.token))
-        sesion <- ValidationT(obtieneSesion(token))
-        tuplaUsuarioOptionEstadoEmpresa <- ValidationT(obtieneUsuarioEmpresarial(token))
+        token <- ValidationT(validarToken(message))
+        sesion <- ValidationT(obtieneSesion(message.token))
+        tuplaUsuarioOptionEstadoEmpresa <- ValidationT(obtieneUsuarioEmpresarial(message.token))
         validUs <- ValidationT(validarUsuario(tuplaUsuarioOptionEstadoEmpresa match { case None => None case _ => Some(tuplaUsuarioOptionEstadoEmpresa.get._1) }))
         validacionEstadoEmpresa <- ValidationT(validarEstadoEmpresa(tuplaUsuarioOptionEstadoEmpresa match { case None => None case _ => Some(tuplaUsuarioOptionEstadoEmpresa.get._2) }))
         validacionIp <- ValidationT(validarIpEmpresa(sesion, message.ip))
@@ -69,14 +69,14 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
    *
    * @param message El token para realizar validación
    */
-  private def validarToken(message: AutorizarUsuarioEmpresarialMessage): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = {
+  private def validarToken(message: AutorizarUsuarioEmpresarialMessage): Future[Validation[ErrorAutorizacion, Option[UsuarioEmpresarial]]] = {
     Token.autorizarToken(message.token) match {
       case true =>
         usDataAdapter.obtenerUsuarioEmpresarialToken(message.token).flatMap { x =>
           val y: Validation[PersistenceException, Future[Option[UsuarioEmpresarial]]] = x.map { userOpt =>
             guardaTokenCache( userOpt match { case None => None case _ => Some(userOpt.get._1) }, message)
           }
-          co.com.alianza.util.transformers.Validation.sequence(y)
+          co.com.alianza.util.transformers.Validation.sequence(y).map(_.leftMap { pe => ErrorPersistenciaAutorizacion(pe.message, pe) })
         }
       case false =>
         Future.successful(Validation.success(None))
@@ -104,19 +104,12 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
     }
   }
 
-  private def validarToken(token: String) : Future[Validation[ErrorAutorizacion, String]] =
-    Token.autorizarToken(token) match {
-      case true =>
-        Future.successful(Validation.success(token))
-      case false =>
-        Future.successful(Validation.failure(TokenInvalido()))
-    }
-
-
   private def obtieneSesion(token: String) : Future[Validation[ErrorAutorizacion, ActorRef]] =
     MainActors.sesionActorSupervisor ? BuscarSesion(token) map {
-      case Some(sesionActor: ActorRef) => Validation.success(sesionActor)
-      case None => Validation.failure(ErrorSesionNoEncontrada())
+      case Some(sesionActor: ActorRef) =>
+        Validation.success(sesionActor)
+      case None =>
+        Validation.failure(ErrorSesionNoEncontrada())
     }
 
   private def obtieneUsuarioEmpresarial(token: String): Future[Validation[ErrorAutorizacion, Option[(UsuarioEmpresarial, Int)]]] =
@@ -175,11 +168,14 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
 
   private def resolveAutorizacionRecursosAgente(usuario: UsuarioEmpresarial, recursos: List[RecursoPerfilAgente]) ={
     recursos.isEmpty match {
-      case true => Validation.failure(RecursoInexistente(usuario))
+      case true =>
+        Validation.failure(RecursoInexistente(usuario))
       case false =>
         recursos.head.filtro match {
-          case f @ Some(_) => Validation.failure(RecursoRestringido(usuario, f))
-          case None => Validation.success(usuario)
+          case f @ Some(_) =>
+            Validation.failure(RecursoRestringido(usuario, f))
+          case None =>
+            Validation.success(usuario)
         }
     }
   }
@@ -188,8 +184,10 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
     futureValidation onComplete {
       case sFailure(error) => originalSender ! error
       case sSuccess(resp) => resp match {
-        case zSuccess(usuario) => originalSender ! ResponseMessage(OK, JsonUtil.toJson(usuario))
-        case zFailure(errorAutorizacion) => errorAutorizacion match {
+        case zSuccess(usuario) =>
+          originalSender ! ResponseMessage(OK, JsonUtil.toJson(usuario))
+        case zFailure(errorAutorizacion) =>
+          errorAutorizacion match {
           case e @ ErrorSesionNoEncontrada() => originalSender ! ResponseMessage(Unauthorized, e.msg)
           case e @ TokenInvalido() => originalSender ! ResponseMessage(Unauthorized, e.msg)
           case ErrorPersistenciaAutorizacion(_, ep1) => originalSender ! ep1

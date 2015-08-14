@@ -156,8 +156,8 @@ object ValidacionesAgenteEmpresarial {
   private val errorContrasenaActualNoExiste     = ErrorMessage("409.7", "No existe la contrasena actual", "No existe la contrasena actual").toJson
   private val errorContrasenaActualNoContempla  = ErrorMessage("409.8", "No comtempla la contrasena actual", "No comtempla la contrasena actual").toJson
   private val errorUsuarioClienteAdmin          = ErrorMessage("409.9", "El usuario ya está registrado en esta empresa.", "El usuario ya está registrado en esta empresa.").toJson
-  private val errorClienteNoExiste              = ErrorMessage("409.10", "El Cliente no existe en core", "El Cliente no existe en core - validacion cliente admin").toJson
-  private val errorEmpresaAccesoDenegado        = ErrorMessage("409.11", "La empresa tiene el acceso desactivado", "La empresa tiene el acceso desactivado - validacion cliente admin").toJson
+  private val errorClienteNoExiste              = ErrorMessage("409.10", "El Cliente no existe en core", "El Cliente no existe en core").toJson
+  private val errorEmpresaAccesoDenegado        = ErrorMessage("409.11", "La empresa tiene el acceso desactivado", "La empresa tiene el acceso desactivado").toJson
   private val errorEstadoUsuarioEmpresaAdmin    = ErrorMessage("409.13", "Estado usuario no permite validar pin", "Estado usuario no permite validar pin").toJson
 
 
