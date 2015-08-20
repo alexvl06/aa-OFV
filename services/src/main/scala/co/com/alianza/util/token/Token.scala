@@ -10,6 +10,10 @@ import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jose._
 import com.nimbusds.jose.crypto.{MACSigner, MACVerifier}
 import com.nimbusds.jwt.SignedJWT
+import co.com.alianza.commons.enumerations.TiposCliente._
+import co.com.alianza.commons.enumerations.TiposCliente
+
+
 
 import collection.JavaConversions._
 import co.com.alianza.util.json.MarshallableImplicits._
@@ -25,7 +29,8 @@ object Token {
   private val ULTIMA_IP_INGRESO_DATA_NAME = "ultimaIpIngreso"
   private val ULTIMA_FECHA_INGRESO_DATA_NAME = "ultimaFechaIngreso"
 
-  def generarToken(nombreUsuarioLogueado: String, correoUsuarioLogueado: String, tipoIdentificacion: String, ultimaIpIngreso: String, ultimaFechaIngreso: Date): String = {
+  def generarToken(nombreUsuarioLogueado: String, correoUsuarioLogueado: String, tipoIdentificacion: String, ultimaIpIngreso: String, ultimaFechaIngreso: Date, expiracionInactividad: String, tipoCliente: TiposCliente.TiposCliente = TiposCliente.clienteIndividual, nit : Option[String] = None): String = {
+
 
     val claimsSet = new JWTClaimsSet()
     claimsSet.setIssueTime(new Date())
@@ -35,7 +40,7 @@ object Token {
 
     val formater = new java.text.SimpleDateFormat("dd MMMM, yyyy 'a las' hh:mm a", new java.util.Locale("es", "ES"))
 
-    val customData = Map(
+    val customDataBase = Map(
       CORREO_DATA_NAME -> correoUsuarioLogueado,
       NOMBRE_USUARIO_DATA_NAME -> nombreUsuarioLogueado,
       TIPO_IDENTIFICACION_DATA_NAME -> tipoIdentificacion,
@@ -44,6 +49,7 @@ object Token {
       "tipoCliente" -> tipoCliente.toString,
       "expiracionInactividad" -> expiracionInactividad
     )
+
 
     val empresarialesData = nit match {
       case Some(x) => Map("nit" -> x)
@@ -61,7 +67,7 @@ object Token {
     signedJWT.serialize()
   }
 
-  def generarTokenCaducidadContrasena(idUsuario: Int) = {
+  def generarTokenCaducidadContrasena(tipoUsuario: TiposCliente, idUsuario: Int) = {
 
     val claimsSet = new JWTClaimsSet()
     claimsSet.setIssueTime(new Date())

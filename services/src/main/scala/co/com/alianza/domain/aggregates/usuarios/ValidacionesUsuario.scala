@@ -137,6 +137,7 @@ object  ValidacionesUsuario {
     if(cliente.wcli_estado != EstadosCliente.inactivo && cliente.wcli_estado != EstadosCliente.bloqueado && cliente.wcli_estado != EstadosCliente.activo)
       zFailure(ErrorClienteNoExiste(errorClienteInactivo))
     else if(getTipoPersona(tipoPersona) != cliente.wcli_person)
+
       zFailure(ErrorClienteNoExiste(errorClienteNoExiste))
     else if(cliente.wcli_dir_correo == null || cliente.wcli_dir_correo.isEmpty)
       zFailure(ErrorClienteNoExiste(errorCorreoNoExiste))
@@ -144,8 +145,8 @@ object  ValidacionesUsuario {
       zSuccess(cliente)
   }
 
-  private def getTipoPersona(message:UsuarioMessage):String = {
-    message.tipoIdentificacion match{
+  private def getTipoPersona(tipoIdentificacion:Int):String = {
+    tipoIdentificacion match{
       case TipoIdentificacion.FID.identificador => "F"
       case TipoIdentificacion.NIT.identificador => "J"
       case _ => "N"

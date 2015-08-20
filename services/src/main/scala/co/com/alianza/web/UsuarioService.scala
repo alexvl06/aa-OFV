@@ -6,6 +6,9 @@ import co.com.alianza.infrastructure.messages.OlvidoContrasenaMessage
 import co.com.alianza.infrastructure.messages.UsuarioMessage
 import spray.routing.{RequestContext, Directives}
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
+import co.com.alianza.util.clave.Crypto
+import enumerations.AppendPasswordUser
+
 
 
 /**
@@ -25,6 +28,7 @@ class UsuarioService  extends Directives with AlianzaCommons   with CrossHeaders
            usuario =>
             respondWithMediaType(mediaType) {
               clientIP { ip =>
+
                 mapRequestContext((r: RequestContext) => requestWithAuiditing(r, "Fiduciaria", "autoregistro-fiduciaria", ip.value, kafkaActor, usuario.copy( contrasena = Crypto.hashSha512(usuario.contrasena.concat(AppendPasswordUser.appendUsuariosFiducia))))) {
                   val nuevoUsuario: UsuarioMessage = usuario.copy(clientIp = Some(ip.value))
                   requestExecute(nuevoUsuario, usuariosActor)
