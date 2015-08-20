@@ -60,11 +60,14 @@ class AlianzaCoreRepository(implicit val executionContex: ExecutionContext) {
         //log.info
         //log.debug
         connection.commit()
+        connection.close()
         zSuccess(response)
       case Failure(exception:PersistenceException) =>
+        connection.close()
         exception.printStackTrace()
         zFailure(exception)
       case Failure(exception) =>
+        connection.close()
         exception.printStackTrace()
         //log.error
         zFailure(PersistenceException(exception, TechnicalLevel, exception.getMessage))
@@ -114,4 +117,18 @@ class AlianzaCoreRepository(implicit val executionContex: ExecutionContext) {
         throw PersistenceException(new Exception(msg), BusinessLevel, msg)
     }
   }
+
+  def buildSpResponse(connection: Connection, callableStatement: CallableStatement): String = {
+    callableStatement.execute()
+    val codeResponse = callableStatement getObject 1
+    val detailResponse = callableStatement getObject 2
+    println(detailResponse)
+    detailResponse match {
+      case null => codeResponse.toString
+      case _ =>
+        val msg = s"Error ejecutando prodecimiento $codeResponse - $detailResponse"
+        throw PersistenceException(new Exception(codeResponse.toString), BusinessLevel, msg)
+    }
+  }
+
 }

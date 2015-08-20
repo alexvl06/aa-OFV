@@ -10,6 +10,7 @@ import CustomDriver.simple._
 
 case class Usuario(id: Option[Int], correo: String, fechaActualizacion: Timestamp, identificacion: String, tipoIdentificacion: Int, estado: Int, contrasena: Option[String], token: Option[String], numeroIngresosErroneos:Int, ipUltimoIngreso: Option[String], fechaUltimoIngreso : Option[Timestamp])
 
+
 class UsuarioTable(tag: Tag) extends Table[Usuario](tag, "USUARIO") {
   def id      = column[Option[Int]]("ID", O.PrimaryKey, O.AutoInc)
   def correo  = column[String]("CORREO")

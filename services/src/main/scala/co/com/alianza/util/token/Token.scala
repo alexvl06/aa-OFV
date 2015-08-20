@@ -40,7 +40,17 @@ object Token {
       NOMBRE_USUARIO_DATA_NAME -> nombreUsuarioLogueado,
       TIPO_IDENTIFICACION_DATA_NAME -> tipoIdentificacion,
       ULTIMA_IP_INGRESO_DATA_NAME -> ultimaIpIngreso,
-      ULTIMA_FECHA_INGRESO_DATA_NAME -> formater.format(ultimaFechaIngreso))
+      ULTIMA_FECHA_INGRESO_DATA_NAME -> formater.format(ultimaFechaIngreso),
+      "tipoCliente" -> tipoCliente.toString,
+      "expiracionInactividad" -> expiracionInactividad
+    )
+
+    val empresarialesData = nit match {
+      case Some(x) => Map("nit" -> x)
+      case None => Map()
+    }
+    val customData = customDataBase ++ empresarialesData
+
 
     claimsSet.setCustomClaims(customData)
 
@@ -60,7 +70,8 @@ object Token {
     claimsSet.setIssuer(ISSUER)
 
     val customData = Map(
-      "us_id" -> idUsuario.toString
+      "us_id" -> idUsuario.toString,
+      "us_tipo" -> tipoUsuario.toString
     )
 
     claimsSet.setCustomClaims(customData)

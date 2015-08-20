@@ -18,8 +18,10 @@ class ValidarCaptcha(implicit val config:Config, val ex:ExecutionContext) {
       val reCaptchaResponse = reCaptcha.checkAnswer(ip, challenge, uresponse)
       reCaptchaResponse.isValid
     } match {
-      case Success(value)      => zSuccess(value)
-      case Failure(exception)  => zFailure(ErrorValidacionCaptchaInternal)
+      case Success(value)      =>
+        zSuccess(value)
+      case Failure(exception)  =>
+        zFailure(ErrorValidacionCaptchaInternal)
     }
   }
 }

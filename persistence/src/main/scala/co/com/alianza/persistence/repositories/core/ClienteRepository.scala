@@ -19,9 +19,8 @@ class ClienteRepository( implicit executionContext: ExecutionContext) extends Al
     connection =>
       connection.setAutoCommit(false)
       val operation: Try[String] = executeClienteSP(connection,msg)
-      resolveTry(connection,operation,"Consulta Cliente por Número de Identificacón")
+      resolveTry(connection,operation,"Consulta Cliente por Número de Identificación")
   }
-
 
   private def executeClienteSP(conn: Connection, msg:ConsultaClienteRequest) = Try {
     val callString = "{ call sf_qportal_web.Cliente(?,?,?,?) }"

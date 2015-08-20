@@ -35,8 +35,7 @@ class SmtpServiceClient(implicit  execctx: ExecutionContext, conf: Config, syste
     val endPoint = conf.getString("autenticacion.service.smtp.location")
     val pipeline = sendReceive
 
-    //~
-  val header:HttpHeader = `Content-Type`(ContentTypes.`application/json`)
+    val header:HttpHeader = `Content-Type`(ContentTypes.`application/json`)
 
     val futureRequest: Future[HttpResponse] =  pipeline(  Post( s"$endPoint", message ) ~> header  )
     val successStatusCodes = List(StatusCodes.OK)

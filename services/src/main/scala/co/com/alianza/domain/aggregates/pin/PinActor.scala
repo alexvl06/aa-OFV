@@ -6,7 +6,7 @@ import akka.actor.{ActorRef, ActorLogging, Actor}
 
 import co.com.alianza.app.{MainActors, AlianzaActors}
 import co.com.alianza.domain.aggregates.usuarios.{ErrorPersistence, ErrorValidacion, ValidacionesUsuario}
-import co.com.alianza.exceptions.PersistenceException
+import co.com.alianza.exceptions.{BusinessLevel, PersistenceException}
 import co.com.alianza.infrastructure.anticorruption.pin.{DataAccessAdapter => pDataAccessAdapter}
 import co.com.alianza.infrastructure.anticorruption.ultimasContrasenas.{ DataAccessAdapter => DataAccessAdapterUltimaContrasena }
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => uDataAccessAdapter}
@@ -28,7 +28,7 @@ import scalaz.Validation
 
 import akka.actor.Props
 import akka.routing.RoundRobinPool
-import enumerations.AppendPasswordUser
+import enumerations.{EstadosUsuarioEnum, PerfilesUsuario, AppendPasswordUser}
 
 
 class PinActorSupervisor extends Actor with ActorLogging {
@@ -36,6 +36,8 @@ class PinActorSupervisor extends Actor with ActorLogging {
   import akka.actor.OneForOneStrategy
 
   val pinActor = context.actorOf(Props[PinActor].withRouter(RoundRobinPool(nrOfInstances = 2)), "pinActor")
+  val pinUsuarioAgenteEmpresarialActor = context.actorOf(Props[PinUsuarioAgenteEmpresarialActor].withRouter(RoundRobinPool(nrOfInstances = 2)), "pinUsuarioAgenteEmpresarialActor")
+  val pinUsuarioEmpresarialAdminActor = context.actorOf(Props[PinUsuarioEmpresarialAdminActor].withRouter(RoundRobinPool(nrOfInstances = 2)), "pinUsuarioEmpresarialAdminActor")
 
   def receive = {
     case message: Any =>
@@ -56,18 +58,32 @@ class PinActor extends Actor with ActorLogging with AlianzaActors with FutureRes
   import ValidacionesUsuario._
 
   def receive = {
-    case message: ValidarPin => validarPin(message.tokenHash)
+    case message: ValidarPin => validarPin(message.tokenHash, message.funcionalidad.get)
     case message: CambiarPw =>
       val currentSender = sender()
       cambiarPw(message.tokenHash, message.pw, currentSender)
   }
 
-  private def validarPin(tokenHash: String) = {
+  private def validarPin(tokenHash: String, funcionalidad:Int) = {
     val currentSender = sender()
     val result: Future[Validation[PersistenceException, Option[PinUsuario]]] = pDataAccessAdapter.obtenerPin(tokenHash)
-    resolveFutureValidation(result, PinUtil.validarPin, currentSender)
+    resolveOlvidoContrasenaFuture(result, funcionalidad, currentSender)
   }
 
+  private def resolveOlvidoContrasenaFuture(finalResultFuture: Future[Validation[PersistenceException, Option[PinUsuario]]], funcionalidad:Int, currentSender: ActorRef) = {
+    finalResultFuture onComplete {
+      case Failure(failure) => currentSender ! failure
+      case Success(value) =>
+        value match {
+          case zSuccess(response:  Option[PinUsuario]) => currentSender ! PinUtil.validarPin(response, funcionalidad)
+          case zFailure(error) =>
+            error match {
+              case errorPersistence: ErrorPersistence => currentSender ! errorPersistence.exception
+              case errorVal: ErrorValidacion => currentSender ! ResponseMessage(Conflict, errorVal.msg)
+            }
+        }
+    }
+  }
 
   private def cambiarPw(tokenHash: String, pw: String, currentSender: ActorRef) = {
 
@@ -78,7 +94,7 @@ class PinActor extends Actor with ActorLogging with AlianzaActors with FutureRes
     val finalResultFuture = (for {
       pin <- ValidationT(obtenerPinFuture)
       pinValidacion <- ValidationT(PinUtil.validarPinFuture(pin))
-      rvalidacionClave <- ValidationT(validacionReglasClave(pw, pinValidacion.idUsuario))
+      rvalidacionClave <- ValidationT(validacionReglasClave(pw, pinValidacion.idUsuario, PerfilesUsuario.clienteIndividual))
       rCambiarPss <- ValidationT(cambiarPassword(pinValidacion.idUsuario, passwordAppend))
       resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(pinValidacion.idUsuario, Crypto.hashSha512(passwordAppend)))
       rCambiarEstado <- ValidationT(cambiarEstado(pinValidacion.idUsuario))

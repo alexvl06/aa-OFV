@@ -13,7 +13,7 @@ import co.com.alianza.infrastructure.anticorruption.clientes.{DataAccessAdapter 
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => DataAccessAdapterUsuario }
 import co.com.alianza.infrastructure.anticorruption.configuraciones.{DataAccessTranslator => dataAccessTransConf, DataAccessAdapter => dataAccesAdaptarConf}
 
-import enumerations.{TipoIdentificacion, EstadosCliente}
+import enumerations.{PerfilesUsuario, TipoIdentificacion, EstadosCliente}
 
 import scalaz.Validation.FlatMap._
 
@@ -35,7 +35,7 @@ object  ValidacionesUsuario {
 
   def validacionReglasClaveAutoregistro(message:UsuarioMessage): Future[Validation[ErrorValidacion, Unit.type]] = {
 
-    val usuarioFuture: Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = ValidarClave.aplicarReglas(message.contrasena, None, ValidarClave.reglasGeneralesAutoregistro: _*)
+    val usuarioFuture: Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = ValidarClave.aplicarReglas(message.contrasena, None, PerfilesUsuario.clienteIndividual, ValidarClave.reglasGeneralesAutoregistro: _*)
 
     usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message,pe)).flatMap{
       (x:List[ErrorValidacionClave]) => x match{
@@ -49,7 +49,7 @@ object  ValidacionesUsuario {
 
   def validacionReglasClave(message:UsuarioMessage): Future[Validation[ErrorValidacion, Unit.type]] = {
 
-    val usuarioFuture: Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = ValidarClave.aplicarReglas(message.contrasena, None, ValidarClave.reglasGenerales: _*)
+    val usuarioFuture: Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = ValidarClave.aplicarReglas(message.contrasena, None, PerfilesUsuario.clienteIndividual, ValidarClave.reglasGenerales: _*)
 
     usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message,pe)).flatMap{
       (x:List[ErrorValidacionClave]) => x match{
@@ -62,9 +62,9 @@ object  ValidacionesUsuario {
   }
 
 
-  def validacionReglasClave(contrasena:String, idUsuario: Int): Future[Validation[ErrorValidacion, Unit.type]] = {
+  def validacionReglasClave(contrasena:String, idUsuario: Int, perfilUsuario: PerfilesUsuario.perfilUsuario): Future[Validation[ErrorValidacion, Unit.type]] = {
 
-    val usuarioFuture: Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = ValidarClave.aplicarReglas(contrasena, Some(idUsuario), ValidarClave.reglasGenerales: _*)
+    val usuarioFuture: Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = ValidarClave.aplicarReglas(contrasena, Some(idUsuario), perfilUsuario, ValidarClave.reglasGenerales: _*)
 
     usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message,pe)).flatMap{
       (x:List[ErrorValidacionClave]) => x match{
@@ -79,13 +79,14 @@ object  ValidacionesUsuario {
 
   def validaCaptcha(message:UsuarioMessage): Future[Validation[ErrorValidacion, Unit.type]] = {
     val validador = new ValidarCaptcha()
-
     val validacionFuture = validador.validarCaptcha(message.clientIp.get, message.challenge,message.uresponse)
 
     validacionFuture.map(_.leftMap(pe => ErrorCaptcha(errorCaptcha)).flatMap{
       (x:Boolean) => x match{
-        case true => zSuccess(Unit)
-        case _ => zFailure(ErrorCaptcha(errorCaptcha))
+        case true =>
+          zSuccess(Unit)
+        case _ =>
+          zFailure(ErrorCaptcha(errorCaptcha))
       }
     })
   }
@@ -97,6 +98,16 @@ object  ValidacionesUsuario {
       (x:Option[Usuario]) => x match{
         case None => zSuccess(Unit)
         case _ => zFailure(ErrorDocumentoExiste(errorUsuarioExiste))
+      }
+    })
+  }
+
+  def validacionUsuarioNumDoc(message:UsuarioMessage): Future[Validation[ErrorValidacion, Option[Usuario]]] = {
+    val usuarioFuture = DataAccessAdapterUsuario.obtenerUsuarioNumeroIdentificacion(message.identificacion)
+    usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message,pe)).flatMap{
+      (x:Option[Usuario]) => x match{
+        case Some(usuarioEncontrado) => zSuccess(Some(usuarioEncontrado))
+        case _ => zFailure(ErrorUsuarioNoExiste(errorUsuarioNoExiste))
       }
     })
   }
@@ -133,9 +144,8 @@ object  ValidacionesUsuario {
       zSuccess(cliente)
   }
 
-  //Se valida la naturalidad de la persona que realiza la autenticaciónS
-  def getTipoPersona(idTipoIdent: Int): String = {
-    idTipoIdent match {
+  private def getTipoPersona(message:UsuarioMessage):String = {
+    message.tipoIdentificacion match{
       case TipoIdentificacion.FID.identificador => "F"
       case TipoIdentificacion.NIT.identificador => "J"
       case _ => "N"
@@ -163,17 +173,15 @@ object  ValidacionesUsuario {
     })
   }
 
-  //Errores autorizacion
-  private val errorClienteInactivo =          ErrorMessage("401.1", "Cliente inactivo", "Cliente inactivo").toJson
-  private val errorClienteNoExiste =          ErrorMessage("401.2", "No existe el cliente", "No existe el cliente").toJson
-  private val errorCorreoNoExiste =           ErrorMessage("401.13", "No hay correo registrado", "No hay correo registrado en la base de datos de Alianza").toJson
-
   private val errorUsuarioExiste =            ErrorMessage("409.1", "Usuario ya existe", "Usuario ya existe").toJson
+  private val errorClienteNoExiste =          ErrorMessage("409.2", "No existe el cliente", "No existe el cliente").toJson
   private val errorUsuarioCorreoExiste =      ErrorMessage("409.3", "Correo ya existe", "Correo ya existe").toJson
+  private val errorClienteInactivo =          ErrorMessage("409.4", "Cliente inactivo", "Cliente inactivo").toJson
   private def errorClave(error:String) =      ErrorMessage("409.5", "Error clave", error).toJson
   private val errorCaptcha =                  ErrorMessage("409.6", "Valor captcha incorrecto", "Valor captcha incorrecto").toJson
   private val errorContrasenaActualNoExiste = ErrorMessage("409.7", "No existe la contrasena actual", "No existe la contrasena actual").toJson
   private val errorPin =                      ErrorMessage("409.8", "Error en el pin", "Ocurrió un error al obtener el tiempo de expiracion del pin").toJson
-
+  private val errorUsuarioNoExiste =          ErrorMessage("409.9", "No existe el usuario", "No existe el usuario").toJson
+  private val errorCorreoNoExiste =           ErrorMessage("409.10", "No hay correo registrado", "No hay correo registrado en la base de datos de Alianza").toJson
 
 }

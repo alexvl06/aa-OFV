@@ -2,19 +2,21 @@ package co.com.alianza.app
 
 import akka.actor.{ Props, ActorSystem }
 import akka.cluster.Cluster
+import co.com.alianza.domain.aggregates.actualizacion.ActualizacionActorSupervisor
 
 import co.com.alianza.domain.aggregates.confronta.{ConfrontaActorSupervisor}
 import co.com.alianza.domain.aggregates.autenticacion._
+import co.com.alianza.domain.aggregates.empresa.{HorarioEmpresaActorSupervisor, ContrasenasClienteAdminActorSupervisor, AgenteEmpresarialActorSupervisor, ContrasenasAgenteEmpresarialActorSupervisor}
 import co.com.alianza.domain.aggregates.usuarios.UsuariosActorSupervisor
 import co.com.alianza.domain.aggregates.autoregistro.ConsultaClienteActorSupervisor
 import co.com.alianza.domain.aggregates.contrasenas.ContrasenasActorSupervisor
 import co.com.alianza.domain.aggregates.ips.IpsUsuarioActorSupervisor
 import co.com.alianza.domain.aggregates.pin.PinActorSupervisor
+import co.com.alianza.domain.aggregates.permisos.PermisoTransaccionalActorSupervisor
 import co.com.alianza.infrastructure.auditing.KafkaActorSupervisor
 import co.com.alianza.util.ConfigApp
 
 import com.typesafe.config.Config
-
 //import co.com.alianza.domain.aggregates.fondos.FondosActorSupervisor
 
 
@@ -51,9 +53,18 @@ trait CoreActors { this: Core =>
   val autenticacionActorSupervisor = system.actorOf( Props[ AutenticacionActorSupervisor ], "autenticacionActorSupervisor" )
   val autorizacionActorSupervisor = system.actorOf( Props[ AutorizacionActorSupervisor ], "autorizacionActorSupervisor" )
   val contrasenasActorSupervisor = system.actorOf( Props[ ContrasenasActorSupervisor ], "contrasenasActorSupervisor" )
+  val contrasenasAgenteEmpresarialActorSupervisor = system.actorOf( Props[ ContrasenasAgenteEmpresarialActorSupervisor ], "contrasenasAgenteEmpresarialActorSupervisor" )
+  val contrasenasClienteAdminActorSupervisor = system.actorOf( Props[ ContrasenasClienteAdminActorSupervisor ], "contrasenasClienteAdminActorSupervisor" )
+
   val ipsUsuarioActorSupervisor  = system.actorOf( Props[ IpsUsuarioActorSupervisor ], "ipsUsuarioActorSupervisor" )
+
+  val horarioEmpresaActorSupervisor  = system.actorOf( Props[ HorarioEmpresaActorSupervisor ], "horarioEmpresaActorSupervisor" )
   val pinActorSupervisor = system.actorOf( Props[ PinActorSupervisor ], "PinActorSupervisor" )
   val sesionActorSupervisor = system.actorOf( Props[ SesionActorSupervisor ], "sesionActorSupervisor" )
+  val agenteEmpresarialActorSupervisor = system.actorOf( Props[ AgenteEmpresarialActorSupervisor ], "agenteEmpresarialActorSupervisor" )
+  val permisoTransaccionalActorSupervisor = system.actorOf( Props[ PermisoTransaccionalActorSupervisor ], "permisoTransaccionalActorSupervisor" )
+
+  val actualizacionActorSupervisor  = system.actorOf( Props[ ActualizacionActorSupervisor ], "actualizacionActorSupervisor" )
   val kafkaActorSupervisor = system.actorOf( Props[ KafkaActorSupervisor ], "kafkaActorSupervisor" )
 }
 

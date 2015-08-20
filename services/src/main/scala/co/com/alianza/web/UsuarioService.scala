@@ -1,15 +1,11 @@
 package co.com.alianza.web
 
-
-import co.com.alianza.infrastructure.auditing.AuditingHelper._
-import co.com.alianza.util.clave.Crypto
-import enumerations.AppendPasswordUser
-import spray.routing.{RequestContext, Directives}
 import co.com.alianza.app.{CrossHeaders, AlianzaCommons}
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.infrastructure.messages.OlvidoContrasenaMessage
-import scala.Some
 import co.com.alianza.infrastructure.messages.UsuarioMessage
+import spray.routing.{RequestContext, Directives}
+import co.com.alianza.infrastructure.auditing.AuditingHelper._
 
 
 /**
@@ -19,6 +15,7 @@ import co.com.alianza.infrastructure.messages.UsuarioMessage
 class UsuarioService  extends Directives with AlianzaCommons   with CrossHeaders{
 
   import UsuariosMessagesJsonSupport._
+
 
   def route = {
      pathPrefix("autoregistro") {
@@ -43,7 +40,7 @@ class UsuarioService  extends Directives with AlianzaCommons   with CrossHeaders
               respondWithMediaType(mediaType) {
                 clientIP {
                   ip =>
-                    val nuevoUsuario: DesbloquarMessage = desbloqueoMsg.toDesbloquarMessage.copy(clientIp = Some(ip.value))
+                    val nuevoUsuario = desbloqueoMsg.toDesbloquarMessage.copy(clientIp = Some(ip.value))
                     requestExecute(nuevoUsuario, usuariosActor)
                 }
               }

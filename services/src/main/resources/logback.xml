@@ -12,7 +12,11 @@
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <!--See also http://logback.qos.ch/manual/appenders.html#RollingFileAppender-->
         <File>log/alianza_fiduciaria_aa_${app}.log</File>
+        <!--encoder>
+            <pattern>%date{ISO8601} %-5level %logger{36} %X{sourceThread} - %msg%n</pattern>
+        </encoder-->
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!--maxHistory>30</maxHistory-->
             <FileNamePattern>log/alianza_fiduciaria_aa_%d{yyyy-MM-dd-a}_${app}.log</FileNamePattern>
         </rollingPolicy>
         <layout class="ch.qos.logback.classic.PatternLayout">
@@ -20,14 +24,13 @@
         </layout>
     </appender>
 
-    <logger name="spray.can.server.HttpServerConnection" level="OFF">
-        <appender-ref ref="STDOUT" />
-        <appender-ref ref="FILE" />
-    </logger>
-
+    <logger name="spray.can.server" level="ERROR"/>
 
     <root level="INFO">
         <appender-ref ref="FILE" />
         <appender-ref ref="STDOUT" />
     </root>
+
+
+
 </configuration>

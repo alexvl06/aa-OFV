@@ -2,8 +2,10 @@ package co.com.alianza.util.clave
 
 import co.com.alianza.infrastructure.anticorruption.contrasenas.DataAccessAdapter
 import co.com.alianza.infrastructure.anticorruption.ultimasContrasenas.{ DataAccessAdapter => DataAccessAdapterUltimaContrasena }
-import co.com.alianza.persistence.entities.UltimaContrasena
-import enumerations.AppendPasswordUser
+import co.com.alianza.infrastructure.anticorruption.ultimasContrasenasAgenteEmpresarial.{ DataAccessAdapter => DataAccessAdapterUltimaContrasenaAgenteE }
+import co.com.alianza.infrastructure.anticorruption.ultimasContrasenasClienteAdmin.{ DataAccessAdapter => DataAccessAdapterUltimaContrasenaClienteAdmin }
+import co.com.alianza.persistence.entities.{UltimaContrasenaUsuarioEmpresarialAdmin, UltimaContrasenaUsuarioAgenteEmpresarial, UltimaContrasena}
+import enumerations.{PerfilesUsuario, AppendPasswordUser}
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scalaz.{Success => zSuccess, Failure => zFailure, Validation}
 import scalaz.std.AllInstances._
@@ -16,12 +18,12 @@ import java.util.regex.Pattern
 
 
 abstract sealed class Regla(val name:String) {
-  def validar(valor:String, idUsuario: Option[Int], condicion:Option[String]):Option[ErrorValidacionClave]
+  def validar(valor:String, idUsuario: Option[Int], perfilUsuario: PerfilesUsuario.perfilUsuario, condicion:Option[String]):Option[ErrorValidacionClave]
 }
 
 case object MinCaracteres extends Regla("MINIMO_NUMERO_CARACTERES")  {
 
-  def validar(valor:String, idUsuario: Option[Int], condicion:Option[String]):Option[ErrorValidacionClave] = {
+  def validar(valor:String, idUsuario: Option[Int], perfilUsuario: PerfilesUsuario.perfilUsuario, condicion:Option[String]):Option[ErrorValidacionClave] = {
     condicion match {
       case Some(value) => if (valor.length < value.toInt)  Some(ErrorMinCaracteres) else None
       case None => Some(ErrorMinCaracteres)
@@ -32,7 +34,7 @@ case object MinCaracteres extends Regla("MINIMO_NUMERO_CARACTERES")  {
 
 case object MinCaracteresEspeciales extends Regla("MINIMO_NUMERO_CARACTERES_ESPECIALES")  {
 
-   def validar(valor:String, idUsuario: Option[Int], condicion:Option[String]):Option[ErrorValidacionClave] = {
+   def validar(valor:String, idUsuario: Option[Int], perfilUsuario: PerfilesUsuario.perfilUsuario, condicion:Option[String]):Option[ErrorValidacionClave] = {
      condicion match {
        case Some(value) =>
          val pattern = s"""(?=(?:.*?[^a-zA-Z0-9]){$value})""".r
@@ -48,7 +50,7 @@ case object MinCaracteresEspeciales extends Regla("MINIMO_NUMERO_CARACTERES_ESPE
 
 case object MinNumDigitos extends Regla("MINIMO_NUMERO_DIGITOS")  {
 
-  def validar(valor:String, idUsuario: Option[Int], condicion:Option[String]):Option[ErrorValidacionClave] = {
+  def validar(valor:String, idUsuario: Option[Int], perfilUsuario: PerfilesUsuario.perfilUsuario, condicion:Option[String]):Option[ErrorValidacionClave] = {
     condicion match {
       case Some(value) =>
         val pattern = s"""(?=(?:.*?[0-9]){$value})""".r
@@ -64,7 +66,7 @@ case object MinNumDigitos extends Regla("MINIMO_NUMERO_DIGITOS")  {
 
 case object MinMayusculas extends Regla("MINIMO_NUMERO_LETRAS_MAYUSCULAS")  {
 
-  def validar(valor:String, idUsuario: Option[Int], condicion:Option[String]):Option[ErrorValidacionClave] = {
+  def validar(valor:String, idUsuario: Option[Int], perfilUsuario: PerfilesUsuario.perfilUsuario, condicion:Option[String]):Option[ErrorValidacionClave] = {
     condicion match {
       case Some(value) =>
         val pattern = s"""(?=(?:.*?[A-Z]){$value})""".r
@@ -80,7 +82,7 @@ case object MinMayusculas extends Regla("MINIMO_NUMERO_LETRAS_MAYUSCULAS")  {
 
 case object MinMinusculas extends Regla("MINIMO_NUMERO_LETRAS_MINUSCULAS")  {
 
-  def validar(valor:String, idUsuario: Option[Int], condicion:Option[String]):Option[ErrorValidacionClave] = {
+  def validar(valor:String, idUsuario: Option[Int], perfilUsuario: PerfilesUsuario.perfilUsuario, condicion:Option[String]):Option[ErrorValidacionClave] = {
     condicion match {
       case Some(value) =>
         val pattern =  s"""(?=(?:.*?[a-z]){$value})""".r
@@ -96,7 +98,7 @@ case object MinMinusculas extends Regla("MINIMO_NUMERO_LETRAS_MINUSCULAS")  {
 
 case object CaracteresPermitidos extends Regla("CARACTERES_PERMITIDOS")  {
 
-  def validar(valor:String, idUsuario: Option[Int], condicion:Option[String]):Option[ErrorValidacionClave] = {
+  def validar(valor:String, idUsuario: Option[Int], perfilUsuario: PerfilesUsuario.perfilUsuario, condicion:Option[String]):Option[ErrorValidacionClave] = {
 
     condicion match {
       case Some(value) =>
@@ -119,7 +121,7 @@ case object CaracteresPermitidos extends Regla("CARACTERES_PERMITIDOS")  {
 
 case object IntentosIngresoContrasena extends Regla("CANTIDAD_REINTENTOS_INGRESO_CONTRASENA")  {
 
-  def validar(valor:String, idUsuario: Option[Int],condicion:Option[String]):Option[ErrorValidacionClave] = {
+  def validar(valor:String, idUsuario: Option[Int], perfilUsuario: PerfilesUsuario.perfilUsuario, condicion:Option[String]):Option[ErrorValidacionClave] = {
     condicion match {
       case Some(value) => if (valor.toInt == value.toInt)  Some(ErrorIntentosErroneos) else None
       case None => Some(ErrorIntentosErroneos)
@@ -131,7 +133,7 @@ case object IntentosIngresoContrasena extends Regla("CANTIDAD_REINTENTOS_INGRESO
 
 case object CambioContrasena extends Regla("DIAS_VALIDA")  {
 
-  def validar(valor:String, idUsuario: Option[Int], condicion:Option[String]):Option[ErrorValidacionClave] = {
+  def validar(valor:String, idUsuario: Option[Int], perfilUsuario: PerfilesUsuario.perfilUsuario, condicion:Option[String]):Option[ErrorValidacionClave] = {
     condicion match {
       case Some(value) => if (valor.toInt == value.toInt)  Some(ErrorIntentosErroneos) else None
       case None => Some(ErrorIntentosErroneos)
@@ -144,12 +146,16 @@ case object UltimasContrasenas extends Regla("ULTIMAS_CONTRASENAS_NO_VALIDAS")  
 
   import scala.concurrent.duration._
 
-  def validar( valorContrasenaNueva: String, idUsuario: Option[Int], condicion: Option[ String ] ) : Option[ ErrorValidacionClave ] = {
+  def validar( valorContrasenaNueva: String, idUsuario: Option[Int], perfilUsuario: PerfilesUsuario.perfilUsuario, condicion: Option[ String ] ) : Option[ ErrorValidacionClave ] = {
     condicion match {
       case Some(value) =>
         idUsuario match {
           case Some(valueIdUsuario) =>
-            val FuturoObtenerUltimasContrasenas: Future[Validation[PersistenceException, List[UltimaContrasena]]] = DataAccessAdapterUltimaContrasena.obtenerUltimasContrasenas(value, idUsuario.get)
+            val FuturoObtenerUltimasContrasenas: (Future[Validation[PersistenceException, List[Any]]]) = perfilUsuario match {
+              case PerfilesUsuario.clienteIndividual => DataAccessAdapterUltimaContrasena.obtenerUltimasContrasenas(value, idUsuario.get)
+              case PerfilesUsuario.agenteEmpresarial => DataAccessAdapterUltimaContrasenaAgenteE.obtenerUltimasContrasenas(value, idUsuario.get)
+              case PerfilesUsuario.clienteAdministrador => DataAccessAdapterUltimaContrasenaClienteAdmin.obtenerUltimasContrasenas(value, idUsuario.get)
+            }
 
             val UltimaContrasenaExiste: Future[Validation[PersistenceException, Boolean]] = FuturoObtenerUltimasContrasenas.map {
               validationInterior => validationInterior.map {
@@ -172,16 +178,24 @@ case object UltimasContrasenas extends Regla("ULTIMAS_CONTRASENAS_NO_VALIDAS")  
     }
   }
 
-  def contiene(lista: List[UltimaContrasena], valorContrasenaNueva: String): Boolean = {
+  def contiene(lista: List[Any], valorContrasenaNueva: String): Boolean = {
     val contrasenaNuevaConSalt: String = valorContrasenaNueva.concat( AppendPasswordUser.appendUsuariosFiducia )
-    val contrasenaNuevaHash = Crypto.hashSha512(contrasenaNuevaConSalt)
+    val contrasenaNuevaHash: String = Crypto.hashSha512(contrasenaNuevaConSalt)
 
-    def loop (lista: List[UltimaContrasena]): Boolean = {
-      if (lista.isEmpty) return false
-      if (lista.head.contrasena == contrasenaNuevaHash) return true
-      loop(lista.tail)
+    def compare(contrasena: String, contrasenaNuevaHash: String): Boolean = {
+      if (contrasena == contrasenaNuevaHash) true
+      else false
     }
-    loop(lista)
+
+    val listaResultadosComparacionContrasena: List[Boolean] = lista.map {
+      case UltimaContrasena(param1, param2, param3, param4) => compare(param3, contrasenaNuevaHash)
+      case UltimaContrasenaUsuarioAgenteEmpresarial(param1, param2, param3, param4) => compare(param3, contrasenaNuevaHash)
+      case UltimaContrasenaUsuarioEmpresarialAdmin(param1, param2, param3, param4) => compare(param3, contrasenaNuevaHash)
+    }
+
+    if(listaResultadosComparacionContrasena.contains(elem = true)) true
+      else false
+
   }
 
 }
@@ -191,11 +205,11 @@ object ValidarClave {
 
   implicit val ec: ExecutionContext = MainActors.dataAccesEx
 
-  def aplicarReglas(input:String, idUsuario: Option[Int], validaciones:Regla* ): Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = {
+  def aplicarReglas(input:String, idUsuario: Option[Int], perfilUsuario: PerfilesUsuario.perfilUsuario, validaciones:Regla* ): Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = {
     obtenerReglasToMap.map(_.flatMap{
          f => zSuccess(
               validaciones.foldLeft(Nil:List[ErrorValidacionClave]){
-                 (acc : List[ErrorValidacionClave], r: Regla) => r.validar(input, idUsuario,f.get(r.name)).map(_ :: acc).getOrElse(acc)
+                 (acc : List[ErrorValidacionClave], r: Regla) => r.validar(input, idUsuario, perfilUsuario, f.get(r.name)).map(_ :: acc).getOrElse(acc)
             }
          )
      })

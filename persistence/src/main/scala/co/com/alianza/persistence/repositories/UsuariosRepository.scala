@@ -1,20 +1,13 @@
 package co.com.alianza.persistence.repositories
 
 import java.sql.Timestamp
-import java.util.Date
-
 import scala.concurrent.{ExecutionContext, Future}
 import co.com.alianza.exceptions.PersistenceException
-
 import scala.util.Try
 import scalaz.Validation
-
 import co.com.alianza.persistence.entities._
-
-
 import scala.slick.lifted.TableQuery
 import CustomDriver.simple._
-import scala.slick.direct.Queryable
 import co.com.alianza.persistence.entities.Usuario
 import scala.Some
 

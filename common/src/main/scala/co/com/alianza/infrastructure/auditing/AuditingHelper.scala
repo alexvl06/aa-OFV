@@ -4,15 +4,37 @@ import akka.actor._
 import co.com.alianza.infrastructure.auditing.AuditingEntities.{AudRequest, AudResponse}
 import co.com.alianza.infrastructure.auditing.AuditingMessages.AuditRequest
 import co.com.alianza.infrastructure.auditing.AuditingUser.AuditingUserData
-import co.com.alianza.util.json.JsonUtil
 import spray.http.{HttpRequest, HttpResponse}
 import spray.routing._
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Try, Success, Failure}
-import scalaz.{Validation, Success => zSuccess, Failure => zFailure}
+import scala.util.{Success}
+import scalaz.{Validation, Success => zSuccess}
 
-object AuditingHelper extends AuditingHelper
+object AuditingHelper extends AuditingHelper {
+  val fiduciariaTopic = "Fiduciaria"
+  val cambioContrasenaIndex = "cambio-contrasena-fiduciaria"
+  val autenticacionIndex = "autenticacion-fiduciaria"
+  val cierreSesionIndex = "cierre-sesion-fiduciaria"
+  val usuarioAgregarIpIndex = "usuario-agregar-ip-fiduciaria"
+  val usuarioEliminarIpIndex = "usuario-eliminar-ip-fiduciaria"
+  val usuarioConsultarIpIndex = "usuario-consultar-ip-fiduciaria"
+  val actualizacionDatosUsuarioIndex = "actualizacion-datos-usuario-fiduciaria"
+  val cambioContrasenaCorreoClienteIndividualIndex = "cambio-contrasena-correo-cliente-individual-fiduciaria"
+  val cambioContrasenaCorreoClienteAdministradorIndex = "cambio-contrasena-correo-cliente-administrador-fiduciaria"
+  val cambioContrasenaCorreoAgenteEmpresarialIndex = "cambio-contrasena-correo-agente-empresarial-fiduciaria"
+  val cambioContrasenaClienteAdministradorIndex = "cambio-contrasena-cliente-administrador-fiduciaria"
+  val cambioContrasenaAgenteEmpresarialIndex = "cambio-contrasena-agente-empresarial-fiduciaria"
+  val cambioHorarioIndex = "cambio-horario-empresa-fiduciaria"
+  val asignarContrasenaAgenteEmpresarialIndex = "asignar-contrasena-agente-empresarial-fiduciaria"
+  val reiniciarContrasenaAgenteEmpresarialIndex = "reiniciar-contrasena-agente-empresarial-fiduciaria"
+  val crearAgenteEmpresarialIndex = "crear-agente-empresarial-fiduciaria"
+  val bloqueoAgenteEmpresarialIndex = "bloqueo-agente-empresarial-fiduciaria"
+  val consultaPermisosAgenteEmpresarialIndex = "consulta-permisos-agente-empresarial-fiduciaria"
+  val actualizarPermisosAgenteEmpresarialIndex = "actualizar-permisos-agente-empresarial-fiduciaria"
+  val consultaUsuariosEmpresarialesIndex = "consulta-usuarios-empresarial-fiduciaria"
+}
+
 
 trait AuditingHelper {
 
@@ -32,7 +54,8 @@ trait AuditingHelper {
             ),
             AudResponse(
               response.status.intValue.toString,
-              response.status.reason
+              response.status.reason,
+              response.entity.data.asString
             ),
             kafkaTopic,
             elasticIndex,
@@ -64,7 +87,8 @@ trait AuditingHelper {
                     ),
                     AudResponse(
                       response.status.intValue.toString,
-                      response.status.reason
+                      response.status.reason,
+                      response.entity.data.asString
                     ),
                     kafkaTopic,
                     elasticIndex,

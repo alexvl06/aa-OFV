@@ -2,7 +2,7 @@ package co.com.alianza.infrastructure.anticorruption.recursos
 
 
 import co.com.alianza.infrastructure.dto.RecursoUsuario
-import co.com.alianza.persistence.entities.{RecursoPerfil => eRecursoUsuario}
+import co.com.alianza.persistence.entities.{RecursoPerfil => eRecursoPerfil}
 
 
 /**
@@ -11,7 +11,7 @@ import co.com.alianza.persistence.entities.{RecursoPerfil => eRecursoUsuario}
  */
 object  DataAccessTranslator {
 
-  def translate(recursos:List[eRecursoUsuario]) = {
+  def translate(recursos:List[eRecursoPerfil]) = {
     recursos map ( recurso => RecursoUsuario(recurso.idPerfil, recurso.urlRecurso, recurso.acceso, recurso.filtro))
   }
 

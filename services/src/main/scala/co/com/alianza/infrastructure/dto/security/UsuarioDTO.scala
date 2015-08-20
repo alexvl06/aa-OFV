@@ -1,5 +1,6 @@
 package co.com.alianza.infrastructure.dto.security
 
+import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import spray.http.{HttpResponse, HttpEntity}
 import spray.json._
 
@@ -8,16 +9,4 @@ import spray.json._
  *
  * @param id El id del usuario autenticado
  */
-case class UsuarioAuth(id:Int)
-
-/**
-Adaptador para el usuario autenticado
- */
-object UsuarioAuthAdapter {
-  import DefaultJsonProtocol._
-  implicit val marshaller = jsonFormat1( UsuarioAuth )
-  def from( obj: HttpEntity ) = {
-    val json = obj.asString.asJson
-    json.convertTo[UsuarioAuth]
-  }
-}
+case class UsuarioAuth(id:Int, tipoCliente: TiposCliente)
