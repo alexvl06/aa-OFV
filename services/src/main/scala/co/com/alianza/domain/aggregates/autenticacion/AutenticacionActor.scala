@@ -227,6 +227,7 @@ class AutenticacionActor extends Actor with ActorLogging {
    * ErrorAutenticacion => ErrorUsuarioBloqueadoIntentosErroneos || ErrorUsuarioBloqueadoPendienteActivacion || ErrorUsuarioBloqueadoPendienteReinicio
    */
   def validarEstadosUsuario(estadoUsuario: Int): Future[Validation[ErrorAutenticacion, Boolean]] = Future {
+
     log.info("Validando estados usuario")
     if (estadoUsuario == EstadosUsuarioEnum.bloqueContraseña.id) Validation.failure(ErrorUsuarioBloqueadoIntentosErroneos())
     else if (estadoUsuario == EstadosUsuarioEnum.pendienteActivacion.id) Validation.failure(ErrorUsuarioBloqueadoPendienteActivacion())
