@@ -37,7 +37,7 @@ class AdministrarContrasenaService extends Directives with AlianzaCommons {
                         val token = r.request.headers.find(header => header.name equals "token")
                         val usuario = DataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
 
-                        requestWithFutureAuditing[PersistenceException, CambiarContrasenaMessage](r, AuditingHelper.fiduciariaTopic, AuditingHelper.cambioContrasenaIndex, ip.value, kafkaActor, usuario, Some(data.copy(pw_actual = Crypto.hashSha512(data.pw_actual.concat(AppendPasswordUser.appendUsuariosFiducia)), pw_nuevo = Crypto.hashSha512(data.pw_nuevo.concat(AppendPasswordUser.appendUsuariosFiducia)))))
+                        requestWithFutureAuditing[PersistenceException, CambiarContrasenaMessage](r, AuditingHelper.fiduciariaTopic, AuditingHelper.cambioContrasenaIndex, ip.value, kafkaActor, usuario, Some(data.copy(pw_actual = null, pw_nuevo = null)))
                     } {
                       val dataComplete: CambiarContrasenaMessage = data.copy(idUsuario = Some(user.id))
                       requestExecute(dataComplete, contrasenasActor)

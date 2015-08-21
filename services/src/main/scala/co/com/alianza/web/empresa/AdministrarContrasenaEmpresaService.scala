@@ -79,7 +79,7 @@ class AdministrarContrasenaEmpresaService extends Directives with AlianzaCommons
                         r: RequestContext =>
                           val token = r.request.headers.find(header => header.name equals "token")
                           val usuario = DataAccessAdapterClienteAdmin.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
-                          requestWithFutureAuditing[PersistenceException, CambiarContrasenaClienteAdminMessage](r, AuditingHelper.fiduciariaTopic, AuditingHelper.cambioContrasenaClienteAdministradorIndex, ip.value, kafkaActor, usuario, Some(data.copy( pw_nuevo = Crypto.hashSha512(data.pw_nuevo.concat(AppendPasswordUser.appendUsuariosFiducia)), pw_actual = Crypto.hashSha512(data.pw_actual.concat(AppendPasswordUser.appendUsuariosFiducia)))))
+                          requestWithFutureAuditing[PersistenceException, CambiarContrasenaClienteAdminMessage](r, AuditingHelper.fiduciariaTopic, AuditingHelper.cambioContrasenaClienteAdministradorIndex, ip.value, kafkaActor, usuario, Some(data.copy( pw_nuevo = null, pw_actual = null)))
                       } {
                         val dataComplete: CambiarContrasenaClienteAdminMessage = data.copy(idUsuario = Some(user.id))
                         requestExecute(dataComplete, contrasenasClienteAdminActor)
@@ -102,7 +102,7 @@ class AdministrarContrasenaEmpresaService extends Directives with AlianzaCommons
                           r: RequestContext =>
                             val token = r.request.headers.find(header => header.name equals "token")
                             val usuario = DataAccessAdapterAgenteEmpresarial.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
-                            requestWithFutureAuditing[PersistenceException, CambiarContrasenaAgenteEmpresarialMessage](r, AuditingHelper.fiduciariaTopic, AuditingHelper.cambioContrasenaAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, Some(data.copy( pw_nuevo = Crypto.hashSha512(data.pw_nuevo.concat(AppendPasswordUser.appendUsuariosFiducia)), pw_actual = Crypto.hashSha512(data.pw_actual.concat(AppendPasswordUser.appendUsuariosFiducia)))))
+                            requestWithFutureAuditing[PersistenceException, CambiarContrasenaAgenteEmpresarialMessage](r, AuditingHelper.fiduciariaTopic, AuditingHelper.cambioContrasenaAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, Some(data.copy( pw_nuevo = null, pw_actual = null)))
                         } {
                         val dataComplete: CambiarContrasenaAgenteEmpresarialMessage = data.copy(idUsuario = Some(user.id))
                         requestExecute(dataComplete, contrasenasAgenteEmpresarialActor)

@@ -1,6 +1,7 @@
 package co.com.alianza.web
 
 import co.com.alianza.app.{CrossHeaders, AlianzaCommons}
+import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.infrastructure.messages.OlvidoContrasenaMessage
 import co.com.alianza.infrastructure.messages.UsuarioMessage
@@ -29,7 +30,7 @@ class UsuarioService  extends Directives with AlianzaCommons   with CrossHeaders
             respondWithMediaType(mediaType) {
               clientIP { ip =>
 
-                mapRequestContext((r: RequestContext) => requestWithAuiditing(r, "Fiduciaria", "autoregistro-fiduciaria", ip.value, kafkaActor, usuario.copy( contrasena = Crypto.hashSha512(usuario.contrasena.concat(AppendPasswordUser.appendUsuariosFiducia))))) {
+                mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.autoRegistroIndex, ip.value, kafkaActor, usuario.copy( contrasena = null))) {
                   val nuevoUsuario: UsuarioMessage = usuario.copy(clientIp = Some(ip.value))
                   requestExecute(nuevoUsuario, usuariosActor)
                 }
@@ -57,7 +58,7 @@ class UsuarioService  extends Directives with AlianzaCommons   with CrossHeaders
               clientIP { ip =>
                 entity(as[OlvidoContrasenaMessage]) {
                   olvidarContrasena =>
-                    mapRequestContext((r: RequestContext) => requestWithAuiditing(r, "Fiduciaria", "olvido-contrasena-fiduciaria", ip.value, kafkaActor, olvidarContrasena)) {
+                    mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.olvidoContrasenaIndex, ip.value, kafkaActor, olvidarContrasena)) {
                       requestExecute(olvidarContrasena, usuariosActor)
                     }
                 }

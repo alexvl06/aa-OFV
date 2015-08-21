@@ -33,6 +33,8 @@ object AuditingHelper extends AuditingHelper {
   val consultaPermisosAgenteEmpresarialIndex = "consulta-permisos-agente-empresarial-fiduciaria"
   val actualizarPermisosAgenteEmpresarialIndex = "actualizar-permisos-agente-empresarial-fiduciaria"
   val consultaUsuariosEmpresarialesIndex = "consulta-usuarios-empresarial-fiduciaria"
+  val autoRegistroIndex = "autoregistro-fiduciaria"
+  val olvidoContrasenaIndex = "olvido-contrasena-fiduciaria"
 }
 
 

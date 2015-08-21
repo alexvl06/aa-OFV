@@ -31,7 +31,7 @@ class PinService extends Directives with AlianzaCommons with CrossHeaders {
             post {
               clientIP {
                 ip =>
-                  mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.cambioContrasenaCorreoClienteIndividualIndex, ip.value, kafkaActor, userPw.copy(pw = Crypto.hashSha512(userPw.pw.concat(AppendPasswordUser.appendUsuariosFiducia))))) {
+                  mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.cambioContrasenaCorreoClienteIndividualIndex, ip.value, kafkaActor, userPw.copy(pw = null))) {
                     requestExecute(CambiarPw(pin, userPw.pw), pinActor)
                   }
               }
@@ -46,7 +46,7 @@ class PinService extends Directives with AlianzaCommons with CrossHeaders {
             post {
               clientIP {
                 ip =>
-                  mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.cambioContrasenaCorreoClienteAdministradorIndex, ip.value, kafkaActor, userPw.copy(pw = Crypto.hashSha512(userPw.pw.concat(AppendPasswordUser.appendUsuariosFiducia))))) {
+                  mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.cambioContrasenaCorreoClienteAdministradorIndex, ip.value, kafkaActor, userPw.copy(pw = null))) {
                     requestExecute(CambiarPw(pin, userPw.pw), pinUsuarioEmpresarialAdminActor)
                   }
               }
@@ -67,7 +67,7 @@ class PinService extends Directives with AlianzaCommons with CrossHeaders {
             post {
               clientIP {
                 ip =>
-                  mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.cambioContrasenaCorreoAgenteEmpresarialIndex, ip.value, kafkaActor, userPw.copy(pw = Crypto.hashSha512(userPw.pw.concat(AppendPasswordUser.appendUsuariosFiducia))))) {
+                  mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.cambioContrasenaCorreoAgenteEmpresarialIndex, ip.value, kafkaActor, userPw.copy(pw = null))) {
                     requestExecute(CambiarPw(pin, userPw.pw), pinUsuarioAgenteEmpresarialActor)
                   }
               }
