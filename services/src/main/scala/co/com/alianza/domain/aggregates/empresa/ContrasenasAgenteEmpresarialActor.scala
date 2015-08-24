@@ -253,21 +253,20 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
   }
 
   private def resolveCambiarContrasenaFuture(CambiarContrasenaFuture: Future[Validation[ErrorValidacion, Int]], currentSender: ActorRef) = {
-      CambiarContrasenaFuture onComplete {
+    CambiarContrasenaFuture onComplete {
       case sFailure(failure) =>
-      currentSender ! failure
+        currentSender ! failure
       case sSuccess(value) =>
-      value match {
-      case zSuccess(response: Int) =>
-      currentSender ! ResponseMessage(OK, response.toJson)
-      case zFailure(error) =>
-      error match {
-      case errorPersistence: ErrorPersistence => currentSender ! errorPersistence.exception
-      case errorVal: ErrorValidacion =>
-      currentSender ! ResponseMessage(Conflict, errorVal.msg)
-      }
-      }
-      }
+        value match {
+          case zSuccess(response: Int) =>
+            currentSender ! ResponseMessage(OK, response.toJson)
+          case zFailure(error) =>
+            error match {
+              case errorPersistence: ErrorPersistence => currentSender ! errorPersistence.exception
+              case errorVal: ErrorValidacion => currentSender ! ResponseMessage(Conflict, errorVal.msg)
+            }
+        }
+    }
   }
 
   private def guardarUltimaContrasena(idUsuario: Int, uContrasena: String): Future[Validation[ErrorValidacion, Unit]] = {

@@ -40,7 +40,7 @@ object  ValidacionesUsuario {
     usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message,pe)).flatMap{
       (x:List[ErrorValidacionClave]) => x match{
         case List() => zSuccess(Unit)
-        case erroresList =>
+        case erroresList: List[ErrorValidacionClave] =>
           val errores = erroresList.foldLeft("") ( (z, i) => i.toString + "-" + z  )
           zFailure(ErrorFormatoClave(errorClave(errores)))
       }
@@ -83,10 +83,8 @@ object  ValidacionesUsuario {
 
     validacionFuture.map(_.leftMap(pe => ErrorCaptcha(errorCaptcha)).flatMap{
       (x:Boolean) => x match{
-        case true =>
-          zSuccess(Unit)
-        case _ =>
-          zFailure(ErrorCaptcha(errorCaptcha))
+        case true => zSuccess(Unit)
+        case _ => zFailure(ErrorCaptcha(errorCaptcha))
       }
     })
   }
@@ -137,7 +135,6 @@ object  ValidacionesUsuario {
     if(cliente.wcli_estado != EstadosCliente.inactivo && cliente.wcli_estado != EstadosCliente.bloqueado && cliente.wcli_estado != EstadosCliente.activo)
       zFailure(ErrorClienteNoExiste(errorClienteInactivo))
     else if(getTipoPersona(tipoPersona) != cliente.wcli_person)
-
       zFailure(ErrorClienteNoExiste(errorClienteNoExiste))
     else if(cliente.wcli_dir_correo == null || cliente.wcli_dir_correo.isEmpty)
       zFailure(ErrorClienteNoExiste(errorCorreoNoExiste))
@@ -159,7 +156,6 @@ object  ValidacionesUsuario {
       (x:Option[Usuario]) => x match{
         case Some(c) => zSuccess(x)
         case None => zFailure(ErrorContrasenaNoExiste(errorContrasenaActualNoExiste))
-        case _ => zFailure(ErrorContrasenaNoExiste(errorContrasenaActualNoExiste))
       }
     })
   }
