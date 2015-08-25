@@ -50,14 +50,12 @@ object Token {
       "expiracionInactividad" -> expiracionInactividad
     )
 
-
     val empresarialesData = nit match {
       case Some(x) => Map("nit" -> x)
       case None => Map()
     }
+
     val customData = customDataBase ++ empresarialesData
-
-
     claimsSet.setCustomClaims(customData)
 
     val headersJWT: String = headersJWToken("HS512", "JWT").toJson
@@ -68,7 +66,6 @@ object Token {
   }
 
   def generarTokenCaducidadContrasena(tipoUsuario: TiposCliente, idUsuario: Int) = {
-
     val claimsSet = new JWTClaimsSet()
     claimsSet.setIssueTime(new Date())
     claimsSet.setNotBeforeTime(new Date())
@@ -85,9 +82,7 @@ object Token {
     val signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.HS512), claimsSet)
     val signer = new MACSigner(SIGNING_KEY)
     signedJWT.sign(signer)
-    val jwt = signedJWT.serialize()
-    jwt
-
+    signedJWT.serialize()
   }
 
   def getToken(token: String): SignedJWT = {

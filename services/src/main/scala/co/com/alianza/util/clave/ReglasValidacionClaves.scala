@@ -183,8 +183,7 @@ case object UltimasContrasenas extends Regla("ULTIMAS_CONTRASENAS_NO_VALIDAS")  
     val contrasenaNuevaHash: String = Crypto.hashSha512(contrasenaNuevaConSalt)
 
     def compare(contrasena: String, contrasenaNuevaHash: String): Boolean = {
-      if (contrasena == contrasenaNuevaHash) true
-      else false
+      contrasena == contrasenaNuevaHash
     }
 
     val listaResultadosComparacionContrasena: List[Boolean] = lista.map {
@@ -192,10 +191,7 @@ case object UltimasContrasenas extends Regla("ULTIMAS_CONTRASENAS_NO_VALIDAS")  
       case UltimaContrasenaUsuarioAgenteEmpresarial(param1, param2, param3, param4) => compare(param3, contrasenaNuevaHash)
       case UltimaContrasenaUsuarioEmpresarialAdmin(param1, param2, param3, param4) => compare(param3, contrasenaNuevaHash)
     }
-
-    if(listaResultadosComparacionContrasena.contains(elem = true)) true
-      else false
-
+    listaResultadosComparacionContrasena.contains(elem = true)
   }
 
 }
@@ -207,12 +203,12 @@ object ValidarClave {
 
   def aplicarReglas(input:String, idUsuario: Option[Int], perfilUsuario: PerfilesUsuario.perfilUsuario, validaciones:Regla* ): Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = {
     obtenerReglasToMap.map(_.flatMap{
-         f => zSuccess(
-              validaciones.foldLeft(Nil:List[ErrorValidacionClave]){
-                 (acc : List[ErrorValidacionClave], r: Regla) => r.validar(input, idUsuario, perfilUsuario, f.get(r.name)).map(_ :: acc).getOrElse(acc)
-            }
-         )
-     })
+      f => zSuccess(
+        validaciones.foldLeft(Nil:List[ErrorValidacionClave]){
+          (acc : List[ErrorValidacionClave], r: Regla) => r.validar(input, idUsuario, perfilUsuario, f.get(r.name)).map(_ :: acc).getOrElse(acc)
+        }
+      )
+    })
   }
 
   private def obtenerReglasToMap: Future[Validation[PersistenceException, Map[String, String]]] = {
