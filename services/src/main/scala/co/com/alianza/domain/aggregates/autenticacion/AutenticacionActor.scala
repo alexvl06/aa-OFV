@@ -96,7 +96,7 @@ class AutenticacionActor extends Actor with ActorLogging {
         usuario           <- ValidationT(obtenerUsuario(message.numeroIdentificacion))
         tipoIdentiValido  <- ValidationT(validacionTipoIdentificacion(message, usuario))
         estadoValido      <- ValidationT(validarEstadosUsuario(usuario.estado))
-        passwordValido    <- ValidationT(validarPasswords(message.password, usuario.contrasena.getOrElse(""), Some(usuario.identificacion), None, usuario.numeroIngresosErroneos))
+        passwordValido    <- ValidationT(validarPasswords(message.password, usuario.contrasena.getOrElse(""), Some(usuario.identificacion), usuario.id, usuario.numeroIngresosErroneos))
         cliente           <- ValidationT(obtenerClienteSP(usuario.tipoIdentificacion, usuario.identificacion))
         cienteValido      <- ValidationT(validarClienteSP(usuario.tipoIdentificacion, cliente))
         passwordCaduco    <- ValidationT(validarCaducidadPassword(TiposCliente.clienteIndividual, usuario.id.get, usuario.fechaCaducidad))
