@@ -115,7 +115,8 @@ class ConfrontaActor extends Actor with ActorLogging with AlianzaActors {
     val passwordUserWithAppend = message.contrasena.concat( AppendPasswordUser.appendUsuariosFiducia )
     val UsuarioCreadoFuture = (for{
       resultActualizarEstadoConfronta <- ValidationT( DataAccessAdapterUsuario.crearUsuario(message.toEntityUsuario( Crypto.hashSha512(passwordUserWithAppend))).map(_.leftMap( pe => ErrorPersistence(pe.message,pe))) )
-      resultGuardarUltimasContrasenas <- ValidationT( DataAccessAdapterUltimaContrasena.guardarUltimaContrasena( UltimaContrasena( None, resultActualizarEstadoConfronta , Crypto.hashSha512(passwordUserWithAppend), new Timestamp(System.currentTimeMillis()))).map(_.leftMap( pe => ErrorPersistence( pe.message, pe ) ) ) )
+      usuario                         <- ValidationT( DataAccessAdapterUsuario.obtenerUsuarioCorreo(message.correo).map(_.leftMap( pe => ErrorPersistence(pe.message,pe))))
+      resultGuardarUltimasContrasenas <- ValidationT( DataAccessAdapterUltimaContrasena.guardarUltimaContrasena( UltimaContrasena( None, resultActualizarEstadoConfronta , Crypto.hashSha512(passwordUserWithAppend + usuario.get.id), new Timestamp(System.currentTimeMillis()))).map(_.leftMap( pe => ErrorPersistence( pe.message, pe ) ) ) )
     }yield{
       resultActualizarEstadoConfronta
     }).run

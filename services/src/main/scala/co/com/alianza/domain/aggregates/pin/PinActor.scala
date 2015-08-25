@@ -86,23 +86,20 @@ class PinActor extends Actor with ActorLogging with AlianzaActors with FutureRes
   }
 
   private def cambiarPw(tokenHash: String, pw: String, currentSender: ActorRef) = {
-
     val obtenerPinFuture: Future[Validation[ErrorValidacion, Option[PinUsuario]]] = pDataAccessAdapter.obtenerPin(tokenHash).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
-    val passwordAppend = pw.concat( AppendPasswordUser.appendUsuariosFiducia )
-
+    val passwordAppend = pw.concat(AppendPasswordUser.appendUsuariosFiducia)
     //En la funcion los cambios: idUsuario y tokenHash que se encuentran en ROJO, no son realmente un error.
     val finalResultFuture = (for {
       pin <- ValidationT(obtenerPinFuture)
-      pinValidacion <- ValidationT(PinUtil.validarPinFuture(pin))
-      rvalidacionClave <- ValidationT(validacionReglasClave(pw, pinValidacion.idUsuario, PerfilesUsuario.clienteIndividual))
-      rCambiarPss <- ValidationT(cambiarPassword(pinValidacion.idUsuario, passwordAppend))
-      resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(pinValidacion.idUsuario, Crypto.hashSha512(passwordAppend)))
-      rCambiarEstado <- ValidationT(cambiarEstado(pinValidacion.idUsuario))
-      idResult <- ValidationT(eliminarPin(pinValidacion.tokenHash))
+      pinValidacion                   <- ValidationT(PinUtil.validarPinFuture(pin))
+      rvalidacionClave                <- ValidationT(validacionReglasClave(pw, pinValidacion.idUsuario, PerfilesUsuario.clienteIndividual))
+      rCambiarPss                     <- ValidationT(cambiarPassword(pinValidacion.idUsuario, passwordAppend))
+      resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(pinValidacion.idUsuario, Crypto.hashSha512(passwordAppend + pinValidacion.idUsuario)))
+      rCambiarEstado                  <- ValidationT(cambiarEstado(pinValidacion.idUsuario))
+      idResult                        <- ValidationT(eliminarPin(pinValidacion.tokenHash))
     } yield {
       idResult
     }).run
-
     resolveCrearUsuarioFuture(finalResultFuture, currentSender)
   }
 
@@ -111,7 +108,7 @@ class PinActor extends Actor with ActorLogging with AlianzaActors with FutureRes
   }
 
   private def cambiarPassword(idUsuario: Int, pw: String): Future[Validation[ErrorValidacion, Int]] = {
-    uDataAccessAdapter.cambiarPassword(idUsuario, Crypto.hashSha512(pw)).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
+    uDataAccessAdapter.cambiarPassword(idUsuario, Crypto.hashSha512(pw + idUsuario)).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
   }
 
   private def cambiarEstado(idUsuario: Int): Future[Validation[ErrorValidacion, Int]] = {

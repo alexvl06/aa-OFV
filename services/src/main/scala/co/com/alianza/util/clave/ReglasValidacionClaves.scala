@@ -159,7 +159,7 @@ case object UltimasContrasenas extends Regla("ULTIMAS_CONTRASENAS_NO_VALIDAS")  
 
             val UltimaContrasenaExiste: Future[Validation[PersistenceException, Boolean]] = FuturoObtenerUltimasContrasenas.map {
               validationInterior => validationInterior.map {
-                listaUltimasContrasenas => contiene(listaUltimasContrasenas, valorContrasenaNueva)
+                listaUltimasContrasenas => contiene(idUsuario.get ,listaUltimasContrasenas, valorContrasenaNueva)
               }
             }
 
@@ -178,8 +178,8 @@ case object UltimasContrasenas extends Regla("ULTIMAS_CONTRASENAS_NO_VALIDAS")  
     }
   }
 
-  def contiene(lista: List[Any], valorContrasenaNueva: String): Boolean = {
-    val contrasenaNuevaConSalt: String = valorContrasenaNueva.concat( AppendPasswordUser.appendUsuariosFiducia )
+  def contiene(idUsuario: Int, lista: List[Any], valorContrasenaNueva: String): Boolean = {
+    val contrasenaNuevaConSalt: String = valorContrasenaNueva.concat( AppendPasswordUser.appendUsuariosFiducia + idUsuario)
     val contrasenaNuevaHash: String = Crypto.hashSha512(contrasenaNuevaConSalt)
 
     def compare(contrasena: String, contrasenaNuevaHash: String): Boolean = {

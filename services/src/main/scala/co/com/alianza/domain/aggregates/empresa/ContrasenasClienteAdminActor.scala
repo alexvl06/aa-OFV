@@ -96,8 +96,8 @@ class ContrasenasClienteAdminActor extends Actor with ActorLogging with AlianzaA
 
     case message: CambiarContrasenaClienteAdminMessage =>
       val currentSender = sender()
-      val passwordActualAppend = message.pw_actual.concat(AppendPasswordUser.appendUsuariosFiducia)
-      val passwordNewAppend = message.pw_nuevo.concat(AppendPasswordUser.appendUsuariosFiducia)
+      val passwordActualAppend = message.pw_actual.concat(AppendPasswordUser.appendUsuariosFiducia + message.idUsuario.get)
+      val passwordNewAppend = message.pw_nuevo.concat(AppendPasswordUser.appendUsuariosFiducia + message.idUsuario.get)
       val CambiarContrasenaFuture = (for {
         usuarioContrasenaActual <- ValidationT(validacionConsultaContrasenaActualClienteAdmin(passwordActualAppend, message.idUsuario.get))
         idValReglasContra <- ValidationT(validacionReglasClave(message.pw_nuevo, message.idUsuario.get, PerfilesUsuario.clienteAdministrador))
@@ -120,8 +120,8 @@ class ContrasenasClienteAdminActor extends Actor with ActorLogging with AlianzaA
           val us_id = claim.getCustomClaim("us_id").toString.toInt
           val us_tipo = claim.getCustomClaim("us_tipo").toString
 
-          val passwordActualAppend = message.pw_actual.concat(AppendPasswordUser.appendUsuariosFiducia)
-          val passwordNewAppend = message.pw_nuevo.concat(AppendPasswordUser.appendUsuariosFiducia)
+          val passwordActualAppend = message.pw_actual.concat(AppendPasswordUser.appendUsuariosFiducia + message.idUsuario.get)
+          val passwordNewAppend = message.pw_nuevo.concat(AppendPasswordUser.appendUsuariosFiducia + message.idUsuario.get)
 
           val CambiarContrasenaFuture = (for {
             usuarioContrasenaActual <- ValidationT(validacionConsultaContrasenaActualClienteAdmin(passwordActualAppend, us_id))

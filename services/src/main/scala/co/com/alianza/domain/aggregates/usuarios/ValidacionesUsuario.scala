@@ -151,7 +151,7 @@ object  ValidacionesUsuario {
   }
 
   def validacionConsultaContrasenaActual(pw_actual: String, idUsuario: Int): Future[Validation[ErrorValidacion, Option[Usuario]]] = {
-    val contrasenaActualFuture = DataAccessAdapterUsuario.ConsultaContrasenaActual(Crypto.hashSha512(pw_actual), idUsuario)
+    val contrasenaActualFuture = DataAccessAdapterUsuario.consultaContrasenaActual(Crypto.hashSha512(pw_actual), idUsuario)
     contrasenaActualFuture.map(_.leftMap(pe => ErrorPersistence(pe.message,pe)).flatMap{
       (x:Option[Usuario]) => x match{
         case Some(c) => zSuccess(x)

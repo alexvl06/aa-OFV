@@ -134,8 +134,8 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
 
     case message: CambiarContrasenaAgenteEmpresarialMessage =>
         val currentSender = sender()
-        val passwordActualAppend = message.pw_actual.concat(AppendPasswordUser.appendUsuariosFiducia)
-        val passwordNewAppend = message.pw_nuevo.concat(AppendPasswordUser.appendUsuariosFiducia)
+        val passwordActualAppend = message.pw_actual.concat(AppendPasswordUser.appendUsuariosFiducia + message.idUsuario.get)
+        val passwordNewAppend = message.pw_nuevo.concat(AppendPasswordUser.appendUsuariosFiducia + message.idUsuario.get)
         val CambiarContrasenaFuture = (for {
           usuarioContrasenaActual <- ValidationT(validacionConsultaContrasenaActualAgenteEmpresarial(passwordActualAppend, message.idUsuario.get))
           idValReglasContra <- ValidationT(validacionReglasClave(message.pw_nuevo, message.idUsuario.get, PerfilesUsuario.agenteEmpresarial))
@@ -158,8 +158,8 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
           val us_id = claim.getCustomClaim("us_id").toString.toInt
           val us_tipo = claim.getCustomClaim("us_tipo").toString
 
-          val passwordActualAppend = message.pw_actual.concat(AppendPasswordUser.appendUsuariosFiducia)
-          val passwordNewAppend = message.pw_nuevo.concat(AppendPasswordUser.appendUsuariosFiducia)
+          val passwordActualAppend = message.pw_actual.concat(AppendPasswordUser.appendUsuariosFiducia + message.idUsuario.get)
+          val passwordNewAppend = message.pw_nuevo.concat(AppendPasswordUser.appendUsuariosFiducia + message.idUsuario.get)
 
           val CambiarContrasenaFuture = (for {
             usuarioContrasenaActual <- ValidationT(validacionConsultaContrasenaActualAgenteEmpresarial(passwordActualAppend, us_id))
@@ -180,11 +180,8 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
 }
 
   private def asignarContrasena(mensaje : AsignarContrasenaMessage)  = {
-
     val currentSender = sender()
-
-    val nuevoPass = mensaje.password.concat(AppendPasswordUser.appendUsuariosFiducia)
-
+    val nuevoPass = mensaje.password.concat(AppendPasswordUser.appendUsuariosFiducia + mensaje.idUsuario)
     val validarActualizarContrasenaFuture = (for {
       usuario <- ValidationT( DataAccessAdapter.obtenerUsuarioEmpresarialPorId(mensaje.idUsuario).map(_.leftMap(pe => ErrorPersistence(pe.message, pe))) )
       empresa <- ValidationT( EmpresaDataAccessAdapter.obtenerEmpresa(usuario.get.identificacion).map(_.leftMap(pe => ErrorPersistence(pe.message, pe))) )

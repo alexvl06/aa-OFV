@@ -84,15 +84,15 @@ class PinUsuarioAgenteEmpresarialActor extends Actor with ActorLogging with Alia
     //En la funcion los cambios: idUsuario y tokenHash que se encuentran en ROJO, no son realmente un error.
     val finalResultFuture = (for {
       pin <- ValidationT(obtenerPinFuture)
-      pinValidacion <- ValidationT(PinUtil.validarPinUsuarioAgenteEmpresarialFuture(pin))
-      clienteAdminOk <- ValidationT(validacionObtenerAgenteEmpId(pinValidacion.idUsuario))
-      estadoEempresaOk <- ValidationT(co.com.alianza.domain.aggregates.empresa.ValidacionesClienteAdmin.validarEstadoEmpresa(clienteAdminOk.identificacion))
-      rvalidacionClave <- ValidationT(co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.validacionReglasClave(pw, pinValidacion.idUsuario, perfilUsuario))
-      rCambiarPss <- ValidationT(cambiarPassword(pinValidacion.idUsuario, passwordAppend))
-      resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(pinValidacion.idUsuario, Crypto.hashSha512(passwordAppend)))
-      rCambiarEstado <- ValidationT(cambiarEstado(pinValidacion.idUsuario))
-      idResult <- ValidationT(eliminarPin(pinValidacion.tokenHash))
-      estadoUsuario       <- ValidationT(validacionEstadoAgenteEmp(clienteAdminOk))
+      pinValidacion                   <- ValidationT(PinUtil.validarPinUsuarioAgenteEmpresarialFuture(pin))
+      clienteAdminOk                  <- ValidationT(validacionObtenerAgenteEmpId(pinValidacion.idUsuario))
+      estadoEempresaOk                <- ValidationT(co.com.alianza.domain.aggregates.empresa.ValidacionesClienteAdmin.validarEstadoEmpresa(clienteAdminOk.identificacion))
+      rvalidacionClave                <- ValidationT(co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.validacionReglasClave(pw, pinValidacion.idUsuario, perfilUsuario))
+      rCambiarPss                     <- ValidationT(cambiarPassword(pinValidacion.idUsuario, passwordAppend))
+      resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(pinValidacion.idUsuario, Crypto.hashSha512(passwordAppend + pinValidacion.idUsuario)))
+      rCambiarEstado                  <- ValidationT(cambiarEstado(pinValidacion.idUsuario))
+      idResult                        <- ValidationT(eliminarPin(pinValidacion.tokenHash))
+      estadoUsuario                   <- ValidationT(validacionEstadoAgenteEmp(clienteAdminOk))
     } yield {
       idResult
     }).run
@@ -105,7 +105,7 @@ class PinUsuarioAgenteEmpresarialActor extends Actor with ActorLogging with Alia
   }
 
   private def cambiarPassword(idUsuario: Int, pw: String): Future[Validation[ErrorValidacion, Int]] =
-    uDataAccessAdapter cambiarPasswordUsuarioAgenteEmpresarial (idUsuario, Crypto.hashSha512(pw)) map (_.leftMap(pe => ErrorPersistence(pe.message, pe)))
+    uDataAccessAdapter cambiarPasswordUsuarioAgenteEmpresarial (idUsuario, Crypto.hashSha512(pw + idUsuario)) map (_.leftMap(pe => ErrorPersistence(pe.message, pe)))
 
   private def cambiarEstado(idUsuario: Int): Future[Validation[ErrorValidacion, Int]] =
     uDataAccessAdapter actualizarEstadoUsuarioAgenteEmpresarial (idUsuario, 1) map (_.leftMap(pe => ErrorPersistence(pe.message, pe)))
