@@ -340,11 +340,6 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
     }).run
   }
 
-  private def guardarUsuario(message:UsuarioMessage): Future[Validation[ErrorValidacion, Int]] = {
-    val passwordUserWithAppend = message.contrasena.concat( AppendPasswordUser.appendUsuariosFiducia )
-    DataAccessAdapterUsuario.crearUsuario(message.toEntityUsuario( Crypto.hashSha512(passwordUserWithAppend))).map(_.leftMap( pe => ErrorPersistence(pe.message,pe)))
-  }
-
   private def resolveCrearUsuarioFuture(crearUsuarioFuture: Future[Validation[ErrorValidacion, Cliente]], currentSender: ActorRef,message:UsuarioMessage) = {
     crearUsuarioFuture onComplete {
       case sFailure(failure) =>
