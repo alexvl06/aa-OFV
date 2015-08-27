@@ -33,7 +33,7 @@ object PermisosTransaccionalesJsonSupport extends DefaultJsonProtocol with Spray
     def write(p: PermisoTransaccionalUsuarioEmpresarial) = jsonFormat8(PermisoTransaccionalUsuarioEmpresarial).write(p)
   }
 
-  implicit val PermisoAgenteFormat = jsonFormat4(PermisoAgente)
+  implicit val PermisoAgenteFormat = jsonFormat7(PermisoAgente)
   implicit val PermisoFormat = new RootJsonFormat[Permiso] {
     def read(json: JsValue) = {
       val permiso = jsonFormat2(Permiso).read(json)
