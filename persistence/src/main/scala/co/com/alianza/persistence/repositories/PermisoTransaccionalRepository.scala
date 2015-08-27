@@ -33,9 +33,9 @@ class PermisoTransaccionalRepository ( implicit executionContext: ExecutionConte
         Try {
           val q = for {
             p <- tablaPermisos if p.idAgente === permiso.idAgente && p.tipoTransaccion === permiso.tipoTransaccion
-          } yield p.minimoNumeroPersonas
+          } yield (p.tipoPermiso, p.montoMaximoTransaccion, p.montoMaximoDiario, p.minimoNumeroPersonas)
           var regMod = 0
-          regMod = q update ((permiso.minimoNumeroPersonas))
+          regMod = q update ((permiso.tipoPermiso, permiso.montoMaximoTransaccion, permiso.montoMaximoDiario, permiso.minimoNumeroPersonas))
           if(!estaSeleccionado) {
             guardarAgentesPermiso(permiso, estaSeleccionado, Some(List()), idClienteAdmin)
             regMod = (for {
