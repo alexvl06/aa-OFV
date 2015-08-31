@@ -122,7 +122,6 @@ class AlianzaCoreRepository(implicit val executionContex: ExecutionContext) {
     callableStatement.execute()
     val codeResponse = callableStatement getObject 1
     val detailResponse = callableStatement getObject 2
-    println(detailResponse)
     detailResponse match {
       case null => codeResponse.toString
       case _ =>

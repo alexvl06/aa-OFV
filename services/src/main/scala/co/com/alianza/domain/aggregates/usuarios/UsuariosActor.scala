@@ -168,23 +168,20 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
                                 resp match {
                                   case zFailure(errorValidacion) => currentSender ! ResponseMessage(Conflict,errorEstadoEmpresa)
                                   case zSuccess(_) =>
-                                    //El olvido de contrasena queda para usuarios en estado activo, pendiente de activacion, pendiente de reinicio de contrasena
-                                    if( valueResponseUsuarioEmpresarial.estado == EstadosEmpresaEnum.activo.id ||
-                                      valueResponseUsuarioEmpresarial.estado == EstadosEmpresaEnum.pendienteActivacion.id ||
-                                      valueResponseUsuarioEmpresarial.estado == EstadosEmpresaEnum.pendienteReiniciarContrasena.id  ) {
+                                    //El olvido de contrasena queda para usuarios en estado diferente a bloqueado por super admin y pendiente activacion
+                                    if(valueResponseUsuarioEmpresarial.estado != EstadosEmpresaEnum.bloqueadoPorAdmin.id  ||
+                                      valueResponseUsuarioEmpresarial.estado != EstadosEmpresaEnum.pendienteActivacion.id) {
                                       //Se cambia a estado reinicio de contraseña cuando el cliente hace click en el enlace del correo
                                       enviarCorreoOlvidoContrasena(responseCliente.wcli_dir_correo, currentSender, message, Some(valueResponseUsuarioEmpresarial.id))
                                     }
                                     else
-                                      currentSender ! ResponseMessage(Conflict,errorEstadoUsuarioNoPermitido)
+                                      currentSender ! ResponseMessage(Conflict, errorEstadoUsuarioNoPermitido)
                                 }
                             }
                           case valueResponse:Usuario =>
-                            //El olvido de contrasena queda para usuarios en estado bloqueado por contrasena y activos
-                            if( valueResponse.estado == EstadosUsuarioEnum.activo.id || valueResponse.estado == EstadosUsuarioEnum.bloqueContraseña.id  )
+                            //El olvido de contrasena queda para usuarios en estado diferente a pendiente de activacion
+                            if( valueResponse.estado != EstadosUsuarioEnum.pendienteActivacion.id)
                               enviarCorreoOlvidoContrasena(responseCliente.wcli_dir_correo, currentSender, message, valueResponse.id)
-                            else if( valueResponse.estado == EstadosUsuarioEnum.pendienteReinicio.id )
-                              currentSender ! ResponseMessage(Conflict,errorEstadoReinicioContrasena)
                             else
                               currentSender ! ResponseMessage(Conflict,errorEstadoUsuarioNoPermitido)
                           case _ => log.info("Error al obtener usuario para olvido de contrasena")
