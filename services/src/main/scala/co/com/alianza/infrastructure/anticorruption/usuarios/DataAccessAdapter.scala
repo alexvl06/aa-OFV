@@ -119,7 +119,7 @@ object DataAccessAdapter {
     }
   }
 
-  def ConsultaContrasenaActual( pw_actual: String, idUsuario: Int): Future[Validation[PersistenceException, Option[Usuario]]] = {
+  def consultaContrasenaActual( pw_actual: String, idUsuario: Int): Future[Validation[PersistenceException, Option[Usuario]]] = {
     val repo = new UsuariosRepository()
     repo.consultaContrasenaActual( pw_actual, idUsuario ) map {
       x => transformValidation(x)
