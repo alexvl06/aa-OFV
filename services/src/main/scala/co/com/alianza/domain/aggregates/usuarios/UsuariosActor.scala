@@ -396,7 +396,7 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
   private val errorEstadoUsuarioNoPermitido                   = ErrorMessage("409.9", "El estado del usuario no permite reiniciar la contrasena", "El estado del usuario no permite reiniciar la contrasena").toJson
   private val errorUsuarioExiste                              = ErrorMessage("409.10", "Fecha de Expedición Invalida", "Fecha de Expedición Invalida").toJson
   private val errorEstadoEmpresa                              = ErrorMessage("409.11", "Estado no valido de la empresa", "Estado no valido de la empresa").toJson
-  private val errorEmpresaNoExiste                            = ErrorMessage("409.12", "Empresa no existe para dicho NIT", "Empresa no existe para dicho NIT").toJson
+  private val errorEmpresaNoExiste                            = ErrorMessage("409.12", "Empresa no existe para dicho NÚMERO", "Empresa no existe para dicho NÚMERO").toJson
   private val errorUsuarioNoExistePerfilClienteNiEmpresaAdmin = ErrorMessage("409.13", "Usuario no existe para perfil cliente, cliente admin", "Usuario no existe para perfil cliente, cliente admin").toJson
   private val errorUsuarioEmpresaAdminActivo                  = ErrorMessage("409.14", "Usuario admin ya existe", "Ya hay un cliente administrador para ese NIT.").toJson
 
