@@ -161,7 +161,6 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
                         response.get match {
                           case valueResponseUsuarioEmpresarial:UsuarioEmpresarialAdmin =>
                             val empresaValidacionFuture = (for {
-                              //adminActivo <- ValidationT(validacionClienteAdminActivo(valueResponseUsuarioEmpresarial.identificacion))
                               empresa     <- ValidationT(esEmpresaActiva(valueResponseUsuarioEmpresarial.identificacion))
                             } yield {
                               empresa
@@ -220,18 +219,6 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
         }
       }
     )
-  }
-
-  //existeUsuarioEmpresarialAdminActivo
-  def validacionClienteAdminActivo(nitEmpresa:String): Future[Validation[ErrorValidacion, Boolean]] = {
-    log.info("Validando cliente admin activo")
-    val existeFuture = co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.DataAccessAdapter.existeUsuarioEmpresarialAdminActivo(nitEmpresa)
-    existeFuture.map(_.leftMap(pe => ErrorPersistence(pe.message, pe)).flatMap{
-      (existe:Boolean) => existe match {
-        case false => zSuccess(existe)
-        case true  => zFailure(ErrorUsuarioEmpresaAdminActivo(errorUsuarioEmpresaAdminActivo))
-      }
-    })
   }
 
   //actualizarContrasenaFuture: Future[Validation[ErrorValidacion, Int]]
