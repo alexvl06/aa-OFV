@@ -11,7 +11,7 @@ trait CrossHeaders {
   def listCrossHeaders: List[spray.http.HttpHeader] = {
 
     val origins = `Access-Control-Allow-Origin`(SomeOrigins(Seq(HttpOrigin(domain))))
-    val methods: `Access-Control-Allow-Methods` = `Access-Control-Allow-Methods`(GET, POST, PUT, DELETE)
+    val methods: `Access-Control-Allow-Methods` = `Access-Control-Allow-Methods`(GET, POST)
     val headers: `Access-Control-Allow-Headers` = `Access-Control-Allow-Headers`("Content-Type", "token")
     val csp = RawHeader("Content-Security-Policy", "default-src 'self'")
     val xpcd: RawHeader = RawHeader("X-Permitted-Cross-Domain-Policies", "master-only")
@@ -21,4 +21,5 @@ trait CrossHeaders {
 
     origins :: methods :: headers :: csp ::xpcd :: ns :: xfo :: xss :: Nil
   }
+
 }
