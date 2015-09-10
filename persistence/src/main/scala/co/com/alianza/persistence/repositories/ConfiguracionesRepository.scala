@@ -14,7 +14,6 @@ import CustomDriver.simple._
 
 class ConfiguracionesRepository(implicit executionContext: ExecutionContext) extends AlianzaRepository {
 
-  //val usuarios = Queryable[Usuario]
 
   val configuraciones = TableQuery[ConfiguracionesTable]
 

@@ -52,7 +52,6 @@ class UsuarioService  extends Directives with AlianzaCommons   with CrossHeaders
           }
         }
       } ~ path("olvidoContrasena"){
-          //pathEndOrSingleSlash {
             post {
               //Reinicio de contrasena de la cuenta alianza fiduciaria (Implica cambio en el estado del usuario)
               clientIP { ip =>
@@ -64,7 +63,6 @@ class UsuarioService  extends Directives with AlianzaCommons   with CrossHeaders
                 }
               }
           }
-        //}
       }
     }
   }
