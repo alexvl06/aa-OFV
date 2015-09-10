@@ -32,7 +32,6 @@ class ValidacionClaveTest  extends FunSuite {
     }
 
 
-    //validaClave("123456").Aw
 
   }
 

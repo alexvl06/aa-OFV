@@ -25,7 +25,6 @@ object DataBaseAccessAlianza{
     dataSource.setUser(config.user);
     dataSource.setPassword(config.pass);
     dataSource.setMaxConnections(config.maxPoolSize);
-    //new InitialContext().rebind("DataSource", source);
     dataSource
 	}
 }

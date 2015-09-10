@@ -67,7 +67,6 @@ class IpsUsuarioRepository ( implicit executionContext: ExecutionContext) extend
   }
 
   private def eliminarIpUsuarioTry(implicit session: Session, idUsuario : Int, ip:String): Try[Int] = Try {
-    //val result: Option[IpsUsuarioTable#TableElementType] = ipsUsuario.filter(x => x.idUsuario === idUsuario && x.ip === ip ).list.headOption
     ipsUsuario.filter(x => x.idUsuario === idUsuario && x.ip === ip ).delete
   }
 

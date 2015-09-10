@@ -30,7 +30,6 @@ case class AutenticarUsuarioEmpresarialMessage (tipoIdentificacion: Option[Int] 
                                                 usuario: String,
                                                 password: String,
                                                 clientIp: Option[String] = None) extends MessageService {
-  //  def toAutenticarRequest:AutenticacionRequest = AutenticacionRequest(tipoIdentificacion, numeroIdentificacion, password, clientIp)
 }
 
 case class AutenticarUsuarioEmpresarialAgenteMessage (tipoIdentificacion: Option[Int] = None,
@@ -39,7 +38,6 @@ case class AutenticarUsuarioEmpresarialAgenteMessage (tipoIdentificacion: Option
                                                       usuario: String,
                                                       password: String,
                                                       clientIp: Option[String] = None) extends MessageService {
-  //  def toAutenticarRequest:AutenticacionRequest = AutenticacionRequest(tipoIdentificacion, numeroIdentificacion, password, clientIp)
 }
 case class AutenticarUsuarioEmpresarialAdminMessage (tipoIdentificacion: Option[Int] = None,
                                                      numeroIdentificacion: Option[String] = None,
@@ -47,7 +45,6 @@ case class AutenticarUsuarioEmpresarialAdminMessage (tipoIdentificacion: Option[
                                                      usuario: String,
                                                      password: String,
                                                      clientIp: Option[String] = None) extends MessageService {
-  //  def toAutenticarRequest:AutenticacionRequest = AutenticacionRequest(tipoIdentificacion, numeroIdentificacion, password, clientIp)
 }
 
 case class AutorizarUrl(token:String, url:String)  extends MessageService{

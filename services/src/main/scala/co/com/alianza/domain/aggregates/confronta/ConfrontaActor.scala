@@ -55,9 +55,6 @@ class ConfrontaActor extends Actor with ActorLogging with AlianzaActors {
 
     case message:ObtenerCuestionarioAdicionalRequestMessage =>
       val currentSender = sender()
-      //val locator =  new ConfrontaBasicoPlusWebServiceServiceLocator
-      //val response = locator.getConfrontaBasicoPlusWS(new java.net.URL(config.getString("confronta.service.obtenerCuestionarioAdicional.location"))).obtenerCuestionario(null,null);
-      //currentSender ! response.toString
 
     case message:ValidarCuestionarioDesbloqueoRequestMessage =>
       val currentSender = sender()

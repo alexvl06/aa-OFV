@@ -58,7 +58,6 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
         result
       }).run
 
-      //resolveFutureValidation(future, (x: ResponseMessage) => x, currentSender)
       resuelveAutorizacionClienteAdmin(future, currentSender)
   }
 
