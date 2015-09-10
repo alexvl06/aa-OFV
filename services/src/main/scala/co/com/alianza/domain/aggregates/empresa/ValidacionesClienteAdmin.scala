@@ -73,7 +73,6 @@ object ValidacionesClienteAdmin {
     }
   }
 
-  //existeUsuarioEmpresarialAdminActivo
   def validacionClienteAdminActivo(nitEmpresa:String): Future[Validation[ErrorValidacion, Boolean]] = {
     val existeFuture = DataAccessAdapterClienteAdmin.existeUsuarioEmpresarialAdminActivo(nitEmpresa)
     existeFuture.map(_.leftMap(pe => ErrorPersistence(pe.message, pe)).flatMap{

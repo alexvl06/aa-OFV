@@ -86,7 +86,6 @@ class ContrasenasClienteAdminActor extends Actor with ActorLogging with AlianzaA
 
   import scala.concurrent.ExecutionContext
 
-  //implicit val _: ExecutionContext = context.dispatcher
 
   import co.com.alianza.util.json.MarshallableImplicits._
 

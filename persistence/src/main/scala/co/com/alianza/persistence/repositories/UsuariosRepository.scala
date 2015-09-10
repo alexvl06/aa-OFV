@@ -17,7 +17,6 @@ import scala.Some
  */
 class UsuariosRepository ( implicit executionContext: ExecutionContext) extends AlianzaRepository  {
 
-  //val usuarios = Queryable[Usuario]
 
   val usuarios = TableQuery[UsuarioTable]
   val perfilesUsuarios = TableQuery[PerfilUsuarioTable]

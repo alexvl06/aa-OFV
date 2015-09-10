@@ -70,7 +70,6 @@ class ContrasenasActor extends Actor with ActorLogging with AlianzaActors {
 
   import scala.concurrent.ExecutionContext
 
-  //implicit val _: ExecutionContext = context.dispatcher
 
   import co.com.alianza.util.json.MarshallableImplicits._
   import ValidacionesUsuario._
