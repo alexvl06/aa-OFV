@@ -24,7 +24,6 @@ import spray.http.StatusCodes._
 import spray.http.RemoteAddress
 import spray.routing.RequestContext
 import spray.routing.authentication.ContextAuthenticator
-//import spray.routing.AuthenticationFailedRejection
 import AuthenticationFailedRejection.{CredentialsRejected, CredentialsMissing}
 
 trait ServiceAuthorization {

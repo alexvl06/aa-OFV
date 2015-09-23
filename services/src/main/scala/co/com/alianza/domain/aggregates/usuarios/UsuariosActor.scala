@@ -1,6 +1,9 @@
 package co.com.alianza.domain.aggregates.usuarios
 
 import akka.actor.{ActorRef, Actor, ActorLogging}
+import co.com.alianza.infrastructure.anticorruption.clientes.DataAccessAdapter
+import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.DataAccessAdapter
+import co.com.alianza.persistence.messages.ConsultaClienteRequest
 import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
 import scala.util.{Failure => sFailure, Success => sSuccess}
 import co.com.alianza.app.{MainActors, AlianzaActors}
@@ -158,7 +161,7 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
                         response.get match {
                           case valueResponseUsuarioEmpresarial:UsuarioEmpresarialAdmin =>
                             val empresaValidacionFuture = (for {
-                              empresa <- ValidationT(esEmpresaActiva(valueResponseUsuarioEmpresarial.identificacion))
+                              empresa     <- ValidationT(esEmpresaActiva(valueResponseUsuarioEmpresarial.identificacion))
                             } yield {
                               empresa
                             }).run
@@ -168,8 +171,9 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
                                 resp match {
                                   case zFailure(errorValidacion) => currentSender ! ResponseMessage(Conflict,errorEstadoEmpresa)
                                   case zSuccess(_) =>
-                                    //El olvido de contrasena queda para usuarios en estado diferente a bloqueado por super admin y pendiente activacion
-                                    if(valueResponseUsuarioEmpresarial.estado != EstadosEmpresaEnum.bloqueadoPorAdmin.id  ||
+                                    //El olvido de contrasena queda para usuarios en estado diferente a bloqueado por super admin
+                                    // y pendiente activacion
+                                    if(valueResponseUsuarioEmpresarial.estado != EstadosEmpresaEnum.bloqueadoPorAdmin.id  &&
                                       valueResponseUsuarioEmpresarial.estado != EstadosEmpresaEnum.pendienteActivacion.id) {
                                       //Se cambia a estado reinicio de contraseña cuando el cliente hace click en el enlace del correo
                                       enviarCorreoOlvidoContrasena(responseCliente.wcli_dir_correo, currentSender, message, Some(valueResponseUsuarioEmpresarial.id))
@@ -388,11 +392,12 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
     //MailMessage(config.getString("alianza.smtp.from"), message.correo, List(), asunto, body, "")
   }
 
-  private val errorEstadoReinicioContrasena = ErrorMessage("409.8", "El usuario se encuentra en proceso de reinicio de contrasena", "El usuario se encuentra en proceso de reinicio de contrasena").toJson
-  private val errorEstadoUsuarioNoPermitido = ErrorMessage("409.9", "El estado del usuario no permite reiniciar la contrasena", "El estado del usuario no permite reiniciar la contrasena").toJson
-  private val errorUsuarioExiste = ErrorMessage("409.10", "Fecha de Expedición Invalida", "Fecha de Expedición Invalida").toJson
-  private val errorEstadoEmpresa = ErrorMessage("409.11", "Estado no valido de la empresa", "Estado no valido de la empresa").toJson
-  private val errorEmpresaNoExiste = ErrorMessage("409.12", "Empresa no existe para dicho NIT", "Empresa no existe para dicho NIT").toJson
+  private val errorEstadoReinicioContrasena                   = ErrorMessage("409.8", "El usuario se encuentra en proceso de reinicio de contrasena", "El usuario se encuentra en proceso de reinicio de contrasena").toJson
+  private val errorEstadoUsuarioNoPermitido                   = ErrorMessage("409.9", "El estado del usuario no permite reiniciar la contrasena", "El estado del usuario no permite reiniciar la contrasena").toJson
+  private val errorUsuarioExiste                              = ErrorMessage("409.10", "Fecha de Expedición Invalida", "Fecha de Expedición Invalida").toJson
+  private val errorEstadoEmpresa                              = ErrorMessage("409.11", "Estado no valido de la empresa", "Estado no valido de la empresa").toJson
+  private val errorEmpresaNoExiste                            = ErrorMessage("409.12", "Empresa no existe para dicho NÚMERO", "Empresa no existe para dicho NÚMERO").toJson
   private val errorUsuarioNoExistePerfilClienteNiEmpresaAdmin = ErrorMessage("409.13", "Usuario no existe para perfil cliente, cliente admin", "Usuario no existe para perfil cliente, cliente admin").toJson
+  private val errorUsuarioEmpresaAdminActivo                  = ErrorMessage("409.14", "Usuario admin ya existe", "Ya hay un cliente administrador para ese NIT.").toJson
 
 }

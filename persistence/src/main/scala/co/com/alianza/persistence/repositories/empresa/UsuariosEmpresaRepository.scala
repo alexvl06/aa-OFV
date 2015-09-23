@@ -26,7 +26,6 @@ import scala.collection.mutable.ListBuffer
  */
 class UsuariosEmpresaRepository ( implicit executionContext: ExecutionContext) extends AlianzaRepository  {
 
-  //val usuarios = Queryable[Usuario]
 
   val Empresas = TableQuery[EmpresaTable]
   val UsuariosEmpresariales = TableQuery[UsuarioEmpresarialTable]

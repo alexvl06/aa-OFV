@@ -96,7 +96,6 @@ class PermisoTransaccionalRepository ( implicit executionContext: ExecutionConte
     implicit session =>
       resolveTry(
         Try {
-          println(tablaPermisos.filter(_.idAgente === idAgente).map(_.tipoTransaccion).list.distinct)
           tablaPermisos.filter(_.idAgente === idAgente).map(_.tipoTransaccion).list.distinct ++
           tablaPermisosEncargos.filter(_.idAgente === idAgente).map(_.tipoTransaccion).list.distinct
         },"Consultar permiso transaccional de agente para login")

@@ -51,7 +51,6 @@ class OtpServicesActor extends Actor with ActorLogging with AlianzaActors with F
   val application = config.getInt("service.otp.application")
 
   def receive = {
-    //toUsuarioEmpresarialEmpresa(empresa, idUsuarioAgenteEmpresarial)
     case message: RegistrarOTP => {
       val currentSender = sender
       val endPoint = config.getString("service.otp.registrar.endpoint")

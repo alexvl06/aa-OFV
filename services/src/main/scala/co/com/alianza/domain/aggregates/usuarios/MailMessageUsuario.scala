@@ -19,7 +19,3 @@ class MailMessageUsuario(templateBody: String) extends MailTemplate {
   }
 }
 
-/*
-object  MailMessageUsuario {
-  def apply() = new MailMessageUsuario
-}*/

@@ -288,7 +288,7 @@ class AutenticacionActor extends Actor with ActorLogging {
     log.info("Validando los estados del cliente del core")
     if (getTipoPersona(tipoIdentificacionUsuario) != cliente.wcli_person)
       Validation.failure(ErrorClienteNoExisteCore())
-    else if (cliente.wcli_estado != EstadosCliente.activo)
+    else if (cliente.wcli_estado != EstadosCliente.inactivo && cliente.wcli_estado != EstadosCliente.bloqueado && cliente.wcli_estado != EstadosCliente.activo)
       Validation.failure(ErrorClienteInactivoCore())
     else if(cliente.wcli_dir_correo == null || cliente.wcli_dir_correo.isEmpty)
       zFailure(ErrorUsuarioBloqueadoCorreoVacio())
