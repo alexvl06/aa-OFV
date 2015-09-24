@@ -175,7 +175,7 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
   private def buildMessage(numHorasCaducidad : Int, pinEmpresa: PinEmpresa, message: UsuarioMessageCorreo, templateBody: String, asuntoTemp: String, usuario : String) = {
     val body: String = new MailMessageEmpresa(templateBody).getMessagePinCreacionAgente(pinEmpresa, numHorasCaducidad, usuario)
     val asunto: String = config.getString(asuntoTemp)
-    MailMessage(config.getString("alianza.smtp.from"), "luisaceleita@seven4n.com",  List(), asunto, body, "")
+    MailMessage(config.getString("alianza.smtp.from"), "josegarcia@seven4n.com",  List(), asunto, body, "")
     //MailMessage(config.getString("alianza.smtp.from"), message.correo, List(), asunto, body, "")
   }
 
