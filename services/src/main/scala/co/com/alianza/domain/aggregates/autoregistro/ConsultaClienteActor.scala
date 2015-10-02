@@ -65,7 +65,6 @@ class ConsultaClienteActor extends Actor with ActorLogging{
             case zFailure(error)              =>  currentSender ! error
           }
       }
-
   }
 
 }
