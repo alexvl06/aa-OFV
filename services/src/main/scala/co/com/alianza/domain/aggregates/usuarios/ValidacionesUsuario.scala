@@ -142,6 +142,15 @@ object  ValidacionesUsuario {
       zSuccess(cliente)
   }
 
+  def validacionConsultaClienteSinCorreo(cliente: Cliente, tipoPersona: Int) : Validation[ErrorValidacion, Cliente] ={
+    if(cliente.wcli_estado != EstadosCliente.inactivo && cliente.wcli_estado != EstadosCliente.bloqueado && cliente.wcli_estado != EstadosCliente.activo)
+      zFailure(ErrorClienteNoExiste(errorClienteInactivo))
+    else if(getTipoPersona(tipoPersona) != cliente.wcli_person)
+      zFailure(ErrorClienteNoExiste(errorClienteNoExiste))
+    else
+      zSuccess(cliente)
+  }
+
   private def getTipoPersona(tipoIdentificacion:Int):String = {
     tipoIdentificacion match{
       case TipoIdentificacion.FID.identificador => "F"
