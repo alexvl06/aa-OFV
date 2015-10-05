@@ -120,33 +120,24 @@ object  ValidacionesUsuario {
     })
   }
 
-  def validacionConsultaCliente(message:UsuarioMessage): Future[Validation[ErrorValidacion, Cliente]] = {
+  def validacionConsultaCliente(message:UsuarioMessage, validarCorreo: Boolean): Future[Validation[ErrorValidacion, Cliente]] = {
     val usuarioFuture = DataAccessAdapterCliente.consultarCliente(ConsultaClienteRequest(message.tipoIdentificacion, message.identificacion))
     usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message,pe)).flatMap{
       (x:Option[Cliente]) => x match{
         case None => zFailure(ErrorClienteNoExiste(errorClienteNoExiste))
         case Some(cliente) =>
-          validacionConsultaCliente(cliente, message.tipoIdentificacion)
+          validacionConsultaCliente(cliente, message.tipoIdentificacion, validarCorreo)
       }
     })
   }
 
-  def validacionConsultaCliente(cliente: Cliente, tipoPersona: Int) : Validation[ErrorValidacion, Cliente] ={
+  def validacionConsultaCliente(cliente: Cliente, tipoPersona: Int, validarCorreo: Boolean) : Validation[ErrorValidacion, Cliente] ={
     if(cliente.wcli_estado != EstadosCliente.inactivo && cliente.wcli_estado != EstadosCliente.bloqueado && cliente.wcli_estado != EstadosCliente.activo)
       zFailure(ErrorClienteNoExiste(errorClienteInactivo))
     else if(getTipoPersona(tipoPersona) != cliente.wcli_person)
       zFailure(ErrorClienteNoExiste(errorClienteNoExiste))
-    else if(cliente.wcli_dir_correo == null || cliente.wcli_dir_correo.isEmpty)
+    else if(validarCorreo && (cliente.wcli_dir_correo == null || cliente.wcli_dir_correo.isEmpty))
       zFailure(ErrorClienteNoExiste(errorCorreoNoExiste))
-    else
-      zSuccess(cliente)
-  }
-
-  def validacionConsultaClienteSinCorreo(cliente: Cliente, tipoPersona: Int) : Validation[ErrorValidacion, Cliente] ={
-    if(cliente.wcli_estado != EstadosCliente.inactivo && cliente.wcli_estado != EstadosCliente.bloqueado && cliente.wcli_estado != EstadosCliente.activo)
-      zFailure(ErrorClienteNoExiste(errorClienteInactivo))
-    else if(getTipoPersona(tipoPersona) != cliente.wcli_person)
-      zFailure(ErrorClienteNoExiste(errorClienteNoExiste))
     else
       zSuccess(cliente)
   }
