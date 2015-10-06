@@ -387,9 +387,9 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
 
     }
     val asunto: String = config.getString(asuntoTemp)
-    MailMessage(config.getString("alianza.smtp.from"), "josegarcia@seven4n.com",  List() , asunto, body, "")
+    //MailMessage(config.getString("alianza.smtp.from"), "josegarcia@seven4n.com",  List() , asunto, body, "")
     //MailMessage(config.getString("alianza.smtp.from"), "josegarcia@seven4n.com", List(), asunto, body, "")
-    //MailMessage(config.getString("alianza.smtp.from"), message.correo, List(), asunto, body, "")
+    MailMessage(config.getString("alianza.smtp.from"), message.correo, List(), asunto, body, "")
   }
 
   private val errorEstadoReinicioContrasena                   = ErrorMessage("409.8", "El usuario se encuentra en proceso de reinicio de contrasena", "El usuario se encuentra en proceso de reinicio de contrasena").toJson
