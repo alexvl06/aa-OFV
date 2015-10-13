@@ -94,7 +94,7 @@ class PinActor extends Actor with ActorLogging with AlianzaActors with FutureRes
       pinValidacion                   <- ValidationT(PinUtil.validarPinFuture(pin))
       rvalidacionClave                <- ValidationT(validacionReglasClave(pw, pinValidacion.idUsuario, PerfilesUsuario.clienteIndividual))
       rCambiarPss                     <- ValidationT(cambiarPassword(pinValidacion.idUsuario, passwordAppend))
-      resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(pinValidacion.idUsuario, Crypto.hashSha512(passwordAppend + pinValidacion.idUsuario)))
+      resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(pinValidacion.idUsuario, Crypto.hashSha512(passwordAppend, pinValidacion.idUsuario)))
       rCambiarEstado                  <- ValidationT(cambiarEstado(pinValidacion.idUsuario))
       idResult                        <- ValidationT(eliminarPin(pinValidacion.tokenHash))
     } yield {
@@ -108,7 +108,7 @@ class PinActor extends Actor with ActorLogging with AlianzaActors with FutureRes
   }
 
   private def cambiarPassword(idUsuario: Int, pw: String): Future[Validation[ErrorValidacion, Int]] = {
-    uDataAccessAdapter.cambiarPassword(idUsuario, Crypto.hashSha512(pw + idUsuario)).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
+    uDataAccessAdapter.cambiarPassword(idUsuario, Crypto.hashSha512(pw, idUsuario)).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
   }
 
   private def cambiarEstado(idUsuario: Int): Future[Validation[ErrorValidacion, Int]] = {

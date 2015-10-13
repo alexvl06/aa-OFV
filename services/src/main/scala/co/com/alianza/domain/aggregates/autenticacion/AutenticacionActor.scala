@@ -245,7 +245,7 @@ class AutenticacionActor extends Actor with ActorLogging {
    */
   def validarPasswords(passwordPeticion: String, passwordUsuario: String, identificacionUsuario: Option[String], idUsuario: Option[Int], numIngresosErroneosUsuario: Int): Future[Validation[ErrorAutenticacion, Boolean]] = Future {
     log.info("Validando passwords")
-    val hash = Crypto.hashSha512(passwordPeticion.concat(AppendPasswordUser.appendUsuariosFiducia + idUsuario.get))
+    val hash = Crypto.hashSha512(passwordPeticion.concat(AppendPasswordUser.appendUsuariosFiducia), idUsuario.get)
     if (hash.contentEquals(passwordUsuario)) Validation.success(true)
     else Validation.failure(ErrorPasswordInvalido(identificacionUsuario, idUsuario, numIngresosErroneosUsuario))
   }

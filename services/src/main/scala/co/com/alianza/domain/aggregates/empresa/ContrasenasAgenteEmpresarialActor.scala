@@ -134,13 +134,13 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
 
     case message: CambiarContrasenaAgenteEmpresarialMessage =>
         val currentSender = sender()
-        val passwordActualAppend = message.pw_actual.concat(AppendPasswordUser.appendUsuariosFiducia + message.idUsuario.get)
-        val passwordNewAppend = message.pw_nuevo.concat(AppendPasswordUser.appendUsuariosFiducia + message.idUsuario.get)
+        val passwordActualAppend = message.pw_actual.concat(AppendPasswordUser.appendUsuariosFiducia)
+        val passwordNewAppend = message.pw_nuevo.concat(AppendPasswordUser.appendUsuariosFiducia)
         val CambiarContrasenaFuture = (for {
           usuarioContrasenaActual <- ValidationT(validacionConsultaContrasenaActualAgenteEmpresarial(passwordActualAppend, message.idUsuario.get))
           idValReglasContra <- ValidationT(validacionReglasClave(message.pw_nuevo, message.idUsuario.get, PerfilesUsuario.agenteEmpresarial))
           idUsuario <- ValidationT(ActualizarContrasena(passwordNewAppend, usuarioContrasenaActual))
-          resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(message.idUsuario.get, Crypto.hashSha512(passwordNewAppend)))
+          resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(message.idUsuario.get, Crypto.hashSha512(passwordNewAppend, message.idUsuario.get)))
         } yield {
           idUsuario
         }).run
@@ -158,14 +158,14 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
           val us_id = claim.getCustomClaim("us_id").toString.toInt
           val us_tipo = claim.getCustomClaim("us_tipo").toString
 
-          val passwordActualAppend = message.pw_actual.concat(AppendPasswordUser.appendUsuariosFiducia + message.idUsuario.get)
-          val passwordNewAppend = message.pw_nuevo.concat(AppendPasswordUser.appendUsuariosFiducia + message.idUsuario.get)
+          val passwordActualAppend = message.pw_actual.concat(AppendPasswordUser.appendUsuariosFiducia)
+          val passwordNewAppend = message.pw_nuevo.concat(AppendPasswordUser.appendUsuariosFiducia)
 
           val CambiarContrasenaFuture = (for {
             usuarioContrasenaActual <- ValidationT(validacionConsultaContrasenaActualAgenteEmpresarial(passwordActualAppend, us_id))
             idValReglasContra <- ValidationT(validacionReglasClave(message.pw_nuevo, us_id, PerfilesUsuario.agenteEmpresarial))
             idUsuario <- ValidationT(ActualizarContrasena(passwordNewAppend, usuarioContrasenaActual))
-            resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(us_id, Crypto.hashSha512(passwordNewAppend)))
+            resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(us_id, Crypto.hashSha512(passwordNewAppend, message.idUsuario.get)))
           } yield {
             idUsuario
           }).run

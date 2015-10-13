@@ -89,7 +89,7 @@ class PinUsuarioAgenteEmpresarialActor extends Actor with ActorLogging with Alia
       estadoEempresaOk                <- ValidationT(co.com.alianza.domain.aggregates.empresa.ValidacionesClienteAdmin.validarEstadoEmpresa(clienteAdminOk.identificacion))
       rvalidacionClave                <- ValidationT(co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.validacionReglasClave(pw, pinValidacion.idUsuario, perfilUsuario))
       rCambiarPss                     <- ValidationT(cambiarPassword(pinValidacion.idUsuario, passwordAppend))
-      resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(pinValidacion.idUsuario, Crypto.hashSha512(passwordAppend + pinValidacion.idUsuario)))
+      resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(pinValidacion.idUsuario, Crypto.hashSha512(passwordAppend, pinValidacion.idUsuario)))
       rCambiarEstado                  <- ValidationT(cambiarEstado(pinValidacion.idUsuario))
       idResult                        <- ValidationT(eliminarPin(pinValidacion.tokenHash))
       estadoUsuario                   <- ValidationT(validacionEstadoAgenteEmp(clienteAdminOk))
@@ -105,7 +105,7 @@ class PinUsuarioAgenteEmpresarialActor extends Actor with ActorLogging with Alia
   }
 
   private def cambiarPassword(idUsuario: Int, pw: String): Future[Validation[ErrorValidacion, Int]] =
-    uDataAccessAdapter cambiarPasswordUsuarioAgenteEmpresarial (idUsuario, Crypto.hashSha512(pw + idUsuario)) map (_.leftMap(pe => ErrorPersistence(pe.message, pe)))
+    uDataAccessAdapter cambiarPasswordUsuarioAgenteEmpresarial (idUsuario, Crypto.hashSha512(pw, idUsuario)) map (_.leftMap(pe => ErrorPersistence(pe.message, pe)))
 
   private def cambiarEstado(idUsuario: Int): Future[Validation[ErrorValidacion, Int]] =
     uDataAccessAdapter actualizarEstadoUsuarioAgenteEmpresarial (idUsuario, 1) map (_.leftMap(pe => ErrorPersistence(pe.message, pe)))

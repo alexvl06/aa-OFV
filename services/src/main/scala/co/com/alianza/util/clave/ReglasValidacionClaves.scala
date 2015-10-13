@@ -179,8 +179,8 @@ case object UltimasContrasenas extends Regla("ULTIMAS_CONTRASENAS_NO_VALIDAS")  
   }
 
   def contiene(idUsuario: Int, lista: List[Any], valorContrasenaNueva: String): Boolean = {
-    val contrasenaNuevaConSalt: String = valorContrasenaNueva.concat( AppendPasswordUser.appendUsuariosFiducia + idUsuario)
-    val contrasenaNuevaHash: String = Crypto.hashSha512(contrasenaNuevaConSalt)
+    val contrasenaNuevaConSalt: String = valorContrasenaNueva.concat( AppendPasswordUser.appendUsuariosFiducia)
+    val contrasenaNuevaHash: String = Crypto.hashSha512(contrasenaNuevaConSalt, idUsuario)
 
     def compare(contrasena: String, contrasenaNuevaHash: String): Boolean = {
       contrasena == contrasenaNuevaHash
