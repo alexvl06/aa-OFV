@@ -31,7 +31,7 @@ object DataAccessAdapter {
 
   def actualizarContrasena(pw_nuevo: String, idUsuario: Int): Future[Validation[PersistenceException, Int]] = {
     val repo = new UsuariosEmpresaRepository()
-    repo.actualizarContrasena(Crypto.hashSha512(pw_nuevo), idUsuario)
+    repo.actualizarContrasena(Crypto.hashSha512(pw_nuevo, idUsuario), idUsuario)
   }
 
   def existeUsuarioEmpresarialAdminActivo(nitEmpresa: String): Future[Validation[PersistenceException, Boolean]] ={
