@@ -107,7 +107,6 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
   def receive = {
 
     case message: ReiniciarContrasenaAgenteEMessage =>
-
       val currentSender = sender()
       val reiniciarContrasenaAgenteEmpresarialFuture = (for {
         idUsuarioAgenteEmpresarial <- ValidationT(validacionAgenteEmpresarial(message.numIdentificacionAgenteEmpresarial, message.correoUsuarioAgenteEmpresarial, message.tipoIdentiAgenteEmpresarial, message.idClienteAdmin.get))
@@ -116,7 +115,6 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
       } yield {
         (idUsuarioAgenteEmpresarial, idEjecucion, numHorasCaducidad)
       }).run
-
       resolveReiniciarContrasenaAEFuture(reiniciarContrasenaAgenteEmpresarialFuture, currentSender, message)
 
     case message: BloquearDesbloquearAgenteEMessage =>
@@ -129,7 +127,6 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
       } yield {
         (estadoAgenteEmpresarial, idEjecucion, numHorasCaducidad)
       }).run
-
       resolveBloquearDesbloquearAgenteFuture(bloquearDesbloquearAgenteEmpresarialFuture, currentSender, message)
 
     case message: CambiarContrasenaAgenteEmpresarialMessage =>
@@ -144,14 +141,11 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
         } yield {
           idUsuario
         }).run
-
         resolveCambiarContrasenaFuture(CambiarContrasenaFuture, currentSender)
 
     case message: CambiarContrasenaCaducadaAgenteEmpresarialMessage =>
-
       val currentSender = sender()
       val tk_validation = Token.autorizarToken(message.token)
-
       tk_validation match {
         case true =>
           val claim = Token.getToken(message.token).getJWTClaimsSet()
@@ -169,9 +163,7 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
           } yield {
             idUsuario
           }).run
-
           resolveCambiarContrasenaFuture(CambiarContrasenaFuture, currentSender)
-
         case false => currentSender ! ResponseMessage(Conflict, tokenValidationFailure)
       }
 
@@ -181,7 +173,7 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
 
   private def asignarContrasena(mensaje : AsignarContrasenaMessage)  = {
     val currentSender = sender()
-    val nuevoPass = mensaje.password.concat(AppendPasswordUser.appendUsuariosFiducia + mensaje.idUsuario)
+    val nuevoPass = mensaje.password.concat(AppendPasswordUser.appendUsuariosFiducia)
     val validarActualizarContrasenaFuture = (for {
       usuario <- ValidationT( DataAccessAdapter.obtenerUsuarioEmpresarialPorId(mensaje.idUsuario).map(_.leftMap(pe => ErrorPersistence(pe.message, pe))) )
       empresa <- ValidationT( EmpresaDataAccessAdapter.obtenerEmpresa(usuario.get.identificacion).map(_.leftMap(pe => ErrorPersistence(pe.message, pe))) )
@@ -189,8 +181,6 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
         (empresa.get, usuario.get, nuevoPass)
       }).run
     resolveValidarActualizarContrasenaFuture(validarActualizarContrasenaFuture, currentSender, mensaje)
-
-
   }
 
   private def resolveValidarActualizarContrasenaFuture(validarActualizarContrasenaFuture: Future[Validation[ErrorValidacion, (Empresa, UsuarioEmpresarial, String)]], currentSender: ActorRef, mensaje: AsignarContrasenaMessage) = {
