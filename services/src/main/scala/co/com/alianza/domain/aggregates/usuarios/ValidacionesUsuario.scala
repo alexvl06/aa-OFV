@@ -61,11 +61,8 @@ object  ValidacionesUsuario {
     })
   }
 
-
   def validacionReglasClave(contrasena:String, idUsuario: Int, perfilUsuario: PerfilesUsuario.perfilUsuario): Future[Validation[ErrorValidacion, Unit.type]] = {
-
     val usuarioFuture: Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = ValidarClave.aplicarReglas(contrasena, Some(idUsuario), perfilUsuario, ValidarClave.reglasGenerales: _*)
-
     usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message,pe)).flatMap{
       (x:List[ErrorValidacionClave]) => x match{
         case List() => zSuccess(Unit)
@@ -75,7 +72,6 @@ object  ValidacionesUsuario {
       }
     })
   }
-
 
   def validaCaptcha(message:UsuarioMessage): Future[Validation[ErrorValidacion, Unit.type]] = {
     val validador = new ValidarCaptcha()

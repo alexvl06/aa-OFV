@@ -97,19 +97,15 @@ class ContrasenasActor extends Actor with ActorLogging with AlianzaActors {
       resolveCambiarContrasenaFuture(CambiarContrasenaFuture, currentSender)
 
     case message: CambiarContrasenaCaducadaMessage =>
-
       val currentSender = sender()
       val tk_validation = Token.autorizarToken(message.token)
-
       tk_validation match {
         case true =>
           val claim = Token.getToken(message.token).getJWTClaimsSet()
           val us_id = claim.getCustomClaim("us_id").toString.toInt
           val us_tipo = claim.getCustomClaim("us_tipo").toString
-
           val passwordActualAppend = message.pw_actual.concat(AppendPasswordUser.appendUsuariosFiducia)
           val passwordNewAppend = message.pw_nuevo.concat(AppendPasswordUser.appendUsuariosFiducia)
-
           val CambiarContrasenaFuture = (for {
             usuarioContrasenaActual <- ValidationT(validacionConsultaContrasenaActual(passwordActualAppend, us_id))
             idValReglasContra <- ValidationT(validacionReglasClave(message.pw_nuevo, us_id, PerfilesUsuario.clienteIndividual))
@@ -121,8 +117,6 @@ class ContrasenasActor extends Actor with ActorLogging with AlianzaActors {
           resolveCambiarContrasenaFuture(CambiarContrasenaFuture, currentSender)
         case false => currentSender ! ResponseMessage(Conflict, tokenValidationFailure)
       }
-
-
 
   }
 
