@@ -5,7 +5,7 @@ import java.text.SimpleDateFormat
 import com.nimbusds.jose.util.Base64URL
 import org.joda.time.{DateTime}
 import java.util.Date
-import enumerations.AppendPasswordUser
+import enumerations.{CryptoAesParameters, AppendPasswordUser}
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jose._
 import com.nimbusds.jose.crypto.{MACSigner, MACVerifier}
@@ -62,7 +62,11 @@ object Token {
     val signedJWT = new SignedJWT(new JWSHeader(JWSHeader.parse(Base64URL.encode(headersJWT))), claimsSet)
     val signer: MACSigner = new MACSigner(SIGNING_KEY)
     signedJWT.sign(signer)
-    signedJWT.serialize()
+
+    var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
+    var encryptedToken = util.encrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, signedJWT.serialize())
+
+    encryptedToken
   }
 
   def generarTokenCaducidadContrasena(tipoUsuario: TiposCliente, idUsuario: Int) = {

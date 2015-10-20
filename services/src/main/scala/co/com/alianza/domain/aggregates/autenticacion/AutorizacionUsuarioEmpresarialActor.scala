@@ -3,7 +3,7 @@ package co.com.alianza.domain.aggregates.autenticacion
 import akka.pattern.ask
 import akka.actor.ActorRef
 
-import co.com.alianza.util.token.Token
+import co.com.alianza.util.token.{AesUtil, Token}
 import co.com.alianza.util.transformers.ValidationT
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.domain.aggregates.autenticacion.errores._
@@ -14,7 +14,7 @@ import co.com.alianza.infrastructure.anticorruption.recursosClienteAdmin.{DataAc
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => usDataAdapter}
 import co.com.alianza.exceptions.{TechnicalLevel, PersistenceException}
 import co.com.alianza.app.MainActors
-import enumerations.EstadosEmpresaEnum
+import enumerations.{CryptoAesParameters, EstadosEmpresaEnum}
 import enumerations.empresa.EstadosDeEmpresaEnum
 
 import scala.concurrent.Future
@@ -69,7 +69,9 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
    * @param message El token para realizar validación
    */
   private def validarToken(message: AutorizarUsuarioEmpresarialMessage): Future[Validation[ErrorAutorizacion, Option[UsuarioEmpresarial]]] = {
-    Token.autorizarToken(message.token) match {
+    var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
+    var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, message.token)
+    Token.autorizarToken(decryptedToken) match {
       case true =>
         usDataAdapter.obtenerUsuarioEmpresarialToken(message.token).flatMap { x =>
           val y: Validation[PersistenceException, Future[Option[UsuarioEmpresarial]]] = x.map { userOpt =>
@@ -90,7 +92,9 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
    * @param token El token para realizar validación
    */
   private def validarTokenAdmin(token: String): Future[Validation[ErrorAutorizacion, Option[(UsuarioEmpresarialAdmin, Int)]]] = {
-    Token.autorizarToken(token) match {
+    var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
+    var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
+    Token.autorizarToken(decryptedToken) match {
       case true =>
         usDataAdapter.obtenerUsuarioEmpresarialAdminToken(token).flatMap { x =>
           val y: Validation[PersistenceException, Future[Option[(UsuarioEmpresarialAdmin, Int)]]] = x.map { userOpt =>

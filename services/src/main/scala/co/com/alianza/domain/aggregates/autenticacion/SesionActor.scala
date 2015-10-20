@@ -10,6 +10,8 @@ import akka.util.Timeout
 import co.com.alianza.app.MainActors
 import co.com.alianza.infrastructure.dto.{Empresa, HorarioEmpresa}
 import co.com.alianza.infrastructure.messages._
+import co.com.alianza.util.token.AesUtil
+import enumerations.CryptoAesParameters
 
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._
@@ -65,8 +67,10 @@ class SesionActorSupervisor extends Actor with ActorLogging {
   }
 
   private def validarSesion(message: ValidarSesion): Unit = {
+    var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT);
+    var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, message.token);
     val currentSender = sender()
-    val actorName = generarNombreSesionActor(message.token)
+    val actorName = generarNombreSesionActor(decryptedToken)
     context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(actorName) map {
       case Some(sesionActor: ActorRef) => sesionActor ? ActualizarSesion() onComplete { case _ => currentSender ! true }
       case None => currentSender ! false
@@ -74,8 +78,10 @@ class SesionActorSupervisor extends Actor with ActorLogging {
   }
 
   private def buscarSesion(token: String) = {
+    var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT);
+    var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token);
     val currentSender = sender()
-    val actorName = generarNombreSesionActor(token)
+    val actorName = generarNombreSesionActor(decryptedToken)
     context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(actorName) onComplete {
       case Failure(error) => log error ("Error al obtener la sesión", error)
       case Success(actor) => currentSender ! actor
@@ -91,7 +97,9 @@ class SesionActorSupervisor extends Actor with ActorLogging {
   }
 
   private def crearSesion(token: String, expiration: Int, empresa: Option[Empresa], horario: Option[HorarioEmpresa]) = {
-    val name = generarNombreSesionActor(token)
+    var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
+    var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
+    val name = generarNombreSesionActor(decryptedToken)
     context.actorOf(SesionActor.props(expiration, empresa, horario), name)
     log.info("Creando sesion de usuario. Tiempo de expiracion: " + expiration + " minutos.")
   }
@@ -111,8 +119,10 @@ class SesionActorSupervisor extends Actor with ActorLogging {
   private def obtenerEmpresaSesionActorId(empresaId: Int) = {
     val currentSender = sender()
     context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(s"empresa$empresaId") onComplete {
-      case Failure(error) => log error ("/*/ Error al obtener la sesion de empresa ", error)
-      case Success(actor) => currentSender ! actor
+      case Failure(error) =>
+        log error ("/*/ Error al obtener la sesion de empresa ", error)
+      case Success(actor) =>
+        currentSender ! actor
     }
   }
 }

@@ -19,8 +19,9 @@ import co.com.alianza.infrastructure.dto.{Configuracion, RecursoUsuario, Usuario
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.util.FutureResponse
 import co.com.alianza.util.json.JsonUtil
-import co.com.alianza.util.token.Token
+import co.com.alianza.util.token.{AesUtil, Token}
 import co.com.alianza.util.transformers.ValidationT
+import enumerations.CryptoAesParameters
 
 import spray.http.StatusCodes._
 
@@ -87,7 +88,6 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
       resolveFutureValidation(future, (x: ResponseMessage) => x, currentSender)
 
     case message: InvalidarToken =>
-
       val currentSender = sender()
       val futureInvalidarToken = usDataAdapter.invalidarTokenUsuario(message.token)
 
@@ -131,7 +131,9 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
    * @param token El token para realizar validación
    */
   private def validarToken(token: String): Future[Validation[PersistenceException, Option[Usuario]]] = {
-    Token.autorizarToken(token) match {
+    var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
+    var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
+    Token.autorizarToken(decryptedToken) match {
       case true =>
         usDataAdapter.obtenerUsuarioToken(token).flatMap { x =>
           val y: Validation[PersistenceException, Future[Option[Usuario]]] = x.map { userOpt =>

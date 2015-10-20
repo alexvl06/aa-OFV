@@ -10,8 +10,9 @@ import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
 import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{DataAccessAdapter => AgenteEmpresarialDataAccessAdapter}
 import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{DataAccessAdapter => ClienteAdminDataAccessAdapter}
 import co.com.alianza.infrastructure.dto.Usuario
-import co.com.alianza.util.token.Token
+import co.com.alianza.util.token.{AesUtil, Token}
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
+import enumerations.CryptoAesParameters
 import spray.routing.{RequestContext, Directives}
 import co.com.alianza.app.AlianzaCommons
 import co.com.alianza.infrastructure.messages.{InvalidarToken, AutorizarUrl}
@@ -31,6 +32,8 @@ class AutorizacionService extends Directives with AlianzaCommons with CacheHelpe
   implicit val contextAuthorization: ExecutionContext = MainActors.ex
   implicit val conf: Config= MainActors.conf
 
+  import AutenticacionMessagesJsonSupport._
+
   def route = {
     path("validarToken" / Segment) {
       token =>
@@ -40,44 +43,50 @@ class AutorizacionService extends Directives with AlianzaCommons with CacheHelpe
               (url, ipRemota) =>
 
                 val tipoCliente = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
+                var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
+                var encryptedToken = util.encrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
 
                 if (tipoCliente == TiposCliente.agenteEmpresarial.toString)
-                  requestExecute(AutorizarUsuarioEmpresarialMessage(token, Some(url), ipRemota), autorizacionUsuarioEmpresarialActor)
+                  requestExecute(AutorizarUsuarioEmpresarialMessage(encryptedToken, Some(url), ipRemota), autorizacionUsuarioEmpresarialActor)
                 else if (tipoCliente == TiposCliente.clienteAdministrador.toString)
-                  requestExecute(AutorizarUsuarioEmpresarialAdminMessage(token, Some(url)), autorizacionUsuarioEmpresarialActor)
+                  requestExecute(AutorizarUsuarioEmpresarialAdminMessage(encryptedToken, Some(url)), autorizacionUsuarioEmpresarialActor)
                 else
-                  requestExecute(AutorizarUrl(token, url), autorizacionActor)
-             }
-          }
-        }
-    } ~ path("invalidarToken" / Segment) {
-      token =>
-        get {
-          respondWithMediaType(mediaType) {
-            clientIP { ip =>
-              mapRequestContext {
-                r: RequestContext =>
-                  val tipoCliente = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
-                  val usuario :  Future[Validation[PersistenceException, Option[AuditingUser.AuditingUserData]]] = if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
-                    AgenteEmpresarialDataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token)
-                  } else if(tipoCliente == TiposCliente.clienteAdministrador.toString) {
-                    ClienteAdminDataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token)
-                  } else {
-                    DataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token)
-                  }
-                  requestWithFutureAuditing[PersistenceException, Usuario](r, AuditingHelper.fiduciariaTopic, AuditingHelper.cierreSesionIndex, ip.value, kafkaActor, usuario)
-              } {
-                val tipoCliente = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
-                if (tipoCliente == TiposCliente.agenteEmpresarial.toString)
-                  requestExecute(InvalidarTokenAgente(token), autorizacionActor)
-                else if (tipoCliente == TiposCliente.clienteAdministrador.toString)
-                  requestExecute(InvalidarTokenClienteAdmin(token), autorizacionActor)
-                else
-                  requestExecute(InvalidarToken(token), autorizacionActor)
-              }
+                  requestExecute(AutorizarUrl(encryptedToken, url), autorizacionActor)
             }
           }
-	      }
+        }
+    } ~ path("invalidarToken") {
+        entity(as[InvalidarToken]) {
+          token =>
+            delete {
+              respondWithMediaType(mediaType) {
+                var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
+                var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token.token)
+                clientIP { ip =>
+                  mapRequestContext {
+                    r: RequestContext =>
+                      val tipoCliente = Token.getToken(decryptedToken).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
+                      val usuario: Future[Validation[PersistenceException, Option[AuditingUser.AuditingUserData]]] = if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
+                        AgenteEmpresarialDataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.token)
+                      } else if (tipoCliente == TiposCliente.clienteAdministrador.toString) {
+                        ClienteAdminDataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.token)
+                      } else {
+                        DataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.token)
+                      }
+                      requestWithFutureAuditing[PersistenceException, Usuario](r, AuditingHelper.fiduciariaTopic, AuditingHelper.cierreSesionIndex, ip.value, kafkaActor, usuario)
+                  } {
+                    val tipoCliente = Token.getToken(decryptedToken).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
+                    if (tipoCliente == TiposCliente.agenteEmpresarial.toString)
+                      requestExecute(InvalidarTokenAgente(token.token), autorizacionActor)
+                    else if (tipoCliente == TiposCliente.clienteAdministrador.toString)
+                      requestExecute(InvalidarTokenClienteAdmin(token.token), autorizacionActor)
+                    else
+                      requestExecute(InvalidarToken(token.token), autorizacionActor)
+                  }
+                }
+              }
+            }
+        }
     }
   }
 }

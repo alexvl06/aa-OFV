@@ -9,6 +9,8 @@ import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{DataAc
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.infrastructure.messages._
+import co.com.alianza.util.token.AesUtil
+import enumerations.CryptoAesParameters
 import spray.routing.{RequestContext}
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import spray.routing.Directives
@@ -56,7 +58,9 @@ class IpsUsuariosService extends Directives with AlianzaCommons with CrossHeader
                     r: RequestContext =>
                       val token = r.request.headers.find(header => header.name equals "token")
                       val stringToken = token match {
-                        case Some(s) => s.value
+                        case Some(s) =>
+                          var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
+                          util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, s.value)
                         case _ => ""
                       }
                       val usuario = user.tipoCliente match {
