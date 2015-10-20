@@ -17,6 +17,7 @@ object AutenticacionMessagesJsonSupport extends DefaultJsonProtocol with SprayJs
   implicit val AutenticarClienteEmpresaMessageFormat = jsonFormat6(AutenticarUsuarioEmpresarialMessage)
   implicit val AutorizarUrlRequestMessageFormat = jsonFormat2(AutorizarUrl)
   implicit val AgregarIpHabitualRequestMessageFormat = jsonFormat2(AgregarIPHabitualUsuario)
+  implicit val InvalidarTokenRequestMessageFormat = jsonFormat1(InvalidarToken)
 }
 
 

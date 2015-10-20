@@ -12,9 +12,10 @@ import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.util.json.JsonUtil
-import co.com.alianza.util.token.Token
+import co.com.alianza.util.token.{AesUtil, Token}
 
 import com.typesafe.config.Config
+import enumerations.CryptoAesParameters
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future, promise}
@@ -37,11 +38,13 @@ trait ServiceAuthorization {
   def authenticateUser : ContextAuthenticator[UsuarioAuth] = {
     ctx =>
       val token = ctx.request.headers.find(header => header.name equals "token")
+      var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
+      var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token.get.value)
       log info(token toString)
       if (token.isEmpty) {
         Future(Left(AuthenticationFailedRejection(CredentialsMissing, List())))
       } else {
-        val tipoCliente = Token.getToken(token.get.value).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
+        val tipoCliente = Token.getToken(decryptedToken).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
         val p = promise[Any]
         var futuro: Future[Any] = null
         if (tipoCliente == TiposCliente.agenteEmpresarial.toString)
@@ -53,7 +56,8 @@ trait ServiceAuthorization {
         futuro map {
           case r: ResponseMessage =>
             r.statusCode match {
-              case Unauthorized => Left(AuthenticationFailedRejection(CredentialsRejected, List(), Some(Unauthorized.intValue), Some(r.responseBody)))
+              case Unauthorized =>
+                Left(AuthenticationFailedRejection(CredentialsRejected, List(), Some(Unauthorized.intValue), Some(r.responseBody)))
               case OK =>
                 val user = JsonUtil.fromJson[Usuario](r.responseBody)
                 Right(UsuarioAuth(user.id.get, user.tipoCliente))
