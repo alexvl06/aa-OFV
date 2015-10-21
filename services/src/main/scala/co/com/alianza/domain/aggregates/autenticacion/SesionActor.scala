@@ -93,7 +93,6 @@ class SesionActorSupervisor extends Actor with ActorLogging {
     ClusterUtil.obtenerNodos foreach { member =>
       context.actorSelection(RootActorPath(member.address) / "user" / "sesionActorSupervisor") ! DeleteSession(actorName)
     }
-
   }
 
   private def crearSesion(token: String, expiration: Int, empresa: Option[Empresa], horario: Option[HorarioEmpresa]) = {

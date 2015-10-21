@@ -44,6 +44,12 @@ trait ServiceAuthorization {
       if (token.isEmpty) {
         Future(Left(AuthenticationFailedRejection(CredentialsMissing, List())))
       } else {
+<<<<<<< HEAD
+=======
+        var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
+        var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token.get.value)
+
+>>>>>>> 033422d... correccion menu y agregar y eliminar ips
         val tipoCliente = Token.getToken(decryptedToken).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
         val p = promise[Any]
         var futuro: Future[Any] = null
