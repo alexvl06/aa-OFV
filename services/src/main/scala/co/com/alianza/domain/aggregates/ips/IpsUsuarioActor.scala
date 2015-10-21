@@ -23,7 +23,6 @@ import scala.concurrent.Future
 import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
 import scalaz.std.AllInstances._
 
-
 class IpsUsuarioActorSupervisor extends Actor with ActorLogging {
 
   val ipsUsuarioActor = context.actorOf(Props[IpsUsuarioActor].withRouter(RoundRobinPool(nrOfInstances = 2)), "ipsUsuarioActor")
@@ -41,10 +40,10 @@ class IpsUsuarioActorSupervisor extends Actor with ActorLogging {
   }
 
 }
+
 /**
  * Created by david on 16/06/14.
  */
-
 class IpsUsuarioActor extends Actor with ActorLogging with AlianzaActors {
   import scala.concurrent.ExecutionContext
   implicit val _: ExecutionContext = context.dispatcher
@@ -136,10 +135,9 @@ class IpsUsuarioActor extends Actor with ActorLogging with AlianzaActors {
 
   private def agregarIpSesionEmpresa(empresaId: Int, ip: String) =
     MainActors.sesionActorSupervisor ? ObtenerEmpresaSesionActorId (empresaId) map {
-      case Some(empresaSesionActor: ActorRef) =>
-        empresaSesionActor ! AgregarIp(ip); zSuccess(():Unit)
-      case _ =>
-        zFailure(PersistenceException(new Exception(),BusinessLevel,"Error"))
+      case Some(empresaSesionActor: ActorRef) => empresaSesionActor ! AgregarIp(ip); zSuccess(():Unit)
+      case None => zSuccess(():Unit)
+      case _ => zFailure(PersistenceException(new Exception(),BusinessLevel,"Error"))
     }
 
   private def removerIpSesionEmpresa(empresaId: Int, ip: String) =
