@@ -117,6 +117,9 @@ class SesionActorSupervisor extends Actor with ActorLogging {
   }
 
   private def obtenerEmpresaSesionActorId(empresaId: Int) = {
+    println("....................................................")
+    println("id_Empresa : " + empresaId)
+
     val currentSender = sender()
     context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(s"empresa$empresaId") onComplete {
       case Failure(error) =>

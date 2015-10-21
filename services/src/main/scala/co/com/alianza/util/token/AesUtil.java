@@ -116,5 +116,5 @@ public class AesUtil {
     private IllegalStateException fail(Exception e) {
         return new IllegalStateException(e);
     }
-    
+
 }
