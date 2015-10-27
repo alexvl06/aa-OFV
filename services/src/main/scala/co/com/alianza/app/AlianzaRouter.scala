@@ -14,7 +14,6 @@ import co.com.alianza.webvalidarPinClienteAdmin.PinService
 
 class AlianzaRouter extends HttpServiceActor with RouteConcatenation with CrossHeaders  with ServiceAuthorization with ActorLogging {
 
-
   implicit val conf: Config = MainActors.conf
   implicit val system: ActorSystem = MainActors.system
   implicit val contextAuthorization = MainActors.ex
