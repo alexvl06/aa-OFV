@@ -57,8 +57,6 @@ class SesionActorSupervisor extends Actor with ActorLogging {
 
     case BuscarSesion(token) => buscarSesion(token)
 
-    case ObtenerEmpresaSesionActorToken(token) => obtenerEmpresaSesion(token)
-
     case CrearEmpresaActor(empresa, horario) =>
       log info "Creando empresa Actor: "+s"empresa${empresa.id}"
       sender ! context.actorOf(EmpresaActor.props(empresa, horario), s"empresa${empresa.id}")
@@ -89,7 +87,9 @@ class SesionActorSupervisor extends Actor with ActorLogging {
   }
 
   private def invalidarSesion(token: String): Unit = {
-    val actorName = generarNombreSesionActor(token)
+    var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
+    var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
+    val actorName = generarNombreSesionActor(decryptedToken)
     ClusterUtil.obtenerNodos foreach { member =>
       context.actorSelection(RootActorPath(member.address) / "user" / "sesionActorSupervisor") ! DeleteSession(actorName)
     }
@@ -103,17 +103,8 @@ class SesionActorSupervisor extends Actor with ActorLogging {
     log.info("Creando sesion de usuario. Tiempo de expiracion: " + expiration + " minutos.")
   }
 
-  private def generarNombreSesionActor(token: String) =
+  private def generarNombreSesionActor(token: String) = 
     MessageDigest.getInstance("MD5").digest(token.split("\\.")(2).getBytes).map { b => String.format("%02X", java.lang.Byte.valueOf(b))}.mkString("") // Actor's name
-
-  private def obtenerEmpresaSesion(token: String) = {
-    val currentSender = sender()
-    val actorName = generarNombreSesionActor(token)
-    context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(actorName) map {
-      case Some(sesion: ActorRef) => sesion tell (ObtenerEmpresaActor, currentSender)
-      case None => currentSender ! None
-    }
-  }
 
   private def obtenerEmpresaSesionActorId(empresaId: Int) = {
     val currentSender = sender()
