@@ -20,7 +20,6 @@ class UsuarioService  extends Directives with AlianzaCommons   with CrossHeaders
 
   import UsuariosMessagesJsonSupport._
 
-
   def route = {
      pathPrefix("autoregistro") {
       path("usuario" ) {
@@ -29,7 +28,6 @@ class UsuarioService  extends Directives with AlianzaCommons   with CrossHeaders
            usuario =>
             respondWithMediaType(mediaType) {
               clientIP { ip =>
-
                 mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.autoRegistroIndex, ip.value, kafkaActor, usuario.copy( contrasena = null))) {
                   val nuevoUsuario: UsuarioMessage = usuario.copy(clientIp = Some(ip.value))
                   requestExecute(nuevoUsuario, usuariosActor)
@@ -51,18 +49,18 @@ class UsuarioService  extends Directives with AlianzaCommons   with CrossHeaders
               }
           }
         }
-      } ~ path("olvidoContrasena"){
-            post {
-              //Reinicio de contrasena de la cuenta alianza fiduciaria (Implica cambio en el estado del usuario)
-              clientIP { ip =>
-                entity(as[OlvidoContrasenaMessage]) {
-                  olvidarContrasena =>
-                    mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.olvidoContrasenaIndex, ip.value, kafkaActor, olvidarContrasena)) {
-                      requestExecute(olvidarContrasena, usuariosActor)
-                    }
+      } ~ path("olvidoContrasena") {
+        post {
+          //Reinicio de contrasena de la cuenta alianza fiduciaria (Implica cambio en el estado del usuario)
+          clientIP { ip =>
+            entity(as[OlvidoContrasenaMessage]) {
+              olvidarContrasena =>
+                mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.olvidoContrasenaIndex, ip.value, kafkaActor, olvidarContrasena)) {
+                  requestExecute(olvidarContrasena, usuariosActor)
                 }
-              }
+            }
           }
+        }
       }
     }
   }
