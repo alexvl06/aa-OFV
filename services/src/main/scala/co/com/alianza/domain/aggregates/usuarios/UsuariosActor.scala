@@ -309,7 +309,7 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
   }
 
   private def validaSolicitudCliente(message: OlvidoContrasenaMessage): Future[Validation[ErrorValidacion, Cliente]] = {
-    val consultaClienteFuture = validacionConsultaCliente(UsuarioMessage("",message.identificacion,message.tipoIdentificacion, null, false, None), false)
+    val consultaClienteFuture = validacionConsultaCliente(UsuarioMessage("",message.identificacion,message.tipoIdentificacion, null, false, None), true)
     (for {
       cliente <- ValidationT(consultaClienteFuture)
     } yield {
