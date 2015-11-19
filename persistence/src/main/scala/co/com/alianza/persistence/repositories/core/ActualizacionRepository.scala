@@ -58,7 +58,13 @@ class ActualizacionRepository(implicit executionContext: ExecutionContext) exten
     callableStatement.setString(11, msg.fdpn_drcl_dire_ofi)
     callableStatement.setString(12, msg.fdpn_drcl_ciud_res)
     callableStatement.setString(13, msg.fdpn_drcl_tele_res)
-    callableStatement.setString(14, msg.fdpn_dcfd_email_ant)
+    //en caso que el cliente no tenga correo en el core,
+    //el correo antiguo debe ser el mismo correo nuevo
+    val correoAntiguo:String =
+      if(msg.fdpn_dcfd_email_ant == null || msg.fdpn_dcfd_email_ant.isEmpty)
+        msg.fdpn_dcfd_email
+      else msg.fdpn_dcfd_email_ant
+    callableStatement.setString(14, correoAntiguo)
     callableStatement.setString(15, msg.fdpn_dcfd_email)
     callableStatement.setString(16, msg.fdpn_dcfd_tipo_ant)
     callableStatement.setString(17, msg.fdpn_dcfd_tipo)
