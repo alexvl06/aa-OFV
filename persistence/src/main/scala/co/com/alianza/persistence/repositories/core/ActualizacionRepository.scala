@@ -66,7 +66,13 @@ class ActualizacionRepository(implicit executionContext: ExecutionContext) exten
       else msg.fdpn_dcfd_email_ant
     callableStatement.setString(14, correoAntiguo)
     callableStatement.setString(15, msg.fdpn_dcfd_email)
-    callableStatement.setString(16, msg.fdpn_dcfd_tipo_ant)
+    //en caso que el cliente no tenga correo en el core,
+    //el tipo correo antiguo debe ser el mismo tipo del correo nuevo
+    val tipoCorreoAntiguo:String =
+      if(msg.fdpn_dcfd_tipo_ant == null || msg.fdpn_dcfd_tipo_ant.isEmpty)
+        msg.fdpn_dcfd_tipo
+      else msg.fdpn_dcfd_tipo_ant
+    callableStatement.setString(16, tipoCorreoAntiguo)
     callableStatement.setString(17, msg.fdpn_dcfd_tipo)
     callableStatement.setString(18, msg.fdpn_envio_corresp)
     callableStatement.setString(19, msg.fdpn_telefono_movil_1)
