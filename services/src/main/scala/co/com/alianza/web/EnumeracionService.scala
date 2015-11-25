@@ -21,7 +21,7 @@ class EnumeracionService extends Directives with AlianzaCommons  {
     path(enumeracion/tiposIdentificacion) {
         get {
             complete {
-              val list = List(new TipoIdentificaciones( 1 ,"CC" ),new TipoIdentificaciones( 2 ,"CE" ), new TipoIdentificaciones( 5 ,"TI" ))
+              val list = List(new TipoIdentificaciones( 1 ,"CC" ),new TipoIdentificaciones( 2 ,"CE" ), new TipoIdentificaciones( 5 ,"TI" ), new TipoIdentificaciones( 6, "NUIP" ), new TipoIdentificaciones( 7, "Pasaporte" ), new TipoIdentificaciones( 8, "Registro Civil" ))
               JsonUtil.toJson(list)
             }
         }
@@ -35,7 +35,7 @@ class EnumeracionService extends Directives with AlianzaCommons  {
       }~ path(enumeracion/tiposIdentificacionEmpresas) {
       get {
         complete {
-          val list = List(new TipoIdentificaciones( 3 ,"NIT" ), new TipoIdentificaciones( 4 ,"FID" ))
+          val list = List(new TipoIdentificaciones( 3 ,"NIT" ), new TipoIdentificaciones( 4 ,"FID" ), new TipoIdentificaciones( 9 ,"Sociedad Extranjera" ))
           JsonUtil.toJson(list)
         }
       }
