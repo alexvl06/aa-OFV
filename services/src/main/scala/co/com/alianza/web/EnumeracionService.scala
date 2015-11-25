@@ -21,14 +21,14 @@ class EnumeracionService extends Directives with AlianzaCommons  {
     path(enumeracion/tiposIdentificacion) {
         get {
             complete {
-              val list = List(new TipoIdentificaciones( 1 ,"CC" ),new TipoIdentificaciones( 2 ,"CE" ), new TipoIdentificaciones( 5 ,"TI" ), new TipoIdentificaciones( 6, "NUIP" ), new TipoIdentificaciones( 7, "Pasaporte" ), new TipoIdentificaciones( 8, "Registro Civil" ))
+              val list = List(new TipoIdentificaciones( 1 ,"Cédula de Ciudadanía" ),new TipoIdentificaciones( 2 ,"Cédula de Extranjería" ), new TipoIdentificaciones( 5 ,"Tarjeta de Identidad" ), new TipoIdentificaciones( 6, "NUIP" ), new TipoIdentificaciones( 7, "Pasaporte" ), new TipoIdentificaciones( 8, "Registro Civil" ))
               JsonUtil.toJson(list)
             }
         }
       }~ path(enumeracion/tiposIdentificacionNatural) {
         get {
           complete {
-            val list = List(new TipoIdentificaciones( 1 ,"CC" ),new TipoIdentificaciones( 2 ,"CE" ))
+            val list = List(new TipoIdentificaciones( 1 ,"Cédula de Ciudadanía" ),new TipoIdentificaciones( 2 ,"Cédula de Extranjería" ))
             JsonUtil.toJson(list)
           }
         }
