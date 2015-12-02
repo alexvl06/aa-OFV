@@ -14,7 +14,7 @@ object DataAccessAdapter {
   implicit val ec: ExecutionContext = MainActors.dataAccesEx
 
   def obtenerPreguntas(): Future[Validation[PersistenceException, List[Pregunta]]] = {
-    val repo = new PreguntasAutovalidacionRepository()()
+    val repo = new PreguntasAutovalidacionRepository()
     repo.obtenerPreguntas() map {
       x => transformValidationList(x)
     }
