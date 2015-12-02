@@ -117,7 +117,7 @@ object  ValidacionesUsuario {
   }
 
   def validacionConsultaCliente(message:UsuarioMessage, validarCorreo: Boolean): Future[Validation[ErrorValidacion, Cliente]] = {
-    val usuarioFuture = DataAccessAdapterCliente.consultarCliente(ConsultaClienteRequest(message.tipoIdentificacion, message.identificacion))
+    val usuarioFuture = DataAccessAdapterCliente.consultarCliente(message.identificacion)
     usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message,pe)).flatMap{
       (x:Option[Cliente]) => x match{
         case None => zFailure(ErrorClienteNoExiste(errorClienteNoExiste))

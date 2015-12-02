@@ -13,9 +13,9 @@ object DataAccessAdapter {
 
   implicit val ec: ExecutionContext = MainActors.dataAccesEx
 
-  def consultarCliente( message:ConsultaClienteRequest ): Future[Validation[PersistenceException, Option[Cliente]]] = {
+  def consultarCliente( numDocumento: String ): Future[Validation[PersistenceException, Option[Cliente]]] = {
     val repo = new ClienteRepository()
-    repo consultaCliente message map { x => transformValidation(x) }
+    repo consultaCliente numDocumento map { x => transformValidation(x) }
   }
 
   private def transformValidation(origin: Validation[PersistenceException, String]): Validation[PersistenceException, Option[Cliente]] = {

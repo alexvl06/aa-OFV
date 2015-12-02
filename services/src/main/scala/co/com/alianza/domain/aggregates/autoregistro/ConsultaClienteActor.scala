@@ -51,7 +51,7 @@ class ConsultaClienteActor extends Actor with ActorLogging{
     case message:ExisteClienteCoreMessage  =>
 
       val currentSender = sender()
-      val result = DataAccessAdapter.consultarCliente(message.toConsultaClienteRequest)
+      val result = DataAccessAdapter.consultarCliente(message.numDocumento)
 
       result  onComplete {
         case Failure(failure)  =>    currentSender ! failure

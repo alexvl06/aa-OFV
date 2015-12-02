@@ -76,28 +76,27 @@ class AutenticacionActor extends Actor with ActorLogging {
     /**
      * Flujo:
      * 1) Busca el usuario en la base de datos, si no se encuentra se devuelve CredencialesInvalidas
-     * 2) Se validan los tipos de documentos
-     * 3) Valida los estados del usuario encontrado, esta validacion devuelve un tipo de error por estado, si es exitosa se continúa el proceso
-     * 4) Se comparan los passwords de la petición y el usuario, si coinciden se prosigue de lo contrario se debe ejecutar la excepcion de pw inválido
-     * 5) Se busca el cliente en el core de alianza, si no se encuentra se debe devolver ErrorClienteNoExisteCore
-     * 6) Se valida el cliente encontrado, este metodo devuelve un error de la validacion que no cumple
-     * 7) Se valida la fecha de caducacion del password, si caducó se debe devolver ErrorPasswordCaducado, de lo contrario se prosigue
+     * *) Antes validaba el tipo de identificacion. Por solicitud de Alianza ya no se hace esa validacion.
+     * 2) Valida los estados del usuario encontrado, esta validacion devuelve un tipo de error por estado, si es exitosa se continúa el proceso
+     * 3) Se comparan los passwords de la petición y el usuario, si coinciden se prosigue de lo contrario se debe ejecutar la excepcion de pw inválido
+     * 4) Se busca el cliente en el core de alianza, si no se encuentra se debe devolver ErrorClienteNoExisteCore
+     * 5) Se valida el cliente encontrado, este metodo devuelve un error de la validacion que no cumple
+     * 6) Se valida la fecha de caducacion del password, si caducó se debe devolver ErrorPasswordCaducado, de lo contrario se prosigue
      * ------- Si pasan las 6 validaciones anteriores, el usuario se considera como usuario autenticado --------
-     * 8) Se actualiza la información de numIngresosErroneos, ipUltimoIngreso y fechaUltimoIngreso del usuario
-     * 9) Se asigna el tiempo de expiración
-     * 10) Se genera un token y se asocia al usuario
-     * 11) Se crea la sesion del usuario en el cluster
-     * 12) Se valida si el usuario tiene alguna ip guardada, si es así se procede a validar si es una ip habitual, de lo contrario se genera un token (10), una sesion (11) y se responde con ErrorControlIpsDesactivado
+     * 7) Se actualiza la información de numIngresosErroneos, ipUltimoIngreso y fechaUltimoIngreso del usuario
+     * 8) Se asigna el tiempo de expiración
+     * 9) Se genera un token y se asocia al usuario
+     * 10) Se crea la sesion del usuario en el cluster
+     * 11) Se valida si el usuario tiene alguna ip guardada, si es así se procede a validar si es una ip habitual, de lo contrario se genera un token (10), una sesion (11) y se responde con ErrorControlIpsDesactivado
      */
     case message: AutenticarMessage =>
       val originalSender = sender()
       val validaciones: Future[Validation[ErrorAutenticacion, String]] = (for {
         usuario           <- ValidationT(obtenerUsuario(message.numeroIdentificacion))
-        tipoIdentiValido  <- ValidationT(validacionTipoIdentificacion(message, usuario))
         estadoValido      <- ValidationT(validarEstadosUsuario(usuario.estado))
         passwordValido    <- ValidationT(validarPasswords(message.password, usuario.contrasena.getOrElse(""), Some(usuario.identificacion), usuario.id, usuario.numeroIngresosErroneos))
-        cliente           <- ValidationT(obtenerClienteSP(usuario.tipoIdentificacion, usuario.identificacion))
-        cienteValido      <- ValidationT(validarClienteSP(usuario.tipoIdentificacion, cliente))
+        cliente           <- ValidationT(obtenerClienteSP(usuario.identificacion))
+        cienteValido      <- ValidationT(validarClienteSP(cliente))
         passwordCaduco    <- ValidationT(validarCaducidadPassword(TiposCliente.clienteIndividual, usuario.id.get, usuario.fechaCaducidad))
         actualizacionInfo <- ValidationT(actualizarInformacionUsuario(usuario.identificacion, message.clientIp.get))
         inactividadConfig <- ValidationT(buscarConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave))
@@ -146,8 +145,8 @@ class AutenticacionActor extends Actor with ActorLogging {
 
       val resultadoIp: Future[Validation[ErrorAutenticacion, Boolean]] = (for {
         usuario <- ValidationT(obtenerUsuario(message.idUsuario.get))
-        cliente <- ValidationT(obtenerClienteSP(usuario.tipoIdentificacion, usuario.identificacion))
-        cienteValido <- ValidationT(validarClienteSP(usuario.tipoIdentificacion, cliente))
+        cliente <- ValidationT(obtenerClienteSP(usuario.identificacion))
+        cienteValido <- ValidationT(validarClienteSP(cliente))
         relacionarIp <- ValidationT(asociarIpUsuario(message.idUsuario.get, message.clientIp.get))
       } yield relacionarIp).run
 
@@ -251,15 +250,14 @@ class AutenticacionActor extends Actor with ActorLogging {
 
   /**
    * Valida que el usuario exista en el core de alianza
-   * @param tipoIdentificacionUsuario tipo de identificacion del usuario
    * @param identificacionUsuario numero de identificacion del usuario
    * @return Future[Validation[ErrorAutenticacion, Cliente] ]
    * Success => Cliente
    * ErrorAutenticacion => ErrorPersistencia | ErrorClienteNoExisteCore
    */
-  def obtenerClienteSP(tipoIdentificacionUsuario: Int, identificacionUsuario: String): Future[Validation[ErrorAutenticacion, Cliente]] = {
+  def obtenerClienteSP(identificacionUsuario: String): Future[Validation[ErrorAutenticacion, Cliente]] = {
     log.info("Validando que el cliente exista en el core de alianza")
-    val future: Future[Validation[PersistenceException, Option[Cliente]]] = ClDataAdapter.consultarCliente(ConsultaClienteRequest(tipoIdentificacionUsuario, identificacionUsuario))
+    val future: Future[Validation[PersistenceException, Option[Cliente]]] = ClDataAdapter.consultarCliente(identificacionUsuario)
     future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap {
       case Some(cliente) => Validation.success(cliente)
       case None => Validation.failure(ErrorClienteNoExisteCore())
@@ -277,17 +275,14 @@ class AutenticacionActor extends Actor with ActorLogging {
 
   /**
    * Valida los estados del usuario del core de alianza
-   * @param tipoIdentificacionUsuario tipo de identificacion del usuario
    * @param cliente cliente a validar
    * @return Future[Validation[ErrorAutenticacion, Boolean] ]
    * Success => True
    * ErrorAutenticacion => ErrorClienteNoExisteCore | ErrorClienteInactivoCore
    */
-  def validarClienteSP(tipoIdentificacionUsuario: Int, cliente: Cliente): Future[Validation[ErrorAutenticacion, Boolean]] = Future {
+  def validarClienteSP(cliente: Cliente): Future[Validation[ErrorAutenticacion, Boolean]] = Future {
     log.info("Validando los estados del cliente del core")
-    if (getTipoPersona(tipoIdentificacionUsuario) != cliente.wcli_person)
-      Validation.failure(ErrorClienteNoExisteCore())
-    else if (cliente.wcli_estado != EstadosCliente.inactivo && cliente.wcli_estado != EstadosCliente.bloqueado &&
+    if (cliente.wcli_estado != EstadosCliente.inactivo && cliente.wcli_estado != EstadosCliente.bloqueado &&
       cliente.wcli_estado != EstadosCliente.activo)
       Validation.failure(ErrorClienteInactivoCore())
     else Validation.success(true)
