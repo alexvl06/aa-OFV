@@ -18,4 +18,5 @@ object TipoIdentificacion extends Enumeration {
   val SOCIEDAD_EXTRANJERA = Val( 6 , "Sociedad Extranjera" )
   val PASAPORTE           = Val( 7 , "Pasaporte" )
   val REGISTRO_CIVIL      = Val( 8 , "Registro Civil" )
+  val NUIP                = Val( 9 , "Nuip" )
 }
