@@ -5,21 +5,20 @@ import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.infrastructure.messages.{GuardarRespuestasMessage, ObtenerPreguntasMessage}
 import spray.routing.{Directives}
 
-
 /**
  *
  * @author seven4n
  */
-class PreguntasConfrontacionService  extends Directives with AlianzaCommons   with CrossHeaders{
+class PreguntasAutovalidacionService  extends Directives with AlianzaCommons   with CrossHeaders{
 
-  import co.com.alianza.infrastructure.messages.PreguntasConfrontacionMessagesJsonSupport._
+  import co.com.alianza.infrastructure.messages.PreguntasAutovalidacionMessagesJsonSupport._
 
   def route(user: UsuarioAuth) = {
     pathPrefix("preguntas") {
       get {
         respondWithMediaType(mediaType) {
           pathPrefix("obtenerPreguntas"){
-            requestExecute(new ObtenerPreguntasMessage, preguntasConfrontacionActor)
+            requestExecute(new ObtenerPreguntasMessage, preguntasAutovalidacionActor)
           }
         }
       }~ path("guardarRespuestas") {
@@ -27,7 +26,7 @@ class PreguntasConfrontacionService  extends Directives with AlianzaCommons   wi
           entity(as[GuardarRespuestasMessage]) {
             message =>
               respondWithMediaType(mediaType) {
-                requestExecute(message, preguntasConfrontacionActor)
+                requestExecute(message.copy(idUsuario = Some(user.id), tipoCliente = Some(user.tipoCliente.toString)), preguntasAutovalidacionActor)
               }
           }
         }

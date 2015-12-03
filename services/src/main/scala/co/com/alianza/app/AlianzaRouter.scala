@@ -38,7 +38,7 @@ class AlianzaRouter extends HttpServiceActor with RouteConcatenation with CrossH
         new AdministrarContrasenaEmpresaService().secureRouteEmpresa( user ) ~
         new UsuarioEmpresaService().secureUserRouteEmpresa( user ) ~
         new PermisosTransaccionalesService().route( user ) ~
-        new PreguntasConfrontacionService().route( user )
+        new PreguntasAutovalidacionService().route( user )
     }
 
   def receive = runRoute(

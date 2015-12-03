@@ -3,7 +3,7 @@ package co.com.alianza.infrastructure.anticorruption.preguntasAutovalidacion
 import co.com.alianza.app.MainActors
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.dto.Pregunta
-import co.com.alianza.persistence.entities.{PreguntasConfrontacionUsuario, PreguntasConfrontacionAutovalidacion}
+import co.com.alianza.persistence.entities.{RespuestasAutovalidacionUsuario, PreguntasAutovalidacion}
 import co.com.alianza.persistence.repositories.PreguntasAutovalidacionRepository
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -20,14 +20,14 @@ object DataAccessAdapter {
     }
   }
 
-  def guardarRespuestas (respuestas:List[PreguntasConfrontacionUsuario]): Future[Validation[PersistenceException, List[Int]]] = {
+  def guardarRespuestas (respuestas:List[RespuestasAutovalidacionUsuario]): Future[Validation[PersistenceException, List[Int]]] = {
     val repo = new PreguntasAutovalidacionRepository()
-    repo.guardarRespuestas(respuestas)
+    repo.guardarRespuestasClienteIndividual(respuestas)
   }
 
-  private def transformValidationList(origin: Validation[PersistenceException, List[PreguntasConfrontacionAutovalidacion]]): Validation[PersistenceException, List[Pregunta]] = {
+  private def transformValidationList(origin: Validation[PersistenceException, List[PreguntasAutovalidacion]]): Validation[PersistenceException, List[Pregunta]] = {
     origin match {
-      case zSuccess(response: List[PreguntasConfrontacionAutovalidacion]) => zSuccess(DataAccessTranslator.translatePregunta(response))
+      case zSuccess(response: List[PreguntasAutovalidacion]) => zSuccess(DataAccessTranslator.translatePregunta(response))
       case zFailure(error)    =>  zFailure(error)
     }
   }
