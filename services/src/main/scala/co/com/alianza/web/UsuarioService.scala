@@ -7,9 +7,6 @@ import co.com.alianza.infrastructure.messages.OlvidoContrasenaMessage
 import co.com.alianza.infrastructure.messages.UsuarioMessage
 import spray.routing.{RequestContext, Directives}
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
-import co.com.alianza.util.clave.Crypto
-import enumerations.AppendPasswordUser
-
 
 
 /**

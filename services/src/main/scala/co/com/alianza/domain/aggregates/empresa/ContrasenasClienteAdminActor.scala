@@ -5,13 +5,12 @@ import java.util.Calendar
 import akka.actor.{ActorRef, Actor, ActorLogging, Props}
 import akka.routing.RoundRobinPool
 import co.com.alianza.app.{AlianzaActors, MainActors}
-import co.com.alianza.domain.aggregates.usuarios.{ErrorPersistence, MailMessageUsuario, ErrorValidacion}
+import co.com.alianza.domain.aggregates.usuarios.{ErrorPersistence, ErrorValidacion}
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{DataAccessAdapter, DataAccessTranslator }
 import co.com.alianza.infrastructure.dto.{UsuarioEmpresarialAdmin, Configuracion, PinEmpresa}
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.infrastructure.messages.empresa.{CambiarContrasenaCaducadaClienteAdminMessage, CambiarContrasenaClienteAdminMessage, UsuarioMessageCorreo}
-import co.com.alianza.microservices.{MailMessage, SmtpServiceClient}
 import co.com.alianza.util.token.{Token, PinData, TokenPin}
 import co.com.alianza.util.transformers.ValidationT
 import com.typesafe.config.Config

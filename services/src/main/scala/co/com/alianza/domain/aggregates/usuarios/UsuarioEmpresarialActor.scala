@@ -26,7 +26,7 @@ class UsuarioEmpresarialActor extends Actor with ActorLogging with AlianzaActors
           }
         }
       else if (message.nit.isDefined && message.usuario.isDefined) {
-        co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtieneUsuarioEmpresarialPorNitYUsuario(message.nit.get, message.usuario.get, message.tipoIdentificacion.get) onComplete {
+        co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtieneUsuarioEmpresarialPorNitYUsuario(message.nit.get, message.usuario.get) onComplete {
           case sFailure(failure) =>
             currentSender ! failure
           case sSuccess(value) => value match {
@@ -50,7 +50,7 @@ class UsuarioEmpresarialActor extends Actor with ActorLogging with AlianzaActors
           }
         }
       else if (message.nit.isDefined && message.usuario.isDefined)
-        co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtieneUsuarioEmpresarialAdminPorNitYUsuario(message.nit.get, message.usuario.get, message.tipoIdentificacion.get) onComplete {
+        co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtieneUsuarioEmpresarialAdminPorNitYUsuario(message.nit.get, message.usuario.get) onComplete {
           case sFailure( failure ) =>
             currentSender ! failure
           case sSuccess (value) => value match {
