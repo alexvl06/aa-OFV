@@ -142,6 +142,7 @@ object  ValidacionesUsuario {
     tipoIdentificacion match{
       case TipoIdentificacion.FID.identificador => "F"
       case TipoIdentificacion.NIT.identificador => "J"
+      case TipoIdentificacion.SOCIEDAD_EXTRANJERA.identificador => "J"
       case _ => "N"
     }
   }
