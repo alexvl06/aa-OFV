@@ -14,21 +14,17 @@ class PreguntasAutovalidacionService  extends Directives with AlianzaCommons   w
   import co.com.alianza.infrastructure.messages.PreguntasAutovalidacionMessagesJsonSupport._
 
   def route(user: UsuarioAuth) = {
-    pathPrefix("preguntas") {
+    pathPrefix("preguntasAutovalidacion") {
       get {
         respondWithMediaType(mediaType) {
-          pathPrefix("obtenerPreguntas"){
-            requestExecute(new ObtenerPreguntasMessage, preguntasAutovalidacionActor)
-          }
+          requestExecute(new ObtenerPreguntasMessage, preguntasAutovalidacionActor)
         }
-      }~ path("guardarRespuestas") {
-        put {
-          entity(as[GuardarRespuestasMessage]) {
-            message =>
-              respondWithMediaType(mediaType) {
-                requestExecute(message.copy(idUsuario = Some(user.id), tipoCliente = Some(user.tipoCliente.toString)), preguntasAutovalidacionActor)
-              }
-          }
+      } ~ put {
+        entity(as[GuardarRespuestasMessage]) {
+          message =>
+            respondWithMediaType(mediaType) {
+              requestExecute(message.copy(idUsuario = Some(user.id), tipoCliente = Some(user.tipoCliente.toString)), preguntasAutovalidacionActor)
+            }
         }
       }
     }
