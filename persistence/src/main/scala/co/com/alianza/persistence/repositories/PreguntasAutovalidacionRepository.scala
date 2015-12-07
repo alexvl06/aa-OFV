@@ -30,13 +30,19 @@ class PreguntasAutovalidacionRepository ( implicit executionContext: ExecutionCo
 
   def guardarRespuestasClienteIndividual(respuestas:List[RespuestasAutovalidacionUsuario]) : Future[Validation[PersistenceException, List[Int]]] = loan {
     implicit session =>
-      val resultTry = Try{(respuestasUsuarioTable  ++= respuestas).toList}
+      val resultTry = Try{
+        respuestasUsuarioTable.filter(respuestas => respuestas.idUsuario === respuestas.idUsuario ).delete
+        (respuestasUsuarioTable  ++= respuestas).toList
+      }
       resolveTry(resultTry, "Guardar respuestas de autovalidacion para cliente individual")
   }
 
   def guardarRespuestasClienteAdministrador(respuestas:List[RespuestasAutovalidacionUsuario]) : Future[Validation[PersistenceException, List[Int]]] = loan {
     implicit session =>
-      val resultTry = Try{(respuestasClienteAdministradorTable  ++= respuestas).toList}
+      val resultTry = Try{
+        respuestasClienteAdministradorTable.filter(respuestas => respuestas.idUsuario === respuestas.idUsuario ).delete
+        (respuestasClienteAdministradorTable  ++= respuestas).toList
+      }
       resolveTry(resultTry, "Guardar respuestas de autovalidacion para cliente administrador")
   }
 }
