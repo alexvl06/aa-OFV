@@ -45,4 +45,16 @@ class PreguntasAutovalidacionRepository ( implicit executionContext: ExecutionCo
       }
       resolveTry(resultTry, "Guardar respuestas de autovalidacion para cliente administrador")
   }
+
+  def obtenerPreguntasValidacionClienteIndividual( idUsuario: Int ) : Future[Validation[PersistenceException, List[PreguntasAutovalidacion]]] = loan {
+    implicit session =>
+
+      val respuestaJoin = for {
+        ((pregunta, respuesta)) <- preguntasTable innerJoin respuestasUsuarioTable on (_.id === _.idPregunta)
+        if respuesta.idUsuario === idUsuario
+      } yield pregunta
+
+      val resultTry = Try{ respuestaJoin.list }
+      resolveTry(resultTry, "Obtener 3 preguntas al azar")
+  }
 }
