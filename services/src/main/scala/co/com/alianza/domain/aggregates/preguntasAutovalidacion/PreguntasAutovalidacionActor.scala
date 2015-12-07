@@ -59,7 +59,8 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
     case message:GuardarRespuestasMessage =>
       val currentSender = sender()
       message.tipoCliente match {
-        case Some("clienteIndividual") => guardarRespuestasUsuario(message.idUsuario, message.respuestasList, currentSender)
+        case Some("clienteIndividual") => guardarRespuestasUsuario(message.idUsuario, message.respuestas, currentSender)
+        case Some("clienteAdministrador") => guardarRespuestasClienteAdministrador(message.idUsuario, message.respuestas, currentSender)
       }
   }
 
@@ -82,6 +83,27 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
         }
     }
   }
+
+  /**
+   * Guardar respuestas de autovalidacion para Cliente Administrador
+   * @param idUsuario
+   * @param respuestas
+   * @param currentSender
+   */
+  def guardarRespuestasClienteAdministrador(idUsuario: Option[Int], respuestas: List[Respuesta], currentSender: ActorRef): Unit = {
+    val respuestasPersistencia = respuestas.map( x => new RespuestasAutovalidacionUsuario(x.idPregunta, idUsuario.get, x.respuesta))
+    val futuro = preguntasAutovalidacionRepository guardarRespuestasClienteAdministrador (respuestasPersistencia)
+    futuro  onComplete {
+      case Failure(failure)  => currentSender ! failure
+      case Success(value)    =>
+        value match {
+          case zSuccess(response: List[Int]) =>
+            currentSender !  ResponseMessage(OK, JsonUtil.toJson(response))
+          case zFailure(error) =>  currentSender !  error
+        }
+    }
+  }
+
 
 
 }

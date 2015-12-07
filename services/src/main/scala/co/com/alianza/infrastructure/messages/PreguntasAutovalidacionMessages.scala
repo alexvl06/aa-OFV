@@ -14,7 +14,7 @@ object PreguntasAutovalidacionMessagesJsonSupport extends DefaultJsonProtocol wi
 
 
 case class ObtenerPreguntasMessage() extends MessageService
-case class GuardarRespuestasMessage(idUsuario: Option[Int], tipoCliente: Option[String], respuestasList: List[Respuesta]) extends MessageService
+case class GuardarRespuestasMessage(idUsuario: Option[Int], tipoCliente: Option[String], respuestas: List[Respuesta]) extends MessageService
 case class Respuesta(idPregunta: Int, respuesta: String)
 
 

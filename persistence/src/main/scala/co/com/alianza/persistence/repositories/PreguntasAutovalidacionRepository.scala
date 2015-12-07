@@ -3,7 +3,7 @@ package co.com.alianza.persistence.repositories
 
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.persistence.entities.CustomDriver.simple._
-import co.com.alianza.persistence.entities.{RespuestasAutovalidacionUsuario, PreguntasAutovalidacion, RespuestasAutovalidacionUsuarioTable, PreguntasAutovalidacionTable}
+import co.com.alianza.persistence.entities._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.slick.lifted.TableQuery
@@ -20,6 +20,7 @@ class PreguntasAutovalidacionRepository ( implicit executionContext: ExecutionCo
 
   val preguntasTable = TableQuery[PreguntasAutovalidacionTable]
   val respuestasUsuarioTable = TableQuery[RespuestasAutovalidacionUsuarioTable]
+  val respuestasClienteAdministradorTable = TableQuery[RespuestasAutovalidacionClienteAdministradorTable]
 
   def obtenerPreguntas(): Future[Validation[PersistenceException, List[PreguntasAutovalidacion]]] = loan {
     implicit session =>
@@ -30,6 +31,12 @@ class PreguntasAutovalidacionRepository ( implicit executionContext: ExecutionCo
   def guardarRespuestasClienteIndividual(respuestas:List[RespuestasAutovalidacionUsuario]) : Future[Validation[PersistenceException, List[Int]]] = loan {
     implicit session =>
       val resultTry = Try{(respuestasUsuarioTable  ++= respuestas).toList}
-      resolveTry(resultTry, "Guardar respuestas de autovalidacion")
+      resolveTry(resultTry, "Guardar respuestas de autovalidacion para cliente individual")
+  }
+
+  def guardarRespuestasClienteAdministrador(respuestas:List[RespuestasAutovalidacionUsuario]) : Future[Validation[PersistenceException, List[Int]]] = loan {
+    implicit session =>
+      val resultTry = Try{(respuestasClienteAdministradorTable  ++= respuestas).toList}
+      resolveTry(resultTry, "Guardar respuestas de autovalidacion para cliente administrador")
   }
 }
