@@ -85,8 +85,8 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
     val respuestasPersistencia = respuestas.map( x => new RespuestasAutovalidacionUsuario(x.idPregunta, idUsuario.get, x.respuesta))
     val futuro = DataAccessAdapter.guardarRespuestas(respuestasPersistencia)
     futuro  onComplete {
-      case Failure(failure)  => currentSender ! failure
-      case Success(value)    =>
+      case Failure(failure) => currentSender ! failure
+      case Success(value)   =>
         value match {
           case zSuccess(response: List[Int]) =>
             currentSender !  ResponseMessage(OK)
@@ -105,8 +105,8 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
     val respuestasPersistencia = respuestas.map( x => new RespuestasAutovalidacionUsuario(x.idPregunta, idUsuario.get, x.respuesta))
     val futuro = DataAccessAdapter.guardarRespuestasClienteAdministrador(respuestasPersistencia)
     futuro  onComplete {
-      case Failure(failure)  => currentSender ! failure
-      case Success(value)    =>
+      case Failure(failure) => currentSender ! failure
+      case Success(value)   =>
         value match {
           case zSuccess(response: List[Int]) =>
             currentSender !  ResponseMessage(OK)
@@ -123,8 +123,8 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
   def obtenerPreguntasRandomClienteIndividual(idUsuario: Option[Int], currentSender: ActorRef): Unit = {
     val futuro = DataAccessAdapter.obtenerPreguntasClienteIndividual(idUsuario)
     futuro  onComplete {
-      case Failure(failure)  => currentSender ! failure
-      case Success(value)    =>
+      case Failure(failure) => currentSender ! failure
+      case Success(value)   =>
         value match {
           case zSuccess(response: List[Pregunta]) => {
             val respuestaRandom = Random.shuffle(response).take(3)
@@ -138,8 +138,8 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
   def validarRespuestasClienteIndividual(idUsuario: Option[Int], respuestas: List[Respuesta], currentSender: ActorRef): Unit = {
     val futuro = DataAccessAdapter.obtenerRespuestaCompletaClienteIndividual(idUsuario)
     futuro  onComplete {
-      case Failure(failure)  => currentSender ! failure
-      case Success(value)    =>
+      case Failure(failure) => currentSender ! failure
+      case Success(value)   =>
         value match {
           case zSuccess(response: List[RespuestaCompleta]) =>
             val respuestasGuardadas : List[Respuesta] = response.map(res => Respuesta(res.idPregunta, res.respuesta))
