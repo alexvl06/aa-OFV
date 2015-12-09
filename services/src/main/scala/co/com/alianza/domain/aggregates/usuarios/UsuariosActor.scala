@@ -263,7 +263,7 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
                         currentSender ! ResponseMessage(Created)
 
                       case pinUsuarioEmpresarialAdminDto @ PinUsuarioEmpresarialAdmin(param1, param2, param3, param4, param5) =>
-                        new SmtpServiceClient().send(buildMessage(pinUsuarioEmpresarialAdminDto, responseConf.valor.toInt, UsuarioMessage(correoCliente, message.identificacion, message.tipoIdentificacion,null, false, None), "alianza.smtp.templatepin.reiniciarContrasena", "alianza.smtp.asunto.reiniciarContrasena"), (_, _) => Unit)
+                        new SmtpServiceClient().send(buildMessage(pinUsuarioEmpresarialAdminDto, responseConf.valor.toInt, UsuarioMessage(correoCliente, message.identificacion, message.tipoIdentificacion,null, false, None), "alianza.smtp.templatepin.reiniciarContrasenaEmpresa", "alianza.smtp.asunto.reiniciarContrasena"), (_, _) => Unit)
                         currentSender ! ResponseMessage(Created)
                     }
                 }
