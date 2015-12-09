@@ -7,7 +7,7 @@ import co.com.alianza.persistence.entities._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.slick.lifted.TableQuery
-import scala.util.Try
+import scala.util.{Random, Try}
 import scalaz.Validation
 
 
@@ -31,7 +31,7 @@ class PreguntasAutovalidacionRepository ( implicit executionContext: ExecutionCo
   def guardarRespuestasClienteIndividual(respuestas:List[RespuestasAutovalidacionUsuario]) : Future[Validation[PersistenceException, List[Int]]] = loan {
     implicit session =>
       val resultTry = Try{
-        respuestasUsuarioTable.filter(respuestas => respuestas.idUsuario === respuestas.idUsuario ).delete
+        respuestasUsuarioTable.filter(res => res.idUsuario === respuestas(0).idUsuario ).delete
         (respuestasUsuarioTable  ++= respuestas).toList
       }
       resolveTry(resultTry, "Guardar respuestas de autovalidacion para cliente individual")
@@ -46,15 +46,14 @@ class PreguntasAutovalidacionRepository ( implicit executionContext: ExecutionCo
       resolveTry(resultTry, "Guardar respuestas de autovalidacion para cliente administrador")
   }
 
-  def obtenerPreguntasValidacionClienteIndividual( idUsuario: Int ) : Future[Validation[PersistenceException, List[PreguntasAutovalidacion]]] = loan {
+  def obtenerPreguntasClienteIndividual( idUsuario: Int ) : Future[Validation[PersistenceException, List[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]]] = loan {
     implicit session =>
-
       val respuestaJoin = for {
-        ((pregunta, respuesta)) <- preguntasTable innerJoin respuestasUsuarioTable on (_.id === _.idPregunta)
+        (pregunta, respuesta) <- preguntasTable innerJoin respuestasUsuarioTable on (_.id === _.idPregunta)
         if respuesta.idUsuario === idUsuario
-      } yield pregunta
+      } yield (pregunta, respuesta)
 
       val resultTry = Try{ respuestaJoin.list }
-      resolveTry(resultTry, "Obtener 3 preguntas al azar")
+      resolveTry(resultTry, "Obtener las preguntas definidas del cliente individual")
   }
 }

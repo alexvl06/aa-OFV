@@ -7,8 +7,8 @@ import co.com.alianza.app.{AlianzaActors, MainActors}
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.preguntasAutovalidacion.DataAccessAdapter
-import co.com.alianza.infrastructure.dto.Pregunta
-import co.com.alianza.infrastructure.messages.{ResponseMessage, Respuesta, GuardarRespuestasMessage, ObtenerPreguntasMessage}
+import co.com.alianza.infrastructure.dto.{RespuestaCompleta, Respuesta, Pregunta}
+import co.com.alianza.infrastructure.messages._
 import co.com.alianza.persistence.entities.RespuestasAutovalidacionUsuario
 import co.com.alianza.persistence.repositories.PreguntasAutovalidacionRepository
 import co.com.alianza.util.FutureResponse
@@ -17,9 +17,8 @@ import com.typesafe.config.Config
 import spray.http.StatusCodes._
 
 import scala.concurrent.Future
-import scala.util.Failure
 import scala.util.Success
-import scala.util.{Success, Failure}
+import scala.util._
 import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
 
 
@@ -62,6 +61,18 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
         case Some("clienteIndividual") => guardarRespuestasUsuario(message.idUsuario, message.respuestas, currentSender)
         case Some("clienteAdministrador") => guardarRespuestasClienteAdministrador(message.idUsuario, message.respuestas, currentSender)
       }
+
+    case message:ObtenerPreguntasRandomMessage =>
+      val currentSender = sender()
+      message.tipoCliente match {
+        case Some("clienteIndividual") => obtenerPreguntasRandomClienteIndividual(message.idUsuario, currentSender)
+      }
+
+    case message:ValidarRespuestasMessage =>
+      val currentSender = sender()
+      message.tipoCliente match {
+        case Some("clienteIndividual") => validarRespuestasClienteIndividual(message.idUsuario, message.respuestas, currentSender)
+      }
   }
 
   /**
@@ -72,13 +83,13 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
    */
   def guardarRespuestasUsuario(idUsuario: Option[Int], respuestas: List[Respuesta], currentSender: ActorRef): Unit = {
     val respuestasPersistencia = respuestas.map( x => new RespuestasAutovalidacionUsuario(x.idPregunta, idUsuario.get, x.respuesta))
-    val futuro = preguntasAutovalidacionRepository guardarRespuestasClienteIndividual(respuestasPersistencia)
+    val futuro = DataAccessAdapter.guardarRespuestas(respuestasPersistencia)
     futuro  onComplete {
-      case Failure(failure)  => currentSender ! failure
-      case Success(value)    =>
+      case Failure(failure) => currentSender ! failure
+      case Success(value)   =>
         value match {
           case zSuccess(response: List[Int]) =>
-            currentSender !  ResponseMessage(OK, JsonUtil.toJson(response))
+            currentSender !  ResponseMessage(OK)
           case zFailure(error) =>  currentSender !  error
         }
     }
@@ -92,18 +103,60 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
    */
   def guardarRespuestasClienteAdministrador(idUsuario: Option[Int], respuestas: List[Respuesta], currentSender: ActorRef): Unit = {
     val respuestasPersistencia = respuestas.map( x => new RespuestasAutovalidacionUsuario(x.idPregunta, idUsuario.get, x.respuesta))
-    val futuro = preguntasAutovalidacionRepository guardarRespuestasClienteAdministrador (respuestasPersistencia)
+    val futuro = DataAccessAdapter.guardarRespuestasClienteAdministrador(respuestasPersistencia)
     futuro  onComplete {
-      case Failure(failure)  => currentSender ! failure
-      case Success(value)    =>
+      case Failure(failure) => currentSender ! failure
+      case Success(value)   =>
         value match {
           case zSuccess(response: List[Int]) =>
-            currentSender !  ResponseMessage(OK, JsonUtil.toJson(response))
+            currentSender !  ResponseMessage(OK)
           case zFailure(error) =>  currentSender !  error
         }
     }
   }
 
+  /**
+   * Obtener 3 preguntas al azar del cliente individual
+   * @param idUsuario
+   * @param currentSender
+   */
+  def obtenerPreguntasRandomClienteIndividual(idUsuario: Option[Int], currentSender: ActorRef): Unit = {
+    val futuro = DataAccessAdapter.obtenerPreguntasClienteIndividual(idUsuario)
+    futuro  onComplete {
+      case Failure(failure) => currentSender ! failure
+      case Success(value)   =>
+        value match {
+          case zSuccess(response: List[Pregunta]) => {
+            val respuestaRandom = Random.shuffle(response).take(3)
+            currentSender !  ResponseMessage(OK, JsonUtil.toJson( respuestaRandom ))
+          }
+          case zFailure(error) =>  currentSender !  error
+        }
+    }
+  }
 
-
+  def validarRespuestasClienteIndividual(idUsuario: Option[Int], respuestas: List[Respuesta], currentSender: ActorRef): Unit = {
+    val futuro = DataAccessAdapter.obtenerRespuestaCompletaClienteIndividual(idUsuario)
+    futuro  onComplete {
+      case Failure(failure) => currentSender ! failure
+      case Success(value)   =>
+        value match {
+          case zSuccess(response: List[RespuestaCompleta]) =>
+            val respuestasGuardadas : List[Respuesta] = response.map(res => Respuesta(res.idPregunta, res.respuesta))
+            //comprobar que las respuestas concuerden
+            val existe :Boolean = respuestas.foldLeft(true)((existe,respuesta) => existe && respuestasGuardadas.contains(respuesta))
+            existe match {
+              case true => currentSender !  ResponseMessage(OK)
+              case false =>{
+                //en caso que no concuerden, se envian la preguntas restantes mas una de las contestadas
+                val idsRespuesta : List[Int] = respuestas.map(_.idPregunta)
+                val idsPreguntas : List[Int] = response.filter(res => !idsRespuesta.contains(res.idPregunta)).map(_.idPregunta) ++ Random.shuffle(idsRespuesta).take(1)
+                val preguntas : List[Pregunta] = response.filter(res => idsPreguntas.contains(res.idPregunta)).map(x=>Pregunta(x.idPregunta, x.pregunta))
+                currentSender !  ResponseMessage(Conflict, JsonUtil.toJson(Random.shuffle(preguntas).take(3)))
+              }
+            }
+          case zFailure(error) =>  currentSender !  error
+        }
+    }
+  }
 }
