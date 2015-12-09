@@ -17,9 +17,8 @@ import com.typesafe.config.Config
 import spray.http.StatusCodes._
 
 import scala.concurrent.Future
-import scala.util.Failure
 import scala.util.Success
-import scala.util.{Success, Failure}
+import scala.util._
 import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
 
 
@@ -68,6 +67,12 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
       message.tipoCliente match {
         case Some("clienteIndividual") => obtenerPreguntasRandomClienteIndividual(message.idUsuario, currentSender)
       }
+
+    case message:ValidarRespuestasMessage =>
+      val currentSender = sender()
+      message.tipoCliente match {
+        case Some("clienteIndividual") => validarRespuestasClienteIndividual(message.idUsuario, message.respuestas, currentSender)
+      }
   }
 
   /**
@@ -78,7 +83,7 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
    */
   def guardarRespuestasUsuario(idUsuario: Option[Int], respuestas: List[Respuesta], currentSender: ActorRef): Unit = {
     val respuestasPersistencia = respuestas.map( x => new RespuestasAutovalidacionUsuario(x.idPregunta, idUsuario.get, x.respuesta))
-    val futuro = preguntasAutovalidacionRepository guardarRespuestasClienteIndividual(respuestasPersistencia)
+    val futuro = DataAccessAdapter.guardarRespuestas(respuestasPersistencia)
     futuro  onComplete {
       case Failure(failure)  => currentSender ! failure
       case Success(value)    =>
@@ -98,7 +103,7 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
    */
   def guardarRespuestasClienteAdministrador(idUsuario: Option[Int], respuestas: List[Respuesta], currentSender: ActorRef): Unit = {
     val respuestasPersistencia = respuestas.map( x => new RespuestasAutovalidacionUsuario(x.idPregunta, idUsuario.get, x.respuesta))
-    val futuro = preguntasAutovalidacionRepository guardarRespuestasClienteAdministrador (respuestasPersistencia)
+    val futuro = DataAccessAdapter.guardarRespuestasClienteAdministrador(respuestasPersistencia)
     futuro  onComplete {
       case Failure(failure)  => currentSender ! failure
       case Success(value)    =>
@@ -116,17 +121,39 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
    * @param currentSender
    */
   def obtenerPreguntasRandomClienteIndividual(idUsuario: Option[Int], currentSender: ActorRef): Unit = {
-    val futuro = preguntasAutovalidacionRepository obtenerPreguntasRandomClienteIndividual (idUsuario.get)
+    val futuro = DataAccessAdapter.obtenerPreguntasClienteIndividual(idUsuario)
     futuro  onComplete {
       case Failure(failure)  => currentSender ! failure
       case Success(value)    =>
         value match {
-          case zSuccess(response: List[Pregunta]) => currentSender !  ResponseMessage(OK, JsonUtil.toJson(response))
+          case zSuccess(response: List[Pregunta]) => {
+            val respuestaRandom =  Random.shuffle(response).take(3)
+            currentSender !  ResponseMessage(OK, JsonUtil.toJson( respuestaRandom ))
+          }
           case zFailure(error) =>  currentSender !  error
         }
     }
   }
 
+  def validarRespuestasClienteIndividual(idUsuario: Option[Int], respuestas: List[Respuesta], currentSender: ActorRef): Unit = {
+    println("@@@@@@@@@@@@@@@@")
+    println("Respuestas desde el front")
+    println("@@@@@@@@@@@@@@@@")
+    println(respuestas)
 
-
+    val futuro = DataAccessAdapter.obtenerRespuestasClienteIndividual(idUsuario)
+    futuro  onComplete {
+      case Failure(failure)  => currentSender ! failure
+      case Success(value)    =>
+        value match {
+          case zSuccess(response: List[Respuesta]) =>
+            println("@@@@@@@@@@@@@@@@")
+            println("Respuestas BASE DE DATOS")
+            println("@@@@@@@@@@@@@@@@")
+            println(response)
+          case zFailure(error) =>  currentSender !  error
+        }
+    }
+    currentSender !  ResponseMessage(OK, JsonUtil.toJson("OK"))
+  }
 }

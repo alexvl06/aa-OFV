@@ -46,14 +46,25 @@ class PreguntasAutovalidacionRepository ( implicit executionContext: ExecutionCo
       resolveTry(resultTry, "Guardar respuestas de autovalidacion para cliente administrador")
   }
 
-  def obtenerPreguntasRandomClienteIndividual( idUsuario: Int ) : Future[Validation[PersistenceException, List[PreguntasAutovalidacion]]] = loan {
+  def obtenerPreguntasClienteIndividual( idUsuario: Int ) : Future[Validation[PersistenceException, List[PreguntasAutovalidacion]]] = loan {
     implicit session =>
       val respuestaJoin = for {
         ((pregunta, respuesta)) <- preguntasTable innerJoin respuestasUsuarioTable on (_.id === _.idPregunta)
         if respuesta.idUsuario === idUsuario
       } yield pregunta
 
-      val resultTry = Try{ Random.shuffle(respuestaJoin.list).take(3) }
-      resolveTry(resultTry, "Obtener 3 preguntas al azar")
+      val resultTry = Try{ respuestaJoin.list }
+      resolveTry(resultTry, "Obtener las preguntas definidas del cliente individual")
+  }
+
+  def obtenerRespuestasClienteIndividual( idUsuario: Int ) : Future[Validation[PersistenceException, List[RespuestasAutovalidacionUsuario]]] = loan {
+    implicit session =>
+      val respuestaJoin = for {
+        ((pregunta, respuesta)) <- preguntasTable innerJoin respuestasUsuarioTable on (_.id === _.idPregunta)
+        if respuesta.idUsuario === idUsuario
+      } yield respuesta
+
+      val resultTry = Try{ respuestaJoin.list }
+      resolveTry(resultTry, "Obtener las preguntas definidas del cliente individual")
   }
 }
