@@ -144,9 +144,7 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
           case zSuccess(response: List[RespuestaCompleta]) =>
             val respuestasGuardadas : List[Respuesta] = response.map(res => Respuesta(res.idPregunta, res.respuesta))
             //comprobar que las respuestas concuerden
-            val existe :Boolean = respuestas.foldLeft(true)((existe,respuesta) => {
-              existe && respuestasGuardadas.contains(respuesta)
-            })
+            val existe :Boolean = respuestas.foldLeft(true)((existe,respuesta) => existe && respuestasGuardadas.contains(respuesta))
             existe match {
               case true => currentSender !  ResponseMessage(OK)
               case false =>{
