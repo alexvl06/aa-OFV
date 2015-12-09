@@ -15,19 +15,19 @@ import co.com.alianza.persistence.messages.ConsultaClienteRequest
  */
 class ClienteRepository( implicit executionContext: ExecutionContext) extends AlianzaCoreRepository{
 
-  def consultaCliente(msg:ConsultaClienteRequest): Future[Validation[PersistenceException, String]] = loan {
+  def consultaCliente(numDocumento:String): Future[Validation[PersistenceException, String]] = loan {
     connection =>
       connection.setAutoCommit(false)
-      val operation: Try[String] = executeClienteSP(connection,msg)
+      val operation: Try[String] = executeClienteSP(connection,numDocumento)
       resolveTry(connection,operation,"Consulta Cliente por Número de Identificación")
   }
 
-  private def executeClienteSP(conn: Connection, msg:ConsultaClienteRequest) = Try {
+  private def executeClienteSP(conn: Connection, numDocumento: String) = Try {
     val callString = "{ call sf_qportal_web.Cliente(?,?,?,?) }"
     val callableStatement = conn prepareCall callString
     callableStatement registerOutParameter (1, OracleTypes.VARCHAR)
     callableStatement registerOutParameter (2, OracleTypes.VARCHAR)
-    callableStatement.setString(3, msg.numDocumento)
+    callableStatement.setString(3, numDocumento)
     callableStatement registerOutParameter (4, OracleTypes.CURSOR)
     buildSpResponse(conn, callableStatement, 4)
   }

@@ -117,7 +117,7 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
       //Se obtiene el usuario dado el perfil que llegue de presentacion, en caso de perfil no correcto se devuelve excepcion
       val futureConsultaUsuarios: Future[Validation[PersistenceException, Option[Any]]] = message.perfilCliente match {
         case 1 => co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerUsuarioNumeroIdentificacion(message.identificacion)
-        case 2 => co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtieneUsuarioEmpresarialAdminPorNitYUsuario(message.identificacion, message.usuarioClienteAdmin.get, message.tipoIdentificacion)
+        case 2 => co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtieneUsuarioEmpresarialAdminPorNitYUsuario(message.identificacion, message.usuarioClienteAdmin.get)
         case _ => Future.successful(Validation.failure(PersistenceException(new Exception, BusinessLevel, "El perfil del usuario no es soportado por la aplicacion")))
       }
       val validarClienteFuture = ( for {
@@ -309,7 +309,7 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
   }
 
   private def validaSolicitudCliente(message: OlvidoContrasenaMessage): Future[Validation[ErrorValidacion, Cliente]] = {
-    val consultaClienteFuture = validacionConsultaCliente(UsuarioMessage("",message.identificacion,message.tipoIdentificacion, null, false, None), false)
+    val consultaClienteFuture = validacionConsultaCliente(UsuarioMessage("",message.identificacion,message.tipoIdentificacion, null, false, None), true)
     (for {
       cliente <- ValidationT(consultaClienteFuture)
     } yield {
@@ -329,7 +329,7 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
     val consultaNumDocFuture = validacionConsultaNumDoc(message)
     //Se quita la validación ya que alianza quiere permitir registro de usuarios a la misma cuenta de correo.
     //val consultaCorreoFuture: Future[Validation[ErrorValidacion, Unit.type]] = validacionConsultaCorreo(message)
-    val consultaClienteFuture: Future[Validation[ErrorValidacion, Cliente]] = validacionConsultaCliente(message, true)
+    val consultaClienteFuture: Future[Validation[ErrorValidacion, Cliente]] = validacionConsultaCliente(message, false)
     val validacionClave: Future[Validation[ErrorValidacion, Unit.type]] = validacionReglasClaveAutoregistro(message)
     (for{
       resultValidacionClave <- ValidationT(validacionClave)
@@ -387,9 +387,8 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
 
     }
     val asunto: String = config.getString(asuntoTemp)
-    //MailMessage(config.getString("alianza.smtp.from"), "josegarcia@seven4n.com",  List() , asunto, body, "")
-    //MailMessage(config.getString("alianza.smtp.from"), "josegarcia@seven4n.com", List(), asunto, body, "")
-    MailMessage(config.getString("alianza.smtp.from"), message.correo, List(), asunto, body, "")
+    MailMessage(config.getString("alianza.smtp.from"), "luisaceleita@seven4n.com", List(), asunto, body, "")
+    //MailMessage(config.getString("alianza.smtp.from"), message.correo, List(), asunto, body, "")
   }
 
   private val errorEstadoReinicioContrasena                   = ErrorMessage("409.8", "El usuario se encuentra en proceso de reinicio de contrasena", "El usuario se encuentra en proceso de reinicio de contrasena").toJson
