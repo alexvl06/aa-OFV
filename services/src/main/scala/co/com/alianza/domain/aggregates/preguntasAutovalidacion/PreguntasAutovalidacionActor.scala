@@ -8,7 +8,7 @@ import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.preguntasAutovalidacion.DataAccessAdapter
 import co.com.alianza.infrastructure.dto.Pregunta
-import co.com.alianza.infrastructure.messages.{ResponseMessage, Respuesta, GuardarRespuestasMessage, ObtenerPreguntasMessage}
+import co.com.alianza.infrastructure.messages._
 import co.com.alianza.persistence.entities.RespuestasAutovalidacionUsuario
 import co.com.alianza.persistence.repositories.PreguntasAutovalidacionRepository
 import co.com.alianza.util.FutureResponse
@@ -62,6 +62,12 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
         case Some("clienteIndividual") => guardarRespuestasUsuario(message.idUsuario, message.respuestas, currentSender)
         case Some("clienteAdministrador") => guardarRespuestasClienteAdministrador(message.idUsuario, message.respuestas, currentSender)
       }
+
+    case message:ObtenerPreguntasRandomMessage =>
+      val currentSender = sender()
+      message.tipoCliente match {
+        case Some("clienteIndividual") => obtenerPreguntasRandomClienteIndividual(message.idUsuario, currentSender)
+      }
   }
 
   /**
@@ -99,6 +105,23 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
         value match {
           case zSuccess(response: List[Int]) =>
             currentSender !  ResponseMessage(OK, JsonUtil.toJson(response))
+          case zFailure(error) =>  currentSender !  error
+        }
+    }
+  }
+
+  /**
+   * Obtener 3 preguntas al azar del cliente individual
+   * @param idUsuario
+   * @param currentSender
+   */
+  def obtenerPreguntasRandomClienteIndividual(idUsuario: Option[Int], currentSender: ActorRef): Unit = {
+    val futuro = preguntasAutovalidacionRepository obtenerPreguntasRandomClienteIndividual (idUsuario.get)
+    futuro  onComplete {
+      case Failure(failure)  => currentSender ! failure
+      case Success(value)    =>
+        value match {
+          case zSuccess(response: List[Pregunta]) => currentSender !  ResponseMessage(OK, JsonUtil.toJson(response))
           case zFailure(error) =>  currentSender !  error
         }
     }

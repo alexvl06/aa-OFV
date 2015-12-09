@@ -2,7 +2,7 @@ package co.com.alianza.web
 
 import co.com.alianza.app.{AlianzaCommons, CrossHeaders}
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
-import co.com.alianza.infrastructure.messages.{GuardarRespuestasMessage, ObtenerPreguntasMessage}
+import co.com.alianza.infrastructure.messages.{ObtenerPreguntasRandomMessage, GuardarRespuestasMessage, ObtenerPreguntasMessage}
 import spray.routing.{Directives}
 
 /**
@@ -17,7 +17,11 @@ class PreguntasAutovalidacionService  extends Directives with AlianzaCommons   w
     pathPrefix("preguntasAutovalidacion") {
       get {
         respondWithMediaType(mediaType) {
-          requestExecute(new ObtenerPreguntasMessage, preguntasAutovalidacionActor)
+          pathPrefix("validacion"){
+            requestExecute(new ObtenerPreguntasRandomMessage(Some(user.id), Some(user.tipoCliente.toString)), preguntasAutovalidacionActor)
+          } ~ {
+              requestExecute(new ObtenerPreguntasMessage, preguntasAutovalidacionActor)
+          }
         }
       } ~ put {
         entity(as[GuardarRespuestasMessage]) {
