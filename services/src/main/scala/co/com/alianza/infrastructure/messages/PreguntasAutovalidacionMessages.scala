@@ -7,12 +7,14 @@ import spray.httpx.SprayJsonSupport
  *
  * @author seven4n
  */
-object PreguntasConfrontacionMessagesJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
+object PreguntasAutovalidacionMessagesJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val respuestaMessageFormat = jsonFormat2(Respuesta)
   implicit val guardarRespuestasMessageFormat = jsonFormat3(GuardarRespuestasMessage)
 }
 
 
 case class ObtenerPreguntasMessage() extends MessageService
-case class GuardarRespuestasMessage(idUsuario: Int, tipoCliente: String, respuestasList: List[Respuesta]) extends MessageService
+case class GuardarRespuestasMessage(idUsuario: Option[Int], tipoCliente: Option[String], respuestas: List[Respuesta]) extends MessageService
 case class Respuesta(idPregunta: Int, respuesta: String)
+
+

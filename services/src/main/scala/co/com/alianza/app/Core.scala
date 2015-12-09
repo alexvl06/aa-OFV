@@ -7,7 +7,7 @@ import co.com.alianza.domain.aggregates.actualizacion.ActualizacionActorSupervis
 import co.com.alianza.domain.aggregates.confronta.{ConfrontaActorSupervisor}
 import co.com.alianza.domain.aggregates.autenticacion._
 import co.com.alianza.domain.aggregates.empresa.{HorarioEmpresaActorSupervisor, ContrasenasClienteAdminActorSupervisor, AgenteEmpresarialActorSupervisor, ContrasenasAgenteEmpresarialActorSupervisor}
-import co.com.alianza.domain.aggregates.preguntasConfrontacion.PreguntasConfrontacionSupervisor
+import co.com.alianza.domain.aggregates.preguntasAutovalidacion.PreguntasAutovalidacionSupervisor
 import co.com.alianza.domain.aggregates.usuarios.UsuariosActorSupervisor
 import co.com.alianza.domain.aggregates.autoregistro.ConsultaClienteActorSupervisor
 import co.com.alianza.domain.aggregates.contrasenas.ContrasenasActorSupervisor
@@ -66,7 +66,7 @@ trait CoreActors { this: Core =>
 
   val actualizacionActorSupervisor  = system.actorOf( Props[ ActualizacionActorSupervisor ], "actualizacionActorSupervisor" )
   val kafkaActorSupervisor = system.actorOf( Props[ KafkaActorSupervisor ], "kafkaActorSupervisor" )
-  val preguntasConfrontacionSupervisor = system.actorOf( Props[ PreguntasConfrontacionSupervisor ], "preguntasConfrontacionSupervisor" )
+  val preguntasAutovalidacionSupervisor = system.actorOf( Props[ PreguntasAutovalidacionSupervisor ], "preguntasAutovalidacionSupervisor" )
 }
 
 /**
