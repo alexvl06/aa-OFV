@@ -2,8 +2,7 @@ package co.com.alianza.infrastructure.anticorruption.preguntasAutovalidacion
 
 import co.com.alianza.app.MainActors
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.infrastructure.dto.Pregunta
-import co.com.alianza.infrastructure.messages.Respuesta
+import co.com.alianza.infrastructure.dto.{RespuestaCompleta, Respuesta, Pregunta}
 import co.com.alianza.persistence.entities.{RespuestasAutovalidacionUsuario, PreguntasAutovalidacion}
 import co.com.alianza.persistence.repositories.PreguntasAutovalidacionRepository
 
@@ -34,14 +33,21 @@ object DataAccessAdapter {
   def obtenerPreguntasClienteIndividual(idUsuario: Option[Int]): Future[Validation[PersistenceException, List[Pregunta]]] = {
     val repo = new PreguntasAutovalidacionRepository()
     repo.obtenerPreguntasClienteIndividual(idUsuario.get) map {
-      x => transformPreguntaList(x)
+      x => toPreguntaList(x)
     }
   }
 
   def obtenerRespuestasClienteIndividual(idUsuario: Option[Int]): Future[Validation[PersistenceException, List[Respuesta]]] = {
     val repo = new PreguntasAutovalidacionRepository()
-    repo.obtenerRespuestasClienteIndividual(idUsuario.get) map {
-      x => transformRespuestaList(x)
+    repo.obtenerPreguntasClienteIndividual(idUsuario.get) map {
+      x => toRespuestaList(x)
+    }
+  }
+
+  def obtenerRespuestaCompletaClienteIndividual(idUsuario: Option[Int]): Future[Validation[PersistenceException, List[RespuestaCompleta]]] = {
+    val repo = new PreguntasAutovalidacionRepository()
+    repo.obtenerPreguntasClienteIndividual(idUsuario.get) map {
+      x => toRespuestaCompletaList(x)
     }
   }
 
@@ -55,6 +61,27 @@ object DataAccessAdapter {
   private def transformRespuestaList(origin: Validation[PersistenceException, List[RespuestasAutovalidacionUsuario]]): Validation[PersistenceException, List[Respuesta]] = {
     origin match {
       case zSuccess(response: List[RespuestasAutovalidacionUsuario]) => zSuccess(DataAccessTranslator.translateRespuesta(response))
+      case zFailure(error)    =>  zFailure(error)
+    }
+  }
+
+  private def toPreguntaList(origin: Validation[PersistenceException, List[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]]): Validation[PersistenceException, List[Pregunta]] = {
+    origin match {
+      case zSuccess(response: List[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]) => zSuccess(DataAccessTranslator.toPreguntaList(response))
+      case zFailure(error)    =>  zFailure(error)
+    }
+  }
+
+  private def toRespuestaList(origin: Validation[PersistenceException, List[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]]): Validation[PersistenceException, List[Respuesta]] = {
+    origin match {
+      case zSuccess(response: List[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]) => zSuccess(DataAccessTranslator.toRespuestaList(response))
+      case zFailure(error)    =>  zFailure(error)
+    }
+  }
+
+  private def toRespuestaCompletaList(origin: Validation[PersistenceException, List[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]]): Validation[PersistenceException, List[RespuestaCompleta]] = {
+    origin match {
+      case zSuccess(response: List[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]) => zSuccess(DataAccessTranslator.toRespuestaCompletaList(response))
       case zFailure(error)    =>  zFailure(error)
     }
   }
