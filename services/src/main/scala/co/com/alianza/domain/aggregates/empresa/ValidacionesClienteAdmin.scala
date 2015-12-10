@@ -64,8 +64,8 @@ object ValidacionesClienteAdmin {
   }
 
   def validacionEstadoClienteAdmin(usuario: UsuarioEmpresarialAdmin) : Future[Validation[ErrorValidacion, Boolean]] = Future {
-    val bloqueContraseña    = EstadosUsuarioEnum.bloqueContraseña.id
-    val pendienteReinicio   = EstadosUsuarioEnum.pendienteReinicio.id
+    val bloqueContraseña    = EstadosEmpresaEnum.bloqueadoPorAdmin.id
+    val pendienteReinicio   = EstadosEmpresaEnum.pendienteActivacion.id
     usuario.estado match {
       case `bloqueContraseña`    => zFailure(ErrorClienteInactivo(errorEstadoUsuarioEmpresaAdmin))
       case `pendienteReinicio`   => zFailure(ErrorClienteInactivo(errorEstadoUsuarioEmpresaAdmin))
