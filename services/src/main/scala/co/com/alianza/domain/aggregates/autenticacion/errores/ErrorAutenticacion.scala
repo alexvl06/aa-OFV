@@ -64,6 +64,14 @@ case class ErrorHorarioIngresoEmpresa() extends ErrorAutenticacion{
   override def msg = ErrorMessage("401.16", "Configuración Horario Empresa", "Está intentando ingresar a la aplicación en un horario no hábil.").toJson
 }
 
+case class ErrorNoIpNoPreguntas(token: String) extends ErrorAutenticacion {
+  override def msg = ErrorMessage("401.17", "Control IP", "El usuario no tiene activo el control de direcciones ip y no tiene preguntas de autovalidacion definidas", token).toJson
+}
+
+case class ErrorSiIpNoPreguntas(token: String) extends ErrorAutenticacion {
+  override def msg = ErrorMessage("401.18", "Control IP", "El usuario tiene activo el control de direcciones ip, pero no tiene preguntas de autovalidacion definidas", token).toJson
+}
+
 // Error de persistencia
 case class ErrorPersistencia(msg: String, e: PersistenceException) extends ErrorAutenticacion
 

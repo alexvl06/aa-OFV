@@ -51,6 +51,11 @@ object DataAccessAdapter {
     }
   }
 
+  def bloquearRespuestasClienteIndividual (idUsuario: Option[Int]) : Future[Validation[PersistenceException, Int]] = {
+    val repo = new PreguntasAutovalidacionRepository()
+    repo.bloquearRespuestasClienteIndividual(idUsuario.get)
+  }
+
   private def transformPreguntaList(origin: Validation[PersistenceException, List[PreguntasAutovalidacion]]): Validation[PersistenceException, List[Pregunta]] = {
     origin match {
       case zSuccess(response: List[PreguntasAutovalidacion]) => zSuccess(DataAccessTranslator.translatePregunta(response))
@@ -85,5 +90,4 @@ object DataAccessAdapter {
       case zFailure(error)    =>  zFailure(error)
     }
   }
-
 }

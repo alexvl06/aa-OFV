@@ -4,7 +4,6 @@ package co.com.alianza.domain.aggregates.preguntasAutovalidacion
 import akka.actor.{ActorRef, Props, ActorLogging, Actor}
 import akka.routing.RoundRobinPool
 import co.com.alianza.app.{AlianzaActors, MainActors}
-import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.preguntasAutovalidacion.DataAccessAdapter
 import co.com.alianza.infrastructure.dto.{RespuestaCompleta, Respuesta, Pregunta}
@@ -72,6 +71,12 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
       val currentSender = sender()
       message.tipoCliente match {
         case Some("clienteIndividual") => validarRespuestasClienteIndividual(message.idUsuario, message.respuestas, currentSender)
+      }
+
+    case message:BloquearRespuestasMessage =>
+      val currentSender = sender()
+      message.tipoCliente match {
+        case Some("clienteIndividual") => bloquearRespuestasClienteIndividual(message.idUsuario, currentSender)
       }
   }
 
@@ -159,4 +164,18 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
         }
     }
   }
+
+  def bloquearRespuestasClienteIndividual(idUsuario: Option[Int], currentSender: ActorRef): Unit = {
+    val futuro = DataAccessAdapter.bloquearRespuestasClienteIndividual(idUsuario)
+    futuro  onComplete {
+      case Failure(failure) => currentSender ! failure
+      case Success(value)   =>
+        value match {
+          case zSuccess(response: Int) =>
+            currentSender !  ResponseMessage(OK)
+          case zFailure(error) =>  currentSender !  error
+        }
+    }
+  }
+
 }

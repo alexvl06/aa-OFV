@@ -7,7 +7,7 @@ import co.com.alianza.persistence.entities._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.slick.lifted.TableQuery
-import scala.util.{Random, Try}
+import scala.util.{Try}
 import scalaz.Validation
 
 
@@ -40,7 +40,7 @@ class PreguntasAutovalidacionRepository ( implicit executionContext: ExecutionCo
   def guardarRespuestasClienteAdministrador(respuestas:List[RespuestasAutovalidacionUsuario]) : Future[Validation[PersistenceException, List[Int]]] = loan {
     implicit session =>
       val resultTry = Try{
-        respuestasClienteAdministradorTable.filter(respuestas => respuestas.idUsuario === respuestas.idUsuario ).delete
+        respuestasClienteAdministradorTable.filter(res => res.idUsuario === respuestas(0).idUsuario ).delete
         (respuestasClienteAdministradorTable  ++= respuestas).toList
       }
       resolveTry(resultTry, "Guardar respuestas de autovalidacion para cliente administrador")
@@ -56,4 +56,13 @@ class PreguntasAutovalidacionRepository ( implicit executionContext: ExecutionCo
       val resultTry = Try{ respuestaJoin.list }
       resolveTry(resultTry, "Obtener las preguntas definidas del cliente individual")
   }
+
+  def bloquearRespuestasClienteIndividual(idUsuario:Int): Future[Validation[PersistenceException, Int]] = loan {
+    implicit session =>
+      val resultTry = Try {
+        respuestasUsuarioTable.filter(x => x.idUsuario === idUsuario).delete
+      }
+      resolveTry(resultTry, "Eliminar repsuestas del Usuario")
+  }
+
 }
