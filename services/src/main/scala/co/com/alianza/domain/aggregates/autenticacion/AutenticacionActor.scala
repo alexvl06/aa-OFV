@@ -14,6 +14,7 @@ import co.com.alianza.domain.aggregates.usuarios.ErrorClienteNoExiste
 import co.com.alianza.exceptions.PersistenceException
 
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => UsDataAdapter}
+import co.com.alianza.infrastructure.anticorruption.preguntasAutovalidacion.{DataAccessAdapter => PrDataAdapter}
 import co.com.alianza.infrastructure.anticorruption.clientes.{DataAccessAdapter => ClDataAdapter}
 import co.com.alianza.infrastructure.anticorruption.contrasenas.{DataAccessAdapter => RgDataAdapter}
 import co.com.alianza.infrastructure.anticorruption.configuraciones.{DataAccessAdapter => ConfDataAdapter}
@@ -92,17 +93,18 @@ class AutenticacionActor extends Actor with ActorLogging {
     case message: AutenticarMessage =>
       val originalSender = sender()
       val validaciones: Future[Validation[ErrorAutenticacion, String]] = (for {
-        usuario           <- ValidationT(obtenerUsuario(message.numeroIdentificacion))
-        estadoValido      <- ValidationT(validarEstadosUsuario(usuario.estado))
-        passwordValido    <- ValidationT(validarPasswords(message.password, usuario.contrasena.getOrElse(""), Some(usuario.identificacion), usuario.id, usuario.numeroIngresosErroneos))
-        cliente           <- ValidationT(obtenerClienteSP(usuario.identificacion))
-        cienteValido      <- ValidationT(validarClienteSP(cliente))
-        passwordCaduco    <- ValidationT(validarCaducidadPassword(TiposCliente.clienteIndividual, usuario.id.get, usuario.fechaCaducidad))
-        actualizacionInfo <- ValidationT(actualizarInformacionUsuario(usuario.identificacion, message.clientIp.get))
-        inactividadConfig <- ValidationT(buscarConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave))
-        token             <- ValidationT(generarYAsociarToken(cliente, usuario, inactividadConfig.valor, message.clientIp.get))
-        sesion            <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
-        validacionIps     <- ValidationT(validarControlIpsUsuario(usuario.id.get, message.clientIp.get, token))
+        usuario               <- ValidationT(obtenerUsuario(message.numeroIdentificacion))
+        estadoValido          <- ValidationT(validarEstadosUsuario(usuario.estado))
+        passwordValido        <- ValidationT(validarPasswords(message.password, usuario.contrasena.getOrElse(""), Some(usuario.identificacion), usuario.id, usuario.numeroIngresosErroneos))
+        cliente               <- ValidationT(obtenerClienteSP(usuario.identificacion))
+        cienteValido          <- ValidationT(validarClienteSP(cliente))
+        passwordCaduco        <- ValidationT(validarCaducidadPassword(TiposCliente.clienteIndividual, usuario.id.get, usuario.fechaCaducidad))
+        actualizacionInfo     <- ValidationT(actualizarInformacionUsuario(usuario.identificacion, message.clientIp.get))
+        inactividadConfig     <- ValidationT(buscarConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave))
+        token                 <- ValidationT(generarYAsociarToken(cliente, usuario, inactividadConfig.valor, message.clientIp.get))
+        sesion                <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
+        validacionPreguntas   <- ValidationT(validarPreguntasUsuario(usuario.id.get))
+        validacionIps         <- ValidationT(validarControlIpsUsuario(usuario.id.get, message.clientIp.get, token, validacionPreguntas))
       } yield validacionIps).run
 
       validaciones.onComplete {
@@ -368,12 +370,34 @@ class AutenticacionActor extends Actor with ActorLogging {
    * Success => El token si el usuario tiene la ip en su lista de ips
    * ErrorAutenticacion => ErrorPersistencia | ErrorControlIpsDesactivado
    */
-  def validarControlIpsUsuario(idUsuario: Int, ipPeticion: String, token: String): Future[Validation[ErrorAutenticacion, String]] = {
+  def validarControlIpsUsuario(idUsuario: Int, ipPeticion: String, token: String, validacionPreguntas: String): Future[Validation[ErrorAutenticacion, String]] = {
     log.info("Validando control de ips usuario individual")
     val future = UsDataAdapter.obtenerIpsUsuario(idUsuario)
     future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap { ips =>
-      if (ips.filter(_.ip == ipPeticion).isEmpty) Validation.failure(ErrorControlIpsDesactivado(token))
-      else Validation.success(token)
+      if (validacionPreguntas.equals("true"))
+        if (ips.filter(_.ip == ipPeticion).isEmpty)
+          Validation.failure(ErrorControlIpsDesactivado(token))
+        else
+          Validation.success(token)
+      else
+        if (ips.filter(_.ip == ipPeticion).isEmpty)
+          Validation.failure(ErrorNoIpNoPreguntas(token))
+        else
+          Validation.failure(ErrorSiIpNoPreguntas(token))
+    })
+  }
+
+  /**
+   * Valida si el usuario tiene preguntas de autovalidacion definidas
+   * @param idUsuario el id del usuario a validar
+   * @return Future[Validation[ErrorAutenticacion, Boolean] ]
+   * Success => El token si el usuario tiene preguntas de autovalidacion definidas
+   */
+  def validarPreguntasUsuario(idUsuario: Int): Future[Validation[ErrorAutenticacion, String]] = {
+    log.info("Validando preguntas de autovalidacion de cliente individual")
+    val future = PrDataAdapter.obtenerRespuestasClienteIndividual(Some(idUsuario))
+    future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap { respuestas =>
+      Validation.success(!respuestas.isEmpty toString)
     })
   }
 
