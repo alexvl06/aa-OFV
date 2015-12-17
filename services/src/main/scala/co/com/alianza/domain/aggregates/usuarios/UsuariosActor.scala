@@ -143,7 +143,6 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
   }
 
   private def resolveDesbloquearContrasenaFuture(futureCliente: Future[Validation[ErrorValidacion, (Option[Usuario], Cliente)]], currentSender: ActorRef, message: DesbloquearMessage) = {
-    //alianza.smtp.templatepin.desbloquearUsuario
     futureCliente onComplete {
       case sFailure( failure ) =>
         currentSender ! failure
@@ -242,8 +241,7 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
     )
   }
 
-  //actualizarContrasenaFuture: Future[Validation[ErrorValidacion, Int]]
-  private def enviarCorreoOlvidoContrasena(perfilCliente:Int, identificacion: String, tipoIdentificacion: Int, correoCliente:String,  currentSender: ActorRef, idUsuario:Option[Int], desbloqueo: Boolean = false) = {
+  private def enviarCorreoOlvidoContrasena(perfilCliente:Int, identificacion: String, tipoIdentificacion: Int, correoCliente:String, currentSender: ActorRef, idUsuario:Option[Int], desbloqueo: Boolean = false) = {
     val validacionConsulta = validacionConsultaTiempoExpiracion()
 
     validacionConsulta onComplete {
