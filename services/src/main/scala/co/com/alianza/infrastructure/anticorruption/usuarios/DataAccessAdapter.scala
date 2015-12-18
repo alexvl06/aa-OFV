@@ -158,6 +158,11 @@ object DataAccessAdapter {
     repo.actualizarNumeroIngresosErroneos( numeroIdentificacion, numeroIntentos )
   }
 
+  def actualizarNumeroIngresosErroneos(idUsuario:Int, numeroIntentos:Int  ): Future[Validation[PersistenceException, Int]] = {
+    val repo = new UsuariosRepository()
+    repo.actualizarNumeroIngresosErroneos(idUsuario, numeroIntentos )
+  }
+
   def actualizarNumeroIngresosErroneosUsuarioEmpresarialAdmin( idUsuario:Int, numeroIntentos:Int  ): Future[Validation[PersistenceException, Int]] = {
     val repo = new UsuarioEmpresarialAdminRepository()
     repo.actualizarNumeroIngresosErroneos( idUsuario, numeroIntentos )

@@ -151,7 +151,7 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
           case zSuccess(response: (Option[Usuario], Option[Cliente])) =>
             val usuario: Usuario = response._1.get
             val cliente: Cliente = response._2
-            enviarCorreoOlvidoContrasena(1, usuario.identificacion, usuario.tipoIdentificacion, cliente.wcli_dir_correo, currentSender, usuario.id, true)
+            enviarCorreoDefinirContrasena(1, usuario.identificacion, usuario.tipoIdentificacion, cliente.wcli_dir_correo, currentSender, usuario.id, true)
           case zFailure (error) =>
             error match {
               case errorPersistence: PersistenceException  => currentSender !  errorPersistence.message
@@ -181,7 +181,7 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
                         response.get match {
                           case valueResponseUsuarioEmpresarial:UsuarioEmpresarialAdmin =>
                             val empresaValidacionFuture = (for {
-                              empresa     <- ValidationT(esEmpresaActiva(valueResponseUsuarioEmpresarial.identificacion))
+                              empresa <- ValidationT(esEmpresaActiva(valueResponseUsuarioEmpresarial.identificacion))
                             } yield {
                               empresa
                             }).run
@@ -196,7 +196,7 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
                                     if(valueResponseUsuarioEmpresarial.estado != EstadosEmpresaEnum.bloqueadoPorAdmin.id  &&
                                       valueResponseUsuarioEmpresarial.estado != EstadosEmpresaEnum.pendienteActivacion.id) {
                                       //Se cambia a estado reinicio de contraseña cuando el cliente hace click en el enlace del correo
-                                      enviarCorreoOlvidoContrasena(message.perfilCliente, message.identificacion, message.tipoIdentificacion, responseCliente.wcli_dir_correo, currentSender, Some(valueResponseUsuarioEmpresarial.id))
+                                      enviarCorreoDefinirContrasena(message.perfilCliente, message.identificacion, message.tipoIdentificacion, responseCliente.wcli_dir_correo, currentSender, Some(valueResponseUsuarioEmpresarial.id))
                                     }
                                     else
                                       currentSender ! ResponseMessage(Conflict, errorEstadoUsuarioNoPermitido)
@@ -205,7 +205,7 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
                           case valueResponse:Usuario =>
                             //El olvido de contrasena queda para usuarios en estado diferente a pendiente de activacion
                             if( valueResponse.estado != EstadosUsuarioEnum.pendienteActivacion.id)
-                              enviarCorreoOlvidoContrasena(message.perfilCliente, message.identificacion, message.tipoIdentificacion, responseCliente.wcli_dir_correo, currentSender, valueResponse.id)
+                              enviarCorreoDefinirContrasena(message.perfilCliente, message.identificacion, message.tipoIdentificacion, responseCliente.wcli_dir_correo, currentSender, valueResponse.id)
                             else
                               currentSender ! ResponseMessage(Conflict,errorEstadoUsuarioNoPermitido)
                           case _ => log.info("Error al obtener usuario para olvido de contrasena")
@@ -241,7 +241,7 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
     )
   }
 
-  private def enviarCorreoOlvidoContrasena(perfilCliente:Int, identificacion: String, tipoIdentificacion: Int, correoCliente:String, currentSender: ActorRef, idUsuario:Option[Int], desbloqueo: Boolean = false) = {
+  private def enviarCorreoDefinirContrasena(perfilCliente:Int, identificacion: String, tipoIdentificacion: Int, correoCliente:String, currentSender: ActorRef, idUsuario:Option[Int], desbloqueo: Boolean = false) = {
     val validacionConsulta = validacionConsultaTiempoExpiracion()
 
     validacionConsulta onComplete {

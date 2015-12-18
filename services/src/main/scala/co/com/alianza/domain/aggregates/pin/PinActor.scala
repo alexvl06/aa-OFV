@@ -96,6 +96,7 @@ class PinActor extends Actor with ActorLogging with AlianzaActors with FutureRes
       rCambiarPss                     <- ValidationT(cambiarPassword(pinValidacion.idUsuario, passwordAppend))
       resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(pinValidacion.idUsuario, Crypto.hashSha512(passwordAppend, pinValidacion.idUsuario)))
       rCambiarEstado                  <- ValidationT(cambiarEstado(pinValidacion.idUsuario))
+      rBorrarIngresosErroneos         <- ValidationT(borrarNumeroIngresosErroneos(pinValidacion.idUsuario))
       idResult                        <- ValidationT(eliminarPin(pinValidacion.tokenHash))
     } yield {
       idResult
@@ -113,6 +114,10 @@ class PinActor extends Actor with ActorLogging with AlianzaActors with FutureRes
 
   private def cambiarEstado(idUsuario: Int): Future[Validation[ErrorValidacion, Int]] = {
     uDataAccessAdapter.actualizarEstadoUsuario(idUsuario, 1).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
+  }
+
+  private def borrarNumeroIngresosErroneos(idUsuario: Int): Future[Validation[ErrorValidacion, Int]] = {
+    uDataAccessAdapter.actualizarNumeroIngresosErroneos(idUsuario, 0).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
   }
 
   private def eliminarPin(tokenHash: String): Future[Validation[ErrorValidacion, Int]] = {
