@@ -474,6 +474,7 @@ class AutenticacionActor extends Actor with ActorLogging {
     idTipoIdent match {
       case TipoIdentificacion.FID.identificador => "F"
       case TipoIdentificacion.NIT.identificador => "J"
+      case TipoIdentificacion.SOCIEDAD_EXTRANJERA.identificador => "S"
       case _ => "N"
     }
   }

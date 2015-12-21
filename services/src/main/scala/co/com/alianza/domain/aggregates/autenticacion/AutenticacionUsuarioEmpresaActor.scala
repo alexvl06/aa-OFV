@@ -25,7 +25,7 @@ import co.com.alianza.util.transformers.ValidationT
 import java.sql.Timestamp
 import java.util.Date
 
-import enumerations.EstadosEmpresaEnum
+import enumerations.{TipoIdentificacion, EstadosEmpresaEnum}
 import enumerations.empresa.EstadosDeEmpresaEnum
 
 import scala.concurrent.duration._
@@ -353,7 +353,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
    */
   def generarYAsociarTokenUsuarioEmpresarialAdmin(cliente: Cliente, usuario: UsuarioEmpresarialAdmin, nit: String, expiracionInactividad: String, ipCliente: String): Future[Validation[ErrorAutenticacion, String]] = {
     log.info("Generando y asociando token usuario empresarial admin")
-    val token: String = Token.generarToken(cliente.wcli_nombre, cliente.wcli_dir_correo, cliente.wcli_person, usuario.ipUltimoIngreso.getOrElse(ipCliente), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), expiracionInactividad, TiposCliente.clienteAdministrador, Some(nit))
+    val token: String = Token.generarToken(cliente.wcli_nombre, cliente.wcli_dir_correo, obtenerNaturalezaClienteAdmin(cliente.wcli_person, usuario.tipoIdentificacion), usuario.ipUltimoIngreso.getOrElse(ipCliente), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), expiracionInactividad, TiposCliente.clienteAdministrador, Some(nit))
     val future: Future[Validation[PersistenceException, Int]] = UsDataAdapter.asociarTokenUsuarioEmpresarialAdmin(usuario.id, token)
     future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap { _ =>
       Validation.success(token)
@@ -565,6 +565,13 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
        log.info("Creando sesion")
        MainActors.sesionActorSupervisor ! CrearSesionUsuario(token, expiracionInactividad, Some(empresa), horario)
        Future.successful(Validation.success(true))
+    }
+
+    private def obtenerNaturalezaClienteAdmin(naturalezaSIFI:String, tipoIdentificacion:Int) = {
+      if( TipoIdentificacion.SOCIEDAD_EXTRANJERA.identificador == tipoIdentificacion  )
+        "S"
+      else
+        naturalezaSIFI
     }
 
 }
