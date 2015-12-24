@@ -1,6 +1,7 @@
 package co.com.alianza.domain.aggregates.pin
 
 import java.sql.Timestamp
+import java.util.Date
 
 import akka.actor.{ActorRef, ActorLogging, Actor}
 
@@ -97,6 +98,7 @@ class PinActor extends Actor with ActorLogging with AlianzaActors with FutureRes
       resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(pinValidacion.idUsuario, Crypto.hashSha512(passwordAppend, pinValidacion.idUsuario)))
       rCambiarEstado                  <- ValidationT(cambiarEstado(pinValidacion.idUsuario))
       rBorrarIngresosErroneos         <- ValidationT(borrarNumeroIngresosErroneos(pinValidacion.idUsuario))
+      actualizarFechaUltimoIngreso    <- ValidationT(actualizarFechaUltimoIngreso(pinValidacion.idUsuario))
       idResult                        <- ValidationT(eliminarPin(pinValidacion.tokenHash))
     } yield {
       idResult
@@ -114,6 +116,10 @@ class PinActor extends Actor with ActorLogging with AlianzaActors with FutureRes
 
   private def cambiarEstado(idUsuario: Int): Future[Validation[ErrorValidacion, Int]] = {
     uDataAccessAdapter.actualizarEstadoUsuario(idUsuario, 1).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
+  }
+
+  private def actualizarFechaUltimoIngreso(idUsuario: Int): Future[Validation[ErrorValidacion, Int]] = {
+    uDataAccessAdapter.actualizarFechaUltimoIngreso(idUsuario, new Timestamp((new Date).getTime)).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
   }
 
   private def borrarNumeroIngresosErroneos(idUsuario: Int): Future[Validation[ErrorValidacion, Int]] = {

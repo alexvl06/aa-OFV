@@ -193,6 +193,11 @@ object DataAccessAdapter {
     repo.actualizarFechaUltimoIngreso( numeroIdentificacion, fechaActual )
   }
 
+  def actualizarFechaUltimoIngreso( idUsuario: Int, fechaActual: Timestamp  ): Future[Validation[PersistenceException, Int]] = {
+    val repo = new UsuariosRepository()
+    repo.actualizarFechaUltimoIngreso( idUsuario, fechaActual )
+  }
+
   def actualizarFechaUltimoIngresoUsuarioEmpresarialAdmin( idUsuario:Int, fechaActual: Timestamp  ): Future[Validation[PersistenceException, Int]] = {
     val repo = new UsuarioEmpresarialAdminRepository()
     repo.actualizarFechaUltimoIngreso( idUsuario, fechaActual )

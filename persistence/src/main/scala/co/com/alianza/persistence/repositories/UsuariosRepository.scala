@@ -106,6 +106,13 @@ class UsuariosRepository ( implicit executionContext: ExecutionContext) extends 
       resolveTry(resultTry, "Actualizar usuario en actualizarFechaUltimoIngreso ")
   }
 
+  def actualizarFechaUltimoIngreso( idUsuario: Int, fechaActual: Timestamp  ): Future[Validation[PersistenceException, Int]] = loan {
+
+    implicit session =>
+      val resultTry = Try{ usuarios.filter( _.id === idUsuario ).map(_.fechaUltimoIngreso ).update(Some(fechaActual))  }
+      resolveTry(resultTry, "Actualizar usuario en actualizarFechaUltimoIngreso ")
+  }
+
   def actualizarEstadoUsuario( numeroIdentificacion:String, estado:Int ): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
       val resultTry = Try{ usuarios.filter( _.identificacion === numeroIdentificacion ).map(_.estado ).update(estado)  }
