@@ -35,14 +35,10 @@ class UsuarioService  extends Directives with AlianzaCommons   with CrossHeaders
       }
      } ~ path("desbloquear") {
         post {
-          entity(as[DesbloquarWebMessage]) {
+          entity(as[DesbloquearMessage]) {
             desbloqueoMsg =>
               respondWithMediaType(mediaType) {
-                clientIP {
-                  ip =>
-                    val nuevoUsuario = desbloqueoMsg.toDesbloquarMessage.copy(clientIp = Some(ip.value))
-                    requestExecute(nuevoUsuario, usuariosActor)
-                }
+                requestExecute(desbloqueoMsg, usuariosActor)
               }
           }
         }

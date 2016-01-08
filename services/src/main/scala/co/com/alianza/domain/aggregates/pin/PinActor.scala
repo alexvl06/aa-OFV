@@ -1,6 +1,7 @@
 package co.com.alianza.domain.aggregates.pin
 
 import java.sql.Timestamp
+import java.util.Date
 
 import akka.actor.{ActorRef, ActorLogging, Actor}
 
@@ -9,6 +10,7 @@ import co.com.alianza.domain.aggregates.usuarios.{ErrorPersistence, ErrorValidac
 import co.com.alianza.exceptions.{BusinessLevel, PersistenceException}
 import co.com.alianza.infrastructure.anticorruption.pin.{DataAccessAdapter => pDataAccessAdapter}
 import co.com.alianza.infrastructure.anticorruption.ultimasContrasenas.{ DataAccessAdapter => DataAccessAdapterUltimaContrasena }
+import co.com.alianza.infrastructure.anticorruption.contrasenas.{ DataAccessAdapter => DataAccessAdapterContrasena }
 import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => uDataAccessAdapter}
 import co.com.alianza.infrastructure.dto.PinUsuario
 import co.com.alianza.infrastructure.messages.PinMessages._
@@ -96,6 +98,7 @@ class PinActor extends Actor with ActorLogging with AlianzaActors with FutureRes
       rCambiarPss                     <- ValidationT(cambiarPassword(pinValidacion.idUsuario, passwordAppend))
       resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(pinValidacion.idUsuario, Crypto.hashSha512(passwordAppend, pinValidacion.idUsuario)))
       rCambiarEstado                  <- ValidationT(cambiarEstado(pinValidacion.idUsuario))
+      rBorrarIngresosErroneos         <- ValidationT(borrarNumeroIngresosErroneos(pinValidacion.idUsuario))
       idResult                        <- ValidationT(eliminarPin(pinValidacion.tokenHash))
     } yield {
       idResult
@@ -108,11 +111,15 @@ class PinActor extends Actor with ActorLogging with AlianzaActors with FutureRes
   }
 
   private def cambiarPassword(idUsuario: Int, pw: String): Future[Validation[ErrorValidacion, Int]] = {
-    uDataAccessAdapter.cambiarPassword(idUsuario, Crypto.hashSha512(pw, idUsuario)).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
+    DataAccessAdapterContrasena.actualizarContrasena(pw, idUsuario).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
   }
 
   private def cambiarEstado(idUsuario: Int): Future[Validation[ErrorValidacion, Int]] = {
     uDataAccessAdapter.actualizarEstadoUsuario(idUsuario, 1).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
+  }
+
+  private def borrarNumeroIngresosErroneos(idUsuario: Int): Future[Validation[ErrorValidacion, Int]] = {
+    uDataAccessAdapter.actualizarNumeroIngresosErroneos(idUsuario, 0).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
   }
 
   private def eliminarPin(tokenHash: String): Future[Validation[ErrorValidacion, Int]] = {

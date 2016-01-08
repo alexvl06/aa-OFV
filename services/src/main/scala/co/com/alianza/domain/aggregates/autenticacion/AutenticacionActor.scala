@@ -432,7 +432,7 @@ class AutenticacionActor extends Actor with ActorLogging {
    * ErrorAutenticacion => ErrorPersistencia (si algo falla) | ErrorIntentosIngresoInvalidos (si se bloqueo el usuario)
    */
   def bloquearUsuario(identificacionUsuario: String, numIngresosErroneos: Int, regla: ReglasContrasenas): Future[Validation[ErrorAutenticacion, Boolean]] = {
-    if( numIngresosErroneos + 1 == regla.valor.toInt) {
+    if( numIngresosErroneos + 1 >= regla.valor.toInt) {
       val future = UsDataAdapter.actualizarEstadoUsuario(identificacionUsuario, EstadosUsuarioEnum.bloqueContraseña.id)
       future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap { _ =>
         Validation.failure(ErrorIntentosIngresoInvalidos())
@@ -450,6 +450,7 @@ class AutenticacionActor extends Actor with ActorLogging {
     idTipoIdent match {
       case TipoIdentificacion.FID.identificador => "F"
       case TipoIdentificacion.NIT.identificador => "J"
+      case TipoIdentificacion.SOCIEDAD_EXTRANJERA.identificador => "S"
       case _ => "N"
     }
   }

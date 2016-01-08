@@ -86,18 +86,18 @@ object  ValidacionesUsuario {
   }
 
 
-  def validacionConsultaNumDoc(message:UsuarioMessage): Future[Validation[ErrorValidacion, Unit.type]] = {
+  def validacionConsultaNumDoc(message:UsuarioMessage): Future[Validation[ErrorValidacion, Option[Usuario]]] = {
     val usuarioFuture = DataAccessAdapterUsuario.obtenerUsuarioNumeroIdentificacion(message.identificacion)
     usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message,pe)).flatMap{
       (x:Option[Usuario]) => x match{
-        case None => zSuccess(Unit)
+        case None => zSuccess(x)
         case _ => zFailure(ErrorDocumentoExiste(errorUsuarioExiste))
       }
     })
   }
 
-  def validacionUsuarioNumDoc(message:UsuarioMessage): Future[Validation[ErrorValidacion, Option[Usuario]]] = {
-    val usuarioFuture = DataAccessAdapterUsuario.obtenerUsuarioNumeroIdentificacion(message.identificacion)
+  def validacionUsuarioNumDoc(identificacion: String) : Future[Validation[ErrorValidacion, Option[Usuario]]] = {
+    val usuarioFuture = DataAccessAdapterUsuario.obtenerUsuarioNumeroIdentificacion(identificacion)
     usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message,pe)).flatMap{
       (x:Option[Usuario]) => x match{
         case Some(usuarioEncontrado) => zSuccess(Some(usuarioEncontrado))
@@ -116,13 +116,13 @@ object  ValidacionesUsuario {
     })
   }
 
-  def validacionConsultaCliente(message:UsuarioMessage, validarCorreo: Boolean): Future[Validation[ErrorValidacion, Cliente]] = {
-    val usuarioFuture = DataAccessAdapterCliente.consultarCliente(message.identificacion)
+  def validacionConsultaCliente(identificacion: String, tipoIdentificacion: Int, validarCorreo: Boolean): Future[Validation[ErrorValidacion, Cliente]] = {
+    val usuarioFuture = DataAccessAdapterCliente.consultarCliente(identificacion)
     usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message,pe)).flatMap{
       (x:Option[Cliente]) => x match{
         case None => zFailure(ErrorClienteNoExiste(errorClienteNoExiste))
         case Some(cliente) =>
-          validacionConsultaCliente(cliente, message.tipoIdentificacion, validarCorreo)
+          validacionConsultaCliente(cliente, tipoIdentificacion, validarCorreo)
       }
     })
   }

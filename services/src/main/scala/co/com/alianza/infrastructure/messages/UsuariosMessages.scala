@@ -13,8 +13,7 @@ import co.com.alianza.persistence.messages.AgregarIpHabitualRequest
  */
 object UsuariosMessagesJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val UsuarioMessageormat = jsonFormat10(UsuarioMessage)
-  implicit val DesbloquearFormat = jsonFormat10(DesbloquarMessage)
-  implicit val DesbloquearWebFormat = jsonFormat7(DesbloquarWebMessage)
+  implicit val DesbloquearFormat = jsonFormat1(DesbloquearMessage)
   implicit val OlvidoContrasenaMessageFormat = jsonFormat4(OlvidoContrasenaMessage)
 }
 
@@ -49,16 +48,6 @@ case class ConsultaUsuarioEmpresarialAdminMessage(
                                               token:Option[String] = None
                                               ) extends MessageService
 
-case class OlvidoContrasenaMessage(perfilCliente:Int, identificacion: String, tipoIdentificacion: Int, usuarioClienteAdmin:Option[String]) extends MessageService{
+case class OlvidoContrasenaMessage(perfilCliente:Int, identificacion: String, tipoIdentificacion: Int, usuarioClienteAdmin:Option[String]) extends MessageService
 
-}
-
-case class DesbloquarMessage (correo: String, identificacion: String, tipoIdentificacion: Int, contrasena: String, activarIP:Boolean, clientIp:Option[String] = None, challenge:String = "",uresponse:String="", primerApellido:Option[String] = None, fechaExpedicion:Option[String] = None) extends MessageService{
-  def toUsuarioMessage = UsuarioMessage(correo,identificacion,tipoIdentificacion,contrasena,activarIP,clientIp,challenge,uresponse,primerApellido,fechaExpedicion)
-
-}
-
-case class DesbloquarWebMessage ( identificacion: String, tipoIdentificacion: Int, clientIp:Option[String] = None, challenge:String = "",uresponse:String="", primerApellido:Option[String] = None, fechaExpedicion:Option[String] = None) extends MessageService{
-  def toDesbloquarMessage = DesbloquarMessage("",identificacion,tipoIdentificacion,"",false,clientIp,challenge,uresponse,primerApellido,fechaExpedicion)
-
-}
+case class DesbloquearMessage(identificacion: String) extends MessageService
