@@ -14,7 +14,7 @@ case class GuardarPermisosAgenteMessage (idAgente: Int, permisos: List[Permiso],
 case class ConsultarPermisosAgenteMessage (idAgente: Int) extends MessageService
 case class ConsultarPermisosAgenteLoginMessage (agente: UsuarioAuth) extends MessageService
 case class PermisosRespuesta (permisos: List[Permiso], encargosPermisos: List[EncargoPermisos])
-case class PermisosLoginRespuesta (permiteInscripciones:Boolean, permiteTransferencias:Boolean, permitePagosMasivos:Boolean, permiteConsultas:Boolean, permiteProgramacion:Boolean)
+case class PermisosLoginRespuesta (permiteInscripciones:Boolean, permiteTransferencias:Boolean, permitePagosMasivos:Boolean, permiteConsultas:Boolean, permiteProgramacion:Boolean, permitePagosMasivosFideicomisos:Boolean)
 
 object PermisosTransaccionalesJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val AgenteFormat = jsonFormat2(Autorizador)
