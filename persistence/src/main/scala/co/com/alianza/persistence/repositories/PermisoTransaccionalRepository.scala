@@ -31,6 +31,10 @@ class PermisoTransaccionalRepository ( implicit executionContext: ExecutionConte
     implicit session =>
       resolveTry(
         Try {
+          println("Permiso=>", permiso)
+          println("Esta seleccionado=>", estaSeleccionado)
+          println("idsAgentes=>", idsAgentes)
+          println("idClienteAdmin=>", idClienteAdmin)
           val q = for {
             p <- tablaPermisos if p.idAgente === permiso.idAgente && p.tipoTransaccion === permiso.tipoTransaccion
           } yield (p.tipoPermiso, p.montoMaximoTransaccion, p.montoMaximoDiario, p.minimoNumeroPersonas)
@@ -159,6 +163,7 @@ class PermisoTransaccionalRepository ( implicit executionContext: ExecutionConte
                                           idsAgentes: Option[List[Int]] = None,
                                           idClienteAdmin: Int)
                                          (implicit s: Session) = {
+    println("guardarAgentesPermiso")
     if(idsAgentes.isDefined){
       val ids = idsAgentes.get.filter{id => id!=0 && id!=(-1)}
       val queryAgentes = for {
