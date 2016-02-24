@@ -261,7 +261,9 @@ class AutenticacionActor extends Actor with ActorLogging {
     log.info("Validando que el cliente exista en el core de alianza")
     val future: Future[Validation[PersistenceException, Option[Cliente]]] = ClDataAdapter.consultarCliente(identificacionUsuario)
     future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap {
-      case Some(cliente) => Validation.success(cliente)
+      case Some(cliente) =>
+        println("*********Cliente******", cliente)
+        Validation.success(cliente)
       case None => Validation.failure(ErrorClienteNoExisteCore())
     })
   }

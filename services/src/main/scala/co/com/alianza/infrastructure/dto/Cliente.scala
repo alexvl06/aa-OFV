@@ -6,4 +6,4 @@ import org.joda.time.DateTime
  *
  * @author smontanez
  */
-case class Cliente (wcli_nombre:String, wcli_person:String, wcli_estado:String,wcli_estado_descri:String, wcli_dir_correo:String, wcli_ident_replegal:String)
+case class Cliente (wcli_nombre:String, wcli_person:String, wcli_estado:String,wcli_estado_descri:String, wcli_dir_correo:String, wcli_ident_replegal:String, wcli_cias_pagos_masivos:String)
