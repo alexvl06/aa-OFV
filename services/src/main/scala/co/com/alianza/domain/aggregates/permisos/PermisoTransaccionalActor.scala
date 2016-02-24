@@ -25,7 +25,7 @@ import co.com.alianza.infrastructure.anticorruption.permisos.{PermisoTransaccion
 import co.com.alianza.util.json.MarshallableImplicits._
 import scalaz.{Success => zSuccess, Failure => zFailure}
 import co.com.alianza.util.json.JsonUtil
-import co.com.alianza.commons.enumerations.TiposCliente
+import co.com.alianza.commons.enumerations.{PermisosFideicomisosCoreAlianza, TiposCliente}
 import co.com.alianza.infrastructure.anticorruption.clientes.{DataAccessAdapter => ClDataAdapter}
 
 /**
@@ -141,8 +141,7 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
     val extraccionFuturo = Await.result( cliente, 8 seconds )
     extraccionFuturo match {
       case zSuccess(cliente) =>
-        println("ClienteFIDPERMISOS****************", cliente.wcli_cias_pagos_masivos)
-        cliente.wcli_cias_pagos_masivos == "S"
+        cliente.wcli_cias_pagos_masivos == PermisosFideicomisosCoreAlianza.`SI`.nombre
       case zFailure(error) => false
     }
 
