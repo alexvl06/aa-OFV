@@ -9,4 +9,4 @@ import spray.json._
  *
  * @param id El id del usuario autenticado
  */
-case class UsuarioAuth(id:Int, tipoCliente: TiposCliente)
+case class UsuarioAuth(id:Int, tipoCliente: TiposCliente, identificacionUsuario:String)

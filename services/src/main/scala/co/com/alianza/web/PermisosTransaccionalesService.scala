@@ -52,7 +52,7 @@ class PermisosTransaccionalesService extends Directives with AlianzaCommons with
 
                     requestWithFutureAuditing[PersistenceException, Any](r, AuditingHelper.fiduciariaTopic, AuditingHelper.consultaPermisosAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, None)
                 } {
-                  requestExecute(ConsultarPermisosAgenteLoginMessage(user, "341262"), permisoTransaccionalActorSupervisor)
+                  requestExecute(ConsultarPermisosAgenteLoginMessage(user, user.identificacionUsuario), permisoTransaccionalActorSupervisor)
                 }
             }
           }

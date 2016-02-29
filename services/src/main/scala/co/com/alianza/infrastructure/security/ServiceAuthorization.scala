@@ -60,10 +60,10 @@ trait ServiceAuthorization {
                 Left(AuthenticationFailedRejection(CredentialsRejected, List(), Some(Unauthorized.intValue), Some(r.responseBody)))
               case OK =>
                 val user = JsonUtil.fromJson[Usuario](r.responseBody)
-                Right(UsuarioAuth(user.id.get, user.tipoCliente))
+                Right(UsuarioAuth(user.id.get, user.tipoCliente, user.identificacion))
               case Forbidden =>
                 val user = JsonUtil.fromJson[UsuarioForbidden](r.responseBody)
-                Right(UsuarioAuth(user.usuario.id.get, user.usuario.tipoCliente))
+                Right(UsuarioAuth(user.usuario.id.get, user.usuario.tipoCliente, user.usuario.identificacion))
 
             }
           case _ =>
