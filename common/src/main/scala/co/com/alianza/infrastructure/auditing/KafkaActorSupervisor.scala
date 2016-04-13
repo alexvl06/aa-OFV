@@ -44,7 +44,7 @@ class KafkaActor extends Actor with ActorLogging {
   def receive = {
 
     case message: AuditRequest =>
-      sendToKafka(JsonUtil.toJson(message), message.kafkaTopic)
+      //sendToKafka(JsonUtil.toJson(message), message.kafkaTopic)
 
     case any: Any =>
       val currentSender = sender()
