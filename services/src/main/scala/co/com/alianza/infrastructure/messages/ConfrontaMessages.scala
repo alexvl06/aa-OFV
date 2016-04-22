@@ -15,14 +15,14 @@ object ConfrontaMessagesJsonSupport extends DefaultJsonProtocol with SprayJsonSu
   implicit val ValidarCuestionarioDesbloqueoRequestMessageFormat = jsonFormat4(ValidarCuestionarioDesbloqueoRequestMessage)
 }
 
-case class ObtenerCuestionarioRequestMessage(primerApellido:String, codigoTipoIdentificacion:String, numeroIdentificacion: String, fechaExpedicion:String) extends MessageService {
+case class ObtenerCuestionarioRequestMessage(primerApellido: String, codigoTipoIdentificacion: String, numeroIdentificacion: String, fechaExpedicion: String) extends MessageService {
 }
 
-case class ObtenerCuestionarioAdicionalRequestMessage(codigoCiudad:Int, codigoCuestionario:Int, codigoDepartamento:Int, codigoTipoIdentificacion:String, numeroIdentificac: String, telefono:String, secuenciaCuestionario:Long) extends MessageService {
+case class ObtenerCuestionarioAdicionalRequestMessage(codigoCiudad: Int, codigoCuestionario: Int, codigoDepartamento: Int, codigoTipoIdentificacion: String, numeroIdentificac: String, telefono: String, secuenciaCuestionario: Long) extends MessageService {
 }
 
-case class ValidarCuestionarioRequestMessage(id:UsuarioMessage, respuestas:Array[String],secuenciaCuestionario:Long,codigoCuestionario:Int) extends MessageService {
+case class ValidarCuestionarioRequestMessage(id: UsuarioMessage, respuestas: Array[String], secuenciaCuestionario: Long, codigoCuestionario: Int) extends MessageService {
 }
 
-case class ValidarCuestionarioDesbloqueoRequestMessage(id:String, respuestas:Array[String],secuenciaCuestionario:Long,codigoCuestionario:Int) extends MessageService {
+case class ValidarCuestionarioDesbloqueoRequestMessage(id: String, respuestas: Array[String], secuenciaCuestionario: Long, codigoCuestionario: Int) extends MessageService {
 }

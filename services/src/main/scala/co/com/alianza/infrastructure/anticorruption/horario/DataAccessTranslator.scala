@@ -1,6 +1,6 @@
 package co.com.alianza.infrastructure.anticorruption.horario
 
-import co.com.alianza.persistence.entities.{HorarioEmpresa => eHorarioEmpresa}
+import co.com.alianza.persistence.entities.{ HorarioEmpresa => eHorarioEmpresa }
 import co.com.alianza.infrastructure.dto.HorarioEmpresa
 
 /**
@@ -10,7 +10,7 @@ object DataAccessTranslator {
 
   def translateHorarioEmpresa(e: eHorarioEmpresa) = {
     import e._
-    HorarioEmpresa(diaHabil, sabado, horaInicio,  horaFin)
+    HorarioEmpresa(diaHabil, sabado, horaInicio, horaFin)
   }
 
 }

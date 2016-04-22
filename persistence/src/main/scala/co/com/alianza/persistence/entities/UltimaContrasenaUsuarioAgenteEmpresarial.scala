@@ -7,11 +7,12 @@ import CustomDriver.simple._
 /**
  * Created by manuel on 7/01/15.
  */
-case class UltimaContrasenaUsuarioAgenteEmpresarial(id: Option[Int],
-                            idUsuario: Int,
-                            contrasena: String,
-                            fechaUltimaContrasena : Timestamp)
-
+case class UltimaContrasenaUsuarioAgenteEmpresarial(
+  id: Option[Int],
+  idUsuario: Int,
+  contrasena: String,
+  fechaUltimaContrasena: Timestamp
+)
 
 class UltimaContrasenaUsuarioAgenteEmpresarialTable(tag: Tag) extends Table[UltimaContrasenaUsuarioAgenteEmpresarial](tag, "ULTIMAS_CONTRASENAS_USUARIO_EMPRESARIAL") {
 

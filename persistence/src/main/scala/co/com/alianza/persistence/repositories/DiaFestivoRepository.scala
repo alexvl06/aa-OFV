@@ -5,16 +5,16 @@ import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.persistence.entities.CustomDriver.simple._
 import co.com.alianza.persistence.entities._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.slick.jdbc.JdbcBackend.Session
 import scala.slick.lifted.TableQuery
 import scala.util.Try
-import scalaz.{Validation, Failure => zFailure, Success => zSuccess}
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 
 /**
  * @author hernando on 02/03/14.
  */
-class DiaFestivoRepository ( implicit executionContext: ExecutionContext) extends AlianzaRepository  {
+class DiaFestivoRepository(implicit executionContext: ExecutionContext) extends AlianzaRepository {
 
   val diaFestivo = TableQuery[DiaFestivoTable]
 

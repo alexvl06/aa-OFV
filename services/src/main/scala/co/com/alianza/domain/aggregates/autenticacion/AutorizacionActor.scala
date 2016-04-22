@@ -2,7 +2,7 @@ package co.com.alianza.domain.aggregates.autenticacion
 
 import java.util.Date
 
-import akka.actor.{ActorLogging, Actor}
+import akka.actor.{ ActorLogging, Actor }
 import akka.actor.Props
 import akka.pattern.ask
 import akka.routing.RoundRobinPool
@@ -12,14 +12,14 @@ import co.com.alianza.app.MainActors
 import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.domain.aggregates.autenticacion.errores.TokenInvalido
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.infrastructure.anticorruption.configuraciones.{DataAccessAdapter => confDataAdapter}
-import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => usDataAdapter}
-import co.com.alianza.infrastructure.anticorruption.recursos.{DataAccessAdapter => rDataAccessAdapter}
-import co.com.alianza.infrastructure.dto.{Configuracion, RecursoUsuario, Usuario}
+import co.com.alianza.infrastructure.anticorruption.configuraciones.{ DataAccessAdapter => confDataAdapter }
+import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => usDataAdapter }
+import co.com.alianza.infrastructure.anticorruption.recursos.{ DataAccessAdapter => rDataAccessAdapter }
+import co.com.alianza.infrastructure.dto.{ Configuracion, RecursoUsuario, Usuario }
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.util.FutureResponse
 import co.com.alianza.util.json.JsonUtil
-import co.com.alianza.util.token.{AesUtil, Token}
+import co.com.alianza.util.token.{ AesUtil, Token }
 import co.com.alianza.util.transformers.ValidationT
 import enumerations.CryptoAesParameters
 
@@ -28,9 +28,9 @@ import spray.http.StatusCodes._
 import scala.concurrent.duration._
 import scala.concurrent.Future
 import scalaz.std.AllInstances._
-import scala.util.{Success, Failure}
+import scala.util.{ Success, Failure }
 import scalaz.Validation
-import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
+import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
 
 class AutorizacionActorSupervisor extends Actor with ActorLogging {
 
@@ -157,7 +157,7 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
 
     val validacionSesion: Future[Boolean] = ask(MainActors.sesionActorSupervisor, ValidarSesion(token)).mapTo[Boolean]
     validacionSesion.map {
-      case true => usuarioOption.map ( usuario =>usuario.copy(contrasena = None))
+      case true => usuarioOption.map(usuario => usuario.copy(contrasena = None))
       case false => None
     }
   }

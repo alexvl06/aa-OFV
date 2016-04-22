@@ -6,9 +6,9 @@ import CustomDriver.simple._
  * Created by heco on 20/2/14.
  */
 
-case class EmpresaUsuarioAdmin (idEmpresa: Int, idUsuario: Int)
+case class EmpresaUsuarioAdmin(idEmpresa: Int, idUsuario: Int)
 
-class EmpresaUsuarioAdminTable (tag: Tag) extends Table[EmpresaUsuarioAdmin](tag, "USUARIO_EMPRESARIAL_ADMIN_EMPRESA") {
+class EmpresaUsuarioAdminTable(tag: Tag) extends Table[EmpresaUsuarioAdmin](tag, "USUARIO_EMPRESARIAL_ADMIN_EMPRESA") {
 
   def idEmpresa = column[Int]("ID_EMPRESA")
 

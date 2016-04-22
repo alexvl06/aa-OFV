@@ -15,14 +15,14 @@ object IpsUsuarioMessagesJsonSupport extends DefaultJsonProtocol with SprayJsonS
 
 case class ObtenerIpsUsuarioMessage(idUsuario: Int, tipoCliente: TiposCliente) extends MessageService
 
-case class AgregarIpsUsuarioMessage(idUsuario: Option[Int], ip: String, tipoCliente: Option[Int]) extends MessageService{
-  def toEntityIpsUsuario : IpsUsuario = {
+case class AgregarIpsUsuarioMessage(idUsuario: Option[Int], ip: String, tipoCliente: Option[Int]) extends MessageService {
+  def toEntityIpsUsuario: IpsUsuario = {
     new IpsUsuario(idUsuario.get, ip)
   }
 }
 
-case class EliminarIpsUsuarioMessage(idUsuario: Option[Int], ip: String, tipoCliente: Option[Int]) extends MessageService{
-  def toEntityIpsUsuario : IpsUsuario = {
+case class EliminarIpsUsuarioMessage(idUsuario: Option[Int], ip: String, tipoCliente: Option[Int]) extends MessageService {
+  def toEntityIpsUsuario: IpsUsuario = {
     new IpsUsuario(idUsuario.get, ip)
   }
 }

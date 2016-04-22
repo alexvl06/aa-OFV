@@ -3,7 +3,7 @@ package co.com.alianza.domain.aggregates.autenticacion.errores
 import co.com.alianza.infrastructure.messages.ErrorMessage
 import co.com.alianza.util.json.MarshallableImplicits._
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.infrastructure.dto.{UsuarioEmpresarial, UsuarioEmpresarialAdmin, RecursoPerfilAgente, RecursoPerfilClienteAdmin}
+import co.com.alianza.infrastructure.dto.{ UsuarioEmpresarial, UsuarioEmpresarialAdmin, RecursoPerfilAgente, RecursoPerfilClienteAdmin }
 
 /**
  * Created by manuel on 3/03/15.

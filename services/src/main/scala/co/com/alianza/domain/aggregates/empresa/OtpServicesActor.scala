@@ -1,16 +1,16 @@
 package co.com.alianza.domain.aggregates.empresa
 
-import akka.actor.{ActorRef, Props, ActorLogging, Actor}
+import akka.actor.{ ActorRef, Props, ActorLogging, Actor }
 import akka.routing.RoundRobinPool
-import co.com.alianza.app.{MainActors, AlianzaActors}
+import co.com.alianza.app.{ MainActors, AlianzaActors }
 import co.com.alianza.util.FutureResponse
 import com.typesafe.config.Config
 import co.com.alianza.infrastructure.messages.empresa._
 import co.com.alianza.infrastructure.messages.empresa.OtpMessagesJsonSupport._
 import scalaz.std.AllInstances._
 import spray.client.pipelining._
-import scala.concurrent.{Future}
-import spray.http.{StatusCodes, HttpResponse}
+import scala.concurrent.{ Future }
+import spray.http.{ StatusCodes, HttpResponse }
 import co.com.alianza.infrastructure.messages.ResponseMessage
 import co.com.alianza.util.transformers.ValidationT
 import spray.httpx.SprayJsonSupport
@@ -54,45 +54,45 @@ class OtpServicesActor extends Actor with ActorLogging with AlianzaActors with F
     case message: RegistrarOTP => {
       val currentSender = sender
       val endPoint = config.getString("service.otp.registrar.endpoint")
-      for{
+      for {
         usr <- ValidationT(co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.DataAccessAdapter.obtenerUsuarioEmpresarialPorId(message.usuario.id))
-      }yield {
-        enviarOTP(endPoint,message.toOperacionOTPDTO(application,usr.get.identificacion,usr.get.usuario),currentSender)
+      } yield {
+        enviarOTP(endPoint, message.toOperacionOTPDTO(application, usr.get.identificacion, usr.get.usuario), currentSender)
       }
     }
 
     case message: RemoverOTP => {
       val currentSender = sender
       val endPoint = config.getString("service.otp.remover.endpoint")
-      for{
+      for {
         usr <- ValidationT(co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.DataAccessAdapter.obtenerUsuarioEmpresarialPorId(message.usuario.id))
-      }yield {
-        enviarOTP(endPoint,message.toOperacionOTPDTO(application,usr.get.identificacion,usr.get.usuario),currentSender)
+      } yield {
+        enviarOTP(endPoint, message.toOperacionOTPDTO(application, usr.get.identificacion, usr.get.usuario), currentSender)
       }
     }
 
     case message: HabilitarOTP => {
       val currentSender = sender
       val endPoint = config.getString("service.otp.habilitar.endpoint")
-      for{
+      for {
         usr <- ValidationT(co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.DataAccessAdapter.obtenerUsuarioEmpresarialPorId(message.usuario.id))
-      }yield {
-        enviarOTP(endPoint,message.toOperacionOTPDTO(application,usr.get.identificacion,usr.get.usuario),currentSender)
+      } yield {
+        enviarOTP(endPoint, message.toOperacionOTPDTO(application, usr.get.identificacion, usr.get.usuario), currentSender)
       }
     }
 
     case message: DeshabilitarOTP => {
       val currentSender = sender
       val endPoint = config.getString("service.otp.deshabilitar.endpoint")
-      for{
+      for {
         usr <- ValidationT(co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.DataAccessAdapter.obtenerUsuarioEmpresarialPorId(message.usuario.id))
-      }yield {
-        enviarOTP(endPoint,message.toOperacionOTPDTO(application,usr.get.identificacion,usr.get.usuario),currentSender)
+      } yield {
+        enviarOTP(endPoint, message.toOperacionOTPDTO(application, usr.get.identificacion, usr.get.usuario), currentSender)
       }
     }
   }
 
-  def enviarOTP(endPoint:String, message: OperacionOTPDTO,sender:ActorRef) = {
+  def enviarOTP(endPoint: String, message: OperacionOTPDTO, sender: ActorRef) = {
     try {
       val pipeline = sendReceive
       val futureRequest: Future[HttpResponse] = pipeline(Post(endPoint, message))
@@ -111,7 +111,7 @@ class OtpServicesActor extends Actor with ActorLogging with AlianzaActors with F
           }
       }
     } catch {
-      case e:Exception =>
+      case e: Exception =>
         Future(ResponseMessage(StatusCodes.BadRequest, "Validación OTP no se realizó correctamente, se presento el siguiente error: " + e.getMessage))
     }
   }

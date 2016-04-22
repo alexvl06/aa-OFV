@@ -1,17 +1,17 @@
 package co.com.alianza.web
 
-import co.com.alianza.app.{CrossHeaders, AlianzaCommons}
+import co.com.alianza.app.{ CrossHeaders, AlianzaCommons }
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
-import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{DataAccessAdapter => DataAccessAdapterAgenteEmpresarial}
-import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{DataAccessAdapter => DataAccessAdapterClienteAdmin}
+import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{ DataAccessAdapter => DataAccessAdapterAgenteEmpresarial }
+import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{ DataAccessAdapter => DataAccessAdapterClienteAdmin }
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.util.token.AesUtil
 import enumerations.CryptoAesParameters
-import spray.routing.{RequestContext}
+import spray.routing.{ RequestContext }
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import spray.routing.Directives
 
@@ -95,9 +95,9 @@ class IpsUsuariosService extends Directives with AlianzaCommons with CrossHeader
                         case TiposCliente.agenteEmpresarial => DataAccessAdapterAgenteEmpresarial.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(stringToken)
                       }
                       requestWithFutureAuditing[PersistenceException, EliminarIpsUsuarioMessage](r, AuditingHelper.fiduciariaTopic, AuditingHelper.usuarioEliminarIpIndex, ip.value, kafkaActor, usuario, Some(eliminarIpsUsuarioMessage))
-                  }{
-                        val eliminarIpsUsuarioMessageAux: EliminarIpsUsuarioMessage = eliminarIpsUsuarioMessage.copy(idUsuario = Some(user.id), tipoCliente = Some(user.tipoCliente.id))
-                        requestExecute(eliminarIpsUsuarioMessageAux, ipsUsuarioActor)
+                  } {
+                    val eliminarIpsUsuarioMessageAux: EliminarIpsUsuarioMessage = eliminarIpsUsuarioMessage.copy(idUsuario = Some(user.id), tipoCliente = Some(user.tipoCliente.id))
+                    requestExecute(eliminarIpsUsuarioMessageAux, ipsUsuarioActor)
                   }
                 }
               }

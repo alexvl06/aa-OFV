@@ -60,7 +60,7 @@ case class ErrorEmpresaAccesoDenegado() extends ErrorAutenticacion {
   override def msg = ErrorMessage("401.15", "Empresa Acceso Denegado", "La empresa actualmente tiene el acceso denegado").toJson
 }
 
-case class ErrorHorarioIngresoEmpresa() extends ErrorAutenticacion{
+case class ErrorHorarioIngresoEmpresa() extends ErrorAutenticacion {
   override def msg = ErrorMessage("401.16", "Configuración Horario Empresa", "Está intentando ingresar a la aplicación en un horario no hábil.").toJson
 }
 

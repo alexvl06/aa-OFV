@@ -39,7 +39,7 @@ class ApiSupervisor(r: RequestContext, props: Props, message: MessageService) ex
   }
 
   def complete[T <: AnyRef](status: StatusCode, obj: String) = {
-    r.complete((status,setHeadersNoCache(), obj): (StatusCode,List[spray.http.HttpHeader], String))
+    r.complete((status, setHeadersNoCache(), obj): (StatusCode, List[spray.http.HttpHeader], String))
     stop(self)
   }
 

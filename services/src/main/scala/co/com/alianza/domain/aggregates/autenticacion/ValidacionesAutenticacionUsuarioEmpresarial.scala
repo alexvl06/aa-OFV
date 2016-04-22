@@ -1,14 +1,14 @@
 package co.com.alianza.domain.aggregates.autenticacion
 
-import java.sql.{Time, Timestamp}
-import java.util.{Calendar, Date}
-import akka.actor.{Actor, ActorLogging}
+import java.sql.{ Time, Timestamp }
+import java.util.{ Calendar, Date }
+import akka.actor.{ Actor, ActorLogging }
 import akka.util.Timeout
 
 import co.com.alianza.domain.aggregates.autenticacion.errores._
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => UsDataAdapter}
-import co.com.alianza.infrastructure.anticorruption.empresa.{DataAccessTranslator => EmpDataAccessTranslator}
+import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => UsDataAdapter }
+import co.com.alianza.infrastructure.anticorruption.empresa.{ DataAccessTranslator => EmpDataAccessTranslator }
 import co.com.alianza.infrastructure.dto._
 import enumerations.empresa.EstadosDeEmpresaEnum
 import scala.concurrent.Future
@@ -24,18 +24,18 @@ trait ValidacionesAutenticacionUsuarioEmpresarial {
   self: Actor with ActorLogging =>
 
   import context.dispatcher
-  implicit private [this] val timeout: Timeout = 10 seconds
+  implicit private[this] val timeout: Timeout = 10 seconds
 
   def validaEstadoEmpresa(empresa: Empresa): Future[Validation[ErrorAutenticacion, Boolean]] = {
     log.info("Validando el estado de la empresa")
-    val empresaActiva : Int = EstadosDeEmpresaEnum.activa.id
+    val empresaActiva: Int = EstadosDeEmpresaEnum.activa.id
     empresa.estado match {
       case `empresaActiva` => Future.successful(Validation.success(true))
       case _ => Future.successful(Validation.failure(ErrorEmpresaAccesoDenegado()))
     }
   }
 
-  def validarHorarioEmpresa(horarioEmpresa: Option[HorarioEmpresa]): Future[Validation[ErrorAutenticacion, Boolean]] =  {
+  def validarHorarioEmpresa(horarioEmpresa: Option[HorarioEmpresa]): Future[Validation[ErrorAutenticacion, Boolean]] = {
     log.info("Validando el horario")
     def calendarToTime(c: Calendar): Time = {
       Time.valueOf(c.get(Calendar.HOUR_OF_DAY) + ":" + c.get(Calendar.MINUTE) + ":" + c.get(Calendar.SECOND))
@@ -62,13 +62,12 @@ trait ValidacionesAutenticacionUsuarioEmpresarial {
             _.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap {
               case true => Validation.failure(ErrorHorarioIngresoEmpresa())
               case _ => {
-                if(horarioNoPermitido) Validation.failure(ErrorHorarioIngresoEmpresa())
+                if (horarioNoPermitido) Validation.failure(ErrorHorarioIngresoEmpresa())
                 else Validation.success(true)
               }
             }
           )
-        }
-        //4. Validar la hora de inicio y de fin
+        } //4. Validar la hora de inicio y de fin
         else if (horarioNoPermitido)
           Future.successful(Validation.failure(ErrorHorarioIngresoEmpresa()))
         else

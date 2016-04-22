@@ -4,8 +4,7 @@ import org.apache.commons.lang3.RandomStringUtils
 import java.security.MessageDigest
 import java.util.Date
 
-
-case class PinData(token:String, fechaExpiracion:Date, tokenHash:Option[String])
+case class PinData(token: String, fechaExpiracion: Date, tokenHash: Option[String])
 
 /**
  *
@@ -13,19 +12,19 @@ case class PinData(token:String, fechaExpiracion:Date, tokenHash:Option[String])
  */
 object TokenPin {
 
- def obtenerToken(fechaExp: Date):PinData = {
+  def obtenerToken(fechaExp: Date): PinData = {
 
-   val md = MessageDigest.getInstance("SHA-512")
+    val md = MessageDigest.getInstance("SHA-512")
 
-   val data: PinData = PinData(RandomStringUtils.randomAscii(89), fechaExp, None)
-   val hash = md.digest(s"""${data.token} - ${data.fechaExpiracion}""".getBytes)
+    val data: PinData = PinData(RandomStringUtils.randomAscii(89), fechaExp, None)
+    val hash = md.digest(s"""${data.token} - ${data.fechaExpiracion}""".getBytes)
 
-   val hexString = new StringBuffer()
-   for (i <- hash) {
-     hexString.append(Integer.toHexString(0xFF & i))
-   }
+    val hexString = new StringBuffer()
+    for (i <- hash) {
+      hexString.append(Integer.toHexString(0xFF & i))
+    }
 
-   data.copy(tokenHash = Some(hexString.toString))
- }
+    data.copy(tokenHash = Some(hexString.toString))
+  }
 
 }

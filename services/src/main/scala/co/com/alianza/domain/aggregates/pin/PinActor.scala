@@ -3,15 +3,15 @@ package co.com.alianza.domain.aggregates.pin
 import java.sql.Timestamp
 import java.util.Date
 
-import akka.actor.{ActorRef, ActorLogging, Actor}
+import akka.actor.{ ActorRef, ActorLogging, Actor }
 
-import co.com.alianza.app.{MainActors, AlianzaActors}
-import co.com.alianza.domain.aggregates.usuarios.{ErrorPersistence, ErrorValidacion, ValidacionesUsuario}
-import co.com.alianza.exceptions.{BusinessLevel, PersistenceException}
-import co.com.alianza.infrastructure.anticorruption.pin.{DataAccessAdapter => pDataAccessAdapter}
+import co.com.alianza.app.{ MainActors, AlianzaActors }
+import co.com.alianza.domain.aggregates.usuarios.{ ErrorPersistence, ErrorValidacion, ValidacionesUsuario }
+import co.com.alianza.exceptions.{ BusinessLevel, PersistenceException }
+import co.com.alianza.infrastructure.anticorruption.pin.{ DataAccessAdapter => pDataAccessAdapter }
 import co.com.alianza.infrastructure.anticorruption.ultimasContrasenas.{ DataAccessAdapter => DataAccessAdapterUltimaContrasena }
 import co.com.alianza.infrastructure.anticorruption.contrasenas.{ DataAccessAdapter => DataAccessAdapterContrasena }
-import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => uDataAccessAdapter}
+import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => uDataAccessAdapter }
 import co.com.alianza.infrastructure.dto.PinUsuario
 import co.com.alianza.infrastructure.messages.PinMessages._
 import co.com.alianza.infrastructure.messages.ResponseMessage
@@ -21,17 +21,16 @@ import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.transformers.ValidationT
 import spray.http.StatusCodes._
 
-import scala.util.{Success, Failure, Try}
+import scala.util.{ Success, Failure, Try }
 import scalaz.std.AllInstances._
-import scalaz.{Failure => zFailure, Success => zSuccess}
+import scalaz.{ Failure => zFailure, Success => zSuccess }
 
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.{ Future, ExecutionContext }
 import scalaz.Validation
 
 import akka.actor.Props
 import akka.routing.RoundRobinPool
-import enumerations.{EstadosUsuarioEnum, PerfilesUsuario, AppendPasswordUser}
-
+import enumerations.{ EstadosUsuarioEnum, PerfilesUsuario, AppendPasswordUser }
 
 class PinActorSupervisor extends Actor with ActorLogging {
   import akka.actor.SupervisorStrategy._
@@ -66,18 +65,18 @@ class PinActor extends Actor with ActorLogging with AlianzaActors with FutureRes
       cambiarPw(message.tokenHash, message.pw, currentSender)
   }
 
-  private def validarPin(tokenHash: String, funcionalidad:Int) = {
+  private def validarPin(tokenHash: String, funcionalidad: Int) = {
     val currentSender = sender()
     val result: Future[Validation[PersistenceException, Option[PinUsuario]]] = pDataAccessAdapter.obtenerPin(tokenHash)
     resolveOlvidoContrasenaFuture(result, funcionalidad, currentSender)
   }
 
-  private def resolveOlvidoContrasenaFuture(finalResultFuture: Future[Validation[PersistenceException, Option[PinUsuario]]], funcionalidad:Int, currentSender: ActorRef) = {
+  private def resolveOlvidoContrasenaFuture(finalResultFuture: Future[Validation[PersistenceException, Option[PinUsuario]]], funcionalidad: Int, currentSender: ActorRef) = {
     finalResultFuture onComplete {
       case Failure(failure) => currentSender ! failure
       case Success(value) =>
         value match {
-          case zSuccess(response:  Option[PinUsuario]) => currentSender ! PinUtil.validarPin(response, funcionalidad)
+          case zSuccess(response: Option[PinUsuario]) => currentSender ! PinUtil.validarPin(response, funcionalidad)
           case zFailure(error) =>
             error match {
               case errorPersistence: ErrorPersistence => currentSender ! errorPersistence.exception
@@ -93,13 +92,13 @@ class PinActor extends Actor with ActorLogging with AlianzaActors with FutureRes
     //En la funcion los cambios: idUsuario y tokenHash que se encuentran en ROJO, no son realmente un error.
     val finalResultFuture = (for {
       pin <- ValidationT(obtenerPinFuture)
-      pinValidacion                   <- ValidationT(PinUtil.validarPinFuture(pin))
-      rvalidacionClave                <- ValidationT(validacionReglasClave(pw, pinValidacion.idUsuario, PerfilesUsuario.clienteIndividual))
-      rCambiarPss                     <- ValidationT(cambiarPassword(pinValidacion.idUsuario, passwordAppend))
+      pinValidacion <- ValidationT(PinUtil.validarPinFuture(pin))
+      rvalidacionClave <- ValidationT(validacionReglasClave(pw, pinValidacion.idUsuario, PerfilesUsuario.clienteIndividual))
+      rCambiarPss <- ValidationT(cambiarPassword(pinValidacion.idUsuario, passwordAppend))
       resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(pinValidacion.idUsuario, Crypto.hashSha512(passwordAppend, pinValidacion.idUsuario)))
-      rCambiarEstado                  <- ValidationT(cambiarEstado(pinValidacion.idUsuario))
-      rBorrarIngresosErroneos         <- ValidationT(borrarNumeroIngresosErroneos(pinValidacion.idUsuario))
-      idResult                        <- ValidationT(eliminarPin(pinValidacion.tokenHash))
+      rCambiarEstado <- ValidationT(cambiarEstado(pinValidacion.idUsuario))
+      rBorrarIngresosErroneos <- ValidationT(borrarNumeroIngresosErroneos(pinValidacion.idUsuario))
+      idResult <- ValidationT(eliminarPin(pinValidacion.tokenHash))
     } yield {
       idResult
     }).run
@@ -107,7 +106,7 @@ class PinActor extends Actor with ActorLogging with AlianzaActors with FutureRes
   }
 
   private def guardarUltimaContrasena(idUsuario: Int, uContrasena: String): Future[Validation[ErrorValidacion, Unit]] = {
-    DataAccessAdapterUltimaContrasena.guardarUltimaContrasena(UltimaContrasena(None, idUsuario , uContrasena, new Timestamp(System.currentTimeMillis()))).map(_.leftMap( pe => ErrorPersistence(pe.message, pe)))
+    DataAccessAdapterUltimaContrasena.guardarUltimaContrasena(UltimaContrasena(None, idUsuario, uContrasena, new Timestamp(System.currentTimeMillis()))).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
   }
 
   private def cambiarPassword(idUsuario: Int, pw: String): Future[Validation[ErrorValidacion, Int]] = {

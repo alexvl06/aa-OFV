@@ -2,25 +2,25 @@ package co.com.alianza.domain.aggregates.autenticacion
 
 import akka.actor._
 import akka.pattern.ask
-import akka.cluster.{Member, MemberStatus}
+import akka.cluster.{ Member, MemberStatus }
 import akka.util.Timeout
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
 import scala.collection.immutable.SortedSet
 import scala.collection.immutable.Vector
-import scala.util.{Failure, Success}
-import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
+import scala.util.{ Failure, Success }
+import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
 
-import co.com.alianza.persistence.entities.{IpsEmpresa, IpsUsuario}
+import co.com.alianza.persistence.entities.{ IpsEmpresa, IpsUsuario }
 import co.com.alianza.app.MainActors
-import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => usuarioAdaptador}
-import co.com.alianza.infrastructure.dto.{Empresa, HorarioEmpresa}
+import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => usuarioAdaptador }
+import co.com.alianza.infrastructure.dto.{ Empresa, HorarioEmpresa }
 import co.com.alianza.infrastructure.messages._
 
 /**
  * Created by manuel on 3/03/15.
  */
-class EmpresaActor(var empresa: Empresa, var horario : Option[HorarioEmpresa]) extends Actor with ActorLogging {
+class EmpresaActor(var empresa: Empresa, var horario: Option[HorarioEmpresa]) extends Actor with ActorLogging {
 
   implicit val _: ExecutionContext = context dispatcher
   implicit val timeout: Timeout = 120 seconds
@@ -31,16 +31,16 @@ class EmpresaActor(var empresa: Empresa, var horario : Option[HorarioEmpresa]) e
     case ActualizarEmpresa(empresa) => this.empresa = empresa
 
     case AgregarSesion(sesion) =>
-      sesionesActivas = if(!sesionesActivas.contains(sesion)) List(sesion) ::: sesionesActivas else sesionesActivas
+      sesionesActivas = if (!sesionesActivas.contains(sesion)) List(sesion) ::: sesionesActivas else sesionesActivas
 
     case RemoverSesion(sesion) =>
-      sesionesActivas = sesionesActivas filterNot{_==sesion}
-      if(sesionesActivas.isEmpty) context.stop(self)
+      sesionesActivas = sesionesActivas filterNot { _ == sesion }
+      if (sesionesActivas.isEmpty) context.stop(self)
       sender ! Unit
 
-    case AgregarIp(ip) => ips = if(!ips.contains(ip)) List(ip) ::: ips else ips
+    case AgregarIp(ip) => ips = if (!ips.contains(ip)) List(ip) ::: ips else ips
 
-    case RemoverIp(ip) => ips = if(ips.contains(ip)) ips filterNot{_==ip} else ips
+    case RemoverIp(ip) => ips = if (ips.contains(ip)) ips filterNot { _ == ip } else ips
 
     case CerrarSesiones => {
       sesionesActivas foreach { _ ! ExpirarSesion() }
@@ -66,22 +66,24 @@ class EmpresaActor(var empresa: Empresa, var horario : Option[HorarioEmpresa]) e
 
   private def cargaIpsEmpresa() = {
     val currentSender = sender
-    if(ips.isEmpty)
+    if (ips.isEmpty)
       usuarioAdaptador obtenerIpsEmpresa empresa.id onComplete {
         case Failure(failure) =>
           log error (failure.getMessage, failure); currentSender ! false
-        case Success(value)    =>
+        case Success(value) =>
           value match {
-            case zSuccess(response: Vector[IpsEmpresa]) => ips = response map (_.ip) toList; currentSender ! true
+            case zSuccess(response: Vector[IpsEmpresa]) =>
+              ips = response map (_.ip) toList; currentSender ! true
             case zFailure(error) => log error (error.message, error); currentSender ! false
           }
-    } else currentSender ! true
+      }
+    else currentSender ! true
   }
 
 }
 
 object EmpresaActor {
-  def props(empresa: Empresa, horario : Option[HorarioEmpresa]) = Props(new EmpresaActor(empresa, horario))
+  def props(empresa: Empresa, horario: Option[HorarioEmpresa]) = Props(new EmpresaActor(empresa, horario))
 }
 
 class BuscadorActorCluster(nombreActorPadre: String) extends Actor {
@@ -106,7 +108,7 @@ class BuscadorActorCluster(nombreActorPadre: String) extends Actor {
       replyIfReady()
   }
 
-  def replyIfReady() = if(numResp == nodosBusqueda.size) { interesado ! resp; this.context.stop(self) }
+  def replyIfReady() = if (numResp == nodosBusqueda.size) { interesado ! resp; this.context.stop(self) }
 
 }
 

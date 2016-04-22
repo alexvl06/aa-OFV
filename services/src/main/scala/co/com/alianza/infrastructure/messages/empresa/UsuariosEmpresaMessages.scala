@@ -13,6 +13,6 @@ object AgentesEmpresarialesMessagesJsonSupport extends DefaultJsonProtocol with 
   implicit val GetAgentesEmpresarialesRequestMessageFormat = jsonFormat5(GetAgentesEmpresarialesMessage)
 }
 
-case class GetAgentesEmpresarialesMessage(correo: String, usuario: String, nombre: String, estado:Int, idClienteAdmin:Int) extends MessageService{
-  def toGetUsuariosEmpresaBusquedaRequest:GetAgentesEmpresarialesRequest = GetAgentesEmpresarialesRequest( correo, usuario, nombre, estado, idClienteAdmin )
+case class GetAgentesEmpresarialesMessage(correo: String, usuario: String, nombre: String, estado: Int, idClienteAdmin: Int) extends MessageService {
+  def toGetUsuariosEmpresaBusquedaRequest: GetAgentesEmpresarialesRequest = GetAgentesEmpresarialesRequest(correo, usuario, nombre, estado, idClienteAdmin)
 }

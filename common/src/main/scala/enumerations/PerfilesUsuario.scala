@@ -6,11 +6,11 @@ package enumerations
  */
 object PerfilesUsuario extends Enumeration(1) {
 
-    type perfilUsuario = Value
+  type perfilUsuario = Value
 
-    val clienteIndividual = Value("cliente individual") //valor id = 1
-    val clienteAdministrador = Value("agente empresarial") //valor id = 2
-    val agenteEmpresarial= Value("agente empresarial") //valor id = 3
+  val clienteIndividual = Value("cliente individual") //valor id = 1
+  val clienteAdministrador = Value("agente empresarial") //valor id = 2
+  val agenteEmpresarial = Value("agente empresarial") //valor id = 3
 
 }
 

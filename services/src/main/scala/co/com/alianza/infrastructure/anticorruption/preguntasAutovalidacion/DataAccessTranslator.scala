@@ -2,8 +2,7 @@ package co.com.alianza.infrastructure.anticorruption.preguntasAutovalidacion
 
 import co.com.alianza.infrastructure.dto._
 
-import co.com.alianza.persistence.entities.{RespuestasAutovalidacionUsuario, PreguntasAutovalidacion}
-
+import co.com.alianza.persistence.entities.{ RespuestasAutovalidacionUsuario, PreguntasAutovalidacion }
 
 /**
  *

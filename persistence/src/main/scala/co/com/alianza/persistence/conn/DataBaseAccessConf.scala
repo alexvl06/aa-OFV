@@ -1,6 +1,5 @@
 package co.com.alianza.persistence.conn
 
-
 /**
  * Datos basicos de conexion a base de datos
  *
@@ -8,16 +7,16 @@ package co.com.alianza.persistence.conn
  */
 trait ConnectionConf {
 
-  def dataSourceName:String
+  def dataSourceName: String
 
-  def serverName:String
+  def serverName: String
 
-  def dataBaseName:String
+  def dataBaseName: String
 
-	def user: String
+  def user: String
 
-	def pass: String
+  def pass: String
 
-	def maxPoolSize: Int
+  def maxPoolSize: Int
 
 }

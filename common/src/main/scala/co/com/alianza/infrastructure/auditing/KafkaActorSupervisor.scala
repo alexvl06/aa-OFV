@@ -2,13 +2,13 @@ package co.com.alianza.infrastructure.auditing
 
 import java.util.Properties
 
-import akka.actor.{Actor, ActorLogging, Props}
+import akka.actor.{ Actor, ActorLogging, Props }
 import akka.routing.RoundRobinPool
-import co.com.alianza.exceptions.{AlianzaException, TechnicalLevel}
+import co.com.alianza.exceptions.{ AlianzaException, TechnicalLevel }
 import co.com.alianza.infrastructure.auditing.AuditingMessages.AuditRequest
 import co.com.alianza.util.json.JsonUtil
-import com.typesafe.config.{Config, ConfigFactory}
-import kafka.producer.{KeyedMessage, ProducerConfig, Producer}
+import com.typesafe.config.{ Config, ConfigFactory }
+import kafka.producer.{ KeyedMessage, ProducerConfig, Producer }
 
 class KafkaActorSupervisor extends Actor with ActorLogging {
 
@@ -44,7 +44,7 @@ class KafkaActor extends Actor with ActorLogging {
   def receive = {
 
     case message: AuditRequest =>
-      //sendToKafka(JsonUtil.toJson(message), message.kafkaTopic)
+    //sendToKafka(JsonUtil.toJson(message), message.kafkaTopic)
 
     case any: Any =>
       val currentSender = sender()

@@ -6,7 +6,7 @@ import co.com.alianza.infrastructure.messages.MessageService
 import enumerations.EstadosEmpresaEnum
 import spray.json.DefaultJsonProtocol
 import spray.httpx.SprayJsonSupport
-import co.com.alianza.persistence.entities.{Usuario => eUsuario}
+import co.com.alianza.persistence.entities.{ Usuario => eUsuario }
 
 /**
  * Created by S4N on 17/12/14.
@@ -36,6 +36,6 @@ object AdministrarContrasenaEmpresaMessagesJsonSupport extends DefaultJsonProtoc
   implicit val AsignarContrasenaMessageFormat = jsonFormat2(AsignarContrasenaMessage)
 }
 
-case class UsuarioMessageCorreo(correo: String, identificacion: String, tipoIdentificacion: Int) extends MessageService{
-  def toEntityUsuario( estado: EstadosEmpresaEnum.estadoEmpresa): eUsuario = eUsuario(None, correo,new Timestamp(System.currentTimeMillis()),identificacion,  tipoIdentificacion, estado.id, None, None, 0, None, None)
+case class UsuarioMessageCorreo(correo: String, identificacion: String, tipoIdentificacion: Int) extends MessageService {
+  def toEntityUsuario(estado: EstadosEmpresaEnum.estadoEmpresa): eUsuario = eUsuario(None, correo, new Timestamp(System.currentTimeMillis()), identificacion, tipoIdentificacion, estado.id, None, None, 0, None, None)
 }

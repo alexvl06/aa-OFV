@@ -18,5 +18,5 @@ object TiposIdentificacionCore {
     8 -> "X" //SocExtrsinNitEnColombia
   )
 
-  def getTipoIdentificacion(tipoIdentificacion: Int):String = mapaTiposIdentificacionAlianza.get(tipoIdentificacion).get
+  def getTipoIdentificacion(tipoIdentificacion: Int): String = mapaTiposIdentificacionAlianza.get(tipoIdentificacion).get
 }

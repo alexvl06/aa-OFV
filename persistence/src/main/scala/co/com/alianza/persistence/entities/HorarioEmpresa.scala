@@ -10,15 +10,15 @@ case class HorarioEmpresa(idEmpresa: Int, diaHabil: Boolean, sabado: Boolean, ho
 
 class HorarioEmpresaTable(tag: Tag) extends Table[HorarioEmpresa](tag, "HORARIO_EMPRESA") {
 
-  def idEmpresa  = column[Int]    ("ID_EMPRESA")
+  def idEmpresa = column[Int]("ID_EMPRESA")
 
-  def diaHabil   = column[Boolean]("DIA_HABIL")
+  def diaHabil = column[Boolean]("DIA_HABIL")
 
-  def sabado     = column[Boolean]("SABADO")
+  def sabado = column[Boolean]("SABADO")
 
-  def horaInicio = column[Time]   ("HORA_INICIO")
+  def horaInicio = column[Time]("HORA_INICIO")
 
-  def horaFin    = column[Time]   ("HORA_FIN")
+  def horaFin = column[Time]("HORA_FIN")
 
   // Every table needs a * projection with the same type as the table's type parameter
   def * = (idEmpresa, diaHabil, sabado, horaInicio, horaFin) <> (HorarioEmpresa.tupled, HorarioEmpresa.unapply)

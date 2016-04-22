@@ -3,21 +3,18 @@ package co.com.alianza.util.token
 import java.text.SimpleDateFormat
 
 import com.nimbusds.jose.util.Base64URL
-import org.joda.time.{DateTime}
+import org.joda.time.{ DateTime }
 import java.util.Date
-import enumerations.{CryptoAesParameters, AppendPasswordUser}
+import enumerations.{ CryptoAesParameters, AppendPasswordUser }
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jose._
-import com.nimbusds.jose.crypto.{MACSigner, MACVerifier}
+import com.nimbusds.jose.crypto.{ MACSigner, MACVerifier }
 import com.nimbusds.jwt.SignedJWT
 import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.commons.enumerations.TiposCliente
 
-
-
 import collection.JavaConversions._
 import co.com.alianza.util.json.MarshallableImplicits._
-
 
 object Token {
 
@@ -29,8 +26,7 @@ object Token {
   private val ULTIMA_IP_INGRESO_DATA_NAME = "ultimaIpIngreso"
   private val ULTIMA_FECHA_INGRESO_DATA_NAME = "ultimaFechaIngreso"
 
-  def generarToken(nombreUsuarioLogueado: String, correoUsuarioLogueado: String, tipoIdentificacion: String, ultimaIpIngreso: String, ultimaFechaIngreso: Date, expiracionInactividad: String, tipoCliente: TiposCliente.TiposCliente = TiposCliente.clienteIndividual, nit : Option[String] = None): String = {
-
+  def generarToken(nombreUsuarioLogueado: String, correoUsuarioLogueado: String, tipoIdentificacion: String, ultimaIpIngreso: String, ultimaFechaIngreso: Date, expiracionInactividad: String, tipoCliente: TiposCliente.TiposCliente = TiposCliente.clienteIndividual, nit: Option[String] = None): String = {
 
     val claimsSet = new JWTClaimsSet()
     claimsSet.setIssueTime(new Date())
@@ -93,16 +89,16 @@ object Token {
     SignedJWT.parse(token)
   }
 
-  def getTipoIdentificacionFromToken(token : String) : String = {
+  def getTipoIdentificacionFromToken(token: String): String = {
     getClaim(token, TIPO_IDENTIFICACION_DATA_NAME)
   }
 
-  def getNombreUsuarioFromToken(token : String) : String = {
+  def getNombreUsuarioFromToken(token: String): String = {
     getClaim(token, NOMBRE_USUARIO_DATA_NAME)
   }
 
-  private def getClaim(token : String, value : String) : String = {
-    val elements : SignedJWT = Token.getToken(token)
+  private def getClaim(token: String, value: String): String = {
+    val elements: SignedJWT = Token.getToken(token)
     val claimSet = elements.getJWTClaimsSet()
     claimSet.getStringClaim(value)
   }
@@ -118,7 +114,7 @@ object Token {
     }
   }
 
-  private def validarToken(signedJWT2: SignedJWT) : Boolean = {
+  private def validarToken(signedJWT2: SignedJWT): Boolean = {
     val verifier = new MACVerifier(SIGNING_KEY)
     val verify = signedJWT2.verify(verifier)
     verify match {
@@ -127,7 +123,7 @@ object Token {
     }
   }
 
-  private def validarExpiracion(signedJWT2: SignedJWT) : Boolean = {
+  private def validarExpiracion(signedJWT2: SignedJWT): Boolean = {
     val expirationTime = signedJWT2.getJWTClaimsSet.getExpirationTime
     val now = new Date()
     expirationTime.after(now)
