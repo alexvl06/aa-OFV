@@ -23,3 +23,6 @@ project/plugins/project/
 
 .idea
 .idea_modules
+
+fiducia_aa.properties
+fiducia_aa_plane.properties
