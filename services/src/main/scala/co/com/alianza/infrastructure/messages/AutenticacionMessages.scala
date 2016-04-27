@@ -25,7 +25,7 @@ case class AutenticarMessage(tipoIdentificacion: Int, numeroIdentificacion: Stri
 }
 
 case class AutenticarUsuarioEmpresarialMessage(
-  tipoIdentificacion: Option[Int] = None,
+    tipoIdentificacion: Option[Int] = None,
     numeroIdentificacion: Option[String] = None,
     nit: String,
     usuario: String,
@@ -35,7 +35,7 @@ case class AutenticarUsuarioEmpresarialMessage(
 }
 
 case class AutenticarUsuarioEmpresarialAgenteMessage(
-  tipoIdentificacion: Option[Int] = None,
+    tipoIdentificacion: Option[Int] = None,
     numeroIdentificacion: Option[String] = None,
     nit: String,
     usuario: String,
@@ -44,7 +44,7 @@ case class AutenticarUsuarioEmpresarialAgenteMessage(
 ) extends MessageService {
 }
 case class AutenticarUsuarioEmpresarialAdminMessage(
-  tipoIdentificacion: Option[Int] = None,
+    tipoIdentificacion: Option[Int] = None,
     numeroIdentificacion: Option[String] = None,
     nit: String,
     usuario: String,
