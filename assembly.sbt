@@ -7,6 +7,8 @@ import sbtassembly.Plugin.AssemblyKeys._
 
 assemblySettings
 
+mainClass in Revolver.reStart := Option("co.com.alianza.app.Boot")
+
 mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
 {
   case "reference.conf" => MergeStrategy.concat
@@ -19,11 +21,9 @@ mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
   case x => MergeStrategy.first
 } }
 
-test in assembly := {}
-
 outputPath in assembly := file(s"../${name.value}_${scalaBinaryVersion.value}-${(version in ThisBuild).value}.jar")
 
-mainClass in Revolver.reStart := Option("co.com.alianza.app.Boot")
+test in assembly := {}
 
 // -----------------------
 // Custom settings
