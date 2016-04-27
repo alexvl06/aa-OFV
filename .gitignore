@@ -95,9 +95,6 @@ Temporary Items
 # Sensitive or high-churn files:
 .idea/
 
-# Mongo Explorer plugin:
-.idea/mongoSettings.xml
-
 ## File-based project format:
 *.iws
 
@@ -108,10 +105,6 @@ Temporary Items
 
 # mpeltonen/sbt-idea plugin
 .idea_modules/
-.idea/codeStyleSettings.xml
-.idea/compiler.xml
-.idea/copyright/profiles_settings.xml
-.idea/scala_compiler.xml
 
 # JIRA plugin
 atlassian-ide-plugin.xml
@@ -189,5 +182,6 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+### Custom
 fiducia_aa.properties
 fiducia_aa_plane.properties
