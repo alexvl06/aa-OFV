@@ -5,10 +5,10 @@ package co.com.alianza.commons.enumerations
  */
 object TiposPermisosTransaccionales extends Enumeration {
 
-    case class TipoPermisoTransaccional(codigo: Int, nombre: String) extends Val(codigo, nombre)
+  case class TipoPermisoTransaccional(codigo: Int, nombre: String) extends Val(codigo, nombre)
 
-    val `POR MONTO` = TipoPermisoTransaccional( 1 ,"Por monto" )
-    val `POR PERSONA` = TipoPermisoTransaccional( 2 , "Por persona" )
-    val `POR MONTO Y PERSONA` = TipoPermisoTransaccional( 3 , "Por monto y persona" )
+  val `POR MONTO` = TipoPermisoTransaccional(1, "Por monto")
+  val `POR PERSONA` = TipoPermisoTransaccional(2, "Por persona")
+  val `POR MONTO Y PERSONA` = TipoPermisoTransaccional(3, "Por monto y persona")
 
 }

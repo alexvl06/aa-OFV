@@ -6,7 +6,7 @@ import CustomDriver.simple._
  * Created by david on 12/06/14.
  */
 
-case class ReglasContrasenas (llave: String, valor: String)
+case class ReglasContrasenas(llave: String, valor: String)
 
 class ReglasContrasenasTable(tag: Tag) extends Table[ReglasContrasenas](tag, "REGLAS_CONTRASENAS") {
 

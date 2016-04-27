@@ -1,11 +1,10 @@
 package co.com.alianza.persistence.repositories
 
+import scala.concurrent.{ Future, ExecutionContext }
+import scala.util.{ Failure, Success, Try }
 
-import scala.concurrent.{Future, ExecutionContext}
-import scala.util.{Failure, Success, Try}
-
-import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
-import co.com.alianza.exceptions.{LevelException, TimeoutLevel, TechnicalLevel, PersistenceException}
+import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
+import co.com.alianza.exceptions.{ LevelException, TimeoutLevel, TechnicalLevel, PersistenceException }
 import co.com.alianza.persistence.conn.DataBaseAccessAlianza
 import scala.slick.jdbc.JdbcBackend.Database
 import scala.slick.jdbc.JdbcBackend.Session
@@ -18,11 +17,11 @@ import com.mchange.v2.resourcepool.TimeoutException
  */
 class AlianzaRepository(implicit val executionContex: ExecutionContext) {
 
-   def loan[R](f: Session => Validation[PersistenceException, R]): Future[Validation[PersistenceException, R]] = {
+  def loan[R](f: Session => Validation[PersistenceException, R]): Future[Validation[PersistenceException, R]] = {
     Future {
       Try {
-       Database.forDataSource(DataBaseAccessAlianza.dataSource) createSession()
-      }match {
+        Database.forDataSource(DataBaseAccessAlianza.dataSource) createSession ()
+      } match {
         case Success(session) =>
           f(session) map {
             value =>
@@ -31,15 +30,14 @@ class AlianzaRepository(implicit val executionContex: ExecutionContext) {
           }
         case Failure(exception) =>
           //   log.error
-         zFailure(PersistenceException(exception, getLevelException(exception), exception.getMessage))
+          zFailure(PersistenceException(exception, getLevelException(exception), exception.getMessage))
       }
     }
   }
 
-
-  private def getLevelException(exception:Throwable):LevelException = {
+  private def getLevelException(exception: Throwable): LevelException = {
     exception.getCause match {
-      case ex: TimeoutException =>TimeoutLevel
+      case ex: TimeoutException => TimeoutLevel
       case _ => TechnicalLevel
     }
   }
@@ -54,9 +52,8 @@ class AlianzaRepository(implicit val executionContex: ExecutionContext) {
       case scala.util.Failure(exception) =>
         //log.error
         exception.printStackTrace()
-        zFailure(PersistenceException(exception,  getLevelException(exception), exception.getMessage))
+        zFailure(PersistenceException(exception, getLevelException(exception), exception.getMessage))
     }
   }
-
 
 }

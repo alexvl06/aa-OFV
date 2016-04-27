@@ -4,5 +4,5 @@ import net.oauth.jsontoken.Checker
 import com.google.gson.JsonObject
 
 class checkerAutorizacion extends Checker {
-	def check(arg0 : JsonObject) :Unit = {}
+  def check(arg0: JsonObject): Unit = {}
 }

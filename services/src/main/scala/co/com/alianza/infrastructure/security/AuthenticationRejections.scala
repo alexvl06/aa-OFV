@@ -3,8 +3,7 @@ package co.com.alianza.infrastructure.security
 import spray.http.HttpHeader
 import spray.routing.Rejection
 
-
-case class AuthenticationFailedRejection(cause: AuthenticationFailedRejection.Cause, challengeHeaders: List[HttpHeader], statusCode:Option[Int] = None, bodyError:Option[String] = None) extends Rejection
+case class AuthenticationFailedRejection(cause: AuthenticationFailedRejection.Cause, challengeHeaders: List[HttpHeader], statusCode: Option[Int] = None, bodyError: Option[String] = None) extends Rejection
 
 object AuthenticationFailedRejection {
   /**

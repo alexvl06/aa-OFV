@@ -1,9 +1,9 @@
 package co.com.alianza.util
 
-import scala.concurrent.{ExecutionContext, Future}
-import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
+import scala.concurrent.{ ExecutionContext, Future }
+import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
 import akka.actor.ActorRef
-import scala.util.{Failure, Success}
+import scala.util.{ Failure, Success }
 
 /**
  *
@@ -25,17 +25,17 @@ trait FutureResponse {
    * @tparam R
    * @return
    */
-  def resolveFutureValidation[F,S,R](future:Future[Validation[F,S]], f:S => R, currentSender:ActorRef)(implicit ex: ExecutionContext ) = {
+  def resolveFutureValidation[F, S, R](future: Future[Validation[F, S]], f: S => R, currentSender: ActorRef)(implicit ex: ExecutionContext) = {
     future onComplete {
       case Failure(failure) => currentSender ! failure
       case Success(value) =>
         value match {
           case zSuccess(response) =>
-            try{
+            try {
               val result = f(response)
               currentSender ! result
-            }catch {
-              case error:Exception =>
+            } catch {
+              case error: Exception =>
                 currentSender ! error
             }
           case zFailure(error) =>

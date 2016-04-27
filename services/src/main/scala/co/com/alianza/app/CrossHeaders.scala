@@ -19,7 +19,7 @@ trait CrossHeaders {
     val xfo: RawHeader = RawHeader("X-Frame-Options", "DENY")
     val xss: RawHeader = RawHeader("X-XSS-Protection", "1")
 
-    origins :: methods :: headers :: csp ::xpcd :: ns :: xfo :: xss :: Nil
+    origins :: methods :: headers :: csp :: xpcd :: ns :: xfo :: xss :: Nil
   }
 
 }

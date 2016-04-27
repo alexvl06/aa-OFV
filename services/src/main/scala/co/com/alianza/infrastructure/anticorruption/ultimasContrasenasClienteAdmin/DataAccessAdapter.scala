@@ -8,7 +8,7 @@ import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.persistence.entities.UltimaContrasenaUsuarioEmpresarialAdmin
 import co.com.alianza.persistence.repositories.UltimasContrasenasUsuarioEmpresarialAdminRepository
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scalaz.Validation
 
 /**

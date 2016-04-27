@@ -10,8 +10,7 @@ package co.com.alianza.exceptions
  *
  * @author seven4n
  */
-sealed class AlianzaException(val cause:Throwable, val level: LevelException, val message:String,  val currentTime: Long) extends RuntimeException(cause)
-
+sealed class AlianzaException(val cause: Throwable, val level: LevelException, val message: String, val currentTime: Long) extends RuntimeException(cause)
 
 /**
  * Representa una excepción de persistencia
@@ -23,7 +22,7 @@ sealed class AlianzaException(val cause:Throwable, val level: LevelException, va
  *
  * @author seven4n
  */
-case class PersistenceException(override val cause: Throwable, override val level: LevelException, override val message: String, override val currentTime: Long) extends AlianzaException(cause,level,message,currentTime)
+case class PersistenceException(override val cause: Throwable, override val level: LevelException, override val message: String, override val currentTime: Long) extends AlianzaException(cause, level, message, currentTime)
 
 /**
  *
@@ -36,7 +35,7 @@ case class PersistenceException(override val cause: Throwable, override val leve
  *
  * @author seven4n
  */
-case class ServiceException(override val cause: Throwable, override val level: LevelException,override val  message: String, override val currentTime: Long, statusCode:Option[Int] = None, bodyError:Option[String] = None) extends AlianzaException(cause,level,message, currentTime)
+case class ServiceException(override val cause: Throwable, override val level: LevelException, override val message: String, override val currentTime: Long, statusCode: Option[Int] = None, bodyError: Option[String] = None) extends AlianzaException(cause, level, message, currentTime)
 
 object PersistenceException {
   def apply(exc: Throwable, level: LevelException, message: String) = new PersistenceException(exc, level, message, currentTime = System.currentTimeMillis())
@@ -44,7 +43,7 @@ object PersistenceException {
 
 object ServiceException {
   def apply(exc: Throwable, level: LevelException, message: String) = new ServiceException(exc, level, message, currentTime = System.currentTimeMillis())
-  def apply(exc: Throwable, level: LevelException, message: String, statusCode:Int, bodyError:String) = new ServiceException(exc, level, message, currentTime = System.currentTimeMillis(), Some (statusCode), Some(bodyError))
+  def apply(exc: Throwable, level: LevelException, message: String, statusCode: Int, bodyError: String) = new ServiceException(exc, level, message, currentTime = System.currentTimeMillis(), Some(statusCode), Some(bodyError))
 }
 
 object AlianzaException {

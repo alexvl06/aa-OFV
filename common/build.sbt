@@ -1,31 +1,10 @@
 import Common._
+import Versions._
 
-name := "fiduciaria-alianza-aa-common"
+name := "auth-common"
 
-organization := "co.s4n"
+def dbLibs = Seq( "org.fusesource.scalate"      % "scalate-core_2.10" % Versions.scalateVersion  )
 
-version := "0.1-SNAPSHOT"
+Common.commonSettings
 
-scalaVersion := commonScalaVersion
-
-scalacOptions ++= commonScalacOptions
-
-//unmanagedSourceDirectories in Compile := (scalaSource in Compile).value :: Nil
-
-//unmanagedSourceDirectories in Test := (scalaSource  in Test).value :: Nil
-
-EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource
-
-EclipseKeys.projectFlavor := EclipseProjectFlavor.Scala
-
-resolvers ++= commonResolvers
-
-def scalate = Seq(
-  "org.fusesource.scalate" % "scalate-core_2.10" % "1.6.1"
-)
-
-libraryDependencies ++= commonLibraries ++ reactiveLibraries ++ scalate
-
-//seq( Revolver.settings: _* )
-
-//baseDirectory in Revolver.reStart := file("./")
+libraryDependencies ++= dbLibs

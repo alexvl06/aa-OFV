@@ -1,15 +1,12 @@
 package co.com.alianza.web.empresa
 
-
 import spray.routing.Directives
-import co.com.alianza.app.{AlianzaActors, MainActors, CrossHeaders, AlianzaCommons}
+import co.com.alianza.app.{ AlianzaActors, MainActors, CrossHeaders, AlianzaCommons }
 import co.com.alianza.infrastructure.messages.empresa._
 import akka.actor.ActorSystem
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 
-
-class OtpService extends Directives with AlianzaCommons   with CrossHeaders with AlianzaActors {
-
+class OtpService extends Directives with AlianzaCommons with CrossHeaders with AlianzaActors {
 
   private val OTPPath = "OTP"
   private val registrarDispositivo = "registrarDispositivo"

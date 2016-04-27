@@ -1,10 +1,10 @@
 package co.com.alianza.domain.aggregates.usuarios
 
-import akka.actor.{Actor, ActorLogging}
-import co.com.alianza.app.{MainActors, AlianzaActors}
+import akka.actor.{ Actor, ActorLogging }
+import co.com.alianza.app.{ MainActors, AlianzaActors }
 import co.com.alianza.infrastructure.messages._
-import scalaz.{Failure => zFailure, Success => zSuccess}
-import scala.util.{Failure => sFailure, Success => sSuccess}
+import scalaz.{ Failure => zFailure, Success => zSuccess }
+import scala.util.{ Failure => sFailure, Success => sSuccess }
 import scala.concurrent.ExecutionContext
 
 /**
@@ -16,13 +16,13 @@ class UsuarioEmpresarialActor extends Actor with ActorLogging with AlianzaActors
   def receive = {
     case message: ConsultaUsuarioEmpresarialMessage =>
       val currentSender = sender
-      if(message.token.isDefined)
+      if (message.token.isDefined)
         co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerUsuarioEmpresarialToken(message.token.get) onComplete {
-          case sFailure( failure ) =>
+          case sFailure(failure) =>
             currentSender ! failure
-          case sSuccess (value) => value match {
-            case zSuccess (response) => currentSender ! response
-            case zFailure( error ) => currentSender ! error
+          case sSuccess(value) => value match {
+            case zSuccess(response) => currentSender ! response
+            case zFailure(error) => currentSender ! error
           }
         }
       else if (message.nit.isDefined && message.usuario.isDefined) {
@@ -34,28 +34,27 @@ class UsuarioEmpresarialActor extends Actor with ActorLogging with AlianzaActors
             case zFailure(error) => currentSender ! error
           }
         }
-      }
-      else
+      } else
         currentSender ! None
 
     case message: ConsultaUsuarioEmpresarialAdminMessage =>
       val currentSender = sender
-      if(message.token.isDefined)
+      if (message.token.isDefined)
         co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerUsuarioEmpresarialAdminToken(message.token.get) onComplete {
-          case sFailure( failure ) =>
+          case sFailure(failure) =>
             currentSender ! failure
-          case sSuccess (value) => value match {
-            case zSuccess (response) => currentSender ! response
-            case zFailure( error ) => currentSender ! error
+          case sSuccess(value) => value match {
+            case zSuccess(response) => currentSender ! response
+            case zFailure(error) => currentSender ! error
           }
         }
       else if (message.nit.isDefined && message.usuario.isDefined)
         co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtieneUsuarioEmpresarialAdminPorNitYUsuario(message.nit.get, message.usuario.get) onComplete {
-          case sFailure( failure ) =>
+          case sFailure(failure) =>
             currentSender ! failure
-          case sSuccess (value) => value match {
-            case zSuccess (response) => currentSender ! response
-            case zFailure( error ) => currentSender ! error
+          case sSuccess(value) => value match {
+            case zSuccess(response) => currentSender ! response
+            case zFailure(error) => currentSender ! error
           }
         }
       else

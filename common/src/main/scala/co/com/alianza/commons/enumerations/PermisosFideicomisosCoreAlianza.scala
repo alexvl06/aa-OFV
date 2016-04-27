@@ -5,9 +5,9 @@ package co.com.alianza.commons.enumerations
  */
 object PermisosFideicomisosCoreAlianza extends Enumeration {
 
-    case class PermisosFideicomisosCoreAlianza(codigo: Int, nombre: String) extends Val(codigo, nombre)
+  case class PermisosFideicomisosCoreAlianza(codigo: Int, nombre: String) extends Val(codigo, nombre)
 
-    val `SI` = PermisosFideicomisosCoreAlianza( 1 ,"S" )
-    val `NO` = PermisosFideicomisosCoreAlianza( 2 , "N" )
+  val `SI` = PermisosFideicomisosCoreAlianza(1, "S")
+  val `NO` = PermisosFideicomisosCoreAlianza(2, "N")
 
 }

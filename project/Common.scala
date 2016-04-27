@@ -1,121 +1,81 @@
+
+import Dependencies._
+import Versions._
+import com.timushev.sbt.updates.UpdatesKeys
+import com.typesafe.sbt.SbtScalariform.ScalariformKeys
+import de.johoop.jacoco4sbt.JacocoPlugin.jacoco
+import org.scalastyle.sbt.ScalastylePlugin
+import sbt.Keys._
 import sbt._
-import Keys._
+import spray.revolver.RevolverPlugin.Revolver
 
 object Common {
+  val compileSbtUpdates: TaskKey[Unit] = taskKey[Unit]("compileSbtUpdates")
+  val compileScalariform: TaskKey[Seq[File]] = taskKey[Seq[File]]("compileScalariform")
+  val compileScalastyle: TaskKey[Unit] = taskKey[Unit]("compileScalastyle")
 
-	autoScalaLibrary := false
+  val commonSettings: Seq[Setting[_]] = jacoco.settings ++ Seq(
 
-	lazy val akkaVersion = "2.3.8"
-	lazy val sprayVersion = "1.3.1"
+    organization := "co.com.alianza.portal.transaccional.autenticacion-autorizacion",
 
-	/**
-	 * Scala version
-	 **/
-	def commonScalaVersion = "2.10.3"
+    scalaVersion := commonScalaVersion,
 
-	/**
-	 * scalac arguments
-	 **/
-	def commonScalacOptions = Seq(
-		"-unchecked",
-		"-deprecation",
-		"-Xlint",
-		"-Ywarn-dead-code",
-		"-language:_",
-		"-target:jvm-1.7",
-		"-encoding", "UTF-8"
-	)
+    autoScalaLibrary := false,
 
-	/**
-	 * Maven repositories
-	 **/
-	def commonResolvers = Seq(
-		"Sonatype Snapshots"  at "http://oss.sonatype.org/content/repositories/snapshots",
-		"Sonatype Releases"   at "http://oss.sonatype.org/content/repositories/releases",
-		"Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/",
-		"Spray.io repository" at "http://repo.spray.io",
-		"artifactory alianza"    at "http://artifactory.alianza.com.co:8081/artifactory/third-party-libs/",
-		"maven repository"    at "http://repo1.maven.org/maven2/"
-	)
+    resolvers ++= commonResolvers,
 
-	/**
-	 * Scala basic libraries
-	 **/
-	def commonScalaLibraries = Seq (
-		"org.scala-lang" 					         % "scala-library" 	% "2.10.3",
-		"org.scala-lang" 					         % "scala-compiler" % "2.10.3",
-		"com.github.scala-incubator.io" 	%% "scala-io-core" 	% "0.4.2",
-		"com.github.scala-incubator.io" 	%% "scala-io-file" 	% "0.4.2" 
+    scalacOptions ++= commonScalacOptions,
 
-	)
+    compileOrder in Compile := CompileOrder.JavaThenScala,
 
-	def functionalProgrammingLibraries = Seq(
-		"org.scalaz"				      %%  "scalaz-core" 			  % "7.1.0-M7"
-	)
+    libraryDependencies ++= commonLibraries ++ reactiveLibraries,
 
-	def akkaLibraries = Seq(
-		"com.typesafe.akka" 	    %%  "akka-actor" 			    % akkaVersion withSources(),
-	  "com.typesafe.akka" 	    %%  "akka-slf4j"       		% akkaVersion withSources(),
-    "com.typesafe.akka"       %%  "akka-testkit"        % akkaVersion withSources(),
-    "com.typesafe.akka"       %%  "akka-cluster"        % akkaVersion withSources(),
-	 	"ch.qos.logback"     		  %   "logback-classic"  		% "1.0.13" withSources()
+    mainClass in Revolver.reStart := Some( "co.com.alianza.app.Boot" ),
+
+    baseDirectory in Revolver.reStart := file("./")
+
+  ) ++ compileTasks
+
+
+  //mainClass in Revolver.reStart := Some( "co.com.alianza.app.Boot" )
+
+  //baseDirectory in Revolver.reStart := file("./")
+
+  //EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource
+
+  //EclipseKeys.projectFlavor := EclipseProjectFlavor.Scala
+
+  /**
+   * scalac arguments
+   **/
+  private def commonScalacOptions = Seq("-unchecked", "-deprecation", "-Xlint", "-Ywarn-dead-code", "-language:_", "-target:jvm-1.7", "-encoding", "UTF-8")
+
+  /**
+   * Maven repositories
+   **/
+
+  /**
+   * Maven repositories
+   **/
+  def commonResolvers = Seq(
+    Resolver.sonatypeRepo("snapshots"),
+    Resolver.sonatypeRepo("releases"),
+    Resolver.typesafeRepo("releases"),
+    "Sonatype Snapshots"  at "http://oss.sonatype.org/content/repositories/snapshots",
+    "Sonatype Releases"   at "http://oss.sonatype.org/content/repositories/releases",
+    "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/",
+    "Spray.io repository" at "http://repo.spray.io",
+    "artifactory alianza" at "http://artifactory.alianza.com.co:8081/artifactory/third-party-libs/",
+    "maven repository"    at "http://repo1.maven.org/maven2/"
   )
 
-  def sprayLibraries = Seq(
-	  "io.spray"           		  % 	"spray-can"    		    % sprayVersion withSources(),
-	  "io.spray"           		  % 	"spray-routing"  		  % sprayVersion withSources(),
-	  "io.spray"           		  % 	"spray-client"   		  % sprayVersion withSources(),
-	  "io.spray"           		  % 	"spray-http"    	    % sprayVersion withSources(),
-	  "io.spray"           		  % 	"spray-httpx"   	    % sprayVersion withSources(),
-		"io.spray" 					      %% 	"spray-json" 		      % "1.2.5" withSources(),
-		"io.spray"           	% "spray-caching"        	% sprayVersion withSources(),
-		"com.chuusai"				      %% 	"shapeless" 		      % "1.2.4" withSources()
+
+  private def compileTasks: Seq[Setting[_]] = Seq(
+    compileSbtUpdates := UpdatesKeys.dependencyUpdates.in(Compile).toTask.value,
+    compileScalariform := ScalariformKeys.format.in(Compile).toTask.value,
+    compileScalastyle := ScalastylePlugin.scalastyle.in(Compile).toTask("").value,
+    compileScalariform <<= compileScalariform dependsOn compileSbtUpdates,
+    compileScalastyle <<= compileScalastyle dependsOn compileScalariform,
+    (compile in Compile) <<= (compile in Compile) dependsOn compileScalastyle
   )
-
-  def testingLibraries = Seq(
-    "junit"                   %  "junit"                % "4.10"    % "test",
-    "com.jayway.restassured"  %  "rest-assured"         % "1.8.1"   % "test",
-    "org.scalatest"           %  "scalatest_2.10"       % "1.9.1"   % "test",
-    "org.scalacheck"          %% "scalacheck"           % "1.11.3"  % "test",
-    "io.spray" 			          %  "spray-testkit" 	      % "1.3.1"   % "test",
-    "org.specs2"              %% "specs2"               % "2.3.12-scalaz-7.1.0-M6"  % "test"
-  )
-
-	def apacheCommonsLibraries = Seq( 
-		"commons-logging" 			  % 	"commons-logging" 	  % "1.1.3",
-		"org.apache.commons" 		  % 	"commons-lang3" 	    % "3.1",
-		"commons-codec" 			    % 	"commons-codec" 	    % "1.8",
-		"org.apache.axis" 			    % 	"axis" 	    % "1.4",
-		"wsdl4j"			%	"wsdl4j"	%	"1.4",
-		"commons-discovery" 	%	 "commons-discovery" 	% 	"0.2",
-    "org.apache.ws.security" % "wss4j" % "1.5.12",
-  "javax.xml"               %   "jaxrpc-api"          % "1.1"
-	)
-
-	def oracle = Seq( 
-		"oracle"					        %	  "ojdbc"				          % "6"
-	)
-
-	def json = Seq(
-    "com.typesafe.play" 		       %% 	"play-json" 			    % "2.2.0"   withSources(),
-		"com.fasterxml.jackson.core"    % "jackson-databind" 		  % "2.2.2",
-		"com.fasterxml.jackson.module" %% "jackson-module-scala"  % "2.2.2"
-	)
-
-  def jsonWebTokenLibraries = Seq(
-    "com.googlecode.jsontoken" % "jsontoken" % "1.1",
-    "com.nimbusds" % "nimbus-jose-jwt" % "3.1"
-  )
-
-  def jasyptLibraries= Seq(
-    "org.jasypt" % "jasypt" % "1.9.2"
-  )
-
-	def kafka = Seq(
-		"org.apache.kafka" % "kafka_2.10" % "0.8.1.1" exclude("javax.jms" , "jms") exclude("com.sun.jdmk" , "jmxtools") exclude("com.sun.jmx" , "jmxri")
-	)
-
-  def commonLibraries   =  testingLibraries ++ commonScalaLibraries ++ apacheCommonsLibraries ++ json ++ functionalProgrammingLibraries ++ jasyptLibraries ++ kafka
- 	def reactiveLibraries =   akkaLibraries ++ sprayLibraries ++ oracle ++ jsonWebTokenLibraries
-
 }

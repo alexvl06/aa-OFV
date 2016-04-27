@@ -4,11 +4,11 @@ import co.com.alianza.app.MainActors
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.dto.PinUsuario
 
-import co.com.alianza.persistence.entities.{PinUsuario => ePinUsuario}
+import co.com.alianza.persistence.entities.{ PinUsuario => ePinUsuario }
 import co.com.alianza.persistence.repositories.PinRepository
 
-import scala.concurrent.{Future, ExecutionContext}
-import scalaz.{Failure => zFailure, Success => zSuccess}
+import scala.concurrent.{ Future, ExecutionContext }
+import scalaz.{ Failure => zFailure, Success => zSuccess }
 import scalaz.Validation
 import java.sql.Timestamp
 

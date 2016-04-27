@@ -6,21 +6,21 @@ import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.persistence.messages.ActualizacionRequest
 import oracle.jdbc.OracleTypes
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 import scalaz.Validation
 
 /**
  * Created by hernando on 13/07/15.
  */
-class ActualizacionRepository(implicit executionContext: ExecutionContext) extends AlianzaCoreRepository{
+class ActualizacionRepository(implicit executionContext: ExecutionContext) extends AlianzaCoreRepository {
 
   //Consulta datos cliente
   def consultaDatosCliente(documento: String, tipoDocumento: String): Future[Validation[PersistenceException, String]] = loan {
     connection =>
       connection.setAutoCommit(false)
       val operation: Try[String] = consultarDatosClienteSP(connection, documento, tipoDocumento)
-      resolveTry(connection,operation,"Consulta Datos Cliente por Número de Identificacón")
+      resolveTry(connection, operation, "Consulta Datos Cliente por Número de Identificacón")
   }
 
   private def consultarDatosClienteSP(conn: Connection, documento: String, tipoDocumento: String) = Try {
@@ -38,15 +38,15 @@ class ActualizacionRepository(implicit executionContext: ExecutionContext) exten
   def actualizarCliente(msg: ActualizacionRequest): Future[Validation[PersistenceException, String]] = loan {
     connection =>
       connection.setAutoCommit(false)
-      val operation: Try[String] = actualizarClienteSP(connection,msg)
-      resolveTry(connection,operation,"Actualizar Cliente")
+      val operation: Try[String] = actualizarClienteSP(connection, msg)
+      resolveTry(connection, operation, "Actualizar Cliente")
   }
 
   private def actualizarClienteSP(conn: Connection, msg: ActualizacionRequest) = Try {
     val callString = "{ call sf_qportal_web_clientes.Actualizar_Cliente(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) }"
     val callableStatement = conn prepareCall callString
-    callableStatement.registerOutParameter (1, OracleTypes.VARCHAR)
-    callableStatement.registerOutParameter (2, OracleTypes.VARCHAR)
+    callableStatement.registerOutParameter(1, OracleTypes.VARCHAR)
+    callableStatement.registerOutParameter(2, OracleTypes.VARCHAR)
     callableStatement.setString(3, msg.nro_identifica)
     callableStatement.setString(4, msg.tpident)
     callableStatement.setString(5, msg.fdpn_nombre1)
@@ -60,16 +60,16 @@ class ActualizacionRepository(implicit executionContext: ExecutionContext) exten
     callableStatement.setString(13, msg.fdpn_drcl_tele_res)
     //en caso que el cliente no tenga correo en el core,
     //el correo antiguo debe ser el mismo correo nuevo
-    val correoAntiguo:String =
-      if(msg.fdpn_dcfd_email_ant == null || msg.fdpn_dcfd_email_ant.isEmpty)
+    val correoAntiguo: String =
+      if (msg.fdpn_dcfd_email_ant == null || msg.fdpn_dcfd_email_ant.isEmpty)
         msg.fdpn_dcfd_email
       else msg.fdpn_dcfd_email_ant
     callableStatement.setString(14, correoAntiguo)
     callableStatement.setString(15, msg.fdpn_dcfd_email)
     //en caso que el cliente no tenga correo en el core,
     //el tipo correo antiguo debe ser el mismo tipo del correo nuevo
-    val tipoCorreoAntiguo:String =
-      if(msg.fdpn_dcfd_tipo_ant == null || msg.fdpn_dcfd_tipo_ant.isEmpty)
+    val tipoCorreoAntiguo: String =
+      if (msg.fdpn_dcfd_tipo_ant == null || msg.fdpn_dcfd_tipo_ant.isEmpty)
         msg.fdpn_dcfd_tipo
       else msg.fdpn_dcfd_tipo_ant
     callableStatement.setString(16, tipoCorreoAntiguo)
@@ -98,11 +98,11 @@ class ActualizacionRepository(implicit executionContext: ExecutionContext) exten
   }
 
   //Lista paises
-  def listarPaises : Future[Validation[PersistenceException, String]] = loan {
+  def listarPaises: Future[Validation[PersistenceException, String]] = loan {
     connection =>
       connection.setAutoCommit(false)
       val operation: Try[String] = listarPaisesSP(connection)
-      resolveTry(connection, operation,"Listar paises")
+      resolveTry(connection, operation, "Listar paises")
   }
 
   private def listarPaisesSP(conn: Connection) = Try {
@@ -119,7 +119,7 @@ class ActualizacionRepository(implicit executionContext: ExecutionContext) exten
     connection =>
       connection.setAutoCommit(false)
       val operation: Try[String] = listarCiudadesSP(connection, pais)
-      resolveTry(connection, operation,"Listar ciudades")
+      resolveTry(connection, operation, "Listar ciudades")
   }
 
   private def listarCiudadesSP(conn: Connection, pais: Int) = Try {
@@ -127,7 +127,7 @@ class ActualizacionRepository(implicit executionContext: ExecutionContext) exten
     val callableStatement = conn prepareCall callString
     callableStatement registerOutParameter (1, OracleTypes.VARCHAR)
     callableStatement registerOutParameter (2, OracleTypes.VARCHAR)
-    callableStatement setString (3, pais.toString )
+    callableStatement setString (3, pais.toString)
     callableStatement registerOutParameter (4, OracleTypes.CURSOR)
     buildSpResponse(conn, callableStatement, 4)
   }
@@ -137,7 +137,7 @@ class ActualizacionRepository(implicit executionContext: ExecutionContext) exten
     connection =>
       connection.setAutoCommit(false)
       val operation: Try[String] = listarTipoCorreoSP(connection)
-      resolveTry(connection, operation,"Listar tipo correo")
+      resolveTry(connection, operation, "Listar tipo correo")
   }
 
   private def listarTipoCorreoSP(conn: Connection) = Try {
@@ -154,7 +154,7 @@ class ActualizacionRepository(implicit executionContext: ExecutionContext) exten
     connection =>
       connection.setAutoCommit(false)
       val operation: Try[String] = listarEnvioCorrespondenciaSP(connection)
-      resolveTry(connection, operation,"Listar Envio Correspondencia")
+      resolveTry(connection, operation, "Listar Envio Correspondencia")
   }
 
   private def listarEnvioCorrespondenciaSP(conn: Connection) = Try {
@@ -171,7 +171,7 @@ class ActualizacionRepository(implicit executionContext: ExecutionContext) exten
     connection =>
       connection.setAutoCommit(false)
       val operation: Try[String] = listarOcupacionesSP(connection)
-      resolveTry(connection, operation,"Listar ocupaciones")
+      resolveTry(connection, operation, "Listar ocupaciones")
   }
 
   private def listarOcupacionesSP(conn: Connection) = Try {
@@ -188,7 +188,7 @@ class ActualizacionRepository(implicit executionContext: ExecutionContext) exten
     connection =>
       connection.setAutoCommit(false)
       val operation: Try[String] = listarActividadesEconomicasSP(connection)
-      resolveTry(connection, operation,"Listar actividades economicas")
+      resolveTry(connection, operation, "Listar actividades economicas")
   }
 
   private def listarActividadesEconomicasSP(conn: Connection) = Try {

@@ -4,7 +4,7 @@ import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.infrastructure.messages.MessageService
 import co.com.alianza.persistence.entities.HorarioEmpresa
 import spray.httpx.SprayJsonSupport
-import java.sql.{Date, Time}
+import java.sql.{ Date, Time }
 import spray.json._
 
 /**
@@ -23,4 +23,4 @@ case class DiaFestivoMessage(fecha: String) extends MessageService
 case class ObtenerHorarioEmpresaMessage(idUsuario: Int, tipoCliente: TiposCliente) extends MessageService
 
 case class AgregarHorarioEmpresaMessage(diaHabil: Boolean, sabado: Boolean, horaInicio: String, horaFin: String,
-                                 idUsuario: Option[Int], tipoCliente: Option[Int]) extends MessageService
+  idUsuario: Option[Int], tipoCliente: Option[Int]) extends MessageService

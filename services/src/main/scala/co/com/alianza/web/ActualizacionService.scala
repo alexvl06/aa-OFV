@@ -1,6 +1,6 @@
 package co.com.alianza.web
 
-import co.com.alianza.app.{AlianzaCommons, CrossHeaders}
+import co.com.alianza.app.{ AlianzaCommons, CrossHeaders }
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.infrastructure.dto.DatosCliente
@@ -9,7 +9,7 @@ import co.com.alianza.infrastructure.messages._
 import co.com.alianza.util.clave.Crypto
 import enumerations.AppendPasswordUser
 import spray.http.StatusCodes
-import spray.routing.{RequestContext, Directives}
+import spray.routing.{ RequestContext, Directives }
 
 /**
  * Created by david on 16/06/14.
@@ -32,31 +32,31 @@ class ActualizacionService extends Directives with AlianzaCommons with CrossHead
     pathPrefix(actualizacion) {
       get {
         respondWithMediaType(mediaType) {
-          pathPrefix(paises){
+          pathPrefix(paises) {
             requestExecute(new ObtenerPaises, actualizacionActor)
           } ~
-          pathPrefix(ciudades / IntNumber){
-            (pais : Int) =>
-              requestExecute(new ObtenerCiudades(pais), actualizacionActor)
-          } ~
-          pathPrefix(tiposCorreo){
-            requestExecute(new ObtenerTiposCorreo, actualizacionActor)
-          } ~
-          pathPrefix(envioCorrespondencia){
-            requestExecute(new ObtenerEnvioCorrespondencia, actualizacionActor)
-          } ~
-          pathPrefix(ocupaciones){
-            requestExecute(new ObtenerOcupaciones, actualizacionActor)
-          } ~
-          pathPrefix(actividadesEconomicas){
-            requestExecute(new ObtenerActividadesEconomicas, actualizacionActor)
-          } ~
-          pathPrefix(datos){
-            requestExecute(new ObtenerDatos(user), actualizacionActor)
-          } ~
-          pathPrefix(comprobar){
-            requestExecute(new ComprobarDatos(user), actualizacionActor)
-          }
+            pathPrefix(ciudades / IntNumber) {
+              (pais: Int) =>
+                requestExecute(new ObtenerCiudades(pais), actualizacionActor)
+            } ~
+            pathPrefix(tiposCorreo) {
+              requestExecute(new ObtenerTiposCorreo, actualizacionActor)
+            } ~
+            pathPrefix(envioCorrespondencia) {
+              requestExecute(new ObtenerEnvioCorrespondencia, actualizacionActor)
+            } ~
+            pathPrefix(ocupaciones) {
+              requestExecute(new ObtenerOcupaciones, actualizacionActor)
+            } ~
+            pathPrefix(actividadesEconomicas) {
+              requestExecute(new ObtenerActividadesEconomicas, actualizacionActor)
+            } ~
+            pathPrefix(datos) {
+              requestExecute(new ObtenerDatos(user), actualizacionActor)
+            } ~
+            pathPrefix(comprobar) {
+              requestExecute(new ComprobarDatos(user), actualizacionActor)
+            }
         }
       } ~ put {
         clientIP {
@@ -72,6 +72,6 @@ class ActualizacionService extends Directives with AlianzaCommons with CrossHead
         }
       }
     }
-   }
+  }
 
 }

@@ -1,15 +1,15 @@
 package co.com.alianza.web
 
-import co.com.alianza.app.{AlianzaCommons, CrossHeaders}
+import co.com.alianza.app.{ AlianzaCommons, CrossHeaders }
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.infrastructure.messages._
-import spray.routing.{Directives}
+import spray.routing.{ Directives }
 
 /**
  *
  * @author seven4n
  */
-class PreguntasAutovalidacionService  extends Directives with AlianzaCommons   with CrossHeaders {
+class PreguntasAutovalidacionService extends Directives with AlianzaCommons with CrossHeaders {
 
   import co.com.alianza.infrastructure.messages.PreguntasAutovalidacionMessagesJsonSupport._
 
@@ -41,7 +41,7 @@ class PreguntasAutovalidacionService  extends Directives with AlianzaCommons   w
             }
           }
         }
-      }~ delete {
+      } ~ delete {
         respondWithMediaType(mediaType) {
           pathPrefix("comprobar") {
             requestExecute(new BloquearRespuestasMessage(Some(user.id), Some(user.tipoCliente.toString)), preguntasAutovalidacionActor)

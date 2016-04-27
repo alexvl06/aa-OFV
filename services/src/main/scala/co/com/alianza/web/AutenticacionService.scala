@@ -5,7 +5,7 @@ import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.util.clave.Crypto
 import enumerations.AppendPasswordUser
 import co.com.alianza.commons.enumerations.TiposCliente
-import spray.routing.{RequestContext, Directives}
+import spray.routing.{ RequestContext, Directives }
 import co.com.alianza.app.{ CrossHeaders, AlianzaCommons }
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
@@ -14,7 +14,6 @@ class AutenticacionService extends Directives with AlianzaCommons with CrossHead
 
   import AutenticacionMessagesJsonSupport._
 
-
   def route = {
     path("autenticar") {
       post {
@@ -22,10 +21,10 @@ class AutenticacionService extends Directives with AlianzaCommons with CrossHead
           autenticacion =>
             respondWithMediaType(mediaType) {
               clientIP { ip =>
-                mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.autenticacionIndex, ip.value, kafkaActor, autenticacion.copy( password = null, clientIp = Some(ip.value)))) {
+                mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.autenticacionIndex, ip.value, kafkaActor, autenticacion.copy(password = null, clientIp = Some(ip.value)))) {
                   val nuevaAutenticacion = autenticacion.copy(clientIp = Some(ip.value))
                   requestExecute(nuevaAutenticacion, autenticacionActor)
-		            }
+                }
               }
             }
         }
@@ -36,7 +35,7 @@ class AutenticacionService extends Directives with AlianzaCommons with CrossHead
           autenticacion =>
             respondWithMediaType(mediaType) {
               clientIP { ip =>
-                mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.autenticacionIndex, ip.value, kafkaActor, autenticacion.copy( password = null, clientIp = Some(ip.value)))) {
+                mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.autenticacionIndex, ip.value, kafkaActor, autenticacion.copy(password = null, clientIp = Some(ip.value)))) {
                   val nuevaAutenticacion = autenticacion.copy(clientIp = Some(ip.value))
                   requestExecute(nuevaAutenticacion, autenticacionUsuarioEmpresaActor)
                 }
@@ -47,7 +46,7 @@ class AutenticacionService extends Directives with AlianzaCommons with CrossHead
     }
   }
 
-  def routeAutenticado( user: UsuarioAuth ) = {
+  def routeAutenticado(user: UsuarioAuth) = {
     path("ponerIpHabitual") {
       post {
         entity(as[AgregarIPHabitualUsuario]) {
@@ -57,14 +56,10 @@ class AutenticacionService extends Directives with AlianzaCommons with CrossHead
 
                 if (user.tipoCliente.id == TiposCliente.clienteAdministrador.id) {
                   requestExecute(AgregarIPHabitualUsuarioEmpresarialAdmin(Some(user.id), Some(ip.value)), autenticacionUsuarioEmpresaActor)
-                }
-
-                else if (user.tipoCliente.id == TiposCliente.agenteEmpresarial.id) {
+                } else if (user.tipoCliente.id == TiposCliente.agenteEmpresarial.id) {
                   requestExecute(AgregarIPHabitualUsuarioEmpresarialAgente(Some(user.id), Some(ip.value)), autenticacionUsuarioEmpresaActor)
-                }
-
-                else {
-                  val nuevoPonerIpHabitual: AgregarIPHabitualUsuario = ponerIpHabitual.copy(clientIp = Some(ip.value), idUsuario =  Some(user.id) )
+                } else {
+                  val nuevoPonerIpHabitual: AgregarIPHabitualUsuario = ponerIpHabitual.copy(clientIp = Some(ip.value), idUsuario = Some(user.id))
                   requestExecute(nuevoPonerIpHabitual, autenticacionActor)
                 }
 
