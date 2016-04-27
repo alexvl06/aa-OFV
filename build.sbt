@@ -3,20 +3,20 @@ import Keys._
 import Common._
 
 val appSettings: Seq[Setting[_]] = commonSettings ++  Seq(
-  name := "autenticacion-autorizacion"
+  name := "fiduciaria-autenticacion-autorizacion"
 )
 
 val dependsOnTest = "test->test;compile->compile"
 
-val `auth-common` = project in file("common")
+val common = project in file("common")
 
-val `auth-persistence` = (project in file("persistence"))
-  .dependsOn(`auth-common` % dependsOnTest)
+val persistence = (project in file("persistence"))
+  .dependsOn(common % dependsOnTest)
 
-val `auth-service` = (project in file("services"))
-  .dependsOn(`auth-common` % dependsOnTest, `auth-persistence` % dependsOnTest)
+val services = (project in file("services"))
+  .dependsOn(common % dependsOnTest, persistence % dependsOnTest)
 
 val root = (project in file("."))
-  .aggregate(`auth-common`, `auth-persistence`, `auth-service`)
-  .dependsOn(`auth-common`, `auth-persistence`, `auth-service`)
+  .aggregate(common, persistence, services)
+  .dependsOn(common, persistence, services)
   .settings(appSettings: _*)
