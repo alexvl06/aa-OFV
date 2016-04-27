@@ -7,7 +7,7 @@ import sbtassembly.Plugin.AssemblyKeys._
 
 assemblySettings
 
-mainClass in Revolver.reStart := Option("co.com.alianza.app.Boot")
+mainClass in assembly := Option("co.com.alianza.app.Boot")
 
 mergeStrategy in assembly <<= (mergeStrategy in assembly) { (old) =>
 {
