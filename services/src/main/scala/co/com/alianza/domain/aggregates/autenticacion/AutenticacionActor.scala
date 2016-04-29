@@ -16,6 +16,7 @@ import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => UsDataAdapter }
 import co.com.alianza.infrastructure.anticorruption.preguntasAutovalidacion.{ DataAccessAdapter => PrDataAdapter }
 import co.com.alianza.infrastructure.anticorruption.clientes.{ DataAccessAdapter => ClDataAdapter }
+import co.com.alianza.infrastructure.anticorruption.grupos.{ DataAccessAdapter => DataAdapterGrupos }
 import co.com.alianza.infrastructure.anticorruption.contrasenas.{ DataAccessAdapter => RgDataAdapter }
 import co.com.alianza.infrastructure.anticorruption.configuraciones.{ DataAccessAdapter => ConfDataAdapter }
 import co.com.alianza.infrastructure.dto.{ Configuracion, Cliente, Usuario }
@@ -96,7 +97,7 @@ class AutenticacionActor extends Actor with ActorLogging {
         usuario <- ValidationT(obtenerUsuario(message.numeroIdentificacion))
         estadoValido <- ValidationT(validarEstadosUsuario(usuario.estado))
         passwordValido <- ValidationT(validarPasswords(message.password, usuario.contrasena.getOrElse(""), Some(usuario.identificacion), usuario.id, usuario.numeroIngresosErroneos))
-        cliente <- ValidationT(obtenerClienteSP(usuario.identificacion))
+        cliente <- ValidationT(obtenerClienteSP(usuario.identificacion, usuario.tipoIdentificacion))
         cienteValido <- ValidationT(validarClienteSP(cliente))
         passwordCaduco <- ValidationT(validarCaducidadPassword(TiposCliente.clienteIndividual, usuario.id.get, usuario.fechaCaducidad))
         actualizacionInfo <- ValidationT(actualizarInformacionUsuario(usuario.identificacion, message.clientIp.get))
@@ -147,7 +148,7 @@ class AutenticacionActor extends Actor with ActorLogging {
 
       val resultadoIp: Future[Validation[ErrorAutenticacion, Boolean]] = (for {
         usuario <- ValidationT(obtenerUsuario(message.idUsuario.get))
-        cliente <- ValidationT(obtenerClienteSP(usuario.identificacion))
+        cliente <- ValidationT(obtenerClienteSP(usuario.identificacion, usuario.tipoIdentificacion))
         cienteValido <- ValidationT(validarClienteSP(cliente))
         relacionarIp <- ValidationT(asociarIpUsuario(message.idUsuario.get, message.clientIp.get))
       } yield relacionarIp).run
@@ -256,13 +257,31 @@ class AutenticacionActor extends Actor with ActorLogging {
    * Success => Cliente
    * ErrorAutenticacion => ErrorPersistencia | ErrorClienteNoExisteCore
    */
-  def obtenerClienteSP(identificacionUsuario: String): Future[Validation[ErrorAutenticacion, Cliente]] = {
+  def obtenerClienteSP(identificacionUsuario: String, tipoIdentificacion: Int): Future[Validation[ErrorAutenticacion, Cliente]] = {
     log.info("Validando que el cliente exista en el core de alianza")
-    val future: Future[Validation[PersistenceException, Option[Cliente]]] = ClDataAdapter.consultarCliente(identificacionUsuario)
-    future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap {
-      case Some(cliente) => Validation.success(cliente)
-      case None => Validation.failure(ErrorClienteNoExisteCore())
-    })
+    println("tipoIdentificacion: " + tipoIdentificacion)
+    if (tipoIdentificacion == TipoIdentificacion.GRUPO.identificador) {
+      println("HOLA MUNDO")
+      val future: Future[Validation[PersistenceException, Option[Cliente]]] = DataAdapterGrupos.consultarGrupo(identificacionUsuario.toInt)
+      future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap {
+        case Some(cliente) =>
+          println("CCCCCCCCCCCCCCCCCCCCc")
+          Validation.success(cliente)
+        case None =>
+          println("DDDDDDDDDDDDDDDDDDDDDD")
+          Validation.failure(ErrorClienteNoExisteCore())
+      })
+    } else {
+      val future: Future[Validation[PersistenceException, Option[Cliente]]] = ClDataAdapter.consultarCliente(identificacionUsuario)
+      future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap {
+        case Some(cliente) =>
+          println("AAAAAAAAAAAAAA")
+          Validation.success(cliente)
+        case None =>
+          println("BBBBBBBBBBBBBB")
+          Validation.failure(ErrorClienteNoExisteCore())
+      })
+    }
   }
 
   def validacionTipoIdentificacion(message: AutenticarMessage, usuario: Usuario): Future[Validation[ErrorAutenticacion, Boolean]] = Future {

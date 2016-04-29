@@ -93,7 +93,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
         usuarioAdmin <- ValidationT(obtenerUsuarioEmpresarialAdmin(message.nit, message.usuario))
         estadoValido <- ValidationT(validarEstadosUsuario(usuarioAdmin.estado))
         passwordValido <- ValidationT(validarPasswords(message.password, usuarioAdmin.contrasena.getOrElse(""), None, Some(usuarioAdmin.id), usuarioAdmin.numeroIngresosErroneos))
-        cliente <- ValidationT(obtenerClienteSP(usuarioAdmin.identificacion))
+        cliente <- ValidationT(obtenerClienteSP(usuarioAdmin.identificacion, usuarioAdmin.tipoIdentificacion))
         cienteValido <- ValidationT(validarClienteSP(cliente))
         passwordCaduco <- ValidationT(validarCaducidadPassword(TiposCliente.clienteAdministrador, usuarioAdmin.id, usuarioAdmin.fechaCaducidad))
         actualizacionInfo <- ValidationT(actualizarInformacionUsuarioEmpresarialAdmin(usuarioAdmin.id, message.clientIp.get))
@@ -208,7 +208,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
 
       val resultadoIp: Future[Validation[ErrorAutenticacion, Boolean]] = (for {
         usuarioAdmin <- ValidationT(obtenerUsuarioEmpresarialAdmin(message.idUsuario.get))
-        cliente <- ValidationT(obtenerClienteSP(usuarioAdmin.identificacion))
+        cliente <- ValidationT(obtenerClienteSP(usuarioAdmin.identificacion, usuarioAdmin.tipoIdentificacion))
         cienteValido <- ValidationT(validarClienteSP(cliente))
         idEmpresa <- ValidationT(obtenerEmpresaIdUsuarioAdmin(message.idUsuario.get))
         relacionarIp <- ValidationT(asociarIpEmpresa(idEmpresa, message.clientIp.get))
