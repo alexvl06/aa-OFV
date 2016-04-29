@@ -21,8 +21,8 @@ object DataAccessAdapter {
     origin match {
       case zSuccess(response: String) =>
         println("RESPONSE: " + response)
-        zSuccess(DataAccessTranslator.translateCliente(response))
-        val jsonMock: String = "[{\n\"wcli_nombre\": \"GRUPO CORONA TEST\",\n\"wcli_person\": \"G\",\n\"wcli_estado\": \"AC\",\n\"wcli_estado_descri\": \"Activo\",\n\"wcli_dir_correo\": \"grupo@mock.com\",\n\"wcli_ident_replegal\": \"666\",\n\"wcli_cias_pagos_masivos\": \"\"\n}]"
+        //zSuccess(DataAccessTranslator.translateCliente(response))
+        val jsonMock: String = "[{\n\"wcli_nombre\": \"" + response + "\",\n\"wcli_person\": \"G\",\n\"wcli_estado\": \"AC\",\n\"wcli_estado_descri\": \"Activo\",\n\"wcli_dir_correo\": \"grupo@mock.com\",\n\"wcli_ident_replegal\": \"666\",\n\"wcli_cias_pagos_masivos\": \"\"\n}]"
         zSuccess(DataAccessTranslator.translateCliente(jsonMock))
       case zFailure(error) => zFailure(error)
     }
