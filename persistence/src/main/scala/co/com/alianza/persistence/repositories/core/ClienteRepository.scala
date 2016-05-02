@@ -39,9 +39,6 @@ class ClienteRepository(implicit executionContext: ExecutionContext) extends Ali
   }
 
   private def executeGrupoSP(conn: Connection, idGrupo: Int) = Try {
-    println("executeGrupoSP")
-    println("executeGrupoSP")
-    println("idGrupo: " + idGrupo)
     val callString = "{ call sf_qportal_web.validar_grupo_cliente(?,?,?,?) }"
     val callableStatement = conn prepareCall callString
     callableStatement registerOutParameter (1, OracleTypes.VARCHAR)

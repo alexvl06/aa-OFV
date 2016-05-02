@@ -259,26 +259,20 @@ class AutenticacionActor extends Actor with ActorLogging {
    */
   def obtenerClienteSP(identificacionUsuario: String, tipoIdentificacion: Int): Future[Validation[ErrorAutenticacion, Cliente]] = {
     log.info("Validando que el cliente exista en el core de alianza")
-    println("tipoIdentificacion: " + tipoIdentificacion)
     if (tipoIdentificacion == TipoIdentificacion.GRUPO.identificador) {
-      println("HOLA MUNDO")
       val future: Future[Validation[PersistenceException, Option[Cliente]]] = DataAdapterGrupos.consultarGrupo(identificacionUsuario.toInt)
       future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap {
         case Some(cliente) =>
-          println("CCCCCCCCCCCCCCCCCCCCc")
           Validation.success(cliente)
         case None =>
-          println("DDDDDDDDDDDDDDDDDDDDDD")
           Validation.failure(ErrorClienteNoExisteCore())
       })
     } else {
       val future: Future[Validation[PersistenceException, Option[Cliente]]] = ClDataAdapter.consultarCliente(identificacionUsuario)
       future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap {
         case Some(cliente) =>
-          println("AAAAAAAAAAAAAA")
           Validation.success(cliente)
         case None =>
-          println("BBBBBBBBBBBBBB")
           Validation.failure(ErrorClienteNoExisteCore())
       })
     }
