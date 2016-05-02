@@ -103,7 +103,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
         empresa <- ValidationT(obtenerEmpresaPorNit(message.nit))
         horario <- ValidationT(obtenerHorarioEmpresa(empresa.id))
         horarioValido <- ValidationT(validarHorarioEmpresa(horario))
-        validacionIps <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token))
+        validacionIps <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token, usuarioAdmin.tipoIdentificacion))
       } yield validacionIps).run
 
       validaciones.onComplete {
@@ -165,7 +165,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
         horario <- ValidationT(obtenerHorarioEmpresa(empresa.id))
         horarioValido <- ValidationT(validarHorarioEmpresa(horario))
         sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt, empresa, horario))
-        validacionIps <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token))
+        validacionIps <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token, usuarioAgente.tipoIdentificacion))
       } yield validacionIps).run
 
       validaciones.onComplete {
@@ -367,13 +367,17 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
    * Success => El token si el usuario tiene la ip en su lista de ips
    * ErrorAutenticacion => ErrorPersistencia | ErrorControlIpsDesactivado
    */
-  def validarControlIpsUsuarioEmpresarial(idEmpresa: Int, ipPeticion: String, token: String): Future[Validation[ErrorAutenticacion, String]] = {
-    log.info("Validando control de ips usuario empresarial")
-    val future = UsDataAdapter.obtenerIpsEmpresa(idEmpresa)
-    future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap { ips =>
-      if (ips.filter(_.ip == ipPeticion).isEmpty) Validation.failure(ErrorControlIpsDesactivado(token))
-      else Validation.success(token)
-    })
+  def validarControlIpsUsuarioEmpresarial(idEmpresa: Int, ipPeticion: String, token: String, tipoIdentificacion: Int): Future[Validation[ErrorAutenticacion, String]] = {
+    if (tipoIdentificacion == TipoIdentificacion.GRUPO.identificador) {
+      Future(Validation.success(token))
+    } else {
+      log.info("Validando control de ips usuario empresarial")
+      val future = UsDataAdapter.obtenerIpsEmpresa(idEmpresa)
+      future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap { ips =>
+        if (ips.filter(_.ip == ipPeticion).isEmpty) Validation.failure(ErrorControlIpsDesactivado(token))
+        else Validation.success(token)
+      })
+    }
   }
 
   /**
