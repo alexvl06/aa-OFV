@@ -14,14 +14,12 @@ object DataAccessAdapter {
 
   def consultarGrupo(idGrupo: Int): Future[Validation[PersistenceException, Option[Cliente]]] = {
     val repo = new ClienteRepository()
-    repo consultaGrupo idGrupo map { x => transformValidationMockGrupo(x) }
+    repo consultaGrupo idGrupo map { x => transformValidationGrupo(x) }
   }
 
-  private def transformValidationMockGrupo(origin: Validation[PersistenceException, String]): Validation[PersistenceException, Option[Cliente]] = {
+  private def transformValidationGrupo(origin: Validation[PersistenceException, String]): Validation[PersistenceException, Option[Cliente]] = {
     origin match {
-      case zSuccess(response: String) =>
-        val jsonMock: String = "[{\n\"wcli_nombre\": \"" + response + "\",\n\"wcli_person\": \"G\",\n\"wcli_estado\": \"AC\",\n\"wcli_estado_descri\": \"Activo\",\n\"wcli_dir_correo\": \"grupo@mock.com\",\n\"wcli_ident_replegal\": \"666\",\n\"wcli_cias_pagos_masivos\": \"\"\n}]"
-        zSuccess(DataAccessTranslator.translateCliente(jsonMock))
+      case zSuccess(response: String) => zSuccess(DataAccessTranslator.translateCliente(response))
       case zFailure(error) => zFailure(error)
     }
   }

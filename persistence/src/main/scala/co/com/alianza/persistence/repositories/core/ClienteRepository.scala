@@ -44,7 +44,7 @@ class ClienteRepository(implicit executionContext: ExecutionContext) extends Ali
     callableStatement registerOutParameter (1, OracleTypes.VARCHAR)
     callableStatement registerOutParameter (2, OracleTypes.VARCHAR)
     callableStatement.setInt(3, idGrupo)
-    callableStatement registerOutParameter (4, OracleTypes.VARCHAR)
+    callableStatement registerOutParameter (4, OracleTypes.CURSOR)
     buildSpResponse(conn, callableStatement, 4)
   }
 
