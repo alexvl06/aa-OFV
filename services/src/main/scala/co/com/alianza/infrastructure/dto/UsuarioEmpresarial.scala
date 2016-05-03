@@ -13,15 +13,12 @@ import co.com.alianza.commons.enumerations.TiposCliente
 case class UsuarioEmpresarialEstado(
   id: Int,
   correo: String,
-  fechaCaducidad: Date,
   identificacion: String,
   tipoIdentificacion: Int,
   usuario: String,
+  cargo: String,
+  descripcion: String,
   estado: estadoUsuario,
-  contrasena: Option[String],
-  numeroIngresosErroneos: Int,
-  ipUltimoIngreso: Option[String],
-  fechaUltimoIngreso: Option[Date],
   tipoCliente: TiposCliente,
   nombreUsuario: Option[String]
 )

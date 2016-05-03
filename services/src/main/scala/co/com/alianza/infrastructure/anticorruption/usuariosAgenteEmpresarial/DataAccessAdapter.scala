@@ -48,12 +48,12 @@ object DataAccessAdapter {
     repo.caducarFechaUltimoCambioContrasenaAgenteEmpresarial(idUsuario)
   }
 
-  def CambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa): Future[Validation[PersistenceException, Int]] = {
-    repo.CambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial, estado)
+  def cambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa): Future[Validation[PersistenceException, Int]] = {
+    repo.cambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial, estado)
   }
 
-  def CambiarBloqueoDesbloqueoAgenteEmpresarial(idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa, timestamp: Timestamp): Future[Validation[PersistenceException, Int]] = {
-    repo.CambiarBloqueoDesbloqueoAgenteEmpresarial(idUsuarioAgenteEmpresarial, estado, timestamp)
+  def cambiarBloqueoDesbloqueoAgenteEmpresarial(idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa, timestamp: Timestamp): Future[Validation[PersistenceException, Int]] = {
+    repo.cambiarBloqueoDesbloqueoAgenteEmpresarial(idUsuarioAgenteEmpresarial, estado, timestamp)
   }
 
   def crearPinEmpresaAgenteEmpresarial(pinEmpresaAgenteEmpresarial: ePinEmpresa): Future[Validation[PersistenceException, Int]] = {
@@ -62,6 +62,10 @@ object DataAccessAdapter {
 
   def crearAgenteEmpresarial(nuevoUsuarioAgenteEmpresarial: eUsuario): Future[Validation[PersistenceException, Int]] = {
     repo.insertarAgenteEmpresarial(nuevoUsuarioAgenteEmpresarial)
+  }
+
+  def actualizarAgenteEmpresarial(agente: eUsuario): Future[Validation[PersistenceException, Int]] = {
+    repo.actualizarAgente(agente)
   }
 
   def eliminarPinEmpresaReiniciarAnteriores(idUsuarioAgenteEmpresarial: Int, usoPinEmpresa: Int): Future[Validation[PersistenceException, Int]] = {

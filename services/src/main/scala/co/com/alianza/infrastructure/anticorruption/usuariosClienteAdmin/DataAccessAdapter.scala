@@ -58,7 +58,6 @@ object DataAccessAdapter {
           case Some(usuario) => zSuccess(Some(DataAccessTranslator.translateUsuario(usuario)))
           case _ => zSuccess(None)
         }
-
       case zFailure(error) => zFailure(error)
     }
   }

@@ -25,22 +25,22 @@ import scala.collection.mutable.ListBuffer
  */
 class UsuariosEmpresaRepository(implicit executionContext: ExecutionContext) extends AlianzaRepository {
 
-  val Empresas = TableQuery[EmpresaTable]
-  val UsuariosEmpresariales = TableQuery[UsuarioEmpresarialTable]
-  val UsuariosEmpresarialesAdmin = TableQuery[UsuarioEmpresarialAdminTable]
-  val UsuariosEmpresarialesEmpresa = TableQuery[UsuarioEmpresarialEmpresaTable]
-  val UsuariosEmpresarialesAdminEmpresa = TableQuery[UsuarioEmpresarialAdminEmpresaTable]
+  val empresas = TableQuery[EmpresaTable]
+  val usuariosEmpresariales = TableQuery[UsuarioEmpresarialTable]
+  val usuariosEmpresarialesAdmin = TableQuery[UsuarioEmpresarialAdminTable]
+  val usuariosEmpresarialesEmpresa = TableQuery[UsuarioEmpresarialEmpresaTable]
+  val usuariosEmpresarialesAdminEmpresa = TableQuery[UsuarioEmpresarialAdminEmpresaTable]
   val perfilesAgentes = TableQuery[PerfilAgenteAgenteTable]
 
   def obtenerUsuariosBusqueda(correoUsuario: String, usuario: String, nombreUsuario: String, estadoUsuario: Int, idClienteAdmin: Int): Future[Validation[PersistenceException, List[UsuarioEmpresarial]]] = loan {
     implicit session =>
       val resultTry = Try {
         var usuariosQuery = (for {
-          (clienteAdministrador, agenteEmpresarial) <- UsuariosEmpresarialesAdmin join UsuariosEmpresarialesAdminEmpresa on {
+          (clienteAdministrador, agenteEmpresarial) <- usuariosEmpresarialesAdmin join usuariosEmpresarialesAdminEmpresa on {
             (uea, ueae) => uea.id === ueae.idUsuarioEmpresarialAdmin && uea.id === idClienteAdmin
-          } join UsuariosEmpresarialesEmpresa on {
+          } join usuariosEmpresarialesEmpresa on {
             case ((uea, ueae), uee) => ueae.idEmpresa === uee.idEmpresa
-          } join UsuariosEmpresariales on {
+          } join usuariosEmpresariales on {
             case (((uea, ueae), uee), ae) =>
               uee.idUsuarioEmpresarial === ae.id && ueae.idEmpresa === uee.idEmpresa && uea.id === ueae.idUsuarioEmpresarialAdmin && uea.id === idClienteAdmin && (ae.estado inSet obtenerListaEstados(estadoUsuario))
           }
@@ -85,25 +85,25 @@ class UsuariosEmpresaRepository(implicit executionContext: ExecutionContext) ext
 
   def cambiarPassword(idUsuario: Int, password: String): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
-      val resultTry = Try { UsuariosEmpresariales.filter(_.id === idUsuario).map(_.contrasena).update(Some(password)) }
+      val resultTry = Try { usuariosEmpresariales.filter(_.id === idUsuario).map(_.contrasena).update(Some(password)) }
       resolveTry(resultTry, "Cambiar la contraseña de usuario agente empresarial")
   }
 
   def actualizarEstadoUsuario(idUsuario: Int, estado: Int): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
-      val resultTry = Try { UsuariosEmpresariales.filter(_.id === idUsuario).map(_.estado).update(estado) }
+      val resultTry = Try { usuariosEmpresariales.filter(_.id === idUsuario).map(_.estado).update(estado) }
       resolveTry(resultTry, "Actualizar estado de usuario agente empresarial")
   }
 
   def consultaContrasenaActual(pw_actual: String, idUsuario: Int): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = loan {
     implicit session =>
-      val resultTry = Try { UsuariosEmpresarialesAdmin.filter(x => x.id === idUsuario && x.contrasena === pw_actual).list.headOption }
+      val resultTry = Try { usuariosEmpresarialesAdmin.filter(x => x.id === idUsuario && x.contrasena === pw_actual).list.headOption }
       resolveTry(resultTry, "Consulta contrasena actual de cliente admin  " + pw_actual)
   }
 
   def actualizarContrasena(pw_nuevo: String, idUsuario: Int): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
-      val query = for { u <- UsuariosEmpresarialesAdmin if u.id === idUsuario } yield (u.contrasena, u.fechaActualizacion)
+      val query = for { u <- usuariosEmpresarialesAdmin if u.id === idUsuario } yield (u.contrasena, u.fechaActualizacion)
       val fechaAct = new org.joda.time.DateTime().getMillis
       val act = (Some(pw_nuevo), new Timestamp(fechaAct))
       val resultTry = Try {
@@ -114,13 +114,13 @@ class UsuariosEmpresaRepository(implicit executionContext: ExecutionContext) ext
 
   def consultaContrasenaActualAgenteEmpresarial(pw_actual: String, idUsuario: Int): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = loan {
     implicit session =>
-      val resultTry = Try { UsuariosEmpresariales.filter(x => x.id === idUsuario && x.contrasena === pw_actual).list.headOption }
+      val resultTry = Try { usuariosEmpresariales.filter(x => x.id === idUsuario && x.contrasena === pw_actual).list.headOption }
       resolveTry(resultTry, "Consulta contrasena actual de cliente admin  " + pw_actual)
   }
 
   def actualizarContrasenaAgenteEmpresarial(pw_nuevo: String, idUsuario: Int): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
-      val query = for { u <- UsuariosEmpresariales if u.id === idUsuario } yield (u.contrasena, u.fechaActualizacion)
+      val query = for { u <- usuariosEmpresariales if u.id === idUsuario } yield (u.contrasena, u.fechaActualizacion)
       val fechaAct = new org.joda.time.DateTime().getMillis
       val act = (Some(pw_nuevo), new Timestamp(fechaAct))
       val resultTry = Try {
@@ -141,14 +141,14 @@ class UsuariosEmpresaRepository(implicit executionContext: ExecutionContext) ext
       calendar.clear(Calendar.YEAR)
       val time = calendar.getTimeInMillis
       val timestamp = new Timestamp(time)
-      val query = for { u <- UsuariosEmpresariales if u.id === idUsuario } yield u.fechaActualizacion
+      val query = for { u <- usuariosEmpresariales if u.id === idUsuario } yield u.fechaActualizacion
       val resultTry = Try { query.update(timestamp) }
       resolveTry(resultTry, "Caducar Contrasena usuario Agente empresarial")
   }
 
   def obtieneClientePorNitYUsuario(nit: String, usuario: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = loan {
     implicit session =>
-      resolveTry(Try(UsuariosEmpresarialesAdmin.filter(u => u.identificacion === nit && u.usuario === usuario).list.headOption), "Consulta cliente admin")
+      resolveTry(Try(usuariosEmpresarialesAdmin.filter(u => u.identificacion === nit && u.usuario === usuario).list.headOption), "Consulta cliente admin")
   }
 
 }

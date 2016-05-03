@@ -6,7 +6,10 @@ import CustomDriver.simple._
 /**
  * Created by manuel on 9/12/14.
  */
-case class UsuarioEmpresarial(id: Int, correo: String, fechaActualizacion: Timestamp, identificacion: String, tipoIdentificacion: Int, usuario: String, estado: Int, contrasena: Option[String], token: Option[String], numeroIngresosErroneos: Int, ipUltimoIngreso: Option[String], fechaUltimoIngreso: Option[Timestamp], nombreUsuario: String, cargo: String, descripcion: String)
+case class UsuarioEmpresarial(id: Int, correo: String, fechaActualizacion: Timestamp, identificacion: String,
+  tipoIdentificacion: Int, usuario: String, estado: Int, contrasena: Option[String],
+  token: Option[String], numeroIngresosErroneos: Int, ipUltimoIngreso: Option[String],
+  fechaUltimoIngreso: Option[Timestamp], nombreUsuario: String, cargo: String, descripcion: String)
 
 class UsuarioEmpresarialTable(tag: Tag) extends Table[UsuarioEmpresarial](tag, "USUARIO_EMPRESARIAL") {
   def id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
@@ -25,5 +28,7 @@ class UsuarioEmpresarialTable(tag: Tag) extends Table[UsuarioEmpresarial](tag, "
   def cargo = column[String]("CARGO")
   def descripcion = column[String]("DESCRIPCION")
 
-  def * = (id, correo, fechaActualizacion, identificacion, tipoIdentificacion, usuario, estado, contrasena, token, numeroIngresosErroneos, ipUltimoIngreso, fechaUltimoIngreso, nombreUsuario, cargo, descripcion) <> (UsuarioEmpresarial.tupled, UsuarioEmpresarial.unapply)
+  def * = (id, correo, fechaActualizacion, identificacion, tipoIdentificacion, usuario, estado, contrasena, token,
+    numeroIngresosErroneos, ipUltimoIngreso, fechaUltimoIngreso, nombreUsuario, cargo, descripcion) <>
+    (UsuarioEmpresarial.tupled, UsuarioEmpresarial.unapply)
 }

@@ -5,7 +5,7 @@ import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.infrastructure.messages.GuardarPermisosAgenteMessage
-import co.com.alianza.infrastructure.messages.empresa.{ CrearAgenteEMessageJsonSupport, CrearAgenteEMessage }
+import co.com.alianza.infrastructure.messages.empresa.{ CrearAgenteEMessageJsonSupport, CrearAgenteMessage }
 import spray.routing.{ RequestContext, Directives }
 import co.com.alianza.app.{ AlianzaActors, CrossHeaders, AlianzaCommons }
 import co.com.alianza.infrastructure.messages.empresa._
@@ -44,7 +44,7 @@ class UsuarioEmpresaService extends Directives with AlianzaCommons with CrossHea
           respondWithMediaType(mediaType) {
             pathEndOrSingleSlash {
               put {
-                entity(as[CrearAgenteEMessage]) {
+                entity(as[CrearAgenteMessage]) {
                   data =>
                     clientIP {
                       ip =>
@@ -52,7 +52,7 @@ class UsuarioEmpresaService extends Directives with AlianzaCommons with CrossHea
                           r: RequestContext =>
                             val token = r.request.headers.find(header => header.name equals "token")
                             val usuario = DataAccessAdapterClienteAdmin.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
-                            requestWithFutureAuditing[PersistenceException, CrearAgenteEMessage](r, AuditingHelper.fiduciariaTopic, AuditingHelper.crearAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, Some(data))
+                            requestWithFutureAuditing[PersistenceException, CrearAgenteMessage](r, AuditingHelper.fiduciariaTopic, AuditingHelper.crearAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, Some(data))
                         } {
                           requestExecute(data, agenteEmpresarialActor)
                         }

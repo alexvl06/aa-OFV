@@ -265,7 +265,7 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
   }
 
   private def CambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa): Future[Validation[ErrorValidacionEmpresa, Int]] = {
-    DataAccessAdapter.CambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial, estado).map(_.leftMap(pe => ErrorPersistenceEmpresa(pe.message, pe)))
+    DataAccessAdapter.cambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial, estado).map(_.leftMap(pe => ErrorPersistenceEmpresa(pe.message, pe)))
   }
 
   private def diasCaducidadContrasena(): Future[Validation[ErrorValidacionEmpresa, Option[ReglasContrasenas]]] = {
@@ -278,7 +278,7 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
     fechaCaducada.add(Calendar.DAY_OF_YEAR, (diasCaducidad.getOrElse(ReglasContrasenas("", "0")).valor.toInt * -1))
     val timestamp = new Timestamp(fechaCaducada.getTimeInMillis)
     val estadoNuevo = if (idUsuarioAgenteEmpresarial._2 == EstadosEmpresaEnum.bloqueContraseña.id || idUsuarioAgenteEmpresarial._2 == EstadosEmpresaEnum.activo.id || idUsuarioAgenteEmpresarial._2 == EstadosEmpresaEnum.pendienteActivacion.id || idUsuarioAgenteEmpresarial._2 == EstadosEmpresaEnum.pendienteReiniciarContrasena.id) { EstadosEmpresaEnum.bloqueadoPorAdmin } else { EstadosEmpresaEnum.pendienteReiniciarContrasena }
-    DataAccessAdapter.CambiarBloqueoDesbloqueoAgenteEmpresarial(idUsuarioAgenteEmpresarial._1, estadoNuevo, timestamp).map(_.leftMap(pe => ErrorPersistenceEmpresa(pe.message, pe)))
+    DataAccessAdapter.cambiarBloqueoDesbloqueoAgenteEmpresarial(idUsuarioAgenteEmpresarial._1, estadoNuevo, timestamp).map(_.leftMap(pe => ErrorPersistenceEmpresa(pe.message, pe)))
   }
 
   private def resolveReiniciarContrasenaAEFuture(ReiniciarContrasenaAEFuture: Future[Validation[ErrorValidacionEmpresa, (Int, Int, Configuracion)]], currentSender: ActorRef, message: ReiniciarContrasenaAgenteEMessage) = {

@@ -17,10 +17,14 @@ object DataAccessTranslator {
   }
 
   def translateUsuarioEmpresarial(ue: dUsuario) =
-    UsuarioEmpresarial(ue.id, ue.correo, ue.fechaActualizacion, ue.identificacion, ue.tipoIdentificacion, ue.usuario, ue.estado, ue.contrasena, ue.numeroIngresosErroneos, ue.ipUltimoIngreso, ue.fechaUltimoIngreso, TiposCliente.agenteEmpresarial, Some(ue.nombreUsuario))
+    UsuarioEmpresarial(ue.id, ue.correo, ue.fechaActualizacion, ue.identificacion, ue.tipoIdentificacion,
+      ue.usuario, ue.estado, ue.contrasena, ue.numeroIngresosErroneos, ue.ipUltimoIngreso, ue.fechaUltimoIngreso,
+      TiposCliente.agenteEmpresarial, Some(ue.nombreUsuario))
 
   def translateUsuarioEstado(usuario: List[dUsuario]) = {
-    usuario map (ue => UsuarioEmpresarialEstado(ue.id, ue.correo, ue.fechaActualizacion, ue.identificacion, ue.tipoIdentificacion, ue.usuario, estadoUsuario(ue.estado, EstadosEmpresaEnum(ue.estado).toString), Some(""), ue.numeroIngresosErroneos, ue.ipUltimoIngreso, ue.fechaUltimoIngreso, TiposCliente.agenteEmpresarial, Some(ue.nombreUsuario)))
+    usuario map (ue => UsuarioEmpresarialEstado(ue.id, ue.correo, ue.identificacion, ue.tipoIdentificacion,
+      ue.usuario, ue.cargo, ue.descripcion, estadoUsuario(ue.estado, EstadosEmpresaEnum(ue.estado).toString),
+      TiposCliente.agenteEmpresarial, Some(ue.nombreUsuario)))
   }
 
 }

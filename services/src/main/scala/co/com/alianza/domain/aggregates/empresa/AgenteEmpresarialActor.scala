@@ -12,7 +12,7 @@ import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{ DataAccessTranslator, DataAccessAdapter }
 import co.com.alianza.infrastructure.dto.{ UsuarioEmpresarialEstado, Configuracion, UsuarioEmpresarial, PinEmpresa }
 import co.com.alianza.infrastructure.messages.{ UsuarioMessage, ResponseMessage }
-import co.com.alianza.infrastructure.messages.empresa.{ GetAgentesEmpresarialesMessage, CrearAgenteEMessage, UsuarioMessageCorreo, ReiniciarContrasenaAgenteEMessage }
+import co.com.alianza.infrastructure.messages.empresa._
 import co.com.alianza.microservices.{ MailMessage, SmtpServiceClient }
 import co.com.alianza.persistence.entities.{ UsuarioEmpresarialEmpresa, Empresa, IpsUsuario, UltimaContrasena }
 import co.com.alianza.util.clave.Crypto
@@ -65,7 +65,7 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
 
   def receive = {
     //toUsuarioEmpresarialEmpresa(empresa, idUsuarioAgenteEmpresarial)
-    case message: CrearAgenteEMessage => {
+    case message: CrearAgenteMessage => {
       val currentSender = sender()
       val usuarioCreadoFuture: Future[Validation[ErrorValidacion, Int]] = (for {
         clienteAdmin <- ValidationT(validarUsuarioClienteAdmin(message.nit, message.usuario))
@@ -79,13 +79,30 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
       resolveCrearAgenteEmpresarialFuture(usuarioCreadoFuture, message, currentSender)
     }
 
+    case message: ActualizarAgenteMessage => actualizarAgente(message)
+
     case message: GetAgentesEmpresarialesMessage =>
       val currentSender = sender()
       val future: Future[Validation[PersistenceException, List[UsuarioEmpresarialEstado]]] = DataAccessAdapter.obtenerUsuariosBusqueda(message.toGetUsuariosEmpresaBusquedaRequest)
       resolveFutureValidation(future, (response: List[UsuarioEmpresarialEstado]) => response.toJson, currentSender)
   }
 
-  private def crearAgenteEmpresarial(message: CrearAgenteEMessage): Future[Validation[ErrorValidacion, Int]] =
+  private def actualizarAgente(message: ActualizarAgenteMessage) = {
+    /*val currentSender = sender()
+    val future = (for {
+      usuarioAdmin <- ValidationT(validarUsuarioClienteAdmin(message.nit, message.usuario))
+      idUsuarioAgenteEmpresarial <- ValidationT(crearAgenteEmpresarial(message))
+      resultAsociarPerfiles <- ValidationT(asociarPerfiles(idUsuarioAgenteEmpresarial))
+      empresa <- ValidationT(obtenerEmpresaPorNit(message.nit))
+      resultAsociarEmpresa <- ValidationT(asociarAgenteEmpresarialConEmpresa(empresa.get.id, idUsuarioAgenteEmpresarial))
+    } yield {
+      idUsuarioAgenteEmpresarial
+    }).run
+    */
+    //resolveCrearAgenteEmpresarialFuture(usuarioCreadoFuture, message, currentSender)
+  }
+
+  private def crearAgenteEmpresarial(message: CrearAgenteMessage): Future[Validation[ErrorValidacion, Int]] =
     DataAccessAdapter.crearAgenteEmpresarial(message.toEntityUsuarioAgenteEmpresarial()).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
 
   private def asociarPerfiles(idUsuarioAgenteEmpresarial: Int): Future[Validation[ErrorValidacion, List[Int]]] =
@@ -97,25 +114,20 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
   private def asociarAgenteEmpresarialConEmpresa(idEmpresa: Int, idAgente: Int): Future[Validation[ErrorValidacion, Int]] =
     DataAccessAdapter.asociarAgenteEmpresarialConEmpresa(UsuarioEmpresarialEmpresa(idEmpresa, idAgente)).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
 
-  private def resolveCrearAgenteEmpresarialFuture(crearAgenteEmpresarialFuture: Future[Validation[ErrorValidacion, Int]], message: CrearAgenteEMessage, currentSender: ActorRef) {
+  private def resolveCrearAgenteEmpresarialFuture(crearAgenteEmpresarialFuture: Future[Validation[ErrorValidacion, Int]], message: CrearAgenteMessage, currentSender: ActorRef) {
     crearAgenteEmpresarialFuture onComplete {
       case sFailure(failure) =>
         currentSender ! failure
       case sSuccess(value) =>
         value match {
-
           case zSuccess(idUsuarioAgenteEmpresarial: Int) => {
-
             val validacionConsulta = validacionConsultaTiempoExpiracion()
-
             validacionConsulta onComplete {
               case sFailure(failure) => currentSender ! failure
               case sSuccess(value) =>
                 value match {
                   case zSuccess(responseConf: Configuracion) =>
-
                     enviarCorreo(responseConf.valor.toInt, message, idUsuarioAgenteEmpresarial, currentSender)
-
                   case zFailure(error) =>
                     error match {
                       case errorPersistence: ErrorPersistence => currentSender ! errorPersistence.exception
@@ -123,7 +135,6 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
                     }
                 }
             }
-
           }
           case zFailure(error) =>
             error match {
@@ -136,27 +147,23 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
                 currentSender ! ResponseMessage(InternalServerError, "Se ha producido un error inesperado.")
               }
             }
-
         }
     }
   }
 
   private def toIpsUsuarioArray(ips: Array[String], idUsuarioAgenteEmpresarial: Int): Array[IpsUsuario] = ips.map(ip => IpsUsuario(idUsuarioAgenteEmpresarial, ip))
 
-  private def enviarCorreo(numHorasCaducidad: Int, message: CrearAgenteEMessage, idUsuarioAgenteEmpresarial: Int, currentSender: ActorRef) = {
+  private def enviarCorreo(numHorasCaducidad: Int, message: CrearAgenteMessage, idUsuarioAgenteEmpresarial: Int, currentSender: ActorRef) = {
     val fechaActual: Calendar = Calendar.getInstance()
     fechaActual.add(Calendar.HOUR_OF_DAY, numHorasCaducidad)
     val tokenPin: PinData = TokenPin.obtenerToken(fechaActual.getTime)
-
     val pin: PinEmpresa = PinEmpresa(None, idUsuarioAgenteEmpresarial, tokenPin.token, tokenPin.fechaExpiracion, tokenPin.tokenHash.get, UsoPinEmpresaEnum.creacionAgenteEmpresarial.id)
     val pinEmpresaAgenteEmpresarial: entities.PinEmpresa = DataAccessTranslator.translateEntityPinEmpresa(pin)
-
     val resultCrearPinEmpresaAgenteEmpresarial = for {
       idResultGuardarPinEmpresa <- DataAccessAdapter.crearPinEmpresaAgenteEmpresarial(pinEmpresaAgenteEmpresarial)
     } yield {
       idResultGuardarPinEmpresa
     }
-
     resultCrearPinEmpresaAgenteEmpresarial onComplete {
       case sFailure(fail) => currentSender ! fail
       case sSuccess(valueResult) =>
