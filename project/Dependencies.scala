@@ -1,7 +1,7 @@
 import sbt._
 
 object Dependencies {
-  
+
 	private[Dependencies] implicit class Exclude(module: ModuleID) {
 
 		def kafkaExclusions: ModuleID = {
@@ -106,6 +106,7 @@ object Dependencies {
 		val ninbus 								= "com.nimbusds"									% "nimbus-jose-jwt" 				% ninbusVersion
 		val jasyptLib 						= "org.jasypt" 										% "jasypt" 									% jasyptVersion
 		val kafkaLib 							= "org.apache.kafka" 							% "kafka_2.10" 							% kafkaVersion kafkaExclusions
+		val jodaTime							= "joda-time" 										% "joda-time" 							% jodaTimeVersion
 
 		val slickLib 							= "com.typesafe.slick" 						 %% "slick"                   % slickVersion log4jExclude
 		val postgresqlLib 				= "postgresql"          					 % "postgresql"              % postgreSqlVersion log4jExclude
@@ -140,7 +141,7 @@ object Dependencies {
 		commonsLang3Lib, commonsCodecLib, playJsonLib, jacksonDatabindLib, jacksonModuleScalaLib, jasyptLib
 	)
 
-	val moduleCommonLibs: Seq[ModuleID]      = Seq(scalateLib, axisLib, jaxrpc, wss4j)
+	val moduleCommonLibs: Seq[ModuleID]      = Seq(scalateLib, axisLib, jaxrpc, wss4j, jodaTime)
 	val modulePersistenceLibs: Seq[ModuleID] = Seq(slickLib, postgresqlLib , c3p0Lib , slickPGLib, slickPG_jodaTimeLib, ojdbc)
 	val moduleService: Seq [ModuleID] = Seq(recaptcha4j, ninbus, jsonToken)
 	val testLibs: Seq[ModuleID] = Seq(akkaTestkit, sprayTestkitLib, scalatestLib, junitLib, restAssuredLib, scalacheckLib, specs2Lib)
