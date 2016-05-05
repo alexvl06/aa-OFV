@@ -15,7 +15,6 @@ object Common {
   private val commonResolvers = Seq(
     Resolver.sonatypeRepo("snapshots"),
     Resolver.sonatypeRepo("releases"),
-    Resolver.typesafeRepo("releases"),
     "Spray.io repository" at "http://repo.spray.io",
     "artifactory alianza" at "http://artifactory.alianza.com.co:8081/artifactory/third-party-libs/",
     "maven repository"    at "http://repo1.maven.org/maven2/"
