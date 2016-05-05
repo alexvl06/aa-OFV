@@ -21,8 +21,7 @@ object DataAccessAdapter {
   private def transformValidationGrupo(origin: Validation[PersistenceException, String]): Validation[PersistenceException, Option[Cliente]] = {
     origin match {
       case zSuccess(response: String) =>
-        val jsonMock: String = "[{\n\"wcli_nombre\": \"UsuarioPruebas\",\n\"wcli_person\": \"G\",\n\"wcli_estado\": \"AC\",\n\"wcli_estado_descri\": \"Activo\",\n\"wcli_dir_correo\": \"grupo@mock.com\",\n\"wcli_ident_replegal\": \"666\",\n\"wcli_cias_pagos_masivos\": \"\"\n}]"
-        zSuccess(DataAccessTranslator.translateCliente(jsonMock))
+        zSuccess(DataAccessTranslator.translateCliente(response))
       case zFailure(error) => zFailure(error)
     }
   }
