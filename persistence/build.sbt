@@ -1,8 +1,10 @@
 import Common._
-import Dependencies._
 
 name := "persistence"
 
 Common.commonSettings
 
-libraryDependencies ++= Dependencies.modulePersistenceLibs
+libraryDependencies ++= {
+  import Dependencies._
+  dbLibs ++ slickLibs
+}
