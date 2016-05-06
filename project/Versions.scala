@@ -5,9 +5,9 @@ object Versions {
 
   val commonScalaVersion: String         = "2.11.8"
 
-  val akka: String                = "2.4.4"
+  val akka: String                = "2.3.15" // Akka 2.4.4 necesita de java 8 (java.util.concurrent)
   val akkaLogback: String         = "1.1.7"
-  val akkaCluster: String         = "2.4.4"
+  val akkaCluster: String         = "2.3.15"
 
   val kafka: String               = "0.9.0.1"
 
@@ -41,7 +41,7 @@ object Versions {
   val sprayTestkit: String        = "1.3.3"
   val spray: String               = "1.3.3"
   val sprayJson: String           = "1.3.2"
-  val playJson: String            = "2.5.3"
+  val playJson: String            = "2.4.0-M2" // Version superiores trae play iteratees y genera conflicto con typesafe.config 1.3.0
   val restAssured: String         = "1.8.1"
   val ojdbc: String               = "6"
   val wsdl4j: String              = "1.4"

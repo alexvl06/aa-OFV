@@ -20,7 +20,7 @@ object Dependencies {
 			)
 		}
 
-    def nettyExclude : ModuleID = module.logScalaExclude.exclude("io.netty","netty")
+    //def nettyExclude : ModuleID = module.logScalaExclude.exclude("io.netty","netty")
 
     def scalaParserCombinatorsExclusions: ModuleID = module.logScalaExclude.exclude("org.scala-lang.modules", "scala-parser-combinators_2.11")
 
@@ -70,9 +70,9 @@ object Dependencies {
     val scalaLibrary 		= "org.scala-lang" 					        % "scala-library" 				% commonScalaVersion
     val scalaCompiler 	= "org.scala-lang" 					      	% "scala-compiler" 				% commonScalaVersion
     
-    val akkaActor 			= "com.typesafe.akka" 	    			  %% "akka-actor" 			 		 	% akka nettyExclude
+    val akkaActor 			= "com.typesafe.akka" 	    			  %% "akka-actor" 			 		 	% akka //nettyExclude
 		val akkaSlf4j 			= "com.typesafe.akka" 	    		 	  %% "akka-slf4j"       			% akka logScalaExclude
-		val akkaClusterLib 	= "com.typesafe.akka"     			 	 % "akka-cluster_2.11"       % akkaCluster nettyExclude
+		val akkaClusterLib 	= "com.typesafe.akka"     			 	 % "akka-cluster_2.11"       % akkaCluster //nettyExclude
 
     val sprayCan 				= "io.spray"           		  			  %% "spray-can"    		  		  % spray logScalaExclude
     val sprayRouting 		= "io.spray"           		  			  %% "spray-routing-shapeless2" % spray logScalaExclude
