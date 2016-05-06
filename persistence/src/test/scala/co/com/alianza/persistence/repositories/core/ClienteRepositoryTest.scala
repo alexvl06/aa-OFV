@@ -22,7 +22,7 @@ class ClienteRepositoryTest extends FunSuite {
     val repo = new ClienteRepository
 
     Try {
-      Await.result(repo.consultaCliente(ConsultaClienteRequest(1, "800122772")), 60 seconds)
+      Await.result(repo.consultaCliente("800122772"), 60 seconds)
     } match {
       case Success(response) =>
         println("============= TEST cliente OK - Success =============")
