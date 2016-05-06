@@ -2,6 +2,19 @@ import sbt._
 
 object Dependencies {
 
+	/**
+		* Define exclusiones necesarias en las librerías para evitar conflictos.
+		*
+		* Hay dos tipos:
+		* - Exclusions: que son paquetes de exclusiones usado por solo una librería.
+		* - Exclude: que una sola exclusión especifica que puede ser usada por una o varias librerías.
+		*
+		* Orden:
+		* - Primero Exclusions luego Exclude.
+		* - Alfabético entre Exclusions.
+		* - Por composición entre Exclude.
+		*/
+
 	private[Dependencies] implicit class Exclude(module: ModuleID) {
 
 		def kafkaExclusions: ModuleID = {
@@ -54,7 +67,11 @@ object Dependencies {
 		def scalaLibraryExclude: ModuleID = module.exclude("org.scala-lang", "scala-library")
 	}
 
-
+	/**
+		* Define las librerías necesarias para compilar.
+		*
+		* Orden por importancia y prioridad, primero cosas como scala, akka y finalmente utilidades y log.
+		*/
 	private[Dependencies] object Compile {
 		import Versions._
 
@@ -108,6 +125,11 @@ object Dependencies {
 		val recaptcha4jLib				= "net.tanesha.recaptcha4j" 			 	% "recaptcha4j" 							% recaptcha4j
 	}
 
+	/**
+		* Define las librerías necesarias para pruebas.
+		*
+		* Orden alfabético.
+		*/
 	private[Dependencies] object Test {
 		import Versions._
 
