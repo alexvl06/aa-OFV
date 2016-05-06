@@ -21,7 +21,7 @@ object Versions {
   val scalaio: String             = "0.4.3"
   val scalatest: String           = "2.2.6"
   val scalaz: String              = "7.1.8" // No se puede actualizar a 7.2.2 por falla con flatmap
-  val shapeless: String           = "2.3.0"
+  val shapeless: String           = "2.1.0" // La 2.3.0 incompatilidad con spray-routing que trae la versión 2.1.0
 
   val commonsDiscovery : String   = "0.2"
   val junit: String               = "4.10"
@@ -35,7 +35,7 @@ object Versions {
   val jdkVersion: String          = "1.7"
   val jsch: String                = "0.1.51"
   val jsonToken: String           = "1.1"
-  val ninbus: String              = "3.10" // Version 4.16.2 , cambia varias funciones de la libreria
+  val ninbus: String              = "3.10" // Version 4.16.2 , incompatibilidad de código
 
   val specs2: String              = "2.3.13"
   val sprayTestkit: String        = "1.3.3"
@@ -49,13 +49,15 @@ object Versions {
   val scalate: String             = "1.6.1"
 
   //subProject Persistence
-  //val postgreSqlVersion2 : String         = "9.3-1102-jdbc41"
   val c3p0: String                = "0.9.1.2"
   val postgreSql: String          = "9.1-901.jdbc4"
   val slick: String               = "2.1.0"
-  val slickpg: String             = "0.8.5"
-  val slickpgJodaTime: String     = "0.6.5.3"
-  
+  val slickpg: String             = "0.6.3"   // Version 0.7.0 - incompatibilidad con slickJodaTime que trae la version de slick_core 0.7.0
+  val slickpgJodaTime: String     = "0.6.3"  // Version 0.10.0 , incompatibilidad con código
+
   //subproject Service
   val recaptcha4j : String        = "0.0.7"
+
+  //Evicted de Jodatime se deja, debido a que JsonToken ni PlayJson pueden actualizarse, y slickPG-jodaTime en su versión
+  //mas baja sigue utilizando jodatime version 2.3
 }
