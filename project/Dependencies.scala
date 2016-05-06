@@ -1,7 +1,7 @@
 import sbt._
 
 object Dependencies {
-  
+
 	private[Dependencies] implicit class Exclude(module: ModuleID) {
 
 		def kafkaExclusions: ModuleID = {
@@ -28,6 +28,13 @@ object Dependencies {
 
     def slickExclude : ModuleID = module.jodaTimeExclusions.excludeAll(ExclusionRule("com.github.tminglei","slick-pg_core_2.11"))
 
+    def jodaTimeExclusions : ModuleID = {
+      module.logScalaExclude.excludeAll(
+        ExclusionRule("joda-time","joda-time"),
+        ExclusionRule("org-joda","joda-convert")
+      )
+    }
+    
     def logScalaExclude : ModuleID = module.logbackExclude.scalaLibraryExclude
 
     def logbackExclude: ModuleID = {
@@ -36,14 +43,7 @@ object Dependencies {
 				ExclusionRule("ch.qos.logback", "logback-core")
 			)
 		}
-
-    def jodaTimeExclusions : ModuleID = {
-      module.logScalaExclude.excludeAll(
-        ExclusionRule("joda-time","joda-time"),
-        ExclusionRule("org-joda","joda-convert")
-      )
-    }
-
+    
 		def log4jExclude: ModuleID = {
 			module.excludeAll(
 				ExclusionRule("commons-logging", "commons-logging"),
@@ -67,81 +67,83 @@ object Dependencies {
 	private[Dependencies] object Compile {
 		import Versions._
 
-		val akkaActor 			= "com.typesafe.akka" 	    			 %% "akka-actor" 			 		 	% akkaVersion nettyExclude
-		val akkaSlf4j 			= "com.typesafe.akka" 	    		 	 %% "akka-slf4j"       			% akkaVersion logScalaExclude
-		val akkaCluster 		= "com.typesafe.akka"     			 	 % "akka-cluster_2.11"      % akkaClusterVersion nettyExclude
-		val logbackClassic 	= "ch.qos.logback"     							% "logback-classic"  			% akkaLogbackVersion
-		val scalaLibrary 		= "org.scala-lang" 					      	% "scala-library" 				% commonScalaVersion
-		val scalaCompiler 	= "org.scala-lang" 					      	% "scala-compiler" 				% commonScalaVersion
-		val scalaIOCore 		= "com.github.scala-incubator.io" 	%% "scala-io-core" 				% scalaioVersion logScalaExclude
-		val scalaIOFile 		= "com.github.scala-incubator.io" 	%% "scala-io-file" 				% scalaioVersion logScalaExclude
-		val scalazLib 			= "org.scalaz"				      			%%  "scalaz-core" 					% scalazVersion logScalaExclude
-		val sprayCan 				= "io.spray"           		  			 %% "spray-can"    		  		% sprayVersion logScalaExclude
-		val sprayRouting 		= "io.spray"           		  			 %% "spray-routing-shapeless2"  % sprayVersion logScalaExclude
-		val sprayClient 		= "io.spray"           		  			 %% "spray-client"   				% sprayVersion logScalaExclude
-		val sprayHttp 			= "io.spray"           		  			 %% "spray-http"    	  		% sprayVersion logScalaExclude
-		val sprayHttpx 			= "io.spray"           		  			 %% "spray-httpx"   	  		% sprayVersion scalaxmlExclude
-		val sprayJsonLib 		= "io.spray" 					      			 %% "spray-json" 		    		% sprayJsonVersion logScalaExclude
-		val sprayCaching 		= "io.spray"           						 % "spray-caching"     		  % sprayVersion logScalaExclude
+    val scalaLibrary 		= "org.scala-lang" 					        % "scala-library" 				% commonScalaVersion
+    val scalaCompiler 	= "org.scala-lang" 					      	% "scala-compiler" 				% commonScalaVersion
+    
+    val akkaActor 			= "com.typesafe.akka" 	    			  %% "akka-actor" 			 		 	% akka nettyExclude
+		val akkaSlf4j 			= "com.typesafe.akka" 	    		 	  %% "akka-slf4j"       			% akka logScalaExclude
+		val akkaClusterLib 	= "com.typesafe.akka"     			 	 % "akka-cluster_2.11"       % akkaCluster nettyExclude
 
-		val scalateLib		  = "org.fusesource.scalate"      		% "scalate-core_2.10" 		% Versions.scalateVersion
-		val shapelessLib 			= "com.chuusai"				      			%% "shapeless" 		   		 	% shapelessVersion logScalaExclude
+    val sprayCan 				= "io.spray"           		  			  %% "spray-can"    		  		  % spray logScalaExclude
+    val sprayRouting 		= "io.spray"           		  			  %% "spray-routing-shapeless2" % spray logScalaExclude
+    val sprayClient 		= "io.spray"           		  			  %% "spray-client"   				  % spray logScalaExclude
+    val sprayHttp 			= "io.spray"           		  			  %% "spray-http"    	  		    % spray logScalaExclude
+    val sprayHttpx 			= "io.spray"           		  			  %% "spray-httpx"   	  		    % spray scalaxmlExclude
+    val sprayJsonLib 		= "io.spray" 					      			  %% "spray-json" 		    		  % sprayJson logScalaExclude
+    val sprayCaching 		= "io.spray"           						  % "spray-caching"     		    % spray logScalaExclude
 
-		val commonsLogging  = "commons-logging" 			  			 % "commons-logging" 	  		% apacheLoginVersion
-		val commonsLang3Lib = "org.apache.commons" 		  			 % "commons-lang3" 	    		% apacheLangVersion
-		val axisLib 						= "org.apache.axis" 			  			 % "axis" 	    							% apacheAxisVersion
-		val wss4j 					= "org.apache.ws.security" 				 % "wss4j" 									% wss4jVersion
+    val commonsLogging  = "commons-logging" 			  			  % "commons-logging" 	  		% apacheLogin 
+    val logbackClassic 	= "ch.qos.logback"     						  % "logback-classic"  			  % akkaLogback 
+    val commonsLang3Lib = "org.apache.commons" 		  			  % "commons-lang3" 	    		% apacheLang 
+    val axisLib 				= "org.apache.axis"      			  	  % "axis" 	    							% apacheAxis 
+    val wss4jLib 				= "org.apache.ws.security" 				  % "wss4j" 									% wss4j 
+		
+		val scalaIOCoreLib 		= "com.github.scala-incubator.io"  %% "scala-io-core" 				% scalaio logScalaExclude
+		val scalaIOFileLib 		= "com.github.scala-incubator.io"  %% "scala-io-file" 				% scalaio logScalaExclude
+		val scalazLib 	  		= "org.scalaz"				      			 %%  "scalaz-core" 					% scalaz logScalaExclude
+		val scalateLib		    = "org.fusesource.scalate"      	  % "scalate-core_2.10" 		% scalate 
+		val shapelessLib 			= "com.chuusai"				      		   %% "shapeless" 		   		 	% shapeless logScalaExclude
+    
+		val commonsCodecLib = "commons-codec" 			    			  % "commons-codec" 	    		% apacheCodec 
+		val discoveryLib 			= "commons-discovery" 						  % "commons-discovery" 			%	commonsDiscovery
+		val wsdl4jLib					= "wsdl4j"												  % "wsdl4j"									%	wsdl4j 
+		val jaxrpcLib 					= "javax.xml"               			  % "jaxrpc-api"          		% jaxrpc 
 
-		val commonsCodecLib = "commons-codec" 			    			 % "commons-codec" 	    		% apacheCodecVersion
-		val discovery 			= "commons-discovery" 						 % "commons-discovery" 			%	commonsDiscovery
-		val wsdl4j					= "wsdl4j"												 % "wsdl4j"									%	wsdl4jVersion
-		val jaxrpc 					= "javax.xml"               			 % "jaxrpc-api"          		% jaxrpcVersion
+		val ojdbcLib 					= "oracle"					        			 % "ojdbc"				      		% ojdbc 
 
-		val ojdbc 					= "oracle"					        			 % "ojdbc"				      		% ojdbcVersion
+		val playJsonLib 					= "com.typesafe.play" 		       	%% "play-json" 			    	  % playJson jodaTimeExclusions
+		val jacksonDatabindLib 		= "com.fasterxml.jackson.core"    % "jackson-databind" 		    % jacksonDataBind 
+		val jacksonModuleScalaLib = "com.fasterxml.jackson.module" 	%% "jackson-module-scala" 	% jacksonModuleScala jacksonExclude
+		val jsonTokenLib 						= "com.googlecode.jsontoken" 			% "jsontoken" 							% jsonToken jodaTimeExclusions
+		val ninbusLib 								= "com.nimbusds"									% "nimbus-jose-jwt" 				% ninbus 
+		val jasyptLib 						= "org.jasypt" 										% "jasypt" 									% jasypt 
+		val kafkaLib 							= "org.apache.kafka" 							% "kafka_2.10" 							% kafka kafkaExclusions
 
-		val playJsonLib 					= "com.typesafe.play" 		       	%% "play-json" 			    	% playJsonVersion jodaTimeExclusions
-		val jacksonDatabindLib 		= "com.fasterxml.jackson.core"    % "jackson-databind" 		  % jacksonDataBindVersion
-		val jacksonModuleScalaLib = "com.fasterxml.jackson.module" 	%% "jackson-module-scala" 	% jacksonModuleScalaVersion jacksonExclude
-		val jsonToken 						= "com.googlecode.jsontoken" 			% "jsontoken" 							% jsonTokenVersion jodaTimeExclusions
-		val ninbus 								= "com.nimbusds"									% "nimbus-jose-jwt" 				% ninbusVersion
-		val jasyptLib 						= "org.jasypt" 										% "jasypt" 									% jasyptVersion
-		val kafkaLib 							= "org.apache.kafka" 							% "kafka_2.10" 							% kafkaVersion kafkaExclusions
-
-		val slickLib 							= "com.typesafe.slick" 						 %% "slick"                   % slickVersion log4jExclude
-		val postgresqlLib 				= "postgresql"          					 % "postgresql"              % postgreSqlVersion log4jExclude
-		val c3p0Lib 							= "c3p0"                					 % "c3p0"                    % c3p0Version log4jExclude
-		val slickPGLib 						= "com.github.tminglei" 					 %% "slick-pg"           % slickpgVersion slickExclude
-		val slickPG_jodaTimeLib 	= "com.github.tminglei" 					 %% "slick-pg_joda-time" % slickpgJodaTimeVersion slickExclude
-		val recaptcha4j 					= "net.tanesha.recaptcha4j" 			 % "recaptcha4j" 						% "0.0.7"
+		val slickLib 							= "com.typesafe.slick" 						 %% "slick"                 % slick log4jExclude
+		val postgresqlLib 				= "postgresql"          					 % "postgresql"             % postgreSql log4jExclude
+		val c3p0Lib 							= "c3p0"                					 % "c3p0"                   % c3p0 log4jExclude
+		val slickPGLib 						= "com.github.tminglei" 					 %% "slick-pg"              % slickpg slickExclude
+		val slickPG_jodaTimeLib 	= "com.github.tminglei" 					 %% "slick-pg_joda-time"    % slickpgJodaTime slickExclude
+		val recaptcha4jLib				= "net.tanesha.recaptcha4j" 			 % "recaptcha4j" 						% recaptcha4j
 	}
 
 	private[Dependencies] object Test {
 		import Versions._
 
-		val akkaTestkit 		= "com.typesafe.akka"       %%  "akka-testkit"        % akkaVersion 				% "test" logScalaExclude
-		val junitLib 				= "junit"                   %  "junit"                % junitVersion    		% "test"
-		val restAssuredLib 	= "com.jayway.restassured"  %  "rest-assured"         % restAssuredVersion  % "test"
-		val scalatestLib 		= "org.scalatest"           %%  "scalatest"      			% scalatestVersion   	% "test" logScalaExclude
-		val scalacheckLib 	= "org.scalacheck"          %% "scalacheck"           % scalacheckVersion  	% "test" logScalaExclude
-		val sprayTestkitLib = "io.spray" 			          %%  "spray-testkit" 	    % sprayTestkitVersion % "test" logScalaExclude
-		val specs2Lib 			= "org.specs2"              %% "specs2"               % specs2Version  			% "test" logScalaExclude
+		val akkaTestkit 		= "com.typesafe.akka"       %% "akka-testkit"       % akka 				% "test" logScalaExclude
+		val junitLib 				= "junit"                   %  "junit"              % junit    		% "test"
+		val restAssuredLib 	= "com.jayway.restassured"  %  "rest-assured"       % restAssured  % "test"
+		val scalatestLib 		= "org.scalatest"           %% "scalatest"      		% scalatest   	% "test" logScalaExclude
+		val scalacheckLib 	= "org.scalacheck"          %% "scalacheck"         % scalacheck  	% "test" logScalaExclude
+		val sprayTestkitLib = "io.spray" 			          %% "spray-testkit" 	    % sprayTestkit % "test" logScalaExclude
+		val specs2Lib 			= "org.specs2"              %% "specs2"             % specs2  			% "test" logScalaExclude
 	}
 
 	import Dependencies.Compile._
 	import Dependencies.Test._
 
 	val scalaLibs: Seq[ModuleID]             = Seq(scalaCompiler, scalaLibrary)
-	val akkaLibs: Seq[ModuleID]              = Seq(akkaActor, akkaCluster, akkaSlf4j, logbackClassic)
+	val akkaLibs: Seq[ModuleID]              = Seq(akkaActor, akkaClusterLib, akkaSlf4j, logbackClassic)
 	val sprayLibs: Seq[ModuleID]             = Seq(sprayCan, sprayRouting, sprayClient, sprayHttp, sprayHttpx, sprayJsonLib)
 	val kafkaLibs: Seq[ModuleID]             = Seq(kafkaLib)
-	val functionalLibs: Seq[ModuleID]        = Seq(scalaIOCore, scalaIOFile, scalazLib, shapelessLib)
+	val functionalLibs: Seq[ModuleID]        = Seq(scalaIOCoreLib, scalaIOFileLib, scalazLib, shapelessLib)
 
+	val slickLibs : Seq[ModuleID]						 = Seq(slickLib , slickPGLib, slickPG_jodaTimeLib)
 	val utilLibs: Seq[ModuleID]              = Seq(
-		commonsLang3Lib, commonsCodecLib, playJsonLib, jacksonDatabindLib, jacksonModuleScalaLib, jasyptLib
+		commonsLang3Lib, commonsCodecLib, playJsonLib, jacksonDatabindLib, jacksonModuleScalaLib, jasyptLib, scalateLib, axisLib, jaxrpcLib, wss4jLib, ninbusLib, jsonTokenLib
 	)
-
-	val moduleCommonLibs: Seq[ModuleID]      = Seq(scalateLib, axisLib, jaxrpc, wss4j)
-	val modulePersistenceLibs: Seq[ModuleID] = Seq(slickLib, postgresqlLib , c3p0Lib , slickPGLib, slickPG_jodaTimeLib, ojdbc)
-	val moduleService: Seq [ModuleID] = Seq(recaptcha4j, ninbus, jsonToken)
+  
+  val modulePersistenceLibs: Seq[ModuleID] = Seq(postgresqlLib , c3p0Lib, ojdbcLib) ++ slickLibs
+	val moduleService: Seq [ModuleID] = Seq(recaptcha4jLib)
 	val testLibs: Seq[ModuleID] = Seq(akkaTestkit, sprayTestkitLib, scalatestLib, junitLib, restAssuredLib, scalacheckLib, specs2Lib)
 }
