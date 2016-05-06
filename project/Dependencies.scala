@@ -95,17 +95,17 @@ object Dependencies {
 		val shapelessLib 			= "com.chuusai"				      		   %% "shapeless" 		   		 	% shapeless logScalaExclude
     
 		val commonsCodecLib = "commons-codec" 			    			  % "commons-codec" 	    		% apacheCodec 
-		val discoveryLib 			= "commons-discovery" 						  % "commons-discovery" 			%	commonsDiscovery
-		val wsdl4jLib					= "wsdl4j"												  % "wsdl4j"									%	wsdl4j 
-		val jaxrpcLib 					= "javax.xml"               			  % "jaxrpc-api"          		% jaxrpc 
+		val discoveryLib 		= "commons-discovery" 						  % "commons-discovery" 			%	commonsDiscovery
+		val wsdl4jLib				= "wsdl4j"												  % "wsdl4j"									%	wsdl4j
+		val jaxrpcLib 			= "javax.xml"               			  % "jaxrpc-api"          		% jaxrpc
 
-		val ojdbcLib 					= "oracle"					        			 % "ojdbc"				      		% ojdbc 
+		val ojdbcLib 				= "oracle"					        			 	% "ojdbc"				      		% ojdbc
 
-		val playJsonLib 					= "com.typesafe.play" 		       	%% "play-json" 			    	  % playJson jodaTimeExclusions
+		val playJsonLib 					= "com.typesafe.play" 		       	%% "play-json" 			    	  % playJson
 		val jacksonDatabindLib 		= "com.fasterxml.jackson.core"    % "jackson-databind" 		    % jacksonDataBind 
 		val jacksonModuleScalaLib = "com.fasterxml.jackson.module" 	%% "jackson-module-scala" 	% jacksonModuleScala jacksonExclude
-		val jsonTokenLib 						= "com.googlecode.jsontoken" 			% "jsontoken" 							% jsonToken jodaTimeExclusions
-		val ninbusLib 								= "com.nimbusds"									% "nimbus-jose-jwt" 				% ninbus 
+		val jsonTokenLib 					= "com.googlecode.jsontoken" 			% "jsontoken" 							% jsonToken
+		val ninbusLib 						= "com.nimbusds"									% "nimbus-jose-jwt" 				% ninbus
 		val jasyptLib 						= "org.jasypt" 										% "jasypt" 									% jasypt 
 		val kafkaLib 							= "org.apache.kafka" 							% "kafka_2.10" 							% kafka kafkaExclusions
 
