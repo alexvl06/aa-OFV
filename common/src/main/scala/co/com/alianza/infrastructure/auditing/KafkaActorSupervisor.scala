@@ -6,7 +6,7 @@ import akka.actor.{ Actor, ActorLogging, Props }
 import akka.routing.RoundRobinPool
 import co.com.alianza.exceptions.{ AlianzaException, TechnicalLevel }
 import co.com.alianza.infrastructure.auditing.AuditingMessages.AuditRequest
-import co.com.alianza.util.json.JsonUtil
+//import co.com.alianza.util.json.JsonUtil
 import com.typesafe.config.{ Config, ConfigFactory }
 import kafka.producer.{ KeyedMessage, ProducerConfig, Producer }
 
