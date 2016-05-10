@@ -1,17 +1,17 @@
 package co.com.alianza.persistence.repositories
 
 import co.com.alianza.persistence.entities.ReglasContrasenas
-import com.typesafe.config.{ConfigFactory, Config}
+import com.typesafe.config.{ ConfigFactory, Config }
 import org.scalatest.FunSuite
 
 import scala.concurrent.Await
-import scala.util.{Failure, Success, Try}
+import scala.util.{ Failure, Success, Try }
 import co.com.alianza.util.ConfigApp
 
 /**
  * Created by david on 12/06/14.
  */
-class ReglasContrasenasRepositoryTest extends FunSuite{
+class ReglasContrasenasRepositoryTest extends FunSuite {
 
   implicit val conf: Config = ConfigApp.conf
   import scala.concurrent.duration._

@@ -27,6 +27,7 @@ import scalaz.{ Success => zSuccess, Failure => zFailure }
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.commons.enumerations.{ PermisosFideicomisosCoreAlianza, TiposCliente }
 import co.com.alianza.infrastructure.anticorruption.clientes.{ DataAccessAdapter => ClDataAdapter }
+import scalaz.Validation.FlatMap._
 
 /**
  * Created by manuel on 8/01/15.
