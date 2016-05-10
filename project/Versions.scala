@@ -6,7 +6,7 @@
 
 object Versions {
 
-  val commonScalaVersion: String         = "2.11.8"
+  val commonScalaVersion: String  = "2.11.8"
   val akka: String                = "2.3.15" // Akka 2.4.4 necesita de java 8 (java.util.concurrent)
   val akkaLogback: String         = "1.1.7"
   val akkaCluster: String         = "2.3.15"
@@ -43,7 +43,7 @@ object Versions {
   val ojdbc: String               = "6"
   val wsdl4j: String              = "1.4"
   val wss4j: String               = "1.6.19"
-  val scalate: String             = "1.6.1"
+  val scalate: String             = "1.7.1"
 
   //subProject Persistence
   val c3p0: String                = "0.9.1.2"

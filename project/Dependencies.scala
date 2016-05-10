@@ -82,6 +82,8 @@ object Dependencies {
 		val akkaSlf4j 						= "com.typesafe.akka" 	    		 	 %% "akka-slf4j"       					% akka logScalaExclude
 		val akkaClusterLib 				= "com.typesafe.akka"     			 	  % "akka-cluster_2.11"       	% akkaCluster nettyExclude
 
+		val kafkaLib 							= "org.apache.kafka" 							 %% "kafka" 										% kafka kafkaExclusions
+
 		val sprayCan 							= "io.spray"           		  			 %% "spray-can"    		  		  	% spray logScalaExclude
 		val sprayRouting 					= "io.spray"           		  			 %% "spray-routing-shapeless2"	% spray logScalaExclude
 		val sprayClient 					= "io.spray"           		  			 %% "spray-client"   				  	% spray logScalaExclude
@@ -98,8 +100,8 @@ object Dependencies {
 
 		val scalaIOCoreLib 				= "com.github.scala-incubator.io"  %% "scala-io-core" 						% scalaio logScalaExclude
 		val scalaIOFileLib 				= "com.github.scala-incubator.io"  %% "scala-io-file" 						% scalaio logScalaExclude
-		val scalazLib 	  				= "org.scalaz"				      			 %%  "scalaz-core" 							% scalaz logScalaExclude
-		val scalateLib		    		= "org.fusesource.scalate"      	  % "scalate-core_2.10" 				% scalate
+		val scalazLib 	  				= "org.scalaz"				      			 %% "scalaz-core" 							% scalaz logScalaExclude
+		val scalateLib		    		= "org.scalatra.scalate"	      	 %% "scalate-core" 							% scalate logScalaExclude
 		val shapelessLib 					= "com.chuusai"				      		   %% "shapeless" 		   		 			% shapeless logScalaExclude
 
 		val commonsCodecLib 			= "commons-codec" 			    			  % "commons-codec" 	    			% apacheCodec
@@ -115,7 +117,6 @@ object Dependencies {
 		val jsonTokenLib 					= "com.googlecode.jsontoken" 				% "jsontoken" 								% jsonToken
 		val ninbusLib 						= "com.nimbusds"										% "nimbus-jose-jwt" 					% ninbus
 		val jasyptLib 						= "org.jasypt" 											%	"jasypt" 										% jasypt
-		val kafkaLib 							= "org.apache.kafka" 							 %% "kafka" 										% kafka kafkaExclusions
 
 		val slickLib 							= "com.typesafe.slick" 						 %% "slick"                 		% slick log4jExclude
 		val postgresqlLib 				= "postgresql"          					 	% "postgresql"             		% postgreSql
