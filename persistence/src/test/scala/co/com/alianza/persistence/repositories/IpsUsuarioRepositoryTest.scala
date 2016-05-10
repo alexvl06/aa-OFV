@@ -1,10 +1,10 @@
 package co.com.alianza.persistence.repositories
 
-import com.typesafe.config.{ConfigFactory, Config}
+import com.typesafe.config.{ ConfigFactory, Config }
 import org.scalatest.FunSuite
 
 import scala.concurrent.Await
-import scala.util.{Failure, Success, Try}
+import scala.util.{ Failure, Success, Try }
 import scala.util.Random
 import co.com.alianza.persistence.entities.IpsUsuario
 import co.com.alianza.util.ConfigApp
@@ -12,7 +12,7 @@ import co.com.alianza.util.ConfigApp
 /**
  * Created by david on 12/06/14.
  */
-class IpsUsuarioRepositoryTest extends FunSuite{
+class IpsUsuarioRepositoryTest extends FunSuite {
 
   implicit val conf: Config = ConfigApp.conf
   import scala.concurrent.duration._
@@ -73,7 +73,7 @@ class IpsUsuarioRepositoryTest extends FunSuite{
     val repo = new IpsUsuarioRepository()
 
     Try {
-      Await.result(repo.guardar(IpsUsuario(2, Random.nextInt(500)+ "")), 60 seconds)
+      Await.result(repo.guardar(IpsUsuario(2, Random.nextInt(500) + "")), 60 seconds)
     } match {
       case Success(response) =>
         println("============= TEST IpsUsuarioRepository OK - Success =============")

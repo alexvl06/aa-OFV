@@ -1,81 +1,86 @@
-
-import Dependencies._
-import Versions._
 import com.timushev.sbt.updates.UpdatesKeys
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import de.johoop.jacoco4sbt.JacocoPlugin.jacoco
 import org.scalastyle.sbt.ScalastylePlugin
 import sbt.Keys._
 import sbt._
-import spray.revolver.RevolverPlugin.Revolver
 
+/**
+  * Maneja las configuraciones comunes de la aplicación.
+  */
 object Common {
-  val compileSbtUpdates: TaskKey[Unit] = taskKey[Unit]("compileSbtUpdates")
-  val compileScalariform: TaskKey[Seq[File]] = taskKey[Seq[File]]("compileScalariform")
-  val compileScalastyle: TaskKey[Unit] = taskKey[Unit]("compileScalastyle")
 
+  val customCompile: TaskKey[Unit] = taskKey[Unit]("customCompile")
+
+  private val commonJavaOptions = Seq(
+    "-Xms512m", "-Xmx1G", "-XX:MaxPermSize=256m", "-Djava.awt.headless=true", "-Djava.net.preferIPv4Stack=true", "-XX:+UseCompressedOops",
+    "-XX:+UseConcMarkSweepGC", "-XX:+CMSIncrementalMode", "-XX:+PrintGCDetails", "-XX:+PrintGCTimeStamps"
+  )
+
+  private val commonJavaOptionsCompile = {
+    import Versions._
+    Seq("-source", jdk, "-target", jdk, "-Xlint:unchecked", "-deprecation")
+  }
+
+  private val commonScalacOptions = Seq(s"-target:jvm-${Versions.jdk}", "-encoding", "UTF-8", "-feature", "-unchecked")
+
+  private val commonScalacOptionsCompile = Seq(
+    "-deprecation", // Emit warning and location for usages of deprecated APIs.
+    "-feature", // Emit warning and location for usages of features that should be imported explicitly.
+    "-unchecked", // Enable additional warnings where generated code depends on assumptions.
+    "-Xlint", // Enable recommended additional warnings.
+    "-Ywarn-adapted-args", // Warn if an argument list is modified to match the receiver.
+    "-Ywarn-dead-code",
+    "-Ywarn-value-discard" // Warn when non-Unit expression results are unused.
+  )
+
+  /**
+    * Maven repositories
+    */
+  private val commonResolvers = Seq(
+    Resolver.sonatypeRepo("snapshots"),
+    Resolver.sonatypeRepo("releases"),
+    "Spray.io repository" at "http://repo.spray.io",
+    "Artifactory Alianza" at "http://artifactory.alianza.com.co:8081/artifactory/third-party-libs/"
+  )
+
+  /**
+    * Tareas secuenciales ejecutadas al ejecutar compile.
+    */
+  private val customCompileInit = Def.sequential(
+    UpdatesKeys.dependencyUpdates.in(Compile).toTask,
+    ScalariformKeys.format.in(Compile).toTask,
+    ScalastylePlugin.scalastyle.in(Compile).toTask("")
+  )
+
+  /**
+    * Configuraciones comunes de los módulos.
+    *
+    * Orden alfabético.
+    */
   val commonSettings: Seq[Setting[_]] = jacoco.settings ++ Seq(
-
-    organization := "co.com.alianza.portal.transaccional.autenticacion-autorizacion",
-
-    scalaVersion := commonScalaVersion,
-
     autoScalaLibrary := false,
+
+    compileOrder in Compile := CompileOrder.JavaThenScala,
+
+    customCompile := customCompileInit.value,
+
+    (compile in Compile) <<= (compile in Compile).dependsOn(customCompile),
+
+    fork in Test := true,
+
+    javaOptions ++= commonJavaOptions,
+
+    javaOptions in Compile ++= commonJavaOptionsCompile,
+
+    organization := "co.com.alianza.portal.transaccional.fiduciaria",
 
     resolvers ++= commonResolvers,
 
     scalacOptions ++= commonScalacOptions,
 
-    compileOrder in Compile := CompileOrder.JavaThenScala,
+    scalacOptions in Compile ++= commonScalacOptionsCompile,
 
-    libraryDependencies ++= commonLibraries ++ reactiveLibraries,
-
-    mainClass in Revolver.reStart := Some( "co.com.alianza.app.Boot" ),
-
-    baseDirectory in Revolver.reStart := file("./")
-
-  ) ++ compileTasks
-
-
-  //mainClass in Revolver.reStart := Some( "co.com.alianza.app.Boot" )
-
-  //baseDirectory in Revolver.reStart := file("./")
-
-  //EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource
-
-  //EclipseKeys.projectFlavor := EclipseProjectFlavor.Scala
-
-  /**
-    * scalac arguments
-    **/
-  private def commonScalacOptions = Seq("-unchecked", "-deprecation", "-Xlint", "-Ywarn-dead-code", "-language:_", "-target:jvm-1.7", "-encoding", "UTF-8")
-
-  /**
-    * Maven repositories
-    **/
-
-  /**
-    * Maven repositories
-    **/
-  def commonResolvers = Seq(
-    Resolver.sonatypeRepo("snapshots"),
-    Resolver.sonatypeRepo("releases"),
-    Resolver.typesafeRepo("releases"),
-    "Sonatype Snapshots"  at "http://oss.sonatype.org/content/repositories/snapshots",
-    "Sonatype Releases"   at "http://oss.sonatype.org/content/repositories/releases",
-    "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/",
-    "Spray.io repository" at "http://repo.spray.io",
-    "artifactory alianza" at "http://artifactory.alianza.com.co:8081/artifactory/third-party-libs/",
-    "maven repository"    at "http://repo1.maven.org/maven2/"
-  )
-
-
-  private def compileTasks: Seq[Setting[_]] = Seq(
-    compileSbtUpdates := UpdatesKeys.dependencyUpdates.in(Compile).toTask.value,
-    compileScalariform := ScalariformKeys.format.in(Compile).toTask.value,
-    compileScalastyle := ScalastylePlugin.scalastyle.in(Compile).toTask("").value,
-    compileScalariform <<= compileScalariform dependsOn compileSbtUpdates,
-    compileScalastyle <<= compileScalastyle dependsOn compileScalariform,
-    (compile in Compile) <<= (compile in Compile) dependsOn compileScalastyle
+    scalaVersion := Versions.scala
   )
 }

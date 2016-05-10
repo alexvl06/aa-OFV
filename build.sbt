@@ -7,20 +7,15 @@ val appSettings: Seq[Setting[_]] = commonSettings ++  Seq(
 
   mainClass in Revolver.reStart := Option("co.com.alianza.app.Boot"),
 
-  mainClass in (Compile, run) := Option( "co.com.alianza.app.Boot" )
+  mainClass in (Compile, run) := Option("co.com.alianza.app.Boot")
 )
 
 val dependsOnTest = "test->test;compile->compile"
 
 val common = project in file("common")
 
-val persistence = (project in file("persistence"))
-  .dependsOn(common % dependsOnTest)
+val persistence = (project in file("persistence")).aggregate(common).dependsOn(common % dependsOnTest)
 
-val services = (project in file("services"))
-  .dependsOn(common % dependsOnTest, persistence % dependsOnTest)
+val services = (project in file("services")).aggregate(persistence).dependsOn(persistence % dependsOnTest)
 
-val root = (project in file("."))
-  .aggregate(common, persistence, services)
-  .dependsOn(common, persistence, services)
-  .settings(appSettings: _*)
+val root = (project in file(".")).aggregate(services).dependsOn(services).settings(appSettings: _*)

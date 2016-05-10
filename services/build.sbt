@@ -1,12 +1,13 @@
-import Common._
-
-name := "service"
+// ---------------------
+// Settings
+// ---------------------
 
 Common.commonSettings
 
-libraryDependencies ++= {
-  import Dependencies._
-  recaptchaLibs
-}
+name := "service"
 
+libraryDependencies ++= Dependencies.recaptchaLibs
 
+// -----------------------
+// Custom settings
+// -----------------------

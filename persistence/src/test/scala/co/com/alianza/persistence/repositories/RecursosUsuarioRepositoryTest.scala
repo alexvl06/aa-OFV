@@ -1,12 +1,12 @@
 package co.com.alianza.persistence.repositories
 
 import org.scalatest.FunSuite
-import com.typesafe.config.{ConfigFactory, Config}
-import scala.util.{Failure, Success, Try}
+import com.typesafe.config.{ ConfigFactory, Config }
+import scala.util.{ Failure, Success, Try }
 import scala.concurrent.Await
 import scalaz.OptionT
 
-import scalaz.{Failure => zFailure, Success => zSuccess}
+import scalaz.{ Failure => zFailure, Success => zSuccess }
 import co.com.alianza.util.ConfigApp
 
 /**
@@ -19,14 +19,13 @@ class RecursosUsuarioRepositoryTest extends FunSuite {
   import scala.concurrent.duration._
   import scala.concurrent.ExecutionContext.Implicits.global
 
-
   test("UsuariosRepository obtenerUsuarioNumeroIdentificacion") {
 
     val repo = new RecursosPerfilRepository
 
     Try {
 
-       Await.result(repo.obtenerRecursos(84), 60 seconds)
+      Await.result(repo.obtenerRecursos(84), 60 seconds)
 
     } match {
       case Success(response) =>

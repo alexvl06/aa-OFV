@@ -18,6 +18,7 @@ import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.DataAcc
 import co.com.alianza.util.clave.{ ValidarClave, ErrorValidacionClave, Crypto }
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => UsDataAdapter }
+import scalaz.Validation.FlatMap._
 
 /**
  * Created by S4N on 16/12/14.
