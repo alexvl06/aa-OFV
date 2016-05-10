@@ -16,6 +16,7 @@ import co.com.alianza.infrastructure.dto.UsuarioEmpresarialAdmin
 import co.com.alianza.infrastructure.messages.ErrorMessage
 import enumerations.{ EstadosUsuarioEnum, EstadosEmpresaEnum, PerfilesUsuario }
 import co.com.alianza.exceptions.PersistenceException
+import scalaz.Validation.FlatMap._
 
 /**
  * Created by josegarcia on 30/01/15.

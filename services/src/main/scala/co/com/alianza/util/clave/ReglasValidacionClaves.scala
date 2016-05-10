@@ -9,6 +9,7 @@ import enumerations.{ PerfilesUsuario, AppendPasswordUser }
 import scala.concurrent.{ Await, ExecutionContext, Future }
 import scalaz.{ Success => zSuccess, Failure => zFailure, Validation }
 import scalaz.std.AllInstances._
+import scalaz.Validation.FlatMap._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
