@@ -4,7 +4,10 @@ import sbt.Keys._
 // Settings
 // ---------------------
 
+aggregate in assembly := false
+
 assemblyMergeStrategy in assembly := {
+  case "reference.conf" => MergeStrategy.concat
   case PathList("com", "github", "tminglei", "slickpg", xs@_*) => MergeStrategy.first
   case PathList("com", "sun", "mail", "smtp", xs@_*) => MergeStrategy.first
   case PathList("org", "postgresql", xs@_*) => MergeStrategy.first
@@ -13,8 +16,6 @@ assemblyMergeStrategy in assembly := {
     case ("mailcap" :: Nil) => MergeStrategy.first
     case _ => MergeStrategy.discard
   }
-
-  case "reference.conf" => MergeStrategy.concat
 
   case x =>
     val oldStrategy = (assemblyMergeStrategy in assembly).value
