@@ -31,4 +31,21 @@ class ClienteRepository(implicit executionContext: ExecutionContext) extends Ali
     buildSpResponse(conn, callableStatement, 4)
   }
 
+  def consultaGrupo(idGrupo: Int): Future[Validation[PersistenceException, String]] = loan {
+    connection =>
+      connection.setAutoCommit(false)
+      val operation: Try[String] = executeGrupoSP(connection, idGrupo)
+      resolveTry(connection, operation, "Consulta Grupo por id del grupo.")
+  }
+
+  private def executeGrupoSP(conn: Connection, idGrupo: Int) = Try {
+    val callString = "{ call sf_qportal_web.validar_grupo_cliente(?,?,?,?) }"
+    val callableStatement = conn prepareCall callString
+    callableStatement registerOutParameter (1, OracleTypes.VARCHAR)
+    callableStatement registerOutParameter (2, OracleTypes.VARCHAR)
+    callableStatement.setInt(3, idGrupo)
+    callableStatement registerOutParameter (4, OracleTypes.CURSOR)
+    buildSpResponse(conn, callableStatement, 4)
+  }
+
 }

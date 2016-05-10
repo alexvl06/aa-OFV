@@ -108,6 +108,8 @@ class AlianzaCoreRepository(implicit val executionContex: ExecutionContext) {
 
         result.toString()
 
+      case r: String => r
+
       case _ =>
         val codeError = callableStatement getObject 1
         val detailError = callableStatement getObject 2
