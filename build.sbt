@@ -1,13 +1,11 @@
-import Common._
-import sbt.Keys._
 import sbt._
+import Keys._
+import Common._
 
 val appSettings: Seq[Setting[_]] = commonSettings ++  Seq(
-  aggregate in assembly := false,
-
   name := "fiduciaria-autenticacion-autorizacion",
 
-  mainClass in reStart := Option("co.com.alianza.app.Boot"),
+  mainClass in Revolver.reStart := Option("co.com.alianza.app.Boot"),
 
   mainClass in (Compile, run) := Option( "co.com.alianza.app.Boot" )
 )
