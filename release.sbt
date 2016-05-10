@@ -16,5 +16,8 @@ publishTo := {
   }
 }
 
-
 //credentials += Credentials(Path.userHome / ".alianza" / ".credentials")
+
+// -----------------------
+// Custom settings
+// -----------------------
