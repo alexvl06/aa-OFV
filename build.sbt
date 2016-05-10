@@ -19,5 +19,3 @@ val persistence = (project in file("persistence")).aggregate(common).dependsOn(c
 val services = (project in file("services")).aggregate(persistence).dependsOn(persistence % dependsOnTest)
 
 val root = (project in file(".")).aggregate(services).dependsOn(services).settings(appSettings: _*)
-
-// TEST
