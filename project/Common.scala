@@ -8,8 +8,8 @@ import Versions._
 
 object Common {
   /**
-   * Tareas secuenciales ejecutadas al correr compile.
-   */
+    * Tareas secuenciales ejecutadas al correr compile.
+    */
   val customCompile: TaskKey[Unit] = taskKey[Unit]("customCompile")
 
   private val commonResolvers = Seq(
