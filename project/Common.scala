@@ -4,41 +4,60 @@ import de.johoop.jacoco4sbt.JacocoPlugin.jacoco
 import org.scalastyle.sbt.ScalastylePlugin
 import sbt.Keys._
 import sbt._
-import Versions._
 
+/**
+  * Maneja las configuraciones comunes de la aplicación.
+  */
 object Common {
-  /**
-   * Tareas secuenciales ejecutadas al correr compile.
-   */
+
   val customCompile: TaskKey[Unit] = taskKey[Unit]("customCompile")
 
-  private val commonResolvers = Seq(
-    Resolver.sonatypeRepo("snapshots"),
-    Resolver.sonatypeRepo("releases"),
-    "Spray.io repository" at "http://repo.spray.io",
-    "artifactory alianza" at "http://artifactory.alianza.com.co:8081/artifactory/third-party-libs/",
-    "maven repository"    at "http://repo1.maven.org/maven2/"
-  )
-
   private val commonJavaOptions = Seq(
-    "-Xms512m", "-Xmx1G", "-Djava.awt.headless=true", "-Djava.net.preferIPv4Stack=true", "-XX:+UseCompressedOops", "-XX:+UseConcMarkSweepGC",
-    "-XX:+CMSIncrementalMode", "-XX:+PrintGCDetails", "-XX:+PrintGCTimeStamps", "-feature"
+    "-Xms512m", "-Xmx1G", "-XX:MaxPermSize=256m", "-Djava.awt.headless=true", "-Djava.net.preferIPv4Stack=true", "-XX:+UseCompressedOops",
+    "-XX:+UseConcMarkSweepGC", "-XX:+CMSIncrementalMode", "-XX:+PrintGCDetails", "-XX:+PrintGCTimeStamps"
   )
 
   private val commonJavaOptionsCompile = {
     import Versions._
-    Seq("-source", jdkVersion, "-target", jdkVersion, "-Xlint:unchecked", "-Xlint:deprecation", "-feature")
+    Seq("-source", jdk, "-target", jdk, "-Xlint:unchecked", "-deprecation")
   }
 
-  private val commonScalacOptions = Seq("-unchecked", "-deprecation", "-Xlint", "-Ywarn-dead-code", "-language:_", "-target:jvm-1.7", "-encoding", "UTF-8")
+  private val commonScalacOptions = Seq(s"-target:jvm-${Versions.jdk}", "-encoding", "UTF-8", "-feature", "-unchecked")
 
+  private val commonScalacOptionsCompile = Seq(
+    "-deprecation", // Emit warning and location for usages of deprecated APIs.
+    "-feature", // Emit warning and location for usages of features that should be imported explicitly.
+    "-unchecked", // Enable additional warnings where generated code depends on assumptions.
+    "-Xlint", // Enable recommended additional warnings.
+    "-Ywarn-adapted-args", // Warn if an argument list is modified to match the receiver.
+    "-Ywarn-dead-code",
+    "-Ywarn-value-discard" // Warn when non-Unit expression results are unused.
+  )
+
+  /**
+    * Maven repositories
+    */
+  private val commonResolvers = Seq(
+    Resolver.sonatypeRepo("snapshots"),
+    Resolver.sonatypeRepo("releases"),
+    "Spray.io repository" at "http://repo.spray.io",
+    "Artifactory Alianza" at "http://artifactory.alianza.com.co:8081/artifactory/third-party-libs/"
+  )
+
+  /**
+    * Tareas secuenciales ejecutadas al ejecutar compile.
+    */
   private val customCompileInit = Def.sequential(
     UpdatesKeys.dependencyUpdates.in(Compile).toTask,
     ScalariformKeys.format.in(Compile).toTask,
     ScalastylePlugin.scalastyle.in(Compile).toTask("")
   )
 
-
+  /**
+    * Configuraciones comunes de los módulos.
+    *
+    * Orden alfabético.
+    */
   val commonSettings: Seq[Setting[_]] = jacoco.settings ++ Seq(
     autoScalaLibrary := false,
 
@@ -48,18 +67,20 @@ object Common {
 
     (compile in Compile) <<= (compile in Compile).dependsOn(customCompile),
 
-    fork := true,
+    fork in Test := true,
 
     javaOptions ++= commonJavaOptions,
 
     javaOptions in Compile ++= commonJavaOptionsCompile,
 
-    organization := "co.com.alianza.portal.transaccional.autenticacion-autorizacion",
+    organization := "co.com.alianza.portal.transaccional.fiduciaria",
 
     resolvers ++= commonResolvers,
 
     scalacOptions ++= commonScalacOptions,
 
-    scalaVersion := commonScalaVersion
+    scalacOptions in Compile ++= commonScalacOptionsCompile,
+
+    scalaVersion := Versions.scala
   )
 }
