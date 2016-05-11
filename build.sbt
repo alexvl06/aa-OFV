@@ -2,6 +2,11 @@ import Common._
 import sbt.Keys._
 import sbt._
 
+/**
+  * Configuraciones de la aplicación.
+  *
+  * Orden alfabético.
+  */
 val appSettings: Seq[Setting[_]] = commonSettings ++  Seq(
   name := "fiduciaria-autenticacion-autorizacion",
 
