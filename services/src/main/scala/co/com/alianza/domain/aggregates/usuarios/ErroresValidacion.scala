@@ -16,6 +16,7 @@ case class ErrorFormatoClave(msg: String) extends ErrorValidacion
 case class ErrorPersistence(msg: String, exception: PersistenceException) extends ErrorValidacion
 case class ErrorCaptcha(msg: String) extends ErrorValidacion
 case class ErrorPin(msg: String) extends ErrorValidacion
+case class ErrorCorreo(msg: String) extends ErrorValidacion
 case class ErrorEstadoUsuarioOlvidoContrasena(msg: String) extends ErrorValidacion
 case class ErrorAgenteEmpresarialNoExiste(msg: String) extends ErrorValidacion
 case class ErrorEstadoInvalidoEmpresa(msg: String) extends ErrorValidacion

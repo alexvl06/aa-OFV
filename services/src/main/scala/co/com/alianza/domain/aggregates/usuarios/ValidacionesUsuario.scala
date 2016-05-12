@@ -1,18 +1,15 @@
 package co.com.alianza.domain.aggregates.usuarios
 
 import co.com.alianza.constants.TiposConfiguracion
-import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.infrastructure.anticorruption.configuraciones.DataAccessAdapter
+import co.com.alianza.exceptions.{ ServiceException, PersistenceException }
 import spray.http.StatusCodes._
-
 import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
 import co.com.alianza.infrastructure.messages.{ ResponseMessage, ErrorMessage, UsuarioMessage }
-import co.com.alianza.persistence.messages.ConsultaClienteRequest
 import scala.concurrent.{ ExecutionContext, Future }
 import co.com.alianza.infrastructure.dto.{ Configuracion, Cliente, Usuario }
 import co.com.alianza.infrastructure.anticorruption.clientes.{ DataAccessAdapter => DataAccessAdapterCliente }
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => DataAccessAdapterUsuario }
-import co.com.alianza.infrastructure.anticorruption.configuraciones.{ DataAccessTranslator => dataAccessTransConf, DataAccessAdapter => dataAccesAdaptarConf }
+import co.com.alianza.infrastructure.anticorruption.configuraciones.{ DataAccessAdapter => dataAccesAdaptarConf }
 
 import enumerations.{ PerfilesUsuario, TipoIdentificacion, EstadosCliente }
 
@@ -21,7 +18,7 @@ import scalaz.Validation.FlatMap._
 import co.com.alianza.util.clave.{ Crypto, ErrorValidacionClave, ValidarClave }
 import co.com.alianza.util.captcha.ValidarCaptcha
 import co.com.alianza.app.MainActors
-import com.typesafe.config.{ ConfigFactory, Config }
+import com.typesafe.config.{ Config }
 
 /**
  *
@@ -186,6 +183,10 @@ object ValidacionesUsuario {
 
   def toErrorValidation[T](futuro: Future[Validation[PersistenceException, T]]): Future[Validation[ErrorValidacion, T]] = {
     futuro.map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
+  }
+
+  def toErrorValidationCorreo[T](futuro: Future[Validation[ServiceException, T]]): Future[Validation[ErrorValidacion, T]] = {
+    futuro.map(_.leftMap(ps => ErrorCorreo("Error enviando correo")))
   }
 
   private val errorUsuarioExiste = ErrorMessage("409.1", "Usuario ya existe", "Usuario ya existe").toJson

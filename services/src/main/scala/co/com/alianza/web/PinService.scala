@@ -35,7 +35,8 @@ class PinService extends Directives with AlianzaCommons with CrossHeaders {
                 post {
                   clientIP {
                     ip =>
-                      mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.cambioContrasenaCorreoClienteIndividualIndex, ip.value, kafkaActor, userPw.copy(pw = null))) {
+                      mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic,
+                        AuditingHelper.cambioContrasenaCorreoClienteIndividualIndex, ip.value, kafkaActor, userPw.copy(pw = ""))) {
                         requestExecute(CambiarPw(pin, userPw.pw), pinActor)
                       }
                   }
@@ -52,7 +53,8 @@ class PinService extends Directives with AlianzaCommons with CrossHeaders {
                 post {
                   clientIP {
                     ip =>
-                      mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.cambioContrasenaCorreoClienteAdministradorIndex, ip.value, kafkaActor, userPw.copy(pw = null))) {
+                      mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic,
+                        AuditingHelper.cambioContrasenaCorreoClienteAdministradorIndex, ip.value, kafkaActor, userPw.copy(pw = ""))) {
                         requestExecute(CambiarPw(pin, userPw.pw), pinUsuarioEmpresarialAdminActor)
                       }
                   }

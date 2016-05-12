@@ -60,9 +60,9 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
       val currentSender = sender
       val permisosEncargos = encargosPermisos flatMap { e => e.permisos.map(p => p.copy(permiso = p.permiso.map { _.copy(idEncargo = e.wspf_plan, idAgente = idAgente) })) }
       numeroPermisos = permisosGenerales.length + permisosEncargos.length
-      if (numeroPermisos == 0)
+      if (numeroPermisos == 0) {
         self ! RestaVerificacionMessage(currentSender)
-      else {
+      } else {
         permisosGenerales foreach { p => self ! ((p, idClienteAdmin, currentSender): (Permiso, Option[Int], ActorRef)) }
         permisosEncargos foreach { p => self ! ((p, idClienteAdmin, currentSender): (PermisoTransaccionalUsuarioEmpresarialAgentes, Option[Int], ActorRef)) }
       }
@@ -107,7 +107,8 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
           permisosFuture,
           { (listaPermisos: List[Int]) =>
             context stop self
-            PermisosLoginRespuesta(listaPermisos.contains(2), listaPermisos.contains(4), listaPermisos.contains(3), listaPermisos.contains(1), listaPermisos.contains(6), listaPermisos.contains(7), tienePermisosPagosMasivosFidCore).toJson
+            PermisosLoginRespuesta(listaPermisos.contains(2), listaPermisos.contains(4), listaPermisos.contains(3),
+              listaPermisos.contains(1), listaPermisos.contains(6), listaPermisos.contains(7), tienePermisosPagosMasivosFidCore).toJson
           }, errorValidacion, currentSender
         )
       } else {

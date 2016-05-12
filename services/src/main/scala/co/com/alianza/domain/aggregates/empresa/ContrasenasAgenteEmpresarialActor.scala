@@ -110,7 +110,7 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
       val currentSender = sender()
       val reiniciarContrasenaAgenteEmpresarialFuture = (for {
         idUsuarioAgenteEmpresarial <- ValidationT(validacionAgenteEmpresarial(message.numIdentificacionAgenteEmpresarial, message.correoUsuarioAgenteEmpresarial, message.tipoIdentiAgenteEmpresarial, message.idClienteAdmin.get))
-        idEjecucion <- ValidationT(CambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial, EstadosEmpresaEnum.pendienteReiniciarContrasena))
+        idEjecucion <- ValidationT(cambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial, EstadosEmpresaEnum.pendienteReiniciarContrasena))
         numHorasCaducidad <- ValidationT(validacionConsultaTiempoExpiracion())
       } yield {
         (idUsuarioAgenteEmpresarial, idEjecucion, numHorasCaducidad)
@@ -264,7 +264,7 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
     DataAccessAdapter.actualizarContrasenaAgenteEmpresarial(pw_nuevo, usuario.get.id).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
   }
 
-  private def CambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa): Future[Validation[ErrorValidacionEmpresa, Int]] = {
+  private def cambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa): Future[Validation[ErrorValidacionEmpresa, Int]] = {
     DataAccessAdapter.cambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial, estado).map(_.leftMap(pe => ErrorPersistenceEmpresa(pe.message, pe)))
   }
 

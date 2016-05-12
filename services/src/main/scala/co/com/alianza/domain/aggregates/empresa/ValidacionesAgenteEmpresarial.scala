@@ -69,6 +69,7 @@ object ValidacionesAgenteEmpresarial {
       (x: Option[Configuracion]) =>
         x match {
           case Some(c) => zSuccess(c)
+          case _ => zFailure(ErrorInterno("error encontrando las configuraciones"))
         }
     })
   }
@@ -134,12 +135,12 @@ object ValidacionesAgenteEmpresarial {
   /**
    * Valida si el cliente ya se encuentra registrado un cliente administrador con el mismo usuario
    */
-  def validarUsuarioClienteAdmin(nit: String, usuario: String): Future[Validation[ErrorValidacion, Unit.type]] =
+  def validarUsuarioClienteAdmin(nit: String, usuario: String): Future[Validation[ErrorValidacion, Boolean]] =
     CliAdmDataAccessAdapter obtieneClientePorNitYUsuario (nit, usuario) map {
       _ leftMap { e => ErrorPersistence(e.message, e) } flatMap {
         u: Option[UsuarioEmpresarialAdmin] =>
           u match {
-            case None => zSuccess(Unit)
+            case None => zSuccess(true)
             case Some(_) => zFailure(ErrorUsuarioClienteAdmin(errorUsuarioClienteAdmin))
           }
       }
@@ -151,12 +152,12 @@ object ValidacionesAgenteEmpresarial {
    * @param usuario
    * @return
    */
-  def validarUsuarioAgente(idUsuario: Int, nit: String, usuario: String): Future[Validation[ErrorValidacion, Unit.type]] =
+  def validarUsuarioAgente(idUsuario: Int, nit: String, usuario: String): Future[Validation[ErrorValidacion, Boolean]] =
     DataAccessAdapterUsuarioAE existeUsuarioEmpresarialPorUsuario (idUsuario: Int, nit, usuario) map {
       _ leftMap { e => ErrorPersistence(e.message, e) } flatMap {
         existe: Boolean =>
           existe match {
-            case false => zSuccess(Unit)
+            case false => zSuccess(true)
             case true => zFailure(ErrorUsuarioClienteAdmin(errorUsuarioClienteAdmin))
           }
       }
