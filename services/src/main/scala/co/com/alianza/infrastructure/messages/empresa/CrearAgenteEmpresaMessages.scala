@@ -36,8 +36,8 @@ case class CrearAgenteMessage(
 }
 
 case class ActualizarAgenteMessage(
-  id: Long,
-  nit: String,
+  id: Int,
+  nit: Option[String],
   usuario: String,
   nombre: String,
   cargo: String,

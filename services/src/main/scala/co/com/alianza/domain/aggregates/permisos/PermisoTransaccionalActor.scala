@@ -49,6 +49,7 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
 
   implicit val _: ExecutionContext = context.dispatcher
   implicit val timeout: Timeout = 120 seconds
+  import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.errorValidacion
 
   var numeroPermisos = 0
 
@@ -70,13 +71,13 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
       val future = (for {
         result <- ValidationT(DataAccessAdapter guardaPermiso (permiso.permisoAgente.get, permiso.autorizadores.map(_.map(_.id)), idClienteAdmin.get))
       } yield result).run
-      resolveFutureValidation(future, (x: Int) => RestaVerificacionMessage(currentSender), self)
+      resolveFutureValidation(future, (x: Int) => RestaVerificacionMessage(currentSender), errorValidacion, self)
 
     case (permisoAgentes: PermisoTransaccionalUsuarioEmpresarialAgentes, idClienteAdmin: Option[Int], currentSender: ActorRef) =>
       val future = (for {
         result <- ValidationT(DataAccessAdapter guardaPermisoEncargo (permisoAgentes.permiso.get, permisoAgentes.agentes.map(_.map(_.id)), idClienteAdmin.get))
       } yield result).run
-      resolveFutureValidation(future, (x: Int) => RestaVerificacionMessage(currentSender), self)
+      resolveFutureValidation(future, (x: Int) => RestaVerificacionMessage(currentSender), errorValidacion, self)
 
     case RestaVerificacionMessage(currentSender) =>
       numeroPermisos -= 1
@@ -84,7 +85,7 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
         val future = (for {
           result <- ValidationT(Future.successful(Validation.success(ResponseMessage(OK, "Guardado de permisos correcto"))))
         } yield result).run
-        resolveFutureValidation(future, { (x: ResponseMessage) => context stop self; x }, currentSender)
+        resolveFutureValidation(future, { (x: ResponseMessage) => context stop self; x }, errorValidacion, currentSender)
       }
 
     case ConsultarPermisosAgenteMessage(idAgente) =>
@@ -94,8 +95,7 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
         { (x: (List[co.com.alianza.infrastructure.dto.Permiso], List[co.com.alianza.infrastructure.dto.EncargoPermisos])) =>
           context stop self
           PermisosRespuesta(x._1, x._2) toJson
-        },
-        currentSender
+        }, errorValidacion, currentSender
       )
 
     case ConsultarPermisosAgenteLoginMessage(agente, identificacionUsuario) =>
@@ -108,8 +108,7 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
           { (listaPermisos: List[Int]) =>
             context stop self
             PermisosLoginRespuesta(listaPermisos.contains(2), listaPermisos.contains(4), listaPermisos.contains(3), listaPermisos.contains(1), listaPermisos.contains(6), listaPermisos.contains(7), tienePermisosPagosMasivosFidCore).toJson
-          },
-          currentSender
+          }, errorValidacion, currentSender
         )
       } else {
         currentSender ! JsonUtil.toJson(PermisosLoginRespuesta(true, true, true, true, true, true, tienePermisosPagosMasivosFidCore))
@@ -140,6 +139,7 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
       cliente <- ValidationT(obtenerClienteSP(numeroIdentificacion))
 
     } yield cliente).run
+    //TODO: Await ???
     val extraccionFuturo = Await.result(cliente, 8 seconds)
     extraccionFuturo match {
       case zSuccess(cliente) =>

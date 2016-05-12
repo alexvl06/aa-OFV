@@ -3,9 +3,10 @@ package co.com.alianza.domain.aggregates.usuarios
 import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.configuraciones.DataAccessAdapter
+import spray.http.StatusCodes._
 
 import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
-import co.com.alianza.infrastructure.messages.{ ErrorMessage, UsuarioMessage }
+import co.com.alianza.infrastructure.messages.{ ResponseMessage, ErrorMessage, UsuarioMessage }
 import co.com.alianza.persistence.messages.ConsultaClienteRequest
 import scala.concurrent.{ ExecutionContext, Future }
 import co.com.alianza.infrastructure.dto.{ Configuracion, Cliente, Usuario }
@@ -173,6 +174,18 @@ object ValidacionesUsuario {
           case None => zFailure(ErrorPin(errorPin))
         }
     })
+  }
+
+  def errorValidacion(error: Any): Any = {
+    error match {
+      case errorPersistence: ErrorPersistence => errorPersistence.exception
+      case errorVal: ErrorValidacion => ResponseMessage(Conflict, errorVal.msg)
+      case _ => error
+    }
+  }
+
+  def toErrorValidation[T](futuro: Future[Validation[PersistenceException, T]]): Future[Validation[ErrorValidacion, T]] = {
+    futuro.map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
   }
 
   private val errorUsuarioExiste = ErrorMessage("409.1", "Usuario ya existe", "Usuario ya existe").toJson

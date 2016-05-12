@@ -23,7 +23,8 @@ class PreguntasAutovalidacionSupervisor extends Actor with ActorLogging {
   import akka.actor.OneForOneStrategy
   import akka.actor.SupervisorStrategy._
 
-  val preguntasAutovalidacionActor = context.actorOf(Props[PreguntasAutovalidacionActor].withRouter(RoundRobinPool(nrOfInstances = 2)), "preguntasAutovalidacionActor")
+  val preguntasAutovalidacionActor = context.actorOf(Props[PreguntasAutovalidacionActor]
+    .withRouter(RoundRobinPool(nrOfInstances = 2)), "preguntasAutovalidacionActor")
 
   def receive = {
     case message: Any =>
@@ -40,6 +41,7 @@ class PreguntasAutovalidacionSupervisor extends Actor with ActorLogging {
 
 class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaActors with FutureResponse {
   import scala.concurrent.ExecutionContext
+  import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.errorValidacion
   implicit val _: ExecutionContext = context.dispatcher
   private val config: Config = MainActors.conf
 
@@ -49,7 +51,7 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
     case message: ObtenerPreguntasMessage =>
       val currentSender = sender()
       val future: Future[Validation[PersistenceException, List[Pregunta]]] = DataAccessAdapter.obtenerPreguntas()
-      resolveFutureValidation(future, (response: List[Pregunta]) => JsonUtil.toJson(response), currentSender)
+      resolveFutureValidation(future, (response: List[Pregunta]) => JsonUtil.toJson(response), errorValidacion, currentSender)
 
     case message: GuardarRespuestasMessage =>
       val currentSender = sender()

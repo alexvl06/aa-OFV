@@ -1,7 +1,6 @@
 package co.com.alianza.persistence.repositories
 
 import java.sql.Timestamp
-
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.persistence.entities.{ CustomDriver, UsuarioEmpresarial, UsuarioEmpresarialTable, EmpresaTable, UsuarioEmpresarialEmpresaTable }
 import enumerations.EstadosEmpresaEnum
@@ -27,6 +26,14 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
     implicit session =>
       val resultTry = Try { usuariosEmpresariales.filter(_.id === idUsuario).firstOption }
       resolveTry(resultTry, "Obtener agente empresarial por ID ")
+  }
+
+  def existeUsuario(idUsuario: Int, nit: String, usuario: String): Future[Validation[PersistenceException, Boolean]] = loan {
+    implicit session =>
+      val resultTry = Try {
+        usuariosEmpresariales.filter(usu => usu.usuario === usuario && usu.identificacion === nit && usu.id =!= idUsuario).exists.run
+      }
+      resolveTry(resultTry, "Existe agente con mismo usuario pero diferente id ?")
   }
 
   def obtenerUsuarioEmpresarialAdminPorId(idUsuario: Int): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = loan {
@@ -214,14 +221,19 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
 
   /**
    * Actualizar datos agente empresarial
-   * @param agente
+   * @param id
+   * @param usuario
+   * @param correo
+   * @param nombreUsuario
+   * @param cargo
+   * @param descripcion
    * @return
    */
-  def actualizarAgente(agente: UsuarioEmpresarial): Future[Validation[PersistenceException, Int]] = loan {
+  def actualizarAgente(id: Int, usuario: String, correo: String, nombreUsuario: String, cargo: String, descripcion: String): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
       val resultTry = Try {
-        val q = usuariosEmpresariales.filter(_.id === agente.id).map(a => (a.correo, a.usuario, a.nombreUsuario, a.cargo, a.descripcion))
-        q.update(agente.correo, agente.usuario, agente.nombreUsuario, agente.cargo, agente.descripcion)
+        val q = usuariosEmpresariales.filter(_.id === id).map(a => (a.correo, a.usuario, a.nombreUsuario, a.cargo, a.descripcion))
+        q.update(correo, usuario, nombreUsuario, cargo, descripcion)
       }
       resolveTry(resultTry, "Actualizar usuario empresarial agente")
   }

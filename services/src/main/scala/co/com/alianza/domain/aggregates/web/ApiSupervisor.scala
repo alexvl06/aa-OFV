@@ -68,16 +68,19 @@ class ApiSupervisor(r: RequestContext, props: Props, message: MessageService) ex
 
         error.level match {
           case TimeoutLevel =>
-            complete(GatewayTimeout, ErrorMessage("504.1", "Error Timeout", s"Se supero el tiempo de espera").toJson)
+            complete(GatewayTimeout, ErrorMessage("504.1", "Error Timeout", "Se supero el tiempo de espera").toJson)
             Stop
           case TechnicalLevel =>
-            complete(InternalServerError, ErrorMessage("500.1", "Error Tecnico", s"Se genero un error al ejecutar la operación").toJson)
+            complete(InternalServerError, ErrorMessage("500.1", "Error Tecnico", "Se genero un error al ejecutar la operación").toJson)
             Stop
           case BusinessLevel =>
-            complete(InternalServerError, ErrorMessage("500.2", "Error de Negocio", s"Se genero un error al ejecutar la operación").toJson)
+            complete(InternalServerError, ErrorMessage("500.2", "Error de Negocio", "Se genero un error al ejecutar la operación").toJson)
             Stop
           case NetworkLevel =>
-            complete(InternalServerError, ErrorMessage("500.3", "Error Tecnico - Red ", s"Se genero un error al ejecutar la operación. Error estableciendo conexión con los servicios").toJson)
+            complete(InternalServerError, ErrorMessage("500.3", "Error Tecnico - Red ", "Se genero un error al ejecutar la operación. Error estableciendo conexión con los servicios").toJson)
+            Stop
+          case InternalServiceLevel =>
+            complete(InternalServerError, ErrorMessage("500.4", "Error Interno", "Se genero un error").toJson)
             Stop
         }
       }

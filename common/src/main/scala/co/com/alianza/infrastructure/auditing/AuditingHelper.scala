@@ -29,6 +29,7 @@ object AuditingHelper extends AuditingHelper {
   val asignarContrasenaAgenteEmpresarialIndex = "asignar-contrasena-agente-empresarial-fiduciaria"
   val reiniciarContrasenaAgenteEmpresarialIndex = "reiniciar-contrasena-agente-empresarial-fiduciaria"
   val crearAgenteEmpresarialIndex = "crear-agente-empresarial-fiduciaria"
+  val editarAgenteEmpresarialIndex = "editar-agente-empresarial-fiduciaria"
   val bloqueoAgenteEmpresarialIndex = "bloqueo-agente-empresarial-fiduciaria"
   val consultaPermisosAgenteEmpresarialIndex = "consulta-permisos-agente-empresarial-fiduciaria"
   val actualizarPermisosAgenteEmpresarialIndex = "actualizar-permisos-agente-empresarial-fiduciaria"

@@ -5,9 +5,7 @@ package enumerations
  */
 object TipoIdentificacion extends Enumeration {
 
-  protected case class Val(identificador: Int, name: String) extends super.Val(nextId, name) {
-
-  }
+  protected case class Val(identificador: Int, name: String) extends super.Val(nextId, name)
 
   val CEDULA_CUIDADANIA = Val(1, "CC")
   val CEDULA_EXTRANJERIA = Val(2, "CE")

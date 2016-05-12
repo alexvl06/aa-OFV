@@ -2,19 +2,16 @@ package co.com.alianza.domain.aggregates.empresa
 
 import co.com.alianza.app.MainActors
 import co.com.alianza.constants.TiposConfiguracion
-import co.com.alianza.domain.aggregates.empresa.ErrorValidacionEmpresa
 import co.com.alianza.domain.aggregates.usuarios._
 import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{ DataAccessAdapter => DataAccessAdapterUsuarioAE }
-import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{ DataAccessTranslator => CliAdmDataAccessTranslator, DataAccessAdapter => CliAdmDataAccessAdapter }
+import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{ DataAccessAdapter => CliAdmDataAccessAdapter }
 import co.com.alianza.infrastructure.dto.{ Empresa, UsuarioEmpresarial, UsuarioEmpresarialAdmin, Configuracion }
 import co.com.alianza.infrastructure.messages.ErrorMessage
 import enumerations.empresa.EstadosDeEmpresaEnum
-import enumerations.{ EstadosUsuarioEnum, PerfilesUsuario, EstadosEmpresaEnum }
-import co.com.alianza.infrastructure.anticorruption.configuraciones.{ DataAccessTranslator => dataAccessTransConf, DataAccessAdapter => dataAccesAdaptarConf }
-
+import enumerations.{ PerfilesUsuario, EstadosEmpresaEnum }
+import co.com.alianza.infrastructure.anticorruption.configuraciones.{ DataAccessAdapter => dataAccesAdaptarConf }
 import scala.concurrent.{ ExecutionContext, Future }
 import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
-import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.DataAccessAdapter
 import co.com.alianza.util.clave.{ ValidarClave, ErrorValidacionClave, Crypto }
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => UsDataAdapter }
@@ -36,6 +33,7 @@ object ValidacionesAgenteEmpresarial {
     usuarioAgenteEmpresarialFuture.map(_.leftMap(pe => ErrorPersistenceEmpresa(pe.message, pe)).flatMap {
       (idUsuarioAgenteEmpresarial: Option[(Int, Int)]) =>
         idUsuarioAgenteEmpresarial match {
+          //TODO: Cambiar por enums correspondiente
           case Some(x) => x._2 match {
             case 1 => zSuccess(x._1)
             case 3 => zSuccess(x._1)
@@ -51,6 +49,7 @@ object ValidacionesAgenteEmpresarial {
     usuarioAgenteEmpresarialFuture.map(_.leftMap(pe => ErrorPersistenceEmpresa(pe.message, pe)).flatMap {
       (idUsuarioAgenteEmpresarial: Option[(Int, Int)]) =>
         idUsuarioAgenteEmpresarial match {
+          //TODO: Cambiar por enums correspondiente
           case Some(x) => x._2 match {
             case 0 => zSuccess(x)
             case 1 => zSuccess(x)
@@ -79,20 +78,15 @@ object ValidacionesAgenteEmpresarial {
     contrasenaActualFuture.map(_.leftMap(pe => ErrorPersistence(pe.message, pe)).flatMap {
       (x: Option[UsuarioEmpresarial]) =>
         x match {
-          case Some(c) =>
-            zSuccess(x)
-          case None =>
-            zFailure(ErrorContrasenaNoExiste(errorContrasenaActualNoExiste))
-          case _ =>
-            zFailure(ErrorContrasenaNoExiste(errorContrasenaActualNoContempla))
+          case Some(c) => zSuccess(x)
+          case None => zFailure(ErrorContrasenaNoExiste(errorContrasenaActualNoExiste))
+          case _ => zFailure(ErrorContrasenaNoExiste(errorContrasenaActualNoContempla))
         }
     })
   }
 
   def validacionReglasClave(contrasena: String, idUsuario: Int, perfilUsuario: PerfilesUsuario.perfilUsuario): Future[Validation[ErrorValidacion, Unit.type]] = {
-
     val usuarioFuture: Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = ValidarClave.aplicarReglas(contrasena, Some(idUsuario), perfilUsuario, ValidarClave.reglasGenerales: _*)
-
     usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message, pe)).flatMap {
       (x: List[ErrorValidacionClave]) =>
         x match {
@@ -140,14 +134,30 @@ object ValidacionesAgenteEmpresarial {
   /**
    * Valida si el cliente ya se encuentra registrado un cliente administrador con el mismo usuario
    */
-  import scalaz.Validation.FlatMap._
   def validarUsuarioClienteAdmin(nit: String, usuario: String): Future[Validation[ErrorValidacion, Unit.type]] =
     CliAdmDataAccessAdapter obtieneClientePorNitYUsuario (nit, usuario) map {
       _ leftMap { e => ErrorPersistence(e.message, e) } flatMap {
         u: Option[UsuarioEmpresarialAdmin] =>
           u match {
             case None => zSuccess(Unit)
-            case Some(clienteAdmin) => zFailure(ErrorUsuarioClienteAdmin(errorUsuarioClienteAdmin))
+            case Some(_) => zFailure(ErrorUsuarioClienteAdmin(errorUsuarioClienteAdmin))
+          }
+      }
+    }
+
+  /**
+   * Validar usuario
+   * @param idUsuario
+   * @param usuario
+   * @return
+   */
+  def validarUsuarioAgente(idUsuario: Int, nit: String, usuario: String): Future[Validation[ErrorValidacion, Unit.type]] =
+    DataAccessAdapterUsuarioAE existeUsuarioEmpresarialPorUsuario (idUsuario: Int, nit, usuario) map {
+      _ leftMap { e => ErrorPersistence(e.message, e) } flatMap {
+        existe: Boolean =>
+          existe match {
+            case false => zSuccess(Unit)
+            case true => zFailure(ErrorUsuarioClienteAdmin(errorUsuarioClienteAdmin))
           }
       }
     }
