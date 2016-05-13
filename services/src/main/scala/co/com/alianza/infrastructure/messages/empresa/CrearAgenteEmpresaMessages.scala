@@ -39,7 +39,7 @@ case class ActualizarAgenteMessage(
   id: Int,
   nit: Option[String],
   usuario: String,
-  nombre: String,
+  nombreUsuario: String,
   cargo: String,
   correo: String,
   descripcion: String

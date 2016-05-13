@@ -106,7 +106,7 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
       estadoEmpresa <- ValidationT(validarEstadoEmpresa(nit))
       usuarioAdmin <- ValidationT(validarUsuarioClienteAdmin(nit, message.usuario))
       existeUsuario <- ValidationT(validarUsuarioAgente(message.id, nit, message.usuario))
-      actualizar <- ValidationT(toErrorValidation(DataAccessAdapter.actualizarAgenteEmpresarial(message.id, message.usuario, message.correo, message.nombre, message.cargo, message.descripcion)))
+      actualizar <- ValidationT(toErrorValidation(DataAccessAdapter.actualizarAgenteEmpresarial(message.id, message.usuario, message.correo, message.nombreUsuario, message.cargo, message.descripcion)))
     } yield actualizar).run
     resolveFutureValidation(future, (response: Int) => response.toJson, errorValidacion, currentSender)
   }

@@ -31,9 +31,11 @@ class UsuarioEmpresaService extends Directives with AlianzaCommons with CrossHea
                     r: RequestContext =>
                       val token = r.request.headers.find(header => header.name equals "token")
                       val usuario2 = DataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
-                      requestWithFutureAuditing[PersistenceException, AuditParams](r, AuditingHelper.fiduciariaTopic, AuditingHelper.consultaUsuariosEmpresarialesIndex, ip.value, kafkaActor, usuario2, Some(AuditParams(correo, usuario, nombre, estado)))
+                      requestWithFutureAuditing[PersistenceException, AuditParams](r, AuditingHelper.fiduciariaTopic,
+                        AuditingHelper.consultaUsuariosEmpresarialesIndex, ip.value, kafkaActor, usuario2, Some(AuditParams(correo, usuario, nombre, estado)))
                   } {
-                    requestExecute(GetAgentesEmpresarialesMessage(correo.getOrElse(null), usuario.getOrElse(null), nombre.getOrElse(null), estado.get.toInt, user.id), agenteEmpresarialActor)
+                    requestExecute(GetAgentesEmpresarialesMessage(correo.getOrElse(null), usuario.getOrElse(null),
+                      nombre.getOrElse(null), estado.get.toInt, user.id), agenteEmpresarialActor)
                   }
               }
             }
