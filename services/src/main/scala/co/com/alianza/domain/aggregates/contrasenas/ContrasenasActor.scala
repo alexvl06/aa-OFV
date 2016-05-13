@@ -76,7 +76,6 @@ class ContrasenasActor extends Actor with ActorLogging with AlianzaActors {
 
   def receive = {
     case message: InboxMessage => obtenerReglasContrasenas()
-    case message: ActualizarReglasContrasenasMessage => actualizarReglasContrasenas(message.toEntityReglasContrasenas)
 
     case message: CambiarContrasenaMessage =>
       val currentSender = sender()
@@ -138,23 +137,6 @@ class ContrasenasActor extends Actor with ActorLogging with AlianzaActors {
           case zFailure(error) => currentSender ! error
         }
     }
-  }
-
-  def actualizarReglasContrasenas(reglasContrasenas: List[ReglasContrasenas]) = {
-    val currentSender = sender()
-    for (regla <- reglasContrasenas) {
-      val result = DataAccessAdapter.actualizarReglasContrasenas(regla)
-      result onComplete {
-        case sFailure(failure) => currentSender ! failure
-        case sSuccess(value) =>
-          value match {
-            case zSuccess(response: Int) =>
-              currentSender ! ResponseMessage(OK, response.toJson)
-            case zFailure(error) => currentSender ! error
-          }
-      }
-    }
-
   }
 
   private def resolveCambiarContrasenaFuture(CambiarContrasenaFuture: Future[Validation[ErrorValidacion, Int]], currentSender: ActorRef) = {

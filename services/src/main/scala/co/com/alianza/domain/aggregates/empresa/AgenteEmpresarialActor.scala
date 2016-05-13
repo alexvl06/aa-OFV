@@ -122,6 +122,12 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
     resolveFutureValidation(future, (response: List[UsuarioEmpresarialEstado]) => response.toJson, errorValidacion, currentSender)
   }
 
+  /**
+   * Obtener el pin
+   * @param configuracionTiempo
+   * @param idUsuario
+   * @return
+   */
   private def obtenerPinUsuario(configuracionTiempo: Configuracion, idUsuario: Int): Future[Validation[ErrorValidacion, PinEmpresa]] = Future {
     val fechaActual = Calendar.getInstance()
     val usoPin = UsoPinEmpresaEnum.creacionAgenteEmpresarial.id
@@ -131,11 +137,31 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
     zSuccess(pin)
   }
 
+  /**
+   * Enviar correo
+   * @param pin
+   * @param confTiempo
+   * @param plantilla
+   * @param asunto
+   * @param usuario
+   * @param correo
+   * @return
+   */
   private def enviarCorreoPin(pin: PinEmpresa, confTiempo: Configuracion, plantilla: String, asunto: String, usuario: String, correo: String): Future[Validation[ErrorValidacion, Int]] = {
     val message = buildMessage(pin, confTiempo.valor.toInt, plantilla, asunto, usuario, correo)
     toErrorValidationCorreo(new SmtpServiceClient().send(message, (_, _) => 1))
   }
 
+  /**
+   * Construir el mensaje de correo
+   * @param pinEmpresa
+   * @param numHorasCaducidad
+   * @param templateBody
+   * @param asuntoTemp
+   * @param usuario
+   * @param correo
+   * @return
+   */
   private def buildMessage(pinEmpresa: PinEmpresa, numHorasCaducidad: Int, templateBody: String, asuntoTemp: String, usuario: String, correo: String) = {
     val body: String = new MailMessageEmpresa(templateBody).getMessagePinCreacionAgente(pinEmpresa, numHorasCaducidad, usuario)
     val asunto: String = config.getString(asuntoTemp)

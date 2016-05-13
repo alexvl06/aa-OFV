@@ -26,10 +26,6 @@ object DataAccessAdapter {
     repo.obtenerReglas()
   }
 
-  def actualizarReglasContrasenas(regla: ReglasContrasenas): Future[Validation[PersistenceException, Int]] = {
-    repo.actualizar(regla)
-  }
-
   def obtenerRegla(llave: String): Future[Validation[PersistenceException, Option[ReglasContrasenas]]] = {
     repo.obtenerRegla(llave)
   }

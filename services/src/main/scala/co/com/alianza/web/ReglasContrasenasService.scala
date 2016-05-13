@@ -1,6 +1,6 @@
 package co.com.alianza.web
 
-import co.com.alianza.infrastructure.messages.{ ActualizarReglasContrasenasMessageJsonSupport, InboxMessage, ActualizarReglasContrasenasMessage }
+import co.com.alianza.infrastructure.messages.InboxMessage
 import spray.routing.Directives
 import co.com.alianza.app.AlianzaCommons
 
@@ -9,7 +9,6 @@ import co.com.alianza.app.AlianzaCommons
  */
 class ReglasContrasenasService extends Directives with AlianzaCommons {
 
-  import ActualizarReglasContrasenasMessageJsonSupport._
   val reglasContrasenas = "reglasContrasenas"
 
   def route = {
