@@ -196,7 +196,6 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
             } else if (empresa.estadoEmpresa == EstadosDeEmpresaEnum.inactiva) {
               currentSender ! ResponseMessage(Conflict, "El Agente Empresarial pertenece a una empresa bloqueada. Desbloquée la empresa para poder asignarle una contraseña.")
             } else {
-
               val actualizarContrasenaFuture = (for {
                 cantidadFilasActualizadas <- ValidationT(DataAccessAdapter.actualizarContrasenaAgenteEmpresarial(nuevoPass, mensaje.idUsuario).map(_.leftMap(pe => ErrorPersistence(pe.message, pe))))
                 res <- ValidationT(DataAccessAdapter.caducarFechaUltimoCambioContrasenaAgenteEmpresarial(mensaje.idUsuario).map(_.leftMap(pe => ErrorPersistence(pe.message, pe))))

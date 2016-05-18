@@ -120,9 +120,11 @@ class UsuariosEmpresaRepository(implicit executionContext: ExecutionContext) ext
 
   def actualizarContrasenaAgenteEmpresarial(pw_nuevo: String, idUsuario: Int): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
-      val query = for { u <- usuariosEmpresariales if u.id === idUsuario } yield (u.contrasena, u.fechaActualizacion)
+      val query = for {
+        u <- usuariosEmpresariales if u.id === idUsuario
+      } yield (u.contrasena, u.fechaActualizacion, u.numeroIngresosErroneos)
       val fechaAct = new org.joda.time.DateTime().getMillis
-      val act = (Some(pw_nuevo), new Timestamp(fechaAct))
+      val act = (Some(pw_nuevo), new Timestamp(fechaAct), 0)
       val resultTry = Try {
         query.update(act)
       }
