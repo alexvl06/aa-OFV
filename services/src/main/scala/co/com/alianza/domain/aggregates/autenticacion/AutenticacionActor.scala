@@ -354,7 +354,8 @@ class AutenticacionActor extends Actor with ActorLogging {
    */
   def generarYAsociarToken(cliente: Cliente, usuario: Usuario, expiracionInactividad: String, ipCliente: String): Future[Validation[ErrorAutenticacion, String]] = {
     log.info("Generando y asociando token usuario individual")
-    val token: String = Token.generarToken(cliente.wcli_nombre, cliente.wcli_dir_correo, cliente.wcli_person, usuario.ipUltimoIngreso.getOrElse(ipCliente), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), expiracionInactividad)
+    val token: String = Token.generarToken(cliente.wcli_nombre, cliente.wcli_dir_correo, cliente.wcli_person,
+      usuario.ipUltimoIngreso.getOrElse(ipCliente), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), expiracionInactividad)
     val future: Future[Validation[PersistenceException, Int]] = UsDataAdapter.asociarTokenUsuario(usuario.identificacion, token)
     future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap { _ =>
       Validation.success(token)

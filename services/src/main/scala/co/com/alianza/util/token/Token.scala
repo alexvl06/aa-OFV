@@ -26,7 +26,9 @@ object Token {
   private val ULTIMA_IP_INGRESO_DATA_NAME = "ultimaIpIngreso"
   private val ULTIMA_FECHA_INGRESO_DATA_NAME = "ultimaFechaIngreso"
 
-  def generarToken(nombreUsuarioLogueado: String, correoUsuarioLogueado: String, tipoIdentificacion: String, ultimaIpIngreso: String, ultimaFechaIngreso: Date, expiracionInactividad: String, tipoCliente: TiposCliente.TiposCliente = TiposCliente.clienteIndividual, nit: Option[String] = None): String = {
+  def generarToken(nombreUsuarioLogueado: String, correoUsuarioLogueado: String, tipoIdentificacion: String,
+    ultimaIpIngreso: String, ultimaFechaIngreso: Date, expiracionInactividad: String,
+    tipoCliente: TiposCliente.TiposCliente = TiposCliente.clienteIndividual, nit: Option[String] = None): String = {
 
     val claimsSet = new JWTClaimsSet()
     claimsSet.setIssueTime(new Date())
@@ -87,14 +89,6 @@ object Token {
 
   def getToken(token: String): SignedJWT = {
     SignedJWT.parse(token)
-  }
-
-  def getTipoIdentificacionFromToken(token: String): String = {
-    getClaim(token, TIPO_IDENTIFICACION_DATA_NAME)
-  }
-
-  def getNombreUsuarioFromToken(token: String): String = {
-    getClaim(token, NOMBRE_USUARIO_DATA_NAME)
   }
 
   private def getClaim(token: String, value: String): String = {

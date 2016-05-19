@@ -8,6 +8,7 @@ import akka.util.Timeout
 import co.com.alianza.domain.aggregates.autenticacion.errores.{ ErrorPasswordInvalido, ErrorAutenticacion, ErrorClienteNoExisteCore, ErrorPersistencia }
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.util.clave.ErrorUltimasContrasenas
+import enumerations.{ TipoIdentificacion, TiposIdentificacionCore }
 
 import scala.util.{ Success, Failure }
 
@@ -98,11 +99,12 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
         }, errorValidacion, currentSender
       )
 
-    case ConsultarPermisosAgenteLoginMessage(agente, identificacionUsuario) =>
+    case ConsultarPermisosAgenteLoginMessage(usuario) =>
       val currentSender = sender
-      val tienePermisosPagosMasivosFidCore = verificarPermisosCore(identificacionUsuario)
-      if (agente.tipoCliente == TiposCliente.agenteEmpresarial) {
-        val permisosFuture = DataAccessAdapter.consultaPermisosAgenteLogin(agente.id)
+      val identificacionUsuario = usuario.identificacionUsuario
+      if (usuario.tipoCliente == TiposCliente.agenteEmpresarial) {
+        val tienePermisosPagosMasivosFidCore = verificarPermisosCore(identificacionUsuario)
+        val permisosFuture = DataAccessAdapter.consultaPermisosAgenteLogin(usuario.id)
         resolveFutureValidation(
           permisosFuture,
           { (listaPermisos: List[Int]) =>
@@ -112,7 +114,14 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
           }, errorValidacion, currentSender
         )
       } else {
-        currentSender ! JsonUtil.toJson(PermisosLoginRespuesta(true, true, true, true, true, true, tienePermisosPagosMasivosFidCore))
+        val tipoGrupo = TipoIdentificacion.GRUPO.identificador
+        val permisosLogin: PermisosLoginRespuesta = if (usuario.tipoIdentificacion == tipoGrupo) {
+          PermisosLoginRespuesta(false, false, false, false, false, false, false)
+        } else {
+          val tienePermisosPagosMasivosFidCore = verificarPermisosCore(identificacionUsuario)
+          PermisosLoginRespuesta(true, true, true, true, true, true, tienePermisosPagosMasivosFidCore)
+        }
+        currentSender ! JsonUtil.toJson(permisosLogin)
         context stop self
       }
 

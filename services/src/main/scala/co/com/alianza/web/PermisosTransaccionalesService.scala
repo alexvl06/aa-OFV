@@ -49,10 +49,9 @@ class PermisosTransaccionalesService extends Directives with AlianzaCommons with
                 r: RequestContext =>
                   val token = r.request.headers.find(header => header.name equals "token")
                   val usuario = DataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
-
                   requestWithFutureAuditing[PersistenceException, Any](r, AuditingHelper.fiduciariaTopic, AuditingHelper.consultaPermisosAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, None)
               } {
-                requestExecute(ConsultarPermisosAgenteLoginMessage(user, user.identificacionUsuario), permisoTransaccionalActorSupervisor)
+                requestExecute(ConsultarPermisosAgenteLoginMessage(user), permisoTransaccionalActorSupervisor)
               }
           }
         }

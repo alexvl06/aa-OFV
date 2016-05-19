@@ -12,7 +12,7 @@ import co.com.alianza.infrastructure.dto.security.UsuarioAuth
  */
 case class GuardarPermisosAgenteMessage(idAgente: Int, permisos: List[Permiso], encargosPermisos: List[EncargoPermisos], idClienteAdmin: Option[Int]) extends MessageService
 case class ConsultarPermisosAgenteMessage(idAgente: Int) extends MessageService
-case class ConsultarPermisosAgenteLoginMessage(agente: UsuarioAuth, identificacionUsuario: String) extends MessageService
+case class ConsultarPermisosAgenteLoginMessage(agente: UsuarioAuth) extends MessageService
 case class PermisosRespuesta(permisos: List[Permiso], encargosPermisos: List[EncargoPermisos])
 case class PermisosLoginRespuesta(permiteInscripciones: Boolean, permiteTransferencias: Boolean, permitePagosMasivos: Boolean, permiteConsultas: Boolean, permiteProgramacion: Boolean, permitePagosMasivosFideicomisos: Boolean, permitePagosMasivosFideicomisosCore: Boolean)
 
