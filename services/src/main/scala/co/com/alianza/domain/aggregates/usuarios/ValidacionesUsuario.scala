@@ -1,24 +1,24 @@
 package co.com.alianza.domain.aggregates.usuarios
 
-import co.com.alianza.constants.TiposConfiguracion
-import co.com.alianza.exceptions.{ ServiceException, PersistenceException }
+import co.com.alianza.constants.{ TiposConfiguracion }
+import co.com.alianza.exceptions.{ PersistenceException, ServiceException }
 import spray.http.StatusCodes._
-import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
-import co.com.alianza.infrastructure.messages.{ ResponseMessage, ErrorMessage, UsuarioMessage }
+
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
+import co.com.alianza.infrastructure.messages.{ ErrorMessage, ResponseMessage, UsuarioMessage }
+
 import scala.concurrent.{ ExecutionContext, Future }
-import co.com.alianza.infrastructure.dto.{ Configuracion, Cliente, Usuario }
+import co.com.alianza.infrastructure.dto.{ Cliente, Configuracion, Usuario }
 import co.com.alianza.infrastructure.anticorruption.clientes.{ DataAccessAdapter => DataAccessAdapterCliente }
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => DataAccessAdapterUsuario }
 import co.com.alianza.infrastructure.anticorruption.configuraciones.{ DataAccessAdapter => dataAccesAdaptarConf }
-
-import enumerations.{ PerfilesUsuario, TipoIdentificacion, EstadosCliente }
+import enumerations.{ EstadosCliente, PerfilesUsuario, TipoIdentificacion }
 
 import scalaz.Validation.FlatMap._
-
 import co.com.alianza.util.clave.{ Crypto, ErrorValidacionClave, ValidarClave }
 import co.com.alianza.util.captcha.ValidarCaptcha
 import co.com.alianza.app.MainActors
-import com.typesafe.config.{ Config }
+import com.typesafe.config.Config
 
 /**
  *
@@ -120,15 +120,28 @@ object ValidacionesUsuario {
   }
 
   def validacionConsultaCliente(identificacion: String, tipoIdentificacion: Int, validarCorreo: Boolean): Future[Validation[ErrorValidacion, Cliente]] = {
-    val usuarioFuture = DataAccessAdapterCliente.consultarCliente(identificacion)
-    usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message, pe)).flatMap {
-      (x: Option[Cliente]) =>
-        x match {
-          case None => zFailure(ErrorClienteNoExiste(errorClienteNoExiste))
-          case Some(cliente) =>
-            validacionConsultaCliente(cliente, tipoIdentificacion, validarCorreo)
-        }
-    })
+
+    if (tipoIdentificacion != TipoIdentificacion.GRUPO.id) {
+      val usuarioFuture = DataAccessAdapterCliente.consultarCliente(identificacion)
+      usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message, pe)).flatMap {
+        (x: Option[Cliente]) =>
+          x match {
+            case None => zFailure(ErrorClienteNoExiste(errorClienteNoExiste))
+            case Some(cliente) =>
+              validacionConsultaCliente(cliente, tipoIdentificacion, validarCorreo)
+          }
+      })
+    } else {
+      val grupoFuture = DataAccessAdapterCliente.consultarGrupo(identificacion toInt)
+      grupoFuture.map(_.leftMap(pe => ErrorPersistence(pe.message, pe)).flatMap {
+        (x: Option[Cliente]) =>
+          x match {
+            case None => zFailure(ErrorClienteNoExiste(errorClienteNoExiste))
+            case Some(cliente) =>
+              validacionConsultaCliente(cliente, tipoIdentificacion, validarCorreo)
+          }
+      })
+    }
   }
 
   def validacionConsultaCliente(cliente: Cliente, tipoPersona: Int, validarCorreo: Boolean): Validation[ErrorValidacion, Cliente] = {
