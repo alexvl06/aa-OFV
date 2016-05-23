@@ -60,7 +60,10 @@ class UsuarioEmpresarialAdminRepository(implicit executionContext: ExecutionCont
 
   def cambiarPassword(idUsuario: Int, password: String): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
-      val resultTry = Try { usuariosEmpresarialesAdmin.filter(_.id === idUsuario).map(_.contrasena).update(Some(password)) }
+      val query = for {
+        u <- usuariosEmpresarialesAdmin.filter(_.id === idUsuario)
+      } yield (u.contrasena, u.numeroIngresosErroneos)
+      val resultTry = Try { query.update((Some(password), 0)) }
       resolveTry(resultTry, "Cambiar la contraseña de usuario cliente admin")
   }
 

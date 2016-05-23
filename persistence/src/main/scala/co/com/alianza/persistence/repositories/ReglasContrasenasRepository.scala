@@ -47,12 +47,12 @@ class ReglasContrasenasRepository(implicit executionContext: ExecutionContext) e
 
   def actualizarContrasena(pw_nuevo: String, idUsuario: Int): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
-      val query = for { u <- usuarios if u.id === idUsuario } yield (u.contrasena, u.fechaActualizacion)
+      val query = for {
+        u <- usuarios if u.id === idUsuario
+      } yield (u.contrasena, u.fechaActualizacion, u.numeroIngresosErroneos)
       val fechaAct = new org.joda.time.DateTime().getMillis
-      val act = (Some(pw_nuevo), new Timestamp(fechaAct))
-      val resultTry = Try {
-        query.update(act)
-      }
+      val act = (Some(pw_nuevo), new Timestamp(fechaAct), 0)
+      val resultTry = Try { query.update(act) }
       resolveTry(resultTry, "Actualizar Contrasena y fecha de actualizacion")
   }
 
