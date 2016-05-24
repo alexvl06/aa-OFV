@@ -25,5 +25,18 @@ object DataAccessAdapter {
     }
   }
 
+  private def transformValidationGrupo(origin: Validation[PersistenceException, String]): Validation[PersistenceException, Option[Cliente]] = {
+    origin match {
+      case zSuccess(response: String) =>
+        zSuccess(DataAccessTranslator.translateGrupo(response))
+      case zFailure(error) => zFailure(error)
+    }
+  }
+
+  def consultarGrupo(idGrupo: Int): Future[Validation[PersistenceException, Option[Cliente]]] = {
+    val repo = new ClienteRepository()
+    repo consultaGrupo idGrupo map { x => transformValidationGrupo(x) }
+  }
+
 }
 
