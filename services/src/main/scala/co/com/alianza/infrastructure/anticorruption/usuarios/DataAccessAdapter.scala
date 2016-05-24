@@ -352,10 +352,13 @@ object DataAccessAdapter {
     origin match {
       case zSuccess(response) =>
         response match {
-          case Some(usuario) => zSuccess(Some(DataAccessTranslator.translateUsuario(usuario)))
-          case _ => zSuccess(None)
+          case Some(usuario) =>
+            zSuccess(Some(DataAccessTranslator.translateUsuario(usuario)))
+          case _ =>
+            zSuccess(None)
         }
-      case zFailure(error) => zFailure(error)
+      case zFailure(error) =>
+        zFailure(error)
     }
   }
 
