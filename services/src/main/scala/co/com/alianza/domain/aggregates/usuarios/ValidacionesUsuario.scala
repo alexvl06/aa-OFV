@@ -120,8 +120,7 @@ object ValidacionesUsuario {
   }
 
   def validacionConsultaCliente(identificacion: String, tipoIdentificacion: Int, validarCorreo: Boolean): Future[Validation[ErrorValidacion, Cliente]] = {
-
-    if (tipoIdentificacion != TipoIdentificacion.GRUPO.id) {
+    if (tipoIdentificacion != TipoIdentificacion.GRUPO.identificador) {
       val usuarioFuture = DataAccessAdapterCliente.consultarCliente(identificacion)
       usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message, pe)).flatMap {
         (x: Option[Cliente]) =>
@@ -136,7 +135,8 @@ object ValidacionesUsuario {
       grupoFuture.map(_.leftMap(pe => ErrorPersistence(pe.message, pe)).flatMap {
         (x: Option[Cliente]) =>
           x match {
-            case None => zFailure(ErrorClienteNoExiste(errorClienteNoExiste))
+            case None =>
+              zFailure(ErrorClienteNoExiste(errorClienteNoExiste))
             case Some(cliente) =>
               validacionConsultaCliente(cliente, tipoIdentificacion, validarCorreo)
           }
@@ -159,6 +159,7 @@ object ValidacionesUsuario {
     tipoIdentificacion match {
       case TipoIdentificacion.FID.identificador => "F"
       case TipoIdentificacion.NIT.identificador => "J"
+      case TipoIdentificacion.GRUPO.identificador => "G"
       case TipoIdentificacion.SOCIEDAD_EXTRANJERA.identificador => "J"
       case _ => "N"
     }
