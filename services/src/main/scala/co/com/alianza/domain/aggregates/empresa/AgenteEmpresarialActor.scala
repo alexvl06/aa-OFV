@@ -59,6 +59,7 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
   import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial.validarUsuarioClienteAdmin
   import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial.validarEstadoEmpresa
   import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial.validarUsuarioAgente
+  import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial.validacionEstadoActualizacionAgenteEmpresarial
 
   implicit val ex: ExecutionContext = MainActors.dataAccesEx
   implicit val sys = context.system
@@ -106,6 +107,7 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
       estadoEmpresa <- ValidationT(validarEstadoEmpresa(nit))
       usuarioAdmin <- ValidationT(validarUsuarioClienteAdmin(nit, message.usuario))
       existeUsuario <- ValidationT(validarUsuarioAgente(message.id, nit, message.usuario))
+      estadoAgente <- ValidationT(validacionEstadoActualizacionAgenteEmpresarial(message.id))
       actualizar <- ValidationT(toErrorValidation(DataAccessAdapter.actualizarAgenteEmpresarial(message.id, message.usuario, message.correo, message.nombreUsuario, message.cargo, message.descripcion)))
     } yield actualizar).run
     resolveFutureValidation(future, (response: Int) => response.toJson, errorValidacion, currentSender)

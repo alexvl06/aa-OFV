@@ -163,6 +163,22 @@ object ValidacionesAgenteEmpresarial {
       }
     }
 
+  def validacionEstadoActualizacionAgenteEmpresarial(idAgenteEmpresarial: Int): Future[Validation[ErrorValidacion, Boolean]] = {
+    val usuarioAgenteEmpresarialFuture = DataAccessAdapterUsuarioAE.obtenerUsuarioEmpresarialPorId(idAgenteEmpresarial)
+    usuarioAgenteEmpresarialFuture.map(_.leftMap(pe => ErrorPersistence(pe.message, pe)).flatMap {
+      (idUsuarioAgenteEmpresarial: Option[UsuarioEmpresarial]) =>
+        idUsuarioAgenteEmpresarial match {
+          //TODO: Cambiar por enums correspondiente
+          case Some(x) => x.estado match {
+            case 0 => zFailure(ErrorEstadoActualizarAgenteEmpresarial(errorEstadoAgenteEmpresarial))
+            case 4 => zFailure(ErrorEstadoActualizarAgenteEmpresarial(errorEstadoAgenteEmpresarial))
+            case _ => zSuccess(true)
+          }
+          case None => zFailure(ErrorAgenteEmpresarialNoExiste(errorAgenteEmpresarialNoExiste))
+        }
+    })
+  }
+
   //Los mensajes de error en empresa se relacionaran como 01-02-03 << Ejemplo: 409.01 >>
   private val errorAgenteEmpresarialNoExiste = ErrorMessage("409.01", "No existe el Agente Empresarial", "No existe el Agente Empresarial").toJson
   private val errorEstadoAgenteEmpresarial = ErrorMessage("409.02", "El estado actual del usuario no permite el reinicio de contrasena", "El estado actual del usuario no permite el reinicio de contrasena").toJson
