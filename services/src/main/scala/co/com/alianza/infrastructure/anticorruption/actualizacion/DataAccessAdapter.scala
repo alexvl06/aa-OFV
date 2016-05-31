@@ -3,12 +3,12 @@ package co.com.alianza.infrastructure.anticorruption.actualizacion
 import co.com.alianza.persistence.messages.ActualizacionRequest
 
 import scalaz.Validation
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.app.MainActors
-import scalaz.{Failure => zFailure, Success => zSuccess}
+import scalaz.{ Failure => zFailure, Success => zSuccess }
 import co.com.alianza.infrastructure.dto._
-import co.com.alianza.persistence.repositories.core.{ActualizacionRepository}
+import co.com.alianza.persistence.repositories.core.{ ActualizacionRepository }
 
 object DataAccessAdapter {
 
@@ -20,14 +20,13 @@ object DataAccessAdapter {
     new ActualizacionRepository().consultaDatosCliente(documento, tipoDocumento) map { x => transformValidationDatosCliente(x) }
   }
 
-  private def transformValidationDatosCliente(origin: Validation[PersistenceException, String]):
-    Validation[PersistenceException, Option[DatosCliente]] = {
+  private def transformValidationDatosCliente(origin: Validation[PersistenceException, String]): Validation[PersistenceException, Option[DatosCliente]] = {
     origin match {
       case zSuccess(response: String) =>
         val datos: Option[DatosCliente] = DataAccessTranslator.translateDatosCliente(response)
         val fecha = datos.get.`nvl(fdpn_fecha_ult_act,fdpn_fecha_creacion)`
         zSuccess(Some(datos.get.copy(fdpn_fecha_ult_act = fecha)))
-      case zFailure(error)            => zFailure(error)
+      case zFailure(error) => zFailure(error)
     }
   }
 
@@ -36,24 +35,23 @@ object DataAccessAdapter {
     new ActualizacionRepository().actualizarCliente(datos) map { x => transformValidationActualizacion(x) }
   }
 
-  private def transformValidationActualizacion(origin: Validation[PersistenceException, String]):
-  Validation[PersistenceException, Option[String]] = {
+  private def transformValidationActualizacion(origin: Validation[PersistenceException, String]): Validation[PersistenceException, Option[String]] = {
     origin match {
       case zSuccess(response: String) => zSuccess(Some(response))
-      case zFailure(error)            => zFailure(error)
+      case zFailure(error) => zFailure(error)
     }
   }
 
   //Adaptador paises
 
   def consultaPaises = {
-      new ActualizacionRepository().listarPaises map { x => transformValidationPais(x) }
+    new ActualizacionRepository().listarPaises map { x => transformValidationPais(x) }
   }
 
   private def transformValidationPais(origin: Validation[PersistenceException, String]): Validation[PersistenceException, Option[List[Pais]]] = {
     origin match {
       case zSuccess(response: String) => zSuccess(DataAccessTranslator.translatePaises(response))
-      case zFailure(error)            => zFailure(error)
+      case zFailure(error) => zFailure(error)
     }
   }
 
@@ -66,20 +64,20 @@ object DataAccessAdapter {
   private def transformValidationCiudad(origin: Validation[PersistenceException, String]): Validation[PersistenceException, Option[List[Ciudad]]] = {
     origin match {
       case zSuccess(response: String) => zSuccess(DataAccessTranslator.translateCiudades(response))
-      case zFailure(error)            => zFailure(error)
+      case zFailure(error) => zFailure(error)
     }
   }
 
   //Adaptador tipo correo
 
   def consultaTipoCorreo = {
-    new ActualizacionRepository().listarTipoCorreo  map { x => transformValidationTipoCorreo(x) }
+    new ActualizacionRepository().listarTipoCorreo map { x => transformValidationTipoCorreo(x) }
   }
 
   private def transformValidationTipoCorreo(origin: Validation[PersistenceException, String]): Validation[PersistenceException, Option[List[TipoCorreo]]] = {
     origin match {
       case zSuccess(response: String) => zSuccess(DataAccessTranslator.translateTiposCorreo(response))
-      case zFailure(error)            => zFailure(error)
+      case zFailure(error) => zFailure(error)
     }
   }
 
@@ -92,7 +90,7 @@ object DataAccessAdapter {
   private def transformValidationEnvioCorrespondencia(origin: Validation[PersistenceException, String]): Validation[PersistenceException, Option[List[EnvioCorrespondencia]]] = {
     origin match {
       case zSuccess(response: String) => zSuccess(DataAccessTranslator.translateEnviosCorrespondencia(response))
-      case zFailure(error)            => zFailure(error)
+      case zFailure(error) => zFailure(error)
     }
   }
 
@@ -105,7 +103,7 @@ object DataAccessAdapter {
   private def transformValidationOcupacion(origin: Validation[PersistenceException, String]): Validation[PersistenceException, Option[List[Ocupacion]]] = {
     origin match {
       case zSuccess(response: String) => zSuccess(DataAccessTranslator.translateOcupaciones(response))
-      case zFailure(error)            => zFailure(error)
+      case zFailure(error) => zFailure(error)
     }
   }
 
@@ -118,7 +116,7 @@ object DataAccessAdapter {
   private def transformValidationActividadEconomica(origin: Validation[PersistenceException, String]): Validation[PersistenceException, Option[List[ActividadEconomica]]] = {
     origin match {
       case zSuccess(response: String) => zSuccess(DataAccessTranslator.translateActividadesEconomicas(response))
-      case zFailure(error)            => zFailure(error)
+      case zFailure(error) => zFailure(error)
     }
   }
 

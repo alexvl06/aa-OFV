@@ -1,8 +1,13 @@
 package co.com.alianza.infrastructure.anticorruption.usuarios
 
 import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.persistence.entities.{Usuario => dUsuario, UsuarioEmpresarial => eUsuarioEmpresarial,
-  UsuarioEmpresarialAdmin => eUsuarioEmpresarialAdmin, Empresa => dEmpresa, HorarioEmpresa => dHorarioEmpresa}
+import co.com.alianza.persistence.entities.{
+  Usuario => dUsuario,
+  UsuarioEmpresarial => eUsuarioEmpresarial,
+  UsuarioEmpresarialAdmin => eUsuarioEmpresarialAdmin,
+  Empresa => dEmpresa,
+  HorarioEmpresa => dHorarioEmpresa
+}
 import co.com.alianza.infrastructure.dto._
 import java.util.Date
 

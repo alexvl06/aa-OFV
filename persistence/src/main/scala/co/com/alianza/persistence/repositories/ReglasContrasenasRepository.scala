@@ -4,7 +4,7 @@ import java.sql.Timestamp
 
 import org.joda.time.DateTime
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import co.com.alianza.exceptions.PersistenceException
 
 import scala.util.Try
@@ -45,23 +45,14 @@ class ReglasContrasenasRepository(implicit executionContext: ExecutionContext) e
     result
   }
 
-  def actualizar(reglaContrasena: ReglasContrasenas): Future[Validation[PersistenceException, Int]] = loan {
-    implicit session =>
-      val resultTry = Try {
-        val row = for {elem <- reglasContrasenas if elem.llave === reglaContrasena.llave} yield elem.valor
-        row.update(reglaContrasena.valor)
-      }
-      resolveTry(resultTry, "Actualiza Regla Contrasena")
-  }
-
   def actualizarContrasena(pw_nuevo: String, idUsuario: Int): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
-      val query = for {u <- usuarios if u.id === idUsuario} yield (u.contrasena, u.fechaActualizacion)
-      val fechaAct= new org.joda.time.DateTime().getMillis
-      val act = ( Some(pw_nuevo), new Timestamp(fechaAct) )
-      val resultTry = Try {
-        query.update(act)
-      }
+      val query = for {
+        u <- usuarios if u.id === idUsuario
+      } yield (u.contrasena, u.fechaActualizacion, u.numeroIngresosErroneos)
+      val fechaAct = new org.joda.time.DateTime().getMillis
+      val act = (Some(pw_nuevo), new Timestamp(fechaAct), 0)
+      val resultTry = Try { query.update(act) }
       resolveTry(resultTry, "Actualizar Contrasena y fecha de actualizacion")
   }
 

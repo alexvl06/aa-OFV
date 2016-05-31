@@ -13,7 +13,7 @@ import scala.util.Random
  */
 class ReglasContrasenasServiceTest extends Specification with Specs2RouteTest {
 
-  implicit val defaultTimeout = RouteTestTimeout( DurationInt( 240 ) seconds )
+  implicit val defaultTimeout = RouteTestTimeout(DurationInt(240) seconds)
 
   val service = new ReglasContrasenasService
 

@@ -5,7 +5,7 @@ import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.persistence.entities.Empresa
 import co.com.alianza.persistence.repositories.EmpresaRepository
 
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.{ Future, ExecutionContext }
 import scalaz.Validation
 
 /**
@@ -14,7 +14,7 @@ import scalaz.Validation
 object DataAccessAdapter {
   implicit val ec: ExecutionContext = MainActors.dataAccesEx
 
-  def obtenerEmpresa(nit : String): Future[Validation[PersistenceException, Option[Empresa]]] = {
+  def obtenerEmpresa(nit: String): Future[Validation[PersistenceException, Option[Empresa]]] = {
     val repo = new EmpresaRepository()
     repo.obtenerEmpresa(nit)
   }

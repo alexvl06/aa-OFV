@@ -9,8 +9,8 @@ case class PerfilClienteAdminClienteAdmin(idUsuario: Int, idPerfil: Int)
 
 class PerfilClienteAdminClienteAdminTable(tag: Tag) extends Table[PerfilClienteAdminClienteAdmin](tag, "PERFILCLIADM_CLIENTEADMIN") {
 
-  def idUsuario      = column[Int]("ID_USUARIO", O.PrimaryKey)
-  def idPerfil  = column[Int]("ID_PERFIL",O.PrimaryKey)
+  def idUsuario = column[Int]("ID_USUARIO", O.PrimaryKey)
+  def idPerfil = column[Int]("ID_PERFIL", O.PrimaryKey)
 
-  def * =  (idUsuario, idPerfil) <> (PerfilClienteAdminClienteAdmin.tupled, PerfilClienteAdminClienteAdmin.unapply)
+  def * = (idUsuario, idPerfil) <> (PerfilClienteAdminClienteAdmin.tupled, PerfilClienteAdminClienteAdmin.unapply)
 }

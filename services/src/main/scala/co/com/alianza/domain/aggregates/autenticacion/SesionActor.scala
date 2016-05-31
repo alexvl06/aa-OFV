@@ -4,11 +4,11 @@ import java.security.MessageDigest
 
 import akka.actor._
 import akka.pattern.ask
-import akka.cluster.{Member, MemberStatus}
+import akka.cluster.{ Member, MemberStatus }
 import akka.util.Timeout
 
 import co.com.alianza.app.MainActors
-import co.com.alianza.infrastructure.dto.{Empresa, HorarioEmpresa}
+import co.com.alianza.infrastructure.dto.{ Empresa, HorarioEmpresa }
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.util.token.AesUtil
 import enumerations.CryptoAesParameters
@@ -16,7 +16,7 @@ import enumerations.CryptoAesParameters
 import scala.collection.immutable.SortedSet
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
-import scala.util.{Failure, Success}
+import scala.util.{ Failure, Success }
 
 class SesionActorSupervisor extends Actor with ActorLogging {
 
@@ -58,7 +58,7 @@ class SesionActorSupervisor extends Actor with ActorLogging {
     case BuscarSesion(token) => buscarSesion(token)
 
     case CrearEmpresaActor(empresa, horario) =>
-      log info "Creando empresa Actor: "+s"empresa${empresa.id}"
+      log info "Creando empresa Actor: " + s"empresa${empresa.id}"
       sender ! context.actorOf(EmpresaActor.props(empresa, horario), s"empresa${empresa.id}")
 
     case ObtenerEmpresaSesionActorId(empresaId) => obtenerEmpresaSesionActorId(empresaId)
@@ -103,8 +103,8 @@ class SesionActorSupervisor extends Actor with ActorLogging {
     log.info("Creando sesion de usuario. Tiempo de expiracion: " + expiration + " minutos.")
   }
 
-  private def generarNombreSesionActor(token: String) = 
-    MessageDigest.getInstance("MD5").digest(token.split("\\.")(2).getBytes).map { b => String.format("%02X", java.lang.Byte.valueOf(b))}.mkString("") // Actor's name
+  private def generarNombreSesionActor(token: String) =
+    MessageDigest.getInstance("MD5").digest(token.split("\\.")(2).getBytes).map { b => String.format("%02X", java.lang.Byte.valueOf(b)) }.mkString("") // Actor's name
 
   private def obtenerEmpresaSesionActorId(empresaId: Int) = {
     val currentSender = sender()
@@ -146,7 +146,7 @@ class SesionActor(expiracionSesion: Int, empresa: Option[Empresa], horario: Opti
 
     case msg: ExpirarSesion =>
       log.info("Eliminando sesión de usuario: " + self.path.name)
-      if(empresaActor.isDefined)
+      if (empresaActor.isDefined)
         empresaActor.get ! RemoverSesion(self)
       context.stop(self)
 
@@ -158,7 +158,7 @@ class SesionActor(expiracionSesion: Int, empresa: Option[Empresa], horario: Opti
 
   }
 
-  private def inicializaEmpresaActor() = if(empresa.isDefined) {
+  private def inicializaEmpresaActor() = if (empresa.isDefined) {
     context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(s"empresa${empresa.get.id}") map {
       case Some(empresaActor: ActorRef) => self ! empresaActor
       case None =>

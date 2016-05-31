@@ -23,7 +23,6 @@ case object TechnicalLevel extends LevelException
  */
 case object TimeoutLevel extends LevelException
 
-
 /**
  * Representa un error interno generado en un microservicio
  *

@@ -1,6 +1,6 @@
 package co.com.alianza.persistence.repositories
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.slick.lifted.TableQuery
 import scala.util.Try
 import scalaz.Validation
@@ -12,7 +12,7 @@ import CustomDriver.simple._
 /**
  * Created by manuel on 3/02/15.
  */
-class RecursoPerfilAgenteRepository ( implicit executionContext: ExecutionContext) extends AlianzaRepository  {
+class RecursoPerfilAgenteRepository(implicit executionContext: ExecutionContext) extends AlianzaRepository {
 
   val recursosPerfilesAgentes = TableQuery[RecursoPerfilAgenteTable]
   val agentes = TableQuery[UsuarioEmpresarialTable]
@@ -28,11 +28,11 @@ class RecursoPerfilAgenteRepository ( implicit executionContext: ExecutionContex
     implicit session =>
 
       val usuariosRecursosJoin = for {
-        ((usu, per), rec) <- agentes innerJoin perfilesAgentes on (_.id === _.idUsuario) innerJoin recursosPerfilesAgentes on(_._2.idPerfil === _.idPerfil)
+        ((usu, per), rec) <- agentes innerJoin perfilesAgentes on (_.id === _.idUsuario) innerJoin recursosPerfilesAgentes on (_._2.idPerfil === _.idPerfil)
         if usu.id === idUsuario
       } yield rec
 
-      val resultTry =  Try { usuariosRecursosJoin.list }
+      val resultTry = Try { usuariosRecursosJoin.list }
       resolveTry(resultTry, "Consulta todos los Recursos por Listado de Id de Perfiles")
   }
 

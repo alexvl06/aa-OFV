@@ -5,21 +5,21 @@ import java.util.Date
 
 import co.com.alianza.app.MainActors
 import co.com.alianza.constants.TiposConfiguracion
-import co.com.alianza.domain.aggregates.usuarios.{ErrorPersistence, ErrorValidacion, ErrorPin}
-import co.com.alianza.exceptions.{BusinessLevel, PersistenceException}
-import co.com.alianza.infrastructure.anticorruption.configuraciones.{DataAccessTranslator => dataAccessTransConf, DataAccessAdapter => dataAccesAdaptarConf}
-import co.com.alianza.infrastructure.dto.{PinUsuarioAgenteEmpresarial, Configuracion, PinUsuario, PinUsuarioEmpresarialAdmin}
-import co.com.alianza.infrastructure.messages.{ErrorMessage, ResponseMessage}
+import co.com.alianza.domain.aggregates.usuarios.{ ErrorPersistence, ErrorValidacion, ErrorPin }
+import co.com.alianza.exceptions.{ BusinessLevel, PersistenceException }
+import co.com.alianza.infrastructure.anticorruption.configuraciones.{ DataAccessTranslator => dataAccessTransConf, DataAccessAdapter => dataAccesAdaptarConf }
+import co.com.alianza.infrastructure.dto.{ PinUsuarioAgenteEmpresarial, Configuracion, PinUsuario, PinUsuarioEmpresarialAdmin }
+import co.com.alianza.infrastructure.messages.{ ErrorMessage, ResponseMessage }
 import co.com.alianza.util.json.MarshallableImplicits._
 import spray.http.StatusCodes._
 
-import scala.util.{Success, Failure}
-import scalaz.{Failure => zFailure, Success => zSuccess}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{ Success, Failure }
+import scalaz.{ Failure => zFailure, Success => zSuccess }
+import scala.concurrent.{ ExecutionContext, Future }
 import scalaz.Validation
 import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
-import enumerations.{EstadosEmpresaEnum, EstadosUsuarioEnum}
-import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => uDataAccessAdapter}
+import enumerations.{ EstadosEmpresaEnum, EstadosUsuarioEnum }
+import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => uDataAccessAdapter }
 
 object PinUtil {
 
@@ -27,7 +27,7 @@ object PinUtil {
 
   def deserializarPin(pin: String, fechaExpiracion: Date): String = {
     val md = MessageDigest.getInstance("SHA-512")
-    val hash = md.digest( s"""${pin} - ${fechaExpiracion}""".getBytes)
+    val hash = md.digest(s"""${pin} - ${fechaExpiracion}""".getBytes)
     val hexString = new StringBuffer()
     for (i <- hash) {
       hexString.append(Integer.toHexString(0xFF & i))
@@ -35,25 +35,23 @@ object PinUtil {
     hexString.toString
   }
 
-  def validarPin(response: Option[PinUsuario], funcionalidad:Int ) = {
-   response match {
+  def validarPin(response: Option[PinUsuario], funcionalidad: Int) = {
+    response match {
       case Some(valueResponse) =>
         val pinHash = deserializarPin(valueResponse.token, valueResponse.fechaExpiracion)
         if (pinHash == valueResponse.tokenHash) {
           val fecha = new Date()
-          if (fecha.getTime < valueResponse.fechaExpiracion.getTime){
+          if (fecha.getTime < valueResponse.fechaExpiracion.getTime) {
             //Se comprueba que la funcionalidad desde donde se genero el PIN es Olvido de Contrasena, para actualizar el estado del
             //Usuario
             val futureConsultaUsuarios: Future[Validation[PersistenceException, Int]] = funcionalidad match {
-              case 1 =>  uDataAccessAdapter.actualizarEstadoUsuario(valueResponse.idUsuario, EstadosUsuarioEnum.pendienteReinicio.id)
+              case 1 => uDataAccessAdapter.actualizarEstadoUsuario(valueResponse.idUsuario, EstadosUsuarioEnum.pendienteReinicio.id)
               case _ => Future.successful(Validation.failure(PersistenceException(new Exception, BusinessLevel, "La funcionalidad no permite cambio de estado del usuario al que pertenece el PIN")))
             }
             ResponseMessage(OK)
-          }
-          else
+          } else
             ResponseMessage(Conflict, errorPinNoEncontrado)
-        }
-        else {
+        } else {
           ResponseMessage(Conflict, errorPinNoEncontrado)
         }
       case None => ResponseMessage(Conflict, errorPinNoEncontrado)
@@ -66,23 +64,20 @@ object PinUtil {
         val pinHash = deserializarPin(valueResponse.token, valueResponse.fechaExpiracion)
         if (pinHash == valueResponse.tokenHash) {
           val fecha = new Date()
-          if (fecha.getTime < valueResponse.fechaExpiracion.getTime){
+          if (fecha.getTime < valueResponse.fechaExpiracion.getTime) {
             val futureConsultaUsuarios: Future[Validation[PersistenceException, Int]] = funcionalidad match {
-              case 1 =>  uDataAccessAdapter.actualizarEstadoUsuarioEmpresarialAdmin(valueResponse.idUsuario, EstadosEmpresaEnum.pendienteReiniciarContrasena.id)
+              case 1 => uDataAccessAdapter.actualizarEstadoUsuarioEmpresarialAdmin(valueResponse.idUsuario, EstadosEmpresaEnum.pendienteReiniciarContrasena.id)
               case _ => Future.successful(Validation.failure(PersistenceException(new Exception, BusinessLevel, "La funcionalidad no permite cambio de estado del usuario al que pertenece el PIN")))
             }
             ResponseMessage(OK)
-          }
-          else
+          } else
             ResponseMessage(Conflict, errorPinNoEncontradoClienteAdmin)
-        }
-        else {
+        } else {
           ResponseMessage(Conflict, errorPinNoEncontradoClienteAdmin)
         }
       case None => ResponseMessage(Conflict, errorPinNoEncontradoClienteAdmin)
     }
   }
-
 
   def validarPinAgenteEmpresarial(response: Option[PinUsuarioAgenteEmpresarial]) = {
     response match {
@@ -90,14 +85,12 @@ object PinUtil {
         val pinHash = deserializarPin(valueResponse.token, valueResponse.fechaExpiracion)
         if (pinHash == valueResponse.tokenHash) {
           val fecha = new Date()
-          if (fecha.getTime < valueResponse.fechaExpiracion.getTime){
+          if (fecha.getTime < valueResponse.fechaExpiracion.getTime) {
             val futureConsultaUsuarios: Future[Validation[PersistenceException, Int]] = uDataAccessAdapter.actualizarEstadoUsuarioEmpresarialAgente(valueResponse.idUsuario, EstadosEmpresaEnum.pendienteReiniciarContrasena.id)
             ResponseMessage(OK)
-          }
-          else
+          } else
             ResponseMessage(Conflict, errorPinNoEncontradoAgenteEmpresarial)
-        }
-        else {
+        } else {
           ResponseMessage(Conflict, errorPinNoEncontradoAgenteEmpresarial)
         }
       case None => ResponseMessage(Conflict, errorPinNoEncontradoAgenteEmpresarial)
@@ -112,8 +105,7 @@ object PinUtil {
           val fecha = new Date()
           if (fecha.getTime < valueResponse.fechaExpiracion.getTime) zSuccess(valueResponse)
           else zFailure(ErrorPin(errorPinNoEncontrado))
-        }
-        else zFailure(ErrorPin(errorPinNoEncontrado))
+        } else zFailure(ErrorPin(errorPinNoEncontrado))
       case None => zFailure(ErrorPin(errorPinNoEncontrado))
     }
   }
@@ -126,8 +118,7 @@ object PinUtil {
           val fecha = new Date()
           if (fecha.getTime < valueResponse.fechaExpiracion.getTime) zSuccess(valueResponse)
           else zFailure(ErrorPin(errorPinNoEncontradoClienteAdmin))
-        }
-        else zFailure(ErrorPin(errorPinNoEncontradoClienteAdmin))
+        } else zFailure(ErrorPin(errorPinNoEncontradoClienteAdmin))
       case None => zFailure(ErrorPin(errorPinNoEncontradoClienteAdmin))
     }
   }
@@ -140,14 +131,13 @@ object PinUtil {
           val fecha = new Date()
           if (fecha.getTime < valueResponse.fechaExpiracion.getTime) zSuccess(valueResponse)
           else zFailure(ErrorPin(errorPinNoEncontradoAgenteEmpresarial))
-        }
-        else zFailure(ErrorPin(errorPinNoEncontradoAgenteEmpresarial))
+        } else zFailure(ErrorPin(errorPinNoEncontradoAgenteEmpresarial))
       case None => zFailure(ErrorPin(errorPinNoEncontradoAgenteEmpresarial))
     }
   }
 
-  private val errorPinNoEncontrado = ErrorMessage("409.1", "Pin invalido", "El proceso para la definición de la contraseña está vencido. Si requiere una nueva contraseña solicítela <a href=\"/#!/olvidarContrasena/1\" target=\"_blank\" >AQUÍ</a>.").toJson
+  private val errorPinNoEncontrado = ErrorMessage("409.1", "Pin invalido", "El proceso para la definición de la contraseña está vencido. Si requiere una nueva contraseña solicítela <a href=\"/#!/olvidarContrasena\" target=\"_blank\" >AQUÍ</a>.").toJson
   private val errorPinNoEncontradoAgenteEmpresarial = ErrorMessage("409.1", "Pin invalido", "El proceso para la definición de la contraseña está vencido. Si requiere una nueva contraseña solicítela con su cliente administrador.").toJson
-  private val errorPinNoEncontradoClienteAdmin = ErrorMessage("409.1", "Pin invalido", "El proceso para la definición de la contraseña está vencido. Si requiere una nueva contraseña solicítela <a href=\"/#!/olvidarContrasena/2\" target=\"_blank\" >AQUÍ</a>.").toJson
+  private val errorPinNoEncontradoClienteAdmin = ErrorMessage("409.1", "Pin invalido", "El proceso para la definición de la contraseña está vencido. Si requiere una nueva contraseña solicítela <a href=\"/#!/olvidarContrasenaEmpresa\" target=\"_blank\" >AQUÍ</a>.").toJson
 
 }

@@ -8,7 +8,7 @@ import shapeless.{ HNil, :: }
 import co.com.alianza.infrastructure.messages.MessageService
 
 package object cache {
-  
+
   type Cache[T] = Either[T, T]
   type ContextCache[T] = RequestContext => Future[Cache[T]]
   type DirectiveCache[T] = Directive[T :: HNil]

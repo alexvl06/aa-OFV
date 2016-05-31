@@ -4,7 +4,6 @@ import co.com.alianza.persistence.messages.ConsultaClienteRequest
 import spray.json.DefaultJsonProtocol
 import spray.httpx.SprayJsonSupport
 
-
 /**
  *
  * @author smontanez
@@ -14,6 +13,6 @@ object ExisteClienteCoreMessagesJsonSupport extends DefaultJsonProtocol with Spr
   implicit val ExisteClienteCoreMessageFormat = jsonFormat2(ExisteClienteCoreMessage)
 }
 
-case class ExisteClienteCoreMessage(tipoDocumento:Int, numDocumento:String)  extends MessageService{
-  def toConsultaClienteRequest:ConsultaClienteRequest = ConsultaClienteRequest(tipoDocumento,numDocumento)
+case class ExisteClienteCoreMessage(tipoDocumento: Int, numDocumento: String) extends MessageService {
+  def toConsultaClienteRequest: ConsultaClienteRequest = ConsultaClienteRequest(tipoDocumento, numDocumento)
 }

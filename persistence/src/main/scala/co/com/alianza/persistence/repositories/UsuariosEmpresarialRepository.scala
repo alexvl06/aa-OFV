@@ -1,13 +1,12 @@
 package co.com.alianza.persistence.repositories
 
 import java.sql.Timestamp
-
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.persistence.entities.{CustomDriver, UsuarioEmpresarial, UsuarioEmpresarialTable, EmpresaTable, UsuarioEmpresarialEmpresaTable}
+import co.com.alianza.persistence.entities.{ CustomDriver, UsuarioEmpresarial, UsuarioEmpresarialTable, EmpresaTable, UsuarioEmpresarialEmpresaTable }
 import enumerations.EstadosEmpresaEnum
 import scala.util.Try
 import scalaz.Validation
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import co.com.alianza.persistence.entities._
 import CustomDriver.simple._
 
@@ -16,60 +15,68 @@ import CustomDriver.simple._
  */
 class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext) extends AlianzaRepository {
 
-  val Empresas = TableQuery[EmpresaTable]
-  val UsuariosEmpresariales = TableQuery[UsuarioEmpresarialTable]
-  val UsuariosEmpresarialesAdmin = TableQuery[UsuarioEmpresarialAdminTable]
-  val UsuariosEmpresarialesEmpresa = TableQuery[UsuarioEmpresarialEmpresaTable]
-  val UsuariosEmpresarialesAdminEmpresa = TableQuery[UsuarioEmpresarialAdminEmpresaTable]
+  val empresas = TableQuery[EmpresaTable]
+  val usuariosEmpresariales = TableQuery[UsuarioEmpresarialTable]
+  val usuariosEmpresarialesAdmin = TableQuery[UsuarioEmpresarialAdminTable]
+  val usuariosEmpresarialesEmpresa = TableQuery[UsuarioEmpresarialEmpresaTable]
+  val usuariosEmpresarialesAdminEmpresa = TableQuery[UsuarioEmpresarialAdminEmpresaTable]
   val pinempresa = TableQuery[PinEmpresaTable]
 
   def obtenerUsuarioEmpresarialPorId(idUsuario: Int): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = loan {
     implicit session =>
-      val resultTry = Try{ UsuariosEmpresariales.filter( _.id === idUsuario ).firstOption  }
+      val resultTry = Try { usuariosEmpresariales.filter(_.id === idUsuario).firstOption }
       resolveTry(resultTry, "Obtener agente empresarial por ID ")
+  }
+
+  def existeUsuario(idUsuario: Int, nit: String, usuario: String): Future[Validation[PersistenceException, Boolean]] = loan {
+    implicit session =>
+      val resultTry = Try {
+        usuariosEmpresariales.filter(usu => usu.usuario === usuario && usu.identificacion === nit && usu.id =!= idUsuario).exists.run
+      }
+      resolveTry(resultTry, "Existe agente con mismo usuario pero diferente id ?")
   }
 
   def obtenerUsuarioEmpresarialAdminPorId(idUsuario: Int): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = loan {
     implicit session =>
-      val resultTry = Try{ UsuariosEmpresarialesAdmin.filter( _.id === idUsuario ).firstOption  }
+      val resultTry = Try { usuariosEmpresarialesAdmin.filter(_.id === idUsuario).firstOption }
       resolveTry(resultTry, "Obtener agente empresarial admin por ID ")
   }
 
   def obtieneUsuarioEmpresaPorNitYUsuario(nit: String, usuario: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = loan {
-    implicit session => resolveTry(Try {
-      (
-        for {
-          ((usuarioEmpresarial, usuarioEmpresarialEmpresa), empresa) <-
-          UsuariosEmpresariales join UsuariosEmpresarialesEmpresa on {
-            (ue, uee) => ue.id === uee.idUsuarioEmpresarial  && ue.usuario === usuario
-          } join Empresas on {
-            case ((ue, uee), e) => e.nit === nit && uee.idEmpresa === e.id
-          }
-        } yield (usuarioEmpresarial)
+    implicit session =>
+      resolveTry(Try {
+        (
+          for {
+            ((usuarioEmpresarial, usuarioEmpresarialEmpresa), empresa) <- usuariosEmpresariales join usuariosEmpresarialesEmpresa on {
+              (ue, uee) => ue.id === uee.idUsuarioEmpresarial && ue.usuario === usuario
+            } join empresas on {
+              case ((ue, uee), e) => e.nit === nit && uee.idEmpresa === e.id
+            }
+          } yield (usuarioEmpresarial)
         ) firstOption
-    }, "Consulta usuario empresarial por nit y usuario")
+      }, "Consulta usuario empresarial por nit y usuario")
   }
 
   def obtieneUsuarioEmpresaAdminPorNitYUsuario(nit: String, usuario: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = loan {
-    implicit session => resolveTry(Try {
-      (
-        for {
-          ((usuarioEmpresarial, usuarioEmpresarialEmpresa), empresa) <-
-          UsuariosEmpresarialesAdmin join UsuariosEmpresarialesAdminEmpresa on {
-            (ue, uee) => ue.id === uee.idUsuarioEmpresarialAdmin && ue.usuario === usuario
-          } join Empresas on {
-            case ((ue, uee), e) => e.nit === nit  && uee.idEmpresa === e.id
-          }
-        } yield (usuarioEmpresarial)
+    implicit session =>
+      resolveTry(Try {
+        (
+          for {
+            ((usuarioEmpresarial, usuarioEmpresarialEmpresa), empresa) <- usuariosEmpresarialesAdmin join usuariosEmpresarialesAdminEmpresa on {
+              (ue, uee) => ue.id === uee.idUsuarioEmpresarialAdmin && ue.usuario === usuario
+            } join empresas on {
+              case ((ue, uee), e) => e.nit === nit && uee.idEmpresa === e.id
+            }
+          } yield (usuarioEmpresarial)
         ) firstOption
-    }, "Consulta usuario empresarial administrador por nit y usuario")
+      }, "Consulta usuario empresarial administrador por nit y usuario")
   }
 
   def asociarTokenUsuario(usuarioId: Int, token: String): Future[Validation[PersistenceException, Int]] = loan {
 
     implicit session =>
       val resultTry = Try {
-        UsuariosEmpresariales.filter(_.id === usuarioId).map(_.token).update(Some(token))
+        usuariosEmpresariales.filter(_.id === usuarioId).map(_.token).update(Some(token))
       }
       resolveTry(resultTry, "Actualizar token de usuario empresarial")
   }
@@ -78,31 +85,30 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
     implicit session =>
       val resultTry = Try {
         (for {
-          (clienteAdministrador, agenteEmpresarial) <-
-          UsuariosEmpresarialesAdmin join UsuariosEmpresarialesAdminEmpresa on {
+          (clienteAdministrador, agenteEmpresarial) <- usuariosEmpresarialesAdmin join usuariosEmpresarialesAdminEmpresa on {
             (uea, ueae) => uea.id === ueae.idUsuarioEmpresarialAdmin && uea.id === idClienteAdmin
-          } join UsuariosEmpresarialesEmpresa on {
+          } join usuariosEmpresarialesEmpresa on {
             case ((uea, ueae), uee) => ueae.idEmpresa === uee.idEmpresa
-          } join UsuariosEmpresariales on {
+          } join usuariosEmpresariales on {
             case (((uea, ueae), uee), ae) => uee.idUsuarioEmpresarial === ae.id && ae.identificacion === numIdentificacionAgenteEmpresarial && ae.correo === correoUsuarioAgenteEmpresarial && ae.tipoIdentificacion === tipoIdentiAgenteEmpresarial
           }
-        } yield (agenteEmpresarial)
-        ).list.headOption
+        } yield (agenteEmpresarial)).list.headOption
       }
 
       val resultIdUsuarioAE: Try[Option[(Int, Int)]] = resultTry map {
-         x => x match {
-           case None => None
-           case Some(x) =>
-             Some((x.id, x.estado))
-         }
+        x =>
+          x match {
+            case None => None
+            case Some(x) =>
+              Some((x.id, x.estado))
+          }
       }
       resolveTry(resultIdUsuarioAE, "Obtiene id agente empresarial de acuerdo a los 3 paramteros dados")
   }
 
-  def CambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa): Future[Validation[PersistenceException, Int]] = loan {
+  def cambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
-      val query = for {u <- UsuariosEmpresariales if u.id === idUsuarioAgenteEmpresarial} yield (u.estado)
+      val query = for { u <- usuariosEmpresariales if u.id === idUsuarioAgenteEmpresarial } yield (u.estado)
 
       val resultTry = Try {
         query.update(estado.id)
@@ -110,18 +116,18 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
       resolveTry(resultTry, "Cambiar Estado Usuario Agente Empresarial")
   }
 
-  def invalidarTokenUsuario( token:String  ) : Future[Validation[PersistenceException, Int]] = loan {
+  def invalidarTokenUsuario(token: String): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
-      val resultTry = Try{ UsuariosEmpresariales.filter( _.token === token ).map(_.token ).update(Some(null))  }
+      val resultTry = Try { usuariosEmpresariales.filter(_.token === token).map(_.token).update(Some(null)) }
       resolveTry(resultTry, "Invalidar token usuario")
   }
 
-  def CambiarBloqueoDesbloqueoAgenteEmpresarial(idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa,timestamp: Timestamp): Future[Validation[PersistenceException, Int]] = loan {
+  def cambiarBloqueoDesbloqueoAgenteEmpresarial(idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa, timestamp: Timestamp): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
-      val query = for {u <- UsuariosEmpresariales if u.id === idUsuarioAgenteEmpresarial} yield (u.estado,u.fechaActualizacion)
+      val query = for { u <- usuariosEmpresariales if u.id === idUsuarioAgenteEmpresarial } yield (u.estado, u.fechaActualizacion)
 
       val resultTry = Try {
-        query.update(estado.id,timestamp)
+        query.update(estado.id, timestamp)
       }
       resolveTry(resultTry, "Cambiar Estado Usuario Agente Empresarial")
   }
@@ -130,10 +136,9 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
   def obtenerUsuarioToken(token: String): Future[Validation[PersistenceException, Option[(UsuarioEmpresarial, Int)]]] = loan {
     implicit session =>
       val query = for {
-        (agenteEmpresarial, empresa) <-
-        UsuariosEmpresariales join UsuariosEmpresarialesEmpresa on {
+        (agenteEmpresarial, empresa) <- usuariosEmpresariales join usuariosEmpresarialesEmpresa on {
           (ue, uee) => ue.token === token && ue.id === uee.idUsuarioEmpresarial
-        } join Empresas on {
+        } join empresas on {
           case ((ue, uee), e) => uee.idEmpresa === e.id
         }
       } yield {
@@ -144,9 +149,9 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
       resolveTry(resultTry, "Consulta usuario empresarial por token: " + token)
   }
 
-  def obtenerUsuarioPorToken( token:String ): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = loan {
+  def obtenerUsuarioPorToken(token: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = loan {
     implicit session =>
-      val resultTry = Try{ UsuariosEmpresariales.filter(_.token === token).list.headOption}
+      val resultTry = Try { usuariosEmpresariales.filter(_.token === token).list.headOption }
       resolveTry(resultTry, "Consulta usuario empresarial con token" + token)
   }
 
@@ -166,52 +171,71 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
       resolveTry(resultTry, "Eliminar pin(es) empresa anteriores del agente empresarial asociado cuando el uso es reiniciar contrasena")
   }
 
-  def insertarAgenteEmpresarial(agenteEmpresarial : UsuarioEmpresarial): Future[Validation[PersistenceException, Int]] = loan {
+  def insertarAgenteEmpresarial(agenteEmpresarial: UsuarioEmpresarial): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
-      val resultTry = Try{ (UsuariosEmpresariales  returning UsuariosEmpresariales.map(_.id)) += agenteEmpresarial }
+      val resultTry = Try { (usuariosEmpresariales returning usuariosEmpresariales.map(_.id)) += agenteEmpresarial }
       resolveTry(resultTry, "Agregar agente empresarial")
   }
 
-  def obtenerEmpresaPorNit(nit : String) : Future[Validation[PersistenceException, Option[Empresa]]] = loan {
+  def obtenerEmpresaPorNit(nit: String): Future[Validation[PersistenceException, Option[Empresa]]] = loan {
     implicit session =>
-      val resultTry = Try{ (Empresas.filter(_.nit === nit).list.headOption ) }
+      val resultTry = Try { (empresas.filter(_.nit === nit).list.headOption) }
       resolveTry(resultTry, "Agregar ips agente empresarial")
   }
 
   def asociarAgenteEmpresarialConEmpresa(usuarioEmpresarialEmpresa: UsuarioEmpresarialEmpresa) = loan {
     implicit session =>
-      val resultTry = Try{ (UsuariosEmpresarialesEmpresa += usuarioEmpresarialEmpresa) }
+      val resultTry = Try { (usuariosEmpresarialesEmpresa += usuarioEmpresarialEmpresa) }
       resolveTry(resultTry, "Asociar usuario agente empresarial a la empresa")
   }
 
-  def actualizarNumeroIngresosErroneos( idUsuario:Int, numeroIntentos:Int ): Future[Validation[PersistenceException, Int]] = loan {
+  def actualizarNumeroIngresosErroneos(idUsuario: Int, numeroIntentos: Int): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
-      val resultTry = Try{ UsuariosEmpresariales.filter( _.id === idUsuario ).map(_.numeroIngresosErroneos).update(numeroIntentos )  }
+      val resultTry = Try { usuariosEmpresariales.filter(_.id === idUsuario).map(_.numeroIngresosErroneos).update(numeroIntentos) }
       resolveTry(resultTry, "Actualizar usuario empresarial admin en numeroIngresosErroneos ")
   }
 
-  def actualizarIpUltimoIngreso( idUsuario:Int, ipActual:String ): Future[Validation[PersistenceException, Int]] = loan {
+  def actualizarIpUltimoIngreso(idUsuario: Int, ipActual: String): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
-      val resultTry = Try{ UsuariosEmpresariales.filter( _.id === idUsuario ).map(_.ipUltimoIngreso ).update(Some(ipActual))  }
+      val resultTry = Try { usuariosEmpresariales.filter(_.id === idUsuario).map(_.ipUltimoIngreso).update(Some(ipActual)) }
       resolveTry(resultTry, "Actualizar usuario empresarial admin en ipUltimoIngreso ")
   }
 
-  def actualizarFechaUltimoIngreso( idUsuario:Int, fechaActual : Timestamp ): Future[Validation[PersistenceException, Int]] = loan {
+  def actualizarFechaUltimoIngreso(idUsuario: Int, fechaActual: Timestamp): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
-      val resultTry = Try{ UsuariosEmpresariales.filter( _.id === idUsuario ).map(_.fechaUltimoIngreso ).update(Some(fechaActual))  }
+      val resultTry = Try { usuariosEmpresariales.filter(_.id === idUsuario).map(_.fechaUltimoIngreso).update(Some(fechaActual)) }
       resolveTry(resultTry, "Actualizar usuario empresarial admin en fechaUltimoIngreso ")
   }
 
   def obtenerUsuarioEmpresarialAgentePorId(idUsuario: Int): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = loan {
     implicit session =>
-      val resultTry = Try{ UsuariosEmpresariales.filter( _.id === idUsuario ).firstOption  }
+      val resultTry = Try { usuariosEmpresariales.filter(_.id === idUsuario).firstOption }
       resolveTry(resultTry, "Actualizar usuario empresarial admin en fechaUltimoIngreso ")
   }
 
-  def actualizarEstadoUsuario( idUsuario:Int, estado:Int ): Future[Validation[PersistenceException, Int]] = loan {
+  def actualizarEstadoUsuario(idUsuario: Int, estado: Int): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
-      val resultTry = Try{ UsuariosEmpresariales.filter( _.id === idUsuario ).map(_.estado ).update(estado)  }
+      val resultTry = Try { usuariosEmpresariales.filter(_.id === idUsuario).map(_.estado).update(estado) }
       resolveTry(resultTry, "Actualizar estado de usuario empresarial agente")
+  }
+
+  /**
+   * Actualizar datos agente empresarial
+   * @param id
+   * @param usuario
+   * @param correo
+   * @param nombreUsuario
+   * @param cargo
+   * @param descripcion
+   * @return
+   */
+  def actualizarAgente(id: Int, usuario: String, correo: String, nombreUsuario: String, cargo: String, descripcion: String): Future[Validation[PersistenceException, Int]] = loan {
+    implicit session =>
+      val resultTry = Try {
+        val q = usuariosEmpresariales.filter(_.id === id).map(a => (a.correo, a.usuario, a.nombreUsuario, a.cargo, a.descripcion))
+        q.update(correo, usuario, nombreUsuario, cargo, descripcion)
+      }
+      resolveTry(resultTry, "Actualizar usuario empresarial agente")
   }
 
 }

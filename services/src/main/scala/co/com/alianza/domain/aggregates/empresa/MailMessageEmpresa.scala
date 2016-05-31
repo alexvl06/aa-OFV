@@ -1,6 +1,6 @@
 package co.com.alianza.domain.aggregates.empresa
 
-import co.com.alianza.infrastructure.dto.{PinEmpresa}
+import co.com.alianza.infrastructure.dto.{ PinEmpresa }
 import co.com.alianza.mail.MailTemplate
 import com.typesafe.config.Config
 
@@ -15,7 +15,7 @@ class MailMessageEmpresa(templateBody: String) extends MailTemplate {
     engine.layout(config.getString(templateBody), Map("pin" -> datos.tokenHash, "numHorasCaducidad" -> numHorasCaducidad, "medida" -> medida))
   }
 
-  def getMessagePinCreacionAgente(datos: PinEmpresa, numHorasCaducidad: Int, usuario : String)(implicit config: Config): String = {
+  def getMessagePinCreacionAgente(datos: PinEmpresa, numHorasCaducidad: Int, usuario: String)(implicit config: Config): String = {
     val medida = if (numHorasCaducidad > 1) "horas" else "hora"
     engine.layout(config.getString(templateBody), Map("pin" -> datos.tokenHash, "numHorasCaducidad" -> numHorasCaducidad, "medida" -> medida, "usuario" -> usuario))
   }

@@ -2,11 +2,11 @@ package co.com.alianza.web
 
 import spray.routing.Directives
 import co.com.alianza.app.AlianzaCommons
-import co.com.alianza.infrastructure.messages.{ValidarCuestionarioDesbloqueoRequestMessage, ObtenerCuestionarioAdicionalRequestMessage, ObtenerCuestionarioRequestMessage, ValidarCuestionarioRequestMessage}
+import co.com.alianza.infrastructure.messages.{ ValidarCuestionarioDesbloqueoRequestMessage, ObtenerCuestionarioAdicionalRequestMessage, ObtenerCuestionarioRequestMessage, ValidarCuestionarioRequestMessage }
 import spray.http.StatusCodes._
 import co.com.alianza.util.json.JsonUtil
 
-class ConfrontaService extends Directives with AlianzaCommons  {
+class ConfrontaService extends Directives with AlianzaCommons {
   import co.com.alianza.infrastructure.messages.ConfrontaMessagesJsonSupport._
 
   val confronta = "confronta"
@@ -15,8 +15,8 @@ class ConfrontaService extends Directives with AlianzaCommons  {
   val validarCuestionario = "validarCuestionario"
   val validarCuestionarioDesbloqueo = "validarCuestionarioDesbloqueo"
 
-  def route= {
-    path(confronta/obtenerCuestionarioAdicional) {
+  def route = {
+    path(confronta / obtenerCuestionarioAdicional) {
       post {
         respondWithMediaType(mediaType) {
           entity(as[ObtenerCuestionarioAdicionalRequestMessage]) {
@@ -25,16 +25,16 @@ class ConfrontaService extends Directives with AlianzaCommons  {
           }
         }
       }
-    } ~ path(confronta/validarCuestionario) {
+    } ~ path(confronta / validarCuestionario) {
       post {
         entity(as[ValidarCuestionarioRequestMessage]) {
           message =>
-          respondWithMediaType(mediaType) {
-            requestExecute(message, confrontaActor)
-          }
+            respondWithMediaType(mediaType) {
+              requestExecute(message, confrontaActor)
+            }
         }
       }
-    } ~ path(confronta/validarCuestionarioDesbloqueo) {
+    } ~ path(confronta / validarCuestionarioDesbloqueo) {
       post {
         entity(as[ValidarCuestionarioDesbloqueoRequestMessage]) {
           message =>

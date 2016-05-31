@@ -1,6 +1,6 @@
 package co.com.alianza.persistence.repositories
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import co.com.alianza.exceptions.PersistenceException
 
 import scala.util.Try
@@ -8,12 +8,10 @@ import scalaz.Validation
 
 import co.com.alianza.persistence.entities._
 
-
 import scala.slick.lifted.TableQuery
 import CustomDriver.simple._
 
 class ConfiguracionesRepository(implicit executionContext: ExecutionContext) extends AlianzaRepository {
-
 
   val configuraciones = TableQuery[ConfiguracionesTable]
 

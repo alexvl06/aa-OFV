@@ -1,6 +1,6 @@
 package co.com.alianza.domain.aggregates.autenticacion
 
-import akka.actor.{Props, ActorLogging, Actor}
+import akka.actor.{ Props, ActorLogging, Actor }
 import akka.routing.RoundRobinPool
 
 import co.com.alianza.app.MainActors
@@ -13,11 +13,12 @@ import co.com.alianza.domain.aggregates.autenticacion.errores._
 import co.com.alianza.domain.aggregates.usuarios.ErrorClienteNoExiste
 import co.com.alianza.exceptions.PersistenceException
 
-import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => UsDataAdapter}
-import co.com.alianza.infrastructure.anticorruption.clientes.{DataAccessAdapter => ClDataAdapter}
-import co.com.alianza.infrastructure.anticorruption.contrasenas.{DataAccessAdapter => RgDataAdapter}
-import co.com.alianza.infrastructure.anticorruption.configuraciones.{DataAccessAdapter => ConfDataAdapter}
-import co.com.alianza.infrastructure.dto.{Configuracion, Cliente, Usuario}
+import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => UsDataAdapter }
+import co.com.alianza.infrastructure.anticorruption.clientes.{ DataAccessAdapter => ClDataAdapter }
+import co.com.alianza.infrastructure.anticorruption.grupos.{ DataAccessAdapter => DataAdapterGrupos }
+import co.com.alianza.infrastructure.anticorruption.contrasenas.{ DataAccessAdapter => RgDataAdapter }
+import co.com.alianza.infrastructure.anticorruption.configuraciones.{ DataAccessAdapter => ConfDataAdapter }
+import co.com.alianza.infrastructure.dto.{ Configuracion, Cliente, Usuario }
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.persistence.entities.ReglasContrasenas
 import co.com.alianza.persistence.messages.ConsultaClienteRequest
@@ -25,7 +26,7 @@ import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.token.Token
 import co.com.alianza.util.transformers.ValidationT
 
-import enumerations.{TipoIdentificacion, EstadosCliente, AppendPasswordUser, EstadosUsuarioEnum}
+import enumerations.{ TipoIdentificacion, EstadosCliente, AppendPasswordUser, EstadosUsuarioEnum }
 
 import java.sql.Timestamp
 import java.util.Date
@@ -34,10 +35,10 @@ import org.joda.time.DateTime
 import spray.http.StatusCodes._
 
 import scala.concurrent.Future
-import scala.util.{Success => sSuccess, Failure => sFailure}
+import scala.util.{ Success => sSuccess, Failure => sFailure }
 
 import scalaz.std.AllInstances._
-import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
+import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
 import scalaz.Validation.FlatMap._
 
 class AutenticacionActorSupervisor extends Actor with ActorLogging {
@@ -92,12 +93,12 @@ class AutenticacionActor extends Actor with ActorLogging {
     case message: AutenticarMessage =>
       val originalSender = sender()
       val validaciones: Future[Validation[ErrorAutenticacion, String]] = (for {
-        usuario           <- ValidationT(obtenerUsuario(message.numeroIdentificacion))
-        estadoValido      <- ValidationT(validarEstadosUsuario(usuario.estado))
-        passwordValido    <- ValidationT(validarPasswords(message.password, usuario.contrasena.getOrElse(""), Some(usuario.identificacion), usuario.id, usuario.numeroIngresosErroneos))
-        cliente           <- ValidationT(obtenerClienteSP(usuario.identificacion))
-        cienteValido      <- ValidationT(validarClienteSP(cliente))
-        passwordCaduco    <- ValidationT(validarCaducidadPassword(TiposCliente.clienteIndividual, usuario.id.get, usuario.fechaCaducidad))
+        usuario <- ValidationT(obtenerUsuario(message.numeroIdentificacion))
+        estadoValido <- ValidationT(validarEstadosUsuario(usuario.estado))
+        passwordValido <- ValidationT(validarPasswords(message.password, usuario.contrasena.getOrElse(""), Some(usuario.identificacion), usuario.id, usuario.numeroIngresosErroneos))
+        cliente <- ValidationT(obtenerClienteSP(usuario.identificacion, usuario.tipoIdentificacion))
+        cienteValido <- ValidationT(validarClienteSP(cliente))
+        passwordCaduco <- ValidationT(validarCaducidadPassword(TiposCliente.clienteIndividual, usuario.id.get, usuario.fechaCaducidad))
         actualizacionInfo <- ValidationT(actualizarInformacionUsuario(usuario.identificacion, message.clientIp.get))
         inactividadConfig <- ValidationT(buscarConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave))
         token             <- ValidationT(generarYAsociarToken(cliente, usuario, inactividadConfig.valor, message.clientIp.get))
@@ -145,7 +146,7 @@ class AutenticacionActor extends Actor with ActorLogging {
 
       val resultadoIp: Future[Validation[ErrorAutenticacion, Boolean]] = (for {
         usuario <- ValidationT(obtenerUsuario(message.idUsuario.get))
-        cliente <- ValidationT(obtenerClienteSP(usuario.identificacion))
+        cliente <- ValidationT(obtenerClienteSP(usuario.identificacion, usuario.tipoIdentificacion))
         cienteValido <- ValidationT(validarClienteSP(cliente))
         relacionarIp <- ValidationT(asociarIpUsuario(message.idUsuario.get, message.clientIp.get))
       } yield relacionarIp).run
@@ -159,7 +160,6 @@ class AutenticacionActor extends Actor with ActorLogging {
           }
       }
   }
-
 
   //----------------
   // AGREGAR IPS
@@ -255,13 +255,25 @@ class AutenticacionActor extends Actor with ActorLogging {
    * Success => Cliente
    * ErrorAutenticacion => ErrorPersistencia | ErrorClienteNoExisteCore
    */
-  def obtenerClienteSP(identificacionUsuario: String): Future[Validation[ErrorAutenticacion, Cliente]] = {
+  def obtenerClienteSP(identificacionUsuario: String, tipoIdentificacion: Int): Future[Validation[ErrorAutenticacion, Cliente]] = {
     log.info("Validando que el cliente exista en el core de alianza")
-    val future: Future[Validation[PersistenceException, Option[Cliente]]] = ClDataAdapter.consultarCliente(identificacionUsuario)
-    future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap {
-      case Some(cliente) => Validation.success(cliente)
-      case None => Validation.failure(ErrorClienteNoExisteCore())
-    })
+    if (tipoIdentificacion == TipoIdentificacion.GRUPO.identificador) {
+      val future: Future[Validation[PersistenceException, Option[Cliente]]] = DataAdapterGrupos.consultarGrupo(identificacionUsuario.toInt)
+      future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap {
+        case Some(cliente) =>
+          Validation.success(cliente)
+        case None =>
+          Validation.failure(ErrorClienteNoExisteCore())
+      })
+    } else {
+      val future: Future[Validation[PersistenceException, Option[Cliente]]] = ClDataAdapter.consultarCliente(identificacionUsuario)
+      future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap {
+        case Some(cliente) =>
+          Validation.success(cliente)
+        case None =>
+          Validation.failure(ErrorClienteNoExisteCore())
+      })
+    }
   }
 
   def validacionTipoIdentificacion(message: AutenticarMessage, usuario: Usuario): Future[Validation[ErrorAutenticacion, Boolean]] = Future {
@@ -269,7 +281,7 @@ class AutenticacionActor extends Actor with ActorLogging {
     val validacionTipoIdentificacion = usuario.tipoIdentificacion == message.tipoIdentificacion
     validacionTipoIdentificacion match {
       case false => Validation.failure(ErrorCredencialesInvalidas())
-      case true  => Validation.success(true)
+      case true => Validation.success(true)
     }
   }
 
@@ -281,7 +293,7 @@ class AutenticacionActor extends Actor with ActorLogging {
    * ErrorAutenticacion => ErrorClienteNoExisteCore | ErrorClienteInactivoCore
    */
   def validarClienteSP(cliente: Cliente): Future[Validation[ErrorAutenticacion, Boolean]] = Future {
-    log.info("Validando los estados del cliente del core")
+    log.info("Validando los estados del cliente del core", cliente)
     if (cliente.wcli_estado != EstadosCliente.inactivo && cliente.wcli_estado != EstadosCliente.bloqueado &&
       cliente.wcli_estado != EstadosCliente.activo)
       Validation.failure(ErrorClienteInactivoCore())
@@ -296,7 +308,7 @@ class AutenticacionActor extends Actor with ActorLogging {
    * Success => True
    * ErrorAutenticacion => ErrorPersistencia | ErrorRegla | ErrorPasswordCaducado
    */
-  def validarCaducidadPassword(tipoCliente : TiposCliente, idUsuario: Int, fechaActualizacionUsuario: Date): Future[Validation[ErrorAutenticacion, Boolean]] = {
+  def validarCaducidadPassword(tipoCliente: TiposCliente, idUsuario: Int, fechaActualizacionUsuario: Date): Future[Validation[ErrorAutenticacion, Boolean]] = {
     log.info("Validando fecha de caducidad del password")
     val future: Future[Validation[PersistenceException, Option[ReglasContrasenas]]] = RgDataAdapter.obtenerRegla("DIAS_VALIDA")
     future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap {
@@ -305,8 +317,7 @@ class AutenticacionActor extends Actor with ActorLogging {
         if (new DateTime().isAfter(new DateTime(fechaActualizacionUsuario.getTime).plusDays(regla.valor.toInt))) {
           val token: String = Token.generarTokenCaducidadContrasena(tipoCliente, idUsuario)
           Validation.failure(ErrorPasswordCaducado(token))
-        }
-        else {
+        } else {
           Validation.success(true)
         }
     })
@@ -341,7 +352,8 @@ class AutenticacionActor extends Actor with ActorLogging {
    */
   def generarYAsociarToken(cliente: Cliente, usuario: Usuario, expiracionInactividad: String, ipCliente: String): Future[Validation[ErrorAutenticacion, String]] = {
     log.info("Generando y asociando token usuario individual")
-    val token: String = Token.generarToken(cliente.wcli_nombre, cliente.wcli_dir_correo, cliente.wcli_person, usuario.ipUltimoIngreso.getOrElse(ipCliente), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), expiracionInactividad)
+    val token: String = Token.generarToken(cliente.wcli_nombre, cliente.wcli_dir_correo, cliente.wcli_person,
+      usuario.ipUltimoIngreso.getOrElse(ipCliente), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), expiracionInactividad)
     val future: Future[Validation[PersistenceException, Int]] = UsDataAdapter.asociarTokenUsuario(usuario.identificacion, token)
     future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap { _ =>
       Validation.success(token)
@@ -385,7 +397,7 @@ class AutenticacionActor extends Actor with ActorLogging {
    * Success => true
    * ErrorAutenticacion => ErrorPersistencia
    */
-  def actualizarIngresosErroneosUsuario(identificacionUsuario:String, numIngresosErroneos: Int): Future[Validation[ErrorAutenticacion, Boolean]] = {
+  def actualizarIngresosErroneosUsuario(identificacionUsuario: String, numIngresosErroneos: Int): Future[Validation[ErrorAutenticacion, Boolean]] = {
     val future = UsDataAdapter.actualizarNumeroIngresosErroneos(identificacionUsuario, numIngresosErroneos)
     future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap { _ =>
       Validation.success(true)
@@ -432,13 +444,12 @@ class AutenticacionActor extends Actor with ActorLogging {
    * ErrorAutenticacion => ErrorPersistencia (si algo falla) | ErrorIntentosIngresoInvalidos (si se bloqueo el usuario)
    */
   def bloquearUsuario(identificacionUsuario: String, numIngresosErroneos: Int, regla: ReglasContrasenas): Future[Validation[ErrorAutenticacion, Boolean]] = {
-    if( numIngresosErroneos + 1 >= regla.valor.toInt) {
+    if (numIngresosErroneos + 1 >= regla.valor.toInt) {
       val future = UsDataAdapter.actualizarEstadoUsuario(identificacionUsuario, EstadosUsuarioEnum.bloqueContraseña.id)
       future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap { _ =>
         Validation.failure(ErrorIntentosIngresoInvalidos())
       })
-    }
-    else Future.successful(Validation.success(false))
+    } else Future.successful(Validation.success(false))
   }
 
   /**

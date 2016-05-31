@@ -20,7 +20,7 @@ trait AlianzaActors {
   val contrasenasAgenteEmpresarialActor = MainActors.system.actorSelection(MainActors.contrasenasAgenteEmpresarialActorSupervisor.path + "/contrasenasAgenteEmpresarialActor")
   val contrasenasClienteAdminActor = MainActors.system.actorSelection(MainActors.contrasenasClienteAdminActorSupervisor.path + "/contrasenasClienteAdminActor")
 
-  val ipsUsuarioActor     = MainActors.system.actorSelection(MainActors.ipsUsuarioActorSupervisor.path + "/ipsUsuarioActor")
+  val ipsUsuarioActor = MainActors.system.actorSelection(MainActors.ipsUsuarioActorSupervisor.path + "/ipsUsuarioActor")
   val horarioEmpresaActor = MainActors.system.actorSelection(MainActors.horarioEmpresaActorSupervisor.path + "/horarioEmpresaActor")
 
   val pinActor = MainActors.system.actorSelection(MainActors.pinActorSupervisor.path + "/pinActor")
@@ -33,6 +33,6 @@ trait AlianzaActors {
   val actualizacionActor = MainActors.system.actorSelection(MainActors.actualizacionActorSupervisor.path + "/actualizacionActor")
   val kafkaActor = MainActors.system.actorSelection(MainActors.kafkaActorSupervisor.path)
 
-  val preguntasConfrontacionActor = MainActors.system.actorSelection(MainActors.preguntasConfrontacionSupervisor.path + "/usuariosActor")
+  val preguntasAutovalidacionActor = MainActors.system.actorSelection(MainActors.preguntasAutovalidacionSupervisor.path + "/preguntasAutovalidacionActor")
 
 }

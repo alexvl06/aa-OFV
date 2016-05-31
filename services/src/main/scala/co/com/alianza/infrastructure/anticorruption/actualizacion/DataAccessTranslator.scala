@@ -7,7 +7,7 @@ import co.com.alianza.infrastructure.dto._
  *
  * @author seven4n
  */
-object  DataAccessTranslator {
+object DataAccessTranslator {
 
   def translateDatosCliente(clienteJson: String): Option[DatosCliente] = {
     val datosCliente = clienteJson.fromJson[Array[DatosCliente]]
@@ -52,5 +52,5 @@ object  DataAccessTranslator {
     val result = dataJson.fromJson[Array[ActividadEconomica]]
     if (result nonEmpty) Some(result.toList) else None
   }
-  
+
 }

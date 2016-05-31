@@ -7,9 +7,10 @@ import co.com.alianza.exceptions.PersistenceException
  */
 
 sealed trait ErrorValidacionEmpresa {
-  def msg:String
+  def msg: String
 }
 
-case class ErrorPersistenceEmpresa(msg:String, exception:PersistenceException) extends ErrorValidacionEmpresa
-case class ErrorEstadoAgenteEmpresarial(msg:String) extends ErrorValidacionEmpresa
-case class ErrorAgenteEmpNoExiste(msg:String) extends ErrorValidacionEmpresa
+case class ErrorPersistenceEmpresa(msg: String, exception: PersistenceException) extends ErrorValidacionEmpresa
+case class ErrorEstadoAgenteEmpresarial(msg: String) extends ErrorValidacionEmpresa
+case class ErrorAgenteEmpNoExiste(msg: String) extends ErrorValidacionEmpresa
+case class ErrorInterno(msg: String) extends ErrorValidacionEmpresa

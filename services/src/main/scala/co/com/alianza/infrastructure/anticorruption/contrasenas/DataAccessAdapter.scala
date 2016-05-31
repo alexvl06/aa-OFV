@@ -10,8 +10,8 @@ import co.com.alianza.persistence.repositories.ReglasContrasenasRepository
 import co.com.alianza.persistence.repositories.core.ClienteRepository
 
 import scalaz.Validation
-import scala.concurrent.{Future, ExecutionContext}
-import scalaz.{Failure => zFailure, Success => zSuccess}
+import scala.concurrent.{ Future, ExecutionContext }
+import scalaz.{ Failure => zFailure, Success => zSuccess }
 import co.com.alianza.util.clave.Crypto
 
 /**
@@ -22,16 +22,12 @@ object DataAccessAdapter {
   implicit val ec: ExecutionContext = MainActors.dataAccesEx
   val repo = new ReglasContrasenasRepository()
 
-  def consultarReglasContrasenas( ): Future[Validation[PersistenceException, List[ReglasContrasenas]]] = {
+  def consultarReglasContrasenas(): Future[Validation[PersistenceException, List[ReglasContrasenas]]] = {
     repo.obtenerReglas()
   }
 
-  def actualizarReglasContrasenas( regla: ReglasContrasenas ): Future[Validation[PersistenceException, Int]] = {
-    repo.actualizar(regla)
-  }
-
-  def obtenerRegla( llave : String ): Future[Validation[PersistenceException, Option[ReglasContrasenas]]] = {
-    repo.obtenerRegla( llave )
+  def obtenerRegla(llave: String): Future[Validation[PersistenceException, Option[ReglasContrasenas]]] = {
+    repo.obtenerRegla(llave)
   }
 
   def actualizarContrasena(pw_nuevo: String, idUsuario: Int): Future[Validation[PersistenceException, Int]] = {

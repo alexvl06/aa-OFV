@@ -1,31 +1,16 @@
-import Common._
+// ---------------------
+// Settings
+// ---------------------
 
-name := "fiduciaria-alianza-aa-common"
+Common.commonSettings
 
-organization := "co.s4n"
+name := "common"
 
-version := "0.1-SNAPSHOT"
+libraryDependencies ++= {
+  import Dependencies._
+  scalaLibs ++ akkaLibs ++ sprayLibs ++ kafkaLibs ++ functionalLibs ++ utilLibs ++ loggingLibs ++ testLibs
+}
 
-scalaVersion := commonScalaVersion
-
-scalacOptions ++= commonScalacOptions
-
-//unmanagedSourceDirectories in Compile := (scalaSource in Compile).value :: Nil
-
-//unmanagedSourceDirectories in Test := (scalaSource  in Test).value :: Nil
-
-EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource
-
-EclipseKeys.projectFlavor := EclipseProjectFlavor.Scala
-
-resolvers ++= commonResolvers
-
-def scalate = Seq(
-  "org.fusesource.scalate" % "scalate-core_2.10" % "1.6.1"
-)
-
-libraryDependencies ++= commonLibraries ++ reactiveLibraries ++ scalate
-
-//seq( Revolver.settings: _* )
-
-//baseDirectory in Revolver.reStart := file("./")
+// -----------------------
+// Custom settings
+// -----------------------

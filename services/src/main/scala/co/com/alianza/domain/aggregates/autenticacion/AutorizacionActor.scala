@@ -2,7 +2,7 @@ package co.com.alianza.domain.aggregates.autenticacion
 
 import java.util.Date
 
-import akka.actor.{ActorLogging, Actor}
+import akka.actor.{ ActorLogging, Actor }
 import akka.actor.Props
 import akka.pattern.ask
 import akka.routing.RoundRobinPool
@@ -12,14 +12,14 @@ import co.com.alianza.app.MainActors
 import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.domain.aggregates.autenticacion.errores.TokenInvalido
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.infrastructure.anticorruption.configuraciones.{DataAccessAdapter => confDataAdapter}
-import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => usDataAdapter}
-import co.com.alianza.infrastructure.anticorruption.recursos.{DataAccessAdapter => rDataAccessAdapter}
-import co.com.alianza.infrastructure.dto.{Configuracion, RecursoUsuario, Usuario}
+import co.com.alianza.infrastructure.anticorruption.configuraciones.{ DataAccessAdapter => confDataAdapter }
+import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => usDataAdapter }
+import co.com.alianza.infrastructure.anticorruption.recursos.{ DataAccessAdapter => rDataAccessAdapter }
+import co.com.alianza.infrastructure.dto.{ Configuracion, RecursoUsuario, Usuario }
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.util.FutureResponse
 import co.com.alianza.util.json.JsonUtil
-import co.com.alianza.util.token.{AesUtil, Token}
+import co.com.alianza.util.token.{ AesUtil, Token }
 import co.com.alianza.util.transformers.ValidationT
 import enumerations.CryptoAesParameters
 
@@ -28,9 +28,9 @@ import spray.http.StatusCodes._
 import scala.concurrent.duration._
 import scala.concurrent.Future
 import scalaz.std.AllInstances._
-import scala.util.{Success, Failure}
+import scala.util.{ Success, Failure }
 import scalaz.Validation
-import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
+import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
 
 class AutorizacionActorSupervisor extends Actor with ActorLogging {
 
@@ -71,13 +71,12 @@ class AutorizacionActorSupervisor extends Actor with ActorLogging {
 class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
 
   import scala.concurrent.ExecutionContext
-
+  import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.errorValidacion
   implicit val _: ExecutionContext = context.dispatcher
   implicit val timeout: Timeout = 10.seconds
 
   def receive = {
     case message: AutorizarUrl =>
-
       val currentSender = sender()
       val future = (for {
         usuarioOption <- ValidationT(validarToken(message.token))
@@ -85,12 +84,11 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
       } yield {
         resultAutorizar
       }).run
-      resolveFutureValidation(future, (x: ResponseMessage) => x, currentSender)
+      resolveFutureValidation(future, (x: ResponseMessage) => x, errorValidacion, currentSender)
 
     case message: InvalidarToken =>
       val currentSender = sender()
       val futureInvalidarToken = usDataAdapter.invalidarTokenUsuario(message.token)
-
       futureInvalidarToken onComplete {
         case Failure(failure) => currentSender ! failure
         case Success(value) =>
@@ -99,10 +97,8 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
       }
 
     case message: InvalidarTokenAgente =>
-
       val currentSender = sender()
       val futureInvalidarToken = usDataAdapter.invalidarTokenAgente(message.token)
-
       futureInvalidarToken onComplete {
         case Failure(failure) => currentSender ! failure
         case Success(value) =>
@@ -111,10 +107,8 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
       }
 
     case message: InvalidarTokenClienteAdmin =>
-
       val currentSender = sender()
       val futureInvalidarToken = usDataAdapter.invalidarTokenClienteAdmin(message.token)
-
       futureInvalidarToken onComplete {
         case Failure(failure) => currentSender ! failure
         case Success(value) =>
@@ -147,29 +141,24 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
   }
 
   /**
-   *
    * Si usuarioOption tiene un valor se guarda en cache y retorna el usuario sin el campo contraseña
    * @param usuarioOption Option con el usuario
    * @param token El token
    * @return
    */
   private def guardaTokenCache(usuarioOption: Option[Usuario], token: String): Future[Option[Usuario]] = {
-
     val validacionSesion: Future[Boolean] = ask(MainActors.sesionActorSupervisor, ValidarSesion(token)).mapTo[Boolean]
     validacionSesion.map {
-      case true => usuarioOption.map ( usuario =>usuario.copy(contrasena = None))
+      case true => usuarioOption.map(usuario => usuario.copy(contrasena = None))
       case false => None
     }
   }
 
   /**
-   *
    * Se valida si el recurso solicitado esta asociado al usuario
-   *
    * @return
    */
   private def validarRecurso(usuarioOpt: Option[Usuario], url: String) = {
-
     usuarioOpt match {
       case Some(usuario) =>
         val recursosFuturo = rDataAccessAdapter.obtenerRecursos(usuario.id.get)
@@ -182,7 +171,6 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
 
   /**
    * De acuerdo si la lista tiene contenido retorna un ResponseMessage
-   *
    * @param recursos Listado de recursos
    * @return
    */
@@ -191,13 +179,10 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
       case true => ResponseMessage(Forbidden, JsonUtil.toJson(ForbiddenMessage(usuario, None, "403.1")))
       case false =>
         val recurso = recursos.head
-
         recurso.filtro match {
           case Some(filtro) => ResponseMessage(Forbidden, JsonUtil.toJson(ForbiddenMessage(usuario, recurso.filtro, "403.2")))
           case None => ResponseMessage(OK, JsonUtil.toJson(usuario))
-
         }
-
     }
   }
 
@@ -212,13 +197,14 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
     filtrarRecursos(recurso.urlRecurso, recurso.acceso, url)
 
   protected def filtrarRecursos(urlRecurso: String, acceso: Boolean, url: String) = {
-    if (urlRecurso.equals(url))
-      acceso
+    //TODO: quitar esos "ifseses"
+    if (urlRecurso.equals(url)) acceso
     else if (urlRecurso.endsWith("/*")) {
       val urlC = urlRecurso.substring(0, urlRecurso.lastIndexOf("*"))
       if (urlC.equals(url + "/")) acceso
       else {
         if (url.length >= urlC.length) {
+          //TODO: Whhhattt ??? if (url.endsWith("/")) "" else ""
           val ends = if (url.endsWith("/")) "" else ""
           val urlSuffix = url.substring(0, urlC.length) + ends
           if (urlSuffix.equals(urlC)) acceso

@@ -5,13 +5,12 @@ import akka.actor.ActorSelection
 import akka.actor.ActorLogging
 import akka.actor.ActorSelection.toScala
 import akka.actor.actorRef2Scala
-import co.com.alianza.infrastructure.messages.{ResponseMessage, MessageService}
-import co.com.alianza.exceptions.{TimeoutLevel, PersistenceException, AlianzaException}
+import co.com.alianza.infrastructure.messages.{ ResponseMessage, MessageService }
+import co.com.alianza.exceptions.{ TimeoutLevel, PersistenceException, AlianzaException }
 
 class AnonymousActor(actorService: ActorSelection) extends Actor with ActorLogging {
 
-
-  var response:Option[Any] = None
+  var response: Option[Any] = None
 
   //Define el numero de reintentos
   var reintentos = 3
@@ -50,16 +49,15 @@ class AnonymousActor(actorService: ActorSelection) extends Actor with ActorLoggi
       response = Some(res)
       replyIfReady()
 
-
     case error: AlianzaException =>
       error.level match {
         case TimeoutLevel =>
-          if(!retryRequest) throw error
-        case _ =>  throw error
+          if (!retryRequest) throw error
+        case _ => throw error
       }
 
     case x: Exception =>
-      log.error(x,"")
+      log.error(x, "")
       log.info("Num: de reintentos:" + reintentos)
       throw x
 
@@ -70,7 +68,6 @@ class AnonymousActor(actorService: ActorSelection) extends Actor with ActorLoggi
     if (response.nonEmpty) {
       context.parent ! response
     }
-
 
   private def retryRequest = {
     if (reintentos > 0) {

@@ -1,6 +1,6 @@
 package co.com.alianza.persistence.conn.core
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{ Config, ConfigFactory }
 
 import oracle.jdbc.xa.client.OracleXADataSource
 import co.com.alianza.util.ConfigApp
@@ -10,17 +10,17 @@ import co.com.alianza.util.ConfigApp
  *
  * @author seven4n
  */
-object DataBaseAccesCoreAlianza  {
+object DataBaseAccesCoreAlianza {
 
-	private val config: Config = ConfigApp.conf
-	val ds: OracleXADataSource = createDatasource( ConnectionConfigCoreAlianza( config ) )
+  private val config: Config = ConfigApp.conf
+  val ds: OracleXADataSource = createDatasource(ConnectionConfigCoreAlianza(config))
 
-	private def createDatasource( config: ConnectionConfigCoreAlianza ): OracleXADataSource = {
+  private def createDatasource(config: ConnectionConfigCoreAlianza): OracleXADataSource = {
     val ds = new OracleXADataSource
     ds.setURL(config.connectionString)
-		ds.setUser( config.user )
-		ds.setPassword( config.pass )
+    ds.setUser(config.user)
+    ds.setPassword(config.pass)
     ds.setLoginTimeout(config.checkoutTimeout)
     ds
-	}
+  }
 }

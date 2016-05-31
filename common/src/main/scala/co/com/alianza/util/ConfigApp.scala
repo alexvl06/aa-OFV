@@ -1,18 +1,18 @@
 package co.com.alianza.util
 
-import java.io.{FileInputStream, File}
-import com.typesafe.config.{Config, ConfigFactory}
+import java.io.{ FileInputStream, File }
+import com.typesafe.config.{ Config, ConfigFactory }
 import java.util.Properties
 import org.jasypt.encryption.pbe.StandardPBEStringEncryptor
 import org.jasypt.properties.EncryptableProperties
-import java.net.{NetworkInterface, InetAddress}
+import java.net.{ NetworkInterface, InetAddress }
 
 /**
  *
  * @author seven4n
  */
 object ConfigApp {
-  private val classPathConf  = ConfigFactory.load
+  private val classPathConf = ConfigFactory.load
 
   private val encryptor = new StandardPBEStringEncryptor()
   val network = NetworkInterface.getByName("eth0")

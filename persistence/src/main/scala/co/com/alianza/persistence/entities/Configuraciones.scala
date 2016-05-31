@@ -11,6 +11,6 @@ class ConfiguracionesTable(tag: Tag) extends Table[Configuraciones](tag, "CONFIG
   def valor = column[String]("VALOR", O.PrimaryKey)
 
   // Every table needs a * projection with the same type as the table's type parameter
-  def * = (llave, valor) <>(Configuraciones.tupled, Configuraciones.unapply)
+  def * = (llave, valor) <> (Configuraciones.tupled, Configuraciones.unapply)
 
 }

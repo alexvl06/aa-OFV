@@ -7,7 +7,7 @@ case class CambiarContrasenaMessage(pw_actual: String, pw_nuevo: String, idUsuar
 
 case class CambiarContrasenaCaducadaRequestMessage(token: String, pw_actual: String, pw_nuevo: String) extends MessageService
 
-case class CambiarContrasenaCaducadaMessage(token: String, pw_actual: String, pw_nuevo: String, us_id : Int, us_tipo : String) extends MessageService
+case class CambiarContrasenaCaducadaMessage(token: String, pw_actual: String, pw_nuevo: String, us_id: Int, us_tipo: String) extends MessageService
 
 object AdministrarContrasenaMessagesJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val CambiarContrasenaMessageFormat = jsonFormat3(CambiarContrasenaMessage)

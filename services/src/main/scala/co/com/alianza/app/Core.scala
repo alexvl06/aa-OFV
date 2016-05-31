@@ -4,10 +4,10 @@ import akka.actor.{ Props, ActorSystem }
 import akka.cluster.Cluster
 import co.com.alianza.domain.aggregates.actualizacion.ActualizacionActorSupervisor
 
-import co.com.alianza.domain.aggregates.confronta.{ConfrontaActorSupervisor}
+import co.com.alianza.domain.aggregates.confronta.{ ConfrontaActorSupervisor }
 import co.com.alianza.domain.aggregates.autenticacion._
-import co.com.alianza.domain.aggregates.empresa.{HorarioEmpresaActorSupervisor, ContrasenasClienteAdminActorSupervisor, AgenteEmpresarialActorSupervisor, ContrasenasAgenteEmpresarialActorSupervisor}
-import co.com.alianza.domain.aggregates.preguntasConfrontacion.PreguntasConfrontacionSupervisor
+import co.com.alianza.domain.aggregates.empresa.{ HorarioEmpresaActorSupervisor, ContrasenasClienteAdminActorSupervisor, AgenteEmpresarialActorSupervisor, ContrasenasAgenteEmpresarialActorSupervisor }
+import co.com.alianza.domain.aggregates.preguntasAutovalidacion.PreguntasAutovalidacionSupervisor
 import co.com.alianza.domain.aggregates.usuarios.UsuariosActorSupervisor
 import co.com.alianza.domain.aggregates.autoregistro.ConsultaClienteActorSupervisor
 import co.com.alianza.domain.aggregates.contrasenas.ContrasenasActorSupervisor
@@ -18,7 +18,6 @@ import co.com.alianza.infrastructure.auditing.KafkaActorSupervisor
 import co.com.alianza.util.ConfigApp
 
 import com.typesafe.config.Config
-
 
 /**
  * Method override for the unique ActorSystem instance
@@ -35,38 +34,38 @@ trait BootedCore extends Core {
 
   implicit lazy val conf: Config = ConfigApp.conf
 
-  implicit lazy val system = ActorSystem( "alianza-fid-auth-service" )
+  implicit lazy val system = ActorSystem("alianza-fid-auth-service")
   implicit lazy val ex: ExecutionContext = system.dispatcher
   implicit lazy val cluster = Cluster.get(system)
   implicit lazy val dataAccesEx: ExecutionContext = system.dispatcher
 
-  sys.addShutdownHook( system.shutdown( ) )
+  sys.addShutdownHook(system.shutdown())
 }
 
 /**
  * Template project actors instantiation
  */
 trait CoreActors { this: Core =>
-  val usuariosActorSupervisor = system.actorOf( Props[ UsuariosActorSupervisor ], "UsuariosActorSupervisor" )
-  val confrontaActorSupervisor = system.actorOf( Props[ ConfrontaActorSupervisor ], "confrontaActorSupervisor" )
-  val consultaClienteActorSupervisor = system.actorOf( Props[ ConsultaClienteActorSupervisor ], "consultaClienteActorSupervisor" )
-  val autenticacionActorSupervisor = system.actorOf( Props[ AutenticacionActorSupervisor ], "autenticacionActorSupervisor" )
-  val autorizacionActorSupervisor = system.actorOf( Props[ AutorizacionActorSupervisor ], "autorizacionActorSupervisor" )
-  val contrasenasActorSupervisor = system.actorOf( Props[ ContrasenasActorSupervisor ], "contrasenasActorSupervisor" )
-  val contrasenasAgenteEmpresarialActorSupervisor = system.actorOf( Props[ ContrasenasAgenteEmpresarialActorSupervisor ], "contrasenasAgenteEmpresarialActorSupervisor" )
-  val contrasenasClienteAdminActorSupervisor = system.actorOf( Props[ ContrasenasClienteAdminActorSupervisor ], "contrasenasClienteAdminActorSupervisor" )
+  val usuariosActorSupervisor = system.actorOf(Props[UsuariosActorSupervisor], "UsuariosActorSupervisor")
+  val confrontaActorSupervisor = system.actorOf(Props[ConfrontaActorSupervisor], "confrontaActorSupervisor")
+  val consultaClienteActorSupervisor = system.actorOf(Props[ConsultaClienteActorSupervisor], "consultaClienteActorSupervisor")
+  val autenticacionActorSupervisor = system.actorOf(Props[AutenticacionActorSupervisor], "autenticacionActorSupervisor")
+  val autorizacionActorSupervisor = system.actorOf(Props[AutorizacionActorSupervisor], "autorizacionActorSupervisor")
+  val contrasenasActorSupervisor = system.actorOf(Props[ContrasenasActorSupervisor], "contrasenasActorSupervisor")
+  val contrasenasAgenteEmpresarialActorSupervisor = system.actorOf(Props[ContrasenasAgenteEmpresarialActorSupervisor], "contrasenasAgenteEmpresarialActorSupervisor")
+  val contrasenasClienteAdminActorSupervisor = system.actorOf(Props[ContrasenasClienteAdminActorSupervisor], "contrasenasClienteAdminActorSupervisor")
 
-  val ipsUsuarioActorSupervisor  = system.actorOf( Props[ IpsUsuarioActorSupervisor ], "ipsUsuarioActorSupervisor" )
+  val ipsUsuarioActorSupervisor = system.actorOf(Props[IpsUsuarioActorSupervisor], "ipsUsuarioActorSupervisor")
 
-  val horarioEmpresaActorSupervisor  = system.actorOf( Props[ HorarioEmpresaActorSupervisor ], "horarioEmpresaActorSupervisor" )
-  val pinActorSupervisor = system.actorOf( Props[ PinActorSupervisor ], "PinActorSupervisor" )
-  val sesionActorSupervisor = system.actorOf( Props[ SesionActorSupervisor ], "sesionActorSupervisor" )
-  val agenteEmpresarialActorSupervisor = system.actorOf( Props[ AgenteEmpresarialActorSupervisor ], "agenteEmpresarialActorSupervisor" )
-  val permisoTransaccionalActorSupervisor = system.actorOf( Props[ PermisoTransaccionalActorSupervisor ], "permisoTransaccionalActorSupervisor" )
+  val horarioEmpresaActorSupervisor = system.actorOf(Props[HorarioEmpresaActorSupervisor], "horarioEmpresaActorSupervisor")
+  val pinActorSupervisor = system.actorOf(Props[PinActorSupervisor], "PinActorSupervisor")
+  val sesionActorSupervisor = system.actorOf(Props[SesionActorSupervisor], "sesionActorSupervisor")
+  val agenteEmpresarialActorSupervisor = system.actorOf(Props[AgenteEmpresarialActorSupervisor], "agenteEmpresarialActorSupervisor")
+  val permisoTransaccionalActorSupervisor = system.actorOf(Props[PermisoTransaccionalActorSupervisor], "permisoTransaccionalActorSupervisor")
 
-  val actualizacionActorSupervisor  = system.actorOf( Props[ ActualizacionActorSupervisor ], "actualizacionActorSupervisor" )
-  val kafkaActorSupervisor = system.actorOf( Props[ KafkaActorSupervisor ], "kafkaActorSupervisor" )
-  val preguntasConfrontacionSupervisor = system.actorOf( Props[ PreguntasConfrontacionSupervisor ], "preguntasConfrontacionSupervisor" )
+  val actualizacionActorSupervisor = system.actorOf(Props[ActualizacionActorSupervisor], "actualizacionActorSupervisor")
+  val kafkaActorSupervisor = system.actorOf(Props[KafkaActorSupervisor], "kafkaActorSupervisor")
+  val preguntasAutovalidacionSupervisor = system.actorOf(Props[PreguntasAutovalidacionSupervisor], "preguntasAutovalidacionSupervisor")
 }
 
 /**

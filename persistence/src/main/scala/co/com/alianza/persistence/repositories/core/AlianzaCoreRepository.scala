@@ -1,11 +1,11 @@
 package co.com.alianza.persistence.repositories.core
 
-import java.sql.{CallableStatement, ResultSet, Connection}
+import java.sql.{ CallableStatement, ResultSet, Connection }
 
-import scala.concurrent.{Future, ExecutionContext}
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.{ Future, ExecutionContext }
+import scala.util.{ Failure, Success, Try }
 
-import scalaz.{Failure => zFailure, Success => zSuccess, Validation}
+import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
 import co.com.alianza.exceptions._
 import co.com.alianza.persistence.conn.core.DataBaseAccesCoreAlianza
 import scala.util.Failure
@@ -19,7 +19,6 @@ import java.net.SocketTimeoutException
  * @author seven4n
  */
 class AlianzaCoreRepository(implicit val executionContex: ExecutionContext) {
-
 
   def loan[R](f: Connection => Validation[PersistenceException, R]): Future[Validation[PersistenceException, R]] = {
     Future {
@@ -42,12 +41,12 @@ class AlianzaCoreRepository(implicit val executionContex: ExecutionContext) {
     }
   }
 
-  private def getLevelException(exception:Throwable):LevelException = {
+  private def getLevelException(exception: Throwable): LevelException = {
     exception.getCause match {
       case ex: NetException =>
         ex.getCause match {
-          case ex: SocketTimeoutException =>TimeoutLevel
-          case _ =>NetworkLevel
+          case ex: SocketTimeoutException => TimeoutLevel
+          case _ => NetworkLevel
         }
       case _ => TechnicalLevel
     }
@@ -62,7 +61,7 @@ class AlianzaCoreRepository(implicit val executionContex: ExecutionContext) {
         connection.commit()
         connection.close()
         zSuccess(response)
-      case Failure(exception:PersistenceException) =>
+      case Failure(exception: PersistenceException) =>
         connection.close()
         exception.printStackTrace()
         zFailure(exception)
@@ -85,11 +84,11 @@ class AlianzaCoreRepository(implicit val executionContex: ExecutionContext) {
         val numCol = r.getMetaData.getColumnCount
         while (r next ()) {
           for (a <- 1 to numCol) {
-            val x = if(r.getString(a)!=null)r.getString(a).replaceAll("\"", "'") else ""
+            val x = if (r.getString(a) != null) r.getString(a).replaceAll("\"", "'") else ""
             if (a == 1)
               record = record + "{\n"
             if (a == numCol)
-              record = record + "\t\t\"" + r.getMetaData.getColumnName(a).toLowerCase + "\": " + "\"" + x  + "\"\n},\n"
+              record = record + "\t\t\"" + r.getMetaData.getColumnName(a).toLowerCase + "\": " + "\"" + x + "\"\n},\n"
             else
               record = record + "\t\t\"" + r.getMetaData.getColumnName(a).toLowerCase + "\": " + "\"" + x + "\",\n"
           }
@@ -99,8 +98,7 @@ class AlianzaCoreRepository(implicit val executionContex: ExecutionContext) {
           record = record.substring(0, record.length() - 2)
           result append "\t" + record + "\n"
           result append "]" append "\n"
-        }else
-        {
+        } else {
           result append "[" append "\n"
           result append "]" append "\n"
         }
@@ -109,6 +107,8 @@ class AlianzaCoreRepository(implicit val executionContex: ExecutionContext) {
         if (callableStatement != null) callableStatement.close()
 
         result.toString()
+
+      case r: String => r
 
       case _ =>
         val codeError = callableStatement getObject 1
