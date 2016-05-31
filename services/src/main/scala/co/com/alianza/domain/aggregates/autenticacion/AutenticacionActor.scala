@@ -101,9 +101,9 @@ class AutenticacionActor extends Actor with ActorLogging {
         passwordCaduco <- ValidationT(validarCaducidadPassword(TiposCliente.clienteIndividual, usuario.id.get, usuario.fechaCaducidad))
         actualizacionInfo <- ValidationT(actualizarInformacionUsuario(usuario.identificacion, message.clientIp.get))
         inactividadConfig <- ValidationT(buscarConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave))
-        token             <- ValidationT(generarYAsociarToken(cliente, usuario, inactividadConfig.valor, message.clientIp.get))
-        sesion            <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
-        validacionIps     <- ValidationT(validarControlIpsUsuario(usuario.id.get, message.clientIp.get, token))
+        token <- ValidationT(generarYAsociarToken(cliente, usuario, inactividadConfig.valor, message.clientIp.get))
+        sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
+        validacionIps <- ValidationT(validarControlIpsUsuario(usuario.id.get, message.clientIp.get, token))
       } yield validacionIps).run
 
       validaciones.onComplete {
