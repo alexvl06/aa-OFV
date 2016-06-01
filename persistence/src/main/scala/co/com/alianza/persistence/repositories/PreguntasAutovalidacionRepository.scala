@@ -54,10 +54,29 @@ class PreguntasAutovalidacionRepository(implicit executionContext: ExecutionCont
       resolveTry(resultTry, "Obtener las preguntas definidas del cliente individual")
   }
 
+  def obtenerPreguntasClienteAdministrador(idUsuario: Int): Future[Validation[PersistenceException, List[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]]] = loan {
+    implicit session =>
+      val respuestaJoin = for {
+        (pregunta, respuesta) <- preguntasTable innerJoin respuestasClienteAdministradorTable on (_.id === _.idPregunta)
+        if respuesta.idUsuario === idUsuario
+      } yield (pregunta, respuesta)
+
+      val resultTry = Try { respuestaJoin.list }
+      resolveTry(resultTry, "Obtener las preguntas definidas del cliente individual")
+  }
+
   def bloquearRespuestasClienteIndividual(idUsuario: Int): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
       val resultTry = Try {
         respuestasUsuarioTable.filter(x => x.idUsuario === idUsuario).delete
+      }
+      resolveTry(resultTry, "Eliminar repsuestas del Usuario")
+  }
+
+  def bloquearRespuestasClienteAdministrador(idUsuario: Int): Future[Validation[PersistenceException, Int]] = loan {
+    implicit session =>
+      val resultTry = Try {
+        respuestasClienteAdministradorTable.filter(x => x.idUsuario === idUsuario).delete
       }
       resolveTry(resultTry, "Eliminar repsuestas del Usuario")
   }

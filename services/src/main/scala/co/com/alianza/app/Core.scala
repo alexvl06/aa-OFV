@@ -7,7 +7,7 @@ import co.com.alianza.domain.aggregates.actualizacion.ActualizacionActorSupervis
 import co.com.alianza.domain.aggregates.confronta.{ ConfrontaActorSupervisor }
 import co.com.alianza.domain.aggregates.autenticacion._
 import co.com.alianza.domain.aggregates.empresa.{ HorarioEmpresaActorSupervisor, ContrasenasClienteAdminActorSupervisor, AgenteEmpresarialActorSupervisor, ContrasenasAgenteEmpresarialActorSupervisor }
-import co.com.alianza.domain.aggregates.preguntasAutovalidacion.PreguntasAutovalidacionSupervisor
+import co.com.alianza.domain.aggregates.autovalidacion.PreguntasAutovalidacionSupervisor
 import co.com.alianza.domain.aggregates.usuarios.UsuariosActorSupervisor
 import co.com.alianza.domain.aggregates.autoregistro.ConsultaClienteActorSupervisor
 import co.com.alianza.domain.aggregates.contrasenas.ContrasenasActorSupervisor

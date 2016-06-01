@@ -18,7 +18,7 @@ class PreguntasAutovalidacionService extends Directives with AlianzaCommons with
       get {
         respondWithMediaType(mediaType) {
           pathPrefix("comprobar") {
-            requestExecute(new ObtenerPreguntasRandomMessage(Some(user.id), Some(user.tipoCliente.toString)), preguntasAutovalidacionActor)
+            requestExecute(new ObtenerPreguntasRandomMessage(Some(user.id), user.tipoCliente), preguntasAutovalidacionActor)
           } ~ {
             requestExecute(new ObtenerPreguntasMessage, preguntasAutovalidacionActor)
           }
@@ -28,7 +28,7 @@ class PreguntasAutovalidacionService extends Directives with AlianzaCommons with
           {
             entity(as[GuardarRespuestasMessage]) {
               message =>
-                requestExecute(message.copy(idUsuario = Some(user.id), tipoCliente = Some(user.tipoCliente.toString)), preguntasAutovalidacionActor)
+                requestExecute(message.copy(idUsuario = Some(user.id), tipoCliente = Some(user.tipoCliente)), preguntasAutovalidacionActor)
             }
           }
         }
@@ -37,14 +37,14 @@ class PreguntasAutovalidacionService extends Directives with AlianzaCommons with
           pathPrefix("comprobar") {
             entity(as[ValidarRespuestasMessage]) {
               message =>
-                requestExecute(message.copy(idUsuario = Some(user.id), tipoCliente = Some(user.tipoCliente.toString)), preguntasAutovalidacionActor)
+                requestExecute(message.copy(idUsuario = Some(user.id), tipoCliente = Some(user.tipoCliente)), preguntasAutovalidacionActor)
             }
           }
         }
       } ~ delete {
         respondWithMediaType(mediaType) {
           pathPrefix("comprobar") {
-            requestExecute(new BloquearRespuestasMessage(Some(user.id), Some(user.tipoCliente.toString)), preguntasAutovalidacionActor)
+            requestExecute(new BloquearRespuestasMessage(Some(user.id), user.tipoCliente), preguntasAutovalidacionActor)
           }
         }
       }

@@ -20,7 +20,7 @@ object DataAccessAdapter {
     }
   }
 
-  def guardarRespuestas(respuestas: List[RespuestasAutovalidacionUsuario]): Future[Validation[PersistenceException, List[Int]]] = {
+  def guardarRespuestasClienteIndividual(respuestas: List[RespuestasAutovalidacionUsuario]): Future[Validation[PersistenceException, List[Int]]] = {
     val repo = new PreguntasAutovalidacionRepository()
     repo.guardarRespuestasClienteIndividual(respuestas)
   }
@@ -33,6 +33,13 @@ object DataAccessAdapter {
   def obtenerPreguntasClienteIndividual(idUsuario: Option[Int]): Future[Validation[PersistenceException, List[Pregunta]]] = {
     val repo = new PreguntasAutovalidacionRepository()
     repo.obtenerPreguntasClienteIndividual(idUsuario.get) map {
+      x => toPreguntaList(x)
+    }
+  }
+
+  def obtenerPreguntasClienteAdministrador(idUsuario: Option[Int]): Future[Validation[PersistenceException, List[Pregunta]]] = {
+    val repo = new PreguntasAutovalidacionRepository()
+    repo.obtenerPreguntasClienteAdministrador(idUsuario.get) map {
       x => toPreguntaList(x)
     }
   }
@@ -51,9 +58,21 @@ object DataAccessAdapter {
     }
   }
 
+  def obtenerRespuestaCompletaClienteAdministrador(idUsuario: Option[Int]): Future[Validation[PersistenceException, List[RespuestaCompleta]]] = {
+    val repo = new PreguntasAutovalidacionRepository()
+    repo.obtenerPreguntasClienteAdministrador(idUsuario.get) map {
+      x => toRespuestaCompletaList(x)
+    }
+  }
+
   def bloquearRespuestasClienteIndividual(idUsuario: Option[Int]): Future[Validation[PersistenceException, Int]] = {
     val repo = new PreguntasAutovalidacionRepository()
     repo.bloquearRespuestasClienteIndividual(idUsuario.get)
+  }
+
+  def bloquearRespuestasClienteAdministrador(idUsuario: Option[Int]): Future[Validation[PersistenceException, Int]] = {
+    val repo = new PreguntasAutovalidacionRepository()
+    repo.bloquearRespuestasClienteAdministrador(idUsuario.get)
   }
 
   private def transformPreguntaList(origin: Validation[PersistenceException, List[PreguntasAutovalidacion]]): Validation[PersistenceException, List[Pregunta]] = {
@@ -90,4 +109,5 @@ object DataAccessAdapter {
       case zFailure(error) => zFailure(error)
     }
   }
+
 }
