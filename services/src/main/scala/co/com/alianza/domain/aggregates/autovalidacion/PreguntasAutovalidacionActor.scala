@@ -64,6 +64,7 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
    * Obtener las preguntas disponibles
    */
   private def obtenerPreguntas(): Unit = {
+    //TODO: Parametrizar el numero de preguntar (#responder * #lista)
     val currentSender = sender()
     val future: Future[Validation[PersistenceException, List[Pregunta]]] = DataAccessAdapter.obtenerPreguntas()
     resolveFutureValidation(future, (response: List[Pregunta]) => JsonUtil.toJson(response), errorValidacion, currentSender)
@@ -73,7 +74,8 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
    * Guardar respuestas autovalidacion
    * @param message
    */
-  private def guardarRespuestas(message: GuardarRespuestasMessage): Unit = {
+  private def guardarRespuestas(message: GuardarRespuestasMessage) = {
+    //TODO: validar que el #respuestas = #respuestasParametrizadas
     val currentSender = sender()
     val respuestasPersistencia = message.respuestas.map(x => new RespuestasAutovalidacionUsuario(x.idPregunta, message.idUsuario, x.respuesta))
     //futuro del guardar
@@ -89,7 +91,8 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
    * Obtener preguntas al azar del cliente individual
    * de acuerdo a las parametrizaciones
    */
-  private def obtenerPreguntasRandom(message: ObtenerPreguntasRandomMessage): Unit = {
+  private def obtenerPreguntasRandom(message: ObtenerPreguntasRandomMessage) = {
+    //TODO: parametrizar el #preguntasAResponder. Que pasa si ahora son mas ???
     val currentSender = sender()
     val future: Future[Validation[PersistenceException, List[Pregunta]]] = message.tipoCliente match {
       case TiposCliente.clienteIndividual => DataAccessAdapter.obtenerPreguntasClienteIndividual(message.idUsuario)
@@ -106,7 +109,7 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
    * @return
    */
   private def obtenerRespuestasAleatorias(response: List[Pregunta]): String = {
-    //TODO: Aqui debe ir la parametrizacio
+    //TODO: Aqui debe ir la parametrizacion
     val numeroPreguntas = 3
     val respuestaRandom = Random.shuffle(response).take(numeroPreguntas)
     JsonUtil.toJson(respuestaRandom)
@@ -133,6 +136,7 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
    * @return
    */
   private def validarRespuestas(response: List[RespuestaCompleta], respuestas: List[Respuesta]): String = {
+    //TODO: validar la parametrizacion, para que #respuestas = #respuestasParametrizadas
     val respuestasGuardadas: List[Respuesta] = response.map(res => Respuesta(res.idPregunta, res.respuesta))
     //comprobar que las respuestas concuerden
     val existe: Boolean = respuestas.foldLeft(true)((existe, respuesta) => existe && respuestasGuardadas.contains(respuesta))
@@ -153,7 +157,7 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
    * Bloquear respuestas autovalidacion
    * @param message
    */
-  def bloquearRespuestas(message: BloquearRespuestasMessage): Unit = {
+  def bloquearRespuestas(message: BloquearRespuestasMessage) = {
     val currentSender = sender()
     val future: Future[Validation[PersistenceException, Int]] = message.tipoCliente match {
       case TiposCliente.clienteIndividual => DataAccessAdapter.bloquearRespuestasClienteIndividual(message.idUsuario)
