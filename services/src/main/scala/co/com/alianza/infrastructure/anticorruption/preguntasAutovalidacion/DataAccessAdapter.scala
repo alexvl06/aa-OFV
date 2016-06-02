@@ -30,56 +30,49 @@ object DataAccessAdapter {
     repo.guardarRespuestasClienteAdministrador(respuestas)
   }
 
-  def obtenerPreguntasClienteIndividual(idUsuario: Option[Int]): Future[Validation[PersistenceException, List[Pregunta]]] = {
+  def obtenerPreguntasClienteIndividual(idUsuario: Int): Future[Validation[PersistenceException, List[Pregunta]]] = {
     val repo = new PreguntasAutovalidacionRepository()
-    repo.obtenerPreguntasClienteIndividual(idUsuario.get) map {
+    repo.obtenerPreguntasClienteIndividual(idUsuario) map {
       x => toPreguntaList(x)
     }
   }
 
-  def obtenerPreguntasClienteAdministrador(idUsuario: Option[Int]): Future[Validation[PersistenceException, List[Pregunta]]] = {
+  def obtenerPreguntasClienteAdministrador(idUsuario: Int): Future[Validation[PersistenceException, List[Pregunta]]] = {
     val repo = new PreguntasAutovalidacionRepository()
-    repo.obtenerPreguntasClienteAdministrador(idUsuario.get) map {
+    repo.obtenerPreguntasClienteAdministrador(idUsuario) map {
       x => toPreguntaList(x)
     }
   }
 
-  def obtenerRespuestasClienteIndividual(idUsuario: Option[Int]): Future[Validation[PersistenceException, List[Respuesta]]] = {
+  def obtenerRespuestasClienteIndividual(idUsuario: Int): Future[Validation[PersistenceException, List[Respuesta]]] = {
     val repo = new PreguntasAutovalidacionRepository()
-    repo.obtenerPreguntasClienteIndividual(idUsuario.get) map {
+    repo.obtenerPreguntasClienteIndividual(idUsuario) map {
       x => toRespuestaList(x)
     }
   }
 
-  def obtenerRespuestasClienteAdministrador(idUsuario: Option[Int]): Future[Validation[PersistenceException, List[Respuesta]]] = {
+  def obtenerRespuestaCompletaClienteIndividual(idUsuario: Int): Future[Validation[PersistenceException, List[RespuestaCompleta]]] = {
     val repo = new PreguntasAutovalidacionRepository()
-    repo.obtenerPreguntasClienteAdministrador(idUsuario.get) map {
-      x => toRespuestaList(x)
-    }
-  }
-
-  def obtenerRespuestaCompletaClienteIndividual(idUsuario: Option[Int]): Future[Validation[PersistenceException, List[RespuestaCompleta]]] = {
-    val repo = new PreguntasAutovalidacionRepository()
-    repo.obtenerPreguntasClienteIndividual(idUsuario.get) map {
+    repo.obtenerPreguntasClienteIndividual(idUsuario) map {
       x => toRespuestaCompletaList(x)
     }
   }
 
-  def obtenerRespuestaCompletaClienteAdministrador(idUsuario: Option[Int]): Future[Validation[PersistenceException, List[RespuestaCompleta]]] = {
+  def obtenerRespuestaCompletaClienteAdministrador(idUsuario: Int): Future[Validation[PersistenceException, List[RespuestaCompleta]]] = {
     val repo = new PreguntasAutovalidacionRepository()
-    repo.obtenerPreguntasClienteAdministrador(idUsuario.get) map {
+    repo.obtenerPreguntasClienteAdministrador(idUsuario) map {
       x => toRespuestaCompletaList(x)
     }
   }
 
-  def bloquearRespuestasClienteIndividual(idUsuario: Option[Int]): Future[Validation[PersistenceException, Int]] = {
+  def bloquearRespuestasClienteIndividual(idUsuario: Int): Future[Validation[PersistenceException, Int]] = {
     val repo = new PreguntasAutovalidacionRepository()
-    repo.bloquearRespuestasClienteIndividual(idUsuario.get)
+    repo.bloquearRespuestasClienteIndividual(idUsuario)
   }
 
-  def bloquearRespuestasClienteAdministrador(idUsuario: Option[Int]): Future[Validation[PersistenceException, Int]] = {
+  def bloquearRespuestasClienteAdministrador(idUsuario: Int): Future[Validation[PersistenceException, Int]] = {
     val repo = new PreguntasAutovalidacionRepository()
-    repo.bloquearRespuestasClienteAdministrador(idUsuario.get)
+    repo.bloquearRespuestasClienteAdministrador(idUsuario)
   }
 
   private def transformPreguntaList(origin: Validation[PersistenceException, List[PreguntasAutovalidacion]]): Validation[PersistenceException, List[Pregunta]] = {

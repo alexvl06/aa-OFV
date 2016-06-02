@@ -75,11 +75,11 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
    */
   private def guardarRespuestas(message: GuardarRespuestasMessage): Unit = {
     val currentSender = sender()
-    val respuestasPersistencia = message.respuestas.map(x => new RespuestasAutovalidacionUsuario(x.idPregunta, message.idUsuario.get, x.respuesta))
+    val respuestasPersistencia = message.respuestas.map(x => new RespuestasAutovalidacionUsuario(x.idPregunta, message.idUsuario, x.respuesta))
     //futuro del guardar
     val future: Future[Validation[PersistenceException, List[Int]]] = message.tipoCliente match {
-      case Some(TiposCliente.clienteIndividual) => DataAccessAdapter.guardarRespuestasClienteIndividual(respuestasPersistencia)
-      case Some(TiposCliente.clienteAdministrador) => DataAccessAdapter.guardarRespuestasClienteAdministrador(respuestasPersistencia)
+      case TiposCliente.clienteIndividual => DataAccessAdapter.guardarRespuestasClienteIndividual(respuestasPersistencia)
+      case TiposCliente.clienteAdministrador => DataAccessAdapter.guardarRespuestasClienteAdministrador(respuestasPersistencia)
       case _ => Future(zSuccess(List.empty[Int]))
     }
     resolveFutureValidation(future, (response: List[Int]) => ResponseMessage(OK), errorValidacion, currentSender)
@@ -119,8 +119,8 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
   private def validarRespuestas(message: ValidarRespuestasMessage): Unit = {
     val currentSender = sender()
     val future: Future[Validation[PersistenceException, List[RespuestaCompleta]]] = message.tipoCliente match {
-      case Some(TiposCliente.clienteIndividual) => DataAccessAdapter.obtenerRespuestaCompletaClienteIndividual(message.idUsuario)
-      case Some(TiposCliente.clienteAdministrador) => DataAccessAdapter.obtenerRespuestaCompletaClienteAdministrador(message.idUsuario)
+      case TiposCliente.clienteIndividual => DataAccessAdapter.obtenerRespuestaCompletaClienteIndividual(message.idUsuario)
+      case TiposCliente.clienteAdministrador => DataAccessAdapter.obtenerRespuestaCompletaClienteAdministrador(message.idUsuario)
       case _ => Future(zSuccess(List.empty[RespuestaCompleta]))
     }
     resolveFutureValidation(future, (response: List[RespuestaCompleta]) => validarRespuestas(response, message.respuestas), errorValidacion, currentSender)

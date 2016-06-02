@@ -6,9 +6,11 @@ import akka.routing.RoundRobinPool
 import co.com.alianza.app.MainActors
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
+import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import co.com.alianza.constants.TiposConfiguracion
 
 import co.com.alianza.domain.aggregates.autenticacion.errores._
+import co.com.alianza.domain.aggregates.usuarios.ErrorClienteNoExiste
 import co.com.alianza.exceptions.PersistenceException
 
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => UsDataAdapter }
