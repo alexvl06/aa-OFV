@@ -11,11 +11,11 @@ import spray.httpx.SprayJsonSupport
  */
 object PreguntasAutovalidacionMessagesJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val respuestaMessageFormat = jsonFormat2(Respuesta)
-  implicit val guardarRespuestasMessageFormat = jsonFormat3(GuardarRespuestasMessage)
-  implicit val validarRespuestasMessageFormat = jsonFormat3(ValidarRespuestasMessage)
+  implicit val respuestasMessageFormat = jsonFormat1(RespuestasMessage)
 }
 
 case class ObtenerPreguntasMessage() extends MessageService
+case class RespuestasMessage(respuestas: List[Respuesta]) extends MessageService
 case class ObtenerPreguntasRandomMessage(idUsuario: Option[Int], tipoCliente: TiposCliente) extends MessageService
 case class BloquearRespuestasMessage(idUsuario: Option[Int], tipoCliente: TiposCliente) extends MessageService
 case class GuardarRespuestasMessage(idUsuario: Option[Int], tipoCliente: Option[TiposCliente], respuestas: List[Respuesta]) extends MessageService
