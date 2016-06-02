@@ -51,6 +51,13 @@ object DataAccessAdapter {
     }
   }
 
+  def obtenerRespuestasClienteAdministrador(idUsuario: Option[Int]): Future[Validation[PersistenceException, List[Respuesta]]] = {
+    val repo = new PreguntasAutovalidacionRepository()
+    repo.obtenerPreguntasClienteAdministrador(idUsuario.get) map {
+      x => toRespuestaList(x)
+    }
+  }
+
   def obtenerRespuestaCompletaClienteIndividual(idUsuario: Option[Int]): Future[Validation[PersistenceException, List[RespuestaCompleta]]] = {
     val repo = new PreguntasAutovalidacionRepository()
     repo.obtenerPreguntasClienteIndividual(idUsuario.get) map {
