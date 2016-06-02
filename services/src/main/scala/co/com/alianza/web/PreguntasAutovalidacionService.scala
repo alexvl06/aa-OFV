@@ -18,7 +18,7 @@ class PreguntasAutovalidacionService extends Directives with AlianzaCommons with
       get {
         respondWithMediaType(mediaType) {
           pathPrefix("comprobar") {
-            requestExecute(new ObtenerPreguntasRandomMessage(Some(user.id), user.tipoCliente), preguntasAutovalidacionActor)
+            requestExecute(new ObtenerPreguntasRandomMessage(user.id, user.tipoCliente), preguntasAutovalidacionActor)
           } ~ {
             requestExecute(new ObtenerPreguntasMessage, preguntasAutovalidacionActor)
           }
@@ -26,9 +26,10 @@ class PreguntasAutovalidacionService extends Directives with AlianzaCommons with
       } ~ put {
         respondWithMediaType(mediaType) {
           {
-            entity(as[GuardarRespuestasMessage]) {
-              message =>
-                requestExecute(message.copy(idUsuario = Some(user.id), tipoCliente = Some(user.tipoCliente)), preguntasAutovalidacionActor)
+            entity(as[RespuestasMessage]) {
+              message: RespuestasMessage =>
+                val guardarMessage = GuardarRespuestasMessage(user.id, user.tipoCliente, message.respuestas)
+                requestExecute(guardarMessage, preguntasAutovalidacionActor)
             }
           }
         }
@@ -36,16 +37,16 @@ class PreguntasAutovalidacionService extends Directives with AlianzaCommons with
         respondWithMediaType(mediaType) {
           pathPrefix("comprobar") {
             entity(as[RespuestasMessage]) {
-              message =>
-                val message = ValidarRespuestasMessage(user.id, user.tipoCliente, message.respuestas)
-                requestExecute(message.copy(idUsuario = Some(user.id), tipoCliente = Some(user.tipoCliente)), preguntasAutovalidacionActor)
+              message: RespuestasMessage =>
+                val validacionMessage = ValidarRespuestasMessage(user.id, user.tipoCliente, message.respuestas)
+                requestExecute(validacionMessage, preguntasAutovalidacionActor)
             }
           }
         }
       } ~ delete {
         respondWithMediaType(mediaType) {
           pathPrefix("comprobar") {
-            requestExecute(new BloquearRespuestasMessage(Some(user.id), user.tipoCliente), preguntasAutovalidacionActor)
+            requestExecute(new BloquearRespuestasMessage(user.id, user.tipoCliente), preguntasAutovalidacionActor)
           }
         }
       }
