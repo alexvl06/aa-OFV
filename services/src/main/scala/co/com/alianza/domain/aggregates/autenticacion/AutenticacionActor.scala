@@ -406,7 +406,7 @@ class AutenticacionActor extends Actor with ActorLogging {
    */
   def validarPreguntasUsuario(idUsuario: Int): Future[Validation[ErrorAutenticacion, String]] = {
     log.info("Validando preguntas de autovalidacion de cliente individual")
-    val future = DataAccesAdapterPreguntas.obtenerRespuestasClienteIndividual(Some(idUsuario))
+    val future = DataAccesAdapterPreguntas.obtenerRespuestasClienteIndividual(idUsuario)
     future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap { respuestas =>
       Validation.success(!respuestas.isEmpty toString)
     })

@@ -8,7 +8,7 @@ import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.domain.aggregates.autenticacion.errores._
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => UsDataAdapter}
+import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => UsDataAdapter }
 import co.com.alianza.infrastructure.dto._
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.persistence.entities.ReglasContrasenas
@@ -18,16 +18,16 @@ import java.sql.Timestamp
 import java.util.Date
 
 import co.com.alianza.infrastructure.anticorruption.preguntasAutovalidacion.{ DataAccessAdapter => DataAccesAdapterPreguntas }
-import enumerations.{EstadosEmpresaEnum, TipoIdentificacion}
+import enumerations.{ EstadosEmpresaEnum, TipoIdentificacion }
 import enumerations.empresa.EstadosDeEmpresaEnum
 
 import scala.concurrent.duration._
 import scala.concurrent.Future
-import scala.util.{Failure => sFailure, Success => sSuccess}
+import scala.util.{ Failure => sFailure, Success => sSuccess }
 import spray.http.StatusCodes._
 
 import scalaz.std.AllInstances._
-import scalaz.{Validation, Failure => zFailure, Success => zSuccess}
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 import scalaz.Validation.FlatMap._
 
 class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogging with ValidacionesAutenticacionUsuarioEmpresarial {
@@ -569,14 +569,14 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
   }
 
   /**
-    * Valida si el usuario empresarial admin tiene preguntas de autovalidacion definidas
-    * @param idUsuario el id del usuario a validar
-    * @return Future[Validation[ErrorAutenticacion, Boolean] ]
-    * Success => El token si el usuario tiene preguntas de autovalidacion definidas
-    */
+   * Valida si el usuario empresarial admin tiene preguntas de autovalidacion definidas
+   * @param idUsuario el id del usuario a validar
+   * @return Future[Validation[ErrorAutenticacion, Boolean] ]
+   * Success => El token si el usuario tiene preguntas de autovalidacion definidas
+   */
   def validarPreguntasUsuarioAdmin(idUsuario: Int): Future[Validation[ErrorAutenticacion, String]] = {
     log.info("Validando preguntas de autovalidacion de cliente administrador")
-    val future = DataAccesAdapterPreguntas.obtenerRespuestasClienteAdministrador(Some(idUsuario))
+    val future = DataAccesAdapterPreguntas.obtenerRespuestasClienteAdministrador(idUsuario)
     future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap { respuestas =>
       Validation.success(!respuestas.isEmpty toString)
     })
