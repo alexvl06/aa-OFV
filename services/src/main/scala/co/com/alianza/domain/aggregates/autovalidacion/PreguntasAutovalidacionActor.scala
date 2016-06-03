@@ -187,8 +187,9 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
         //3. obtener las preguntas que no corresponden a las preguntas contestadas
         val numeroPreguntasRepetidas: Int = respuestas.size - numeroPreguntasCambio
         val idsRespuesta: List[Int] = respuestas.map(_.idPregunta)
-
         val idsPreguntasRepetidas: List[Int] = Random.shuffle(idsRespuesta).take(numeroPreguntasRepetidas)
+        println("ids preguntas repetidas")
+        println(idsPreguntasRepetidas)
         val idsPreguntasNuevas: List[Int] = response.filter(res => !idsPreguntasRepetidas.contains(res.idPregunta)).map(_.idPregunta)
         val idsPreguntas: List[Int] = idsPreguntasRepetidas ++ idsPreguntasNuevas
         val preguntas: List[Pregunta] = response.filter(res => (idsPreguntas).contains(res.idPregunta)).map(x => Pregunta(x.idPregunta, x.pregunta))
