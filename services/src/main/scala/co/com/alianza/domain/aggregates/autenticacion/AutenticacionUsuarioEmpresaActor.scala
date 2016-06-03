@@ -1,41 +1,33 @@
 package co.com.alianza.domain.aggregates.autenticacion
 
-import java.sql.{ Time, Timestamp }
-import java.util.{ Calendar, Date }
-
 import akka.actor.ActorLogging
 import akka.pattern.ask
 import akka.util.Timeout
-
 import co.com.alianza.app.MainActors
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.domain.aggregates.autenticacion.errores._
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => UsDataAdapter }
-import co.com.alianza.infrastructure.anticorruption.empresa.{ DataAccessTranslator => EmpDataAccessTranslator }
 import co.com.alianza.infrastructure.dto._
 import co.com.alianza.infrastructure.messages._
-
 import co.com.alianza.persistence.entities.ReglasContrasenas
-
 import co.com.alianza.util.token.Token
 import co.com.alianza.util.transformers.ValidationT
-
 import java.sql.Timestamp
 import java.util.Date
 
-import enumerations.{ TipoIdentificacion, EstadosEmpresaEnum }
+import co.com.alianza.infrastructure.anticorruption.preguntasAutovalidacion.{ DataAccessAdapter => DataAccesAdapterPreguntas }
+import enumerations.{ EstadosEmpresaEnum, TipoIdentificacion }
 import enumerations.empresa.EstadosDeEmpresaEnum
 
 import scala.concurrent.duration._
 import scala.concurrent.Future
-import scala.util.{ Success => sSuccess, Failure => sFailure }
-
+import scala.util.{ Failure => sFailure, Success => sSuccess }
 import spray.http.StatusCodes._
 
 import scalaz.std.AllInstances._
-import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 import scalaz.Validation.FlatMap._
 
 class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogging with ValidacionesAutenticacionUsuarioEmpresarial {
@@ -103,7 +95,8 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
         empresa <- ValidationT(obtenerEmpresaPorNit(message.nit))
         horario <- ValidationT(obtenerHorarioEmpresa(empresa.id))
         horarioValido <- ValidationT(validarHorarioEmpresa(horario))
-        validacionIps <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token, usuarioAdmin.tipoIdentificacion))
+        validacionPreguntas <- ValidationT(validarPreguntasUsuarioAdmin(usuarioAdmin.id))
+        validacionIps <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token, usuarioAdmin.tipoIdentificacion, validacionPreguntas))
       } yield validacionIps).run
 
       validaciones.onComplete {
@@ -165,7 +158,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
         horario <- ValidationT(obtenerHorarioEmpresa(empresa.id))
         horarioValido <- ValidationT(validarHorarioEmpresa(horario))
         sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt, empresa, horario))
-        validacionIps <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token, usuarioAgente.tipoIdentificacion))
+        validacionIps <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token, usuarioAgente.tipoIdentificacion, "true"))
       } yield validacionIps).run
 
       validaciones.onComplete {
@@ -367,15 +360,22 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
    * Success => El token si el usuario tiene la ip en su lista de ips
    * ErrorAutenticacion => ErrorPersistencia | ErrorControlIpsDesactivado
    */
-  def validarControlIpsUsuarioEmpresarial(idEmpresa: Int, ipPeticion: String, token: String, tipoIdentificacion: Int): Future[Validation[ErrorAutenticacion, String]] = {
+  def validarControlIpsUsuarioEmpresarial(idEmpresa: Int, ipPeticion: String, token: String, tipoIdentificacion: Int, validacionPreguntas: String): Future[Validation[ErrorAutenticacion, String]] = {
     if (tipoIdentificacion == TipoIdentificacion.GRUPO.identificador) {
       Future(Validation.success(token))
     } else {
       log.info("Validando control de ips usuario empresarial")
       val future = UsDataAdapter.obtenerIpsEmpresa(idEmpresa)
       future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap { ips =>
-        if (ips.filter(_.ip == ipPeticion).isEmpty) Validation.failure(ErrorControlIpsDesactivado(token))
-        else Validation.success(token)
+        if (validacionPreguntas.equals("true"))
+          if (ips.filter(_.ip == ipPeticion).isEmpty)
+            Validation.failure(ErrorControlIpsDesactivado(token))
+          else
+            Validation.success(token)
+        else if (ips.filter(_.ip == ipPeticion).isEmpty)
+          Validation.failure(ErrorNoIpNoPreguntas(token))
+        else
+          Validation.failure(ErrorSiIpNoPreguntas(token))
       })
     }
   }
@@ -573,6 +573,20 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
       "S"
     else
       naturalezaSIFI
+  }
+
+  /**
+   * Valida si el usuario empresarial admin tiene preguntas de autovalidacion definidas
+   * @param idUsuario el id del usuario a validar
+   * @return Future[Validation[ErrorAutenticacion, Boolean] ]
+   * Success => El token si el usuario tiene preguntas de autovalidacion definidas
+   */
+  def validarPreguntasUsuarioAdmin(idUsuario: Int): Future[Validation[ErrorAutenticacion, String]] = {
+    log.info("Validando preguntas de autovalidacion de cliente administrador")
+    val future = DataAccesAdapterPreguntas.obtenerRespuestasClienteAdministrador(idUsuario)
+    future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap { respuestas =>
+      Validation.success(!respuestas.isEmpty toString)
+    })
   }
 
 }

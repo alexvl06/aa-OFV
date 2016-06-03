@@ -10,7 +10,7 @@ import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.domain.aggregates.autenticacion.errores._
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => UsDataAdapter }
-import co.com.alianza.infrastructure.anticorruption.autovalidacion.{ DataAccessAdapter => PrDataAdapter }
+import co.com.alianza.infrastructure.anticorruption.preguntasAutovalidacion.{ DataAccessAdapter => DataAccesAdapterPreguntas }
 import co.com.alianza.infrastructure.anticorruption.clientes.{ DataAccessAdapter => ClDataAdapter }
 import co.com.alianza.infrastructure.anticorruption.grupos.{ DataAccessAdapter => DataAdapterGrupos }
 import co.com.alianza.infrastructure.anticorruption.contrasenas.{ DataAccessAdapter => RgDataAdapter }
@@ -22,16 +22,12 @@ import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.token.Token
 import co.com.alianza.util.transformers.ValidationT
 import enumerations.{ TipoIdentificacion, EstadosCliente, AppendPasswordUser, EstadosUsuarioEnum }
-
 import java.sql.Timestamp
 import java.util.Date
-
 import org.joda.time.DateTime
 import spray.http.StatusCodes._
-
 import scala.concurrent.Future
 import scala.util.{ Success => sSuccess, Failure => sFailure }
-
 import scalaz.std.AllInstances._
 import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
 import scalaz.Validation.FlatMap._
@@ -400,7 +396,7 @@ class AutenticacionActor extends Actor with ActorLogging {
    */
   def validarPreguntasUsuario(idUsuario: Int): Future[Validation[ErrorAutenticacion, String]] = {
     log.info("Validando preguntas de autovalidacion de cliente individual")
-    val future = PrDataAdapter.obtenerRespuestasClienteIndividual(idUsuario)
+    val future = DataAccesAdapterPreguntas.obtenerRespuestasClienteIndividual(idUsuario)
     future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap { respuestas =>
       Validation.success(!respuestas.isEmpty toString)
     })
