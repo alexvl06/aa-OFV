@@ -26,4 +26,5 @@ case class ErrorClienteNoPerfil(msg: String) extends ErrorValidacion
 case class ErrorUsuarioClienteAdmin(msg: String) extends ErrorValidacion
 case class ErrorEmpresaAccesoDenegado(msg: String) extends ErrorValidacion
 case class ErrorUsuarioEmpresaAdminActivo(msg: String) extends ErrorValidacion
+case class ErrorAutovalidacion(msg: String) extends ErrorValidacion
 

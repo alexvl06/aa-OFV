@@ -1,4 +1,4 @@
-package co.com.alianza.infrastructure.anticorruption.preguntasAutovalidacion
+package co.com.alianza.infrastructure.anticorruption.autovalidacion
 
 import co.com.alianza.infrastructure.dto._
 
