@@ -18,7 +18,7 @@ class PreguntasAutovalidacionService extends Directives with AlianzaCommons with
       get {
         respondWithMediaType(mediaType) {
           pathPrefix("comprobar") {
-            requestExecute(new ObtenerPreguntasRandomMessage(user.id, user.tipoCliente), preguntasAutovalidacionActor)
+            requestExecute(new ObtenerPreguntasComprobarMessage(user.id, user.tipoCliente), preguntasAutovalidacionActor)
           } ~ {
             requestExecute(new ObtenerPreguntasMessage, preguntasAutovalidacionActor)
           }

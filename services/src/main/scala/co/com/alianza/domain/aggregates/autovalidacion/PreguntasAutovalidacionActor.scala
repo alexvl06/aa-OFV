@@ -58,7 +58,7 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
 
     case message: GuardarRespuestasMessage => guardarRespuestas(message)
 
-    case message: ObtenerPreguntasRandomMessage => obtenerPreguntasRandom(message)
+    case message: ObtenerPreguntasComprobarMessage => obtenerPreguntasComprobar(message)
 
     case message: ValidarRespuestasMessage => validarRespuestas(message)
 
@@ -73,14 +73,15 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
    */
   private def obtenerPreguntas(): Unit = {
     val currentSender = sender()
-    val future: Future[Validation[PersistenceException, (List[Pregunta], Option[Configuracion])]] = (for {
+    val future: Future[Validation[PersistenceException, (List[Pregunta], List[Configuracion])]] = (for {
       preguntas <- ValidationT(DataAccessAdapter.obtenerPreguntas())
-      configuracion <- ValidationT(DataAdapterConfiguracion.obtenerConfiguracionPorLlave("AUTOVALIDACION_NUMERO_PREGUNTAS_LISTA"))
-    } yield (preguntas, configuracion)).run
-    resolveFutureValidation(future, (response: (List[Pregunta], Option[Configuracion])) => {
-      val numeroPreguntasLista = response._2.get.valor.toInt
+      configuraciones <- ValidationT(DataAdapterConfiguracion.obtenerConfiguraciones())
+    } yield (preguntas, configuraciones)).run
+    resolveFutureValidation(future, (response: (List[Pregunta], List[Configuracion])) => {
+      val numeroPreguntas = obtenerValorEntero(response._2, "AUTOVALIDACION_NUMERO_PREGUNTAS")
+      val numeroPreguntasLista = obtenerValorEntero(response._2, "AUTOVALIDACION_NUMERO_PREGUNTAS_LISTA")
       val preguntas = Random.shuffle(response._1).take(numeroPreguntasLista)
-      JsonUtil.toJson(preguntas)
+      JsonUtil.toJson(PreguntasResponse(preguntas, numeroPreguntas))
     }, errorValidacion, currentSender)
   }
 
@@ -127,7 +128,7 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
    * Obtener preguntas al azar del cliente individual
    * de acuerdo a las parametrizaciones
    */
-  private def obtenerPreguntasRandom(message: ObtenerPreguntasRandomMessage) = {
+  private def obtenerPreguntasComprobar(message: ObtenerPreguntasComprobarMessage) = {
     val currentSender = sender()
     val futurePreguntas: Future[Validation[PersistenceException, List[Pregunta]]] = message.tipoCliente match {
       case TiposCliente.clienteIndividual => DataAccessAdapter.obtenerPreguntasClienteIndividual(message.idUsuario)
@@ -189,7 +190,7 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
         //2. obtener los ids de las preguntas que se van a repetir
         val numeroPreguntasRepetidas: Int = respuestas.size - numeroPreguntasCambio
         val idsPreguntasRepetidas: List[Int] = Random.shuffle(idsRespuesta).take(numeroPreguntasRepetidas)
-        //3. obtener las preguntas que no corresponden a las preguntas contestadas
+        //3. obtener ids de las preguntas que no corresponden a las preguntas contestadas
         val idsPreguntasNuevas: List[Int] = response.filter(res => !idsRespuesta.contains(res.idPregunta)).map(_.idPregunta)
         //4. obtener ids de las preguntas repetidas mas las preguntas nuevas
         val idsPreguntas: List[Int] = idsPreguntasRepetidas ++ Random.shuffle(idsPreguntasNuevas).take(numeroPreguntasCambio)
