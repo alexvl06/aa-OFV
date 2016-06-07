@@ -155,11 +155,13 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
       case TiposCliente.clienteAdministrador => DataAccessAdapter.obtenerRespuestaCompletaClienteAdministrador(message.idUsuario)
       case _ => Future(zSuccess(List.empty[RespuestaCompleta]))
     }
+    val llavePreguntasComprobar: String = "AUTOVALIDACION_NUMERO_PREGUNTAS_COMPROBACION"
+    val llavePreguntasCambio: String = "AUTOVALIDACION_NUMERO_PREGUNTAS_CAMBIAR"
     val future = (for {
       configuraciones <- ValidationT(toErrorValidation(DataAdapterConfiguracion.obtenerConfiguraciones()))
-      validar <- ValidationT(validarNumeroRespuestas(message.respuestas.size, obtenerValorEntero(configuraciones, "AUTOVALIDACION_NUMERO_PREGUNTAS_COMPROBACION")))
+      validar <- ValidationT(validarNumeroRespuestas(message.respuestas.size, obtenerValorEntero(configuraciones, llavePreguntasComprobar)))
       respuestas <- ValidationT(toErrorValidation(futureRespuestas))
-      respuesta <- ValidationT(validarRespuestasValidation(respuestas, message.respuestas, obtenerValorEntero(configuraciones, "AUTOVALIDACION_NUMERO_PREGUNTAS_CAMBIAR")))
+      respuesta <- ValidationT(validarRespuestasValidation(respuestas, message.respuestas, obtenerValorEntero(configuraciones, llavePreguntasCambio)))
     } yield respuesta).run
     resolveFutureValidation(future, (response: String) => response, errorValidacion, currentSender)
   }
@@ -183,19 +185,18 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
       case false => {
         //en caso que no concuerden, se envian la preguntas restantes mas una de las contestadas
         //1. obtener los ids de las respuestas
-        //2. obtener los ids de las preguntas que no contienen las respuestas
-        //3. obtener las preguntas que no corresponden a las preguntas contestadas
-        val numeroPreguntasRepetidas: Int = respuestas.size - numeroPreguntasCambio
         val idsRespuesta: List[Int] = respuestas.map(_.idPregunta)
+        //2. obtener los ids de las preguntas que se van a repetir
+        val numeroPreguntasRepetidas: Int = respuestas.size - numeroPreguntasCambio
         val idsPreguntasRepetidas: List[Int] = Random.shuffle(idsRespuesta).take(numeroPreguntasRepetidas)
-        println("ids preguntas repetidas")
-        println(idsPreguntasRepetidas)
-        val idsPreguntasNuevas: List[Int] = response.filter(res => !idsPreguntasRepetidas.contains(res.idPregunta)).map(_.idPregunta)
-        val idsPreguntas: List[Int] = idsPreguntasRepetidas ++ idsPreguntasNuevas
+        //3. obtener las preguntas que no corresponden a las preguntas contestadas
+        val idsPreguntasNuevas: List[Int] = response.filter(res => !idsRespuesta.contains(res.idPregunta)).map(_.idPregunta)
+        //4. obtener ids de las preguntas repetidas mas las preguntas nuevas
+        val idsPreguntas: List[Int] = idsPreguntasRepetidas ++ Random.shuffle(idsPreguntasNuevas).take(numeroPreguntasCambio)
+        //5. con los ids, obtener las preguntas a devolver
         val preguntas: List[Pregunta] = response.filter(res => (idsPreguntas).contains(res.idPregunta)).map(x => Pregunta(x.idPregunta, x.pregunta))
-        //reenviar preguntas
-        val preguntasDesordenadas = Random.shuffle(preguntas).take(preguntas.size)
-        zFailure(ErrorAutovalidacion(JsonUtil.toJson(preguntasDesordenadas)))
+        //6. reenviar preguntas desordenadamente
+        zFailure(ErrorAutovalidacion(JsonUtil.toJson(Random.shuffle(preguntas).take(preguntas.size))))
       }
     }
   }
