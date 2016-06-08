@@ -16,6 +16,7 @@ import co.com.alianza.util.FutureResponse
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.transformers.ValidationT
 import com.typesafe.config.Config
+import enumerations.ConfiguracionEnum
 import spray.http.StatusCodes._
 
 import scala.concurrent.Future
@@ -78,8 +79,8 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
       configuraciones <- ValidationT(DataAdapterConfiguracion.obtenerConfiguraciones())
     } yield (preguntas, configuraciones)).run
     resolveFutureValidation(future, (response: (List[Pregunta], List[Configuracion])) => {
-      val numeroPreguntas = obtenerValorEntero(response._2, "AUTOVALIDACION_NUMERO_PREGUNTAS")
-      val numeroPreguntasLista = obtenerValorEntero(response._2, "AUTOVALIDACION_NUMERO_PREGUNTAS_LISTA")
+      val numeroPreguntas = obtenerValorEntero(response._2, ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS.name)
+      val numeroPreguntasLista = obtenerValorEntero(response._2, ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS_LISTA.name)
       val preguntas = Random.shuffle(response._1).take(numeroPreguntasLista)
       JsonUtil.toJson(PreguntasResponse(preguntas, numeroPreguntas))
     }, errorValidacion, currentSender)
@@ -91,6 +92,7 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
    */
   private def guardarRespuestas(message: GuardarRespuestasMessage) = {
     val currentSender = sender()
+    val llave = ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS.name
     val respuestasPersistencia = message.respuestas.map(x => new RespuestasAutovalidacionUsuario(x.idPregunta, message.idUsuario, x.respuesta))
     //futuro del guardar
     val futureGuardar: Future[Validation[PersistenceException, List[Int]]] = message.tipoCliente match {
@@ -99,7 +101,7 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
       case _ => Future(zSuccess(List.empty[Int]))
     }
     val future: Future[Validation[ErrorValidacion, List[Int]]] = (for {
-      configuracion <- ValidationT(toErrorValidation(DataAdapterConfiguracion.obtenerConfiguracionPorLlave("AUTOVALIDACION_NUMERO_PREGUNTAS")))
+      configuracion <- ValidationT(toErrorValidation(DataAdapterConfiguracion.obtenerConfiguracionPorLlave(llave)))
       validar <- ValidationT(validarNumeroRespuestas(respuestasPersistencia.size, configuracion.get.valor.toInt))
       guardar <- ValidationT(toErrorValidation(futureGuardar))
     } yield guardar).run
@@ -139,8 +141,8 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
       configuraciones <- ValidationT(DataAdapterConfiguracion.obtenerConfiguraciones())
     } yield (preguntas, configuraciones)).run
     resolveFutureValidation(future, (response: (List[Pregunta], List[Configuracion])) => {
-      val numeroIntentos = obtenerValorEntero(response._2, "AUTOVALIDACION_NUMERO_REINTENTOS")
-      val numeroPreguntasComprobacion = obtenerValorEntero(response._2, "AUTOVALIDACION_NUMERO_PREGUNTAS_COMPROBACION")
+      val numeroIntentos = obtenerValorEntero(response._2, ConfiguracionEnum.AUTOVALIDACION_NUMERO_REINTENTOS.name)
+      val numeroPreguntasComprobacion = obtenerValorEntero(response._2, ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS_COMPROBACION.name)
       val preguntasRandom = Random.shuffle(response._1).take(numeroPreguntasComprobacion)
       JsonUtil.toJson(PreguntasComprobarResponse(preguntasRandom, numeroIntentos))
     }, errorValidacion, currentSender)
@@ -157,8 +159,8 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
       case TiposCliente.clienteAdministrador => DataAccessAdapter.obtenerRespuestaCompletaClienteAdministrador(message.idUsuario)
       case _ => Future(zSuccess(List.empty[RespuestaCompleta]))
     }
-    val llavePreguntasComprobar: String = "AUTOVALIDACION_NUMERO_PREGUNTAS_COMPROBACION"
-    val llavePreguntasCambio: String = "AUTOVALIDACION_NUMERO_PREGUNTAS_CAMBIAR"
+    val llavePreguntasComprobar: String = ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS_COMPROBACION.name
+    val llavePreguntasCambio: String = ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS_CAMBIAR.name
     val future = (for {
       configuraciones <- ValidationT(toErrorValidation(DataAdapterConfiguracion.obtenerConfiguraciones()))
       validar <- ValidationT(validarNumeroRespuestas(message.respuestas.size, obtenerValorEntero(configuraciones, llavePreguntasComprobar)))
