@@ -108,7 +108,7 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
 
   /**
    * Validaciones correspondiente a que el numero de respuestas sea igual a
-   * el numero de preguntas parametrizadas por el administrados
+   * el numero de preguntas parametrizadas por el administrador
    * @param numeroRespuestas
    * @param numeroRespuestasParametrizadas
    * @return
@@ -118,14 +118,13 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
     comparacion match {
       case true => zSuccess(comparacion)
       case false =>
-        //TODO: definir los codigos de error a enviar para este error y el
-        //comportamiento
+        //TODO: definir los codigos de error a enviar para este error y el comportamiento
         zFailure(ErrorAutovalidacion("Numero de respuestas no es igual al parametrizado"))
     }
   }
 
   /**
-   * Obtener preguntas al azar del cliente individual
+   * Obtener preguntas al azar del cliente
    * de acuerdo a las parametrizaciones
    */
   private def obtenerPreguntasComprobar(message: ObtenerPreguntasComprobarMessage) = {
@@ -137,11 +136,13 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
     }
     val future = (for {
       preguntas <- ValidationT(futurePreguntas)
-      configuracion <- ValidationT(DataAdapterConfiguracion.obtenerConfiguracionPorLlave("AUTOVALIDACION_NUMERO_PREGUNTAS_COMPROBACION"))
-    } yield (preguntas, configuracion)).run
-    resolveFutureValidation(future, (response: (List[Pregunta], Option[Configuracion])) => {
-      val respuestaRandom = Random.shuffle(response._1).take(response._2.get.valor.toInt)
-      JsonUtil.toJson(respuestaRandom)
+      configuraciones <- ValidationT(DataAdapterConfiguracion.obtenerConfiguraciones())
+    } yield (preguntas, configuraciones)).run
+    resolveFutureValidation(future, (response: (List[Pregunta], List[Configuracion])) => {
+      val numeroIntentos = obtenerValorEntero(response._2, "AUTOVALIDACION_NUMERO_REINTENTOS")
+      val numeroPreguntasComprobacion = obtenerValorEntero(response._2, "AUTOVALIDACION_NUMERO_PREGUNTAS_COMPROBACION")
+      val preguntasRandom = Random.shuffle(response._1).take(numeroPreguntasComprobacion)
+      JsonUtil.toJson(PreguntasComprobarResponse(preguntasRandom, numeroIntentos))
     }, errorValidacion, currentSender)
   }
 

@@ -20,4 +20,7 @@ case class ObtenerPreguntasComprobarMessage(idUsuario: Int, tipoCliente: TiposCl
 case class BloquearRespuestasMessage(idUsuario: Int, tipoCliente: TiposCliente) extends MessageService
 case class GuardarRespuestasMessage(idUsuario: Int, tipoCliente: TiposCliente, respuestas: List[Respuesta]) extends MessageService
 case class ValidarRespuestasMessage(idUsuario: Int, tipoCliente: TiposCliente, respuestas: List[Respuesta]) extends MessageService
+
 case class PreguntasResponse(preguntas: List[Pregunta], numeroPreguntas: Int)
+
+case class PreguntasComprobarResponse(preguntas: List[Pregunta], numeroIntentos: Int)
