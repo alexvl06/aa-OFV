@@ -17,7 +17,7 @@ import co.com.alianza.util.transformers.ValidationT
 import java.sql.Timestamp
 import java.util.Date
 
-import co.com.alianza.infrastructure.anticorruption.preguntasAutovalidacion.{ DataAccessAdapter => DataAccesAdapterPreguntas }
+import co.com.alianza.infrastructure.anticorruption.autovalidacion.{ DataAccessAdapter => DataAccesAdapterPreguntas }
 import enumerations.{ EstadosEmpresaEnum, TipoIdentificacion }
 import enumerations.empresa.EstadosDeEmpresaEnum
 
