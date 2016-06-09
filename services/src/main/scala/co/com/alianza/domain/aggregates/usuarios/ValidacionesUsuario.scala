@@ -187,6 +187,13 @@ object ValidacionesUsuario {
     })
   }
 
+  def validaIpConfianza(ipConfianza: Boolean): Future[Validation[ErrorValidacion, Unit.type]] = Future {
+    ipConfianza match {
+      case true => zSuccess(Unit)
+      case _ => zFailure(ErrorIpConfianza(errorIpConfianza))
+    }
+  }
+
   def errorValidacion(error: Any): Any = {
     error match {
       case errorPersistence: ErrorPersistence => errorPersistence.exception
@@ -213,5 +220,6 @@ object ValidacionesUsuario {
   private val errorPin = ErrorMessage("409.8", "Error en el pin", "Ocurrió un error al obtener el tiempo de expiracion del pin").toJson
   private val errorUsuarioNoExiste = ErrorMessage("409.9", "No existe el usuario", "No existe el usuario").toJson
   private val errorCorreoNoExiste = ErrorMessage("409.10", "No hay correo registrado", "No hay correo registrado en la base de datos de Alianza").toJson
+  private val errorIpConfianza = ErrorMessage("409.11", "La Ip no es de confianza", "La Ip no es de confianza").toJson
 
 }

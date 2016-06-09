@@ -93,6 +93,7 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
     case message: UsuarioMessage =>
       val currentSender = sender()
       val crearUsuarioFuture = (for {
+        validacionIpConfianza <- ValidationT(validaIpConfianza(message.activarIP))
         captchaVal <- ValidationT(validaCaptcha(message))
         cliente <- ValidationT(validaSolicitud(message))
       } yield {
