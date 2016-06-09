@@ -27,3 +27,4 @@ case class ErrorUsuarioClienteAdmin(msg: String) extends ErrorValidacion
 case class ErrorEmpresaAccesoDenegado(msg: String) extends ErrorValidacion
 case class ErrorUsuarioEmpresaAdminActivo(msg: String) extends ErrorValidacion
 case class ErrorIpConfianza(msg: String) extends ErrorValidacion
+case class ErrorAutovalidacion(msg: String) extends ErrorValidacion
