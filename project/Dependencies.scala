@@ -1,22 +1,22 @@
 import sbt._
 
 /**
-  * Maneja las dependencias de la aplicación.
-  */
+ * Maneja las dependencias de la aplicación.
+ */
 object Dependencies {
 
   /**
-    * Define exclusiones necesarias en las librerías para evitar conflictos.
-    *
-    * Hay dos tipos:
-    * - Exclusions: que son paquetes de exclusiones usado por solo una librería.
-    * - Exclude: que una sola exclusión especifica que puede ser usada por una o varias librerías.
-    *
-    * Orden:
-    * - Primero Exclusions luego Exclude.
-    * - Alfabético entre Exclusions.
-    * - Por composición entre Exclude.
-    */
+   * Define exclusiones necesarias en las librerías para evitar conflictos.
+   *
+   * Hay dos tipos:
+   * - Exclusions: que son paquetes de exclusiones usado por solo una librería.
+   * - Exclude: que una sola exclusión especifica que puede ser usada por una o varias librerías.
+   *
+   * Orden:
+   * - Primero Exclusions luego Exclude.
+   * - Alfabético entre Exclusions.
+   * - Por composición entre Exclude.
+   */
   private[Dependencies] implicit class Exclude(module: ModuleID) {
 
     def kafkaExclusions: ModuleID = {
@@ -32,6 +32,9 @@ object Dependencies {
 
     // Hay un problema de compatibilidad binaria con play-json que que no fue posible resolver de la forma correcta haciendo upgrade o downgrade
     def jodaTimeExclude: ModuleID = module.logScalaExclude.exclude("joda-time", "joda-time")
+
+    // Hay un problema de compatibilidad binaria con spray-testkit que que no fue posible resolver de la forma correcta haciendo upgrade o downgrade
+    def specs2Exclude: ModuleID = module.logScalaExclude.exclude("org.specs2", "specs2_2.11")
 
     def logScalaExclude: ModuleID = module.logbackExclude.scalaLibraryExclude
 
@@ -62,10 +65,10 @@ object Dependencies {
   }
 
   /**
-    * Define las librerías necesarias para compilar.
-    *
-    * Orden por importancia y prioridad, primero cosas como scala, akka y finalmente utilidades y log.
-    */
+   * Define las librerías necesarias para compilar.
+   *
+   * Orden por importancia y prioridad, primero cosas como scala, akka y finalmente utilidades y log.
+   */
   private[Dependencies] object CompileDep {
 
     import Versions._
@@ -129,10 +132,10 @@ object Dependencies {
   }
 
   /**
-    * Define las librerías necesarias para pruebas.
-    *
-    * Orden alfabético.
-    */
+   * Define las librerías necesarias para pruebas.
+   *
+   * Orden alfabético.
+   */
   private[Dependencies] object TestDep {
 
     import Versions._
@@ -142,7 +145,7 @@ object Dependencies {
     val restAssuredLib  = "com.jayway.restassured"  % "rest-assured"  % restAssured % Test logScalaExclude
     val scalatestLib    = "org.scalatest"          %% "scalatest"     % scalatest % Test logScalaExclude
     val scalacheckLib   = "org.scalacheck"         %% "scalacheck"    % scalacheck % Test logScalaExclude
-    val sprayTestkitLib = "io.spray"               %% "spray-testkit" % spray % Test logScalaExclude
+    val sprayTestkitLib = "io.spray"               %% "spray-testkit" % spray % Test specs2Exclude
     val specs2Lib       = "org.specs2"             %% "specs2"        % specs2 % Test logScalaExclude
   }
 
@@ -151,14 +154,14 @@ object Dependencies {
 
   val scalaLibs: Seq[ModuleID]      = Seq(scalaCompiler, scalaReflect, scalaLibrary)
   val akkaLibs: Seq[ModuleID]       = Seq(akkaActor, akkaClusterLib, akkaSlf4j, logbackClassic)
-  val sprayLibs: Seq[ModuleID]      = Seq(sprayCan, sprayRouting, sprayClient, sprayHttp, sprayHttpx, sprayJsonLib)
+  val sprayLibs: Seq[ModuleID]      = Seq(sprayCan, sprayCaching, sprayRouting, sprayClient, sprayHttp, sprayHttpx, sprayJsonLib)
   val kafkaLibs: Seq[ModuleID]      = Seq(kafkaLib)
   val functionalLibs: Seq[ModuleID] = Seq(scalaIOCore, scalaIOFile, scalazLib, shapelessLib)
   val slickLibs: Seq[ModuleID]      = Seq(slickLib, slickPGLib, slickPGJodaTimeLib)
   val dbLibs: Seq[ModuleID]         = Seq(postgresqlLib, c3p0Lib, oracleLib, h2Lib)
 
   val utilLibs: Seq[ModuleID]       = Seq(
-    commonsLang3Lib, commonsCodecLib, playJsonLib, jacksonDatabindLib, jacksonModuleScalaLib, jasyptLib, scalateLib, axisLib, jaxrpcLib, wss4jLib, ninbusLib, jsonTokenLib
+    commonsLang3Lib, commonsCodecLib, discoveryLib, playJsonLib, wsdl4jLib, jacksonDatabindLib, jacksonModuleScalaLib, jasyptLib, scalateLib, axisLib, jaxrpcLib, wss4jLib, ninbusLib, jsonTokenLib
   )
 
   val recaptchaLibs: Seq[ModuleID]  = Seq(recaptcha4jLib)
