@@ -38,7 +38,7 @@ class PinUsuarioAgenteEmpresarialActor extends Actor with ActorLogging with Alia
 
     case message: ValidarPin => validarPin(message.tokenHash)
 
-    case message: CambiarPw =>
+    case message: CambiarContrasena =>
       val currentSender = sender()
       cambiarPw(message.tokenHash, message.pw, currentSender, PerfilesUsuario.agenteEmpresarial)
   }

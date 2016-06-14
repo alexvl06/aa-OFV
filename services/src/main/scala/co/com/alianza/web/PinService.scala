@@ -37,7 +37,11 @@ class PinService extends Directives with AlianzaCommons with CrossHeaders {
                     ip =>
                       mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic,
                         AuditingHelper.cambioContrasenaCorreoClienteIndividualIndex, ip.value, kafkaActor, userPw.copy(pw = ""))) {
-                        requestExecute(CambiarPw(pin, userPw.pw), pinActor)
+                        val menssage: CambiarContrasena = userPw.agregarIp match {
+                          case Some(true) => CambiarContrasena(pin, userPw.pw, Some(ip.value))
+                          case _ => CambiarContrasena(pin, userPw.pw)
+                        }
+                        requestExecute(menssage, pinActor)
                       }
                   }
                 }
@@ -55,7 +59,7 @@ class PinService extends Directives with AlianzaCommons with CrossHeaders {
                     ip =>
                       mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic,
                         AuditingHelper.cambioContrasenaCorreoClienteAdministradorIndex, ip.value, kafkaActor, userPw.copy(pw = ""))) {
-                        requestExecute(CambiarPw(pin, userPw.pw), pinUsuarioEmpresarialAdminActor)
+                        requestExecute(CambiarContrasena(pin, userPw.pw), pinUsuarioEmpresarialAdminActor)
                       }
                   }
                 }
@@ -79,7 +83,7 @@ class PinService extends Directives with AlianzaCommons with CrossHeaders {
                   clientIP {
                     ip =>
                       mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.cambioContrasenaCorreoAgenteEmpresarialIndex, ip.value, kafkaActor, userPw.copy(pw = null))) {
-                        requestExecute(CambiarPw(pin, userPw.pw), pinUsuarioAgenteEmpresarialActor)
+                        requestExecute(CambiarContrasena(pin, userPw.pw), pinUsuarioAgenteEmpresarialActor)
                       }
                   }
                 }

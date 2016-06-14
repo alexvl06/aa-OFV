@@ -1,21 +1,21 @@
 package co.com.alianza.domain.aggregates.pin
 
 import java.sql.Timestamp
-import java.util.Date
 
 import akka.actor.{ ActorRef, ActorLogging, Actor }
 
 import co.com.alianza.app.{ MainActors, AlianzaActors }
 import co.com.alianza.domain.aggregates.usuarios.{ ErrorPersistence, ErrorValidacion, ValidacionesUsuario }
-import co.com.alianza.exceptions.{ BusinessLevel, PersistenceException }
+import co.com.alianza.exceptions.{ PersistenceException }
+import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => DataAdapterUsuario }
 import co.com.alianza.infrastructure.anticorruption.pin.{ DataAccessAdapter => pDataAccessAdapter }
-import co.com.alianza.infrastructure.anticorruption.ultimasContrasenas.{ DataAccessAdapter => DataAccessAdapterUltimaContrasena }
+import co.com.alianza.infrastructure.anticorruption.ultimasContrasenas.{ DataAccessAdapter => DataAdapterContrasena }
 import co.com.alianza.infrastructure.anticorruption.contrasenas.{ DataAccessAdapter => DataAccessAdapterContrasena }
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => uDataAccessAdapter }
 import co.com.alianza.infrastructure.dto.PinUsuario
 import co.com.alianza.infrastructure.messages.PinMessages._
 import co.com.alianza.infrastructure.messages.ResponseMessage
-import co.com.alianza.persistence.entities.UltimaContrasena
+import co.com.alianza.persistence.entities.{ IpsUsuario, UltimaContrasena }
 import co.com.alianza.util.FutureResponse
 import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.transformers.ValidationT
@@ -59,84 +59,71 @@ class PinActor extends Actor with ActorLogging with AlianzaActors with FutureRes
   import ValidacionesUsuario._
 
   def receive = {
-    case message: ValidarPin => validarPin(message.tokenHash, message.funcionalidad.get)
-    case message: CambiarPw =>
-      val currentSender = sender()
-      cambiarPw(message.tokenHash, message.pw, currentSender)
+
+    case message: ValidarPin => validarPin(message)
+
+    case message: CambiarContrasena => cambiarContrasena(message)
   }
 
-  private def validarPin(tokenHash: String, funcionalidad: Int) = {
+  /**
+   * Validar pin
+   * @param message
+   */
+  private def validarPin(message: ValidarPin) = {
     val currentSender = sender()
-    val result: Future[Validation[PersistenceException, Option[PinUsuario]]] = pDataAccessAdapter.obtenerPin(tokenHash)
-    resolveOlvidoContrasenaFuture(result, funcionalidad, currentSender)
+    val tokenHash: String = message.tokenHash
+    val funcionalidad: Int = message.funcionalidad.get
+    val future: Future[Validation[PersistenceException, Option[PinUsuario]]] = pDataAccessAdapter.obtenerPin(tokenHash)
+    resolveFutureValidation(future, (response: Option[PinUsuario]) => PinUtil.validarPin(response, funcionalidad), errorValidacion, currentSender)
   }
 
-  private def resolveOlvidoContrasenaFuture(finalResultFuture: Future[Validation[PersistenceException, Option[PinUsuario]]], funcionalidad: Int, currentSender: ActorRef) = {
-    finalResultFuture onComplete {
-      case Failure(failure) => currentSender ! failure
-      case Success(value) =>
-        value match {
-          case zSuccess(response: Option[PinUsuario]) => currentSender ! PinUtil.validarPin(response, funcionalidad)
-          case zFailure(error) =>
-            error match {
-              case errorPersistence: ErrorPersistence => currentSender ! errorPersistence.exception
-              case errorVal: ErrorValidacion => currentSender ! ResponseMessage(Conflict, errorVal.msg)
-            }
-        }
-    }
-  }
-
-  private def cambiarPw(tokenHash: String, pw: String, currentSender: ActorRef) = {
-    val obtenerPinFuture: Future[Validation[ErrorValidacion, Option[PinUsuario]]] = pDataAccessAdapter.obtenerPin(tokenHash).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
-    val passwordAppend = pw.concat(AppendPasswordUser.appendUsuariosFiducia)
-    //En la funcion los cambios: idUsuario y tokenHash que se encuentran en ROJO, no son realmente un error.
-    val finalResultFuture = (for {
-      pin <- ValidationT(obtenerPinFuture)
+  /**
+   * Cambiar contraseña
+   * @param message
+   */
+  private def cambiarContrasena(message: CambiarContrasena) = {
+    val currentSender = sender()
+    val ip: Option[String] = message.ip
+    val contrasena: String = message.pw
+    val tokenHash: String = message.tokenHash
+    val estadoActivo: Int = EstadosUsuarioEnum.activo.id
+    val passwordAppend: String = contrasena.concat(AppendPasswordUser.appendUsuariosFiducia)
+    val future = (for {
+      pin <- ValidationT(toErrorValidation(pDataAccessAdapter.obtenerPin(tokenHash)))
       pinValidacion <- ValidationT(PinUtil.validarPinFuture(pin))
-      rvalidacionClave <- ValidationT(validacionReglasClave(pw, pinValidacion.idUsuario, PerfilesUsuario.clienteIndividual))
-      rCambiarPss <- ValidationT(cambiarPassword(pinValidacion.idUsuario, passwordAppend))
-      resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(pinValidacion.idUsuario, Crypto.hashSha512(passwordAppend, pinValidacion.idUsuario)))
-      rCambiarEstado <- ValidationT(cambiarEstado(pinValidacion.idUsuario))
-      rBorrarIngresosErroneos <- ValidationT(borrarNumeroIngresosErroneos(pinValidacion.idUsuario))
-      idResult <- ValidationT(eliminarPin(pinValidacion.tokenHash))
-    } yield {
-      idResult
-    }).run
-    resolveCrearUsuarioFuture(finalResultFuture, currentSender)
+      rvalidacionClave <- ValidationT(validacionReglasClave(message.pw, pinValidacion.idUsuario, PerfilesUsuario.clienteIndividual))
+      rCambiarPss <- ValidationT(toErrorValidation(DataAccessAdapterContrasena.actualizarContrasena(passwordAppend, pinValidacion.idUsuario)))
+      resultGuardarUltimasContrasenas <- ValidationT(toErrorValidation(DataAdapterContrasena.guardarUltimaContrasena(ultimaContrasena(contrasena, pinValidacion.idUsuario))))
+      rCambiarEstado <- ValidationT(toErrorValidation(uDataAccessAdapter.actualizarEstadoUsuario(pinValidacion.idUsuario, estadoActivo)))
+      guardarIp <- ValidationT(guardarIpUsuario(ip, pinValidacion.idUsuario))
+      idResult <- ValidationT(toErrorValidation(pDataAccessAdapter.eliminarPin(pinValidacion.tokenHash)))
+    } yield idResult).run
+    resolveFutureValidation(future, (response: Int) => ResponseMessage(OK), errorValidacion, currentSender)
   }
 
-  private def guardarUltimaContrasena(idUsuario: Int, uContrasena: String): Future[Validation[ErrorValidacion, Unit]] = {
-    DataAccessAdapterUltimaContrasena.guardarUltimaContrasena(UltimaContrasena(None, idUsuario, uContrasena, new Timestamp(System.currentTimeMillis()))).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
+  /**
+   * Obtener el objeto ultimacontrasena
+   * @param contrasena
+   * @param idUsuario
+   * @return
+   */
+  private def ultimaContrasena(contrasena: String, idUsuario: Int) = {
+    val contrasenaCrypto: String = Crypto.hashSha512(contrasena, idUsuario)
+    UltimaContrasena(None, idUsuario, contrasenaCrypto, new Timestamp(System.currentTimeMillis()))
   }
 
-  private def cambiarPassword(idUsuario: Int, pw: String): Future[Validation[ErrorValidacion, Int]] = {
-    DataAccessAdapterContrasena.actualizarContrasena(pw, idUsuario).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
-  }
-
-  private def cambiarEstado(idUsuario: Int): Future[Validation[ErrorValidacion, Int]] = {
-    uDataAccessAdapter.actualizarEstadoUsuario(idUsuario, 1).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
-  }
-
-  private def borrarNumeroIngresosErroneos(idUsuario: Int): Future[Validation[ErrorValidacion, Int]] = {
-    uDataAccessAdapter.actualizarNumeroIngresosErroneos(idUsuario, 0).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
-  }
-
-  private def eliminarPin(tokenHash: String): Future[Validation[ErrorValidacion, Int]] = {
-    pDataAccessAdapter.eliminarPin(tokenHash).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
-  }
-
-  private def resolveCrearUsuarioFuture(finalResultFuture: Future[Validation[ErrorValidacion, Int]], currentSender: ActorRef) = {
-    finalResultFuture onComplete {
-      case Failure(failure) => currentSender ! failure
-      case Success(value) =>
-        value match {
-          case zSuccess(response: Int) => currentSender ! ResponseMessage(OK)
-          case zFailure(error) =>
-            error match {
-              case errorPersistence: ErrorPersistence => currentSender ! errorPersistence.exception
-              case errorVal: ErrorValidacion => currentSender ! ResponseMessage(Conflict, errorVal.msg)
-            }
-        }
+  /**
+   * Guardar ip equipo de confianza
+   * @param ip
+   * @param idUsuario
+   * @return
+   */
+  private def guardarIpUsuario(ip: Option[String], idUsuario: Int): Future[Validation[ErrorValidacion, String]] = {
+    ip match {
+      case Some(ip: String) =>
+        val ipUsuario: IpsUsuario = new IpsUsuario(idUsuario, ip)
+        toErrorValidation(DataAdapterUsuario.agregarIpUsuario(ipUsuario))
+      case _ => Future(zSuccess("OK"))
     }
   }
 
