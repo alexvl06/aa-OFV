@@ -302,6 +302,8 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
   }
 
   private def obtenerCuestionario(sender: ActorRef, message: UsuarioMessage) = {
+    println("obtenerCuestionario")
+    println("obtenerCuestionario")
     val currentSender = sender
     val locator: ConfrontaUltraWebServiceServiceLocator = new ConfrontaUltraWebServiceServiceLocator(config.getString("confronta.service.obtenerCuestionario.location"))
     val stub: ConfrontaUltraWSSoapBindingStub = locator.getConfrontaUltraWS.asInstanceOf[ConfrontaUltraWSSoapBindingStub]
@@ -350,15 +352,12 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
   }
 
   private def validaSolicitud(message: UsuarioMessage): Future[Validation[ErrorValidacion, Cliente]] = {
-    val consultaNumDocFuture = validacionConsultaNumDoc(message)
-    //Se quita la validación ya que alianza quiere permitir registro de usuarios a la misma cuenta de correo.
-    //val consultaCorreoFuture: Future[Validation[ErrorValidacion, Unit.type]] = validacionConsultaCorreo(message)
-    val consultaClienteFuture: Future[Validation[ErrorValidacion, Cliente]] = validacionConsultaCliente(message.identificacion, message.tipoIdentificacion, false)
     val validacionClave: Future[Validation[ErrorValidacion, Unit.type]] = validacionReglasClaveAutoregistro(message)
+    val consultaNumDocFuture = validacionConsultaNumDoc(message)
+    val consultaClienteFuture: Future[Validation[ErrorValidacion, Cliente]] = validacionConsultaCliente(message.identificacion, message.tipoIdentificacion, false)
     (for {
       resultValidacionClave <- ValidationT(validacionClave)
       resultConsultaNumDoc <- ValidationT(consultaNumDocFuture)
-      //resultConsultaCorreo <- ValidationT(consultaCorreoFuture)
       cliente <- ValidationT(consultaClienteFuture)
     } yield {
       cliente
