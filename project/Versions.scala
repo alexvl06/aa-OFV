@@ -35,7 +35,7 @@ object Versions {
   val jsonToken: String          = "1.1"
   val ninbus: String             = "3.10" // Version 4.16.2 , incompatibilidad de código
   val wsdl4j: String             = "1.4"
-  val wss4j: String              = "1.6.19"
+  val wss4j: String              = "1.5.12" //No se actualiza por clase deprecated de .wssd WSDoAllSender
   val scalate: String            = "1.7.1"
   val scalaLogging: String       = "3.4.0"
   val slf4j: String              = "1.7.21"
