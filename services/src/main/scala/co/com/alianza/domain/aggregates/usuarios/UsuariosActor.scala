@@ -302,8 +302,6 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
   }
 
   private def obtenerCuestionario(sender: ActorRef, message: UsuarioMessage) = {
-    println("obtenerCuestionario")
-    println("obtenerCuestionario")
     val currentSender = sender
     val locator: ConfrontaUltraWebServiceServiceLocator = new ConfrontaUltraWebServiceServiceLocator(config.getString("confronta.service.obtenerCuestionario.location"))
     val stub: ConfrontaUltraWSSoapBindingStub = locator.getConfrontaUltraWS.asInstanceOf[ConfrontaUltraWSSoapBindingStub]
