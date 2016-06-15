@@ -40,7 +40,7 @@ class PinUsuarioEmpresarialAdminActor extends Actor with ActorLogging with Alian
 
   def receive = {
     case message: ValidarPin => validarPin(message.tokenHash, message.funcionalidad.get)
-    case message: CambiarPw =>
+    case message: CambiarContrasena =>
       val currentSender = sender()
       cambiarPw(message.tokenHash, message.pw, currentSender)
   }
