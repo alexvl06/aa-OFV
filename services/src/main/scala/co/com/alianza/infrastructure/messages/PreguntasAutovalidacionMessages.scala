@@ -11,16 +11,18 @@ import spray.httpx.SprayJsonSupport
  */
 object PreguntasAutovalidacionMessagesJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val respuestaMessageFormat = jsonFormat2(Respuesta)
+  implicit val respuestaComprobacionMessageFormat = jsonFormat2(RespuestasComprobacionMessage)
   implicit val respuestasMessageFormat = jsonFormat1(RespuestasMessage)
 }
 
-case class ObtenerPreguntasMessage() extends MessageService
 case class RespuestasMessage(respuestas: List[Respuesta]) extends MessageService
-case class ObtenerPreguntasComprobarMessage(idUsuario: Int, tipoCliente: TiposCliente) extends MessageService
+case class RespuestasComprobacionMessage(respuestas: List[Respuesta], numeroIntentos: Int) extends MessageService
+
+case class ObtenerPreguntasMessage() extends MessageService
 case class BloquearRespuestasMessage(idUsuario: Int, tipoCliente: TiposCliente) extends MessageService
+case class ObtenerPreguntasComprobarMessage(idUsuario: Int, tipoCliente: TiposCliente) extends MessageService
 case class GuardarRespuestasMessage(idUsuario: Int, tipoCliente: TiposCliente, respuestas: List[Respuesta]) extends MessageService
-case class ValidarRespuestasMessage(idUsuario: Int, tipoCliente: TiposCliente, respuestas: List[Respuesta]) extends MessageService
+case class ValidarRespuestasMessage(idUsuario: Int, tipoCliente: TiposCliente, respuestas: List[Respuesta], numeroIntentos: Int) extends MessageService
 
 case class PreguntasResponse(preguntas: List[Pregunta], numeroPreguntas: Int)
-
 case class PreguntasComprobarResponse(preguntas: List[Pregunta], numeroIntentos: Int)

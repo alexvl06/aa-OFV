@@ -36,9 +36,9 @@ class PreguntasAutovalidacionService extends Directives with AlianzaCommons with
       } ~ post {
         respondWithMediaType(mediaType) {
           pathPrefix("comprobar") {
-            entity(as[RespuestasMessage]) {
-              message: RespuestasMessage =>
-                val validacionMessage = ValidarRespuestasMessage(user.id, user.tipoCliente, message.respuestas)
+            entity(as[RespuestasComprobacionMessage]) {
+              message: RespuestasComprobacionMessage =>
+                val validacionMessage = ValidarRespuestasMessage(user.id, user.tipoCliente, message.respuestas, message.numeroIntentos)
                 requestExecute(validacionMessage, preguntasAutovalidacionActor)
             }
           }

@@ -72,7 +72,7 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
    * El numero de preguntas que se envia, es igual a el numero de preguntas
    * que debe aparecer en la lista desplegable.
    */
-  private def obtenerPreguntas(): Unit = {
+  private def obtenerPreguntas() = {
     val currentSender = sender()
     val future: Future[Validation[PersistenceException, (List[Pregunta], List[Configuracion])]] = (for {
       preguntas <- ValidationT(DataAccessAdapter.obtenerPreguntas())
@@ -95,14 +95,14 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
     val llave = ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS.name
     val respuestasPersistencia = message.respuestas.map(x => new RespuestasAutovalidacionUsuario(x.idPregunta, message.idUsuario, x.respuesta))
     //futuro del guardar
-    val futureGuardar: Future[Validation[PersistenceException, List[Int]]] = message.tipoCliente match {
+    def futureGuardar: Future[Validation[PersistenceException, List[Int]]] = message.tipoCliente match {
       case TiposCliente.clienteIndividual => DataAccessAdapter.guardarRespuestasClienteIndividual(respuestasPersistencia)
       case TiposCliente.clienteAdministrador => DataAccessAdapter.guardarRespuestasClienteAdministrador(respuestasPersistencia)
       case _ => Future(zSuccess(List.empty[Int]))
     }
     val future: Future[Validation[ErrorValidacion, List[Int]]] = (for {
       configuracion <- ValidationT(toErrorValidation(DataAdapterConfiguracion.obtenerConfiguracionPorLlave(llave)))
-      validar <- ValidationT(validarNumeroRespuestas(respuestasPersistencia.size, configuracion.get.valor.toInt))
+      validar <- ValidationT(validarParametrizacion(respuestasPersistencia.size, configuracion.get.valor.toInt))
       guardar <- ValidationT(toErrorValidation(futureGuardar))
     } yield guardar).run
     resolveFutureValidation(future, (response: List[Int]) => ResponseMessage(OK), errorValidacion, currentSender)
@@ -115,7 +115,7 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
    * @param numeroRespuestasParametrizadas
    * @return
    */
-  private def validarNumeroRespuestas(numeroRespuestas: Int, numeroRespuestasParametrizadas: Int): Future[Validation[ErrorValidacion, Boolean]] = Future {
+  private def validarParametrizacion(numeroRespuestas: Int, numeroRespuestasParametrizadas: Int): Future[Validation[ErrorValidacion, Boolean]] = Future {
     val comparacion = numeroRespuestas == numeroRespuestasParametrizadas
     comparacion match {
       case true => zSuccess(comparacion)
@@ -131,14 +131,16 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
    */
   private def obtenerPreguntasComprobar(message: ObtenerPreguntasComprobarMessage) = {
     val currentSender = sender()
+    val llaveNumeroPreguntas: String = ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS.name
     val futurePreguntas: Future[Validation[PersistenceException, List[Pregunta]]] = message.tipoCliente match {
       case TiposCliente.clienteIndividual => DataAccessAdapter.obtenerPreguntasClienteIndividual(message.idUsuario)
       case TiposCliente.clienteAdministrador => DataAccessAdapter.obtenerPreguntasClienteAdministrador(message.idUsuario)
       case _ => Future(zSuccess(List.empty[Pregunta]))
     }
     val future = (for {
-      preguntas <- ValidationT(futurePreguntas)
-      configuraciones <- ValidationT(DataAdapterConfiguracion.obtenerConfiguraciones())
+      preguntas <- ValidationT(toErrorValidation(futurePreguntas))
+      configuraciones <- ValidationT(toErrorValidation(DataAdapterConfiguracion.obtenerConfiguraciones()))
+      validar <- ValidationT(validarParametrizacion(preguntas.size, obtenerValorEntero(configuraciones, llaveNumeroPreguntas)))
     } yield (preguntas, configuraciones)).run
     resolveFutureValidation(future, (response: (List[Pregunta], List[Configuracion])) => {
       val numeroIntentos = obtenerValorEntero(response._2, ConfiguracionEnum.AUTOVALIDACION_NUMERO_REINTENTOS.name)
@@ -154,16 +156,18 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
    */
   private def validarRespuestas(message: ValidarRespuestasMessage): Unit = {
     val currentSender = sender()
-    val futureRespuestas: Future[Validation[PersistenceException, List[RespuestaCompleta]]] = message.tipoCliente match {
+    def futureRespuestas: Future[Validation[PersistenceException, List[RespuestaCompleta]]] = message.tipoCliente match {
       case TiposCliente.clienteIndividual => DataAccessAdapter.obtenerRespuestaCompletaClienteIndividual(message.idUsuario)
       case TiposCliente.clienteAdministrador => DataAccessAdapter.obtenerRespuestaCompletaClienteAdministrador(message.idUsuario)
       case _ => Future(zSuccess(List.empty[RespuestaCompleta]))
     }
-    val llavePreguntasComprobar: String = ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS_COMPROBACION.name
+    val llaveReintentos: String = ConfiguracionEnum.AUTOVALIDACION_NUMERO_REINTENTOS.name
     val llavePreguntasCambio: String = ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS_CAMBIAR.name
+    val llavePreguntasComprobar: String = ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS_COMPROBACION.name
     val future = (for {
       configuraciones <- ValidationT(toErrorValidation(DataAdapterConfiguracion.obtenerConfiguraciones()))
-      validar <- ValidationT(validarNumeroRespuestas(message.respuestas.size, obtenerValorEntero(configuraciones, llavePreguntasComprobar)))
+      validarLista <- ValidationT(validarParametrizacion(message.respuestas.size, obtenerValorEntero(configuraciones, llavePreguntasComprobar)))
+      validarReintentos <- ValidationT(validarParametrizacion(message.numeroIntentos, obtenerValorEntero(configuraciones, llaveReintentos)))
       respuestas <- ValidationT(toErrorValidation(futureRespuestas))
       respuesta <- ValidationT(validarRespuestasValidation(respuestas, message.respuestas, obtenerValorEntero(configuraciones, llavePreguntasCambio)))
     } yield respuesta).run
