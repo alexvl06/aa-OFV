@@ -121,7 +121,7 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
       case true => zSuccess(comparacion)
       case false =>
         //TODO: definir los codigos de error a enviar para este error y el comportamiento
-        zFailure(ErrorAutovalidacion("Numero de respuestas no es igual al parametrizado"))
+        zFailure(ErrorAutovalidacion("Error comprobacion parametrizacion campos"))
     }
   }
 
