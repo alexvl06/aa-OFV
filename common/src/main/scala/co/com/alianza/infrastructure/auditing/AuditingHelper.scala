@@ -36,11 +36,15 @@ object AuditingHelper extends AuditingHelper {
   val consultaUsuariosEmpresarialesIndex = "consulta-usuarios-empresarial-fiduciaria"
   val autoRegistroIndex = "autoregistro-fiduciaria"
   val olvidoContrasenaIndex = "olvido-contrasena-fiduciaria"
+  val autovalidacionBloquearIndex = "autovalidacion-bloquear-fiduciaria"
+  val autovalidacionComprobarIndex = "autovalidacion-comprobar-fiduciaria"
+
 }
 
 trait AuditingHelper {
 
-  def requestWithAuiditing(ctx: RequestContext, kafkaTopic: String, elasticIndex: String, ip: String, kafkaActor: ActorSelection, requestParameters: Any): RequestContext = {
+  def requestWithAuiditing(ctx: RequestContext, kafkaTopic: String, elasticIndex: String, ip: String, kafkaActor: ActorSelection,
+                           requestParameters: Any): RequestContext = {
     ctx.withRouteResponseMapped {
       case response: HttpResponse =>
 
