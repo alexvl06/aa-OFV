@@ -44,7 +44,7 @@ object AuditingHelper extends AuditingHelper {
 trait AuditingHelper {
 
   def requestWithAuiditing(ctx: RequestContext, kafkaTopic: String, elasticIndex: String, ip: String, kafkaActor: ActorSelection,
-                           requestParameters: Any): RequestContext = {
+    requestParameters: Any): RequestContext = {
     ctx.withRouteResponseMapped {
       case response: HttpResponse =>
 

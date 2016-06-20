@@ -6,7 +6,7 @@ import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.infrastructure.messages.PinMessages.CambiarContrasena
 import co.com.alianza.infrastructure.messages._
-import spray.routing.{RequestContext, Directives}
+import spray.routing.{ RequestContext, Directives }
 
 /**
  *

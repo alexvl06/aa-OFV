@@ -93,8 +93,6 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
         token <- ValidationT(generarYAsociarTokenUsuarioEmpresarialAdmin(cliente, usuarioAdmin, message.nit, inactividadConfig.valor, message.clientIp.get))
         sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
         empresa <- ValidationT(obtenerEmpresaPorNit(message.nit))
-        horario <- ValidationT(obtenerHorarioEmpresa(empresa.id))
-        horarioValido <- ValidationT(validarHorarioEmpresa(horario))
         validacionPreguntas <- ValidationT(validarPreguntasUsuarioAdmin(usuarioAdmin.id))
         validacionIps <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token, usuarioAdmin.tipoIdentificacion, validacionPreguntas))
       } yield validacionIps).run
@@ -155,9 +153,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
         inactividadConfig <- ValidationT(buscarConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave))
         token <- ValidationT(generarYAsociarTokenUsuarioEmpresarialAgente(usuarioAgente, message.nit, inactividadConfig.valor, message.clientIp.get))
         empresa <- ValidationT(obtenerEmpresaPorNit(message.nit))
-        horario <- ValidationT(obtenerHorarioEmpresa(empresa.id))
-        horarioValido <- ValidationT(validarHorarioEmpresa(horario))
-        sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt, empresa, horario))
+        sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt, empresa, None))
         validacionIps <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token, usuarioAgente.tipoIdentificacion, "true"))
       } yield validacionIps).run
 
