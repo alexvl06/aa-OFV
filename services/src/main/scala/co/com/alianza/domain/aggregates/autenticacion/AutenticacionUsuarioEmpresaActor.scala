@@ -1,41 +1,29 @@
 package co.com.alianza.domain.aggregates.autenticacion
 
-import java.sql.{ Time, Timestamp }
-import java.util.{ Calendar, Date }
-
 import akka.actor.ActorLogging
 import akka.pattern.ask
 import akka.util.Timeout
-
 import co.com.alianza.app.MainActors
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.domain.aggregates.autenticacion.errores._
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => UsDataAdapter }
-import co.com.alianza.infrastructure.anticorruption.empresa.{ DataAccessTranslator => EmpDataAccessTranslator }
 import co.com.alianza.infrastructure.dto._
 import co.com.alianza.infrastructure.messages._
-
 import co.com.alianza.persistence.entities.ReglasContrasenas
-
 import co.com.alianza.util.token.Token
 import co.com.alianza.util.transformers.ValidationT
-
 import java.sql.Timestamp
 import java.util.Date
-
-import enumerations.{ TipoIdentificacion, EstadosEmpresaEnum }
+import enumerations.{ EstadosEmpresaEnum, TipoIdentificacion }
 import enumerations.empresa.EstadosDeEmpresaEnum
-
 import scala.concurrent.duration._
 import scala.concurrent.Future
-import scala.util.{ Success => sSuccess, Failure => sFailure }
-
+import scala.util.{ Failure => sFailure, Success => sSuccess }
 import spray.http.StatusCodes._
-
 import scalaz.std.AllInstances._
-import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 import scalaz.Validation.FlatMap._
 
 class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogging with ValidacionesAutenticacionUsuarioEmpresarial {
@@ -101,8 +89,6 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
         token <- ValidationT(generarYAsociarTokenUsuarioEmpresarialAdmin(cliente, usuarioAdmin, message.nit, inactividadConfig.valor, message.clientIp.get))
         sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
         empresa <- ValidationT(obtenerEmpresaPorNit(message.nit))
-        horario <- ValidationT(obtenerHorarioEmpresa(empresa.id))
-        horarioValido <- ValidationT(validarHorarioEmpresa(horario))
         validacionIps <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token, usuarioAdmin.tipoIdentificacion))
       } yield validacionIps).run
 
@@ -162,9 +148,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
         inactividadConfig <- ValidationT(buscarConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave))
         token <- ValidationT(generarYAsociarTokenUsuarioEmpresarialAgente(usuarioAgente, message.nit, inactividadConfig.valor, message.clientIp.get))
         empresa <- ValidationT(obtenerEmpresaPorNit(message.nit))
-        horario <- ValidationT(obtenerHorarioEmpresa(empresa.id))
-        horarioValido <- ValidationT(validarHorarioEmpresa(horario))
-        sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt, empresa, horario))
+        sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt, empresa, None))
         validacionIps <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token, usuarioAgente.tipoIdentificacion))
       } yield validacionIps).run
 
