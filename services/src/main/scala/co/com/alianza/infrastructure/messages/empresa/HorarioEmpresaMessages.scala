@@ -24,3 +24,5 @@ case class ObtenerHorarioEmpresaMessage(idUsuario: Int, tipoCliente: TiposClient
 
 case class AgregarHorarioEmpresaMessage(diaHabil: Boolean, sabado: Boolean, horaInicio: String, horaFin: String,
   idUsuario: Option[Int], tipoCliente: Option[Int]) extends MessageService
+
+case class ValidarHorarioEmpresaMessage(identificacionUsuario: String, tipoCliente: TiposCliente) extends MessageService

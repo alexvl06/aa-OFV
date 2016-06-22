@@ -18,6 +18,7 @@ class HorarioEmpresaService extends Directives with AlianzaCommons with CrossHea
 
   val diaFestivo = "diaFestivo"
   val horarioEmpresa = "horarioEmpresa"
+  val validarHorario = "validarHorario"
 
   def route(user: UsuarioAuth) = {
 
@@ -56,6 +57,14 @@ class HorarioEmpresaService extends Directives with AlianzaCommons with CrossHea
                 requestExecute(diaFestivoMessage, horarioEmpresaActor)
               }
           }
+        }
+      } ~
+      path(validarHorario) {
+        get {
+          respondWithMediaType(mediaType) {
+            requestExecute(new ValidarHorarioEmpresaMessage(user.identificacionUsuario, user.tipoCliente), horarioEmpresaActor)
+          }
+
         }
       }
   }
