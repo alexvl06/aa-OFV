@@ -46,32 +46,34 @@ trait ValidacionesAutenticacionUsuarioEmpresarial {
     horarioEmpresa match {
       case None => Future.successful(Validation.success(true))
       case Some(horario) => {
-        //Obtener la hora actual
+        //Obtener la hora actual de la fecha real
         val calendar = Calendar.getInstance()
         val horaActual = calendarToTime(calendar)
         val horarioNoPermitido = horario.horaInicio.after(horaActual) || horario.horaFin.before(horaActual)
         //1. Validar si es domingo
-        if (calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY)
-          Future.successful(Validation.failure(ErrorHorarioIngresoEmpresa()))
-        //2. Si esta habilitado el sábado, validar
-        else if (!horario.sabado && calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY)
-          Future.successful(Validation.failure(ErrorHorarioIngresoEmpresa()))
-        //3. Validar el día hábil
+        if (calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY) {
+          Future.successful(Validation.success(false))
+        } //2. Si esta habilitado el sábado, validar
+        else if (!horario.sabado && calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY) {
+          Future.successful(Validation.success(false))
+        } //3. Validar el día hábil
         else if (horario.diaHabil) {
           UsDataAdapter.existeDiaFestivo(calendarToDate(calendar)).map(
             _.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap {
-              case true => Validation.failure(ErrorHorarioIngresoEmpresa())
+              case true =>
+                (Validation.success(false))
               case _ => {
-                if (horarioNoPermitido) Validation.failure(ErrorHorarioIngresoEmpresa())
+                if (horarioNoPermitido) (Validation.success(false))
                 else Validation.success(true)
               }
             }
           )
         } //4. Validar la hora de inicio y de fin
-        else if (horarioNoPermitido)
-          Future.successful(Validation.failure(ErrorHorarioIngresoEmpresa()))
-        else
+        else if (horarioNoPermitido) {
+          Future.successful((Validation.success(false)))
+        } else {
           Future.successful(Validation.success(true))
+        }
       }
     }
 
