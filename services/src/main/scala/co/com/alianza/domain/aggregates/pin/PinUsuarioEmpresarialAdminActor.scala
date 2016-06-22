@@ -5,6 +5,9 @@ import java.sql.Timestamp
 import akka.actor.{ ActorRef, ActorLogging, Actor }
 
 import co.com.alianza.app.{ MainActors, AlianzaActors }
+import co.com.alianza.commons.enumerations.TiposCliente
+import co.com.alianza.commons.enumerations.TiposCliente
+import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import co.com.alianza.domain.aggregates.usuarios.{ ErrorPersistence, ErrorValidacion, ValidacionesUsuario }
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.pinclienteadmin.{ DataAccessAdapter => pDataAccessAdapter }
@@ -18,6 +21,8 @@ import co.com.alianza.util.FutureResponse
 import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.transformers.ValidationT
 import spray.http.StatusCodes._
+import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => DataAdapterUsuario }
+import co.com.alianza.persistence.entities.IpsEmpresa
 
 import scala.util.{ Success, Failure, Try }
 import scalaz.std.AllInstances._
@@ -42,7 +47,7 @@ class PinUsuarioEmpresarialAdminActor extends Actor with ActorLogging with Alian
     case message: ValidarPin => validarPin(message.tokenHash, message.funcionalidad.get)
     case message: CambiarContrasena =>
       val currentSender = sender()
-      cambiarPw(message.tokenHash, message.pw, currentSender)
+      cambiarPw(message.tokenHash, message.pw, currentSender, message.ip)
   }
 
   /**
@@ -82,7 +87,7 @@ class PinUsuarioEmpresarialAdminActor extends Actor with ActorLogging with Alian
     }
   }
 
-  private def cambiarPw(tokenHash: String, pw: String, currentSender: ActorRef) = {
+  private def cambiarPw(tokenHash: String, pw: String, currentSender: ActorRef, ip: Option[String]) = {
     val passwordAppend = pw.concat(AppendPasswordUser.appendUsuariosFiducia)
     //En la funcion los cambios: idUsuario y tokenHash que se encuentran en ROJO, no son realmente un error.
     val finalResultFuture = (for {
@@ -96,6 +101,8 @@ class PinUsuarioEmpresarialAdminActor extends Actor with ActorLogging with Alian
       rCambiarPss <- ValidationT(cambiarPassword(pinValidacion.idUsuario, passwordAppend))
       guardarUltimaContrasena <- ValidationT(guardarUltimaContrasena(pinValidacion.idUsuario, Crypto.hashSha512(passwordAppend, pinValidacion.idUsuario)))
       rCambiarEstado <- ValidationT(cambiarEstado(pinValidacion.idUsuario))
+      idEmpresa <- ValidationT(obtenerIdEmpresa(pinValidacion.idUsuario, TiposCliente.clienteAdministrador))
+      guardarIp <- ValidationT(guardarIpUsuarioEmpresarial(ip, idEmpresa))
       idResult <- ValidationT(eliminarPin(pinValidacion.tokenHash))
     } yield {
       idResult
@@ -143,6 +150,26 @@ class PinUsuarioEmpresarialAdminActor extends Actor with ActorLogging with Alian
             }
         }
     }
+  }
+
+  /**
+   * Guardar ip equipo de confianza en empresa
+   * @param ip
+   * @param idEmpresa
+   * @return
+   */
+  private def guardarIpUsuarioEmpresarial(ip: Option[String], idEmpresa: Int): Future[Validation[ErrorValidacion, String]] = {
+    ip match {
+      case Some(ip: String) =>
+
+        val ipUsuario: IpsEmpresa = new IpsEmpresa(idEmpresa, ip)
+        toErrorValidation(DataAdapterUsuario.agregarIpEmpresa(ipUsuario))
+      case _ => Future(zSuccess("OK"))
+    }
+  }
+
+  private def obtenerIdEmpresa(idUsuario: Int, tipoClienteAdmin: TiposCliente): Future[Validation[ErrorValidacion, Int]] = {
+    toErrorValidation(DataAdapterUsuario.obtenerIdEmpresa(idUsuario, tipoClienteAdmin))
   }
 
 }
