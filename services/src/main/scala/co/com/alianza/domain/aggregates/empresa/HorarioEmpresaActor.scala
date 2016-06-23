@@ -141,22 +141,27 @@ class HorarioEmpresaActor extends Actor with ActorLogging with AlianzaActors wit
 
   def validarHorario(message: ValidarHorarioEmpresaMessage) = {
     val currentSender = sender()
-    val result = {
-      (for {
-        empresa <- ValidationT(obtenerEmpresaPorNit(message.identificacionUsuario))
-        horario <- ValidationT(obtenerHorarioEmpresa(empresa.id))
-        horarioValido <- ValidationT(validarHorarioEmpresa(horario))
-      } yield (horarioValido)).run
-    }
-    result onComplete {
-      case Failure(failure) =>
-        currentSender ! failure
-      case Success(value) =>
-        value match {
-          case zSuccess(response: Boolean) =>
-            currentSender ! ResponseMessage(OK, response.toJson)
-          case zFailure(error) =>
-            currentSender ! error
+
+    message.tipoCliente match {
+      case TiposCliente.clienteIndividual => currentSender ! ResponseMessage(OK, true.toJson)
+      case _ =>
+        val result = {
+          (for {
+            empresa <- ValidationT(obtenerEmpresaPorNit(message.identificacionUsuario))
+            horario <- ValidationT(obtenerHorarioEmpresa(empresa.id))
+            horarioValido <- ValidationT(validarHorarioEmpresa(horario))
+          } yield (horarioValido)).run
+        }
+        result onComplete {
+          case Failure(failure) =>
+            currentSender ! failure
+          case Success(value) =>
+            value match {
+              case zSuccess(response: Boolean) =>
+                currentSender ! ResponseMessage(OK, response.toJson)
+              case zFailure(error) =>
+                currentSender ! error
+            }
         }
     }
   }
