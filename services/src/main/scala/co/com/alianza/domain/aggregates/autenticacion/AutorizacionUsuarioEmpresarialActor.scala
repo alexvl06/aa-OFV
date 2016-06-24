@@ -41,7 +41,6 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
         validUs <- ValidationT(validarUsuario(tuplaUsuarioOptionEstadoEmpresa match { case None => None case _ => Some(tuplaUsuarioOptionEstadoEmpresa.get._1) }))
         validacionEstadoEmpresa <- ValidationT(validarEstadoEmpresa(tuplaUsuarioOptionEstadoEmpresa match { case None => None case _ => Some(tuplaUsuarioOptionEstadoEmpresa.get._2) }))
         validacionIp <- ValidationT(validarIpEmpresa(sesion, message.ip))
-        validacionHorario <- ValidationT(validarHorarioEmpresa(sesion))
         result <- ValidationT(autorizarRecursoAgente(tuplaUsuarioOptionEstadoEmpresa match { case None => None case _ => Some(tuplaUsuarioOptionEstadoEmpresa.get._1) }, message.url))
       } yield {
         result
@@ -142,24 +141,6 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
       }
     }
   }
-
-  private def validarHorarioEmpresa(sesion: ActorRef): Future[Validation[ErrorAutorizacion, Unit]] =
-    sesion ? ObtenerEmpresaActor flatMap {
-      case Some(empresaSesionActor: ActorRef) =>
-        empresaSesionActor ? ObtenerHorario flatMap {
-          case horario: Option[HorarioEmpresa] =>
-            validarHorarioEmpresa(horario) map {
-              case zSuccess(true) =>
-                Validation success ((): Unit)
-              case zSuccess(false) =>
-                Validation failure ErrorSesionHorarioInvalido()
-              case zFailure(error) =>
-                Validation failure ErrorSesionHorarioInvalido()
-            }
-        }
-      case None =>
-        Future.successful(Validation failure ErrorSesionHorarioInvalido())
-    }
 
   import scalaz.Validation.FlatMap._
   private def autorizarRecursoAgente(agente: Option[UsuarioEmpresarial], url: Option[String]): Future[Validation[ErrorAutorizacion, UsuarioEmpresarial]] =
