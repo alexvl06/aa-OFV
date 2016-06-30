@@ -24,8 +24,6 @@ case class CambiarContrasenaCaducadaClienteAdminMessage(token: String, pw_actual
 
 case class CambiarContrasenaCaducadaAgenteEmpresarialMessage(token: String, pw_actual: String, pw_nuevo: String, idUsuario: Option[Int]) extends MessageService
 
-case class AsignarContrasenaMessage(password: String, idUsuario: Int) extends MessageService
-
 object AdministrarContrasenaEmpresaMessagesJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val ReiniciarContrasenaEmpresaMessageFormat = jsonFormat4(ReiniciarContrasenaAgenteEMessage)
   implicit val BloquearDesbloquearAgenteEMessageFormat = jsonFormat4(BloquearDesbloquearAgenteEMessage)
@@ -33,7 +31,6 @@ object AdministrarContrasenaEmpresaMessagesJsonSupport extends DefaultJsonProtoc
   implicit val CambiarContrasenaAgenteEmpresarialMessageFormat = jsonFormat3(CambiarContrasenaAgenteEmpresarialMessage)
   implicit val CambiarContrasenaCaducadaClienteAdminMessageFormat = jsonFormat4(CambiarContrasenaCaducadaClienteAdminMessage)
   implicit val CambiarContrasenaCaducadaAgenteEmpresarialMessageFormat = jsonFormat4(CambiarContrasenaCaducadaAgenteEmpresarialMessage)
-  implicit val AsignarContrasenaMessageFormat = jsonFormat2(AsignarContrasenaMessage)
 }
 
 case class UsuarioMessageCorreo(correo: String, identificacion: String, tipoIdentificacion: Int) extends MessageService {

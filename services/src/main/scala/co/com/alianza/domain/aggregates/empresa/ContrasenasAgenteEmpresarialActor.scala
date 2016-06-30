@@ -37,7 +37,6 @@ import co.com.alianza.infrastructure.dto.Configuracion
 import co.com.alianza.microservices.MailMessage
 import co.com.alianza.domain.aggregates.usuarios.ErrorPersistence
 import akka.routing.RoundRobinPool
-import co.com.alianza.infrastructure.messages.empresa.AsignarContrasenaMessage
 import co.com.alianza.infrastructure.messages.empresa.CambiarContrasenaCaducadaAgenteEmpresarialMessage
 import co.com.alianza.infrastructure.dto.UsuarioEmpresarial
 import co.com.alianza.util.token.PinData
@@ -167,75 +166,6 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging with Ali
         case false => currentSender ! ResponseMessage(Conflict, tokenValidationFailure)
       }
 
-    case message: AsignarContrasenaMessage => asignarContrasena(message)
-
-  }
-
-  private def asignarContrasena(mensaje: AsignarContrasenaMessage) = {
-    val currentSender = sender()
-    val nuevoPass = mensaje.password.concat(AppendPasswordUser.appendUsuariosFiducia)
-    val validarActualizarContrasenaFuture = (for {
-      usuario <- ValidationT(DataAccessAdapter.obtenerUsuarioEmpresarialPorId(mensaje.idUsuario).map(_.leftMap(pe => ErrorPersistence(pe.message, pe))))
-      empresa <- ValidationT(EmpresaDataAccessAdapter.obtenerEmpresa(usuario.get.identificacion).map(_.leftMap(pe => ErrorPersistence(pe.message, pe))))
-    } yield {
-      (empresa.get, usuario.get, nuevoPass)
-    }).run
-    resolveValidarActualizarContrasenaFuture(validarActualizarContrasenaFuture, currentSender, mensaje)
-  }
-
-  private def resolveValidarActualizarContrasenaFuture(validarActualizarContrasenaFuture: Future[Validation[ErrorValidacion, (Empresa, UsuarioEmpresarial, String)]], currentSender: ActorRef, mensaje: AsignarContrasenaMessage) = {
-    validarActualizarContrasenaFuture onComplete {
-      case sFailure(failure) => currentSender ! failure
-      case sSuccess(value) =>
-        value match {
-          case zSuccess((empresa, usuario, nuevoPass)) => {
-
-            // validar que usuario no está bloqueado y que l empresa no esté inactiva
-            if (usuario.estado == EstadosEmpresaEnum.bloqueadoPorAdmin.id) {
-              currentSender ! ResponseMessage(Conflict, "El Agente Empresarial se encuentra inactivo. Actívelo para poder asignarle una contraseña.")
-            } else if (empresa.estadoEmpresa == EstadosDeEmpresaEnum.inactiva) {
-              currentSender ! ResponseMessage(Conflict, "El Agente Empresarial pertenece a una empresa bloqueada. Desbloquée la empresa para poder asignarle una contraseña.")
-            } else {
-              val actualizarContrasenaFuture = (for {
-                cantidadFilasActualizadas <- ValidationT(DataAccessAdapter.actualizarContrasenaAgenteEmpresarial(nuevoPass, mensaje.idUsuario).map(_.leftMap(pe => ErrorPersistence(pe.message, pe))))
-                res <- ValidationT(DataAccessAdapter.caducarFechaUltimoCambioContrasenaAgenteEmpresarial(mensaje.idUsuario).map(_.leftMap(pe => ErrorPersistence(pe.message, pe))))
-              } yield {
-                (cantidadFilasActualizadas, usuario)
-              }).run
-              resolveActualizarContrasenaFuture(actualizarContrasenaFuture, currentSender, mensaje)
-
-            }
-
-          }
-          case zFailure(error) =>
-            error match {
-              case errorPersistence: ErrorPersistence => currentSender ! errorPersistence.exception
-              case errorVal: ErrorValidacion => currentSender ! ResponseMessage(Conflict, errorVal.msg)
-            }
-        }
-    }
-  }
-
-  private def resolveActualizarContrasenaFuture(actualizarContrasenaFuture: Future[Validation[ErrorValidacion, (Int, UsuarioEmpresarial)]], currentSender: ActorRef, message: AsignarContrasenaMessage) = {
-    actualizarContrasenaFuture onComplete {
-      case sFailure(failure) => currentSender ! failure
-      case sSuccess(value) =>
-        value match {
-          case zSuccess((filasActualizadas, usuario)) => {
-
-            if (usuario.estado != EstadosEmpresaEnum.bloqueadoPorAdmin.id) {
-              DataAccessAdapter.actualizarEstadoUsuarioAgenteEmpresarial(usuario.id, EstadosUsuarioEnum.activo.id)
-            }
-            currentSender ! ResponseMessage(OK, filasActualizadas.toString)
-
-          }
-          case zFailure(error) =>
-            error match {
-              case errorPersistence: ErrorPersistence => currentSender ! errorPersistence.exception
-              case errorVal: ErrorValidacion => currentSender ! ResponseMessage(Conflict, errorVal.msg)
-            }
-        }
-    }
   }
 
   private def resolveCambiarContrasenaFuture(CambiarContrasenaFuture: Future[Validation[ErrorValidacion, Int]], currentSender: ActorRef) = {
