@@ -108,7 +108,7 @@ object Dependencies {
     val axisLib               = "org.apache.axis"                % "axis"                     % apacheAxis logScalaExclude
     val wss4jLib              = "org.apache.ws.security"         % "wss4j"                    % wss4j jodaTimeExclude
     val commonsCodecLib       = "commons-codec"                  % "commons-codec"            % apacheCodec logScalaExclude
-    val discoveryLib          = "commons-discovery"              % "commons-discovery"        % commonsDiscovery logScalaExclude
+    val discoveryLib          = "commons-discovery"              % "commons-discovery"        % "0.2"
     val wsdl4jLib             = "wsdl4j"                         % "wsdl4j"                   % wsdl4j logScalaExclude
     val jaxrpcLib             = "javax.xml"                      % "jaxrpc-api"               % jaxrpc logScalaExclude
     val playJsonLib           = "com.typesafe.play"             %% "play-json"                % playJson logScalaExclude

@@ -11,6 +11,7 @@ assemblyMergeStrategy in assembly := {
   case PathList("com", "github", "tminglei", "slickpg", xs@_*) => MergeStrategy.first
   case PathList("com", "sun", "mail", "smtp", xs@_*) => MergeStrategy.first
   case PathList("org", "postgresql", xs@_*) => MergeStrategy.first
+  case PathList("org", "apache", "commons", xs@_*) => MergeStrategy.first
 
   case PathList("META-INF", xs@_*) => xs.map(_.toLowerCase) match {
     case ("mailcap" :: Nil) => MergeStrategy.first
