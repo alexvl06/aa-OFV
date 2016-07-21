@@ -21,13 +21,13 @@ class PinUsuarioEmpresarialAdminRepository(implicit executionContext: ExecutionC
 
   def obtenerPin(tokenHash: String): Future[Validation[PersistenceException, Option[PinUsuarioEmpresarialAdmin]]] = loan {
     implicit session =>
-      val resultTry: Try[Any] = Try { pin.filter(_.tokenHash === tokenHash).list.headOption }
+      val resultTry = session.database.run(pin.filter(_.tokenHash === tokenHash).result.headOption)
       resolveTry(resultTry, "Consulta un pin de cliente administrador dado su hash")
   }
 
   def eliminarPin(tokenHash: String): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
-      val resultTry = Try { pin.filter(_.tokenHash === tokenHash).delete }
+      val resultTry = session.database.run(pin.filter(_.tokenHash === tokenHash).delete)
       resolveTry(resultTry, "Elimina un pin de cliente administrador dado su hash")
   }
 

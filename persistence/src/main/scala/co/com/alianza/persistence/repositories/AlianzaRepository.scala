@@ -1,9 +1,9 @@
 package co.com.alianza.persistence.repositories
 
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
-import scalaz.{Validation, Failure => zFailure, Success => zSuccess}
-import co.com.alianza.exceptions.{LevelException, PersistenceException, TechnicalLevel, TimeoutLevel}
+import scala.concurrent.{ Await, ExecutionContext, Future }
+import scala.util.{ Failure, Success, Try }
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
+import co.com.alianza.exceptions.{ LevelException, PersistenceException, TechnicalLevel, TimeoutLevel }
 import co.com.alianza.persistence.conn.pg.DataBaseAccessPGAlianza
 import slick.jdbc.JdbcBackend.Database
 import slick.jdbc.JdbcBackend.Session

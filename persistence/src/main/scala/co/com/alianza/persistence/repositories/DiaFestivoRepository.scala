@@ -22,7 +22,7 @@ class DiaFestivoRepository(implicit executionContext: ExecutionContext) extends 
     session => resolveTry(obtenerDiaFestivoTry(session: Session, fecha), "Consulta si existe dia Festivo")
   }
 
-  private def obtenerDiaFestivoTry(implicit session: Session, fecha: Date): Future[Boolean] =  {
+  private def obtenerDiaFestivoTry(implicit session: Session, fecha: Date): Future[Boolean] = {
     session.database.run(diaFestivo.filter(x => x.fecha === fecha).exists.result)
   }
 

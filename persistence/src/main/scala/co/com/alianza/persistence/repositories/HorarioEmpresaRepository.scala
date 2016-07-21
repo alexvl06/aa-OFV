@@ -23,7 +23,7 @@ class HorarioEmpresaRepository(implicit executionContext: ExecutionContext) exte
       resolveTry(resultTry, "Consulta horario de una empresa")
   }
 
-  private def obtenerHorarioEmpresaTry(implicit session: Session, idEmpresa: Int): Future[Option[HorarioEmpresa]] =  {
+  private def obtenerHorarioEmpresaTry(implicit session: Session, idEmpresa: Int): Future[Option[HorarioEmpresa]] = {
     session.database.run(horarioEmpresa.filter(x => x.idEmpresa === idEmpresa).result.headOption)
   }
 
