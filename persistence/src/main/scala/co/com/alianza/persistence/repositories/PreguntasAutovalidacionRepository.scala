@@ -19,7 +19,7 @@ class PreguntasAutovalidacionRepository(implicit executionContext: ExecutionCont
   val respuestasUsuarioTable = TableQuery[RespuestasAutovalidacionUsuarioTable]
   val respuestasClienteAdministradorTable = TableQuery[RespuestasAutovalidacionClienteAdministradorTable]
 
-  def obtenerPreguntas(): Future[Validation[PersistenceException, List[PreguntasAutovalidacion]]] = loan {
+  def obtenerPreguntas(): Future[Validation[PersistenceException, Seq[PreguntasAutovalidacion]]] = loan {
     implicit session =>
       val resultTry = session.database.run(preguntasTable.result)
       resolveTry(resultTry, "Consulta todas las preguntas")
@@ -30,7 +30,7 @@ class PreguntasAutovalidacionRepository(implicit executionContext: ExecutionCont
       val idUsuario = respuestas(0).idUsuario
       val resultTry = for {
         eliminar <- session.database.run(respuestasUsuarioTable.filter(res => res.idUsuario === idUsuario).delete)
-        agregar <- respuestas.map(respuesta => session.database.run(respuestasUsuarioTable ++= respuesta))
+        agregar <- respuestas.map(respuesta => session.database.run(respuestasUsuarioTable returning respuestasUsuarioTable.map(_.idPregunta) += respuesta))
       } yield (agregar)
       resolveTry(resultTry, "Guardar respuestas de autovalidacion para cliente individual")
   }
@@ -39,12 +39,12 @@ class PreguntasAutovalidacionRepository(implicit executionContext: ExecutionCont
     implicit session =>
       val resultTry = for {
         eliminar <- respuestasClienteAdministradorTable.filter(res => res.idUsuario === respuestas(0).idUsuario).delete
-        agregar <- respuestas.map(respuesta => session.database.run(respuestasClienteAdministradorTable ++= respuesta))
+        agregar <- respuestas.map(respuesta => session.database.run(respuestasClienteAdministradorTable returning respuestasClienteAdministradorTable.map(_.idPregunta) += respuesta))
       } yield (agregar)
       resolveTry(resultTry, "Guardar respuestas de autovalidacion para cliente administrador")
   }
 
-  def obtenerPreguntasClienteIndividual(idUsuario: Int): Future[Validation[PersistenceException, List[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]]] = loan {
+  def obtenerPreguntasClienteIndividual(idUsuario: Int): Future[Validation[PersistenceException, Seq[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]]] = loan {
     implicit session =>
       val respuestaJoin = for {
         (pregunta, respuesta) <- preguntasTable join respuestasUsuarioTable on (_.id === _.idPregunta)
@@ -55,7 +55,7 @@ class PreguntasAutovalidacionRepository(implicit executionContext: ExecutionCont
       resolveTry(resultTry, "Obtener las preguntas definidas del cliente individual")
   }
 
-  def obtenerPreguntasClienteAdministrador(idUsuario: Int): Future[Validation[PersistenceException, List[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]]] = loan {
+  def obtenerPreguntasClienteAdministrador(idUsuario: Int): Future[Validation[PersistenceException, Seq[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]]] = loan {
     implicit session =>
       val respuestaJoin = for {
         (pregunta, respuesta) <- preguntasTable join respuestasClienteAdministradorTable on (_.id === _.idPregunta)
