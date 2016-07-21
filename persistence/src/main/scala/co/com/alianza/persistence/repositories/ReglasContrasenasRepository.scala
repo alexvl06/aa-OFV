@@ -24,7 +24,7 @@ class ReglasContrasenasRepository(implicit executionContext: ExecutionContext) e
   val reglasContrasenas = TableQuery[ReglasContrasenasTable]
   val usuarios = TableQuery[UsuarioTable]
 
-  def obtenerReglas(): Future[Validation[PersistenceException, List[ReglasContrasenas]]] = loan {
+  def obtenerReglas(): Future[Validation[PersistenceException, Seq[ReglasContrasenas]]] = loan {
     session =>
       val resultTry = session.database.run(reglasContrasenas.result)
       resolveTry(resultTry, "Consulta todas las reglas contraseñas")

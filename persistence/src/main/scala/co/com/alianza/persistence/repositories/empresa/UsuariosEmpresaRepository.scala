@@ -77,6 +77,7 @@ class UsuariosEmpresaRepository(implicit executionContext: ExecutionContext) ext
   }
 
   private def obtenerListaEstados(estadoUsuarioBusqueda: Int): List[Int] = {
+    //TODO: porque con numeros quemado ?? de por Dios utilizar la enumeracion que está creada !!
     if (estadoUsuarioBusqueda == -1)
       List(0, 1, 2, 3, 4)
     else
@@ -88,21 +89,19 @@ class UsuariosEmpresaRepository(implicit executionContext: ExecutionContext) ext
       val query = for {
         u <- usuariosEmpresariales.filter(_.id === idUsuario)
       } yield (u.contrasena, u.numeroIngresosErroneos)
-      val resultTry = Try {
-        query.update((Some(password), 0))
-      }
+      val resultTry = session.database.run(query.update((Some(password), 0)))
       resolveTry(resultTry, "Cambiar la contraseña de usuario agente empresarial")
   }
 
   def actualizarEstadoUsuario(idUsuario: Int, estado: Int): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
-      val resultTry = Try { usuariosEmpresariales.filter(_.id === idUsuario).map(_.estado).update(estado) }
+      val resultTry = session.database.run(usuariosEmpresariales.filter(_.id === idUsuario).map(_.estado).update(estado))
       resolveTry(resultTry, "Actualizar estado de usuario agente empresarial")
   }
 
   def consultaContrasenaActual(pw_actual: String, idUsuario: Int): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = loan {
     implicit session =>
-      val resultTry = Try { usuariosEmpresarialesAdmin.filter(x => x.id === idUsuario && x.contrasena === pw_actual).list.headOption }
+      val resultTry = session.database.run(usuariosEmpresarialesAdmin.filter(x => x.id === idUsuario && x.contrasena === pw_actual).result.headOption)
       resolveTry(resultTry, "Consulta contrasena actual de cliente admin  " + pw_actual)
   }
 
@@ -113,15 +112,13 @@ class UsuariosEmpresaRepository(implicit executionContext: ExecutionContext) ext
       } yield (u.contrasena, u.fechaActualizacion, u.numeroIngresosErroneos)
       val fechaAct = new org.joda.time.DateTime().getMillis
       val act = (Some(pw_nuevo), new Timestamp(fechaAct), 0)
-      val resultTry = Try {
-        query.update(act)
-      }
+      val resultTry = session.database.run(query.update(act))
       resolveTry(resultTry, "Actualizar Contrasena clientes admin y fecha de actualizacion")
   }
 
   def consultaContrasenaActualAgenteEmpresarial(pw_actual: String, idUsuario: Int): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = loan {
     implicit session =>
-      val resultTry = Try { usuariosEmpresariales.filter(x => x.id === idUsuario && x.contrasena === pw_actual).list.headOption }
+      val resultTry = session.database.run(usuariosEmpresariales.filter(x => x.id === idUsuario && x.contrasena === pw_actual).result.headOption)
       resolveTry(resultTry, "Consulta contrasena actual de cliente admin  " + pw_actual)
   }
 
@@ -132,15 +129,13 @@ class UsuariosEmpresaRepository(implicit executionContext: ExecutionContext) ext
       } yield (u.contrasena, u.fechaActualizacion, u.numeroIngresosErroneos)
       val fechaAct = new org.joda.time.DateTime().getMillis
       val act = (Some(pw_nuevo), new Timestamp(fechaAct), 0)
-      val resultTry = Try {
-        query.update(act)
-      }
+      val resultTry = session.database.run(query.update(act))
       resolveTry(resultTry, "Actualizar Contrasena agente empresariales y fecha de actualizacion")
   }
 
   def asociarPerfiles(perfiles: List[PerfilAgenteAgente]): Future[Validation[PersistenceException, List[Int]]] = loan {
     implicit session =>
-      val resultTry = Try { (perfilesAgentes ++= perfiles).toList }
+      val resultTry = session.database.run(perfilesAgentes ++= perfiles)
       resolveTry(resultTry, "Asociar perfiles del cliente administrador")
   }
 
@@ -151,13 +146,15 @@ class UsuariosEmpresaRepository(implicit executionContext: ExecutionContext) ext
       val time = calendar.getTimeInMillis
       val timestamp = new Timestamp(time)
       val query = for { u <- usuariosEmpresariales if u.id === idUsuario } yield u.fechaActualizacion
-      val resultTry = Try { query.update(timestamp) }
+      val resultTry = session.database.run(query.update(timestamp))
       resolveTry(resultTry, "Caducar Contrasena usuario Agente empresarial")
   }
 
   def obtieneClientePorNitYUsuario(nit: String, usuario: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = loan {
     implicit session =>
-      resolveTry(Try(usuariosEmpresarialesAdmin.filter(u => u.identificacion === nit && u.usuario === usuario).list.headOption), "Consulta cliente admin")
+      val query = usuariosEmpresarialesAdmin.filter(u => u.identificacion === nit && u.usuario === usuario).result.headOption
+      val resultTry = session.database.run(query)
+      resolveTry(resultTry, "Consulta cliente admin")
   }
 
 }

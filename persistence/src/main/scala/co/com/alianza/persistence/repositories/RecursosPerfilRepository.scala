@@ -29,7 +29,7 @@ class RecursosPerfilRepository(implicit executionContext: ExecutionContext) exte
    * @param idUsuario Id del usuario para obtener los recursos
    * @return
    */
-  def obtenerRecursos(idUsuario: Int): Future[Validation[PersistenceException, List[RecursoPerfil]]] = loan {
+  def obtenerRecursos(idUsuario: Int): Future[Validation[PersistenceException, Seq[RecursoPerfil]]] = loan {
     implicit session =>
 
       val usuariosRecursosJoin = for {
