@@ -1,6 +1,6 @@
 package co.com.alianza.persistence.repositories
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 import scalaz.{Validation, Failure => zFailure, Success => zSuccess}
 import co.com.alianza.exceptions.{LevelException, PersistenceException, TechnicalLevel, TimeoutLevel}
@@ -43,16 +43,24 @@ class AlianzaRepository(implicit val executionContex: ExecutionContext) {
     }
   }
 
-  def resolveTry[T](operation: Try[T], messageInfo: String): Validation[PersistenceException, T] = {
-    operation match {
-      case scala.util.Success(response) =>
-        //TODO:Agregar logs
-        //log.info
-        //log.debug
-        zSuccess(response)
-      case scala.util.Failure(exception) =>
-        //log.error
-        exception.printStackTrace()
+  def resolveTry[T](operation: Future[T], messageInfo: String): Validation[PersistenceException, T] = {
+    import scala.concurrent.duration._
+    //TODO: QUITAR ESTO POR FAVOR !!
+    Await.result(operation, 15 seconds)
+    operation.value match {
+      case Some(e) => e match {
+        case scala.util.Success(response) =>
+          //TODO:Agregar logs
+          //log.info
+          //log.debug
+          zSuccess(response)
+        case scala.util.Failure(exception) =>
+          //log.error
+          exception.printStackTrace()
+          zFailure(PersistenceException(exception, getLevelException(exception), exception.getMessage))
+      }
+      case _ =>
+        val exception = new Exception
         zFailure(PersistenceException(exception, getLevelException(exception), exception.getMessage))
     }
   }
