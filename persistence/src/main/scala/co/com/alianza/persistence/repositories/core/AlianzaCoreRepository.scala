@@ -1,10 +1,10 @@
 package co.com.alianza.persistence.repositories.core
 
-import java.sql.{CallableStatement, Connection, ResultSet}
+import java.sql.{ CallableStatement, Connection, ResultSet }
 
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
-import scalaz.{Validation, Failure => zFailure, Success => zSuccess}
+import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{ Failure, Success, Try }
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 import co.com.alianza.exceptions._
 import oracle.net.ns.NetException
 import java.net.SocketTimeoutException

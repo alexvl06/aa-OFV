@@ -92,7 +92,8 @@ class HorarioEmpresaActor extends Actor with ActorLogging with AlianzaActors wit
     val result = {
       (for {
         idEmpresa <- ValidationT(DataAccessAdapter.obtenerIdEmpresa(message.idUsuario.get, message.tipoCliente))
-        horarioEmpresa <- ValidationT(DataAccessAdapter.agregarHorarioEmpresa(toEntity(message, idEmpresa)))
+        existeHorario <- ValidationT(DataAccessAdapter.existeHorarioEmpresa(idEmpresa))
+        horarioEmpresa <- ValidationT(DataAccessAdapter.agregarHorarioEmpresa(toEntity(message, idEmpresa), existeHorario))
         horarioEmpresa <- ValidationT(agregarHorarioSesionEmpresa(idEmpresa, HorarioTrans translateHorarioEmpresa (toEntity(message, idEmpresa))))
       } yield (horarioEmpresa)).run
     }

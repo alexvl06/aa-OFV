@@ -81,7 +81,7 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
       resolveTry(resultTry, "Actualizar token de usuario empresarial")
   }
 
-  def validacionAgenteEmpresarial(numIdentificacionAgenteEmpresarial: String, correoUsuarioAgenteEmpresarial: String, tipoIdentiAgenteEmpresarial: Int, idClienteAdmin: Int): Future[Validation[PersistenceException, Option[(Int, Int)]]] = loan {
+  def validacionAgenteEmpresarial(numIdentificacionAgenteEmpresarial: String, correoUsuarioAgenteEmpresarial: String, tipoIdentiAgenteEmpresarial: Int, idClienteAdmin: Int): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = loan {
     implicit session =>
       val query =
         (for {
@@ -96,7 +96,7 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
 
       val resultTry = session.database.run(query)
 
-      val resultIdUsuarioAE: Try[Option[(Int, Int)]] = resultTry map {
+      val resultIdUsuarioAE: Future[Option[(Int, Int)]] = resultTry map {
         x =>
           x match {
             case None => None

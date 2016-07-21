@@ -29,19 +29,22 @@ class PreguntasAutovalidacionRepository(implicit executionContext: ExecutionCont
     implicit session =>
       val idUsuario = respuestas(0).idUsuario
       val resultTry = for {
-        eliminar <- session.database.run(respuestasUsuarioTable.filter(res => res.idUsuario === idUsuario).delete)
-        agregar <- respuestas.map(respuesta => session.database.run(respuestasUsuarioTable returning respuestasUsuarioTable.map(_.idPregunta) += respuesta))
+        eliminar <- respuestasUsuarioTable.filter(res => res.idUsuario === idUsuario).delete
+        agregar <- respuestas.map(respuesta => respuestasUsuarioTable returning respuestasUsuarioTable.map(_.idPregunta) += respuesta)
       } yield (agregar)
-      resolveTry(resultTry, "Guardar respuestas de autovalidacion para cliente individual")
+      val result = session.database.run(resultTry)
+
+      resolveTry(result, "Guardar respuestas de autovalidacion para cliente individual")
   }
 
   def guardarRespuestasClienteAdministrador(respuestas: List[RespuestasAutovalidacionUsuario]): Future[Validation[PersistenceException, List[Int]]] = loan {
     implicit session =>
       val resultTry = for {
-        eliminar <- session.database.run(respuestasClienteAdministradorTable.filter(res => res.idUsuario === respuestas(0).idUsuario).delete)
-        agregar <- respuestas.map(respuesta => session.database.run(respuestasClienteAdministradorTable returning respuestasClienteAdministradorTable.map(_.idPregunta) += respuesta))
+        eliminar <- respuestasClienteAdministradorTable.filter(res => res.idUsuario === respuestas(0).idUsuario).delete
+        agregar <- respuestas.map(respuesta => respuestasClienteAdministradorTable returning respuestasClienteAdministradorTable.map(_.idPregunta) += respuesta)
       } yield (agregar)
-      resolveTry(resultTry, "Guardar respuestas de autovalidacion para cliente administrador")
+      val result = session.database.run(resultTry)
+      resolveTry(result, "Guardar respuestas de autovalidacion para cliente administrador")
   }
 
   def obtenerPreguntasClienteIndividual(idUsuario: Int): Future[Validation[PersistenceException, Seq[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]]] = loan {

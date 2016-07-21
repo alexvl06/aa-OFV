@@ -235,8 +235,12 @@ object DataAccessAdapter {
     new DiaFestivoRepository().existeDiaFestivo(fecha)
   }
 
-  def agregarHorarioEmpresa(horarioEmpresa: eHorarioEmpresa): Future[Validation[PersistenceException, Boolean]] = {
-    new HorarioEmpresaRepository().agregarHorarioEmpresa(horarioEmpresa)
+  def existeHorarioEmpresa(idEmpresa: Int): Future[Validation[PersistenceException, Boolean]] = {
+    new HorarioEmpresaRepository().existeHorario(idEmpresa)
+  }
+
+  def agregarHorarioEmpresa(horarioEmpresa: eHorarioEmpresa, existeHorario: Boolean): Future[Validation[PersistenceException, Boolean]] = {
+    new HorarioEmpresaRepository().agregarHorarioEmpresa(horarioEmpresa, existeHorario: Boolean)
   }
 
   def obtenerIpsUsuario(idUsuario: Int): Future[Validation[PersistenceException, Vector[IpsUsuario]]] = {
