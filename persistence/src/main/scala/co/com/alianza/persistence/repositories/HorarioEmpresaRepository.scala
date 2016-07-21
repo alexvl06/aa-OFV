@@ -23,16 +23,16 @@ class HorarioEmpresaRepository(implicit executionContext: ExecutionContext) exte
       resolveTry(resultTry, "Consulta horario de una empresa")
   }
 
-  private def obtenerHorarioEmpresaTry(implicit session: Session, idEmpresa: Int): Try[Option[HorarioEmpresa]] = Try {
-    horarioEmpresa.filter(x => x.idEmpresa === idEmpresa).list.headOption
+  private def obtenerHorarioEmpresaTry(implicit session: Session, idEmpresa: Int): Future[Option[HorarioEmpresa]] =  {
+    session.database.run(horarioEmpresa.filter(x => x.idEmpresa === idEmpresa).result.headOption)
   }
 
-  def agregarHorarioEmpresa(horario: HorarioEmpresa): Future[Validation[PersistenceException, Boolean]] = loan {
+  def agregarHorarioEmpresa(horario: HorarioEmpresa) = loan {
     implicit session =>
       val resultTry = Try {
         val query = horarioEmpresa.filter(_.idEmpresa === horario.idEmpresa)
         val result = {
-          if (query.exists.run) query.update(horario)
+          if (session.database.run(query.result.exists)) query.update(horario)
           else (horarioEmpresa returning horarioEmpresa.map(_.idEmpresa)) += horario
         }
         result > 0

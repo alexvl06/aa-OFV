@@ -19,12 +19,11 @@ class DiaFestivoRepository(implicit executionContext: ExecutionContext) extends 
   val diaFestivo = TableQuery[DiaFestivoTable]
 
   def existeDiaFestivo(fecha: Date): Future[Validation[PersistenceException, Boolean]] = loan {
-    session =>
-      resolveTry(obtenerDiaFestivoTry(session: Session, fecha), "Consulta si existe dia Festivo")
+    session => resolveTry(obtenerDiaFestivoTry(session: Session, fecha), "Consulta si existe dia Festivo")
   }
 
-  private def obtenerDiaFestivoTry(implicit session: Session, fecha: Date): Try[Boolean] = Try {
-    diaFestivo.filter(x => x.fecha === fecha).exists.run
+  private def obtenerDiaFestivoTry(implicit session: Session, fecha: Date): Future[Boolean] =  {
+    session.database.run(diaFestivo.filter(x => x.fecha === fecha).exists.result)
   }
 
 }

@@ -19,7 +19,7 @@ class EmpresaRepository(implicit executionContext: ExecutionContext) extends Ali
 
   def obtenerEmpresa(nit: String): Future[Validation[PersistenceException, Option[Empresa]]] = loan {
     implicit session =>
-      val resultTry = Try { empresa.filter(_.nit === nit).list.headOption }
+      val resultTry = session.database.run(empresa.filter(_.nit === nit).result.headOption)
       resolveTry(resultTry, "Consulta empresa por nit")
   }
 
