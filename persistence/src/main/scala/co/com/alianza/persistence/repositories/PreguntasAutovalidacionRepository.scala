@@ -38,7 +38,7 @@ class PreguntasAutovalidacionRepository(implicit executionContext: ExecutionCont
   def guardarRespuestasClienteAdministrador(respuestas: List[RespuestasAutovalidacionUsuario]): Future[Validation[PersistenceException, List[Int]]] = loan {
     implicit session =>
       val resultTry = for {
-        eliminar <- respuestasClienteAdministradorTable.filter(res => res.idUsuario === respuestas(0).idUsuario).delete
+        eliminar <- session.database.run(respuestasClienteAdministradorTable.filter(res => res.idUsuario === respuestas(0).idUsuario).delete)
         agregar <- respuestas.map(respuesta => session.database.run(respuestasClienteAdministradorTable returning respuestasClienteAdministradorTable.map(_.idPregunta) += respuesta))
       } yield (agregar)
       resolveTry(resultTry, "Guardar respuestas de autovalidacion para cliente administrador")
