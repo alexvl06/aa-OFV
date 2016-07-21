@@ -24,7 +24,7 @@ class RecursoPerfilClienteAdminRepository(implicit executionContext: ExecutionCo
    * @param idUsuario Id del usuario para obtener los recursos
    * @return
    */
-  def obtenerRecursosPerfiles(idUsuario: Int): Future[Validation[PersistenceException, List[RecursoPerfilClienteAdmin]]] = loan {
+  def obtenerRecursosPerfiles(idUsuario: Int): Future[Validation[PersistenceException, Seq[RecursoPerfilClienteAdmin]]] = loan {
     implicit session =>
 
       val usuariosRecursosJoin = for {
