@@ -44,14 +44,14 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
     implicit session =>
       val resultTry = session.database.run(
         (
-          for {
-            ((usuarioEmpresarial, usuarioEmpresarialEmpresa), empresa) <- usuariosEmpresariales join usuariosEmpresarialesEmpresa on {
-              (ue, uee) => ue.id === uee.idUsuarioEmpresarial && ue.usuario === usuario
-            } join empresas on {
-              case ((ue, uee), e) => e.nit === nit && uee.idEmpresa === e.id
-            }
-          } yield (usuarioEmpresarial)
-        ).result.headOption
+        for {
+          ((usuarioEmpresarial, usuarioEmpresarialEmpresa), empresa) <- usuariosEmpresariales join usuariosEmpresarialesEmpresa on {
+            (ue, uee) => ue.id === uee.idUsuarioEmpresarial && ue.usuario === usuario
+          } join empresas on {
+            case ((ue, uee), e) => e.nit === nit && uee.idEmpresa === e.id
+          }
+        } yield (usuarioEmpresarial)
+      ).result.headOption
       )
 
       resolveTry(resultTry, "Consulta usuario empresarial por nit y usuario")
@@ -61,14 +61,14 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
     implicit session =>
       val resultTry = session.database.run(
         (
-          for {
-            ((usuarioEmpresarial, usuarioEmpresarialEmpresa), empresa) <- usuariosEmpresarialesAdmin join usuariosEmpresarialesAdminEmpresa on {
-              (ue, uee) => ue.id === uee.idUsuarioEmpresarialAdmin && ue.usuario === usuario
-            } join empresas on {
-              case ((ue, uee), e) => e.nit === nit && uee.idEmpresa === e.id
-            }
-          } yield (usuarioEmpresarial)
-        ).result.headOption
+        for {
+          ((usuarioEmpresarial, usuarioEmpresarialEmpresa), empresa) <- usuariosEmpresarialesAdmin join usuariosEmpresarialesAdminEmpresa on {
+            (ue, uee) => ue.id === uee.idUsuarioEmpresarialAdmin && ue.usuario === usuario
+          } join empresas on {
+            case ((ue, uee), e) => e.nit === nit && uee.idEmpresa === e.id
+          }
+        } yield (usuarioEmpresarial)
+      ).result.headOption
       )
 
       resolveTry(resultTry, "Obtiene id agente empresarial de acuerdo a los 3 paramteros dados")
@@ -94,8 +94,7 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
           }
         } yield (agenteEmpresarial)).result.headOption
 
-
-      val resultTry =  session.database.run(query)
+      val resultTry = session.database.run(query)
 
       val resultIdUsuarioAE: Try[Option[(Int, Int)]] = resultTry map {
         x =>
