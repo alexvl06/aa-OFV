@@ -20,7 +20,7 @@ class UltimasContrasenasUsuarioEmpresarialAdminRepository(implicit executionCont
 
   def guardarUltimaContrasena(nuevaUltimaContrasena: UltimaContrasenaUsuarioEmpresarialAdmin): Future[Validation[PersistenceException, Unit]] = loan {
     implicit session =>
-      val resultTry = session.database.run(ultimasContrasenas += nuevaUltimaContrasena)
+      val resultTry = session.database.run((ultimasContrasenas returning ultimasContrasenas.map(_.id.get)) += nuevaUltimaContrasena)
       resolveTry(resultTry, "Guarda última contraseña registrada de un cliente admin")
   }
 

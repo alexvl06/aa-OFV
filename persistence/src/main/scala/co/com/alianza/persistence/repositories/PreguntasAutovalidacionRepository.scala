@@ -27,7 +27,7 @@ class PreguntasAutovalidacionRepository(implicit executionContext: ExecutionCont
 
   def guardarRespuestasClienteIndividual(respuestas: List[RespuestasAutovalidacionUsuario]): Future[Validation[PersistenceException, List[Int]]] = loan {
     implicit session =>
-      val resultTry = Try {
+      val resultTry = {
         respuestasUsuarioTable.filter(res => res.idUsuario === respuestas(0).idUsuario).delete
         (respuestasUsuarioTable ++= respuestas).toList
       }
@@ -46,21 +46,21 @@ class PreguntasAutovalidacionRepository(implicit executionContext: ExecutionCont
   def obtenerPreguntasClienteIndividual(idUsuario: Int): Future[Validation[PersistenceException, List[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]]] = loan {
     implicit session =>
       val respuestaJoin = for {
-        (pregunta, respuesta) <- preguntasTable innerJoin respuestasUsuarioTable on (_.id === _.idPregunta)
+        (pregunta, respuesta) <- preguntasTable join respuestasUsuarioTable on (_.id === _.idPregunta)
         if respuesta.idUsuario === idUsuario
       } yield (pregunta, respuesta)
 
-      val resultTry = session.database.run(respuestaJoin.list)
+      val resultTry = session.database.run(respuestaJoin.result)
       resolveTry(resultTry, "Obtener las preguntas definidas del cliente individual")
   }
 
   def obtenerPreguntasClienteAdministrador(idUsuario: Int): Future[Validation[PersistenceException, List[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]]] = loan {
     implicit session =>
       val respuestaJoin = for {
-        (pregunta, respuesta) <- preguntasTable innerJoin respuestasClienteAdministradorTable on (_.id === _.idPregunta)
+        (pregunta, respuesta) <- preguntasTable join respuestasClienteAdministradorTable on (_.id === _.idPregunta)
         if respuesta.idUsuario === idUsuario
       } yield (pregunta, respuesta)
-      val resultTry = session.database.run(respuestaJoin.list)
+      val resultTry = session.database.run(respuestaJoin.result)
       resolveTry(resultTry, "Obtener las preguntas definidas del cliente individual")
   }
 

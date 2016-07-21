@@ -20,7 +20,7 @@ class UltimasContrasenasRepository(implicit executionContext: ExecutionContext) 
 
   def guardarUltimaContrasena(nuevaUltimaContrasena: UltimaContrasena): Future[Validation[PersistenceException, Unit]] = loan {
     implicit session =>
-      val resultTry: Try[Unit] = Try { (ultimasContrasenas += nuevaUltimaContrasena) }
+      val resultTry = session.database.run((ultimasContrasenas returning ultimasContrasenas.map(_.id.get)) += nuevaUltimaContrasena)
       resolveTry(resultTry, "Guarda ultima contraseña registrada")
   }
 

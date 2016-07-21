@@ -6,8 +6,8 @@ import co.com.alianza.persistence.entities._
 import slick.jdbc.JdbcBackend.Session
 import slick.lifted.TableQuery
 
-import scala.concurrent.{ExecutionContext, Future}
-import scalaz.{Validation, Failure => zFailure, Success => zSuccess}
+import scala.concurrent.{ ExecutionContext, Future }
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 
 /**
  * @author hernando on 02/03/14.
