@@ -57,7 +57,7 @@ class UsuariosRepository(implicit executionContext: ExecutionContext) extends Al
 
   def guardar(usuario: Usuario): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
-      val resultTry = session.database.run((usuarios returning usuarios.map(_.id.get)) += usuario )
+      val resultTry = session.database.run((usuarios returning usuarios.map(_.id.get)) += usuario)
       resolveTry(resultTry, "Crea usuario")
   }
 

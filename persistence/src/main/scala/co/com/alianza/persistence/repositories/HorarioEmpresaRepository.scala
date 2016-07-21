@@ -3,11 +3,10 @@ package co.com.alianza.persistence.repositories
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.persistence.entities.CustomDriver.simple._
 import co.com.alianza.persistence.entities._
-
-import scala.concurrent.{ ExecutionContext, Future }
 import slick.jdbc.JdbcBackend.Session
 import slick.lifted.TableQuery
-import scala.util.Try
+
+import scala.concurrent.{ ExecutionContext, Future }
 import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 
 /**
@@ -23,20 +22,19 @@ class HorarioEmpresaRepository(implicit executionContext: ExecutionContext) exte
       resolveTry(resultTry, "Consulta horario de una empresa")
   }
 
-  private def obtenerHorarioEmpresaTry(implicit session: Session, idEmpresa: Int): Future[Option[HorarioEmpresa]] =  {
+  private def obtenerHorarioEmpresaTry(implicit session: Session, idEmpresa: Int): Future[Option[HorarioEmpresa]] = {
     session.database.run(horarioEmpresa.filter(x => x.idEmpresa === idEmpresa).result.headOption)
   }
 
-  def agregarHorarioEmpresa(horario: HorarioEmpresa) = loan {
+  def agregarHorarioEmpresa(horario: HorarioEmpresa): Future[Validation[PersistenceException, Boolean]] = loan {
     implicit session =>
-      val resultTry = Try {
-        val query = horarioEmpresa.filter(_.idEmpresa === horario.idEmpresa)
-        val result = {
-          if (session.database.run(query.result.exists)) query.update(horario)
-          else (horarioEmpresa returning horarioEmpresa.map(_.idEmpresa)) += horario
-        }
-        result > 0
-      }
+      val query = horarioEmpresa.filter(_.idEmpresa === horario.idEmpresa)
+      val query2 = for {
+        horario <- query.exists
+        actualizar <- if (horario) query.update(horario) else horarioEmpresa returning horarioEmpresa.map(_.idEmpresa) += horario
+      } yield actualizar
+
+      val resultTry = session.database.run(query2)
       resolveTry(resultTry, "Agregar Horario Empresa")
   }
 
