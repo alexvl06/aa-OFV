@@ -5,7 +5,7 @@ import co.com.alianza.persistence.entities.CustomDriver.simple._
 import co.com.alianza.persistence.entities._
 
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.slick.lifted.TableQuery
+import slick.lifted.TableQuery
 import scala.util.{ Try }
 import scalaz.Validation
 

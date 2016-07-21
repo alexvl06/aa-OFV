@@ -20,6 +20,8 @@ object Versions {
   val slickPGJodaTime: String    = "0.10.2" // No se puede actualizar mas ya que obligaría a cambiar a slick 3
   val postgresql: String         = "9.4.1208"  // No se puede actualizar mas ya versiones superiores son para postgres 9.4
   val oracle: String             = "6"
+  val freeslick: String          = "3.1.1.1" // Versiones superioes trean slick 3.1.x lo que rompe compatibilidad con slick 2.x
+  val hikariCP: String           = "2.4.6"
   val h2: String                 = "1.4.192"
   val recaptcha4j : String       = "0.0.7"
   val apacheCodec: String        = "1.10"

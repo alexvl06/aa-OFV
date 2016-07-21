@@ -5,8 +5,8 @@ import co.com.alianza.persistence.entities._
 
 import scala.concurrent.{ Future, ExecutionContext }
 
-import scala.slick.lifted.TableQuery
-import scala.slick.jdbc.JdbcBackend.SessionDef
+import slick.lifted.TableQuery
+import slick.jdbc.JdbcBackend.SessionDef
 import CustomDriver.simple._
 
 import scala.util.Try

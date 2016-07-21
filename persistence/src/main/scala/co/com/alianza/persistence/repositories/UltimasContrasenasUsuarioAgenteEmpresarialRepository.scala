@@ -4,8 +4,8 @@ import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.persistence.entities._
 
 import scala.concurrent.{ Future, ExecutionContext }
-import scala.slick.lifted
-import scala.slick.lifted.TableQuery
+import slick.lifted
+import slick.lifted.TableQuery
 import CustomDriver.simple._
 
 import scala.util.Try

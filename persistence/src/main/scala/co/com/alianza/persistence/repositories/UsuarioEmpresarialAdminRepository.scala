@@ -11,7 +11,7 @@ import co.com.alianza.persistence.entities._
 import co.com.alianza.exceptions.PersistenceException
 import CustomDriver.simple._
 import scala.util.Try
-import scala.slick.lifted.TableQuery
+import slick.lifted.TableQuery
 
 /**
  * Created by manuel on 18/12/14.

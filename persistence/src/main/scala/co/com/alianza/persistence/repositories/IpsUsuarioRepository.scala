@@ -8,10 +8,10 @@ import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
 
 import co.com.alianza.persistence.entities._
 
-import scala.slick.lifted.TableQuery
+import slick.lifted.TableQuery
 import CustomDriver.simple._
-import scala.slick.direct.Queryable
-import scala.slick.jdbc.JdbcBackend.Session
+import slick.direct.Queryable
+import slick.jdbc.JdbcBackend.Session
 
 /**
  * Created by david on 12/06/14.

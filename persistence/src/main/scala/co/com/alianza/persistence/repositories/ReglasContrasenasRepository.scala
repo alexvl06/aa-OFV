@@ -12,8 +12,8 @@ import scalaz.Validation
 
 import co.com.alianza.persistence.entities._
 
-import scala.slick.lifted.TableQuery
-import scala.slick.jdbc.JdbcBackend.Session
+import slick.lifted.TableQuery
+import slick.jdbc.JdbcBackend.Session
 import CustomDriver.simple._
 
 /**

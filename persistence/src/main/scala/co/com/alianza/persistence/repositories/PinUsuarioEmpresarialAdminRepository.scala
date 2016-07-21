@@ -5,8 +5,8 @@ import co.com.alianza.persistence.entities.{ CustomDriver, PinUsuarioEmpresarial
 
 import scala.concurrent.{ Future, ExecutionContext }
 
-import scala.slick.lifted.TableQuery
-import scala.slick.jdbc.JdbcBackend.SessionDef
+import slick.lifted.TableQuery
+import slick.jdbc.JdbcBackend.SessionDef
 import CustomDriver.simple._
 
 import scala.util.Try
@@ -21,7 +21,7 @@ class PinUsuarioEmpresarialAdminRepository(implicit executionContext: ExecutionC
 
   def obtenerPin(tokenHash: String): Future[Validation[PersistenceException, Option[PinUsuarioEmpresarialAdmin]]] = loan {
     implicit session =>
-      val resultTry = Try { pin.filter(_.tokenHash === tokenHash).list.headOption }
+      val resultTry: Try[Any] = Try { pin.filter(_.tokenHash === tokenHash).list.headOption }
       resolveTry(resultTry, "Consulta un pin de cliente administrador dado su hash")
   }
 

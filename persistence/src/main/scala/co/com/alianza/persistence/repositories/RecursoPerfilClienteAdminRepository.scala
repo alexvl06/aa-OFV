@@ -1,7 +1,7 @@
 package co.com.alianza.persistence.repositories
 
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.slick.lifted.TableQuery
+import slick.lifted.TableQuery
 import scala.util.Try
 import scalaz.Validation
 

@@ -104,6 +104,8 @@ object Dependencies {
     val postgresqlLib         = "org.postgresql"                 % "postgresql"               % postgresql logScalaExclude
     val oracleLib             = "oracle"                         % "ojdbc"                    % oracle logScalaExclude
     val h2Lib                 = "com.h2database"                 % "h2"                       % h2 logScalaExclude
+    val freeslickLib          = "org.suecarter"                 %% "freeslick"                % freeslick
+    val hikariCPLib           = "com.zaxxer"                     % "HikariCP"                 % hikariCP logScalaExclude
 
     val recaptcha4jLib        = "net.tanesha.recaptcha4j"        % "recaptcha4j"              % recaptcha4j logScalaExclude
 
@@ -158,7 +160,7 @@ object Dependencies {
   val kafkaLibs: Seq[ModuleID]      = Seq(kafkaLib)
   val functionalLibs: Seq[ModuleID] = Seq(scalaIOCore, scalaIOFile, scalazLib, shapelessLib)
   val slickLibs: Seq[ModuleID]      = Seq(slickLib, slickPGLib, slickPGJodaTimeLib)
-  val dbLibs: Seq[ModuleID]         = Seq(postgresqlLib, oracleLib, h2Lib)
+  val dbLibs: Seq[ModuleID]         = Seq(postgresqlLib, oracleLib, h2Lib, freeslickLib, hikariCPLib)
 
   val utilLibs: Seq[ModuleID]       = Seq(
     commonsLang3Lib, commonsCodecLib, discoveryLib, playJsonLib, wsdl4jLib, jacksonDatabindLib, jacksonModuleScalaLib, jasyptLib, scalateLib, axisLib, jaxrpcLib, wss4jLib, ninbusLib, jsonTokenLib
