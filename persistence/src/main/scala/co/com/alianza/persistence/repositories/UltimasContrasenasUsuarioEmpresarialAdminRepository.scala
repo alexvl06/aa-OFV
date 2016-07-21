@@ -20,13 +20,13 @@ class UltimasContrasenasUsuarioEmpresarialAdminRepository(implicit executionCont
 
   def guardarUltimaContrasena(nuevaUltimaContrasena: UltimaContrasenaUsuarioEmpresarialAdmin): Future[Validation[PersistenceException, Unit]] = loan {
     implicit session =>
-      val resultTry: Try[Unit] = Try { (ultimasContrasenas += nuevaUltimaContrasena) }
+      val resultTry = session.database.run(ultimasContrasenas += nuevaUltimaContrasena)
       resolveTry(resultTry, "Guarda última contraseña registrada de un cliente admin")
   }
 
   def obtenerUltimasContrasenas(numeroUltimasContrasenas: String, usuarioId: Int): Future[Validation[PersistenceException, List[UltimaContrasenaUsuarioEmpresarialAdmin]]] = loan {
     implicit session =>
-      val resultTry = Try { ultimasContrasenas.filter(_.idUsuario === usuarioId).sortBy(_.fechaUltimaContrasena.desc).take(numeroUltimasContrasenas.toInt).list }
+      val resultTry = session.database.run(ultimasContrasenas.filter(_.idUsuario === usuarioId).sortBy(_.fechaUltimaContrasena.desc).take(numeroUltimasContrasenas.toInt).result)
       resolveTry(resultTry, "Consulta las ultimas 'N' Contrasenas de un cliente admin")
   }
 

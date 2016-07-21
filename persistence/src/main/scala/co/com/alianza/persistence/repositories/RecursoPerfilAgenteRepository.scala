@@ -28,11 +28,11 @@ class RecursoPerfilAgenteRepository(implicit executionContext: ExecutionContext)
     implicit session =>
 
       val usuariosRecursosJoin = for {
-        ((usu, per), rec) <- agentes innerJoin perfilesAgentes on (_.id === _.idUsuario) innerJoin recursosPerfilesAgentes on (_._2.idPerfil === _.idPerfil)
+        ((usu, per), rec) <- agentes join perfilesAgentes on (_.id === _.idUsuario) join recursosPerfilesAgentes on (_._2.idPerfil === _.idPerfil)
         if usu.id === idUsuario
       } yield rec
 
-      val resultTry = Try { usuariosRecursosJoin.list }
+      val resultTry = session.database.run(usuariosRecursosJoin.result)
       resolveTry(resultTry, "Consulta todos los Recursos por Listado de Id de Perfiles")
   }
 

@@ -21,7 +21,7 @@ class PreguntasAutovalidacionRepository(implicit executionContext: ExecutionCont
 
   def obtenerPreguntas(): Future[Validation[PersistenceException, List[PreguntasAutovalidacion]]] = loan {
     implicit session =>
-      val resultTry = Try { preguntasTable.list }
+      val resultTry = session.database.run(preguntasTable.result)
       resolveTry(resultTry, "Consulta todas las preguntas")
   }
 
@@ -50,7 +50,7 @@ class PreguntasAutovalidacionRepository(implicit executionContext: ExecutionCont
         if respuesta.idUsuario === idUsuario
       } yield (pregunta, respuesta)
 
-      val resultTry = Try { respuestaJoin.list }
+      val resultTry = session.database.run(respuestaJoin.list)
       resolveTry(resultTry, "Obtener las preguntas definidas del cliente individual")
   }
 
@@ -60,24 +60,19 @@ class PreguntasAutovalidacionRepository(implicit executionContext: ExecutionCont
         (pregunta, respuesta) <- preguntasTable innerJoin respuestasClienteAdministradorTable on (_.id === _.idPregunta)
         if respuesta.idUsuario === idUsuario
       } yield (pregunta, respuesta)
-
-      val resultTry = Try { respuestaJoin.list }
+      val resultTry = session.database.run(respuestaJoin.list)
       resolveTry(resultTry, "Obtener las preguntas definidas del cliente individual")
   }
 
   def bloquearRespuestasClienteIndividual(idUsuario: Int): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
-      val resultTry = Try {
-        respuestasUsuarioTable.filter(x => x.idUsuario === idUsuario).delete
-      }
+      val resultTry = session.database.run(respuestasUsuarioTable.filter(x => x.idUsuario === idUsuario).delete)
       resolveTry(resultTry, "Eliminar repsuestas del Usuario")
   }
 
   def bloquearRespuestasClienteAdministrador(idUsuario: Int): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
-      val resultTry = Try {
-        respuestasClienteAdministradorTable.filter(x => x.idUsuario === idUsuario).delete
-      }
+      val resultTry = session.database.run(respuestasClienteAdministradorTable.filter(x => x.idUsuario === idUsuario).delete)
       resolveTry(resultTry, "Eliminar repsuestas del Usuario")
   }
 
