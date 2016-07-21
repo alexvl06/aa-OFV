@@ -1,20 +1,18 @@
 package co.com.alianza.persistence.repositories.core
 
-import java.sql.{ CallableStatement, ResultSet, Connection }
+import java.sql.{CallableStatement, Connection, ResultSet}
 
-import scala.concurrent.{ Future, ExecutionContext }
-import scala.util.{ Failure, Success, Try }
-
-import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success, Try}
+import scalaz.{Validation, Failure => zFailure, Success => zSuccess}
 import co.com.alianza.exceptions._
-import co.com.alianza.persistence.conn.core.DataBaseAccesCoreAlianza
-import scala.util.Failure
-import scala.util.Success
 import oracle.net.ns.NetException
 import java.net.SocketTimeoutException
 
+import co.com.alianza.persistence.conn.oracle.DataBaseAccessOracleAlianza
+
 /**
- * Repositorio que obtiene la conexión del DataSource: [[DataBaseAccesCoreAlianza.ds]]
+ * Repositorio que obtiene la conexión del DataSource: [[co.com.alianza.persistence.conn.oracle.DataBaseAccessOracleAlianza.ds]]
  *
  * @author seven4n
  */
@@ -23,7 +21,7 @@ class AlianzaCoreRepository(implicit val executionContex: ExecutionContext) {
   def loan[R](f: Connection => Validation[PersistenceException, R]): Future[Validation[PersistenceException, R]] = {
     Future {
       Try {
-        val connectionDataSource = DataBaseAccesCoreAlianza.ds
+        val connectionDataSource = DataBaseAccessOracleAlianza.ds
         connectionDataSource.getConnection
       } match {
         case Success(connection) =>
