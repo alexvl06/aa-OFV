@@ -135,8 +135,8 @@ class UsuariosEmpresaRepository(implicit executionContext: ExecutionContext) ext
 
   def asociarPerfiles(perfiles: List[PerfilAgenteAgente]): Future[Validation[PersistenceException, List[Int]]] = loan {
     implicit session =>
-      val resultTry = session.database.run(perfilesAgentes ++= perfiles)
-      resolveTry(resultTry, "Asociar perfiles del cliente administrador")
+      val resultTry = perfiles.map(perfil => session.database.run(perfilesAgentes += perfil))
+      resolveTry(Future.sequence(resultTry), "Asociar perfiles del cliente administrador")
   }
 
   def caducarFechaUltimoCambioContrasenaAgenteEmpresarial(idUsuario: Int): Future[Validation[PersistenceException, Int]] = loan {
