@@ -1,13 +1,13 @@
 package co.com.alianza.persistence.repositories
 
 import scalaz.Validation
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import co.com.alianza.persistence.entities._
 import co.com.alianza.exceptions.PersistenceException
 import CustomDriver.simple._
-import slick.dbio.Effect.{Read, Write}
+import slick.dbio.Effect.{ Read, Write }
 import slick.lifted.TableQuery
-import slick.profile.{FixedSqlAction, FixedSqlStreamingAction, SqlAction}
+import slick.profile.{ FixedSqlAction, FixedSqlStreamingAction, SqlAction }
 import slick.dbio.Effect.Read
 import slick.profile.{ FixedSqlStreamingAction, SqlAction }
 
@@ -28,8 +28,8 @@ class PermisoTransaccionalRepository(implicit executionContext: ExecutionContext
 
   /**
    * Crea, actualiza o borra un permiso general
-    *
-    * @param permiso Datos permiso
+   *
+   * @param permiso Datos permiso
    * @param estaSeleccionado Se encuentra seleccionado?
    * @param idsAgentes Autorizadores
    * @return
@@ -69,8 +69,8 @@ class PermisoTransaccionalRepository(implicit executionContext: ExecutionContext
 
   /**
    * Crea, actualiza o borra un permiso de un encargo
-    *
-    * @param permiso Datos permiso
+   *
+   * @param permiso Datos permiso
    * @param estaSeleccionado Se encuentra seleccionado?
    * @param idsAgentes Autorizadores
    * @return
@@ -116,7 +116,7 @@ class PermisoTransaccionalRepository(implicit executionContext: ExecutionContext
     implicit session =>
       val consultaJoin = {
         val joinPermisosTransaccionalesAutorizadores = for {
-          ((permiso, autorizador), agente) <- tablaPermisos.filter(_.idAgente === idAgente) joinLeft tablaPermisosAutorizadores on {
+          ((permiso, autorizador), agente) <- tablaPermisos.filter(_.idAgente === idAgente) join tablaPermisosAutorizadores on {
             (permiso, autorizador) =>
               permiso.tipoTransaccion === autorizador.tipoTransaccion && permiso.idAgente === autorizador.idAgente
           } join tablaAgentes on {
@@ -126,14 +126,16 @@ class PermisoTransaccionalRepository(implicit executionContext: ExecutionContext
         } yield (permiso, autorizador, false)
 
         val joinPermisosTransaccionalesAutorizadoresAdmin = for {
-          (permiso, autorizador) <- tablaPermisos.filter(_.idAgente === idAgente) joinLeft tablaPermisosAutorizadoresAdmins on {
+          (permiso, autorizador) <- tablaPermisos.filter(_.idAgente === idAgente) join tablaPermisosAutorizadoresAdmins on {
             (permiso, autorizador) =>
               permiso.tipoTransaccion === autorizador.tipoTransaccion && permiso.idAgente === autorizador.idAgente
           }
         } yield (permiso, autorizador, true)
+
         val unionPermisos = joinPermisosTransaccionalesAutorizadores ++ joinPermisosTransaccionalesAutorizadoresAdmin
+
         val joinPermisosTransaccionalesEncargosAutorizadores = for {
-          ((permiso, autorizador), agente) <- tablaPermisosEncargos.filter(_.idAgente === idAgente) joinLeft tablaPermisosEncargosAutorizadores on {
+          ((permiso, autorizador), agente) <- tablaPermisosEncargos.filter(_.idAgente === idAgente) join tablaPermisosEncargosAutorizadores on {
             (permiso, autorizador) =>
               permiso.idEncargo === autorizador.idEncargo && permiso.tipoTransaccion === autorizador.tipoTransaccion && permiso.idAgente === autorizador.idAgente
           } join tablaAgentes on {
@@ -143,11 +145,12 @@ class PermisoTransaccionalRepository(implicit executionContext: ExecutionContext
         } yield (permiso, autorizador, false)
 
         val joinPermisosTransaccionalesEncargosAutorizadoresAdmin = for {
-          (permiso, autorizador) <- tablaPermisosEncargos.filter(_.idAgente === idAgente) joinLeft tablaPermisosEncargosAutorizadoresAdmins on {
+          (permiso, autorizador) <- tablaPermisosEncargos.filter(_.idAgente === idAgente) join tablaPermisosEncargosAutorizadoresAdmins on {
             (permiso, autorizador) =>
               permiso.idEncargo === autorizador.idEncargo && permiso.tipoTransaccion === autorizador.tipoTransaccion && permiso.idAgente === autorizador.idAgente
           }
         } yield (permiso, autorizador, true)
+
         val unionPermisosEncargos = joinPermisosTransaccionalesEncargosAutorizadores ++ joinPermisosTransaccionalesEncargosAutorizadoresAdmin
 
         (unionPermisos.groupBy { _._1 } map {
@@ -161,8 +164,7 @@ class PermisoTransaccionalRepository(implicit executionContext: ExecutionContext
       resolveTry(resultTry, "Consultar permiso transaccional de agente")
   }
 
-
-  private def insertDelete(inserts : Seq[FixedSqlAction[Int, NoStream, Write]] , deletes : Seq[FixedSqlAction[Int, NoStream, Write]] )(implicit session: Session) = {
+  private def insertDelete(inserts: Seq[FixedSqlAction[Int, NoStream, Write]], deletes: Seq[FixedSqlAction[Int, NoStream, Write]])(implicit session: Session) = {
 
     val allInserts = DBIO.seq(inserts: _*)
 
@@ -173,11 +175,10 @@ class PermisoTransaccionalRepository(implicit executionContext: ExecutionContext
     session.database.run(allActions)
   }
 
-
   private def insertDeleteAdmin(
     permiso: PermisoAgente, estaSeleccionado: Boolean, ids: Seq[Int], queryAgentes: Query[PermisoAgenteAutorizadorAdminTable, PermisoAgenteAutorizador, Seq],
     existentes: Seq[Int]
-    )(implicit session: Session) = {
+  )(implicit session: Session) = {
     val (nuevos, removidos) = if (estaSeleccionado) (ids.diff(existentes), existentes.diff(ids)) else (Seq.empty, existentes)
     val inserts = nuevos.map { id =>
       tablaPermisosAutorizadoresAdmins += PermisoAgenteAutorizador(permiso.idAgente, permiso.tipoTransaccion, id)
@@ -194,14 +195,14 @@ class PermisoTransaccionalRepository(implicit executionContext: ExecutionContext
       tablaPermisosAutorizadores += PermisoAgenteAutorizador(permiso.idAgente, permiso.tipoTransaccion, id)
     }
     val deletes = removidos.map(id => queryAgentes.filter(_.idAutorizador === id).delete)
-
   }
 
-  private[this] def guardarAgentesPermiso(  permiso: PermisoAgente,
-                                            estaSeleccionado: Boolean,
-                                            idsAgentes: Seq[Int],
-                                            idClienteAdmin: Int
-                                          )(implicit session: Session) = {
+  private[this] def guardarAgentesPermiso(
+    permiso: PermisoAgente,
+    estaSeleccionado: Boolean,
+    idsAgentes: Seq[Int],
+    idClienteAdmin: Int
+  )(implicit session: Session) = {
     if (idsAgentes.nonEmpty) {
 
       val ids = idsAgentes.filter { id => id != 0 && id != (-1) }
@@ -211,7 +212,7 @@ class PermisoTransaccionalRepository(implicit executionContext: ExecutionContext
         .filter(au => au.idAgente === permiso.idAgente && au.tipoTransaccion === permiso.tipoTransaccion)
 
       val queryAdmins = tablaPermisosAutorizadoresAdmins
-        .filter( a => a.idAgente === permiso.idAgente && a.tipoTransaccion === permiso.tipoTransaccion)
+        .filter(a => a.idAgente === permiso.idAgente && a.tipoTransaccion === permiso.tipoTransaccion)
 
       for {
         existentesAgentes <- session.database.run(queryAgentes.map(_.idAutorizador).result)
