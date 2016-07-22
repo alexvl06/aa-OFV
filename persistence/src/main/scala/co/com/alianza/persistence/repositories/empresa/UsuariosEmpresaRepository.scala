@@ -32,25 +32,23 @@ class UsuariosEmpresaRepository(implicit executionContext: ExecutionContext) ext
   val usuariosEmpresarialesAdminEmpresa = TableQuery[UsuarioEmpresarialAdminEmpresaTable]
   val perfilesAgentes = TableQuery[PerfilAgenteAgenteTable]
 
-
-
   def obtenerUsuariosBusqueda(correoUsuario: String, usuario: String, nombreUsuario: String, estadoUsuario: Int, idClienteAdmin: Int): Future[Validation[PersistenceException, Seq[UsuarioEmpresarial]]] = loan {
     implicit session =>
 
-        val usuariosQuery = for {
-          (clienteAdministrador, agenteEmpresarial) <- usuariosEmpresarialesAdmin join usuariosEmpresarialesAdminEmpresa on {
-            (uea, ueae) => uea.id === ueae.idUsuarioEmpresarialAdmin && uea.id === idClienteAdmin
-          } join usuariosEmpresarialesEmpresa on {
-            case ((uea, ueae), uee) => ueae.idEmpresa === uee.idEmpresa
-          } join usuariosEmpresariales on {
-            case (((uea, ueae), uee), ae) =>
-              uee.idUsuarioEmpresarial === ae.id && ueae.idEmpresa === uee.idEmpresa && uea.id === ueae.idUsuarioEmpresarialAdmin && uea.id === idClienteAdmin && (ae.estado inSet obtenerListaEstados(estadoUsuario))
-          }
-        } yield agenteEmpresarial
+      val usuariosQuery = for {
+        (clienteAdministrador, agenteEmpresarial) <- usuariosEmpresarialesAdmin join usuariosEmpresarialesAdminEmpresa on {
+          (uea, ueae) => uea.id === ueae.idUsuarioEmpresarialAdmin && uea.id === idClienteAdmin
+        } join usuariosEmpresarialesEmpresa on {
+          case ((uea, ueae), uee) => ueae.idEmpresa === uee.idEmpresa
+        } join usuariosEmpresariales on {
+          case (((uea, ueae), uee), ae) =>
+            uee.idUsuarioEmpresarial === ae.id && ueae.idEmpresa === uee.idEmpresa && uea.id === ueae.idUsuarioEmpresarialAdmin && uea.id === idClienteAdmin && (ae.estado inSet obtenerListaEstados(estadoUsuario))
+        }
+      } yield agenteEmpresarial
 
-        val correoFiltrado = if (correoUsuario != null && correoUsuario.nonEmpty && usuariosQuery != null) usuariosQuery.filter(_.correo === correoUsuario) else usuariosQuery
-        val usuarioFiltrado = if (usuario != null && usuario.nonEmpty && usuariosQuery != null) correoFiltrado.filter(_.usuario === usuario) else correoFiltrado
-        val nombreFiltrado = if (nombreUsuario != null && nombreUsuario.nonEmpty && usuariosQuery != null)  usuarioFiltrado.filter(_.nombreUsuario === nombreUsuario) else usuarioFiltrado
+      val correoFiltrado = if (correoUsuario != null && correoUsuario.nonEmpty && usuariosQuery != null) usuariosQuery.filter(_.correo === correoUsuario) else usuariosQuery
+      val usuarioFiltrado = if (usuario != null && usuario.nonEmpty && usuariosQuery != null) correoFiltrado.filter(_.usuario === usuario) else correoFiltrado
+      val nombreFiltrado = if (nombreUsuario != null && nombreUsuario.nonEmpty && usuariosQuery != null) usuarioFiltrado.filter(_.nombreUsuario === nombreUsuario) else usuarioFiltrado
 
       val resultTry = session.database.run(nombreFiltrado.result)
 
