@@ -5,9 +5,11 @@ import scala.concurrent.{ExecutionContext, Future}
 import co.com.alianza.persistence.entities._
 import co.com.alianza.exceptions.PersistenceException
 import CustomDriver.simple._
-import slick.dbio.Effect.Read
-import slick.profile.{FixedSqlStreamingAction, SqlAction}
+import slick.dbio.Effect.{Read, Write}
+import slick.lifted.TableQuery
+import slick.profile.{FixedSqlAction, FixedSqlStreamingAction, SqlAction}
 
+import scala.tools.nsc.interpreter.session
 import scala.util.Try
 
 /**
@@ -164,22 +166,40 @@ class PermisoTransaccionalRepository(implicit executionContext: ExecutionContext
       )
   }
 
-  private def insertDelete(
+
+  private def insertDelete(inserts : Seq[FixedSqlAction[Int, NoStream, Write]] , deletes : Seq[FixedSqlAction[Int, NoStream, Write]] )(implicit session: Session) = {
+
+    val allInserts = DBIO.seq(inserts: _*)
+
+    val allDeletes = DBIO.seq(deletes: _*)
+
+    val allActions = DBIO.seq(allInserts, allDeletes).transactionally
+
+    session.database.run(allActions)
+  }
+
+
+  private def insertDeleteAdmin(
+    permiso: PermisoAgente, estaSeleccionado: Boolean, ids: Seq[Int], queryAgentes: Query[PermisoAgenteAutorizadorAdminTable, PermisoAgenteAutorizador, Seq],
+    existentes: Seq[Int]
+    )(implicit session: Session) = {
+    val (nuevos, removidos) = if (estaSeleccionado) (ids.diff(existentes), existentes.diff(ids)) else (Seq.empty, existentes)
+    val inserts = nuevos.map { id =>
+      tablaPermisosAutorizadoresAdmins += PermisoAgenteAutorizador(permiso.idAgente, permiso.tipoTransaccion, id)
+    }
+    val deletes = removidos.map(id => queryAgentes.filter(_.idAutorizador === id).delete)
+  }
+
+  private def insertDeleteAgentes(
     permiso: PermisoAgente, estaSeleccionado: Boolean, ids: Seq[Int], queryAgentes: Query[PermisoAgenteAutorizadorTable, PermisoAgenteAutorizador, Seq],
     existentes: Seq[Int]
   )(implicit session: Session) = {
     val (nuevos, removidos) = if (estaSeleccionado) (ids.diff(existentes), existentes.diff(ids)) else (Seq.empty, existentes)
-
     val inserts = nuevos.map { id =>
       tablaPermisosAutorizadores += PermisoAgenteAutorizador(permiso.idAgente, permiso.tipoTransaccion, id)
     }
-    val allInserts = DBIO.seq(inserts: _*)
-
     val deletes = removidos.map(id => queryAgentes.filter(_.idAutorizador === id).delete)
-    val allDeletes = DBIO.seq(deletes: _*)
 
-    val allActions = DBIO.seq(allInserts, allDeletes).transactionally
-    session.database.run(allActions)
   }
 
   private[this] def guardarAgentesPermiso(  permiso: PermisoAgente,
@@ -187,30 +207,23 @@ class PermisoTransaccionalRepository(implicit executionContext: ExecutionContext
                                             idsAgentes: Seq[Int],
                                             idClienteAdmin: Int
                                           )(implicit session: Session) = {
-    println("guardarAgentesPermiso")
     if (idsAgentes.nonEmpty) {
+
       val ids = idsAgentes.filter { id => id != 0 && id != (-1) }
+      val incluidoClienteAdmin = idsAgentes.filter { _ != 0 }.contains(-1)
+
       val queryAgentes = tablaPermisosAutorizadores
         .filter(au => au.idAgente === permiso.idAgente && au.tipoTransaccion === permiso.tipoTransaccion)
 
-      for {
-        existentes <- session.database.run(queryAgentes.map(_.idAutorizador).result)
-        _ <- insertDelete(permiso, estaSeleccionado, ids, queryAgentes, existentes)
-      } yield ()
+      val queryAdmins = tablaPermisosAutorizadoresAdmins
+        .filter( a => a.idAgente === permiso.idAgente && a.tipoTransaccion === permiso.tipoTransaccion)
 
-      val incluidoClienteAdmin = idsAgentes.filter { _ != 0 }.contains(-1)
-      val queryAdmins = for {
-        au <- tablaPermisosAutorizadoresAdmins if au.idAgente === permiso.idAgente && au.tipoTransaccion === permiso.tipoTransaccion
-      } yield au
-      val adminsIds = if (incluidoClienteAdmin) List(idClienteAdmin) else List()
-      val adminsExistentes = queryAdmins.list.map { _.idAutorizador }
-      val adminsNuevos = if (estaSeleccionado) adminsIds.diff(adminsExistentes) else List()
-      val adminsRemovidos = if (estaSeleccionado) adminsExistentes.diff(adminsIds) else adminsExistentes
-      adminsNuevos foreach {
-        id =>
-          tablaPermisosAutorizadoresAdmins += PermisoAgenteAutorizador(permiso.idAgente, permiso.tipoTransaccion, id)
-      }
-      adminsRemovidos foreach { id => queryAdmins filter { _.idAutorizador === id } delete }
+      for {
+        existentesAgentes <- session.database.run(queryAgentes.map(_.idAutorizador).result)
+        _ <- insertDeleteAgentes(permiso, estaSeleccionado, ids, queryAgentes, existentesAgentes)
+        exitentesAdmin <- session.database.run(queryAdmins.map(_.idAutorizador).result)
+        _ <- insertDeleteAdmin(permiso, incluidoClienteAdmin, List(idClienteAdmin), queryAdmins, exitentesAdmin)
+      } yield ()
     }
   }
 
@@ -222,7 +235,7 @@ class PermisoTransaccionalRepository(implicit executionContext: ExecutionContext
   )(implicit s: Session) = {
     if (idsAgentes.isDefined && idsAgentes.get.headOption.isDefined && idsAgentes.get.headOption.get != 0) {
       val ids = idsAgentes.get.filter { id => id != 0 && id != (-1) }
-      val esConAutorizadores = (permiso.tipoPermiso == 2 || permiso.tipoPermiso == 3)
+      val esConAutorizadores = permiso.tipoPermiso == 2 || permiso.tipoPermiso == 3
       val queryAgentes = for {
         au <- tablaPermisosEncargosAutorizadores if au.idEncargo === permiso.idEncargo && au.idAgente === permiso.idAgente && au.tipoTransaccion === permiso.tipoTransaccion
       } yield au
