@@ -32,10 +32,12 @@ class UsuariosEmpresaRepository(implicit executionContext: ExecutionContext) ext
   val usuariosEmpresarialesAdminEmpresa = TableQuery[UsuarioEmpresarialAdminEmpresaTable]
   val perfilesAgentes = TableQuery[PerfilAgenteAgenteTable]
 
-  def obtenerUsuariosBusqueda(correoUsuario: String, usuario: String, nombreUsuario: String, estadoUsuario: Int, idClienteAdmin: Int): Future[Validation[PersistenceException, List[UsuarioEmpresarial]]] = loan {
+
+
+  def obtenerUsuariosBusqueda(correoUsuario: String, usuario: String, nombreUsuario: String, estadoUsuario: Int, idClienteAdmin: Int): Future[Validation[PersistenceException, Seq[UsuarioEmpresarial]]] = loan {
     implicit session =>
-      val resultTry = Try {
-        var usuariosQuery = (for {
+
+        val usuariosQuery = for {
           (clienteAdministrador, agenteEmpresarial) <- usuariosEmpresarialesAdmin join usuariosEmpresarialesAdminEmpresa on {
             (uea, ueae) => uea.id === ueae.idUsuarioEmpresarialAdmin && uea.id === idClienteAdmin
           } join usuariosEmpresarialesEmpresa on {
@@ -44,35 +46,14 @@ class UsuariosEmpresaRepository(implicit executionContext: ExecutionContext) ext
             case (((uea, ueae), uee), ae) =>
               uee.idUsuarioEmpresarial === ae.id && ueae.idEmpresa === uee.idEmpresa && uea.id === ueae.idUsuarioEmpresarialAdmin && uea.id === idClienteAdmin && (ae.estado inSet obtenerListaEstados(estadoUsuario))
           }
-        } yield (agenteEmpresarial))
+        } yield agenteEmpresarial
 
-        val usuariosEmpresarialesLista = new ListBuffer[UsuarioEmpresarial]()
-        if ((correoUsuario == null || correoUsuario.isEmpty) && (usuario == null || usuario.isEmpty) && (nombreUsuario == null || nombreUsuario.isEmpty))
-          usuariosEmpresarialesLista ++= usuariosQuery
-        else {
-          if (correoUsuario != null && !correoUsuario.isEmpty && usuariosQuery != null) {
-            if (usuariosQuery.filter(_.correo === correoUsuario).exists.run)
-              usuariosQuery = usuariosQuery.filter(_.correo === correoUsuario)
-            else
-              usuariosQuery = null
-          }
-          if (usuario != null && !usuario.isEmpty && usuariosQuery != null) {
-            if (usuariosQuery.filter(_.usuario === usuario).exists.run)
-              usuariosQuery = usuariosQuery.filter(_.usuario === usuario)
-            else
-              usuariosQuery = null
-          }
-          if (nombreUsuario != null && !nombreUsuario.isEmpty && usuariosQuery != null) {
-            if (usuariosQuery.filter(_.nombreUsuario === nombreUsuario).exists.run)
-              usuariosQuery = usuariosQuery.filter(_.nombreUsuario === nombreUsuario)
-            else
-              usuariosQuery = null
-          }
-          if (usuariosQuery != null)
-            usuariosEmpresarialesLista ++= usuariosQuery.list
-        }
-        usuariosEmpresarialesLista.toList
-      }
+        val correoFiltrado = if (correoUsuario != null && correoUsuario.nonEmpty && usuariosQuery != null) usuariosQuery.filter(_.correo === correoUsuario) else usuariosQuery
+        val usuarioFiltrado = if (usuario != null && usuario.nonEmpty && usuariosQuery != null) correoFiltrado.filter(_.usuario === usuario) else correoFiltrado
+        val nombreFiltrado = if (nombreUsuario != null && nombreUsuario.nonEmpty && usuariosQuery != null)  usuarioFiltrado.filter(_.nombreUsuario === nombreUsuario) else usuarioFiltrado
+
+      val resultTry = session.database.run(nombreFiltrado.result)
+
       resolveTry(resultTry, "Consulta agentes empresariales que pertenezcan a la empresa del cliente administrador y cumpla con parametros de busqueda")
   }
 
