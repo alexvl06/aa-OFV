@@ -1,10 +1,13 @@
 package co.com.alianza.persistence.repositories
 
 import scalaz.Validation
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 import co.com.alianza.persistence.entities._
 import co.com.alianza.exceptions.PersistenceException
 import CustomDriver.simple._
+import slick.dbio.Effect.Read
+import slick.profile.{FixedSqlStreamingAction, SqlAction}
+
 import scala.util.Try
 
 /**
@@ -22,7 +25,8 @@ class PermisoTransaccionalRepository(implicit executionContext: ExecutionContext
 
   /**
    * Crea, actualiza o borra un permiso general
-   * @param permiso Datos permiso
+    *
+    * @param permiso Datos permiso
    * @param estaSeleccionado Se encuentra seleccionado?
    * @param idsAgentes Autorizadores
    * @return
@@ -62,7 +66,8 @@ class PermisoTransaccionalRepository(implicit executionContext: ExecutionContext
 
   /**
    * Crea, actualiza o borra un permiso de un encargo
-   * @param permiso Datos permiso
+    *
+    * @param permiso Datos permiso
    * @param estaSeleccionado Se encuentra seleccionado?
    * @param idsAgentes Autorizadores
    * @return
@@ -159,28 +164,41 @@ class PermisoTransaccionalRepository(implicit executionContext: ExecutionContext
       )
   }
 
-  private[this] def guardarAgentesPermiso(
-    permiso: PermisoAgente,
-    estaSeleccionado: Boolean,
-    idsAgentes: Option[List[Int]] = None,
-    idClienteAdmin: Int
-  )(implicit s: Session) = {
-    println("guardarAgentesPermiso")
-    if (idsAgentes.isDefined) {
-      val ids = idsAgentes.get.filter { id => id != 0 && id != (-1) }
-      val queryAgentes = for {
-        au <- tablaPermisosAutorizadores if au.idAgente === permiso.idAgente && au.tipoTransaccion === permiso.tipoTransaccion
-      } yield au
-      val existentes = queryAgentes.list.map { _.idAutorizador }
-      val nuevos = if (estaSeleccionado) ids.diff(existentes) else List()
-      val removidos = if (estaSeleccionado) existentes.diff(ids) else existentes
-      nuevos foreach {
-        id =>
-          tablaPermisosAutorizadores += PermisoAgenteAutorizador(permiso.idAgente, permiso.tipoTransaccion, id)
-      }
-      removidos foreach { id => queryAgentes filter { _.idAutorizador === id } delete }
+  private def insertDelete(
+    permiso: PermisoAgente, estaSeleccionado: Boolean, ids: Seq[Int], queryAgentes: Query[PermisoAgenteAutorizadorTable, PermisoAgenteAutorizador, Seq],
+    existentes: Seq[Int]
+  )(implicit session: Session) = {
+    val (nuevos, removidos) = if (estaSeleccionado) (ids.diff(existentes), existentes.diff(ids)) else (Seq.empty, existentes)
 
-      val incluidoClienteAdmin = idsAgentes.get.filter { _ != 0 }.contains(-1)
+    val inserts = nuevos.map { id =>
+      tablaPermisosAutorizadores += PermisoAgenteAutorizador(permiso.idAgente, permiso.tipoTransaccion, id)
+    }
+    val allInserts = DBIO.seq(inserts: _*)
+
+    val deletes = removidos.map(id => queryAgentes.filter(_.idAutorizador === id).delete)
+    val allDeletes = DBIO.seq(deletes: _*)
+
+    val allActions = DBIO.seq(allInserts, allDeletes).transactionally
+    session.database.run(allActions)
+  }
+
+  private[this] def guardarAgentesPermiso(  permiso: PermisoAgente,
+                                            estaSeleccionado: Boolean,
+                                            idsAgentes: Seq[Int],
+                                            idClienteAdmin: Int
+                                          )(implicit session: Session) = {
+    println("guardarAgentesPermiso")
+    if (idsAgentes.nonEmpty) {
+      val ids = idsAgentes.filter { id => id != 0 && id != (-1) }
+      val queryAgentes = tablaPermisosAutorizadores
+        .filter(au => au.idAgente === permiso.idAgente && au.tipoTransaccion === permiso.tipoTransaccion)
+
+      for {
+        existentes <- session.database.run(queryAgentes.map(_.idAutorizador).result)
+        _ <- insertDelete(permiso, estaSeleccionado, ids, queryAgentes, existentes)
+      } yield ()
+
+      val incluidoClienteAdmin = idsAgentes.filter { _ != 0 }.contains(-1)
       val queryAdmins = for {
         au <- tablaPermisosAutorizadoresAdmins if au.idAgente === permiso.idAgente && au.tipoTransaccion === permiso.tipoTransaccion
       } yield au
