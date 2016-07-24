@@ -12,19 +12,19 @@ import enumerations.EstadosEmpresaEnum
  */
 object DataAccessTranslator {
 
-  def translateEntityPinEmpresa(pin: PinEmpresa) = {
+  def translateEntityPinEmpresa(pin: PinEmpresa): ePinEmpresa = {
     ePinEmpresa(pin.id, pin.idUsuarioEmpresarial, pin.token, new Timestamp(pin.fechaExpiracion.getTime), pin.tokenHash, pin.uso)
   }
 
-  def translateUsuarioEmpresarial(ue: dUsuario) =
+  def translateUsuarioEmpresarial(ue: dUsuario): UsuarioEmpresarial =
     UsuarioEmpresarial(ue.id, ue.correo, ue.fechaActualizacion, ue.identificacion, ue.tipoIdentificacion,
       ue.usuario, ue.estado, ue.contrasena, ue.numeroIngresosErroneos, ue.ipUltimoIngreso, ue.fechaUltimoIngreso,
       TiposCliente.agenteEmpresarial, Some(ue.nombreUsuario))
 
-  def translateUsuarioEstado(usuario: List[dUsuario]) = {
-    usuario map (ue => UsuarioEmpresarialEstado(ue.id, ue.correo, ue.identificacion, ue.tipoIdentificacion,
+  def translateUsuarioEstado(usuario: Seq[dUsuario]): List[UsuarioEmpresarialEstado] = {
+    usuario.map (ue => UsuarioEmpresarialEstado(ue.id, ue.correo, ue.identificacion, ue.tipoIdentificacion,
       ue.usuario, ue.cargo, ue.descripcion, estadoUsuario(ue.estado, EstadosEmpresaEnum(ue.estado).toString),
-      TiposCliente.agenteEmpresarial, Some(ue.nombreUsuario)))
+      TiposCliente.agenteEmpresarial, Some(ue.nombreUsuario))).toList
   }
 
 }

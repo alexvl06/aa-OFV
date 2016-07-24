@@ -10,7 +10,7 @@ import co.com.alianza.persistence.entities.{ RespuestasAutovalidacionUsuario, Pr
  */
 object DataAccessTranslator {
 
-  def translatePregunta(pregunta: List[PreguntasAutovalidacion]) = {
+  def translatePregunta(pregunta: Seq[PreguntasAutovalidacion]) = {
     pregunta map (pre => Pregunta(pre.id, pre.pregunta))
   }
 
@@ -18,16 +18,16 @@ object DataAccessTranslator {
     respuesta map (res => Respuesta(res.idPregunta, res.respuesta))
   }
 
-  def toPreguntaList(pregunta: List[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]) = {
-    pregunta map (pre => Pregunta(pre._1.id, pre._1.pregunta))
+  def toPreguntaList(pregunta: Seq[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]) = {
+    pregunta.map(pre => Pregunta(pre._1.id, pre._1.pregunta)).toList
   }
 
-  def toRespuestaList(pregunta: List[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]) = {
-    pregunta map (pre => Respuesta(pre._1.id, pre._2.respuesta))
+  def toRespuestaList(pregunta: Seq[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]) = {
+    pregunta.map(pre => Respuesta(pre._1.id, pre._2.respuesta)).toList
   }
 
-  def toRespuestaCompletaList(pregunta: List[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]) = {
-    pregunta map (pre => RespuestaCompleta(pre._1.id, pre._1.pregunta, pre._2.respuesta))
+  def toRespuestaCompletaList(pregunta: Seq[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]): List[RespuestaCompleta] = {
+    pregunta.map(pre => RespuestaCompleta(pre._1.id, pre._1.pregunta, pre._2.respuesta)).toList
   }
 
 }

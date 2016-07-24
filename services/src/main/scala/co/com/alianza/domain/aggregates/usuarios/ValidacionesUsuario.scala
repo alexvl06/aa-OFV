@@ -131,7 +131,7 @@ object ValidacionesUsuario {
           }
       })
     } else {
-      val grupoFuture = DataAccessAdapterCliente.consultarGrupo(identificacion toInt)
+      val grupoFuture = DataAccessAdapterCliente.consultarGrupo(identificacion.toInt)
       grupoFuture.map(_.leftMap(pe => ErrorPersistence(pe.message, pe)).flatMap {
         (x: Option[Cliente]) =>
           x match {

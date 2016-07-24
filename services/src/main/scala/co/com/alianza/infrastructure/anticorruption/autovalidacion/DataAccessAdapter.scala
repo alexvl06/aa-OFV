@@ -15,9 +15,7 @@ object DataAccessAdapter {
 
   def obtenerPreguntas(): Future[Validation[PersistenceException, List[Pregunta]]] = {
     val repo = new PreguntasAutovalidacionRepository()
-    repo.obtenerPreguntas() map {
-      x => transformPreguntaList(x)
-    }
+    repo.obtenerPreguntas().map(x => transformPreguntaList(x))
   }
 
   def guardarRespuestasClienteIndividual(respuestas: List[RespuestasAutovalidacionUsuario]): Future[Validation[PersistenceException, List[Int]]] = {
@@ -82,37 +80,40 @@ object DataAccessAdapter {
     repo.bloquearRespuestasClienteAdministrador(idUsuario)
   }
 
-  private def transformPreguntaList(origin: Validation[PersistenceException, List[PreguntasAutovalidacion]]): Validation[PersistenceException, List[Pregunta]] = {
+  private def transformPreguntaList(origin: Validation[PersistenceException, Seq[PreguntasAutovalidacion]]): Validation[PersistenceException, List[Pregunta]]= {
     origin match {
-      case zSuccess(response: List[PreguntasAutovalidacion]) => zSuccess(DataAccessTranslator.translatePregunta(response))
+      case zSuccess(response: Seq[PreguntasAutovalidacion]) => zSuccess(DataAccessTranslator.translatePregunta(response).toList)
       case zFailure(error) => zFailure(error)
     }
   }
 
-  private def transformRespuestaList(origin: Validation[PersistenceException, List[RespuestasAutovalidacionUsuario]]): Validation[PersistenceException, List[Respuesta]] = {
+  private def transformRespuestaList(origin: Validation[PersistenceException, List[RespuestasAutovalidacionUsuario]]):
+  Validation[PersistenceException, List[Respuesta]] = {
+
     origin match {
       case zSuccess(response: List[RespuestasAutovalidacionUsuario]) => zSuccess(DataAccessTranslator.translateRespuesta(response))
       case zFailure(error) => zFailure(error)
     }
   }
 
-  private def toPreguntaList(origin: Validation[PersistenceException, List[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]]): Validation[PersistenceException, List[Pregunta]] = {
+  private def toPreguntaList(origin: Validation[PersistenceException, Seq[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]]): Validation[PersistenceException, List[Pregunta]] = {
     origin match {
-      case zSuccess(response: List[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]) => zSuccess(DataAccessTranslator.toPreguntaList(response))
+      case zSuccess(response: Seq[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]) => zSuccess(DataAccessTranslator.toPreguntaList(response))
       case zFailure(error) => zFailure(error)
     }
   }
 
-  private def toRespuestaList(origin: Validation[PersistenceException, List[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]]): Validation[PersistenceException, List[Respuesta]] = {
+  private def toRespuestaList(origin: Validation[PersistenceException, Seq[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]]): Validation[PersistenceException, List[Respuesta]] = {
     origin match {
-      case zSuccess(response: List[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]) => zSuccess(DataAccessTranslator.toRespuestaList(response))
+      case zSuccess(response: Seq[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]) => zSuccess(DataAccessTranslator.toRespuestaList(response))
       case zFailure(error) => zFailure(error)
     }
   }
 
-  private def toRespuestaCompletaList(origin: Validation[PersistenceException, List[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]]): Validation[PersistenceException, List[RespuestaCompleta]] = {
+  private def toRespuestaCompletaList(origin: Validation[PersistenceException, Seq[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]]):
+  Validation[PersistenceException, List[RespuestaCompleta]] = {
     origin match {
-      case zSuccess(response: List[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]) => zSuccess(DataAccessTranslator.toRespuestaCompletaList(response))
+      case zSuccess(response: Seq[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]) => zSuccess(DataAccessTranslator.toRespuestaCompletaList(response))
       case zFailure(error) => zFailure(error)
     }
   }

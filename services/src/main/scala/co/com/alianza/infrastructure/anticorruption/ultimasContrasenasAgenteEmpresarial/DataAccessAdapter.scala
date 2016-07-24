@@ -18,10 +18,10 @@ object DataAccessAdapter {
 
   implicit val ec: ExecutionContext = MainActors.dataAccesEx
 
-  def guardarUltimaContrasena(nuevaUltimaContrasena: UltimaContrasenaUsuarioAgenteEmpresarial): Future[Validation[PersistenceException, Unit]] =
+  def guardarUltimaContrasena(nuevaUltimaContrasena: UltimaContrasenaUsuarioAgenteEmpresarial): Future[Validation[PersistenceException, Int]] =
     new UltimasContrasenasUsuarioAgenteEmpresarialRepository guardarUltimaContrasena nuevaUltimaContrasena
 
-  def obtenerUltimasContrasenas(numeroUltimasContrasenas: String, idUsuario: Int): Future[Validation[PersistenceException, List[UltimaContrasenaUsuarioAgenteEmpresarial]]] =
+  def obtenerUltimasContrasenas(numeroUltimasContrasenas: String, idUsuario: Int): Future[Validation[PersistenceException, Seq[UltimaContrasenaUsuarioAgenteEmpresarial]]] =
     new UltimasContrasenasUsuarioAgenteEmpresarialRepository obtenerUltimasContrasenas (numeroUltimasContrasenas, idUsuario)
 
 }

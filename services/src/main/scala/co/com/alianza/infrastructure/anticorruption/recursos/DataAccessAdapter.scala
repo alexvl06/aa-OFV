@@ -20,9 +20,9 @@ object DataAccessAdapter {
     }
   }
 
-  private def transformValidationList(origin: Validation[PersistenceException, List[eRecursoPerfil]]): Validation[PersistenceException, List[RecursoUsuario]] = {
+  private def transformValidationList(origin: Validation[PersistenceException, Seq[eRecursoPerfil]]): Validation[PersistenceException, List[RecursoUsuario]] = {
     origin match {
-      case zSuccess(response: List[eRecursoPerfil]) => zSuccess(DataAccessTranslator.translate(response))
+      case zSuccess(response: Seq[eRecursoPerfil]) => zSuccess(DataAccessTranslator.translate(response))
       case zFailure(error) => zFailure(error)
     }
   }

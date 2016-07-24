@@ -110,7 +110,7 @@ class PinUsuarioEmpresarialAdminActor extends Actor with ActorLogging with Alian
     resolveCambioPwFuture(finalResultFuture, currentSender)
   }
 
-  private def guardarUltimaContrasena(idUsuario: Int, uContrasena: String): Future[Validation[ErrorValidacion, Unit]] = {
+  private def guardarUltimaContrasena(idUsuario: Int, uContrasena: String): Future[Validation[ErrorValidacion, Int]] = {
     DataAccessAdapterUltimaContrasena.guardarUltimaContrasena(UltimaContrasenaUsuarioEmpresarialAdmin(None, idUsuario, uContrasena, new Timestamp(System.currentTimeMillis()))).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
   }
 

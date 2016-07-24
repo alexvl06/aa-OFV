@@ -243,12 +243,12 @@ object DataAccessAdapter {
     new HorarioEmpresaRepository().agregarHorarioEmpresa(horarioEmpresa, existeHorario: Boolean)
   }
 
-  def obtenerIpsUsuario(idUsuario: Int): Future[Validation[PersistenceException, Vector[IpsUsuario]]] = {
+  def obtenerIpsUsuario(idUsuario: Int): Future[Validation[PersistenceException, Seq[IpsUsuario]]] = {
     val repo = new IpsUsuarioRepository()
     repo.obtenerIpsUsuario(idUsuario)
   }
 
-  def obtenerIpsEmpresa(idEmpresa: Int): Future[Validation[PersistenceException, Vector[IpsEmpresa]]] = {
+  def obtenerIpsEmpresa(idEmpresa: Int): Future[Validation[PersistenceException, Seq[IpsEmpresa]]] = {
     new IpsEmpresaRepository().obtenerIpsEmpresa(idEmpresa)
   }
 
@@ -345,9 +345,9 @@ object DataAccessAdapter {
     }
   }
 
-  private def transformValidationList(origin: Validation[PersistenceException, List[eUsuario]]): Validation[PersistenceException, List[Usuario]] = {
+  private def transformValidationList(origin: Validation[PersistenceException, Seq[eUsuario]]): Validation[PersistenceException, List[Usuario]] = {
     origin match {
-      case zSuccess(response: List[eUsuario]) => zSuccess(DataAccessTranslator.translateUsuario(response))
+      case zSuccess(response: Seq[eUsuario]) => zSuccess(DataAccessTranslator.translateUsuario(response))
       case zFailure(error) => zFailure(error)
     }
   }

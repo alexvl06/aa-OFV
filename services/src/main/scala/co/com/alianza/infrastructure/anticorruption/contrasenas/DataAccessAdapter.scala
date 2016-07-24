@@ -22,7 +22,7 @@ object DataAccessAdapter {
   implicit val ec: ExecutionContext = MainActors.dataAccesEx
   val repo = new ReglasContrasenasRepository()
 
-  def consultarReglasContrasenas(): Future[Validation[PersistenceException, List[ReglasContrasenas]]] = {
+  def consultarReglasContrasenas(): Future[Validation[PersistenceException, Seq[ReglasContrasenas]]] = {
     repo.obtenerReglas()
   }
 

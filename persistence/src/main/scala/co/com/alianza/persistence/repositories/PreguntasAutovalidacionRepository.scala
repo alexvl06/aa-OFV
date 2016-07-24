@@ -3,10 +3,13 @@ package co.com.alianza.persistence.repositories
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.persistence.entities.CustomDriver.simple._
 import co.com.alianza.persistence.entities._
+import slick.dbio.DBIOAction
+import slick.dbio.Effect.Write
 
 import scala.concurrent.{ ExecutionContext, Future }
 import slick.lifted.TableQuery
-import scala.util.{ Try }
+
+import scala.util.Try
 import scalaz.Validation
 
 /**
@@ -26,25 +29,25 @@ class PreguntasAutovalidacionRepository(implicit executionContext: ExecutionCont
   }
 
   def guardarRespuestasClienteIndividual(respuestas: List[RespuestasAutovalidacionUsuario]): Future[Validation[PersistenceException, List[Int]]] = loan {
-    implicit session =>
-      val idUsuario = respuestas(0).idUsuario
-      val resultTry = for {
-        eliminar <- respuestasUsuarioTable.filter(res => res.idUsuario === idUsuario).delete
-        agregar <- respuestas.map(respuesta => respuestasUsuarioTable returning respuestasUsuarioTable.map(_.idPregunta) += respuesta)
-      } yield (agregar)
-      val result = session.database.run(resultTry)
 
-      resolveTry(result, "Guardar respuestas de autovalidacion para cliente individual")
+    implicit session =>
+      val resultTry = for {
+        delete <- session.database.run(respuestasUsuarioTable.filter(res => res.idUsuario === respuestas.head.idUsuario).delete)
+        insert <- session.database.run(respuestasUsuarioTable ++= respuestas)
+      } yield List(delete)
+
+      resolveTry(resultTry, "Guardar respuestas de autovalidacion para cliente individual")
   }
 
   def guardarRespuestasClienteAdministrador(respuestas: List[RespuestasAutovalidacionUsuario]): Future[Validation[PersistenceException, List[Int]]] = loan {
     implicit session =>
+
       val resultTry = for {
-        eliminar <- respuestasClienteAdministradorTable.filter(res => res.idUsuario === respuestas(0).idUsuario).delete
-        agregar <- respuestas.map(respuesta => respuestasClienteAdministradorTable returning respuestasClienteAdministradorTable.map(_.idPregunta) += respuesta)
-      } yield (agregar)
-      val result = session.database.run(resultTry)
-      resolveTry(result, "Guardar respuestas de autovalidacion para cliente administrador")
+        delete <- session.database.run(respuestasClienteAdministradorTable.filter(res => res.idUsuario === respuestas.head.idUsuario).delete)
+        insert <- session.database.run(respuestasClienteAdministradorTable ++= respuestas)
+      } yield List(delete)
+
+      resolveTry(resultTry, "Guardar respuestas de autovalidacion para cliente administrador")
   }
 
   def obtenerPreguntasClienteIndividual(idUsuario: Int): Future[Validation[PersistenceException, Seq[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]]] = loan {

@@ -18,9 +18,9 @@ object DataAccessAdapter {
   def obtenerRecursos(idUsuario: Int): Future[Validation[PersistenceException, List[RecursoPerfilAgente]]] =
     new RecursoPerfilAgenteRepository obtenerRecursosPerfiles (idUsuario) map transformValidationList
 
-  private def transformValidationList(origin: Validation[PersistenceException, List[eRecursoPerfilAgente]]): Validation[PersistenceException, List[RecursoPerfilAgente]] = {
+  private def transformValidationList(origin: Validation[PersistenceException, Seq[eRecursoPerfilAgente]]): Validation[PersistenceException, List[RecursoPerfilAgente]] = {
     origin match {
-      case zSuccess(response: List[eRecursoPerfilAgente]) => zSuccess(DataAccessTranslator.translate(response))
+      case zSuccess(response: Seq[eRecursoPerfilAgente]) => zSuccess(DataAccessTranslator.translate(response))
       case zFailure(error) => zFailure(error)
     }
   }

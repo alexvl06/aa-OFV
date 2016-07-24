@@ -149,7 +149,7 @@ case object UltimasContrasenas extends Regla("ULTIMAS_CONTRASENAS_NO_VALIDAS") {
       case Some(value) =>
         idUsuario match {
           case Some(valueIdUsuario) =>
-            val FuturoObtenerUltimasContrasenas: (Future[Validation[PersistenceException, List[Any]]]) = perfilUsuario match {
+            val FuturoObtenerUltimasContrasenas: (Future[Validation[PersistenceException, Seq[Any]]]) = perfilUsuario match {
               case PerfilesUsuario.clienteIndividual => DataAccessAdapterUltimaContrasena.obtenerUltimasContrasenas(value, idUsuario.get)
               case PerfilesUsuario.agenteEmpresarial => DataAccessAdapterUltimaContrasenaAgenteE.obtenerUltimasContrasenas(value, idUsuario.get)
               case PerfilesUsuario.clienteAdministrador => DataAccessAdapterUltimaContrasenaClienteAdmin.obtenerUltimasContrasenas(value, idUsuario.get)
@@ -177,7 +177,7 @@ case object UltimasContrasenas extends Regla("ULTIMAS_CONTRASENAS_NO_VALIDAS") {
     }
   }
 
-  def contiene(idUsuario: Int, lista: List[Any], valorContrasenaNueva: String): Boolean = {
+  def contiene(idUsuario: Int, lista: Seq[Any], valorContrasenaNueva: String): Boolean = {
     val contrasenaNuevaConSalt: String = valorContrasenaNueva.concat(AppendPasswordUser.appendUsuariosFiducia)
     val contrasenaNuevaHash: String = Crypto.hashSha512(contrasenaNuevaConSalt, idUsuario)
 
@@ -185,7 +185,7 @@ case object UltimasContrasenas extends Regla("ULTIMAS_CONTRASENAS_NO_VALIDAS") {
       contrasena == contrasenaNuevaHash
     }
 
-    val listaResultadosComparacionContrasena: List[Boolean] = lista.map {
+    val listaResultadosComparacionContrasena: Seq[Boolean] = lista.map {
       case UltimaContrasena(param1, param2, param3, param4) => compare(param3, contrasenaNuevaHash)
       case UltimaContrasenaUsuarioAgenteEmpresarial(param1, param2, param3, param4) => compare(param3, contrasenaNuevaHash)
       case UltimaContrasenaUsuarioEmpresarialAdmin(param1, param2, param3, param4) => compare(param3, contrasenaNuevaHash)

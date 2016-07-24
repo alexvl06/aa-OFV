@@ -15,9 +15,9 @@ class EmpresaUsuarioAdminRepository(implicit executionContext: ExecutionContext)
 
   val empresaUsuarioAdmin = TableQuery[EmpresaUsuarioAdminTable]
 
-  def obtenerIdEmpresa(idUsuario: Int): Future[Validation[PersistenceException, Option[Int]]] = loan {
+  def obtenerIdEmpresa(idUsuario: Int): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
-      val resultTry = session.database.run(empresaUsuarioAdmin.filter(_.idUsuario === idUsuario).map(_.idEmpresa).result.headOption)
+      val resultTry = session.database.run(empresaUsuarioAdmin.filter(_.idUsuario === idUsuario).map(_.idEmpresa).result.head)
       resolveTry(resultTry, "Consulta id empresa por idUsuario empresarial admin")
   }
 

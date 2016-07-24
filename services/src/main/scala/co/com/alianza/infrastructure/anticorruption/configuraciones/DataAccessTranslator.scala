@@ -11,8 +11,8 @@ import java.sql.Timestamp
  */
 object DataAccessTranslator {
 
-  def translateConfiguracion(configuraciones: List[dConfiguracion]) = {
-    configuraciones map (conf => Configuracion(conf.llave, conf.valor))
+  def translateConfiguracion(configuraciones: Seq[dConfiguracion]) = {
+    configuraciones.map(conf => Configuracion(conf.llave, conf.valor)).toList
   }
 
   def translateConfiguracion(conf: dConfiguracion) = {
