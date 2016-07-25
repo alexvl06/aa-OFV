@@ -2,9 +2,9 @@ package portal.transaccional.autenticacion.service.drivers.usuario
 
 import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.persistence.entities.Usuario
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.UsuarioDAOs
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.daos.driver.UsuarioDAOs
 
-import scala.concurrent.{ Future, ExecutionContext }
+import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * Created by hernando on 25/07/16.
