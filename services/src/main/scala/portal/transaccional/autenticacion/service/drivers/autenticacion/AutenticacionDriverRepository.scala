@@ -1,5 +1,6 @@
 package portal.transaccional.autenticacion.service.drivers.autenticacion
 
+import java.sql.Timestamp
 import java.util.Date
 
 import co.com.alianza.infrastructure.dto.Cliente
@@ -22,15 +23,16 @@ case class AutenticacionDriverRepository(usuarioRepo: UsuarioRepository, cliente
    * 3) Se comparan los passwords de la petición y el usuario, si coinciden se prosigue de lo contrario se debe ejecutar la excepcion de pw inválido
    * 4) Se busca el cliente en el core de alianza, si no se encuentra se debe devolver ErrorClienteNoExisteCore
    * 5) Se valida el cliente encontrado, este metodo devuelve un error de la validacion que no cumple
-   *
    * 6) Se valida la fecha de caducacion del password, si caducó se debe devolver ErrorPasswordCaducado, de lo contrario se prosigue
    * ------- Si pasan las 6 validaciones anteriores, el usuario se considera como usuario autenticado --------
-   * 7) Se actualiza la información de numIngresosErroneos, ipUltimoIngreso y fechaUltimoIngreso del usuario
-   * 8) Se asigna el tiempo de expiración
-   * 9) Se genera un token
-   * 10) se asocia al usuario(token)
-   * 10) Se crea la sesion del usuario en el cluster
-   * 11) Se valida si el usuario tiene alguna ip guardada, si es así se procede a validar si es una ip habitual, de lo contrario se genera un token (10), una sesion (11) y se responde con ErrorControlIpsDesactivado
+   * 7) Se actualiza la información de numIngresosErroneos
+   * 8) ipUltimoIngreso
+   * 9) fechaUltimoIngreso del usuario
+   * 10) Se asigna el tiempo de expiración
+   * 11) Se genera un token
+   * 12) se asocia al usuario(token)
+   * 13) Se crea la sesion del usuario en el cluster
+   * 14) Se valida si el usuario tiene alguna ip guardada, si es así se procede a validar si es una ip habitual, de lo contrario se genera un token (10), una sesion (11) y se responde con ErrorControlIpsDesactivado
    */
   def autenticar(tipoIdentificacion: Int, numeroIdentificacion: String, contrasena: String, ip: String): Future[String] = {
     for {
@@ -39,14 +41,22 @@ case class AutenticacionDriverRepository(usuarioRepo: UsuarioRepository, cliente
       contrasena <- usuarioRepo.validarContrasena(contrasena, usuario.contrasena.get, usuario.id.get)
       cliente <- clienteCoreRepo.getCliente(numeroIdentificacion)
       estadoCore <- clienteCoreRepo.validarEstado(cliente)
+
       //passwordCaduco <- ValidationT(validarCaducidadPassword(TiposCliente.clienteIndividual, usuario.id.get, usuario.fechaCaducidad))
-      //actualizacionInfo <- ValidationT(actualizarInformacionUsuario(usuario.identificacion, message.clientIp.get))
+      //TODO: depende de las reglas contrasena
+
+      ingErroneos <- usuarioRepo.actualizarIngresosErroneosUsuario(usuario.id.get, 0)
+      actualizarIP <- usuarioRepo.actualizarIp(numeroIdentificacion, ip)
+      fechaUltimoIngreso <- usuarioRepo.actualizarFechaIngreso(numeroIdentificacion, new Timestamp((new Date).getTime))
       //inactividadConfig <- ValidationT(buscarConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave))
+      //TODO: depende de las configuraciones
       token <- generarToken(usuario, cliente, ip, "") //TODO: agregar el timpo de inactividad
       asociarToken <- usuarioRepo.actualizarToken(numeroIdentificacion, token)
       //sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
       //validacionPreguntas <- ValidationT(validarPreguntasUsuario(usuario.id.get))
+      //TODO: depende del repo preguntas
       //validacionIps <- ValidationT(validarControlIpsUsuario(usuario.id.get, message.clientIp.get, token, validacionPreguntas))
+      //TODO: depende del repo ip
     } yield token
   }
 
