@@ -9,10 +9,10 @@ import co.com.alianza.exceptions._
 import oracle.net.ns.NetException
 import java.net.SocketTimeoutException
 
-import co.com.alianza.persistence.conn.oracle.DataBaseAccessOracleAlianza
+import portal.transaccional.fiduciaria.autenticacion.storage.conn.oracle.DataBaseAccessOracleAlianza
 
 /**
- * Repositorio que obtiene la conexión del DataSource: [[co.com.alianza.persistence.conn.oracle.DataBaseAccessOracleAlianza.ds]]
+ * Repositorio que obtiene la conexión del DataSource: [[portal.transaccional.fiduciaria.autenticacion.storage.conn.oracle.DataBaseAccessOracleAlianza.ds]]
  *
  * @author seven4n
  */

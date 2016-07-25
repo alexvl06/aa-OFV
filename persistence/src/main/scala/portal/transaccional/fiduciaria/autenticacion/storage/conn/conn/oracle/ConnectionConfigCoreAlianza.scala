@@ -1,7 +1,7 @@
-package co.com.alianza.persistence.conn.oracle
+package portal.transaccional.fiduciaria.autenticacion.storage.conn.oracle
 
 import com.typesafe.config.Config
-import co.com.alianza.persistence.conn.ConnectionConf
+import portal.transaccional.fiduciaria.autenticacion.storage.conn.ConnectionConf
 
 /**
  * Obtiene la configuracion de la conexión a base de datos

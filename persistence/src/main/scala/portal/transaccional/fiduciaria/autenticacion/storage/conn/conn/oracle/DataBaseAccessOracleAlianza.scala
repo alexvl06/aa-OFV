@@ -1,4 +1,4 @@
-package co.com.alianza.persistence.conn.oracle
+package portal.transaccional.fiduciaria.autenticacion.storage.conn.oracle
 
 import javax.sql.DataSource
 

@@ -1,7 +1,7 @@
 package co.com.alianza.persistence.config.pg
 
 import co.com.alianza.persistence.config.DBConfig
-import co.com.alianza.persistence.conn.pg.DataBaseAccessPGAlianza
+import portal.transaccional.fiduciaria.autenticacion.storage.conn.pg.DataBaseAccessPGAlianza
 import slick.driver.{ JdbcProfile, PostgresDriver }
 import slick.jdbc.JdbcBackend._
 
