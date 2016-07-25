@@ -19,7 +19,7 @@ import co.com.alianza.infrastructure.messages.{ AdministrarContrasenaMessagesJso
 /**
  * Created by seven4n on 01/09/14.
  */
-case class AdministrarContrasenaService(kafkaActor: ActorSelection, contrasenasActor: ActorSelection, contrasenasAgenteEmpresarialActor: ActorSelection, contrasenasClienteAdminActor: ActorSelection ) extends Directives with AlianzaCommons {
+case class AdministrarContrasenaService(kafkaActor: ActorSelection, contrasenasActor: ActorSelection, contrasenasAgenteEmpresarialActor: ActorSelection, contrasenasClienteAdminActor: ActorSelection) extends Directives with AlianzaCommons {
 
   import AdministrarContrasenaMessagesJsonSupport._
 

@@ -9,7 +9,7 @@ import co.com.alianza.infrastructure.messages.{ ExisteClienteCoreMessage, Existe
  *
  * @author smontanez
  */
-case class ClienteCoreService (consultaClienteActor: ActorSelection)extends Directives with AlianzaCommons {
+case class ClienteCoreService(consultaClienteActor: ActorSelection) extends Directives with AlianzaCommons {
 
   import ExisteClienteCoreMessagesJsonSupport._
 

@@ -8,8 +8,10 @@ import spray.can.Http
 object Boot extends App with HostBinding with Core with BootedCore with CoreActors with Storage {
 
   implicit val ec = system.dispatcher
-  private val rootService = system.actorOf(Props(AlianzaRouter(autenticacionRepo, kafkaActor, preguntasValidacionActor, usuariosActor, confrontaActor, autenticacionActor, autenticacionUsuarioEmpresaActor, actualizacionActor, permisoTransaccionalActor, agenteEmpresarialActor, pinActor, pinUsuarioEmpresarialAdminActor, pinUsuarioAgenteEmpresarialActor, autorizacionActor, autorizacionUsuarioEmpresarialActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor)),
-    name = "api-AlianzaRouter")
+  private val rootService = system.actorOf(
+    Props(AlianzaRouter(autenticacionRepo, kafkaActor, preguntasValidacionActor, usuariosActor, confrontaActor, autenticacionActor, autenticacionUsuarioEmpresaActor, actualizacionActor, permisoTransaccionalActor, agenteEmpresarialActor, pinActor, pinUsuarioEmpresarialAdminActor, pinUsuarioAgenteEmpresarialActor, autorizacionActor, autorizacionUsuarioEmpresarialActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor)),
+    name = "api-AlianzaRouter"
+  )
 
   IO(Http)(system) ! Http.Bind(rootService, interface = machineIp(), port = portNumber(args))
 }

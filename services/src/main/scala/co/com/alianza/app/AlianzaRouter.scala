@@ -12,10 +12,9 @@ import portal.transaccional.autenticacion.service.drivers.autenticacion.Autentic
 
 case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, kafkaActor: ActorSelection, preguntasValidacionActor: ActorSelection,
   usuariosActor: ActorSelection, confrontaActor: ActorSelection, autenticacionActor: ActorSelection, autenticacionUsuarioEmpresaActor: ActorSelection,
-  actualizacionActor : ActorSelection, permisoTransaccionalActor : ActorSelection, agenteEmpresarialActor : ActorSelection,
-  pinActor : ActorSelection, pinUsuarioEmpresarialAdminActor :ActorSelection, pinUsuarioAgenteEmpresarialActor : ActorSelection, autorizacionActor: ActorSelection, 
-  autorizacionUsuarioEmpresarialActor: ActorSelection, contrasenasActor: ActorSelection, contrasenasAgenteEmpresarialActor: ActorSelection, contrasenasClienteAdminActor: ActorSelection
-)(implicit val system: ActorSystem) extends HttpServiceActor
+  actualizacionActor: ActorSelection, permisoTransaccionalActor: ActorSelection, agenteEmpresarialActor: ActorSelection,
+  pinActor: ActorSelection, pinUsuarioEmpresarialAdminActor: ActorSelection, pinUsuarioAgenteEmpresarialActor: ActorSelection, autorizacionActor: ActorSelection,
+  autorizacionUsuarioEmpresarialActor: ActorSelection, contrasenasActor: ActorSelection, contrasenasAgenteEmpresarialActor: ActorSelection, contrasenasClienteAdminActor: ActorSelection)(implicit val system: ActorSystem) extends HttpServiceActor
     with RouteConcatenation with CrossHeaders with ServiceAuthorization with ActorLogging {
 
   import system.dispatcher
@@ -32,7 +31,7 @@ case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, kafkaActor:
       new AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).insecureRoute ~
       authenticate(authenticateUser) {
         user =>
-            IpsUsuariosService(kafkaActor).route(user) ~
+          IpsUsuariosService(kafkaActor).route(user) ~
             ActualizacionService(actualizacionActor, kafkaActor).route(user) ~
             HorarioEmpresaService(kafkaActor).route(user) ~
             new AdministrarContrasenaService().secureRoute(user) ~
@@ -49,11 +48,11 @@ case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, kafkaActor:
       routes
     }
   )(
-    ExceptionHandler.default,
-    CustomRejectionHandler.extended orElse RejectionHandler.Default,
-    context,
-    RoutingSettings.default,
-    LoggingContext.fromActorRefFactory
-  )
+      ExceptionHandler.default,
+      CustomRejectionHandler.extended orElse RejectionHandler.Default,
+      context,
+      RoutingSettings.default,
+      LoggingContext.fromActorRefFactory
+    )
 
 }
