@@ -65,12 +65,16 @@ trait CoreActors {
   val autenticacionActorSupervisor = system.actorOf(Props[AutenticacionActorSupervisor], "autenticacionActorSupervisor")
   val autenticacionActor = system.actorSelection(autenticacionActorSupervisor.path)
   val autenticacionUsuarioEmpresaActor = system.actorSelection(autenticacionActorSupervisor.path)
-  val consultaClienteActorSupervisor = system.actorOf(Props[ConsultaClienteActorSupervisor], "consultaClienteActorSupervisor")
   val autorizacionActorSupervisor = system.actorOf(Props[AutorizacionActorSupervisor], "autorizacionActorSupervisor")
+  val autorizacionActor = system.actorSelection(autenticacionActorSupervisor.path)
+  val autorizacionUsuarioEmpresarialActor = system.actorSelection(autenticacionActorSupervisor.path)
+  val consultaClienteActorSupervisor = system.actorOf(Props[ConsultaClienteActorSupervisor], "consultaClienteActorSupervisor")
+  val consultaClienteActor = system.actorSelection(consultaClienteActorSupervisor.path)
   val contrasenasActorSupervisor = system.actorOf(Props[ContrasenasActorSupervisor], "contrasenasActorSupervisor")
+  val contrasenasActor = system.actorSelection(contrasenasActorSupervisor.path)
   val contrasenasAgenteEmpresarialActorSupervisor = system.actorOf(Props[ContrasenasAgenteEmpresarialActorSupervisor], "contrasenasAgenteEmpresarialActorSupervisor")
+  val contrasenasAgenteEmpresarialActor = system.actorSelection(contrasenasAgenteEmpresarialActorSupervisor.path)
   val contrasenasClienteAdminActorSupervisor = system.actorOf(Props[ContrasenasClienteAdminActorSupervisor], "contrasenasClienteAdminActorSupervisor")
-
   val ipsUsuarioActorSupervisor = system.actorOf(Props[IpsUsuarioActorSupervisor], "ipsUsuarioActorSupervisor")
 
   val horarioEmpresaActorSupervisor = system.actorOf(Props[HorarioEmpresaActorSupervisor], "horarioEmpresaActorSupervisor")
@@ -93,7 +97,6 @@ trait CoreActors {
 
   val kafkaActorSupervisor = system.actorOf(Props[KafkaActorSupervisor], "kafkaActorSupervisor")
   val kafkaActor = system.actorSelection(kafkaActorSupervisor.path)
-
   val preguntasAutovalidacionSupervisor = system.actorOf(Props[PreguntasAutovalidacionSupervisor], "preguntasAutovalidacionSupervisor")
   val preguntasAutovalidacionActor = system.actorSelection(preguntasAutovalidacionSupervisor.path)
 }

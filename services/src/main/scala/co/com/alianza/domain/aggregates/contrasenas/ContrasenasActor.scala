@@ -52,7 +52,7 @@ class ContrasenasActorSupervisor extends Actor with ActorLogging {
  * Created by david on 16/06/14.
  */
 
-class ContrasenasActor extends Actor with ActorLogging with AlianzaActors {
+class ContrasenasActor extends Actor with ActorLogging  {
 
   import scalaz._
   import scalaz.std.string._

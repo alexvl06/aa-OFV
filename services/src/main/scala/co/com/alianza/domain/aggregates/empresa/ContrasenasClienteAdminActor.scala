@@ -62,7 +62,7 @@ class ContrasenasClienteAdminActorSupervisor extends Actor with ActorLogging {
  * *
  * Actor que se encarga de procesar los mensajes relacionados con la administración de contraseñas de los usuarios emopresa (Cliente Administrador y Agente Empresarial)
  */
-class ContrasenasClienteAdminActor extends Actor with ActorLogging with AlianzaActors {
+class ContrasenasClienteAdminActor extends Actor with ActorLogging {
 
   import scala.concurrent.ExecutionContext
 

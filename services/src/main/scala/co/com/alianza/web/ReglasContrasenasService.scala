@@ -1,5 +1,6 @@
 package co.com.alianza.web
 
+import akka.actor.ActorSelection
 import co.com.alianza.infrastructure.messages.InboxMessage
 import spray.routing.Directives
 import co.com.alianza.app.AlianzaCommons
@@ -7,7 +8,7 @@ import co.com.alianza.app.AlianzaCommons
 /**
  * Created by david on 16/06/14.
  */
-class ReglasContrasenasService extends Directives with AlianzaCommons {
+case class ReglasContrasenasService(contrasenasActor: ActorSelection) extends Directives with AlianzaCommons {
 
   val reglasContrasenas = "reglasContrasenas"
 
