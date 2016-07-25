@@ -14,13 +14,12 @@ import scala.collection.mutable
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success, Try }
 
-
 /**
  * Created by alexandra on 25/07/16.
  */
 trait AlianzaStorageHelper {
 
-    implicit val ec: ExecutionContext
+  implicit val ec: ExecutionContext
 
   protected def transaction[R](f: Connection => R): Future[R] = {
     Future {
@@ -38,47 +37,47 @@ trait AlianzaStorageHelper {
     }
   }
 
-    protected def buildResult(connection: Connection, callableStatement: CallableStatement, positionResult: Int): Try[String] = {
-      Try {
-        callableStatement.execute()
-        val result = callableStatement.getObject(positionResult)
-        result match {
-          case r: ResultSet =>
-            val records = buildJsFromResult(r)
-            r.close()
-            records
-
-          case r: String => r
-          case r: java.lang.Long => r.toString
-          case _ => result
-        }
-      }.flatMap {
-        case r: String => Success(r)
-        case _ =>
-          val codeError = callableStatement getObject 1
-          val detailError = callableStatement getObject 2
-          val msg = s"Error ejecutando procedimiento $codeError - $detailError"
-          Failure[String](PersistenceException(new Exception(msg), BusinessLevel, msg))
-      }
-    }
-
-    private def getLevelException(exception: Throwable): LevelException = {
-      Option(exception.getCause)
-        .collect { case e: NetException if e.getCause.cast[SocketTimeoutException].nonEmpty => TimeoutLevel }
-        .getOrElse(TechnicalLevel)
-    }
-
-    protected def buildResult(result: Any): Unit = {
+  protected def buildResult(connection: Connection, callableStatement: CallableStatement, positionResult: Int): Try[String] = {
+    Try {
+      callableStatement.execute()
+      val result = callableStatement.getObject(positionResult)
       result match {
         case r: ResultSet =>
           val records = buildJsFromResult(r)
+          r.close()
           records
 
         case r: String => r
         case r: java.lang.Long => r.toString
         case _ => result
       }
+    }.flatMap {
+      case r: String => Success(r)
+      case _ =>
+        val codeError = callableStatement getObject 1
+        val detailError = callableStatement getObject 2
+        val msg = s"Error ejecutando procedimiento $codeError - $detailError"
+        Failure[String](PersistenceException(new Exception(msg), BusinessLevel, msg))
     }
+  }
+
+  private def getLevelException(exception: Throwable): LevelException = {
+    Option(exception.getCause)
+      .collect { case e: NetException if e.getCause.cast[SocketTimeoutException].nonEmpty => TimeoutLevel }
+      .getOrElse(TechnicalLevel)
+  }
+
+  protected def buildResult(result: Any): Unit = {
+    result match {
+      case r: ResultSet =>
+        val records = buildJsFromResult(r)
+        records
+
+      case r: String => r
+      case r: java.lang.Long => r.toString
+      case _ => result
+    }
+  }
 
   /**
    * Construye un arreglo de objetos json [[JsArray]] a partir de un [[ResultSet]].

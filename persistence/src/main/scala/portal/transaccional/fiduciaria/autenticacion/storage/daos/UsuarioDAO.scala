@@ -2,6 +2,7 @@ package portal.transaccional.fiduciaria.autenticacion.storage.daos
 
 import java.sql.Timestamp
 
+import _root_.portal.transaccional.fiduciaria.autenticacion.storage.daos.daos.driver.UsuarioDAOs
 import co.com.alianza.persistence.config.DBConfig
 import co.com.alianza.persistence.entities.{ Usuario, UsuarioTable }
 import slick.lifted.TableQuery

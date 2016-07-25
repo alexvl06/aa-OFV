@@ -9,8 +9,8 @@ import scala.concurrent.Future
 /**
  * Created by alexandra on 25/07/16.
  */
-case class AlianzaDAO()(implicit dcConfig : DBConfig) {
-  
+case class AlianzaDAO()(implicit dcConfig: DBConfig) {
+
   val recursos = TableQuery[RecursoPerfilTable]
   val usuarios = TableQuery[UsuarioTable]
   val perfilesUsuario = TableQuery[PerfilUsuarioTable]
