@@ -1,6 +1,6 @@
 package co.com.alianza.app
 
-import akka.actor.{ ActorSelection, Props }
+import akka.actor.{ ActorSelection, ActorSystem, Props }
 import akka.io.IO
 import portal.transaccional.autenticacion.service.drivers.autenticacion.AutenticacionRepository
 import spray.can.Http
@@ -8,10 +8,11 @@ import spray.can.Http
 object Boot extends App with HostBinding with Core with BootedCore with CoreActors with Storage {
 
   implicit val ec = system.dispatcher
-  private val rootService = system.actorOf(
-    Props(AlianzaRouter(autenticacionRepo, kafkaActor, preguntasValidacionActor, usuariosActor, confrontaActor, autenticacionActor, autenticacionUsuarioEmpresaActor, actualizacionActor, permisoTransaccionalActor, agenteEmpresarialActor, pinActor, pinUsuarioEmpresarialAdminActor, pinUsuarioAgenteEmpresarialActor, autorizacionActor, autorizacionUsuarioEmpresarialActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor)),
-    name = "api-AlianzaRouter"
-  )
+
+  private val rootService = system.actorOf(Props(AlianzaRouter(autenticacionRepo: AutenticacionRepository, kafkaActor, preguntasAutovalidacionActor,
+    usuariosActor , confrontaActor, autenticacionActor, autenticacionUsuarioEmpresaActor, actualizacionActor, permisoTransaccionalActor, agenteEmpresarialActor,
+    pinActor, pinUsuarioEmpresarialAdminActor, pinUsuarioAgenteEmpresarialActor, ipsUsuarioActor, horarioEmpresaActor , autorizacionActor,
+    autorizacionUsuarioEmpresarialActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor, contrasenasActor)), name = "api-AlianzaRouter")
 
   IO(Http)(system) ! Http.Bind(rootService, interface = machineIp(), port = portNumber(args))
 }

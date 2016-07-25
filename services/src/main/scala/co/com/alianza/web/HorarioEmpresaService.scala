@@ -13,7 +13,7 @@ import spray.routing.{ Directives, RequestContext }
 /**
  * @author hernando on 16/06/15.
  */
-case class HorarioEmpresaService(kafkaActor: ActorSelection) extends Directives with AlianzaCommons with CrossHeaders {
+case class HorarioEmpresaService(kafkaActor: ActorSelection, horarioEmpresaActor: ActorSelection) extends Directives with AlianzaCommons with CrossHeaders {
 
   import HorarioEmpresaJsonSupport._
 
@@ -40,7 +40,8 @@ case class HorarioEmpresaService(kafkaActor: ActorSelection) extends Directives 
                         val token = r.request.headers.find(header => header.name equals "token")
                         val usuario = DataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
 
-                        requestWithFutureAuditing[PersistenceException, AgregarHorarioEmpresaMessage](r, AuditingHelper.fiduciariaTopic, AuditingHelper.cambioHorarioIndex, ip.value, kafkaActor, usuario, Some(agregarHorarioEmpresaMessage))
+                        requestWithFutureAuditing[PersistenceException, AgregarHorarioEmpresaMessage](r, AuditingHelper.fiduciariaTopic,
+                          AuditingHelper.cambioHorarioIndex, ip.value, kafkaActor, usuario, Some(agregarHorarioEmpresaMessage))
                     } {
                       requestExecute(agregarHorarioEmpresaMessage.copy(idUsuario = Some(user.id), tipoCliente = Some(user.tipoCliente.id)), horarioEmpresaActor)
                     }

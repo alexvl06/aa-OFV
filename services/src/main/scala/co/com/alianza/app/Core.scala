@@ -70,14 +70,20 @@ trait CoreActors {
   val autorizacionUsuarioEmpresarialActor = system.actorSelection(autenticacionActorSupervisor.path)
   val consultaClienteActorSupervisor = system.actorOf(Props[ConsultaClienteActorSupervisor], "consultaClienteActorSupervisor")
   val consultaClienteActor = system.actorSelection(consultaClienteActorSupervisor.path)
+
   val contrasenasActorSupervisor = system.actorOf(Props[ContrasenasActorSupervisor], "contrasenasActorSupervisor")
   val contrasenasActor = system.actorSelection(contrasenasActorSupervisor.path)
   val contrasenasAgenteEmpresarialActorSupervisor = system.actorOf(Props[ContrasenasAgenteEmpresarialActorSupervisor], "contrasenasAgenteEmpresarialActorSupervisor")
   val contrasenasAgenteEmpresarialActor = system.actorSelection(contrasenasAgenteEmpresarialActorSupervisor.path)
+
   val contrasenasClienteAdminActorSupervisor = system.actorOf(Props[ContrasenasClienteAdminActorSupervisor], "contrasenasClienteAdminActorSupervisor")
+  val contrasenasClienteAdminActor = MainActors.system.actorSelection(MainActors.contrasenasClienteAdminActorSupervisor.path)
+
   val ipsUsuarioActorSupervisor = system.actorOf(Props[IpsUsuarioActorSupervisor], "ipsUsuarioActorSupervisor")
+  val ipsUsuarioActor =  MainActors.system.actorSelection(MainActors.ipsUsuarioActorSupervisor.path)
 
   val horarioEmpresaActorSupervisor = system.actorOf(Props[HorarioEmpresaActorSupervisor], "horarioEmpresaActorSupervisor")
+  val horarioEmpresaActor =  MainActors.system.actorSelection(MainActors.horarioEmpresaActorSupervisor.path)
 
   val pinActorSupervisor = system.actorOf(Props[PinActorSupervisor], "PinActorSupervisor")
   val pinActor = MainActors.system.actorSelection(pinActorSupervisor.path)

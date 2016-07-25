@@ -19,7 +19,7 @@ import spray.routing.Directives
 /**
  * Created by david on 16/06/14.
  */
-case class IpsUsuariosService(kafkaActor: ActorSelection) extends Directives with AlianzaCommons with CrossHeaders {
+case class IpsUsuariosService(kafkaActor: ActorSelection, ipsUsuarioActor : ActorSelection) extends Directives with AlianzaCommons with CrossHeaders {
 
   import IpsUsuarioMessagesJsonSupport._
   val ipsUsuarios = "ipsUsuarios"
