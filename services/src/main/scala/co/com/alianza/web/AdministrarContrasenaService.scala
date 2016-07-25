@@ -1,8 +1,9 @@
 package co.com.alianza.web
 
+import akka.actor.ActorSelection
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.infrastructure.auditing.AuditingHelper
-import co.com.alianza.infrastructure.messages.empresa.{ CambiarContrasenaCaducadaClienteAdminMessage, CambiarContrasenaCaducadaAgenteEmpresarialMessage }
+import co.com.alianza.infrastructure.messages.empresa.{ CambiarContrasenaCaducadaAgenteEmpresarialMessage, CambiarContrasenaCaducadaClienteAdminMessage }
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.util.token.Token
 import co.com.alianza.exceptions.PersistenceException
@@ -10,15 +11,15 @@ import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.util.clave.Crypto
 import enumerations.AppendPasswordUser
-import spray.routing.{ RequestContext, Directives }
+import spray.routing.{ Directives, RequestContext }
 import co.com.alianza.app.AlianzaCommons
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
-import co.com.alianza.infrastructure.messages.{ CambiarContrasenaCaducadaMessage, AdministrarContrasenaMessagesJsonSupport, CambiarContrasenaMessage }
+import co.com.alianza.infrastructure.messages.{ AdministrarContrasenaMessagesJsonSupport, CambiarContrasenaCaducadaMessage, CambiarContrasenaMessage }
 
 /**
  * Created by seven4n on 01/09/14.
  */
-class AdministrarContrasenaService extends Directives with AlianzaCommons {
+case class AdministrarContrasenaService(kafkaActor: ActorSelection, contrasenasActor: ActorSelection, contrasenasAgenteEmpresarialActor: ActorSelection, contrasenasClienteAdminActor: ActorSelection ) extends Directives with AlianzaCommons {
 
   import AdministrarContrasenaMessagesJsonSupport._
 

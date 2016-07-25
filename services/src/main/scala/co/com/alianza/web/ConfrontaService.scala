@@ -7,7 +7,7 @@ import co.com.alianza.infrastructure.messages.{ ObtenerCuestionarioAdicionalRequ
 import spray.http.StatusCodes._
 import co.com.alianza.util.json.JsonUtil
 
-case class ConfrontaService (confrontaActor : ActorSelection) extends Directives with AlianzaCommons {
+case class ConfrontaService(confrontaActor: ActorSelection) extends Directives with AlianzaCommons {
   import co.com.alianza.infrastructure.messages.ConfrontaMessagesJsonSupport._
 
   val confronta = "confronta"

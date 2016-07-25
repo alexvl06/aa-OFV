@@ -11,21 +11,22 @@ import co.com.alianza.webvalidarPinClienteAdmin.PinService
 import portal.transaccional.autenticacion.service.drivers.autenticacion.AutenticacionRepository
 
 case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, kafkaActor: ActorSelection, preguntasValidacionActor: ActorSelection,
-  usuariosActor: ActorSelection, confrontaActor: ActorSelection, autenticacionActor: ActorSelection, autenticacionUsuarioEmpresaActor: ActorSelection)(implicit val system: ActorSystem) extends HttpServiceActor
+  usuariosActor: ActorSelection, confrontaActor: ActorSelection, autenticacionActor: ActorSelection, autenticacionUsuarioEmpresaActor: ActorSelection,
+  autorizacionActor: ActorSelection, autorizacionUsuarioEmpresarialActor: ActorSelection, contrasenasActor: ActorSelection, contrasenasAgenteEmpresarialActor: ActorSelection, contrasenasClienteAdminActor: ActorSelection)(implicit val system: ActorSystem) extends HttpServiceActor
     with RouteConcatenation with CrossHeaders with ServiceAuthorization with ActorLogging {
 
   import system.dispatcher
 
   val routes =
-    AutorizacionService(kafkaActor).route ~
+    AutorizacionService(kafkaActor, autorizacionActor, autorizacionUsuarioEmpresarialActor).route ~
       portal.transaccional.autenticacion.service.web.autenticacion.AutenticacionService(autenticacionRepo, kafkaActor).route ~
       AutenticacionService(kafkaActor, autenticacionActor, autenticacionUsuarioEmpresaActor).route ~
       new ConfrontaService(confrontaActor).route ~
       new EnumeracionService().route ~
       UsuarioService(kafkaActor, usuariosActor).route ~
-      new ReglasContrasenasService().route ~
+      new ReglasContrasenasService(contrasenasActor).route ~
       PinService(kafkaActor).route ~
-      new AdministrarContrasenaService().insecureRoute ~
+      new AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).insecureRoute ~
       authenticate(authenticateUser) {
         user =>
           IpsUsuariosService(kafkaActor).route(user) ~
