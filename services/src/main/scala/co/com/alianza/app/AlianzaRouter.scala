@@ -11,8 +11,8 @@ import co.com.alianza.web._
 import co.com.alianza.webvalidarPinClienteAdmin.PinService
 import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionDriverRepository, AutenticacionRepository }
 
-case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, kafkaActor: ActorSelection, preguntasValidacionActor : ActorSelection)(implicit val system: ActorSystem) extends HttpServiceActor
-  with RouteConcatenation with CrossHeaders with ServiceAuthorization with ActorLogging {
+case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, kafkaActor: ActorSelection, preguntasValidacionActor: ActorSelection)(implicit val system: ActorSystem) extends HttpServiceActor
+    with RouteConcatenation with CrossHeaders with ServiceAuthorization with ActorLogging {
 
   import system.dispatcher
 

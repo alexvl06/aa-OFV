@@ -15,7 +15,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success }
 
 case class AutenticacionService(
-  autenticacionRepositorio: AutenticacionRepository, kafkaActor: ActorSelection
+    autenticacionRepositorio: AutenticacionRepository, kafkaActor: ActorSelection
 )(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   val autenticar = "autenticar"

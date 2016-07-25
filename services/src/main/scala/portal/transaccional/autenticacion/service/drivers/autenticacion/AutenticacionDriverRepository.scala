@@ -10,6 +10,7 @@ import co.com.alianza.persistence.entities.Usuario
 import co.com.alianza.util.token.Token
 import portal.transaccional.autenticacion.service.drivers.cliente.ClienteRepository
 import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionRepository
+import portal.transaccional.autenticacion.service.drivers.ipusuario.IpUsuarioRepository
 import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaRepository
 import portal.transaccional.autenticacion.service.drivers.usuario.UsuarioRepository
 
@@ -19,7 +20,7 @@ import scala.concurrent.{ ExecutionContext, Future }
  * Created by hernando on 25/07/16.
  */
 case class AutenticacionDriverRepository(usuarioRepo: UsuarioRepository, clienteCoreRepo: ClienteRepository, configuracionRepo: ConfiguracionRepository,
-    reglaRepo: ReglaContrasenaRepository)(implicit val ex: ExecutionContext) extends AutenticacionRepository {
+    reglaRepo: ReglaContrasenaRepository, ipRepo: IpUsuarioRepository)(implicit val ex: ExecutionContext) extends AutenticacionRepository {
 
   /**
    * Flujo:
@@ -55,10 +56,13 @@ case class AutenticacionDriverRepository(usuarioRepo: UsuarioRepository, cliente
       token <- generarToken(usuario, cliente, ip, inactividad.valor)
       asociarToken <- usuarioRepo.actualizarToken(numeroIdentificacion, token)
       //sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
+
+      tieneRespuestas <- Future { true }
       //validacionPreguntas <- ValidationT(validarPreguntasUsuario(usuario.id.get))
       //TODO: depende del repo preguntas
-      //validacionIps <- ValidationT(validarControlIpsUsuario(usuario.id.get, message.clientIp.get, token, validacionPreguntas))
-      //TODO: depende del repo ip
+
+      ips <- ipRepo.getIpsUsuarioById(usuario.id.get)
+      validacionIps <- ipRepo.validarControlIp(ip, ips, token, tieneRespuestas)
     } yield token
   }
 

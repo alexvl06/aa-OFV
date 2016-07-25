@@ -12,7 +12,7 @@ import spray.routing.{ Directives, RequestContext }
  *
  * @author seven4n
  */
-class PreguntasAutovalidacionService (preguntasAutovalidacionActor : ActorSelection) extends Directives with AlianzaCommons with CrossHeaders {
+class PreguntasAutovalidacionService(preguntasAutovalidacionActor: ActorSelection) extends Directives with AlianzaCommons with CrossHeaders {
 
   import co.com.alianza.infrastructure.messages.PreguntasAutovalidacionMessagesJsonSupport._
 

@@ -1,7 +1,6 @@
 package portal.transaccional.autenticacion.service.drivers.usuario
 
 import java.sql.Timestamp
-import java.util.Date
 
 import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import co.com.alianza.exceptions.ValidacionException

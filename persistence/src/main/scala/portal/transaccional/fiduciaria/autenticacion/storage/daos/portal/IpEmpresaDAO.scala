@@ -7,9 +7,8 @@ import slick.lifted.TableQuery
 /**
  * Created by alexandra on 25/07/16.
  */
-class IpEmpresaDAO()(implicit dcConfig : DBConfig)extends TableQuery( new IpsEmpresaTable(_)) {
+class IpEmpresaDAO()(implicit dcConfig: DBConfig) extends TableQuery(new IpsEmpresaTable(_)) {
   import dcConfig.db._
   import dcConfig.profile.api._
-
 
 }

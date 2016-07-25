@@ -22,11 +22,12 @@ import com.typesafe.config.Config
 import portal.transaccional.autenticacion.service.drivers.autenticacion.AutenticacionDriverRepository
 import portal.transaccional.autenticacion.service.drivers.cliente.ClienteDriverCoreRepository
 import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionDriverRepository
+import portal.transaccional.autenticacion.service.drivers.ipusuario.IpUsuarioDriverRepository
 import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuario.UsuarioDriverRepository
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.core.ClienteDAO
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.daos.driver.UsuarioDAO
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ ReglaContrasenaDAO, ConfiguracionDAO }
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ IpUsuarioDAO, ReglaContrasenaDAO, ConfiguracionDAO }
 
 /**
  * Method override for the unique ActorSystem instance
@@ -85,9 +86,10 @@ trait CoreActors {
 trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val usuarioRepo = UsuarioDriverRepository(usuarioDAO)(ex)
   lazy val clienteRepo = ClienteDriverCoreRepository(clienteDAO)(ex)
+  lazy val ipUsuarioRepo = IpUsuarioDriverRepository(ipUsuarioDAO)(ex)
   lazy val configuracionRepo = ConfiguracionDriverRepository(configuracionDAO)(ex)
   lazy val reglaContrasenaRepo = ReglaContrasenaDriverRepository(reglaContrasenaDAO)(ex)
-  lazy val autenticacionRepo = AutenticacionDriverRepository(usuarioRepo, clienteRepo, configuracionRepo, reglaContrasenaRepo)(ex)
+  lazy val autenticacionRepo = AutenticacionDriverRepository(usuarioRepo, clienteRepo, configuracionRepo, reglaContrasenaRepo, ipUsuarioRepo)(ex)
 }
 
 private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
@@ -96,6 +98,7 @@ private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
 
   lazy val usuarioDAO = UsuarioDAO()(config)
   lazy val clienteDAO = ClienteDAO()(ex, configCore)
+  lazy val ipUsuarioDAO = IpUsuarioDAO()(config)
   lazy val configuracionDAO = ConfiguracionDAO()(config)
   lazy val reglaContrasenaDAO = ReglaContrasenaDAO()(config)
 }
