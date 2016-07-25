@@ -10,7 +10,8 @@ import co.com.alianza.domain.aggregates.web.ApiRequestCreator
 import co.com.alianza.domain.aggregates.web.AnonymousActor
 import co.com.alianza.util.json.Links_hal
 import scala.util.{ Success, Failure }
-trait AlianzaCommons extends ApiRequestCreator with AlianzaActors {
+
+trait AlianzaCommons extends ApiRequestCreator {
 
   implicit val ec: ExecutionContext = MainActors.ex
 

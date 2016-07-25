@@ -17,27 +17,27 @@ case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, kafkaActor:
   import system.dispatcher
 
   val routes =
-    new AutorizacionService().route ~
+      AutorizacionService(kafkaActor).route ~
       portal.transaccional.autenticacion.service.web.autenticacion.AutenticacionService(autenticacionRepo, kafkaActor).route ~
-      new AutenticacionService().route ~
+      AutenticacionService(kafkaActor).route ~
       new ConfrontaService().route ~
       new EnumeracionService().route ~
-      new UsuarioService().route ~
+      UsuarioService(kafkaActor).route ~
       new ReglasContrasenasService().route ~
-      new PinService().route ~
+      PinService(kafkaActor).route ~
       new AdministrarContrasenaService().insecureRoute ~
       authenticate(authenticateUser) {
         user =>
-          new IpsUsuariosService().route(user) ~
+            IpsUsuariosService(kafkaActor).route(user) ~
             new ActualizacionService().route(user) ~
-            new HorarioEmpresaService().route(user) ~
+            HorarioEmpresaService(kafkaActor).route(user) ~
             new AdministrarContrasenaService().secureRoute(user) ~
-            new AutenticacionService().routeAutenticado(user) ~
+            AutenticacionService(kafkaActor).routeAutenticado(user) ~
             //TO-DO Cambiar al authenticate de cliente empresarial o agente
             new AdministrarContrasenaEmpresaService().secureRouteEmpresa(user) ~
             new UsuarioEmpresaService().secureUserRouteEmpresa(user) ~
-            new PermisosTransaccionalesService().route(user) ~
-            new PreguntasAutovalidacionService(preguntasValidacionActor).route(user)
+            PermisosTransaccionalesService(kafkaActor).route(user) ~
+            PreguntasAutovalidacionService(kafkaActor, preguntasValidacionActor).route(user)
       }
 
   def receive = runRoute(
@@ -45,11 +45,11 @@ case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, kafkaActor:
       routes
     }
   )(
-      ExceptionHandler.default,
-      CustomRejectionHandler.extended orElse RejectionHandler.Default,
-      context,
-      RoutingSettings.default,
-      LoggingContext.fromActorRefFactory
-    )
+    ExceptionHandler.default,
+    CustomRejectionHandler.extended orElse RejectionHandler.Default,
+    context,
+    RoutingSettings.default,
+    LoggingContext.fromActorRefFactory
+  )
 
 }
