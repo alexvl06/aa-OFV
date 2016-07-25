@@ -11,13 +11,12 @@ import co.com.alianza.webvalidarPinClienteAdmin.PinService
 import portal.transaccional.autenticacion.service.drivers.autenticacion.AutenticacionRepository
 
 case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, kafkaActor: ActorSelection, preguntasAutovalidacionActor: ActorSelection,
-  usuariosActor: ActorSelection, confrontaActor: ActorSelection, autenticacionActor: ActorSelection, autenticacionUsuarioEmpresaActor: ActorSelection,
-  actualizacionActor: ActorSelection, permisoTransaccionalActor: ActorSelection, agenteEmpresarialActor: ActorSelection,
-  pinActor: ActorSelection, pinUsuarioEmpresarialAdminActor: ActorSelection, pinUsuarioAgenteEmpresarialActor: ActorSelection, ipsUsuarioActor : ActorSelection,
-  horarioEmpresaActor : ActorSelection, autorizacionActor: ActorSelection,
-  autorizacionUsuarioEmpresarialActor: ActorSelection, contrasenasAgenteEmpresarialActor: ActorSelection, contrasenasClienteAdminActor: ActorSelection,
-  contrasenasActor :ActorSelection )
-  (implicit val system: ActorSystem) extends HttpServiceActor with RouteConcatenation with CrossHeaders with ServiceAuthorization with ActorLogging {
+    usuariosActor: ActorSelection, confrontaActor: ActorSelection, autenticacionActor: ActorSelection, autenticacionUsuarioEmpresaActor: ActorSelection,
+    actualizacionActor: ActorSelection, permisoTransaccionalActor: ActorSelection, agenteEmpresarialActor: ActorSelection,
+    pinActor: ActorSelection, pinUsuarioEmpresarialAdminActor: ActorSelection, pinUsuarioAgenteEmpresarialActor: ActorSelection, ipsUsuarioActor: ActorSelection,
+    horarioEmpresaActor: ActorSelection, autorizacionActor: ActorSelection,
+    autorizacionUsuarioEmpresarialActor: ActorSelection, contrasenasAgenteEmpresarialActor: ActorSelection, contrasenasClienteAdminActor: ActorSelection,
+    contrasenasActor: ActorSelection)(implicit val system: ActorSystem) extends HttpServiceActor with RouteConcatenation with CrossHeaders with ServiceAuthorization with ActorLogging {
 
   import system.dispatcher
 
@@ -34,13 +33,13 @@ case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, kafkaActor:
       authenticate(authenticateUser) {
         user =>
           IpsUsuariosService(kafkaActor, ipsUsuarioActor).route(user) ~
-          IpsUsuariosService(kafkaActor, ipsUsuarioActor).route(user) ~
+            IpsUsuariosService(kafkaActor, ipsUsuarioActor).route(user) ~
             ActualizacionService(actualizacionActor, kafkaActor).route(user) ~
             HorarioEmpresaService(kafkaActor, horarioEmpresaActor).route(user) ~
-            new AdministrarContrasenaService().secureRoute(user) ~
+            new AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).secureRoute(user) ~
             AutenticacionService(kafkaActor, autenticacionActor, autenticacionUsuarioEmpresaActor).routeAutenticado(user) ~
             //TO-DO Cambiar al authenticate de cliente empresarial o agente
-            new AdministrarContrasenaEmpresaService().secureRouteEmpresa(user) ~
+            new AdministrarContrasenaEmpresaService(kafkaActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).secureRouteEmpresa(user) ~
             UsuarioEmpresaService(kafkaActor, agenteEmpresarialActor).secureUserRouteEmpresa(user) ~
             PermisosTransaccionalesService(kafkaActor, permisoTransaccionalActor).route(user) ~
             PreguntasAutovalidacionService(kafkaActor, preguntasAutovalidacionActor).route(user)

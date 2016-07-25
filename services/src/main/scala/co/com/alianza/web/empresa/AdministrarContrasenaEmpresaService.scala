@@ -1,5 +1,6 @@
 package co.com.alianza.web.empresa
 
+import akka.actor.ActorSelection
 import co.com.alianza.app.AlianzaCommons
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{ DataAccessAdapter => DataAccessAdapterAgenteEmpresarial }
@@ -10,12 +11,12 @@ import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.infrastructure.messages.empresa._
 import co.com.alianza.util.clave.Crypto
 import enumerations.AppendPasswordUser
-import spray.routing.{ RequestContext, Directives }
+import spray.routing.{ Directives, RequestContext }
 
 /**
  * Created by S4N on 17/12/14.
  */
-class AdministrarContrasenaEmpresaService extends Directives with AlianzaCommons {
+case class AdministrarContrasenaEmpresaService(kafkaActor: ActorSelection, contrasenasAgenteEmpresarialActor: ActorSelection, contrasenasClienteAdminActor: ActorSelection) extends Directives with AlianzaCommons {
 
   import AdministrarContrasenaEmpresaMessagesJsonSupport._
 

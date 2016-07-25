@@ -80,10 +80,10 @@ trait CoreActors {
   val contrasenasClienteAdminActor = MainActors.system.actorSelection(MainActors.contrasenasClienteAdminActorSupervisor.path)
 
   val ipsUsuarioActorSupervisor = system.actorOf(Props[IpsUsuarioActorSupervisor], "ipsUsuarioActorSupervisor")
-  val ipsUsuarioActor =  MainActors.system.actorSelection(MainActors.ipsUsuarioActorSupervisor.path)
+  val ipsUsuarioActor = MainActors.system.actorSelection(MainActors.ipsUsuarioActorSupervisor.path)
 
   val horarioEmpresaActorSupervisor = system.actorOf(Props[HorarioEmpresaActorSupervisor], "horarioEmpresaActorSupervisor")
-  val horarioEmpresaActor =  MainActors.system.actorSelection(MainActors.horarioEmpresaActorSupervisor.path)
+  val horarioEmpresaActor = MainActors.system.actorSelection(MainActors.horarioEmpresaActorSupervisor.path)
 
   val pinActorSupervisor = system.actorOf(Props[PinActorSupervisor], "PinActorSupervisor")
   val pinActor = MainActors.system.actorSelection(pinActorSupervisor.path)

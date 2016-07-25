@@ -43,7 +43,7 @@ case class PermisosTransaccionalesService(kafkaActor: ActorSelection, permisoTra
                   )
                   requestExecute(
                     permisosMessage.copy(idClienteAdmin = if (user.tipoCliente == clienteAdministrador) Some(user.id) else None),
-                    permisoTransaccionalActorSupervisor
+                    permisoTransaccionalActor
                   )
                 }
             }
