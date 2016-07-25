@@ -1,15 +1,16 @@
 package co.com.alianza.webvalidarPinClienteAdmin
 
-import co.com.alianza.app.{ CrossHeaders, AlianzaCommons }
+import akka.actor.ActorSelection
+import co.com.alianza.app.{ AlianzaCommons, CrossHeaders }
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.infrastructure.messages.PinMessages._
 import co.com.alianza.infrastructure.messages.PinMarshallers._
 import co.com.alianza.util.clave.Crypto
 import enumerations.AppendPasswordUser
-import spray.routing.{ RequestContext, Directives }
+import spray.routing.{ Directives, RequestContext }
 
-class PinService extends Directives with AlianzaCommons with CrossHeaders {
+case class PinService (kafkaActor: ActorSelection) extends Directives with AlianzaCommons with CrossHeaders {
 
   def route = {
     path("validarPin" / Segment / IntNumber) {

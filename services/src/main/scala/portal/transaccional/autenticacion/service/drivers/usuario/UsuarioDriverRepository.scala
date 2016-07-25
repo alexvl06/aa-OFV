@@ -1,11 +1,15 @@
 package portal.transaccional.autenticacion.service.drivers.usuario
 
 import java.sql.Timestamp
+import java.util.Date
 
+import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.persistence.entities.Usuario
 import co.com.alianza.util.clave.Crypto
+import co.com.alianza.util.token.Token
 import enumerations.{ AppendPasswordUser, EstadosUsuarioEnum, TipoIdentificacion }
+import org.joda.time.DateTime
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.daos.driver.UsuarioDAOs
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -106,6 +110,22 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
    */
   def actualizarFechaIngreso(numeroIdentificacion: String, fechaActual: Timestamp): Future[Int] = {
     usuarioDAO.updateLastDate(numeroIdentificacion, fechaActual)
+  }
+
+  /**
+   * Valida la fecha de caducidad de la contraseña de un usuario
+   * @param tipoCliente
+   * @param usuario
+   * @param dias
+   * @return
+   */
+  def validarCaducidadContrasena(tipoCliente: TiposCliente, usuario: Usuario, dias: Int): Future[Boolean] = {
+    if (new DateTime().isAfter(new DateTime(usuario.fechaActualizacion.getTime).plusDays(dias))) {
+      val token: String = Token.generarTokenCaducidadContrasena(tipoCliente, usuario.id.get)
+      Future.failed(ValidacionException("401.9", token))
+    } else {
+      Future.successful(true)
+    }
   }
 
   /**

@@ -2,6 +2,7 @@ package portal.transaccional.autenticacion.service.drivers.usuario
 
 import java.sql.Timestamp
 
+import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.persistence.entities.Usuario
 
 import scala.concurrent.Future
@@ -24,5 +25,7 @@ trait UsuarioRepository {
   def actualizarIp(numeroIdentificacion: String, ip: String): Future[Int]
 
   def actualizarFechaIngreso(numeroIdentificacion: String, fechaActual: Timestamp): Future[Int]
+
+  def validarCaducidadContrasena(tipoCliente: TiposCliente, usuario: Usuario, dias: Int): Future[Boolean]
 
 }
