@@ -1,11 +1,9 @@
 package co.com.alianza.app
 
-import akka.actor.{ ActorLogging, ActorRef, ActorSelection, ActorSystem }
+import akka.actor.{ ActorLogging, ActorSelection, ActorSystem }
 import co.com.alianza.app.handler.CustomRejectionHandler
-import co.com.alianza.domain.aggregates.confronta.ConfrontaActor
 import co.com.alianza.infrastructure.security.ServiceAuthorization
 import co.com.alianza.web.empresa.{ AdministrarContrasenaEmpresaService, UsuarioEmpresaService }
-import com.typesafe.config.Config
 import spray.routing._
 import spray.util.LoggingContext
 import co.com.alianza.web._
@@ -13,7 +11,7 @@ import co.com.alianza.webvalidarPinClienteAdmin.PinService
 import portal.transaccional.autenticacion.service.drivers.autenticacion.AutenticacionRepository
 
 case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, kafkaActor: ActorSelection, preguntasValidacionActor: ActorSelection,
-  usuariosActor: ActorSelection, confrontaActor: ActorSelection)(implicit val system: ActorSystem) extends HttpServiceActor
+  usuariosActor: ActorSelection, confrontaActor: ActorSelection, autenticacionActor: ActorSelection, autenticacionUsuarioEmpresaActor: ActorSelection)(implicit val system: ActorSystem) extends HttpServiceActor
     with RouteConcatenation with CrossHeaders with ServiceAuthorization with ActorLogging {
 
   import system.dispatcher
@@ -21,7 +19,7 @@ case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, kafkaActor:
   val routes =
     AutorizacionService(kafkaActor).route ~
       portal.transaccional.autenticacion.service.web.autenticacion.AutenticacionService(autenticacionRepo, kafkaActor).route ~
-      AutenticacionService(kafkaActor).route ~
+      AutenticacionService(kafkaActor, autenticacionActor, autenticacionUsuarioEmpresaActor).route ~
       new ConfrontaService(confrontaActor).route ~
       new EnumeracionService().route ~
       UsuarioService(kafkaActor, usuariosActor).route ~
@@ -34,7 +32,7 @@ case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, kafkaActor:
             new ActualizacionService().route(user) ~
             HorarioEmpresaService(kafkaActor).route(user) ~
             new AdministrarContrasenaService().secureRoute(user) ~
-            AutenticacionService(kafkaActor).routeAutenticado(user) ~
+            AutenticacionService(kafkaActor, autenticacionActor, autenticacionUsuarioEmpresaActor).routeAutenticado(user) ~
             //TO-DO Cambiar al authenticate de cliente empresarial o agente
             new AdministrarContrasenaEmpresaService().secureRouteEmpresa(user) ~
             new UsuarioEmpresaService().secureUserRouteEmpresa(user) ~
