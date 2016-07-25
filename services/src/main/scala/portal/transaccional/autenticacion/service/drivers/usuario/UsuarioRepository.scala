@@ -9,6 +9,8 @@ import scala.concurrent.Future
  */
 trait UsuarioRepository {
 
-  def getUsuarioByIdentificacion(numeroIdentificacion: String): Future[Usuario]
+  def getByIdentificacion(numeroIdentificacion: String): Future[Usuario]
+
+  def validarEstados(estadoUsuario: Int): Future[Boolean]
 
 }

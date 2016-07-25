@@ -9,7 +9,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * Created by alexandra on 25/07/16.
  */
-case class ClienteDAO()(implicit val ec: ExecutionContext, dcConfig: DBConfig) extends AlianzaStorageHelper {
+case class ClienteDAO()(implicit val ec: ExecutionContext, dcConfig: DBConfig) extends AlianzaStorageHelper with ClienteDAOs {
 
   def consultaCliente(numDocumento: String): Future[String] = transaction {
     connection =>
