@@ -9,7 +9,6 @@ import spray.routing._
 import co.com.alianza.app.{ AlianzaActors, CrossHeaders }
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper.requestWithAuiditing
-
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success }
 
@@ -17,18 +16,19 @@ class AutenticacionService(autenticacionRepositorio: AutenticacionRepository)(im
     with DomainJsonFormatters with CrossHeaders {
 
   val autenticar = "autenticar"
+  val autenticarUsuarioEmpresa = "autenticarUsuarioEmpresa"
 
   val route: Route = {
     pathPrefix(autenticar) {
       pathEndOrSingleSlash {
-        autenticarUsuarioIndividual
+        autenticarUsuarioIndividual ~ autenticarUsuarioEmpresarial
       }
     }
   }
 
   private def autenticarUsuarioIndividual = {
     post {
-      entity(as[AutenticacionRequest]) {
+      entity(as[AutenticarRequest]) {
         autenticacionRequest =>
           clientIP { ip =>
             val request = autenticacionRequest.copy(clientIp = ip.value)
@@ -41,6 +41,27 @@ class AutenticacionService(autenticacionRepositorio: AutenticacionRepository)(im
               }
             }
           }
+      }
+    }
+  }
+
+  private def autenticarUsuarioEmpresarial = {
+    path(autenticarUsuarioEmpresa) {
+      post {
+        entity(as[AutenticarUsuarioEmpresarialRequest]) {
+          autenticacionRequest =>
+            clientIP { ip =>
+              val request = autenticacionRequest.copy(clientIp = ip.value)
+              val resultado: Future[String] =
+                autenticacionRepositorio.autenticarUsuarioEmpresa(request.tipoIdentificacion, request.numeroIdentificacion, request.usuario, request.password, request.clientIp)
+              mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.autenticacionIndex, ip.value, kafkaActor, autenticacionRequest.copy(password = null, clientIp = ip.value))) {
+                onComplete(resultado) {
+                  case Success(value) => complete(value.toString)
+                  case Failure(ex) => execution(ex)
+                }
+              }
+            }
+        }
       }
     }
   }

@@ -13,6 +13,7 @@ import co.com.alianza.persistence.entities.Usuario
  *
  * @author seven4n
  */
+//TODO : Borrarlo ! , ya esta en el refactor
 class UsuariosRepository(implicit executionContext: ExecutionContext) extends AlianzaRepository {
 
   val usuarios = TableQuery[UsuarioTable]
