@@ -10,15 +10,15 @@ import co.com.alianza.util.clave.Crypto
 import enumerations.AppendPasswordUser
 import spray.routing.{ Directives, RequestContext }
 
-case class PinService (kafkaActor: ActorSelection, pinActor : ActorSelection, pinUsuarioEmpresarialAdminActor : ActorSelection,
-  pinUsuarioAgenteEmpresarialActor : ActorSelection) extends Directives with AlianzaCommons with CrossHeaders {
+case class PinService(kafkaActor: ActorSelection, pinActor: ActorSelection, pinUsuarioEmpresarialAdminActor: ActorSelection,
+    pinUsuarioAgenteEmpresarialActor: ActorSelection) extends Directives with AlianzaCommons with CrossHeaders {
 
   def route = {
     path("validarPin" / Segment / IntNumber) {
       (pin, ft) =>
         {
           post {
-            requestExecute(ValidarPin(pin, Some(ft)), pinActor )
+            requestExecute(ValidarPin(pin, Some(ft)), pinActor)
           }
         }
     } ~ path("validarPinClienteAdmin" / Segment / IntNumber) {

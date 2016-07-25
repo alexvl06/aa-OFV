@@ -16,7 +16,7 @@ import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 /**
  * Created by s4n on 17/12/14.
  */
-case class UsuarioEmpresaService (kafkaActor: ActorSelection, agenteEmpresarialActor : ActorSelection) extends Directives with AlianzaCommons with CrossHeaders {
+case class UsuarioEmpresaService(kafkaActor: ActorSelection, agenteEmpresarialActor: ActorSelection) extends Directives with AlianzaCommons with CrossHeaders {
 
   import CrearAgenteEMessageJsonSupport._
 

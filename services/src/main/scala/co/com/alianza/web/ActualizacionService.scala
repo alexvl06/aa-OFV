@@ -16,7 +16,7 @@ import spray.routing.{ Directives, RequestContext }
 /**
  * Created by david on 16/06/14.
  */
-case class ActualizacionService (actualizacionActor: ActorSelection, kafkaActor: ActorSelection)extends Directives with AlianzaCommons with CrossHeaders {
+case class ActualizacionService(actualizacionActor: ActorSelection, kafkaActor: ActorSelection) extends Directives with AlianzaCommons with CrossHeaders {
 
   val datos = "datos"
   val paises = "paises"

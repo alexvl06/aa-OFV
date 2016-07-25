@@ -14,8 +14,8 @@ import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 /**
  * Created by manuel on 7/01/15.
  */
-case class PermisosTransaccionalesService (kafkaActor: ActorSelection, permisoTransaccionalActor : ActorSelection)
-  extends Directives with AlianzaCommons with CrossHeaders {
+case class PermisosTransaccionalesService(kafkaActor: ActorSelection, permisoTransaccionalActor: ActorSelection)
+    extends Directives with AlianzaCommons with CrossHeaders {
 
   import PermisosTransaccionalesJsonSupport._
 
@@ -37,8 +37,10 @@ case class PermisosTransaccionalesService (kafkaActor: ActorSelection, permisoTr
                     requestWithFutureAuditing[PersistenceException, GuardarPermisosAgenteMessage](r, AuditingHelper.fiduciariaTopic,
                       AuditingHelper.actualizarPermisosAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, Some(permisosMessage))
                 } {
-                  requestExecute(permisosMessage.copy(idClienteAdmin = if (user.tipoCliente == clienteAdministrador) Some(user.id) else None),
-                    permisoTransaccionalActor)
+                  requestExecute(
+                    permisosMessage.copy(idClienteAdmin = if (user.tipoCliente == clienteAdministrador) Some(user.id) else None),
+                    permisoTransaccionalActor
+                  )
                   requestExecute(
                     permisosMessage.copy(idClienteAdmin = if (user.tipoCliente == clienteAdministrador) Some(user.id) else None),
                     permisoTransaccionalActorSupervisor
