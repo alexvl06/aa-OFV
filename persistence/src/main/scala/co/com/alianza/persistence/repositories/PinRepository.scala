@@ -10,6 +10,7 @@ import CustomDriver.simple._
 
 import scalaz.Validation
 
+//Todo : Borrar ! ya esta en el refactor
 class PinRepository(implicit executionContext: ExecutionContext) extends AlianzaRepository {
 
   val pin = TableQuery[PinUsuarioTable]
