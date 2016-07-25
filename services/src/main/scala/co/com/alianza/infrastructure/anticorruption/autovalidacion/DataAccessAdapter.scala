@@ -80,15 +80,14 @@ object DataAccessAdapter {
     repo.bloquearRespuestasClienteAdministrador(idUsuario)
   }
 
-  private def transformPreguntaList(origin: Validation[PersistenceException, Seq[PreguntasAutovalidacion]]): Validation[PersistenceException, List[Pregunta]]= {
+  private def transformPreguntaList(origin: Validation[PersistenceException, Seq[PreguntasAutovalidacion]]): Validation[PersistenceException, List[Pregunta]] = {
     origin match {
       case zSuccess(response: Seq[PreguntasAutovalidacion]) => zSuccess(DataAccessTranslator.translatePregunta(response).toList)
       case zFailure(error) => zFailure(error)
     }
   }
 
-  private def transformRespuestaList(origin: Validation[PersistenceException, List[RespuestasAutovalidacionUsuario]]):
-  Validation[PersistenceException, List[Respuesta]] = {
+  private def transformRespuestaList(origin: Validation[PersistenceException, List[RespuestasAutovalidacionUsuario]]): Validation[PersistenceException, List[Respuesta]] = {
 
     origin match {
       case zSuccess(response: List[RespuestasAutovalidacionUsuario]) => zSuccess(DataAccessTranslator.translateRespuesta(response))
@@ -110,8 +109,7 @@ object DataAccessAdapter {
     }
   }
 
-  private def toRespuestaCompletaList(origin: Validation[PersistenceException, Seq[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]]):
-  Validation[PersistenceException, List[RespuestaCompleta]] = {
+  private def toRespuestaCompletaList(origin: Validation[PersistenceException, Seq[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]]): Validation[PersistenceException, List[RespuestaCompleta]] = {
     origin match {
       case zSuccess(response: Seq[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]) => zSuccess(DataAccessTranslator.toRespuestaCompletaList(response))
       case zFailure(error) => zFailure(error)

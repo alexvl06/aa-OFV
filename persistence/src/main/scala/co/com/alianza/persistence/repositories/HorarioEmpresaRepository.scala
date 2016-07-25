@@ -38,7 +38,7 @@ class HorarioEmpresaRepository(implicit executionContext: ExecutionContext) exte
 
       val resultTry: Future[Boolean] = for {
         update: Int <- session.database.run(horarioEmpresa.insertOrUpdate(horario))
-        result <- Future{update > 0}
+        result <- Future { update > 0 }
       } yield result
 
       resolveTry(resultTry, "Agregar Horario Empresa")

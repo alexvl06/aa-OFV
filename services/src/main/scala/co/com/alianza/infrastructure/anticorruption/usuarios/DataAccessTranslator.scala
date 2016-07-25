@@ -4,8 +4,13 @@ import java.util.Date
 
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.infrastructure.dto._
-import co.com.alianza.persistence.entities.{ Empresa => dEmpresa, HorarioEmpresa => dHorarioEmpresa, Usuario => dUsuario,
-                                             UsuarioEmpresarial => eUsuarioEmpresarial, UsuarioEmpresarialAdmin => eUsuarioEmpresarialAdmin }
+import co.com.alianza.persistence.entities.{
+  Empresa => dEmpresa,
+  HorarioEmpresa => dHorarioEmpresa,
+  Usuario => dUsuario,
+  UsuarioEmpresarial => eUsuarioEmpresarial,
+  UsuarioEmpresarialAdmin => eUsuarioEmpresarialAdmin
+}
 
 /**
  *
