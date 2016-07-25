@@ -12,6 +12,7 @@ import portal.transaccional.autenticacion.service.drivers.cliente.ClienteReposit
 import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionRepository
 import portal.transaccional.autenticacion.service.drivers.ipusuario.IpUsuarioRepository
 import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaRepository
+import portal.transaccional.autenticacion.service.drivers.respuestas.RespuestaUsuarioRepository
 import portal.transaccional.autenticacion.service.drivers.usuario.UsuarioRepository
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -19,8 +20,9 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * Created by hernando on 25/07/16.
  */
-case class AutenticacionDriverRepository(usuarioRepo: UsuarioRepository, clienteCoreRepo: ClienteRepository, configuracionRepo: ConfiguracionRepository,
-    reglaRepo: ReglaContrasenaRepository, ipRepo: IpUsuarioRepository)(implicit val ex: ExecutionContext) extends AutenticacionRepository {
+case class AutenticacionDriverRepository(usuarioRepo: UsuarioRepository, clienteCoreRepo: ClienteRepository,
+    configuracionRepo: ConfiguracionRepository, reglaRepo: ReglaContrasenaRepository, ipRepo: IpUsuarioRepository,
+    respuestasRepo: RespuestaUsuarioRepository)(implicit val ex: ExecutionContext) extends AutenticacionRepository {
 
   /**
    * Flujo:
@@ -56,15 +58,40 @@ case class AutenticacionDriverRepository(usuarioRepo: UsuarioRepository, cliente
       token <- generarToken(usuario, cliente, ip, inactividad.valor)
       asociarToken <- usuarioRepo.actualizarToken(numeroIdentificacion, token)
       //sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
-
-      tieneRespuestas <- Future { true }
-      //validacionPreguntas <- ValidationT(validarPreguntasUsuario(usuario.id.get))
-      //TODO: depende del repo preguntas
-
+      respuestas <- respuestasRepo.getRespuestasById(usuario.id.get)
+      tieneRespuestas <- respuestasRepo.validarRespuestas(respuestas)
       ips <- ipRepo.getIpsUsuarioById(usuario.id.get)
       validacionIps <- ipRepo.validarControlIp(ip, ips, token, tieneRespuestas)
     } yield token
   }
+
+  /*validaciones.onComplete {
+    case sFailure(_) => originalSender ! _
+    case sSuccess(resp) => resp match {
+      case zSuccess(token) => originalSender ! token
+      case zFailure(errorAutenticacion) => errorAutenticacion match {
+        case err @ ErrorPersistencia(_, ep1) => originalSender ! ep1
+        case err @ ErrorPasswordInvalido(identificacionUsuario, _, numIngresosErroneosUsuario) =>
+
+          val ejecucion: Future[Validation[ErrorAutenticacion, Boolean]] = (for {
+            ingresosErroneos <- ValidationT(actualizarIngresosErroneosUsuario(identificacionUsuario.get, numIngresosErroneosUsuario + 1))
+            regla <- ValidationT(buscarRegla("CANTIDAD_REINTENTOS_INGRESO_CONTRASENA"))
+            bloqueo <- ValidationT(bloquearUsuario(identificacionUsuario.get, numIngresosErroneosUsuario, regla))
+          } yield bloqueo).run
+
+          ejecucion.onFailure { case _ => originalSender ! _ }
+          ejecucion.onSuccess {
+            case zSuccess(_) => originalSender ! ResponseMessage(Unauthorized, err.msg)
+            case zFailure(errorBloqueo) => errorBloqueo match {
+              case errb @ ErrorPersistencia(_, ep2) => originalSender ! ep2
+              case _ => originalSender ! ResponseMessage(Unauthorized, errorBloqueo.msg)
+            }
+          }
+
+        case _ => originalSender ! ResponseMessage(Unauthorized, errorAutenticacion.msg)
+      }
+    }
+  }*/
 
   /**
    * Generar token

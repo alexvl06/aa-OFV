@@ -55,6 +55,14 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
     val hash = Crypto.hashSha512(contrasena.concat(AppendPasswordUser.appendUsuariosFiducia), idUsuario)
     if (hash.contentEquals(contrasenaUsuario)) Future.successful(true)
     else Future.failed(ValidacionException("401.3", "Error Credenciales"))
+
+    /*
+    * val ejecucion: Future[Validation[ErrorAutenticacion, Boolean]] = (for {
+            ingresosErroneos <- ValidationT(actualizarIngresosErroneosUsuario(identificacionUsuario.get, numIngresosErroneosUsuario + 1))
+            regla <- ValidationT(buscarRegla("CANTIDAD_REINTENTOS_INGRESO_CONTRASENA"))
+            bloqueo <- ValidationT(bloquearUsuario(identificacionUsuario.get, numIngresosErroneosUsuario, regla))
+          } yield bloqueo).run
+    * */
   }
 
   /**
