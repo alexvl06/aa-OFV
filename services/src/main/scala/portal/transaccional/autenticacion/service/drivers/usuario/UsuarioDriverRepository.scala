@@ -1,5 +1,7 @@
 package portal.transaccional.autenticacion.service.drivers.usuario
 
+import java.sql.Timestamp
+
 import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.persistence.entities.Usuario
 import co.com.alianza.util.clave.Crypto
@@ -84,6 +86,26 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
    */
   def actualizarIngresosErroneosUsuario(idUsuario: Int, numeroIntentos: Int): Future[Int] = {
     usuarioDAO.updateIncorrectEntries(idUsuario, numeroIntentos)
+  }
+
+  /**
+   * Actualizar ultima ip
+   * @param numeroIdentificacion
+   * @param ip
+   * @return
+   */
+  def actualizarIp(numeroIdentificacion: String, ip: String): Future[Int] = {
+    usuarioDAO.updateLastIp(numeroIdentificacion, ip)
+  }
+
+  /**
+   * Actualizar fecha ingreso
+   * @param numeroIdentificacion
+   * @param fechaActual
+   * @return
+   */
+  def actualizarFechaIngreso(numeroIdentificacion: String, fechaActual: Timestamp): Future[Int] = {
+    usuarioDAO.updateLastDate(numeroIdentificacion, fechaActual)
   }
 
   /**
