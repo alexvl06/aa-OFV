@@ -1,6 +1,7 @@
 package co.com.alianza.web
 
-import co.com.alianza.app.{ CrossHeaders, AlianzaCommons }
+import akka.actor.ActorSelection
+import co.com.alianza.app.{ AlianzaCommons, CrossHeaders }
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
@@ -11,14 +12,14 @@ import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.util.token.AesUtil
 import enumerations.CryptoAesParameters
-import spray.routing.{ RequestContext }
+import spray.routing.RequestContext
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import spray.routing.Directives
 
 /**
  * Created by david on 16/06/14.
  */
-class IpsUsuariosService extends Directives with AlianzaCommons with CrossHeaders {
+case class IpsUsuariosService(kafkaActor: ActorSelection) extends Directives with AlianzaCommons with CrossHeaders {
 
   import IpsUsuarioMessagesJsonSupport._
   val ipsUsuarios = "ipsUsuarios"

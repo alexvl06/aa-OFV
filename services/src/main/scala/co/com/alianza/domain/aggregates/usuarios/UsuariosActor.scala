@@ -79,7 +79,7 @@ class UsuariosActorSupervisor extends Actor with ActorLogging {
 /**
  *
  */
-class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
+class UsuariosActor extends Actor with ActorLogging {
 
   import scala.concurrent.ExecutionContext
 

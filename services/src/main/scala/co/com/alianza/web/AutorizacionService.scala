@@ -13,19 +13,21 @@ import co.com.alianza.infrastructure.dto.Usuario
 import co.com.alianza.util.token.{ AesUtil, Token }
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import enumerations.CryptoAesParameters
-import spray.routing.{ RequestContext, Directives }
+import spray.routing.{ Directives, RequestContext }
 import co.com.alianza.app.AlianzaCommons
-import co.com.alianza.infrastructure.messages.{ InvalidarToken, AutorizarUrl }
+import co.com.alianza.infrastructure.messages.{ AutorizarUrl, InvalidarToken }
 import co.com.alianza.infrastructure.cache.CacheHelper
-import akka.actor.ActorSystem
+import akka.actor.{ ActorSelection, ActorSystem }
+
 import scala.concurrent.ExecutionContext
 import com.typesafe.config.Config
 import co.com.alianza.app.MainActors
 import co.com.alianza.infrastructure.cache.CachingDirectiveAlianza
+
 import scala.concurrent.Future
 import scalaz.Validation
 
-class AutorizacionService extends Directives with AlianzaCommons with CacheHelper {
+case class AutorizacionService(kafkaActor: ActorSelection) extends Directives with AlianzaCommons with CacheHelper {
 
   import CachingDirectiveAlianza._
   implicit val system: ActorSystem = MainActors.system

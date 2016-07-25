@@ -1,12 +1,12 @@
 package co.com.alianza.web
 
+import akka.actor.ActorSelection
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
-import spray.routing.{ RequestContext, Directives }
-
-import co.com.alianza.app.{ AlianzaActors, MainActors, CrossHeaders, AlianzaCommons }
+import spray.routing.{ Directives, RequestContext }
+import co.com.alianza.app.{ AlianzaActors, AlianzaCommons, CrossHeaders, MainActors }
 import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
@@ -14,7 +14,7 @@ import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 /**
  * Created by manuel on 7/01/15.
  */
-class PermisosTransaccionalesService extends Directives with AlianzaCommons with CrossHeaders with AlianzaActors {
+case class PermisosTransaccionalesService(kafkaActor: ActorSelection) extends Directives with AlianzaCommons with CrossHeaders {
   import PermisosTransaccionalesJsonSupport._
 
   val permisoTransaccionalActorSupervisor = MainActors.system.actorSelection(MainActors.permisoTransaccionalActorSupervisor.path)
@@ -33,9 +33,13 @@ class PermisosTransaccionalesService extends Directives with AlianzaCommons with
                     val token = r.request.headers.find(header => header.name equals "token")
                     val usuario = DataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
 
-                    requestWithFutureAuditing[PersistenceException, GuardarPermisosAgenteMessage](r, AuditingHelper.fiduciariaTopic, AuditingHelper.actualizarPermisosAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, Some(permisosMessage))
+                    requestWithFutureAuditing[PersistenceException, GuardarPermisosAgenteMessage](r, AuditingHelper.fiduciariaTopic,
+                      AuditingHelper.actualizarPermisosAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, Some(permisosMessage))
                 } {
-                  requestExecute(permisosMessage.copy(idClienteAdmin = if (user.tipoCliente == clienteAdministrador) Some(user.id) else None), permisoTransaccionalActorSupervisor)
+                  requestExecute(
+                    permisosMessage.copy(idClienteAdmin = if (user.tipoCliente == clienteAdministrador) Some(user.id) else None),
+                    permisoTransaccionalActorSupervisor
+                  )
                 }
             }
         }
@@ -49,7 +53,8 @@ class PermisosTransaccionalesService extends Directives with AlianzaCommons with
                 r: RequestContext =>
                   val token = r.request.headers.find(header => header.name equals "token")
                   val usuario = DataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
-                  requestWithFutureAuditing[PersistenceException, Any](r, AuditingHelper.fiduciariaTopic, AuditingHelper.consultaPermisosAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, None)
+                  requestWithFutureAuditing[PersistenceException, Any](r, AuditingHelper.fiduciariaTopic, AuditingHelper.consultaPermisosAgenteEmpresarialIndex,
+                    ip.value, kafkaActor, usuario, None)
               } {
                 requestExecute(ConsultarPermisosAgenteLoginMessage(user), permisoTransaccionalActorSupervisor)
               }
@@ -66,7 +71,8 @@ class PermisosTransaccionalesService extends Directives with AlianzaCommons with
                   r: RequestContext =>
                     val token = r.request.headers.find(header => header.name equals "token")
                     val usuario = DataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
-                    requestWithFutureAuditing[PersistenceException, Any](r, AuditingHelper.fiduciariaTopic, AuditingHelper.consultaPermisosAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, None)
+                    requestWithFutureAuditing[PersistenceException, Any](r, AuditingHelper.fiduciariaTopic,
+                      AuditingHelper.consultaPermisosAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, None)
                 } {
                   requestExecute(ConsultarPermisosAgenteMessage(idAgente), permisoTransaccionalActorSupervisor)
                 }

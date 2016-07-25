@@ -12,7 +12,8 @@ import spray.routing.{ Directives, RequestContext }
  *
  * @author seven4n
  */
-class PreguntasAutovalidacionService(preguntasAutovalidacionActor: ActorSelection) extends Directives with AlianzaCommons with CrossHeaders {
+case class PreguntasAutovalidacionService(kafkaActor: ActorSelection, preguntasAutovalidacionActor: ActorSelection) extends Directives with AlianzaCommons
+    with CrossHeaders {
 
   import co.com.alianza.infrastructure.messages.PreguntasAutovalidacionMessagesJsonSupport._
 
