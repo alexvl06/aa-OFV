@@ -16,10 +16,10 @@ import scala.util.{ Failure, Success }
 class AutenticacionService(autenticacionRepositorio: AutenticacionRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with AlianzaActors
     with DomainJsonFormatters {
 
-  val autenticacion = "autenticacion"
+  val autenticar = "autenticar"
 
   val route: Route = {
-    pathPrefix(autenticacion) {
+    pathPrefix(autenticar) {
       pathEndOrSingleSlash {
         autenticarUsuarioIndividual
       }
