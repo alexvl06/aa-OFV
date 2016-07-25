@@ -9,9 +9,10 @@ import spray.routing._
 import spray.util.LoggingContext
 import co.com.alianza.web._
 import co.com.alianza.webvalidarPinClienteAdmin.PinService
-import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionDriverRepository, AutenticacionRepository }
+import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionRepository }
 
-case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, kafkaActor: ActorSelection, preguntasValidacionActor : ActorSelection)(implicit val system: ActorSystem) extends HttpServiceActor
+case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, kafkaActor: ActorSelection, preguntasValidacionActor : ActorSelection,
+                         usuariosActor : ActorSelection)(implicit val system: ActorSystem) extends HttpServiceActor
   with RouteConcatenation with CrossHeaders with ServiceAuthorization with ActorLogging {
 
   import system.dispatcher
@@ -22,7 +23,7 @@ case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, kafkaActor:
       new AutenticacionService().route ~
       new ConfrontaService().route ~
       new EnumeracionService().route ~
-      new UsuarioService().route ~
+      new UsuarioService(usuariosActor).route ~
       new ReglasContrasenasService().route ~
       new PinService().route ~
       new AdministrarContrasenaService().insecureRoute ~

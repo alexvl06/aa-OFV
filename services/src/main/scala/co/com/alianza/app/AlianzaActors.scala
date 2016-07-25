@@ -9,7 +9,7 @@ trait AlianzaActors {
   implicit val timeout = Timeout(120 seconds)
 
   //Definicion de actores
-  val usuariosActor = MainActors.system.actorSelection(MainActors.usuariosActorSupervisor.path + "/usuariosActor")
+  //val usuariosActor = MainActors.system.actorSelection(MainActors.usuariosActorSupervisor.path + "/usuariosActor")
   val confrontaActor = MainActors.system.actorSelection(MainActors.confrontaActorSupervisor.path + "/confrontaActor")
   val autenticacionActor = MainActors.system.actorSelection(MainActors.autenticacionActorSupervisor.path + "/autenticacionActor")
   val autenticacionUsuarioEmpresaActor = MainActors.system.actorSelection(MainActors.autenticacionActorSupervisor.path + "/autenticacionUsuarioEmpresaActor")

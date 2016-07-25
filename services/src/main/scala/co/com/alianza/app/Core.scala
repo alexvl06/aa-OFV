@@ -54,6 +54,7 @@ trait BootedCore extends Core {
 trait CoreActors {
   this: Core with BootedCore =>
   val usuariosActorSupervisor = system.actorOf(Props[UsuariosActorSupervisor], "UsuariosActorSupervisor")
+  val usuariosActor = system.actorSelection(usuariosActorSupervisor.path)
   val confrontaActorSupervisor = system.actorOf(Props[ConfrontaActorSupervisor], "confrontaActorSupervisor")
   val consultaClienteActorSupervisor = system.actorOf(Props[ConsultaClienteActorSupervisor], "consultaClienteActorSupervisor")
   val autenticacionActorSupervisor = system.actorOf(Props[AutenticacionActorSupervisor], "autenticacionActorSupervisor")

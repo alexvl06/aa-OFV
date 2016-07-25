@@ -27,8 +27,6 @@ import com.typesafe.config.Config
 object ValidacionesUsuario {
 
   import co.com.alianza.util.json.MarshallableImplicits._
-  implicit val _: ExecutionContext = MainActors.dataAccesEx
-  implicit private val config: Config = MainActors.conf
 
   def validacionReglasClaveAutoregistro(message: UsuarioMessage): Future[Validation[ErrorValidacion, Unit.type]] = {
 
