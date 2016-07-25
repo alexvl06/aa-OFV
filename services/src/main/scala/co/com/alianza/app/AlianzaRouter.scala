@@ -1,6 +1,6 @@
 package co.com.alianza.app
 
-import akka.actor.{ ActorLogging, ActorSystem }
+import akka.actor.{ ActorLogging, ActorRef, ActorSelection, ActorSystem }
 import co.com.alianza.app.handler.CustomRejectionHandler
 import co.com.alianza.infrastructure.security.ServiceAuthorization
 import co.com.alianza.web.empresa.{ AdministrarContrasenaEmpresaService, UsuarioEmpresaService }
@@ -9,16 +9,16 @@ import spray.routing._
 import spray.util.LoggingContext
 import co.com.alianza.web._
 import co.com.alianza.webvalidarPinClienteAdmin.PinService
-import portal.transaccional.autenticacion.service.drivers.autenticacion.AutenticacionDriverRepository
+import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionDriverRepository, AutenticacionRepository }
 
-class AlianzaRouter() extends HttpServiceActor with RouteConcatenation with CrossHeaders with ServiceAuthorization with ActorLogging {
+case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, kafkaActor: ActorSelection)(implicit val system: ActorSystem) extends HttpServiceActor
+  with RouteConcatenation with CrossHeaders with ServiceAuthorization with ActorLogging {
 
-  implicit val conf: Config = MainActors.conf
-  implicit val system: ActorSystem = MainActors.system
-  implicit val contextAuthorization = MainActors.ex
+  import system.dispatcher
 
   val routes =
     new AutorizacionService().route ~
+      portal.transaccional.autenticacion.service.web.autenticacion.AutenticacionService(autenticacionRepo, kafkaActor).route ~
       new AutenticacionService().route ~
       new ConfrontaService().route ~
       new EnumeracionService().route ~

@@ -30,9 +30,10 @@ import AuthenticationFailedRejection.{ CredentialsRejected, CredentialsMissing }
 trait ServiceAuthorization {
   self: ActorLogging =>
 
-  implicit val contextAuthorization: ExecutionContext
-  implicit val conf: Config
   implicit val system: ActorSystem
+  import system.dispatcher
+
+  implicit val conf: Config = system.settings.config
   implicit val timeout: Timeout = Timeout(10 seconds)
 
   def authenticateUser: ContextAuthenticator[UsuarioAuth] = {

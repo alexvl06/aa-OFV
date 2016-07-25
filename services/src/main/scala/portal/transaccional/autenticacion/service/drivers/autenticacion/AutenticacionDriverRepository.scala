@@ -57,7 +57,7 @@ case class AutenticacionDriverRepository(usuarioRepo: UsuarioRepository)(implici
   //TODO: Completar
   def autenticarUsuarioEmpresa(tipoIdentificacion: Int, numeroIdentificacion: String, password: String, usuario: String, clientIp: String): Future[String] = {
     for {
-      usuario <- usuarioRepo.getUsuarioByIdentificacion(numeroIdentificacion)
+      usuario <- usuarioRepo.getByIdentificacion(numeroIdentificacion)
       token <- Future {
         //Token.generarToken(cliente.wcli_nombre, cliente.wcli_dir_correo, cliente.wcli_person,
         //  usuario.ipUltimoIngreso.getOrElse(clientIp), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), expiracionInactividad)
