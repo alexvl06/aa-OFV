@@ -1,4 +1,4 @@
-package co.com.alianza.persistence.conn.pg
+package portal.transaccional.fiduciaria.autenticacion.storage.conn.pg
 
 import javax.sql.DataSource
 

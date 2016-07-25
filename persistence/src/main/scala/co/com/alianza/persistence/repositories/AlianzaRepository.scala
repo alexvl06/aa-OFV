@@ -4,7 +4,7 @@ import scala.concurrent.{ Await, ExecutionContext, Future }
 import scala.util.{ Failure, Success, Try }
 import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 import co.com.alianza.exceptions.{ LevelException, PersistenceException, TechnicalLevel, TimeoutLevel }
-import co.com.alianza.persistence.conn.pg.DataBaseAccessPGAlianza
+import portal.transaccional.fiduciaria.autenticacion.storage.conn.pg.DataBaseAccessPGAlianza
 import slick.jdbc.JdbcBackend.Database
 import slick.jdbc.JdbcBackend.Session
 //import com.mchange.v2.resourcepool.TimeoutException

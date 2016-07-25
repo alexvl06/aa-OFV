@@ -1,4 +1,4 @@
-package portal.transaccional.fiduciaria.autenticacion.storage.daos
+package portal.transaccional.fiduciaria.autenticacion.storage.daos.daos.driver
 
 import java.sql.Timestamp
 
@@ -33,7 +33,7 @@ trait UsuarioDAOs {
 
   def updateIncorrectEntries(idUsuario: Int, numeroIntentos: Int): Future[Int]
 
-  def updateLastIp(numeroIdentificacion: String, ipActual: String): Future[Int]
+  def updateLastIp (numeroIdentificacion: String, ipActual: String): Future[Int]
 
   def updateLastDate(numeroIdentificacion: String, fechaActual: Timestamp): Future[Int]
 

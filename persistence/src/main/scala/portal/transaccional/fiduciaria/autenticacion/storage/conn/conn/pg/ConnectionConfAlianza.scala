@@ -1,6 +1,6 @@
-package co.com.alianza.persistence.conn.pg
+package portal.transaccional.fiduciaria.autenticacion.storage.conn.pg
 
-import co.com.alianza.persistence.conn.ConnectionConf
+import portal.transaccional.fiduciaria.autenticacion.storage.conn.ConnectionConf
 import com.typesafe.config.Config
 
 /**

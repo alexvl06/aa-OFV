@@ -1,4 +1,4 @@
-package co.com.alianza.persistence.conn
+package portal.transaccional.fiduciaria.autenticacion.storage.conn
 
 /**
  * Datos basicos de conexion a base de datos
