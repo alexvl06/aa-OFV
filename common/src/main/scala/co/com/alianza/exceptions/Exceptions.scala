@@ -1,5 +1,7 @@
 package co.com.alianza.exceptions
 
+import scala.util.control.NoStackTrace
+
 /**
  * Representa un error general al ejecutar alguna petición
  *
@@ -7,7 +9,6 @@ package co.com.alianza.exceptions
  * @param level Nivel de la excepción
  * @param message Mensaje de la excepción
  * @param currentTime Fecha generación del error
- *
  * @author seven4n
  */
 sealed class AlianzaException(val cause: Throwable, val level: LevelException, val message: String, val currentTime: Long) extends RuntimeException(cause)
@@ -19,7 +20,6 @@ sealed class AlianzaException(val cause: Throwable, val level: LevelException, v
  * @param level Nivel de la excepción
  * @param message Mensaje de la excepción
  * @param currentTime Fecha generación del error
- *
  * @author seven4n
  */
 case class PersistenceException(override val cause: Throwable, override val level: LevelException, override val message: String, override val currentTime: Long) extends AlianzaException(cause, level, message, currentTime)
@@ -32,7 +32,6 @@ case class PersistenceException(override val cause: Throwable, override val leve
  * @param level Nivel de la excepción
  * @param message Mensaje de la excepción
  * @param currentTime Fecha generación del error
- *
  * @author seven4n
  */
 case class ServiceException(override val cause: Throwable, override val level: LevelException, override val message: String, override val currentTime: Long, statusCode: Option[Int] = None, bodyError: Option[String] = None) extends AlianzaException(cause, level, message, currentTime)
@@ -49,3 +48,5 @@ object ServiceException {
 object AlianzaException {
   def apply(exc: Throwable, level: LevelException, message: String) = new AlianzaException(exc, level, message, currentTime = System.currentTimeMillis())
 }
+
+case class ValidacionException(codigo: String, descripcion: String) extends NoStackTrace

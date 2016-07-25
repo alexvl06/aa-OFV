@@ -1,18 +1,19 @@
 package co.com.alianza.app
 
-import akka.actor.{ ActorSystem, ActorLogging }
+import akka.actor.{ ActorLogging, ActorSystem }
 import co.com.alianza.app.handler.CustomRejectionHandler
 import co.com.alianza.infrastructure.security.ServiceAuthorization
-import co.com.alianza.web._
-import co.com.alianza.web.empresa.{ UsuarioEmpresaService, AdministrarContrasenaEmpresaService }
+import co.com.alianza.web.empresa.{ AdministrarContrasenaEmpresaService, UsuarioEmpresaService }
 import com.typesafe.config.Config
 import spray.routing._
-import spray.http.StatusCodes
 import spray.util.LoggingContext
-import StatusCodes._
+import co.com.alianza.web._
 import co.com.alianza.webvalidarPinClienteAdmin.PinService
+import portal.transaccional.autenticacion.service.drivers.autenticacion.AutenticacionDriverRepository
+import portal.transaccional.autenticacion.service.web.autenticacion.AutenticacionService
 
-class AlianzaRouter extends HttpServiceActor with RouteConcatenation with CrossHeaders with ServiceAuthorization with ActorLogging {
+class AlianzaRouter(autenticacionRepo: AutenticacionDriverRepository)
+    extends HttpServiceActor with RouteConcatenation with CrossHeaders with ServiceAuthorization with ActorLogging {
 
   implicit val conf: Config = MainActors.conf
   implicit val system: ActorSystem = MainActors.system
@@ -20,7 +21,7 @@ class AlianzaRouter extends HttpServiceActor with RouteConcatenation with CrossH
 
   val routes =
     new AutorizacionService().route ~
-      new AutenticacionService().route ~
+      new AutenticacionService(autenticacionRepo).route ~
       new ConfrontaService().route ~
       new EnumeracionService().route ~
       new UsuarioService().route ~
@@ -33,7 +34,7 @@ class AlianzaRouter extends HttpServiceActor with RouteConcatenation with CrossH
             new ActualizacionService().route(user) ~
             new HorarioEmpresaService().route(user) ~
             new AdministrarContrasenaService().secureRoute(user) ~
-            new AutenticacionService().routeAutenticado(user) ~
+            /*new AutenticacionService().routeAutenticado(user) ~*/
             //TO-DO Cambiar al authenticate de cliente empresarial o agente
             new AdministrarContrasenaEmpresaService().secureRouteEmpresa(user) ~
             new UsuarioEmpresaService().secureUserRouteEmpresa(user) ~

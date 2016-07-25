@@ -1,12 +1,11 @@
 package co.com.alianza.app
 
-import akka.actor.{ Props, ActorSystem }
+import akka.actor.{ ActorSystem, Props }
 import akka.cluster.Cluster
 import co.com.alianza.domain.aggregates.actualizacion.ActualizacionActorSupervisor
-
-import co.com.alianza.domain.aggregates.confronta.{ ConfrontaActorSupervisor }
+import co.com.alianza.domain.aggregates.confronta.ConfrontaActorSupervisor
 import co.com.alianza.domain.aggregates.autenticacion._
-import co.com.alianza.domain.aggregates.empresa.{ HorarioEmpresaActorSupervisor, ContrasenasClienteAdminActorSupervisor, AgenteEmpresarialActorSupervisor, ContrasenasAgenteEmpresarialActorSupervisor }
+import co.com.alianza.domain.aggregates.empresa.{ AgenteEmpresarialActorSupervisor, ContrasenasAgenteEmpresarialActorSupervisor, ContrasenasClienteAdminActorSupervisor, HorarioEmpresaActorSupervisor }
 import co.com.alianza.domain.aggregates.autovalidacion.PreguntasAutovalidacionSupervisor
 import co.com.alianza.domain.aggregates.usuarios.UsuariosActorSupervisor
 import co.com.alianza.domain.aggregates.autoregistro.ConsultaClienteActorSupervisor
@@ -15,9 +14,11 @@ import co.com.alianza.domain.aggregates.ips.IpsUsuarioActorSupervisor
 import co.com.alianza.domain.aggregates.pin.PinActorSupervisor
 import co.com.alianza.domain.aggregates.permisos.PermisoTransaccionalActorSupervisor
 import co.com.alianza.infrastructure.auditing.KafkaActorSupervisor
+import co.com.alianza.persistence.config.DBConfig
+import co.com.alianza.persistence.config.pg.PGConfig
 import co.com.alianza.util.ConfigApp
-
 import com.typesafe.config.Config
+import portal.transaccional.autenticacion.service.drivers.autenticacion.AutenticacionDriverRepository
 
 /**
  * Method override for the unique ActorSystem instance
@@ -68,7 +69,16 @@ trait CoreActors { this: Core =>
   val preguntasAutovalidacionSupervisor = system.actorOf(Props[PreguntasAutovalidacionSupervisor], "preguntasAutovalidacionSupervisor")
 }
 
+trait Storage extends StoragePGAlianzaDB with BootedCore {
+  lazy val autenticacionRepo = AutenticacionDriverRepository()(ex)
+}
+
+private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
+  implicit val config: DBConfig = new DBConfig with PGConfig
+}
+
 /**
  *
  */
 object MainActors extends BootedCore with CoreActors
+

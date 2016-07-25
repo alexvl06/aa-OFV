@@ -1,33 +1,60 @@
 package portal.transaccional.autenticacion.service.web.autenticacion
 
-import co.com.alianza.app.{ AlianzaCommons, CrossHeaders }
-import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.infrastructure.auditing.AuditingHelper
-import co.com.alianza.infrastructure.auditing.AuditingHelper._
-import co.com.alianza.infrastructure.dto.security.UsuarioAuth
-import co.com.alianza.infrastructure.messages._
-import spray.routing.{ Directives, RequestContext }
+import co.com.alianza.exceptions.{ PersistenceException, ValidacionException }
+import portal.transaccional.autenticacion.service.drivers.autenticacion.AutenticacionRepository
+import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
+import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
+import spray.http.StatusCodes
+import spray.routing._
+import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{ Failure, Success }
 
-class AutenticacionService extends Directives with AlianzaCommons with CrossHeaders {
+class AutenticacionService(autenticacionRepositorio: AutenticacionRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul
+    with DomainJsonFormatters {
 
-  import AutenticacionMessagesJsonSupport._
+  val autenticacion = "autenticacion"
 
-  def route = {
-    path("autenticar") {
-      post {
-        entity(as[AutenticarMessage]) {
-          autenticacion =>
-            respondWithMediaType(mediaType) {
-              clientIP { ip =>
-                mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.autenticacionIndex, ip.value, kafkaActor, autenticacion.copy(password = null, clientIp = Some(ip.value)))) {
-                  val mensajeAutenticacion = autenticacion.copy(clientIp = Some(ip.value))
-                  requestExecute(mensajeAutenticacion, autenticacionActor)
-                }
-              }
-            }
-        }
+  val route: Route = {
+    pathPrefix(autenticacion) {
+      pathEndOrSingleSlash {
+        autenticarUsuarioIndividual
       }
-    } ~ path("autenticarUsuarioEmpresa") {
+    }
+  }
+
+  private def autenticarUsuarioIndividual = {
+    post {
+      entity(as[AutenticacionRequest]) {
+        autenticacionRequest =>
+          clientIP { ip =>
+            val request = autenticacionRequest.copy(clientIp = ip.value)
+            val resultado: Future[String] =
+              autenticacionRepositorio.autenticar(request.tipoIdentificacion, request.numeroIdentificacion, request.password, request.clientIp)
+
+            //TODO: Arreglar Auditoria
+            //mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.autenticacionIndex, ip.value, "algo", autenticacionRequest.copy(password = null, clientIp = ip.value))) {
+            onComplete(resultado) {
+              case Success(value) => complete(value.toString)
+              case Failure(ex) => execution(ex)
+            }
+            //}
+
+          }
+      }
+    }
+  }
+
+  def execution(ex: Any): StandardRoute = {
+    ex match {
+      case ex: ValidacionException => complete((StatusCodes.InternalServerError, ex))
+      case ex: PersistenceException => complete((StatusCodes.InternalServerError, "Error inesperado"))
+      case ex: Throwable => complete((StatusCodes.InternalServerError, "Error inesperado"))
+    }
+  }
+
+}
+/*
+  path("autenticarUsuarioEmpresa") {
       post {
         entity(as[AutenticarUsuarioEmpresarialMessage]) {
           autenticacion =>
@@ -43,8 +70,9 @@ class AutenticacionService extends Directives with AlianzaCommons with CrossHead
       }
     }
   }
+  */
 
-  def routeAutenticado(user: UsuarioAuth) = {
+/*def routeAutenticado(user: UsuarioAuth) = {
     path("ponerIpHabitual") {
       post {
         entity(as[AgregarIPHabitualUsuario]) {
@@ -72,5 +100,4 @@ class AutenticacionService extends Directives with AlianzaCommons with CrossHead
         }
       }
     }
-  }
-}
+  }*/ 
