@@ -1,6 +1,7 @@
 package portal.transaccional.autenticacion.service.drivers.configuracion
 
 import co.com.alianza.infrastructure.dto.Configuracion
+import co.com.alianza.persistence.entities.Configuraciones
 
 import scala.concurrent.Future
 
@@ -9,6 +10,6 @@ import scala.concurrent.Future
  */
 trait ConfiguracionRepository {
 
-  //def buscarConfiguracion(llave: String): Future[Configuracion]
+  def getConfiguracion(llave: String): Future[Configuraciones]
 
 }

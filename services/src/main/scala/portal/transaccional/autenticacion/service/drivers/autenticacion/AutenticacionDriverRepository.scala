@@ -7,6 +7,7 @@ import co.com.alianza.infrastructure.dto.Cliente
 import co.com.alianza.persistence.entities.Usuario
 import co.com.alianza.util.token.Token
 import portal.transaccional.autenticacion.service.drivers.cliente.ClienteRepository
+import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionRepository
 import portal.transaccional.autenticacion.service.drivers.usuario.UsuarioRepository
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -14,7 +15,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * Created by hernando on 25/07/16.
  */
-case class AutenticacionDriverRepository(usuarioRepo: UsuarioRepository, clienteCoreRepo: ClienteRepository)(implicit val ex: ExecutionContext) extends AutenticacionRepository {
+case class AutenticacionDriverRepository(usuarioRepo: UsuarioRepository, clienteCoreRepo: ClienteRepository, configuracionRepo: ConfiguracionRepository)(implicit val ex: ExecutionContext) extends AutenticacionRepository {
 
   /**
    * Flujo:
@@ -50,7 +51,7 @@ case class AutenticacionDriverRepository(usuarioRepo: UsuarioRepository, cliente
       fechaUltimoIngreso <- usuarioRepo.actualizarFechaIngreso(numeroIdentificacion, new Timestamp((new Date).getTime))
       //inactividadConfig <- ValidationT(buscarConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave))
       //TODO: depende de las configuraciones
-      token <- generarToken(usuario, cliente, ip, "") //TODO: agregar el timpo de inactividad
+      token <- generarToken(usuario, cliente, ip, "") //TODO: agregar el timpo de inactividad(configuraciones)
       asociarToken <- usuarioRepo.actualizarToken(numeroIdentificacion, token)
       //sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
       //validacionPreguntas <- ValidationT(validarPreguntasUsuario(usuario.id.get))
