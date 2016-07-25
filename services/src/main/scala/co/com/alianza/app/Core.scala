@@ -76,6 +76,7 @@ trait CoreActors {
   val kafkaActor = system.actorSelection(kafkaActorSupervisor.path)
 
   val preguntasAutovalidacionSupervisor = system.actorOf(Props[PreguntasAutovalidacionSupervisor], "preguntasAutovalidacionSupervisor")
+  val preguntasAutovalidacion = system.actorSelection(preguntasAutovalidacionSupervisor.path)
 }
 
 trait Storage extends StoragePGAlianzaDB with BootedCore {

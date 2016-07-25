@@ -33,6 +33,6 @@ trait AlianzaActors {
   val actualizacionActor = MainActors.system.actorSelection(MainActors.actualizacionActorSupervisor.path + "/actualizacionActor")
   val kafkaActor = MainActors.system.actorSelection(MainActors.kafkaActorSupervisor.path)
 
-  val preguntasAutovalidacionActor = MainActors.system.actorSelection(MainActors.preguntasAutovalidacionSupervisor.path + "/preguntasAutovalidacionActor")
+  //val preguntasAutovalidacionActor = MainActors.system.actorSelection(MainActors.preguntasAutovalidacionSupervisor.path + "/preguntasAutovalidacionActor")
 
 }
