@@ -11,7 +11,8 @@ import scala.concurrent.Future
 /**
  * Created by alexandra on 25/07/16.
  */
-case class UsuarioDAO()(implicit dcConfig: DBConfig) extends TableQuery(new UsuarioTable(_)) {
+case class UsuarioDAO()(implicit dcConfig: DBConfig) extends TableQuery(new UsuarioTable(_))
+    with UsuarioDAOs {
 
   import dcConfig.db._
   import dcConfig.profile.api._

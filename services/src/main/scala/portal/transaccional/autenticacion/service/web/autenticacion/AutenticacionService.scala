@@ -6,10 +6,14 @@ import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJson
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import spray.http.StatusCodes
 import spray.routing._
+import co.com.alianza.app.AlianzaActors
+import co.com.alianza.infrastructure.auditing.AuditingHelper
+import co.com.alianza.infrastructure.auditing.AuditingHelper.requestWithAuiditing
+
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success }
 
-class AutenticacionService(autenticacionRepositorio: AutenticacionRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul
+class AutenticacionService(autenticacionRepositorio: AutenticacionRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with AlianzaActors
     with DomainJsonFormatters {
 
   val autenticacion = "autenticacion"
@@ -30,15 +34,12 @@ class AutenticacionService(autenticacionRepositorio: AutenticacionRepository)(im
             val request = autenticacionRequest.copy(clientIp = ip.value)
             val resultado: Future[String] =
               autenticacionRepositorio.autenticar(request.tipoIdentificacion, request.numeroIdentificacion, request.password, request.clientIp)
-
-            //TODO: Arreglar Auditoria
-            //mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.autenticacionIndex, ip.value, "algo", autenticacionRequest.copy(password = null, clientIp = ip.value))) {
-            onComplete(resultado) {
-              case Success(value) => complete(value.toString)
-              case Failure(ex) => execution(ex)
+            mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.autenticacionIndex, ip.value, kafkaActor, autenticacionRequest.copy(password = null, clientIp = ip.value))) {
+              onComplete(resultado) {
+                case Success(value) => complete(value.toString)
+                case Failure(ex) => execution(ex)
+              }
             }
-            //}
-
           }
       }
     }

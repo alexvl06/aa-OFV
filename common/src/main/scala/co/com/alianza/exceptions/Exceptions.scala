@@ -51,4 +51,3 @@ object AlianzaException {
   def apply(exc: Throwable, level: LevelException, message: String) = new AlianzaException(exc, level, message, currentTime = System.currentTimeMillis())
 }
 
-case class ValidacionException(codigo: String, descripcion: String) extends NoStackTrace
