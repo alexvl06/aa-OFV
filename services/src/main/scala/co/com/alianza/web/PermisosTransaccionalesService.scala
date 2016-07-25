@@ -14,10 +14,11 @@ import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 /**
  * Created by manuel on 7/01/15.
  */
-case class PermisosTransaccionalesService(kafkaActor: ActorSelection) extends Directives with AlianzaCommons with CrossHeaders {
+case class PermisosTransaccionalesService (kafkaActor: ActorSelection, permisoTransaccionalActor : ActorSelection)
+  extends Directives with AlianzaCommons with CrossHeaders {
+
   import PermisosTransaccionalesJsonSupport._
 
-  val permisoTransaccionalActorSupervisor = MainActors.system.actorSelection(MainActors.permisoTransaccionalActorSupervisor.path)
   val rutaPermisosTx = "permisosTx"
   val permisosLogin = "permisosLogin"
 
@@ -36,6 +37,8 @@ case class PermisosTransaccionalesService(kafkaActor: ActorSelection) extends Di
                     requestWithFutureAuditing[PersistenceException, GuardarPermisosAgenteMessage](r, AuditingHelper.fiduciariaTopic,
                       AuditingHelper.actualizarPermisosAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, Some(permisosMessage))
                 } {
+                  requestExecute(permisosMessage.copy(idClienteAdmin = if (user.tipoCliente == clienteAdministrador) Some(user.id) else None),
+                    permisoTransaccionalActor)
                   requestExecute(
                     permisosMessage.copy(idClienteAdmin = if (user.tipoCliente == clienteAdministrador) Some(user.id) else None),
                     permisoTransaccionalActorSupervisor
@@ -56,7 +59,7 @@ case class PermisosTransaccionalesService(kafkaActor: ActorSelection) extends Di
                   requestWithFutureAuditing[PersistenceException, Any](r, AuditingHelper.fiduciariaTopic, AuditingHelper.consultaPermisosAgenteEmpresarialIndex,
                     ip.value, kafkaActor, usuario, None)
               } {
-                requestExecute(ConsultarPermisosAgenteLoginMessage(user), permisoTransaccionalActorSupervisor)
+                requestExecute(ConsultarPermisosAgenteLoginMessage(user), permisoTransaccionalActor)
               }
           }
         }
@@ -74,7 +77,7 @@ case class PermisosTransaccionalesService(kafkaActor: ActorSelection) extends Di
                     requestWithFutureAuditing[PersistenceException, Any](r, AuditingHelper.fiduciariaTopic,
                       AuditingHelper.consultaPermisosAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, None)
                 } {
-                  requestExecute(ConsultarPermisosAgenteMessage(idAgente), permisoTransaccionalActorSupervisor)
+                  requestExecute(ConsultarPermisosAgenteMessage(idAgente), permisoTransaccionalActor)
                 }
             }
           }

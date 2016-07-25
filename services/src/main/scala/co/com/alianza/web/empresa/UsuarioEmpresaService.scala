@@ -1,13 +1,14 @@
 package co.com.alianza.web.empresa
 
+import akka.actor.ActorSelection
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.infrastructure.messages.GuardarPermisosAgenteMessage
 import co.com.alianza.infrastructure.messages.empresa.{ CrearAgenteEMessageJsonSupport, CrearAgenteMessage }
-import spray.routing.{ RequestContext, Directives }
-import co.com.alianza.app.{ AlianzaActors, CrossHeaders, AlianzaCommons }
+import spray.routing.{ Directives, RequestContext }
+import co.com.alianza.app.{ AlianzaActors, AlianzaCommons, CrossHeaders }
 import co.com.alianza.infrastructure.messages.empresa._
 import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{ DataAccessAdapter => DataAccessAdapterClienteAdmin }
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
@@ -15,7 +16,7 @@ import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 /**
  * Created by s4n on 17/12/14.
  */
-class UsuarioEmpresaService extends Directives with AlianzaCommons with CrossHeaders with AlianzaActors {
+case class UsuarioEmpresaService (kafkaActor: ActorSelection, agenteEmpresarialActor : ActorSelection) extends Directives with AlianzaCommons with CrossHeaders {
 
   import CrearAgenteEMessageJsonSupport._
 

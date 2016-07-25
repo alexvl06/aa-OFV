@@ -2,6 +2,7 @@ package co.com.alianza.domain.aggregates.autovalidacion
 
 import akka.actor.{ Actor, ActorLogging, ActorSystem, Props }
 import akka.routing.RoundRobinPool
+import co.com.alianza.app.{ AlianzaActors, MainActors }
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.domain.aggregates.usuarios.{ ErrorAutovalidacion, ErrorValidacion }
 import co.com.alianza.exceptions.PersistenceException
@@ -13,6 +14,7 @@ import co.com.alianza.persistence.entities.RespuestasAutovalidacionUsuario
 import co.com.alianza.util.FutureResponse
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.transformers.ValidationT
+import com.typesafe.config.Config
 import enumerations.ConfiguracionEnum
 import spray.http.StatusCodes._
 
@@ -40,12 +42,15 @@ class PreguntasAutovalidacionSupervisor extends Actor with ActorLogging {
   }
 }
 
-case class PreguntasAutovalidacionActor()(implicit val system: ActorSystem) extends Actor with ActorLogging with FutureResponse {
+case class PreguntasAutovalidacionActor(implicit val system: ActorSystem) extends Actor with ActorLogging with FutureResponse {
 
-  import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.{ errorValidacion, toErrorValidation }
-  import system.dispatcher
-
+  import scala.concurrent.ExecutionContext
   import scalaz.std.AllInstances._
+  import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.errorValidacion
+  import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.toErrorValidation
+
+  implicit val _: ExecutionContext = context.dispatcher
+  private val config: Config = MainActors.conf
 
   def receive = {
 

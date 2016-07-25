@@ -23,15 +23,15 @@ trait AlianzaActors {
   val ipsUsuarioActor = MainActors.system.actorSelection(MainActors.ipsUsuarioActorSupervisor.path + "/ipsUsuarioActor")
   val horarioEmpresaActor = MainActors.system.actorSelection(MainActors.horarioEmpresaActorSupervisor.path + "/horarioEmpresaActor")
 
-  val pinActor = MainActors.system.actorSelection(MainActors.pinActorSupervisor.path + "/pinActor")
-  val pinUsuarioEmpresarialAdminActor = MainActors.system.actorSelection(MainActors.pinActorSupervisor.path + "/pinUsuarioEmpresarialAdminActor")
-  val pinUsuarioAgenteEmpresarialActor = MainActors.system.actorSelection(MainActors.pinActorSupervisor.path + "/pinUsuarioAgenteEmpresarialActor")
-  val sesionActor = MainActors.system.actorSelection(MainActors.sesionActorSupervisor.path + "/sesionActor")
-  val agenteEmpresarialActor = MainActors.system.actorSelection(MainActors.agenteEmpresarialActorSupervisor.path + "/agenteEmpresarialActor")
-  val permisoTransaccionalActor = MainActors.system.actorSelection(MainActors.permisoTransaccionalActorSupervisor.path + "/permisoTransaccionalActor")
+  //val pinActor = MainActors.system.actorSelection(MainActors.pinActorSupervisor.path + "/pinActor")
+  //val pinUsuarioEmpresarialAdminActor = MainActors.system.actorSelection(MainActors.pinActorSupervisor.path + "/pinUsuarioEmpresarialAdminActor")
+  //val pinUsuarioAgenteEmpresarialActor = MainActors.system.actorSelection(MainActors.pinActorSupervisor.path + "/pinUsuarioAgenteEmpresarialActor")
+  //val sesionActor = MainActors.system.actorSelection(MainActors.sesionActorSupervisor.path + "/sesionActor")
+  //val agenteEmpresarialActor = MainActors.system.actorSelection(MainActors.agenteEmpresarialActorSupervisor.path + "/agenteEmpresarialActor")
+  //val permisoTransaccionalActor = MainActors.system.actorSelection(MainActors.permisoTransaccionalActorSupervisor.path + "/permisoTransaccionalActor")
 
-  val actualizacionActor = MainActors.system.actorSelection(MainActors.actualizacionActorSupervisor.path + "/actualizacionActor")
-  val kafkaActor = MainActors.system.actorSelection(MainActors.kafkaActorSupervisor.path)
+  //val actualizacionActor = MainActors.system.actorSelection(MainActors.actualizacionActorSupervisor.path + "/actualizacionActor")
+  //val kafkaActor = MainActors.system.actorSelection(MainActors.kafkaActorSupervisor.path)
 
   //val preguntasAutovalidacionActor = MainActors.system.actorSelection(MainActors.preguntasAutovalidacionSupervisor.path + "/preguntasAutovalidacionActor")
 

@@ -27,7 +27,7 @@ import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasena
 import portal.transaccional.autenticacion.service.drivers.usuario.UsuarioDriverRepository
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.core.ClienteDAO
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.daos.driver.UsuarioDAO
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ IpUsuarioDAO, ReglaContrasenaDAO, ConfiguracionDAO }
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ ConfiguracionDAO, IpUsuarioDAO, ReglaContrasenaDAO }
 
 /**
  * Method override for the unique ActorSystem instance
@@ -69,17 +69,33 @@ trait CoreActors {
   val contrasenasActorSupervisor = system.actorOf(Props[ContrasenasActorSupervisor], "contrasenasActorSupervisor")
   val contrasenasAgenteEmpresarialActorSupervisor = system.actorOf(Props[ContrasenasAgenteEmpresarialActorSupervisor], "contrasenasAgenteEmpresarialActorSupervisor")
   val contrasenasClienteAdminActorSupervisor = system.actorOf(Props[ContrasenasClienteAdminActorSupervisor], "contrasenasClienteAdminActorSupervisor")
+
   val ipsUsuarioActorSupervisor = system.actorOf(Props[IpsUsuarioActorSupervisor], "ipsUsuarioActorSupervisor")
+
   val horarioEmpresaActorSupervisor = system.actorOf(Props[HorarioEmpresaActorSupervisor], "horarioEmpresaActorSupervisor")
+
+
   val pinActorSupervisor = system.actorOf(Props[PinActorSupervisor], "PinActorSupervisor")
+  val pinActor = MainActors.system.actorSelection(pinActorSupervisor.path)
+  val pinUsuarioEmpresarialAdminActor = MainActors.system.actorSelection(MainActors.pinActorSupervisor.path + "/pinUsuarioEmpresarialAdminActor")
+  val pinUsuarioAgenteEmpresarialActor = MainActors.system.actorSelection(MainActors.pinActorSupervisor.path + "/pinUsuarioAgenteEmpresarialActor")
+
   val sesionActorSupervisor = system.actorOf(Props[SesionActorSupervisor], "sesionActorSupervisor")
+
   val agenteEmpresarialActorSupervisor = system.actorOf(Props[AgenteEmpresarialActorSupervisor], "agenteEmpresarialActorSupervisor")
+  val agenteEmpresarialActor = MainActors.system.actorSelection(MainActors.agenteEmpresarialActorSupervisor.path)
+
   val permisoTransaccionalActorSupervisor = system.actorOf(Props[PermisoTransaccionalActorSupervisor], "permisoTransaccionalActorSupervisor")
+  val permisoTransaccionalActor = MainActors.system.actorSelection(MainActors.permisoTransaccionalActorSupervisor.path)
+
   val actualizacionActorSupervisor = system.actorOf(Props[ActualizacionActorSupervisor], "actualizacionActorSupervisor")
+  val actualizacionActor = system.actorSelection(actualizacionActorSupervisor.path)
+
   val kafkaActorSupervisor = system.actorOf(Props[KafkaActorSupervisor], "kafkaActorSupervisor")
   val kafkaActor = system.actorSelection(kafkaActorSupervisor.path)
+
   val preguntasAutovalidacionSupervisor = system.actorOf(Props[PreguntasAutovalidacionSupervisor], "preguntasAutovalidacionSupervisor")
-  val preguntasAutovalidacion = system.actorSelection(preguntasAutovalidacionSupervisor.path)
+  val preguntasAutovalidacionActor = system.actorSelection(preguntasAutovalidacionSupervisor.path)
 }
 
 trait Storage extends StoragePGAlianzaDB with BootedCore {

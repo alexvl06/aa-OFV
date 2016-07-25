@@ -1,7 +1,9 @@
 package co.com.alianza.web
 
+import akka.actor.ActorSelection
 import co.com.alianza.app.{ AlianzaCommons, CrossHeaders }
-import co.com.alianza.infrastructure.auditing.AuditingHelper
+import co.com.alianza.domain.aggregates.actualizacion.ActualizacionActor
+import co.com.alianza.infrastructure.auditing.{ AuditingHelper, KafkaActor }
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.infrastructure.dto.DatosCliente
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
@@ -9,12 +11,12 @@ import co.com.alianza.infrastructure.messages._
 import co.com.alianza.util.clave.Crypto
 import enumerations.AppendPasswordUser
 import spray.http.StatusCodes
-import spray.routing.{ RequestContext, Directives }
+import spray.routing.{ Directives, RequestContext }
 
 /**
  * Created by david on 16/06/14.
  */
-class ActualizacionService extends Directives with AlianzaCommons with CrossHeaders {
+case class ActualizacionService (actualizacionActor: ActorSelection, kafkaActor: ActorSelection)extends Directives with AlianzaCommons with CrossHeaders {
 
   val datos = "datos"
   val paises = "paises"

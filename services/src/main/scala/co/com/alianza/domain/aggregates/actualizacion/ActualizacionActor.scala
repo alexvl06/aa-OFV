@@ -42,7 +42,7 @@ class ActualizacionActorSupervisor extends Actor with ActorLogging {
 
 }
 
-class ActualizacionActor extends Actor with ActorLogging with AlianzaActors {
+class ActualizacionActor extends Actor with ActorLogging {
   import scala.concurrent.ExecutionContext
   implicit val _: ExecutionContext = context.dispatcher
   import co.com.alianza.util.json.MarshallableImplicits._

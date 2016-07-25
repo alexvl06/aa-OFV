@@ -16,7 +16,7 @@ object ConfigApp {
 
   private val encryptor = new StandardPBEStringEncryptor()
   val network = NetworkInterface.getByName("eth0")
-  val mac = (network.getHardwareAddress() map { "%02x" format _ } mkString "-")
+  val mac = network.getHardwareAddress map { "%02x" format _ } mkString "-"
   encryptor.setPassword(mac.toUpperCase + "4l14nz4_p4ss_k3y")
 
   private val cryptoProps = new EncryptableProperties(encryptor)
