@@ -3,16 +3,16 @@ package co.com.alianza.app
 import akka.actor.{ ActorSystem, Props }
 import akka.cluster.Cluster
 import co.com.alianza.domain.aggregates.actualizacion.ActualizacionActorSupervisor
-import co.com.alianza.domain.aggregates.confronta.ConfrontaActorSupervisor
 import co.com.alianza.domain.aggregates.autenticacion._
-import co.com.alianza.domain.aggregates.empresa.{ AgenteEmpresarialActorSupervisor, ContrasenasAgenteEmpresarialActorSupervisor, ContrasenasClienteAdminActorSupervisor, HorarioEmpresaActorSupervisor }
-import co.com.alianza.domain.aggregates.autovalidacion.PreguntasAutovalidacionSupervisor
-import co.com.alianza.domain.aggregates.usuarios.UsuariosActorSupervisor
 import co.com.alianza.domain.aggregates.autoregistro.ConsultaClienteActorSupervisor
+import co.com.alianza.domain.aggregates.autovalidacion.PreguntasAutovalidacionSupervisor
+import co.com.alianza.domain.aggregates.confronta.ConfrontaActorSupervisor
 import co.com.alianza.domain.aggregates.contrasenas.ContrasenasActorSupervisor
+import co.com.alianza.domain.aggregates.empresa.{ AgenteEmpresarialActorSupervisor, ContrasenasAgenteEmpresarialActorSupervisor, ContrasenasClienteAdminActorSupervisor, HorarioEmpresaActorSupervisor }
 import co.com.alianza.domain.aggregates.ips.IpsUsuarioActorSupervisor
-import co.com.alianza.domain.aggregates.pin.PinActorSupervisor
 import co.com.alianza.domain.aggregates.permisos.PermisoTransaccionalActorSupervisor
+import co.com.alianza.domain.aggregates.pin.PinActorSupervisor
+import co.com.alianza.domain.aggregates.usuarios.UsuariosActorSupervisor
 import co.com.alianza.infrastructure.auditing.KafkaActorSupervisor
 import co.com.alianza.persistence.config.DBConfig
 import co.com.alianza.persistence.config.pg.PGConfig
@@ -20,7 +20,7 @@ import co.com.alianza.util.ConfigApp
 import com.typesafe.config.Config
 import portal.transaccional.autenticacion.service.drivers.autenticacion.AutenticacionDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuario.UsuarioDriverRepository
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.UsuarioDAO
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.daos.driver.UsuarioDAO
 
 /**
  * Method override for the unique ActorSystem instance
@@ -48,7 +48,8 @@ trait BootedCore extends Core {
 /**
  * Template project actors instantiation
  */
-trait CoreActors { this: Core =>
+trait CoreActors {
+  this: Core =>
   val usuariosActorSupervisor = system.actorOf(Props[UsuariosActorSupervisor], "UsuariosActorSupervisor")
   val confrontaActorSupervisor = system.actorOf(Props[ConfrontaActorSupervisor], "confrontaActorSupervisor")
   val consultaClienteActorSupervisor = system.actorOf(Props[ConsultaClienteActorSupervisor], "consultaClienteActorSupervisor")

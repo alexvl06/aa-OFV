@@ -11,8 +11,7 @@ import co.com.alianza.web._
 import co.com.alianza.webvalidarPinClienteAdmin.PinService
 import portal.transaccional.autenticacion.service.drivers.autenticacion.AutenticacionDriverRepository
 
-class AlianzaRouter(autenticacionRepositorio: AutenticacionDriverRepository)
-    extends HttpServiceActor with RouteConcatenation with CrossHeaders with ServiceAuthorization with ActorLogging {
+class AlianzaRouter() extends HttpServiceActor with RouteConcatenation with CrossHeaders with ServiceAuthorization with ActorLogging {
 
   implicit val conf: Config = MainActors.conf
   implicit val system: ActorSystem = MainActors.system
