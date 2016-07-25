@@ -35,12 +35,12 @@ trait Core {
 trait BootedCore extends Core {
   import scala.concurrent.ExecutionContext
 
+  implicit lazy val conf: Config = ConfigApp.conf
+
   implicit lazy val system = ActorSystem("alianza-fid-auth-service")
   implicit lazy val ex: ExecutionContext = system.dispatcher
   implicit lazy val cluster = Cluster.get(system)
   implicit lazy val dataAccesEx: ExecutionContext = system.dispatcher
-
-  implicit lazy val conf: Config = ConfigApp.conf
 
   sys.addShutdownHook(system.terminate())
 }
@@ -86,4 +86,3 @@ private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
  *
  */
 object MainActors extends BootedCore with CoreActors
-

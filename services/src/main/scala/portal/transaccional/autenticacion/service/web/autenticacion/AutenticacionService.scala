@@ -6,7 +6,7 @@ import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJson
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import spray.http.StatusCodes
 import spray.routing._
-import co.com.alianza.app.AlianzaActors
+import co.com.alianza.app.{ AlianzaActors, CrossHeaders }
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper.requestWithAuiditing
 
@@ -14,7 +14,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success }
 
 class AutenticacionService(autenticacionRepositorio: AutenticacionRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with AlianzaActors
-    with DomainJsonFormatters {
+    with DomainJsonFormatters with CrossHeaders {
 
   val autenticar = "autenticar"
 
@@ -54,51 +54,3 @@ class AutenticacionService(autenticacionRepositorio: AutenticacionRepository)(im
   }
 
 }
-/*
-  path("autenticarUsuarioEmpresa") {
-      post {
-        entity(as[AutenticarUsuarioEmpresarialMessage]) {
-          autenticacion =>
-            respondWithMediaType(mediaType) {
-              clientIP { ip =>
-                mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.autenticacionIndex, ip.value, kafkaActor, autenticacion.copy(password = null, clientIp = Some(ip.value)))) {
-                  val mensajeAutenticacion = autenticacion.copy(clientIp = Some(ip.value))
-                  requestExecute(mensajeAutenticacion, autenticacionUsuarioEmpresaActor)
-                }
-              }
-            }
-        }
-      }
-    }
-  }
-  */
-
-/*def routeAutenticado(user: UsuarioAuth) = {
-    path("ponerIpHabitual") {
-      post {
-        entity(as[AgregarIPHabitualUsuario]) {
-          ponerIpHabitual =>
-            respondWithMediaType(mediaType) {
-              clientIP { ip =>
-
-                if (user.tipoCliente.id == TiposCliente.clienteAdministrador.id) {
-                  requestExecute(AgregarIPHabitualUsuarioEmpresarialAdmin(Some(user.id), Some(ip.value)), autenticacionUsuarioEmpresaActor)
-                } else if (user.tipoCliente.id == TiposCliente.agenteEmpresarial.id) {
-                  requestExecute(AgregarIPHabitualUsuarioEmpresarialAgente(Some(user.id), Some(ip.value)), autenticacionUsuarioEmpresaActor)
-                } else {
-                  val nuevoPonerIpHabitual: AgregarIPHabitualUsuario = ponerIpHabitual.copy(clientIp = Some(ip.value), idUsuario = Some(user.id))
-                  requestExecute(nuevoPonerIpHabitual, autenticacionActor)
-                }
-
-              }
-            }
-        }
-      }
-    } ~ path("actualizarInactividad") {
-      post {
-        complete {
-          "ok"
-        }
-      }
-    }
-  }*/ 

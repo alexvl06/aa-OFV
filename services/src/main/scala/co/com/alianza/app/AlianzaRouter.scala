@@ -10,9 +10,8 @@ import spray.util.LoggingContext
 import co.com.alianza.web._
 import co.com.alianza.webvalidarPinClienteAdmin.PinService
 import portal.transaccional.autenticacion.service.drivers.autenticacion.AutenticacionDriverRepository
-import portal.transaccional.autenticacion.service.web.autenticacion.AutenticacionService
 
-class AlianzaRouter(autenticacionRepo: AutenticacionDriverRepository)
+class AlianzaRouter(autenticacionRepositorio: AutenticacionDriverRepository)
     extends HttpServiceActor with RouteConcatenation with CrossHeaders with ServiceAuthorization with ActorLogging {
 
   implicit val conf: Config = MainActors.conf
@@ -21,7 +20,7 @@ class AlianzaRouter(autenticacionRepo: AutenticacionDriverRepository)
 
   val routes =
     new AutorizacionService().route ~
-      new AutenticacionService(autenticacionRepo).route ~
+      new AutenticacionService().route ~
       new ConfrontaService().route ~
       new EnumeracionService().route ~
       new UsuarioService().route ~
@@ -34,7 +33,7 @@ class AlianzaRouter(autenticacionRepo: AutenticacionDriverRepository)
             new ActualizacionService().route(user) ~
             new HorarioEmpresaService().route(user) ~
             new AdministrarContrasenaService().secureRoute(user) ~
-            /*new AutenticacionService().routeAutenticado(user) ~*/
+            new AutenticacionService().routeAutenticado(user) ~
             //TO-DO Cambiar al authenticate de cliente empresarial o agente
             new AdministrarContrasenaEmpresaService().secureRouteEmpresa(user) ~
             new UsuarioEmpresaService().secureUserRouteEmpresa(user) ~
