@@ -5,14 +5,13 @@ import oracle.jdbc.OracleTypes
 import portal.transaccional.fiduciaria.autenticacion.storage.helpers.AlianzaStorageHelper
 
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.Try
 
 /**
  * Created by alexandra on 25/07/16.
  */
 case class ClienteDAO()(implicit val ec: ExecutionContext, dcConfig: DBConfig) extends AlianzaStorageHelper {
 
-  def consultaCliente(numDocumento: String): Future[Try[String]] = transaction {
+  def consultaCliente(numDocumento: String): Future[String] = transaction {
     connection =>
       connection.setAutoCommit(false)
       val callString = "{ call sf_qportal_web.Cliente(?,?,?,?) }"
@@ -21,10 +20,10 @@ case class ClienteDAO()(implicit val ec: ExecutionContext, dcConfig: DBConfig) e
       callableStatement registerOutParameter (2, OracleTypes.VARCHAR)
       callableStatement.setString(3, numDocumento)
       callableStatement registerOutParameter (4, OracleTypes.CURSOR)
-      buildResult(connection, callableStatement, 4)
+      buildResult(connection, callableStatement, 4).get
   }
 
-  def consultaGrupo(idGrupo: Int): Future[Try[String]] = transaction {
+  def consultaGrupo(idGrupo: Int): Future[String] = transaction {
     connection =>
       connection.setAutoCommit(false)
       val callString = "{ call sf_qportal_web.validar_grupo_cliente(?,?,?,?) }"
@@ -33,7 +32,7 @@ case class ClienteDAO()(implicit val ec: ExecutionContext, dcConfig: DBConfig) e
       callableStatement registerOutParameter (2, OracleTypes.VARCHAR)
       callableStatement.setInt(3, idGrupo)
       callableStatement registerOutParameter (4, OracleTypes.CURSOR)
-      buildResult(connection, callableStatement, 4)
+      buildResult(connection, callableStatement, 4).get
   }
 
 }

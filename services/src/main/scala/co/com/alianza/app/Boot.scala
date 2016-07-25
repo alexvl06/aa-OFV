@@ -7,7 +7,7 @@ object Boot extends App with HostBinding with Storage {
   import spray.can.Http
   val sys = MainActors.system
   implicit val _ = sys.dispatcher
-  val rootService = sys.actorOf(Props(new AlianzaRouter(autenticacionRepo)), name = "api-AlianzaRouter")
+  val rootService = sys.actorOf(Props(new AlianzaRouter()), name = "api-AlianzaRouter")
 
   IO(Http)(sys) ! Http.Bind(rootService, interface = machineIp(), port = portNumber(args))
 }
