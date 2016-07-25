@@ -9,6 +9,7 @@ import scala.concurrent.Future
 /**
  * Created by alexandra on 25/07/16.
  */
+//TODO: falta crear el trait
 case class PerfilUsuarioDAO()(implicit dcConfig: DBConfig) extends TableQuery(new PerfilUsuarioTable(_)) {
 
   import dcConfig.db._

@@ -1,14 +1,17 @@
 package portal.transaccional.autenticacion.service.drivers.configuracion
 
-import co.com.alianza.infrastructure.dto.Configuracion
+import co.com.alianza.persistence.entities.Configuraciones
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.ConfiguracionDAOs
 
-import scala.concurrent.{ Future, ExecutionContext }
+import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * Created by hernando on 25/07/16.
  */
-case class ConfiguracionDriverRepository(implicit val ex: ExecutionContext) extends ConfiguracionRepository {
+case class ConfiguracionDriverRepository(configuracionDAO: ConfiguracionDAOs)(implicit val ex: ExecutionContext) extends ConfiguracionRepository {
 
-  //def buscarConfiguracion(llave: String): Future[Configuracion]
+  def getConfiguracion(llave: String): Future[Configuraciones] = {
+    configuracionDAO.getByKey(llave)
+  }
 
 }
