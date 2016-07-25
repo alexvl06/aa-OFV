@@ -6,13 +6,13 @@ import slick.lifted.TableQuery
 
 import scala.concurrent.Future
 
-class PinUsuarioDAO (implicit val dcConfig : DBConfig)extends TableQuery(new PinUsuarioTable(_)){
+class PinUsuarioDAO(implicit val dcConfig: DBConfig) extends TableQuery(new PinUsuarioTable(_)) {
 
   import dcConfig.db._
   import dcConfig.profile.api._
 
   def create(pinUsuario: PinUsuario): Future[Int] = {
-      run((this returning this.map(_.id.get)) += pinUsuario)
+    run((this returning this.map(_.id.get)) += pinUsuario)
   }
 
 }
