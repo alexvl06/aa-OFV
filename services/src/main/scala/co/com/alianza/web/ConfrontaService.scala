@@ -1,12 +1,13 @@
 package co.com.alianza.web
 
+import akka.actor.ActorSelection
 import spray.routing.Directives
 import co.com.alianza.app.AlianzaCommons
-import co.com.alianza.infrastructure.messages.{ ValidarCuestionarioDesbloqueoRequestMessage, ObtenerCuestionarioAdicionalRequestMessage, ObtenerCuestionarioRequestMessage, ValidarCuestionarioRequestMessage }
+import co.com.alianza.infrastructure.messages.{ ObtenerCuestionarioAdicionalRequestMessage, ObtenerCuestionarioRequestMessage, ValidarCuestionarioDesbloqueoRequestMessage, ValidarCuestionarioRequestMessage }
 import spray.http.StatusCodes._
 import co.com.alianza.util.json.JsonUtil
 
-class ConfrontaService extends Directives with AlianzaCommons {
+case class ConfrontaService (confrontaActor : ActorSelection) extends Directives with AlianzaCommons {
   import co.com.alianza.infrastructure.messages.ConfrontaMessagesJsonSupport._
 
   val confronta = "confronta"

@@ -27,7 +27,7 @@ import co.com.alianza.infrastructure.cache.CachingDirectiveAlianza
 import scala.concurrent.Future
 import scalaz.Validation
 
-case class AutorizacionService (kafkaActor: ActorSelection) extends Directives with AlianzaCommons with CacheHelper {
+case class AutorizacionService(kafkaActor: ActorSelection) extends Directives with AlianzaCommons with CacheHelper {
 
   import CachingDirectiveAlianza._
   implicit val system: ActorSystem = MainActors.system

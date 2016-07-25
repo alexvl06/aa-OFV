@@ -15,7 +15,7 @@ import enumerations.AppendPasswordUser
  *
  * @author seven4n
  */
-case class UsuarioService (kafkaActor: ActorSelection, usuariosActor : ActorSelection) extends Directives with AlianzaCommons with CrossHeaders {
+case class UsuarioService(kafkaActor: ActorSelection, usuariosActor: ActorSelection) extends Directives with AlianzaCommons with CrossHeaders {
 
   import UsuariosMessagesJsonSupport._
 

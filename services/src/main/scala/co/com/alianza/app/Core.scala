@@ -59,6 +59,7 @@ trait CoreActors {
   val usuariosActorSupervisor = system.actorOf(Props[UsuariosActorSupervisor], "UsuariosActorSupervisor")
   val usuariosActor = system.actorSelection(usuariosActorSupervisor.path)
   val confrontaActorSupervisor = system.actorOf(Props[ConfrontaActorSupervisor], "confrontaActorSupervisor")
+  val confrontaActor = system.actorSelection(confrontaActorSupervisor.path)
   val consultaClienteActorSupervisor = system.actorOf(Props[ConsultaClienteActorSupervisor], "consultaClienteActorSupervisor")
   val autenticacionActorSupervisor = system.actorOf(Props[AutenticacionActorSupervisor], "autenticacionActorSupervisor")
   val autorizacionActorSupervisor = system.actorOf(Props[AutorizacionActorSupervisor], "autorizacionActorSupervisor")

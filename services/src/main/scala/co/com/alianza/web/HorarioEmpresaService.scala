@@ -13,7 +13,7 @@ import spray.routing.{ Directives, RequestContext }
 /**
  * @author hernando on 16/06/15.
  */
-case class HorarioEmpresaService (kafkaActor: ActorSelection) extends Directives with AlianzaCommons with CrossHeaders {
+case class HorarioEmpresaService(kafkaActor: ActorSelection) extends Directives with AlianzaCommons with CrossHeaders {
 
   import HorarioEmpresaJsonSupport._
 
