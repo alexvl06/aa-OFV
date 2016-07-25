@@ -55,7 +55,7 @@ trait BootedCore extends Core {
  * Template project actors instantiation
  */
 trait CoreActors {
-  this: Core =>
+  this: Core with BootedCore =>
   val usuariosActorSupervisor = system.actorOf(Props[UsuariosActorSupervisor], "UsuariosActorSupervisor")
   val confrontaActorSupervisor = system.actorOf(Props[ConfrontaActorSupervisor], "confrontaActorSupervisor")
   val consultaClienteActorSupervisor = system.actorOf(Props[ConsultaClienteActorSupervisor], "consultaClienteActorSupervisor")
@@ -74,8 +74,12 @@ trait CoreActors {
   val permisoTransaccionalActorSupervisor = system.actorOf(Props[PermisoTransaccionalActorSupervisor], "permisoTransaccionalActorSupervisor")
 
   val actualizacionActorSupervisor = system.actorOf(Props[ActualizacionActorSupervisor], "actualizacionActorSupervisor")
+
   val kafkaActorSupervisor = system.actorOf(Props[KafkaActorSupervisor], "kafkaActorSupervisor")
+  val kafkaActor = system.actorSelection(kafkaActorSupervisor.path)
+
   val preguntasAutovalidacionSupervisor = system.actorOf(Props[PreguntasAutovalidacionSupervisor], "preguntasAutovalidacionSupervisor")
+  val preguntasAutovalidacion = system.actorSelection(preguntasAutovalidacionSupervisor.path)
 }
 
 trait Storage extends StoragePGAlianzaDB with BootedCore {

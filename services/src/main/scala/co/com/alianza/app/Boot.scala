@@ -1,15 +1,15 @@
 package co.com.alianza.app
 
 import akka.actor.{ Props }
+import akka.io.IO
+import spray.can.Http
 
-object Boot extends App with HostBinding with Storage {
-  import akka.io.IO
-  import spray.can.Http
-  val sys = MainActors.system
-  implicit val _ = sys.dispatcher
-  val rootService = sys.actorOf(Props(new AlianzaRouter()), name = "api-AlianzaRouter")
+object Boot extends App with HostBinding with Core with BootedCore with CoreActors with Storage {
 
-  IO(Http)(sys) ! Http.Bind(rootService, interface = machineIp(), port = portNumber(args))
+  implicit val ec = system.dispatcher
+  private val rootService = system.actorOf(Props(AlianzaRouter(autenticacionRepo, kafkaActor, preguntasAutovalidacion )), name = "api-AlianzaRouter")
+
+  IO(Http)(system) ! Http.Bind(rootService, interface = machineIp(), port = portNumber(args))
 }
 
 trait HostBinding {

@@ -1,27 +1,24 @@
 package co.com.alianza.domain.aggregates.autovalidacion
 
-import akka.actor.{ Props, ActorLogging, Actor }
+import akka.actor.{ Actor, ActorLogging, ActorSystem, Props }
 import akka.routing.RoundRobinPool
-import co.com.alianza.app.{ AlianzaActors, MainActors }
 import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.domain.aggregates.usuarios.{ ErrorValidacion, ErrorAutovalidacion }
+import co.com.alianza.domain.aggregates.usuarios.{ ErrorAutovalidacion, ErrorValidacion }
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.autovalidacion.DataAccessAdapter
 import co.com.alianza.infrastructure.anticorruption.configuraciones.{ DataAccessAdapter => DataAdapterConfiguracion }
-
-import co.com.alianza.infrastructure.dto.{ Configuracion, RespuestaCompleta, Respuesta, Pregunta }
+import co.com.alianza.infrastructure.dto.{ Configuracion, Pregunta, Respuesta, RespuestaCompleta }
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.persistence.entities.RespuestasAutovalidacionUsuario
 import co.com.alianza.util.FutureResponse
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.transformers.ValidationT
-import com.typesafe.config.Config
 import enumerations.ConfiguracionEnum
 import spray.http.StatusCodes._
 
 import scala.concurrent.Future
 import scala.util._
-import scalaz.{ Success => zSuccess, Failure => zFailure, Validation }
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 
 class PreguntasAutovalidacionSupervisor extends Actor with ActorLogging {
   import akka.actor.OneForOneStrategy
@@ -43,15 +40,12 @@ class PreguntasAutovalidacionSupervisor extends Actor with ActorLogging {
   }
 }
 
-class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaActors with FutureResponse {
+case class PreguntasAutovalidacionActor()(implicit val system: ActorSystem) extends Actor with ActorLogging with FutureResponse {
 
-  import scala.concurrent.ExecutionContext
+  import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.{ errorValidacion, toErrorValidation }
+  import system.dispatcher
+
   import scalaz.std.AllInstances._
-  import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.errorValidacion
-  import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.toErrorValidation
-  implicit val _: ExecutionContext = context.dispatcher
-
-  private val config: Config = MainActors.conf
 
   def receive = {
 

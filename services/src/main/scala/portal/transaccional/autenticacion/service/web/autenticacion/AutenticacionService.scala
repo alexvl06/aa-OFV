@@ -1,5 +1,6 @@
 package portal.transaccional.autenticacion.service.web.autenticacion
 
+import akka.actor.{ ActorRef, ActorSelection }
 import co.com.alianza.exceptions.{ PersistenceException, ValidacionException }
 import portal.transaccional.autenticacion.service.drivers.autenticacion.AutenticacionRepository
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
@@ -9,11 +10,13 @@ import spray.routing._
 import co.com.alianza.app.{ AlianzaActors, CrossHeaders }
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper.requestWithAuiditing
+
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success }
 
-class AutenticacionService(autenticacionRepositorio: AutenticacionRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with AlianzaActors
-    with DomainJsonFormatters with CrossHeaders {
+case class AutenticacionService(
+  autenticacionRepositorio: AutenticacionRepository, kafkaActor: ActorSelection
+)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   val autenticar = "autenticar"
   val autenticarUsuarioEmpresa = "autenticarUsuarioEmpresa"
