@@ -18,10 +18,8 @@ class KafkaActorSupervisor extends Actor with ActorLogging {
   val kafkaActor = context.actorOf(Props[KafkaActor].withRouter(RoundRobinPool(nrOfInstances = 10)), "kafkaActor")
 
   def receive = {
-
     case message: Any =>
       kafkaActor forward message
-
   }
 
   override val supervisorStrategy = OneForOneStrategy() {
