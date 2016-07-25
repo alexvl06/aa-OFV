@@ -13,4 +13,8 @@ trait UsuarioRepository {
 
   def validarEstados(estadoUsuario: Int): Future[Boolean]
 
+  def validarContrasena(contrasena: String, contrasenaUsuario: String, idUsuario: Int): Future[Boolean]
+
+  def actualizarToken(numeroIdentificacion: String, token: String): Future[Int]
+
 }

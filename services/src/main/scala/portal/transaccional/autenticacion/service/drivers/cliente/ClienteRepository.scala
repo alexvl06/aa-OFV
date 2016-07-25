@@ -11,4 +11,6 @@ trait ClienteRepository {
 
   def getCliente(documento: String): Future[Cliente]
 
+  def validarEstado(cliente: Cliente): Future[Boolean]
+
 }

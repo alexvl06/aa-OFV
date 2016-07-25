@@ -15,11 +15,14 @@ import co.com.alianza.domain.aggregates.pin.PinActorSupervisor
 import co.com.alianza.domain.aggregates.usuarios.UsuariosActorSupervisor
 import co.com.alianza.infrastructure.auditing.KafkaActorSupervisor
 import co.com.alianza.persistence.config.DBConfig
+import co.com.alianza.persistence.config.oracle.OracleConfig
 import co.com.alianza.persistence.config.pg.PGConfig
 import co.com.alianza.util.ConfigApp
 import com.typesafe.config.Config
 import portal.transaccional.autenticacion.service.drivers.autenticacion.AutenticacionDriverRepository
+import portal.transaccional.autenticacion.service.drivers.cliente.ClienteDriverCoreRepository
 import portal.transaccional.autenticacion.service.drivers.usuario.UsuarioDriverRepository
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.core.ClienteDAO
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.daos.driver.UsuarioDAO
 
 /**
@@ -74,13 +77,16 @@ trait CoreActors {
 
 trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val usuarioRepo = UsuarioDriverRepository(usuarioDAO)(ex)
-  lazy val autenticacionRepo = AutenticacionDriverRepository(usuarioRepo)(ex)
+  lazy val clienteRepo = ClienteDriverCoreRepository(clienteDAO)(ex)
+  lazy val autenticacionRepo = AutenticacionDriverRepository(usuarioRepo, clienteRepo)(ex)
 }
 
 private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
   implicit val config: DBConfig = new DBConfig with PGConfig
+  implicit val configCore: DBConfig = new DBConfig with OracleConfig
 
-  lazy val usuarioDAO = UsuarioDAO()
+  lazy val usuarioDAO = UsuarioDAO()(config)
+  lazy val clienteDAO = ClienteDAO()(ex, configCore)
 }
 
 /**

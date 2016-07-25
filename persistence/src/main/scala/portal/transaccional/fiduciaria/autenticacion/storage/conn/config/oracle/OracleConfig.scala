@@ -10,7 +10,7 @@ import slick.jdbc.JdbcBackend.Database
  */
 trait OracleConfig extends DBConfig {
 
-  implicit lazy val driver: OracleProfile = OracleProfile
-  implicit lazy val DB: Database = Database.forDataSource(DataBaseAccessOracleAlianza.ds)
+  implicit lazy val profile: OracleProfile = OracleProfile
+  implicit lazy val db: Database = Database.forDataSource(DataBaseAccessOracleAlianza.ds)
 
 }
