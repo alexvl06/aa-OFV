@@ -1,7 +1,5 @@
 package co.com.alianza.util.token
 
-import java.text.SimpleDateFormat
-
 import com.nimbusds.jose.util.Base64URL
 import org.joda.time.{ DateTime }
 import java.util.Date

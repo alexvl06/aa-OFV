@@ -347,7 +347,7 @@ class AutenticacionActor extends Actor with ActorLogging {
     val token: String = Token.generarToken(cliente.wcli_nombre, cliente.wcli_dir_correo, cliente.wcli_person,
       usuario.ipUltimoIngreso.getOrElse(ipCliente), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), expiracionInactividad)
     val future: Future[Validation[PersistenceException, Int]] = UsDataAdapter.asociarTokenUsuario(usuario.identificacion, token)
-    future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap { _ => Validation.success(token)})
+    future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap { _ => Validation.success(token) })
   }
 
   /**

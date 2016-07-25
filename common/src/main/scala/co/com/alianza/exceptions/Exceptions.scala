@@ -1,5 +1,7 @@
 package co.com.alianza.exceptions
 
+import scala.util.control.NoStackTrace
+
 /**
  * Representa un error general al ejecutar alguna petición
  *
@@ -36,6 +38,8 @@ case class PersistenceException(override val cause: Throwable, override val leve
  * @author seven4n
  */
 case class ServiceException(override val cause: Throwable, override val level: LevelException, override val message: String, override val currentTime: Long, statusCode: Option[Int] = None, bodyError: Option[String] = None) extends AlianzaException(cause, level, message, currentTime)
+
+case class ValidacionException(codigo: String, descripcion: String) extends NoStackTrace
 
 object PersistenceException {
   def apply(exc: Throwable, level: LevelException, message: String) = new PersistenceException(exc, level, message, currentTime = System.currentTimeMillis())
