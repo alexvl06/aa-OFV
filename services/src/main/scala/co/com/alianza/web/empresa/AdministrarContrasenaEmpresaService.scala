@@ -13,10 +13,13 @@ import co.com.alianza.util.clave.Crypto
 import enumerations.AppendPasswordUser
 import spray.routing.{ Directives, RequestContext }
 
+import scala.concurrent.ExecutionContext
+
 /**
  * Created by S4N on 17/12/14.
  */
-case class AdministrarContrasenaEmpresaService(kafkaActor: ActorSelection, contrasenasAgenteEmpresarialActor: ActorSelection, contrasenasClienteAdminActor: ActorSelection) extends Directives with AlianzaCommons {
+case class AdministrarContrasenaEmpresaService(kafkaActor: ActorSelection, contrasenasAgenteEmpresarialActor: ActorSelection,
+    contrasenasClienteAdminActor: ActorSelection)(implicit val ec: ExecutionContext) extends Directives with AlianzaCommons {
 
   import AdministrarContrasenaEmpresaMessagesJsonSupport._
 

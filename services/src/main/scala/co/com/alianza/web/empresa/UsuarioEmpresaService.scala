@@ -13,10 +13,13 @@ import co.com.alianza.infrastructure.messages.empresa._
 import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{ DataAccessAdapter => DataAccessAdapterClienteAdmin }
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 
+import scala.concurrent.ExecutionContext
+
 /**
  * Created by s4n on 17/12/14.
  */
-case class UsuarioEmpresaService(kafkaActor: ActorSelection, agenteEmpresarialActor: ActorSelection) extends Directives with AlianzaCommons with CrossHeaders {
+case class UsuarioEmpresaService(kafkaActor: ActorSelection, agenteEmpresarialActor: ActorSelection)(implicit val ec: ExecutionContext)
+    extends Directives with AlianzaCommons with CrossHeaders {
 
   import CrearAgenteEMessageJsonSupport._
 

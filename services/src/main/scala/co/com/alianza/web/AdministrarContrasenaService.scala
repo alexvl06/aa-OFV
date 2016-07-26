@@ -21,7 +21,8 @@ import scala.concurrent.ExecutionContext
 /**
  * Created by seven4n on 01/09/14.
  */
-case class AdministrarContrasenaService(kafkaActor: ActorSelection, contrasenasActor: ActorSelection, contrasenasAgenteEmpresarialActor: ActorSelection, contrasenasClienteAdminActor: ActorSelection)(implicit val ec: ExecutionContext) extends Directives with AlianzaCommons {
+case class AdministrarContrasenaService(kafkaActor: ActorSelection, contrasenasActor: ActorSelection, contrasenasAgenteEmpresarialActor: ActorSelection,
+    contrasenasClienteAdminActor: ActorSelection)(implicit val ec: ExecutionContext) extends Directives with AlianzaCommons {
 
   import AdministrarContrasenaMessagesJsonSupport._
 

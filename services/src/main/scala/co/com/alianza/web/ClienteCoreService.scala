@@ -5,11 +5,13 @@ import spray.routing.Directives
 import co.com.alianza.app.AlianzaCommons
 import co.com.alianza.infrastructure.messages.{ ExisteClienteCoreMessage, ExisteClienteCoreMessagesJsonSupport }
 
+import scala.concurrent.ExecutionContext
+
 /**
  *
  * @author smontanez
  */
-case class ClienteCoreService(consultaClienteActor: ActorSelection) extends Directives with AlianzaCommons {
+case class ClienteCoreService(consultaClienteActor: ActorSelection)(implicit val ec: ExecutionContext) extends Directives with AlianzaCommons {
 
   import ExisteClienteCoreMessagesJsonSupport._
 

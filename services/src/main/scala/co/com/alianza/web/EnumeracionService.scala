@@ -6,9 +6,11 @@ import co.com.alianza.app.AlianzaCommons
 import co.com.alianza.infrastructure.messages.AutenticacionMessagesJsonSupport
 import co.com.alianza.infrastructure.messages.AutenticarMessage
 import co.com.alianza.util.json.JsonUtil
-import enumerations.{ TipoIdentificaciones, TipoIdentificacion };
+import enumerations.{ TipoIdentificacion, TipoIdentificaciones }
 
-class EnumeracionService extends Directives with AlianzaCommons {
+import scala.concurrent.ExecutionContext;
+
+class EnumeracionService(implicit val ec: ExecutionContext) extends Directives with AlianzaCommons {
 
   val enumeracion = "enumeracion"
   val tiposIdentificacion = "tiposIdentificacion"

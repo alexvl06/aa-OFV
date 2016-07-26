@@ -13,10 +13,13 @@ import enumerations.AppendPasswordUser
 import spray.http.StatusCodes
 import spray.routing.{ Directives, RequestContext }
 
+import scala.concurrent.ExecutionContext
+
 /**
  * Created by david on 16/06/14.
  */
-case class ActualizacionService(actualizacionActor: ActorSelection, kafkaActor: ActorSelection) extends Directives with AlianzaCommons with CrossHeaders {
+case class ActualizacionService(actualizacionActor: ActorSelection, kafkaActor: ActorSelection)(implicit val ec: ExecutionContext)
+    extends Directives with AlianzaCommons with CrossHeaders {
 
   val datos = "datos"
   val paises = "paises"
