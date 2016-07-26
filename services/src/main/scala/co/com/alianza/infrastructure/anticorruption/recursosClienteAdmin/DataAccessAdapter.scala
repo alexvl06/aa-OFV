@@ -3,12 +3,12 @@ package co.com.alianza.infrastructure.anticorruption.recursosClienteAdmin
 import co.com.alianza.persistence.repositories.RecursoPerfilClienteAdminRepository
 
 import scalaz.Validation
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import co.com.alianza.exceptions.PersistenceException
 
-import scalaz.{Failure => zFailure, Success => zSuccess}
+import scalaz.{ Failure => zFailure, Success => zSuccess }
 import co.com.alianza.infrastructure.dto.RecursoPerfilClienteAdmin
-import co.com.alianza.persistence.entities.{RecursoPerfilClienteAdmin => eRecursoPerfilClienteAdmin}
+import co.com.alianza.persistence.entities.{ RecursoPerfilClienteAdmin => eRecursoPerfilClienteAdmin }
 import co.com.alianza.persistence.util.DataBaseExecutionContext
 
 /**

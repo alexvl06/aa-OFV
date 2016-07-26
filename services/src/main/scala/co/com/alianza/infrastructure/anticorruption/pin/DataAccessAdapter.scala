@@ -2,12 +2,12 @@ package co.com.alianza.infrastructure.anticorruption.pin
 
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.dto.PinUsuario
-import co.com.alianza.persistence.entities.{PinUsuario => ePinUsuario}
+import co.com.alianza.persistence.entities.{ PinUsuario => ePinUsuario }
 import co.com.alianza.persistence.repositories.PinRepository
 import co.com.alianza.persistence.util.DataBaseExecutionContext
 
-import scala.concurrent.{ExecutionContext, Future}
-import scalaz.{Validation, Failure => zFailure, Success => zSuccess}
+import scala.concurrent.{ ExecutionContext, Future }
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 
 object DataAccessAdapter {
 

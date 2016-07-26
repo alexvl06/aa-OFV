@@ -1,12 +1,10 @@
 package co.com.alianza.domain.aggregates.usuarios
 
-import akka.actor.{Actor, ActorLogging}
+import akka.actor.{Actor, ActorLogging, ActorSystem}
 import co.com.alianza.infrastructure.messages._
-import co.com.alianza.persistence.util.DataBaseExecutionContext
 
-import scalaz.{Failure => zFailure, Success => zSuccess}
 import scala.util.{Failure => sFailure, Success => sSuccess}
-import scala.concurrent.ExecutionContext
+import scalaz.{Failure => zFailure, Success => zSuccess}
 
 /**
  * Created by manuel on 18/12/14.
@@ -18,7 +16,8 @@ class UsuarioEmpresarialActor(implicit val system: ActorSystem) extends Actor wi
     case message: ConsultaUsuarioEmpresarialMessage =>
       val currentSender = sender
       if (message.token.isDefined)
-        co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerUsuarioEmpresarialToken(message.token.get) onComplete {
+        co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerUsuarioEmpresarialToken(
+          message.token.get) onComplete {
           case sFailure(failure) =>
             currentSender ! failure
           case sSuccess(value) => value match {
@@ -27,7 +26,8 @@ class UsuarioEmpresarialActor(implicit val system: ActorSystem) extends Actor wi
           }
         }
       else if (message.nit.isDefined && message.usuario.isDefined) {
-        co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtieneUsuarioEmpresarialPorNitYUsuario(message.nit.get, message.usuario.get) onComplete {
+        co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtieneUsuarioEmpresarialPorNitYUsuario(
+          message.nit.get, message.usuario.get) onComplete {
           case sFailure(failure) =>
             currentSender ! failure
           case sSuccess(value) => value match {
@@ -41,7 +41,8 @@ class UsuarioEmpresarialActor(implicit val system: ActorSystem) extends Actor wi
     case message: ConsultaUsuarioEmpresarialAdminMessage =>
       val currentSender = sender
       if (message.token.isDefined)
-        co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerUsuarioEmpresarialAdminToken(message.token.get) onComplete {
+        co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerUsuarioEmpresarialAdminToken(
+          message.token.get) onComplete {
           case sFailure(failure) =>
             currentSender ! failure
           case sSuccess(value) => value match {
@@ -50,7 +51,8 @@ class UsuarioEmpresarialActor(implicit val system: ActorSystem) extends Actor wi
           }
         }
       else if (message.nit.isDefined && message.usuario.isDefined)
-        co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtieneUsuarioEmpresarialAdminPorNitYUsuario(message.nit.get, message.usuario.get) onComplete {
+        co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
+          .obtieneUsuarioEmpresarialAdminPorNitYUsuario(message.nit.get, message.usuario.get) onComplete {
           case sFailure(failure) =>
             currentSender ! failure
           case sSuccess(value) => value match {

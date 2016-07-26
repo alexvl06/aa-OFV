@@ -6,8 +6,8 @@ import co.com.alianza.persistence.repositories.ReglasContrasenasRepository
 import co.com.alianza.persistence.util.DataBaseExecutionContext
 import co.com.alianza.util.clave.Crypto
 
-import scala.concurrent.{ExecutionContext, Future}
-import scalaz.{Validation, Failure => zFailure, Success => zSuccess}
+import scala.concurrent.{ ExecutionContext, Future }
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 
 /**
  * Created by david on 16/06/14.

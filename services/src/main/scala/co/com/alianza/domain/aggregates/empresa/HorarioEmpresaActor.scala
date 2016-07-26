@@ -1,36 +1,36 @@
 package co.com.alianza.domain.aggregates.empresa
 
-import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, OneForOneStrategy, Props }
+import java.sql.{Date, Time}
+
 import akka.actor.SupervisorStrategy._
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, OneForOneStrategy, Props}
 import akka.pattern._
 import akka.routing.RoundRobinPool
+import akka.util.Timeout
 import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.exceptions.PersistenceException
+import co.com.alianza.domain.aggregates.autenticacion.errores.{ErrorAutenticacion, ErrorCredencialesInvalidas, ErrorPersistencia}
+import co.com.alianza.domain.aggregates.autenticacion.{ActualizarHorarioEmpresa, ValidacionesAutenticacionUsuarioEmpresarial}
+import co.com.alianza.exceptions.{BusinessLevel, PersistenceException}
+import co.com.alianza.infrastructure.anticorruption.horario.{DataAccessTranslator => HorarioTrans}
 import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
-import co.com.alianza.infrastructure.anticorruption.horario.{ DataAccessTranslator => HorarioTrans }
-import co.com.alianza.infrastructure.dto.{ Empresa, HorarioEmpresa => HorarioEmpresaDTO }
+import co.com.alianza.infrastructure.dto.{Empresa, HorarioEmpresa => HorarioEmpresaDTO}
 import co.com.alianza.infrastructure.messages._
-import co.com.alianza.infrastructure.messages.empresa.{ AgregarHorarioEmpresaMessage, DiaFestivoMessage, ObtenerHorarioEmpresaMessage, ValidarHorarioEmpresaMessage }
+import co.com.alianza.infrastructure.messages.empresa.{AgregarHorarioEmpresaMessage, DiaFestivoMessage, ObtenerHorarioEmpresaMessage, ValidarHorarioEmpresaMessage}
 import co.com.alianza.persistence.entities.HorarioEmpresa
 import co.com.alianza.util.transformers.ValidationT
-
-import co.com.alianza.exceptions.BusinessLevel
-import co.com.alianza.domain.aggregates.autenticacion.{ ActualizarHorarioEmpresa, ValidacionesAutenticacionUsuarioEmpresarial }
 import spray.http.StatusCodes._
-import java.sql.{ Date, Time }
 
-import scalaz.Validation.FlatMap._
-import co.com.alianza.domain.aggregates.autenticacion.errores.{ ErrorAutenticacion, ErrorCredencialesInvalidas, ErrorPersistencia }
-import com.typesafe.config.Config
-
-import scala.util.{ Failure, Success }
 import scala.concurrent.Future
-import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
+import scala.concurrent.duration.DurationInt
+import scala.util.{Failure, Success}
+import scalaz.Validation.FlatMap._
 import scalaz.std.AllInstances._
+import scalaz.{Validation, Failure => zFailure, Success => zSuccess}
 
 class HorarioEmpresaActorSupervisor extends Actor with ActorLogging {
 
-  val horarioEmpresaActor = context.actorOf(Props[HorarioEmpresaActor].withRouter(RoundRobinPool(nrOfInstances = 2)), "horarioEmpresaActor")
+  val horarioEmpresaActor = context.actorOf(Props[HorarioEmpresaActor].withRouter(RoundRobinPool(nrOfInstances = 2)),
+    "horarioEmpresaActor")
 
   def receive = {
     case message: Any => horarioEmpresaActor forward message
@@ -45,11 +45,11 @@ class HorarioEmpresaActorSupervisor extends Actor with ActorLogging {
 
 }
 
-class HorarioEmpresaActor(implicit val system: ActorSystem) extends Actor with ActorLogging with ValidacionesAutenticacionUsuarioEmpresarial {
-
-  import system.dispatcher
+class HorarioEmpresaActor(implicit val system: ActorSystem, implicit val Supervisor : ActorRef) extends Actor
+  with ActorLogging with ValidacionesAutenticacionUsuarioEmpresarial {
 
   import co.com.alianza.util.json.MarshallableImplicits._
+  import system.dispatcher
 
   def receive = {
     case message: ObtenerHorarioEmpresaMessage => obtenerHorarioEmpresa(message)
@@ -96,7 +96,7 @@ class HorarioEmpresaActor(implicit val system: ActorSystem) extends Actor with A
         existeHorario <- ValidationT(DataAccessAdapter.existeHorarioEmpresa(idEmpresa))
         horarioEmpresa <- ValidationT(DataAccessAdapter.agregarHorarioEmpresa(toEntity(message, idEmpresa), existeHorario))
         horarioEmpresa <- ValidationT(agregarHorarioSesionEmpresa(idEmpresa, HorarioTrans translateHorarioEmpresa (toEntity(message, idEmpresa))))
-      } yield (horarioEmpresa)).run
+      } yield horarioEmpresa).run
     }
     result onComplete {
       case Failure(failure) =>
@@ -112,7 +112,8 @@ class HorarioEmpresaActor(implicit val system: ActorSystem) extends Actor with A
   }
 
   def agregarHorarioSesionEmpresa(empresaId: Int, horario: HorarioEmpresaDTO): Future[Validation[PersistenceException, Boolean]] = {
-    MainActors.sesionActorSupervisor ? ObtenerEmpresaSesionActorId(empresaId) map {
+    implicit val timeout = Timeout(120 seconds)
+    Supervisor ? ObtenerEmpresaSesionActorId(empresaId) map {
       case Some(empresaSesionActor: ActorRef) =>
         empresaSesionActor ! ActualizarHorarioEmpresa(horario); zSuccess(true)
       case None => zSuccess(false)

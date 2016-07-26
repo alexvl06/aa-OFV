@@ -35,8 +35,7 @@ object DataAccessAdapter {
     new ActualizacionRepository().actualizarCliente(datos) map { x => transformValidationActualizacion(x) }
   }
 
-  private def transformValidationActualizacion(origin: Validation[PersistenceException, String])(implicit ec : ExecutionContext):
-  Validation[PersistenceException, Option[String]] = {
+  private def transformValidationActualizacion(origin: Validation[PersistenceException, String])(implicit ec: ExecutionContext): Validation[PersistenceException, Option[String]] = {
     origin match {
       case zSuccess(response: String) => zSuccess(Some(response))
       case zFailure(error) => zFailure(error)

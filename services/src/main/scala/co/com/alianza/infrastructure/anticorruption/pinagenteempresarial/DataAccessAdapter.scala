@@ -3,10 +3,10 @@ package co.com.alianza.infrastructure.anticorruption.pinagenteempresarial
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.dto.PinUsuarioAgenteEmpresarial
 import co.com.alianza.persistence.entities.PinEmpresa
-import co.com.alianza.persistence.repositories.{PinUsuarioAgenteEmpresarialRepository, PinUsuarioEmpresarialAdminRepository}
+import co.com.alianza.persistence.repositories.{ PinUsuarioAgenteEmpresarialRepository, PinUsuarioEmpresarialAdminRepository }
 
-import scala.concurrent.{ExecutionContext, Future}
-import scalaz.{Failure => zFailure, Success => zSuccess}
+import scala.concurrent.{ ExecutionContext, Future }
+import scalaz.{ Failure => zFailure, Success => zSuccess }
 import scalaz.Validation
 import java.sql.Timestamp
 

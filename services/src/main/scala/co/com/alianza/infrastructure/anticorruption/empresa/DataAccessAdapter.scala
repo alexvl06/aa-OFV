@@ -5,7 +5,7 @@ import co.com.alianza.persistence.entities.Empresa
 import co.com.alianza.persistence.repositories.EmpresaRepository
 import co.com.alianza.persistence.util.DataBaseExecutionContext
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scalaz.Validation
 
 /**
