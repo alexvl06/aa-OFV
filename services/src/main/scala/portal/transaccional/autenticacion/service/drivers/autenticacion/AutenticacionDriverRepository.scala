@@ -46,7 +46,8 @@ case class AutenticacionDriverRepository(usuarioRepo: UsuarioRepository, cliente
     for {
       usuario <- usuarioRepo.getByIdentificacion(numeroIdentificacion)
       estado <- usuarioRepo.validarEstados(usuario.estado)
-      contrasena <- usuarioRepo.validarContrasena(contrasena, usuario.contrasena.get, usuario.id.get)
+      reintentosErroneos <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA.llave)
+      contrasena <- usuarioRepo.validarContrasena(contrasena, usuario, reintentosErroneos.llave.toInt)
       cliente <- clienteCoreRepo.getCliente(numeroIdentificacion)
       estadoCore <- clienteCoreRepo.validarEstado(cliente)
       reglaDias <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA.llave)
@@ -64,34 +65,6 @@ case class AutenticacionDriverRepository(usuarioRepo: UsuarioRepository, cliente
       validacionIps <- ipRepo.validarControlIp(ip, ips, token, tieneRespuestas)
     } yield token
   }
-
-  /*validaciones.onComplete {
-    case sFailure(_) => originalSender ! _
-    case sSuccess(resp) => resp match {
-      case zSuccess(token) => originalSender ! token
-      case zFailure(errorAutenticacion) => errorAutenticacion match {
-        case err @ ErrorPersistencia(_, ep1) => originalSender ! ep1
-        case err @ ErrorPasswordInvalido(identificacionUsuario, _, numIngresosErroneosUsuario) =>
-
-          val ejecucion: Future[Validation[ErrorAutenticacion, Boolean]] = (for {
-            ingresosErroneos <- ValidationT(actualizarIngresosErroneosUsuario(identificacionUsuario.get, numIngresosErroneosUsuario + 1))
-            regla <- ValidationT(buscarRegla("CANTIDAD_REINTENTOS_INGRESO_CONTRASENA"))
-            bloqueo <- ValidationT(bloquearUsuario(identificacionUsuario.get, numIngresosErroneosUsuario, regla))
-          } yield bloqueo).run
-
-          ejecucion.onFailure { case _ => originalSender ! _ }
-          ejecucion.onSuccess {
-            case zSuccess(_) => originalSender ! ResponseMessage(Unauthorized, err.msg)
-            case zFailure(errorBloqueo) => errorBloqueo match {
-              case errb @ ErrorPersistencia(_, ep2) => originalSender ! ep2
-              case _ => originalSender ! ResponseMessage(Unauthorized, errorBloqueo.msg)
-            }
-          }
-
-        case _ => originalSender ! ResponseMessage(Unauthorized, errorAutenticacion.msg)
-      }
-    }
-  }*/
 
   /**
    * Generar token

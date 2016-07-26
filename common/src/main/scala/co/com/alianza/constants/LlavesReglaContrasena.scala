@@ -8,4 +8,6 @@ object LlavesReglaContrasena extends Enumeration {
 
   val DIAS_VALIDA = Val("DIAS_VALIDA")
 
+  val CANTIDAD_REINTENTOS_INGRESO_CONTRASENA = Val("CANTIDAD_REINTENTOS_INGRESO_CONTRASENA")
+
 }

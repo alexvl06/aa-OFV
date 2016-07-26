@@ -47,22 +47,36 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
 
   /**
    * Valida que las contrasenas concuerden
-   * @param contrasena Password de la peticion
-   * @param contrasenaUsuario Password del usuario en BD
-   * @return  Future[Boolean]
+   * @param contrasena
+   * @param usuario
+   * @param reintentosErroneos
+   * @return
    */
-  def validarContrasena(contrasena: String, contrasenaUsuario: String, idUsuario: Int): Future[Boolean] = {
-    val hash = Crypto.hashSha512(contrasena.concat(AppendPasswordUser.appendUsuariosFiducia), idUsuario)
-    if (hash.contentEquals(contrasenaUsuario)) Future.successful(true)
-    else Future.failed(ValidacionException("401.3", "Error Credenciales"))
+  def validarContrasena(contrasena: String, usuario: Usuario, reintentosErroneos: Int): Future[Boolean] = {
+    val hash = Crypto.hashSha512(contrasena.concat(AppendPasswordUser.appendUsuariosFiducia), usuario.id.get)
+    if (hash.contentEquals(usuario.contrasena.get)) {
+      //si las contraseñas no concuerdan, se debe:
+      //1. actualizar ingresos erroneos
+      //2. bloquear usuario si es necesario
+      val reintentos: Int = usuario.numeroIngresosErroneos + 1
+      for {
+        actualizarIngresos <- actualizarIngresosErroneosUsuario(usuario.id.get, reintentos)
+        bloquear <- validarBloqueoUsuario(usuario.id.get, reintentos, reintentosErroneos)
+      } yield bloquear
+    } else Future.failed(ValidacionException("401.3", "Error Credenciales"))
+  }
 
-    /*
-    * val ejecucion: Future[Validation[ErrorAutenticacion, Boolean]] = (for {
-            ingresosErroneos <- ValidationT(actualizarIngresosErroneosUsuario(identificacionUsuario.get, numIngresosErroneosUsuario + 1))
-            regla <- ValidationT(buscarRegla("CANTIDAD_REINTENTOS_INGRESO_CONTRASENA"))
-            bloqueo <- ValidationT(bloquearUsuario(identificacionUsuario.get, numIngresosErroneosUsuario, regla))
-          } yield bloqueo).run
-    * */
+  /**
+   * Bloquea el usuario si se incumple la regla por parametro
+   * @param idUsuario
+   * @param reintentos
+   * @param reintentosErroneos
+   * @return
+   */
+  private def validarBloqueoUsuario(idUsuario: Int, reintentos: Int, reintentosErroneos: Int): Future[Boolean] = {
+    if (reintentos >= reintentosErroneos) {
+      usuarioDAO.updateStateById(idUsuario, EstadosUsuarioEnum.bloqueContraseña.id).map(_ => true)
+    } else Future.successful(true)
   }
 
   /**
