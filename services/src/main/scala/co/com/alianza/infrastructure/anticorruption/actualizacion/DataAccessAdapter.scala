@@ -8,10 +8,12 @@ import co.com.alianza.exceptions.PersistenceException
 
 import scalaz.{ Failure => zFailure, Success => zSuccess }
 import co.com.alianza.infrastructure.dto._
-import co.com.alianza.persistence.repositories.core.{ ActualizacionRepository }
+import co.com.alianza.persistence.repositories.core.ActualizacionRepository
+import co.com.alianza.persistence.util.DataBaseExecutionContext
 
 object DataAccessAdapter {
 
+  implicit val ec: ExecutionContext = DataBaseExecutionContext.executionContext
   //Consulta datos cliente
 
   def consultaDatosCliente(documento: String, tipoDocumento: String) = {
@@ -33,7 +35,7 @@ object DataAccessAdapter {
     new ActualizacionRepository().actualizarCliente(datos) map { x => transformValidationActualizacion(x) }
   }
 
-  private def transformValidationActualizacion(origin: Validation[PersistenceException, String]): Validation[PersistenceException, Option[String]] = {
+  private def transformValidationActualizacion(origin: Validation[PersistenceException, String])(implicit ec: ExecutionContext): Validation[PersistenceException, Option[String]] = {
     origin match {
       case zSuccess(response: String) => zSuccess(Some(response))
       case zFailure(error) => zFailure(error)

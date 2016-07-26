@@ -107,7 +107,7 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
       resolveTry(resultIdUsuarioAE, "Obtiene id agente empresarial de acuerdo a los 3 parametros dados")
   }
 
-  def cambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa): Future[Validation[PersistenceException, Int]] = loan {
+  def AcambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
       val query = for { u <- usuariosEmpresariales if u.id === idUsuarioAgenteEmpresarial } yield (u.estado)
 

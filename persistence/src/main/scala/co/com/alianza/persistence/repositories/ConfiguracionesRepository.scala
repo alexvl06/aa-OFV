@@ -1,15 +1,12 @@
 package co.com.alianza.persistence.repositories
 
-import scala.concurrent.{ ExecutionContext, Future }
 import co.com.alianza.exceptions.PersistenceException
-
-import scala.util.Try
-import scalaz.Validation
-
+import co.com.alianza.persistence.entities.CustomDriver.simple._
 import co.com.alianza.persistence.entities._
-
 import slick.lifted.TableQuery
-import CustomDriver.simple._
+
+import scala.concurrent.{ ExecutionContext, Future }
+import scalaz.Validation
 
 class ConfiguracionesRepository(implicit executionContext: ExecutionContext) extends AlianzaRepository {
 

@@ -3,22 +3,21 @@ package co.com.alianza.domain.aggregates.autenticacion
 import java.security.MessageDigest
 
 import akka.actor._
+import akka.cluster.Cluster
 import akka.pattern.ask
-import akka.cluster.{ Member, MemberStatus }
 import akka.util.Timeout
-
 import co.com.alianza.infrastructure.dto.{ Empresa, HorarioEmpresa }
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.util.token.AesUtil
 import com.typesafe.config.Config
 import enumerations.CryptoAesParameters
 
-import scala.collection.immutable.SortedSet
-import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
 import scala.util.{ Failure, Success }
 
-class SesionActorSupervisor(implicit val system: ActorSystem) extends Actor with ActorLogging {
+class SesionActorSupervisor(implicit val system: ActorSystem, implicit val cluster: Cluster) extends Actor
+    with ActorLogging {
 
   import system.dispatcher
 
@@ -92,7 +91,7 @@ class SesionActorSupervisor(implicit val system: ActorSystem) extends Actor with
     var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
     var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
     val actorName = generarNombreSesionActor(decryptedToken)
-    ClusterUtil.obtenerNodos foreach { member =>
+    ClusterUtil.obtenerNodos(cluster) foreach { member =>
       context.actorSelection(RootActorPath(member.address) / "user" / "sesionActorSupervisor") ! DeleteSession(actorName)
     }
   }
@@ -119,7 +118,7 @@ class SesionActorSupervisor(implicit val system: ActorSystem) extends Actor with
   }
 }
 
-class SesionActor(expiracionSesion: Int, empresa: Option[Empresa], horario: Option[HorarioEmpresa]) extends Actor with ActorLogging {
+class SesionActor(expiracionSesion: Int, empresa: Option[Empresa], horario: Option[HorarioEmpresa])(implicit val SessionActorSupervisor: ActorRef, implicit val cluster: Cluster) extends Actor with ActorLogging {
 
   implicit val _: ExecutionContext = context dispatcher
   implicit val timeout: Timeout = 120 seconds
@@ -164,7 +163,7 @@ class SesionActor(expiracionSesion: Int, empresa: Option[Empresa], horario: Opti
     context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(s"empresa${empresa.get.id}") map {
       case Some(empresaActor: ActorRef) => self ! empresaActor
       case None =>
-        MainActors.sesionActorSupervisor ? CrearEmpresaActor(empresa.get, horario) map {
+        SessionActorSupervisor ? CrearEmpresaActor(empresa.get, horario) map {
           case empresaActor: ActorRef => self ! empresaActor
           case None => log error s"Sesión empresa '${empresa.get.id}' no creada!!"
         }
@@ -175,7 +174,8 @@ class SesionActor(expiracionSesion: Int, empresa: Option[Empresa], horario: Opti
 
 object SesionActor {
 
-  def props(expirationTime: Int, empresa: Option[Empresa], horario: Option[HorarioEmpresa]) = {
+  def props(expirationTime: Int, empresa: Option[Empresa], horario: Option[HorarioEmpresa])(implicit SessionActorSupervisor: ActorRef, cluster: Cluster): Props = {
+
     Props(new SesionActor(expirationTime, empresa, horario))
   }
 

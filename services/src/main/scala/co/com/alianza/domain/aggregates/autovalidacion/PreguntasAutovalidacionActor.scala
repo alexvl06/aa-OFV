@@ -75,7 +75,7 @@ case class PreguntasAutovalidacionActor(implicit val system: ActorSystem) extend
     val currentSender = sender()
     val future: Future[Validation[PersistenceException, (List[Pregunta], List[Configuracion])]] = (for {
       preguntas <- ValidationT(DataAccessAdapter.obtenerPreguntas())
-      configuraciones <- ValidationT(DataAdapterConfiguracion.obtenerConfiguraciones(system))
+      configuraciones <- ValidationT(DataAdapterConfiguracion.obtenerConfiguraciones())
     } yield (preguntas, configuraciones)).run
     resolveFutureValidation(future, (response: (List[Pregunta], List[Configuracion])) => {
       val numeroPreguntas = obtenerValorEntero(response._2, ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS.name)
@@ -138,7 +138,7 @@ case class PreguntasAutovalidacionActor(implicit val system: ActorSystem) extend
     }
     val future = (for {
       preguntas <- ValidationT(toErrorValidation(futurePreguntas))
-      configuraciones <- ValidationT(toErrorValidation(DataAdapterConfiguracion.obtenerConfiguraciones(system)))
+      configuraciones <- ValidationT(toErrorValidation(DataAdapterConfiguracion.obtenerConfiguraciones()))
       validar <- ValidationT(validarParametrizacion(preguntas.size, obtenerValorEntero(configuraciones, llaveNumeroPreguntas)))
     } yield (preguntas, configuraciones)).run
     resolveFutureValidation(future, (response: (List[Pregunta], List[Configuracion])) => {
@@ -164,7 +164,7 @@ case class PreguntasAutovalidacionActor(implicit val system: ActorSystem) extend
     val llavePreguntasCambio: String = ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS_CAMBIAR.name
     val llavePreguntasComprobar: String = ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS_COMPROBACION.name
     val future = (for {
-      configuraciones <- ValidationT(toErrorValidation(DataAdapterConfiguracion.obtenerConfiguraciones(system)))
+      configuraciones <- ValidationT(toErrorValidation(DataAdapterConfiguracion.obtenerConfiguraciones()))
       validarLista <- ValidationT(validarParametrizacion(message.respuestas.size, obtenerValorEntero(configuraciones, llavePreguntasComprobar)))
       validarReintentos <- ValidationT(validarParametrizacion(message.numeroIntentos, obtenerValorEntero(configuraciones, llaveReintentos)))
       respuestas <- ValidationT(toErrorValidation(futureRespuestas))

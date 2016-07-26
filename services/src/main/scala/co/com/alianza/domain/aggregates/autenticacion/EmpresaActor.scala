@@ -1,21 +1,19 @@
 package co.com.alianza.domain.aggregates.autenticacion
 
 import akka.actor._
+import akka.cluster.{ Cluster, Member, MemberStatus }
 import akka.pattern.ask
-import akka.cluster.{ Member, MemberStatus }
 import akka.util.Timeout
-import scala.concurrent.duration._
-import scala.concurrent.ExecutionContext
-import scala.collection.immutable.SortedSet
-import scala.collection.immutable.Vector
-import scala.util.{ Failure, Success }
-import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
-
-import co.com.alianza.persistence.entities.{ IpsEmpresa, IpsUsuario }
-
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => usuarioAdaptador }
 import co.com.alianza.infrastructure.dto.{ Empresa, HorarioEmpresa }
 import co.com.alianza.infrastructure.messages._
+import co.com.alianza.persistence.entities.IpsEmpresa
+
+import scala.collection.immutable.{ SortedSet, Vector }
+import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
+import scala.util.{ Failure, Success }
+import scalaz.{ Failure => zFailure, Success => zSuccess }
 
 /**
  * Created by manuel on 3/03/15.
@@ -86,11 +84,11 @@ object EmpresaActor {
   def props(empresa: Empresa, horario: Option[HorarioEmpresa]) = Props(new EmpresaActor(empresa, horario))
 }
 
-class BuscadorActorCluster(nombreActorPadre: String) extends Actor {
+class BuscadorActorCluster(nombreActorPadre: String)(implicit val cluster: Cluster) extends Actor {
 
   var numResp = 0
   var resp: Option[ActorRef] = None
-  val nodosBusqueda: SortedSet[Member] = ClusterUtil.obtenerNodos
+  val nodosBusqueda: SortedSet[Member] = ClusterUtil.obtenerNodos(cluster)
   var interesado: ActorRef = null
 
   def receive: Receive = {
@@ -113,9 +111,9 @@ class BuscadorActorCluster(nombreActorPadre: String) extends Actor {
 }
 
 object ClusterUtil {
-  def obtenerNodos = {
-    val nodosUnreach: Set[Member] = MainActors.cluster.state.unreachable // Lista de nodos en estado unreachable
-    val nodosUp: SortedSet[Member] = MainActors.cluster.state.members.filter(_.status == MemberStatus.up) // Lista de nodos en estado UP
+  def obtenerNodos(implicit cluster: Cluster) = {
+    val nodosUnreach: Set[Member] = cluster.state.unreachable // Lista de nodos en estado unreachable
+    val nodosUp: SortedSet[Member] = cluster.state.members.filter(_.status == MemberStatus.up) // Lista de nodos en estado UP
     nodosUp.filter(m => !nodosUnreach.contains(m)) // Lista de nodos que estan en estado UP y no son estan unreachable
   }
 }

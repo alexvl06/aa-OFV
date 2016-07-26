@@ -1,31 +1,27 @@
 package co.com.alianza.domain.aggregates.empresa
 
+import co.com.alianza.domain.aggregates.usuarios._
+import co.com.alianza.exceptions.PersistenceException
+import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => UsDataAdapter }
+import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{ DataAccessAdapter => DataAccessAdapterClienteAdmin }
+import co.com.alianza.infrastructure.dto.{ UsuarioEmpresarialAdmin, _ }
+import co.com.alianza.infrastructure.messages.ErrorMessage
+import co.com.alianza.persistence.util.DataBaseExecutionContext
+import co.com.alianza.util.clave.{ Crypto, ErrorValidacionClave, ValidarClave }
 import enumerations.empresa.EstadosDeEmpresaEnum
+import enumerations.{ EstadosEmpresaEnum, PerfilesUsuario }
 
 import scala.concurrent.{ ExecutionContext, Future }
-import scalaz.{ Failure, Success, Validation }
-import co.com.alianza.domain.aggregates.usuarios._
-import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{ DataAccessAdapter => DataAccessAdapterClienteAdmin }
-import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => UsDataAdapter }
-import co.com.alianza.infrastructure.dto._
-import co.com.alianza.util.clave.{ ValidarClave, ErrorValidacionClave, Crypto }
-
-import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
-import com.typesafe.config.Config
-import co.com.alianza.infrastructure.dto.UsuarioEmpresarialAdmin
-import co.com.alianza.infrastructure.messages.ErrorMessage
-import enumerations.{ EstadosUsuarioEnum, EstadosEmpresaEnum, PerfilesUsuario }
-import co.com.alianza.exceptions.PersistenceException
 import scalaz.Validation.FlatMap._
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 
 /**
  * Created by josegarcia on 30/01/15.
  */
 object ValidacionesClienteAdmin {
 
+  implicit val ec: ExecutionContext = DataBaseExecutionContext.executionContext
   import co.com.alianza.util.json.MarshallableImplicits._
-  implicit val _: ExecutionContext = MainActors.dataAccesEx
-  implicit private val config: Config = MainActors.conf
 
   def validacionConsultaContrasenaActualClienteAdmin(pw_actual: String, idUsuario: Int): Future[Validation[ErrorValidacion, Option[UsuarioEmpresarialAdmin]]] = {
     val contrasenaActualFuture = DataAccessAdapterClienteAdmin.consultaContrasenaActual(Crypto.hashSha512(pw_actual, idUsuario), idUsuario)
