@@ -1,19 +1,22 @@
 package co.com.alianza.domain.aggregates.empresa
 
+import akka.actor.ActorSystem
 import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.domain.aggregates.usuarios._
 import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{ DataAccessAdapter => DataAccessAdapterUsuarioAE }
 import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{ DataAccessAdapter => CliAdmDataAccessAdapter }
-import co.com.alianza.infrastructure.dto.{ Empresa, UsuarioEmpresarial, UsuarioEmpresarialAdmin, Configuracion }
+import co.com.alianza.infrastructure.dto.{ Configuracion, Empresa, UsuarioEmpresarial, UsuarioEmpresarialAdmin }
 import co.com.alianza.infrastructure.messages.ErrorMessage
 import enumerations.empresa.EstadosDeEmpresaEnum
-import enumerations.{ PerfilesUsuario, EstadosEmpresaEnum }
+import enumerations.{ EstadosEmpresaEnum, PerfilesUsuario }
 import co.com.alianza.infrastructure.anticorruption.configuraciones.{ DataAccessAdapter => dataAccesAdaptarConf }
+
 import scala.concurrent.{ ExecutionContext, Future }
 import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
-import co.com.alianza.util.clave.{ ValidarClave, ErrorValidacionClave, Crypto }
+import co.com.alianza.util.clave.{ Crypto, ErrorValidacionClave, ValidarClave }
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => UsDataAdapter }
+
 import scalaz.Validation.FlatMap._
 
 /**
@@ -21,8 +24,9 @@ import scalaz.Validation.FlatMap._
  */
 object ValidacionesAgenteEmpresarial {
 
+  implicit val system: ActorSystem
+  import system.dispatcher
   import co.com.alianza.util.json.MarshallableImplicits._
-  implicit val _: ExecutionContext = MainActors.dataAccesEx
 
   /*
   Este Metodo de validacionAgenteEmpresarial Me retorna el id de este usuario si cumple con los 3 parametros que se le envian a la DB

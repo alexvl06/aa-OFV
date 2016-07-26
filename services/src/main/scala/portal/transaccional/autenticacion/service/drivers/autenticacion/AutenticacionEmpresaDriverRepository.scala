@@ -8,7 +8,7 @@ import scala.concurrent.Future
  * Created by hernando on 26/07/16.
  */
 case class AutenticacionEmpresaDriverRepository(
-  usuarioRepo: UsuarioEmpresarialRepository, usuarioAdminRepo: UsuarioEmpresarialAdminRepository
+    usuarioRepo: UsuarioEmpresarialRepository, usuarioAdminRepo: UsuarioEmpresarialAdminRepository
 ) extends AutenticacionEmpresaRepository {
 
   /**

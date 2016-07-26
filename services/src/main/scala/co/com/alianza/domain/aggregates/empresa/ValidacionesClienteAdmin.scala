@@ -1,5 +1,6 @@
 package co.com.alianza.domain.aggregates.empresa
 
+import akka.actor.ActorSystem
 import enumerations.empresa.EstadosDeEmpresaEnum
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -8,14 +9,15 @@ import co.com.alianza.domain.aggregates.usuarios._
 import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{ DataAccessAdapter => DataAccessAdapterClienteAdmin }
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => UsDataAdapter }
 import co.com.alianza.infrastructure.dto._
-import co.com.alianza.util.clave.{ ValidarClave, ErrorValidacionClave, Crypto }
+import co.com.alianza.util.clave.{ Crypto, ErrorValidacionClave, ValidarClave }
 
-import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 import com.typesafe.config.Config
 import co.com.alianza.infrastructure.dto.UsuarioEmpresarialAdmin
 import co.com.alianza.infrastructure.messages.ErrorMessage
-import enumerations.{ EstadosUsuarioEnum, EstadosEmpresaEnum, PerfilesUsuario }
+import enumerations.{ EstadosEmpresaEnum, EstadosUsuarioEnum, PerfilesUsuario }
 import co.com.alianza.exceptions.PersistenceException
+
 import scalaz.Validation.FlatMap._
 
 /**
@@ -24,8 +26,8 @@ import scalaz.Validation.FlatMap._
 object ValidacionesClienteAdmin {
 
   import co.com.alianza.util.json.MarshallableImplicits._
-  implicit val _: ExecutionContext = MainActors.dataAccesEx
-  implicit private val config: Config = MainActors.conf
+  implicit val system: ActorSystem
+  import system.dispatcher
 
   def validacionConsultaContrasenaActualClienteAdmin(pw_actual: String, idUsuario: Int): Future[Validation[ErrorValidacion, Option[UsuarioEmpresarialAdmin]]] = {
     val contrasenaActualFuture = DataAccessAdapterClienteAdmin.consultaContrasenaActual(Crypto.hashSha512(pw_actual, idUsuario), idUsuario)
