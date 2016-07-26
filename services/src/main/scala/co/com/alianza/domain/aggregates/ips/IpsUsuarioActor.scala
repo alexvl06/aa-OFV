@@ -44,7 +44,7 @@ class IpsUsuarioActorSupervisor extends Actor with ActorLogging {
 /**
  * Created by david on 16/06/14.
  */
-class IpsUsuarioActor(implicit val system: ActorSystem) extends Actor with ActorLogging{
+class IpsUsuarioActor(implicit val system: ActorSystem) extends Actor with ActorLogging {
   import system.dispatcher
   implicit val config: Config = system.settings.config
   import co.com.alianza.util.json.MarshallableImplicits._

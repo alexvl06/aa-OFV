@@ -16,8 +16,7 @@ case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, kafkaActor:
     pinActor: ActorSelection, pinUsuarioEmpresarialAdminActor: ActorSelection, pinUsuarioAgenteEmpresarialActor: ActorSelection, ipsUsuarioActor: ActorSelection,
     horarioEmpresaActor: ActorSelection, autorizacionActor: ActorSelection,
     autorizacionUsuarioEmpresarialActor: ActorSelection, contrasenasAgenteEmpresarialActor: ActorSelection, contrasenasClienteAdminActor: ActorSelection,
-    contrasenasActor: ActorSelection)
-  (implicit val system: ActorSystem) extends HttpServiceActor with RouteConcatenation with CrossHeaders with ServiceAuthorization with ActorLogging {
+    contrasenasActor: ActorSelection)(implicit val system: ActorSystem) extends HttpServiceActor with RouteConcatenation with CrossHeaders with ServiceAuthorization with ActorLogging {
 
   import system.dispatcher
 

@@ -53,7 +53,7 @@ class ContrasenasActorSupervisor extends Actor with ActorLogging {
  * Created by david on 16/06/14.
  */
 
-class ContrasenasActor (implicit val system: ActorSystem) extends Actor with ActorLogging {
+class ContrasenasActor(implicit val system: ActorSystem) extends Actor with ActorLogging {
 
   import scalaz._
   import scalaz.std.string._

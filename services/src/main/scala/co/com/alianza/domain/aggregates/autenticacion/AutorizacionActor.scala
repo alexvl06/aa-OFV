@@ -69,7 +69,9 @@ class AutorizacionActorSupervisor extends Actor with ActorLogging {
  * @author smontanez
  */
 class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
-  
+
+  import scalaz.std.AllInstances._
+
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.errorValidacion
   implicit val timeout: Timeout = 10.seconds
 

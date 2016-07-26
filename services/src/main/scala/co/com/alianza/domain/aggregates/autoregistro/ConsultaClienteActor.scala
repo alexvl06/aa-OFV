@@ -36,7 +36,7 @@ class ConsultaClienteActorSupervisor extends Actor with ActorLogging {
  *
  * @author smontanez
  */
-class ConsultaClienteActor (implicit val system: ActorSystem) extends Actor with ActorLogging {
+class ConsultaClienteActor(implicit val system: ActorSystem) extends Actor with ActorLogging {
 
   import system.dispatcher
 

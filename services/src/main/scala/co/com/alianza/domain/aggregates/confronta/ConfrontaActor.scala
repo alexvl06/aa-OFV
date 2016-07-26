@@ -44,7 +44,7 @@ class ConfrontaActorSupervisor extends Actor with ActorLogging {
   }
 }
 
-case class ConfrontaActor (implicit val system: ActorSystem) extends Actor with ActorLogging {
+case class ConfrontaActor(implicit val system: ActorSystem) extends Actor with ActorLogging {
   self: ActorLogging =>
 
   import co.com.alianza.util.json.MarshallableImplicits._
@@ -53,7 +53,6 @@ case class ConfrontaActor (implicit val system: ActorSystem) extends Actor with 
 
   implicit val config: Config = system.settings.config
   import co.com.alianza.util.json.MarshallableImplicits._
-
 
   def receive = {
 
