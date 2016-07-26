@@ -44,7 +44,6 @@ class PreguntasAutovalidacionSupervisor extends Actor with ActorLogging {
 
 case class PreguntasAutovalidacionActor(implicit val system: ActorSystem) extends Actor with ActorLogging with FutureResponse {
 
-  import scala.concurrent.ExecutionContext
   import scalaz.std.AllInstances._
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.errorValidacion
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.toErrorValidation

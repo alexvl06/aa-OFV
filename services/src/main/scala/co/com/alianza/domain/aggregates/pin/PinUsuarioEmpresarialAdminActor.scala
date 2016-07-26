@@ -2,9 +2,8 @@ package co.com.alianza.domain.aggregates.pin
 
 import java.sql.Timestamp
 
-import akka.actor.{ ActorRef, ActorLogging, Actor }
-
-import co.com.alianza.app.{ MainActors, AlianzaActors }
+import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, Props }
+import co.com.alianza.app.{ AlianzaActors, MainActors }
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
@@ -13,7 +12,7 @@ import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.pinclienteadmin.{ DataAccessAdapter => pDataAccessAdapter }
 import co.com.alianza.infrastructure.anticorruption.ultimasContrasenasClienteAdmin.{ DataAccessAdapter => DataAccessAdapterUltimaContrasena }
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => uDataAccessAdapter }
-import co.com.alianza.infrastructure.dto.{ UsuarioEmpresarialAdmin, PinUsuario, PinUsuarioEmpresarialAdmin }
+import co.com.alianza.infrastructure.dto.{ PinUsuario, PinUsuarioEmpresarialAdmin, UsuarioEmpresarialAdmin }
 import co.com.alianza.infrastructure.messages.PinMessages._
 import co.com.alianza.infrastructure.messages.ResponseMessage
 import co.com.alianza.persistence.entities.UltimaContrasenaUsuarioEmpresarialAdmin
@@ -24,22 +23,19 @@ import spray.http.StatusCodes._
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => DataAdapterUsuario }
 import co.com.alianza.persistence.entities.IpsEmpresa
 
-import scala.util.{ Success, Failure, Try }
+import scala.util.{ Failure, Success, Try }
 import scalaz.std.AllInstances._
 import scalaz.{ Failure => zFailure, Success => zSuccess }
-
-import scala.concurrent.{ Future, ExecutionContext }
+import scala.concurrent.{ ExecutionContext, Future }
 import scalaz.Validation
-
-import akka.actor.Props
 import akka.routing.RoundRobinPool
-import enumerations.{ EstadosEmpresaEnum, PerfilesUsuario, AppendPasswordUser }
+import enumerations.{ AppendPasswordUser, EstadosEmpresaEnum, PerfilesUsuario }
 /**
  * Created by manuel on 6/01/15.
  */
-class PinUsuarioEmpresarialAdminActor extends Actor with ActorLogging with AlianzaActors with FutureResponse {
+class PinUsuarioEmpresarialAdminActor (implicit val system: ActorSystem)extends Actor with ActorLogging with AlianzaActors with FutureResponse {
 
-  implicit val ex: ExecutionContext = MainActors.dataAccesEx
+  import system.dispatcher
   import co.com.alianza.domain.aggregates.empresa.ValidacionesClienteAdmin._
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario._
 

@@ -6,11 +6,11 @@ import akka.actor._
 import akka.pattern.ask
 import akka.cluster.{ Member, MemberStatus }
 import akka.util.Timeout
-
 import co.com.alianza.app.MainActors
 import co.com.alianza.infrastructure.dto.{ Empresa, HorarioEmpresa }
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.util.token.AesUtil
+import com.typesafe.config.Config
 import enumerations.CryptoAesParameters
 
 import scala.collection.immutable.SortedSet
@@ -18,9 +18,11 @@ import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
 import scala.util.{ Failure, Success }
 
-class SesionActorSupervisor extends Actor with ActorLogging {
+class SesionActorSupervisor (implicit val system: ActorSystem) extends Actor with ActorLogging {
 
-  implicit val _: ExecutionContext = context dispatcher
+  import system.dispatcher
+
+  implicit val conf: Config = system.settings.config
   implicit val timeout: Timeout = 10 seconds
 
   def receive = {
