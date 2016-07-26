@@ -11,10 +11,12 @@ import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 
+import scala.concurrent.ExecutionContext
+
 /**
  * Created by manuel on 7/01/15.
  */
-case class PermisosTransaccionalesService(kafkaActor: ActorSelection, permisoTransaccionalActor: ActorSelection)
+case class PermisosTransaccionalesService(kafkaActor: ActorSelection, permisoTransaccionalActor: ActorSelection) (implicit val ec: ExecutionContext)
     extends Directives with AlianzaCommons with CrossHeaders {
 
   import PermisosTransaccionalesJsonSupport._
