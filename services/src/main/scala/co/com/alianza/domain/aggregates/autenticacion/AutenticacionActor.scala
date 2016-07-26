@@ -1,6 +1,6 @@
 package co.com.alianza.domain.aggregates.autenticacion
 
-import akka.actor.{ Actor, ActorLogging, Props }
+import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import akka.routing.RoundRobinPool
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
@@ -23,7 +23,6 @@ import enumerations.{ AppendPasswordUser, EstadosCliente, EstadosUsuarioEnum, Ti
 import java.sql.Timestamp
 import java.util.Date
 
-import akka.remote.ContainerFormats.ActorRef
 import org.joda.time.DateTime
 import spray.http.StatusCodes._
 
@@ -33,7 +32,7 @@ import scalaz.std.AllInstances._
 import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 import scalaz.Validation.FlatMap._
 
-class AutenticacionActorSupervisor(implicit val supervisor: ActorRef) extends Actor with ActorLogging {
+class AutenticacionActorSupervisor extends Actor with ActorLogging {
   import akka.actor.SupervisorStrategy._
   import akka.actor.OneForOneStrategy
 
@@ -60,7 +59,7 @@ class AutenticacionActorSupervisor(implicit val supervisor: ActorRef) extends Ac
 
 }
 
-class AutenticacionActor extends Actor with ActorLogging {
+class AutenticacionActor(implicit val supervisor: ActorRef) extends Actor with ActorLogging {
 
   import context.dispatcher
 

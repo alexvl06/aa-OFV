@@ -2,11 +2,10 @@ package co.com.alianza.domain.aggregates.autenticacion
 
 import java.util.Date
 
-import akka.actor.{ Actor, ActorLogging, ActorSystem, Props }
+import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, Props }
 import akka.pattern.ask
 import akka.routing.RoundRobinPool
 import akka.util.Timeout
-
 import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.domain.aggregates.autenticacion.errores.TokenInvalido
 import co.com.alianza.exceptions.PersistenceException
@@ -67,7 +66,7 @@ class AutorizacionActorSupervisor extends Actor with ActorLogging {
  * Realiza la validación de un token y si se está autorizado para acceder a la url
  * @author smontanez
  */
-class AutorizacionActor(implicit val system: ActorSystem) extends Actor with ActorLogging with FutureResponse {
+class AutorizacionActor(implicit val system: ActorSystem, implicit val sesionActorSupervisor: ActorRef) extends Actor with ActorLogging with FutureResponse {
 
   import system.dispatcher
   import co.com.alianza.util.json.MarshallableImplicits._
@@ -94,7 +93,7 @@ class AutorizacionActor(implicit val system: ActorSystem) extends Actor with Act
       futureInvalidarToken onComplete {
         case Failure(failure) => currentSender ! failure
         case Success(value) =>
-          MainActors.sesionActorSupervisor ! InvalidarSesion(message.token)
+          sesionActorSupervisor ! InvalidarSesion(message.token)
           currentSender ! ResponseMessage(OK, "El token ha sido removido")
       }
 
@@ -104,7 +103,7 @@ class AutorizacionActor(implicit val system: ActorSystem) extends Actor with Act
       futureInvalidarToken onComplete {
         case Failure(failure) => currentSender ! failure
         case Success(value) =>
-          MainActors.sesionActorSupervisor ! InvalidarSesion(message.token)
+          sesionActorSupervisor ! InvalidarSesion(message.token)
           currentSender ! ResponseMessage(OK, "El token ha sido removido")
       }
 
@@ -114,7 +113,7 @@ class AutorizacionActor(implicit val system: ActorSystem) extends Actor with Act
       futureInvalidarToken onComplete {
         case Failure(failure) => currentSender ! failure
         case Success(value) =>
-          MainActors.sesionActorSupervisor ! InvalidarSesion(message.token)
+          sesionActorSupervisor ! InvalidarSesion(message.token)
           currentSender ! ResponseMessage(OK, "El token ha sido removido")
       }
   }
@@ -149,7 +148,7 @@ class AutorizacionActor(implicit val system: ActorSystem) extends Actor with Act
    * @return
    */
   private def guardaTokenCache(usuarioOption: Option[Usuario], token: String): Future[Option[Usuario]] = {
-    val validacionSesion: Future[Boolean] = ask(MainActors.sesionActorSupervisor, ValidarSesion(token)).mapTo[Boolean]
+    val validacionSesion: Future[Boolean] = ask(sesionActorSupervisor, ValidarSesion(token)).mapTo[Boolean]
     validacionSesion.map {
       case true => usuarioOption.map(usuario => usuario.copy(contrasena = None))
       case false => None
