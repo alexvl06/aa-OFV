@@ -14,8 +14,8 @@ import scala.concurrent.ExecutionContext
  *
  * @author seven4n
  */
-case class PreguntasAutovalidacionService(kafkaActor: ActorSelection, preguntasAutovalidacionActor: ActorSelection) (implicit val ec: ExecutionContext)
-  extends Directives with AlianzaCommons with CrossHeaders {
+case class PreguntasAutovalidacionService(kafkaActor: ActorSelection, preguntasAutovalidacionActor: ActorSelection)(implicit val ec: ExecutionContext)
+    extends Directives with AlianzaCommons with CrossHeaders {
 
   import co.com.alianza.infrastructure.messages.PreguntasAutovalidacionMessagesJsonSupport._
 

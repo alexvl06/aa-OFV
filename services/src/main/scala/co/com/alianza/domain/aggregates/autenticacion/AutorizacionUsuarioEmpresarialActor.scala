@@ -1,8 +1,7 @@
 package co.com.alianza.domain.aggregates.autenticacion
 
 import akka.pattern.ask
-import akka.actor.ActorRef
-
+import akka.actor.{ Actor, ActorRef, ActorSelection, ActorSystem }
 import co.com.alianza.util.token.{ AesUtil, Token }
 import co.com.alianza.util.transformers.ValidationT
 import co.com.alianza.infrastructure.messages._
@@ -12,23 +11,23 @@ import co.com.alianza.infrastructure.dto._
 import co.com.alianza.infrastructure.anticorruption.recursosAgenteEmpresarial.{ DataAccessAdapter => raDataAccessAdapter }
 import co.com.alianza.infrastructure.anticorruption.recursosClienteAdmin.{ DataAccessAdapter => rcaDataAccessAdapter }
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => usDataAdapter }
-import co.com.alianza.exceptions.{ TechnicalLevel, PersistenceException }
-import co.com.alianza.app.MainActors
+import co.com.alianza.exceptions.{ PersistenceException, TechnicalLevel }
 import enumerations.{ CryptoAesParameters, EstadosEmpresaEnum }
 import enumerations.empresa.EstadosDeEmpresaEnum
 
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 import scalaz.std.AllInstances._
-import scalaz.Validation
-import scala.util.{ Success => sSuccess, Failure => sFailure }
-import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
-
+import scala.util.{ Failure => sFailure, Success => sSuccess }
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 import spray.http.StatusCodes._
 
 /**
  * Created by manuel on 16/12/14.
  */
-class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with ValidacionesAutenticacionUsuarioEmpresarial {
+class AutorizacionUsuarioEmpresarialActor()(implicit val supervisor : ActorRef, implicit val system : ActorSystem)
+  extends AutorizacionActor with ValidacionesAutenticacionUsuarioEmpresarial {
+
+  import co.com.alianza.util.json.MarshallableImplicits._
 
   override def receive = {
 
@@ -39,9 +38,11 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
         sesion <- ValidationT(obtieneSesion(message.token))
         tuplaUsuarioOptionEstadoEmpresa <- ValidationT(obtieneUsuarioEmpresarial(message.token))
         validUs <- ValidationT(validarUsuario(tuplaUsuarioOptionEstadoEmpresa match { case None => None case _ => Some(tuplaUsuarioOptionEstadoEmpresa.get._1) }))
-        validacionEstadoEmpresa <- ValidationT(validarEstadoEmpresa(tuplaUsuarioOptionEstadoEmpresa match { case None => None case _ => Some(tuplaUsuarioOptionEstadoEmpresa.get._2) }))
+        validacionEstadoEmpresa <- ValidationT(validarEstadoEmpresa(tuplaUsuarioOptionEstadoEmpresa match { case None => None case _ =>
+          Some(tuplaUsuarioOptionEstadoEmpresa.get._2) }))
         validacionIp <- ValidationT(validarIpEmpresa(sesion, message.ip))
-        result <- ValidationT(autorizarRecursoAgente(tuplaUsuarioOptionEstadoEmpresa match { case None => None case _ => Some(tuplaUsuarioOptionEstadoEmpresa.get._1) }, message.url))
+        result <- ValidationT(autorizarRecursoAgente(tuplaUsuarioOptionEstadoEmpresa match { case None => None case _ =>
+          Some(tuplaUsuarioOptionEstadoEmpresa.get._1) }, message.url))
       } yield {
         result
       }).run
@@ -107,7 +108,7 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
   }
 
   private def obtieneSesion(token: String): Future[Validation[ErrorAutorizacion, ActorRef]] =
-    MainActors.sesionActorSupervisor ? BuscarSesion(token) map {
+    supervisor ? BuscarSesion(token) map {
       case Some(sesionActor: ActorRef) =>
         Validation.success(sesionActor)
       case None =>
@@ -125,7 +126,7 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
         empresaSesionActor ? ObtenerIps map {
           case ips: List[String] if ips.contains(ip) => Validation.success(ip)
           case ips: List[String] if ips.isEmpty || !ips.contains(ip) =>
-            Validation.failure(ErrorSesionIpInvalida(ip));
+            Validation.failure(ErrorSesionIpInvalida(ip))
         }
       case None =>
         Future.successful(Validation.failure(ErrorSesionIpInvalida(ip)))
@@ -212,7 +213,7 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
    */
   private def guardaTokenCache(usuarioOption: Option[UsuarioEmpresarial], message: AutorizarUsuarioEmpresarialMessage): Future[Option[UsuarioEmpresarial]] = {
 
-    val validacionSesion: Future[Boolean] = ask(MainActors.sesionActorSupervisor, ValidarSesion(message.token)).mapTo[Boolean]
+    val validacionSesion: Future[Boolean] = ask(supervisor, ValidarSesion(message.token)).mapTo[Boolean]
     validacionSesion.map {
       case true => usuarioOption.map(usuario => usuario.copy(contrasena = None))
       case false => None
@@ -228,7 +229,7 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
    */
   private def guardaTokenAdminCache(usuarioOption: Option[(UsuarioEmpresarialAdmin, Int)], token: String): Future[Option[(UsuarioEmpresarialAdmin, Int)]] = {
 
-    val validacionSesion: Future[Boolean] = ask(MainActors.sesionActorSupervisor, ValidarSesion(token)).mapTo[Boolean]
+    val validacionSesion: Future[Boolean] = ask(supervisor, ValidarSesion(token)).mapTo[Boolean]
     validacionSesion.map {
       case true => usuarioOption.map(usuario => (usuario._1.copy(contrasena = None), usuario._2))
       case false => None
@@ -272,7 +273,9 @@ class AutorizacionUsuarioEmpresarialActor extends AutorizacionActor with Validac
     clienteAdmin match {
       case Some(usuario) =>
         val recursosFuturo = rcaDataAccessAdapter obtenerRecursos usuario.id
-        recursosFuturo.map(_.map(x => resolveMessageRecursosClienteAdmin(usuario, x.filter(filtrarRecursosPerfilClienteAdmin(_, url.getOrElse("")))))).map(_.leftMap { pe => ErrorPersistenciaAutorizacion(pe.message, pe) })
+        recursosFuturo
+          .map(_.map(x => resolveMessageRecursosClienteAdmin(usuario, x.filter(filtrarRecursosPerfilClienteAdmin(_, url.getOrElse(""))))))
+          .map(_.leftMap { pe => ErrorPersistenciaAutorizacion(pe.message, pe) })
       case _ =>
         Future.successful(Validation.success(ResponseMessage(Unauthorized, TokenInvalido().msg)))
     }

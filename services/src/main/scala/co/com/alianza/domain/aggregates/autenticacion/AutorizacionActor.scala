@@ -34,7 +34,10 @@ class AutorizacionActorSupervisor extends Actor with ActorLogging {
   import akka.actor.OneForOneStrategy
 
   val autorizacionActor = context.actorOf(Props[AutorizacionActor].withRouter(RoundRobinPool(nrOfInstances = 1)), "autorizacionActor")
-  val autorizacionUsuarioEmpresarialActor = context.actorOf(Props[AutorizacionUsuarioEmpresarialActor].withRouter(RoundRobinPool(nrOfInstances = 1)), "autorizacionUsuarioEmpresarialActor")
+  val autorizacionUsuarioEmpresarialActor = context.actorOf(
+    Props[AutorizacionUsuarioEmpresarialActor].withRouter(RoundRobinPool(nrOfInstances = 1)),
+    "autorizacionUsuarioEmpresarialActor"
+  )
 
   def receive = {
 
@@ -65,6 +68,7 @@ class AutorizacionActorSupervisor extends Actor with ActorLogging {
  * @author smontanez
  */
 class AutorizacionActor(implicit val system: ActorSystem) extends Actor with ActorLogging with FutureResponse {
+
   import system.dispatcher
   import co.com.alianza.util.json.MarshallableImplicits._
   import scalaz.std.AllInstances._

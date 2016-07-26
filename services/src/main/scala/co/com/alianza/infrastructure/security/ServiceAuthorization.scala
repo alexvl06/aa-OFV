@@ -26,6 +26,7 @@ trait ServiceAuthorization {
   implicit val system: ActorSystem
   import system.dispatcher
 
+  implicit val autorizacionActorSupervisor : ActorRef
   implicit val conf: Config = system.settings.config
   implicit val timeout: Timeout = Timeout(10 seconds)
 
@@ -42,11 +43,11 @@ trait ServiceAuthorization {
         val p = promise[Any]
         var futuro: Future[Any] = null
         if (tipoCliente == TiposCliente.agenteEmpresarial.toString)
-          futuro = MainActors.autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialMessage(token.get.value, None, obtenerIp(ctx).get.value)
+          futuro = autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialMessage(token.get.value, None, obtenerIp(ctx).get.value)
         else if (tipoCliente == TiposCliente.clienteAdministrador.toString)
-          futuro = MainActors.autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialAdminMessage(token.get.value, None)
+          futuro = autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialAdminMessage(token.get.value, None)
         else
-          futuro = MainActors.autorizacionActorSupervisor ? AutorizarUrl(token.get.value, "")
+          futuro = autorizacionActorSupervisor ? AutorizarUrl(token.get.value, "")
         futuro map {
           case r: ResponseMessage =>
             r.statusCode match {
