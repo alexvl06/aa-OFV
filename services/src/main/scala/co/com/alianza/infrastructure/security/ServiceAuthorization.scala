@@ -26,7 +26,7 @@ trait ServiceAuthorization {
   implicit val system: ActorSystem
   import system.dispatcher
 
-  implicit val autorizacionActorSupervisor : ActorRef
+  implicit val autorizacionActorSupervisor: ActorRef
   implicit val conf: Config = system.settings.config
   implicit val timeout: Timeout = Timeout(10 seconds)
 

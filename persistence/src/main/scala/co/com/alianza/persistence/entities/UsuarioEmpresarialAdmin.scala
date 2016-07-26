@@ -6,7 +6,9 @@ import CustomDriver.simple._
 /**
  * Created by manuel on 17/12/14.
  */
-case class UsuarioEmpresarialAdmin(id: Int, correo: String, fechaActualizacion: Timestamp, usuario: String, identificacion: String, tipoIdentificacion: Int, estado: Int, contrasena: Option[String], token: Option[String], numeroIngresosErroneos: Int, ipUltimoIngreso: Option[String], fechaUltimoIngreso: Option[Timestamp])
+case class UsuarioEmpresarialAdmin(id: Int, correo: String, fechaActualizacion: Timestamp, usuario: String, identificacion: String,
+  tipoIdentificacion: Int, estado: Int, contrasena: Option[String], token: Option[String],
+  numeroIngresosErroneos: Int, ipUltimoIngreso: Option[String], fechaUltimoIngreso: Option[Timestamp])
 
 class UsuarioEmpresarialAdminTable(tag: Tag) extends Table[UsuarioEmpresarialAdmin](tag, "USUARIO_EMPRESARIAL_ADMIN") {
   def id = column[Int]("ID", O.PrimaryKey, O.AutoInc) // This is the primary key column
@@ -24,5 +26,6 @@ class UsuarioEmpresarialAdminTable(tag: Tag) extends Table[UsuarioEmpresarialAdm
   def tokenActivacion = column[Option[Timestamp]]("TOKEN_ACTIVACION")
 
   // Every table needs a * projection with the same type as the table's type parameter
-  def * = (id, correo, fechaActualizacion, usuario, identificacion, tipoIdentificacion, estado, contrasena, token, numeroIngresosErroneos, ipUltimoIngreso, fechaUltimoIngreso) <> (UsuarioEmpresarialAdmin.tupled, UsuarioEmpresarialAdmin.unapply)
+  def * = (id, correo, fechaActualizacion, usuario, identificacion, tipoIdentificacion, estado, contrasena, token,
+    numeroIngresosErroneos, ipUltimoIngreso, fechaUltimoIngreso) <> (UsuarioEmpresarialAdmin.tupled, UsuarioEmpresarialAdmin.unapply)
 }

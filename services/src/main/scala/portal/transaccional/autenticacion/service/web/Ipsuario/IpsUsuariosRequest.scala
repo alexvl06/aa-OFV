@@ -1,4 +1,4 @@
-package portal.transaccional.autenticacion.service.web.IpsUsuarios
+package portal.transaccional.autenticacion.service.web.Ipsuario
 
 /**
  * Created by jonathan on 25/07/16.

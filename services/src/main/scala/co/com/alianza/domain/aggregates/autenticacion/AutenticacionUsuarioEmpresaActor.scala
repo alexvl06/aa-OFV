@@ -40,8 +40,12 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
 
     /**
      * Flujo:
-     * Se consulta si el usuario a autenticar es un agente empresarial, de ser así se manda un mensaje el mismo para autenticar ese tipo de usuario
-     * Si no se cumple lo anterior se valida si el usuario es cliente administrador, si es asi se manda un mensaje el mismo para autenticar ese tipo de usuario
+     * Se consulta si el usuario a autenticar es un agente empresarial, de ser
+     * así se manda un mensaje el mismo para autenticar ese tipo de usuario
+     *
+     * Si no se cumple lo anterior se valida si el usuario es cliente administrador,
+     * si es asi se manda un mensaje el mismo para autenticar ese tipo de usuario
+     *
      * Si no se cumple ninguna de las dos cosas se retorna ErrorCredencialesInvalidas
      */
     case message: AutenticarUsuarioEmpresarialMessage =>

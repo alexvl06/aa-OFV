@@ -24,8 +24,8 @@ import spray.http.StatusCodes._
 /**
  * Created by manuel on 16/12/14.
  */
-class AutorizacionUsuarioEmpresarialActor()(implicit val supervisor : ActorRef, implicit val system : ActorSystem)
-  extends AutorizacionActor with ValidacionesAutenticacionUsuarioEmpresarial {
+class AutorizacionUsuarioEmpresarialActor()(implicit val supervisor: ActorRef, implicit val system: ActorSystem)
+    extends AutorizacionActor with ValidacionesAutenticacionUsuarioEmpresarial {
 
   import co.com.alianza.util.json.MarshallableImplicits._
 
@@ -38,11 +38,15 @@ class AutorizacionUsuarioEmpresarialActor()(implicit val supervisor : ActorRef, 
         sesion <- ValidationT(obtieneSesion(message.token))
         tuplaUsuarioOptionEstadoEmpresa <- ValidationT(obtieneUsuarioEmpresarial(message.token))
         validUs <- ValidationT(validarUsuario(tuplaUsuarioOptionEstadoEmpresa match { case None => None case _ => Some(tuplaUsuarioOptionEstadoEmpresa.get._1) }))
-        validacionEstadoEmpresa <- ValidationT(validarEstadoEmpresa(tuplaUsuarioOptionEstadoEmpresa match { case None => None case _ =>
-          Some(tuplaUsuarioOptionEstadoEmpresa.get._2) }))
+        validacionEstadoEmpresa <- ValidationT(validarEstadoEmpresa(tuplaUsuarioOptionEstadoEmpresa match {
+          case None => None case _ =>
+            Some(tuplaUsuarioOptionEstadoEmpresa.get._2)
+        }))
         validacionIp <- ValidationT(validarIpEmpresa(sesion, message.ip))
-        result <- ValidationT(autorizarRecursoAgente(tuplaUsuarioOptionEstadoEmpresa match { case None => None case _ =>
-          Some(tuplaUsuarioOptionEstadoEmpresa.get._1) }, message.url))
+        result <- ValidationT(autorizarRecursoAgente(tuplaUsuarioOptionEstadoEmpresa match {
+          case None => None case _ =>
+            Some(tuplaUsuarioOptionEstadoEmpresa.get._1)
+        }, message.url))
       } yield {
         result
       }).run
