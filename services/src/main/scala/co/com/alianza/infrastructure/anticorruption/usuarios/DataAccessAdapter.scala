@@ -1,41 +1,24 @@
 package co.com.alianza.infrastructure.anticorruption.usuarios
 
-import java.sql.{ Date, Timestamp }
+import java.sql.{Date, Timestamp}
 
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente._
-import co.com.alianza.persistence.repositories._
-import scalaz.Validation
-import scala.concurrent.{ ExecutionContext, Future }
 import co.com.alianza.exceptions.PersistenceException
-
-import scalaz.{ Failure => zFailure, Success => zSuccess }
-import co.com.alianza.infrastructure.dto._
-import co.com.alianza.persistence.entities.{
-  Usuario => eUsuario,
-  PinUsuario => ePinUsuario,
-  UsuarioEmpresarial => eUsuarioEmpresarial,
-  UsuarioEmpresarialAdmin => eUsuarioEmpresarialAdmin,
-  Empresa => eEmpresa,
-  HorarioEmpresa => eHorarioEmpresa,
-  _
-}
-import co.com.alianza.persistence.messages.AutenticacionRequest
-import enumerations.EstadosUsuarioEnum
-import co.com.alianza.persistence.entities
 import co.com.alianza.infrastructure.auditing.AuditingUser.AuditingUserData
-import co.com.alianza.persistence.repositories.{ IpsUsuarioRepository, UsuariosRepository }
-import scalaz.Validation
-import scala.concurrent.{ ExecutionContext, Future }
-import co.com.alianza.exceptions.PersistenceException
-
-import scalaz.{ Failure => zFailure, Success => zSuccess }
-import co.com.alianza.infrastructure.dto.Usuario
-import co.com.alianza.persistence.entities.{ Usuario => eUsuario, PinUsuario => ePinUsuario, PerfilUsuario, IpsUsuario }
-import co.com.alianza.persistence.messages.AutenticacionRequest
+import co.com.alianza.infrastructure.dto.{Usuario, _}
+import co.com.alianza.persistence.entities
+import co.com.alianza.persistence.entities.{IpsUsuario, PerfilUsuario, Empresa => eEmpresa, HorarioEmpresa => eHorarioEmpresa, PinUsuario => ePinUsuario, Usuario => eUsuario, UsuarioEmpresarial => eUsuarioEmpresarial, UsuarioEmpresarialAdmin => eUsuarioEmpresarialAdmin, _}
+import co.com.alianza.persistence.repositories.{IpsUsuarioRepository, UsuariosRepository, _}
+import co.com.alianza.persistence.util.DataBaseExecutionContext
 import enumerations.EstadosUsuarioEnum
+
+import scala.concurrent.{ExecutionContext, Future}
+import scalaz.{Validation, Failure => zFailure, Success => zSuccess}
 
 object DataAccessAdapter {
+
+  implicit val ec: ExecutionContext = DataBaseExecutionContext.executionContext
 
   def obtenerUsuarios(): Future[Validation[PersistenceException, List[Usuario]]] = {
     val repo = new UsuariosRepository()

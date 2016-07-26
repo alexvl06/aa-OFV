@@ -1,14 +1,17 @@
 package co.com.alianza.infrastructure.anticorruption.autovalidacion
 
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.infrastructure.dto.{ RespuestaCompleta, Respuesta, Pregunta }
-import co.com.alianza.persistence.entities.{ RespuestasAutovalidacionUsuario, PreguntasAutovalidacion }
+import co.com.alianza.infrastructure.dto.{Pregunta, Respuesta, RespuestaCompleta}
+import co.com.alianza.persistence.entities.{PreguntasAutovalidacion, RespuestasAutovalidacionUsuario}
 import co.com.alianza.persistence.repositories.PreguntasAutovalidacionRepository
+import co.com.alianza.persistence.util.DataBaseExecutionContext
 
-import scala.concurrent.{ ExecutionContext, Future }
-import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
+import scala.concurrent.{ExecutionContext, Future}
+import scalaz.{Validation, Failure => zFailure, Success => zSuccess}
 
 object DataAccessAdapter {
+
+  implicit val ec: ExecutionContext = DataBaseExecutionContext.executionContext
 
   def obtenerPreguntas(): Future[Validation[PersistenceException, List[Pregunta]]] = {
     val repo = new PreguntasAutovalidacionRepository()
