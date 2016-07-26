@@ -12,14 +12,17 @@ import scalaz.{ Failure => zFailure, Success => zSuccess }
 import co.com.alianza.infrastructure.dto.Configuracion
 import co.com.alianza.persistence.entities.{ Configuraciones => eConfiguraciones }
 import co.com.alianza.persistence.repositories.ConfiguracionesRepository
-import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
+import slick.util.AsyncExecutor
 
 object DataAccessAdapter {
 
-  /*import system.dispatcher
-  implicit val conf: Config = system.settings.config*/
+  private val numThreads = ConfigFactory.load().getInt("dbs.alianza.db.config.numThreads"),
+  private val queueSize = ConfigFactory.load().getInt("dbs.alianza.db.config.queueSize")
+  implicit val executionContext: ExecutionContext = AsyncExecutor("DataAccessAdapter", numThreads, queueSize).executionContext
 
   def obtenerConfiguraciones(implicit system: ActorSystem): Future[Validation[PersistenceException, List[Configuracion]]] = {
+    import system.dispatcher
     val repo = new ConfiguracionesRepository()
     repo.obtenerConfiguraciones() map {
       x => transformValidationList(x)

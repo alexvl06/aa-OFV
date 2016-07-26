@@ -1,16 +1,17 @@
 package co.com.alianza.domain.aggregates.empresa
 
-import akka.actor.{ ActorRef, Props, ActorLogging, Actor }
+import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, Props }
 import akka.routing.RoundRobinPool
-
 import co.com.alianza.util.FutureResponse
 import com.typesafe.config.Config
 import co.com.alianza.infrastructure.messages.empresa._
 import co.com.alianza.infrastructure.messages.empresa.OtpMessagesJsonSupport._
+
 import scalaz.std.AllInstances._
 import spray.client.pipelining._
-import scala.concurrent.{ Future }
-import spray.http.{ StatusCodes, HttpResponse }
+
+import scala.concurrent.Future
+import spray.http.{ HttpResponse, StatusCodes }
 import co.com.alianza.infrastructure.messages.ResponseMessage
 import co.com.alianza.util.transformers.ValidationT
 import spray.httpx.SprayJsonSupport
@@ -43,11 +44,11 @@ class OtpServicesActorSupervisor extends Actor with ActorLogging {
 
 }
 
-class OtpServicesActor extends Actor with ActorLogging with FutureResponse {
+class OtpServicesActor(implicit val system: ActorSystem) extends Actor with ActorLogging with FutureResponse {
 
-  import scala.concurrent.ExecutionContext
-  implicit val _: ExecutionContext = context.dispatcher
-  private val config: Config = MainActors.conf
+  import system.dispatcher
+  implicit val config: Config = system.settings.config
+
   val application = config.getInt("service.otp.application")
 
   def receive = {
