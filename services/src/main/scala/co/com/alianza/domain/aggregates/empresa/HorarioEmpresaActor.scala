@@ -1,6 +1,6 @@
 package co.com.alianza.domain.aggregates.empresa
 
-import akka.actor.{ Actor, ActorLogging, ActorRef, OneForOneStrategy, Props }
+import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, OneForOneStrategy, Props }
 import akka.actor.SupervisorStrategy._
 import akka.pattern._
 import akka.routing.RoundRobinPool
@@ -19,9 +19,10 @@ import co.com.alianza.exceptions.BusinessLevel
 import co.com.alianza.domain.aggregates.autenticacion.{ ActualizarHorarioEmpresa, ValidacionesAutenticacionUsuarioEmpresarial }
 import spray.http.StatusCodes._
 import java.sql.{ Date, Time }
-import scalaz.Validation.FlatMap._
 
+import scalaz.Validation.FlatMap._
 import co.com.alianza.domain.aggregates.autenticacion.errores.{ ErrorAutenticacion, ErrorCredencialesInvalidas, ErrorPersistencia }
+import com.typesafe.config.Config
 
 import scala.util.{ Failure, Success }
 import scala.concurrent.Future
@@ -45,9 +46,11 @@ class HorarioEmpresaActorSupervisor extends Actor with ActorLogging {
 
 }
 
-class HorarioEmpresaActor extends Actor with ActorLogging with AlianzaActors with ValidacionesAutenticacionUsuarioEmpresarial {
-  import scala.concurrent.ExecutionContext
-  implicit val _: ExecutionContext = context.dispatcher
+class HorarioEmpresaActor (implicit val system: ActorSystem) extends Actor with ActorLogging with AlianzaActors with ValidacionesAutenticacionUsuarioEmpresarial {
+
+  import system.dispatcher
+
+  implicit val conf: Config = system.settings.config
   import co.com.alianza.util.json.MarshallableImplicits._
 
   def receive = {

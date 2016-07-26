@@ -1,15 +1,15 @@
 package co.com.alianza.domain.aggregates.autoregistro
 
-import akka.actor.{ ActorLogging, Actor }
+import akka.actor.{ Actor, ActorLogging, ActorSystem, Props }
 import co.com.alianza.infrastructure.anticorruption.clientes.DataAccessAdapter
+
 import scalaz.{ Failure => zFailure, Success => zSuccess }
-import scala.util.{ Success, Failure }
-import co.com.alianza.infrastructure.messages.{ ResponseMessage, ExisteClienteCoreMessage }
+import scala.util.{ Failure, Success }
+import co.com.alianza.infrastructure.messages.{ ExisteClienteCoreMessage, ResponseMessage }
 import co.com.alianza.infrastructure.dto.Cliente
 import spray.http.StatusCodes._
-
-import akka.actor.Props
 import akka.routing.RoundRobinPool
+import com.typesafe.config.Config
 
 class ConsultaClienteActorSupervisor extends Actor with ActorLogging {
   import akka.actor.SupervisorStrategy._
@@ -36,10 +36,12 @@ class ConsultaClienteActorSupervisor extends Actor with ActorLogging {
  *
  * @author smontanez
  */
-class ConsultaClienteActor extends Actor with ActorLogging {
+class ConsultaClienteActor (implicit val system: ActorSystem) extends Actor with ActorLogging {
 
-  import scala.concurrent.ExecutionContext
-  implicit val _: ExecutionContext = context.dispatcher
+  import system.dispatcher
+
+  implicit val conf: Config = system.settings.config
+
   import co.com.alianza.util.json.MarshallableImplicits._
 
   def receive = {
