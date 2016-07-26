@@ -30,9 +30,6 @@ import scalaz.Validation
 case class AutorizacionService(kafkaActor: ActorSelection, autorizacionActor: ActorSelection, autorizacionUsuarioEmpresarialActor: ActorSelection) extends Directives with AlianzaCommons with CacheHelper {
 
   import CachingDirectiveAlianza._
-  implicit val system: ActorSystem = MainActors.system
-  implicit val contextAuthorization: ExecutionContext = MainActors.ex
-  implicit val conf: Config = MainActors.conf
 
   import AutenticacionMessagesJsonSupport._
 

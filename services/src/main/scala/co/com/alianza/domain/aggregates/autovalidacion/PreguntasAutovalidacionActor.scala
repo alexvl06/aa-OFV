@@ -49,8 +49,9 @@ case class PreguntasAutovalidacionActor(implicit val system: ActorSystem) extend
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.errorValidacion
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.toErrorValidation
 
-  implicit val _: ExecutionContext = context.dispatcher
-  private val config: Config = MainActors.conf
+  import system.dispatcher
+
+  implicit val conf: Config = system.settings.config
 
   def receive = {
 
