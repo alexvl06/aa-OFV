@@ -8,10 +8,12 @@ import co.com.alianza.exceptions.PersistenceException
 
 import scalaz.{ Failure => zFailure, Success => zSuccess }
 import co.com.alianza.infrastructure.dto._
-import co.com.alianza.persistence.repositories.core.{ ActualizacionRepository }
+import co.com.alianza.persistence.repositories.core.ActualizacionRepository
+import co.com.alianza.persistence.util.DataBaseExecutionContext
 
 object DataAccessAdapter {
 
+  implicit val ec: ExecutionContext = DataBaseExecutionContext.executionContext
   //Consulta datos cliente
 
   def consultaDatosCliente(documento: String, tipoDocumento: String) = {

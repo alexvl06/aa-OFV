@@ -1,8 +1,8 @@
 package co.com.alianza.domain.aggregates.usuarios
 
-import akka.actor.{ Actor, ActorLogging }
-
+import akka.actor.{ Actor, ActorLogging, ActorSystem }
 import co.com.alianza.infrastructure.messages._
+
 import scalaz.{ Failure => zFailure, Success => zSuccess }
 import scala.util.{ Failure => sFailure, Success => sSuccess }
 import scala.concurrent.ExecutionContext
@@ -10,8 +10,8 @@ import scala.concurrent.ExecutionContext
 /**
  * Created by manuel on 18/12/14.
  */
-class UsuarioEmpresarialActor extends Actor with ActorLogging {
-  implicit val ex: ExecutionContext = MainActors.dataAccesEx
+class UsuarioEmpresarialActor(implicit val system: ActorSystem) extends Actor with ActorLogging {
+  import system.dispatcher
 
   def receive = {
     case message: ConsultaUsuarioEmpresarialMessage =>
