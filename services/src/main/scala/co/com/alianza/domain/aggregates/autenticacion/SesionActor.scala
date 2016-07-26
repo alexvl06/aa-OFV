@@ -119,7 +119,7 @@ class SesionActorSupervisor(implicit val system: ActorSystem) extends Actor with
   }
 }
 
-class SesionActor(expiracionSesion: Int, empresa: Option[Empresa], horario: Option[HorarioEmpresa]) extends Actor with ActorLogging {
+class SesionActor(expiracionSesion: Int, empresa: Option[Empresa], horario: Option[HorarioEmpresa])(implicit val SessionActorSupervisor: ActorRef) extends Actor with ActorLogging {
 
   implicit val _: ExecutionContext = context dispatcher
   implicit val timeout: Timeout = 120 seconds
@@ -164,7 +164,7 @@ class SesionActor(expiracionSesion: Int, empresa: Option[Empresa], horario: Opti
     context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(s"empresa${empresa.get.id}") map {
       case Some(empresaActor: ActorRef) => self ! empresaActor
       case None =>
-        MainActors.sesionActorSupervisor ? CrearEmpresaActor(empresa.get, horario) map {
+        SessionActorSupervisor ? CrearEmpresaActor(empresa.get, horario) map {
           case empresaActor: ActorRef => self ! empresaActor
           case None => log error s"Sesión empresa '${empresa.get.id}' no creada!!"
         }
@@ -175,7 +175,8 @@ class SesionActor(expiracionSesion: Int, empresa: Option[Empresa], horario: Opti
 
 object SesionActor {
 
-  def props(expirationTime: Int, empresa: Option[Empresa], horario: Option[HorarioEmpresa]) = {
+  def props(expirationTime: Int, empresa: Option[Empresa], horario: Option[HorarioEmpresa])(implicit SessionActorSupervisor: ActorRef): Props = {
+
     Props(new SesionActor(expirationTime, empresa, horario))
   }
 

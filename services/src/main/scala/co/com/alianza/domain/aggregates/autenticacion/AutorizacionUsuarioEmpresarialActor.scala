@@ -1,17 +1,17 @@
 package co.com.alianza.domain.aggregates.autenticacion
 
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem}
+import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem }
 import akka.pattern.ask
 import akka.util.Timeout
 import co.com.alianza.domain.aggregates.autenticacion.errores._
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.infrastructure.anticorruption.recursosAgenteEmpresarial.{DataAccessAdapter => raDataAccessAdapter}
-import co.com.alianza.infrastructure.anticorruption.recursosClienteAdmin.{DataAccessAdapter => rcaDataAccessAdapter}
-import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => usDataAdapter}
+import co.com.alianza.infrastructure.anticorruption.recursosAgenteEmpresarial.{ DataAccessAdapter => raDataAccessAdapter }
+import co.com.alianza.infrastructure.anticorruption.recursosClienteAdmin.{ DataAccessAdapter => rcaDataAccessAdapter }
+import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => usDataAdapter }
 import co.com.alianza.infrastructure.dto._
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.util.json.JsonUtil
-import co.com.alianza.util.token.{AesUtil, Token}
+import co.com.alianza.util.token.{ AesUtil, Token }
 import co.com.alianza.util.transformers.ValidationT
 import enumerations.CryptoAesParameters
 import enumerations.empresa.EstadosDeEmpresaEnum
@@ -19,9 +19,9 @@ import spray.http.StatusCodes._
 
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
-import scala.util.{Failure => sFailure, Success => sSuccess}
+import scala.util.{ Failure => sFailure, Success => sSuccess }
 import scalaz.std.AllInstances._
-import scalaz.{Validation, Failure => zFailure, Success => zSuccess}
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 
 /**
  * Created by manuel on 16/12/14.

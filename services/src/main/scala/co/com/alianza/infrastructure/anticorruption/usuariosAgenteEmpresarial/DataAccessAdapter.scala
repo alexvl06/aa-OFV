@@ -5,24 +5,28 @@ import java.sql.Timestamp
 import co.com.alianza.infrastructure.auditing.AuditingUser.AuditingUserData
 import co.com.alianza.persistence.entities.{ PinEmpresa => ePinEmpresa, UsuarioEmpresarial => eUsuario, _ }
 import co.com.alianza.persistence.repositories.UsuariosEmpresarialRepository
-
 import co.com.alianza.exceptions.PersistenceException
 import enumerations.EstadosEmpresaEnum
+
 import scala.concurrent.{ ExecutionContext, Future }
 import scalaz.{ Failure, Success, Validation }
 import co.com.alianza.infrastructure.dto.{ UsuarioEmpresarial => dtoUsuario, UsuarioEmpresarialEstado => dtoEstadoUsuario }
 import co.com.alianza.persistence.repositories.empresa.UsuariosEmpresaRepository
+
 import scalaz.{ Failure => zFailure, Success => zSuccess }
 import co.com.alianza.util.clave.Crypto
 import co.com.alianza.persistence.entities.IpsUsuario
 import co.com.alianza.persistence.entities.Empresa
 import co.com.alianza.persistence.messages.empresa.GetAgentesEmpresarialesRequest
 import co.com.alianza.persistence.entities.UsuarioEmpresarialEmpresa
+import co.com.alianza.persistence.util.DataBaseExecutionContext
 
 /**
  * Created by S4N on 16/12/14.
  */
 object DataAccessAdapter {
+
+  implicit val ec: ExecutionContext = DataBaseExecutionContext.executionContext
 
   val repo = new UsuariosEmpresarialRepository()
 
@@ -48,7 +52,7 @@ object DataAccessAdapter {
   }
 
   def cambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa): Future[Validation[PersistenceException, Int]] = {
-    repo.cambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial, estado)
+    repo.AcambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial, estado)
   }
 
   def cambiarBloqueoDesbloqueoAgenteEmpresarial(idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa, timestamp: Timestamp): Future[Validation[PersistenceException, Int]] = {
