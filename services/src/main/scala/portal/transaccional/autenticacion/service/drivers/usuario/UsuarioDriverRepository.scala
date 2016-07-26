@@ -29,11 +29,51 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
   }
 
   /**
+   * Asociar el token al usuario
+   * @param numeroIdentificacion
+   * @param token
+   * @return
+   */
+  def actualizarToken(numeroIdentificacion: String, token: String): Future[Int] = {
+    usuarioDAO.createToken(numeroIdentificacion, token)
+  }
+
+  /**
+   * Actualiza los ingresos erroneos de un usuario al numero especificado por parametro
+   * @param idUsuario
+   * @param numeroIntentos
+   * @return
+   */
+  def actualizarIngresosErroneosUsuario(idUsuario: Int, numeroIntentos: Int): Future[Int] = {
+    usuarioDAO.updateIncorrectEntries(idUsuario, numeroIntentos)
+  }
+
+  /**
+   * Actualizar ultima ip
+   * @param numeroIdentificacion
+   * @param ip
+   * @return
+   */
+  def actualizarIp(numeroIdentificacion: String, ip: String): Future[Int] = {
+    usuarioDAO.updateLastIp(numeroIdentificacion, ip)
+  }
+
+  /**
+   * Actualizar fecha ingreso
+   * @param numeroIdentificacion
+   * @param fechaActual
+   * @return
+   */
+  def actualizarFechaIngreso(numeroIdentificacion: String, fechaActual: Timestamp): Future[Int] = {
+    usuarioDAO.updateLastDate(numeroIdentificacion, fechaActual)
+  }
+
+  /////////////////////////////// validaciones //////////////////////////////////
+
+  /**
    * Valida el estado del usuario
    * @param estadoUsuario El estado del usuario a validar
    * @return Future[Boolean]
-   * Success => True
-   * ErrorAutenticacion => ErrorUsuarioBloqueadoIntentosErroneos || ErrorUsuarioBloqueadoPendienteActivacion || ErrorUsuarioBloqueadoPendienteReinicio
    */
   def validarEstados(estadoUsuario: Int): Future[Boolean] = {
     if (estadoUsuario == EstadosUsuarioEnum.bloqueContraseña.id)
@@ -91,46 +131,6 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
       case false => Future.failed(ValidacionException("401.3", "Error Credenciales"))
       case true => Future.successful(true)
     }
-  }
-
-  /**
-   * Asociar el token al usuario
-   * @param numeroIdentificacion
-   * @param token
-   * @return
-   */
-  def actualizarToken(numeroIdentificacion: String, token: String): Future[Int] = {
-    usuarioDAO.createToken(numeroIdentificacion, token)
-  }
-
-  /**
-   * Actualiza los ingresos erroneos de un usuario al numero especificado por parametro
-   * @param idUsuario
-   * @param numeroIntentos
-   * @return
-   */
-  def actualizarIngresosErroneosUsuario(idUsuario: Int, numeroIntentos: Int): Future[Int] = {
-    usuarioDAO.updateIncorrectEntries(idUsuario, numeroIntentos)
-  }
-
-  /**
-   * Actualizar ultima ip
-   * @param numeroIdentificacion
-   * @param ip
-   * @return
-   */
-  def actualizarIp(numeroIdentificacion: String, ip: String): Future[Int] = {
-    usuarioDAO.updateLastIp(numeroIdentificacion, ip)
-  }
-
-  /**
-   * Actualizar fecha ingreso
-   * @param numeroIdentificacion
-   * @param fechaActual
-   * @return
-   */
-  def actualizarFechaIngreso(numeroIdentificacion: String, fechaActual: Timestamp): Future[Int] = {
-    usuarioDAO.updateLastDate(numeroIdentificacion, fechaActual)
   }
 
   /**

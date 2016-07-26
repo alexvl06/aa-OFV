@@ -1,4 +1,4 @@
-package portal.transaccional.autenticacion.service.drivers.respuestas
+package portal.transaccional.autenticacion.service.drivers.respuesta
 
 import co.com.alianza.persistence.entities.RespuestasAutovalidacionUsuario
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.RespuestaUsuarioDAOs

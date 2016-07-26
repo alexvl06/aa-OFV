@@ -12,7 +12,7 @@ import portal.transaccional.autenticacion.service.drivers.cliente.ClienteReposit
 import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionRepository
 import portal.transaccional.autenticacion.service.drivers.ipusuario.IpUsuarioRepository
 import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaRepository
-import portal.transaccional.autenticacion.service.drivers.respuestas.RespuestaUsuarioRepository
+import portal.transaccional.autenticacion.service.drivers.respuesta.RespuestaUsuarioRepository
 import portal.transaccional.autenticacion.service.drivers.usuario.UsuarioRepository
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -58,6 +58,7 @@ case class AutenticacionDriverRepository(usuarioRepo: UsuarioRepository, cliente
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
       token <- generarToken(usuario, cliente, ip, inactividad.valor)
       asociarToken <- usuarioRepo.actualizarToken(numeroIdentificacion, token)
+      //TODO: pendiente agregar método de creación de la sesión
       //sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
       respuestas <- respuestasRepo.getRespuestasById(usuario.id.get)
       tieneRespuestas <- respuestasRepo.validarRespuestas(respuestas)
@@ -77,19 +78,6 @@ case class AutenticacionDriverRepository(usuarioRepo: UsuarioRepository, cliente
   private def generarToken(usuario: Usuario, cliente: Cliente, ip: String, inactividad: String): Future[String] = Future {
     Token.generarToken(cliente.wcli_nombre, cliente.wcli_dir_correo, cliente.wcli_person,
       usuario.ipUltimoIngreso.getOrElse(ip), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), inactividad)
-  }
-
-  //TODO: Completar
-  def autenticarUsuarioEmpresa(tipoIdentificacion: Int, numeroIdentificacion: String, password: String, usuario: String, clientIp: String): Future[String] = {
-    for {
-      usuario <- usuarioRepo.getByIdentificacion(numeroIdentificacion)
-      token <- Future {
-        //Token.generarToken(cliente.wcli_nombre, cliente.wcli_dir_correo, cliente.wcli_person,
-        //  usuario.ipUltimoIngreso.getOrElse(clientIp), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), expiracionInactividad)
-        Token.generarToken("", "", "",
-          usuario.ipUltimoIngreso.getOrElse(clientIp), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), "")
-      }
-    } yield token
   }
 
 }
