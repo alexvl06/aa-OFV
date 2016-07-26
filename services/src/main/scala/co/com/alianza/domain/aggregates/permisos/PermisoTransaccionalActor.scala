@@ -1,16 +1,14 @@
 package co.com.alianza.domain.aggregates.permisos
 
-import akka.actor.{ ActorLogging, Actor, ActorRef }
-import akka.actor.Props
+import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, OneForOneStrategy, Props }
 import akka.actor.SupervisorStrategy._
-import akka.actor.OneForOneStrategy
 import akka.util.Timeout
-import co.com.alianza.domain.aggregates.autenticacion.errores.{ ErrorPasswordInvalido, ErrorAutenticacion, ErrorClienteNoExisteCore, ErrorPersistencia }
+import co.com.alianza.domain.aggregates.autenticacion.errores.{ ErrorAutenticacion, ErrorClienteNoExisteCore, ErrorPasswordInvalido, ErrorPersistencia }
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.util.clave.ErrorUltimasContrasenas
 import enumerations.{ TipoIdentificacion, TiposIdentificacionCore }
 
-import scala.util.{ Success, Failure }
+import scala.util.{ Failure, Success }
 
 //import co.com.alianza.infrastructure.anticorruption.clientes.DataAccessAdapter
 import scala.concurrent.duration._
@@ -46,9 +44,10 @@ class PermisoTransaccionalActorSupervisor extends Actor with ActorLogging {
 
 }
 
-class PermisoTransaccionalActor extends Actor with ActorLogging with FutureResponse {
+class PermisoTransaccionalActor (implicit val system: ActorSystem) extends Actor with ActorLogging with FutureResponse {
 
-  implicit val _: ExecutionContext = context.dispatcher
+  import system.dispatcher
+
   implicit val timeout: Timeout = 120 seconds
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.errorValidacion
 

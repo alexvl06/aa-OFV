@@ -2,11 +2,10 @@ package co.com.alianza.domain.aggregates.pin
 
 import java.sql.Timestamp
 
-import akka.actor.{ ActorRef, ActorLogging, Actor }
-
-import co.com.alianza.app.{ MainActors, AlianzaActors }
+import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, Props }
+import co.com.alianza.app.{ AlianzaActors, MainActors }
 import co.com.alianza.domain.aggregates.usuarios.{ ErrorPersistence, ErrorValidacion, ValidacionesUsuario }
-import co.com.alianza.exceptions.{ PersistenceException }
+import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => DataAdapterUsuario }
 import co.com.alianza.infrastructure.anticorruption.pin.{ DataAccessAdapter => pDataAccessAdapter }
 import co.com.alianza.infrastructure.anticorruption.ultimasContrasenas.{ DataAccessAdapter => DataAdapterContrasena }
@@ -21,16 +20,13 @@ import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.transformers.ValidationT
 import spray.http.StatusCodes._
 
-import scala.util.{ Success, Failure, Try }
+import scala.util.{ Failure, Success, Try }
 import scalaz.std.AllInstances._
 import scalaz.{ Failure => zFailure, Success => zSuccess }
-
-import scala.concurrent.{ Future, ExecutionContext }
+import scala.concurrent.{ ExecutionContext, Future }
 import scalaz.Validation
-
-import akka.actor.Props
 import akka.routing.RoundRobinPool
-import enumerations.{ EstadosUsuarioEnum, PerfilesUsuario, AppendPasswordUser }
+import enumerations.{ AppendPasswordUser, EstadosUsuarioEnum, PerfilesUsuario }
 
 class PinActorSupervisor extends Actor with ActorLogging {
   import akka.actor.SupervisorStrategy._
@@ -53,9 +49,10 @@ class PinActorSupervisor extends Actor with ActorLogging {
   }
 }
 
-class PinActor extends Actor with ActorLogging with AlianzaActors with FutureResponse {
+class PinActor (implicit val system: ActorSystem)extends Actor with ActorLogging with AlianzaActors with FutureResponse {
 
-  implicit val ex: ExecutionContext = MainActors.dataAccesEx
+  import system.dispatcher
+
   import ValidacionesUsuario._
 
   def receive = {

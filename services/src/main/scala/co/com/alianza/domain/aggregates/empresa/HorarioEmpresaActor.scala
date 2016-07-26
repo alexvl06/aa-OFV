@@ -50,7 +50,6 @@ class HorarioEmpresaActor (implicit val system: ActorSystem) extends Actor with 
 
   import system.dispatcher
 
-  implicit val conf: Config = system.settings.config
   import co.com.alianza.util.json.MarshallableImplicits._
 
   def receive = {

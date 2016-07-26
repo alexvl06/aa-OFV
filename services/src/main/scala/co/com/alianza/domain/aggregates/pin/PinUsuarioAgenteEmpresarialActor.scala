@@ -2,7 +2,7 @@ package co.com.alianza.domain.aggregates.pin
 
 import java.sql.Timestamp
 
-import akka.actor.{ Actor, ActorLogging, ActorRef }
+import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem }
 import co.com.alianza.app.{ AlianzaActors, MainActors }
 import co.com.alianza.domain.aggregates.usuarios.{ ErrorPersistence, ErrorValidacion }
 import co.com.alianza.exceptions.PersistenceException
@@ -16,10 +16,10 @@ import co.com.alianza.persistence.entities.{ PerfilUsuario, UltimaContrasenaUsua
 import co.com.alianza.util.FutureResponse
 import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.transformers.ValidationT
-import enumerations.{ PerfilesUsuario, AppendPasswordUser }
+import enumerations.{ AppendPasswordUser, PerfilesUsuario }
 import spray.http.StatusCodes._
-import scalaz.std.AllInstances._
 
+import scalaz.std.AllInstances._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success }
 import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
@@ -27,9 +27,10 @@ import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 /**
  * Created by manuel on 6/01/15.
  */
-class PinUsuarioAgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors with FutureResponse {
+class PinUsuarioAgenteEmpresarialActor(implicit val system: ActorSystem) extends Actor with ActorLogging with AlianzaActors with FutureResponse {
 
-  implicit val ex: ExecutionContext = MainActors.dataAccesEx
+  import system.dispatcher
+
   import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial._
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.errorValidacion
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.toErrorValidation
