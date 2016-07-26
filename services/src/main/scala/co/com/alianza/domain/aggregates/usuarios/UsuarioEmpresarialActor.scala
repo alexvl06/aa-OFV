@@ -10,7 +10,7 @@ import scala.concurrent.ExecutionContext
 /**
  * Created by manuel on 18/12/14.
  */
-class UsuarioEmpresarialActor extends Actor with ActorLogging with AlianzaActors {
+class UsuarioEmpresarialActor extends Actor with ActorLogging {
   implicit val ex: ExecutionContext = MainActors.dataAccesEx
 
   def receive = {

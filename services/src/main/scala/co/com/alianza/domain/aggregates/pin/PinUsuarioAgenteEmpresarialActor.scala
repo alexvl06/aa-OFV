@@ -27,7 +27,7 @@ import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 /**
  * Created by manuel on 6/01/15.
  */
-class PinUsuarioAgenteEmpresarialActor(implicit val system: ActorSystem) extends Actor with ActorLogging with AlianzaActors with FutureResponse {
+class PinUsuarioAgenteEmpresarialActor(implicit val system: ActorSystem) extends Actor with ActorLogging with FutureResponse {
 
   import system.dispatcher
 

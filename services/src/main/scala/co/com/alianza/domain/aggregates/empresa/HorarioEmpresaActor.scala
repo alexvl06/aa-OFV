@@ -45,7 +45,7 @@ class HorarioEmpresaActorSupervisor extends Actor with ActorLogging {
 
 }
 
-class HorarioEmpresaActor(implicit val system: ActorSystem) extends Actor with ActorLogging with AlianzaActors with ValidacionesAutenticacionUsuarioEmpresarial {
+class HorarioEmpresaActor(implicit val system: ActorSystem) extends Actor with ActorLogging with ValidacionesAutenticacionUsuarioEmpresarial {
 
   import system.dispatcher
 

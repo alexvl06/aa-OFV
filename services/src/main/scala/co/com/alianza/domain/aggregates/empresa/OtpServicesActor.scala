@@ -43,7 +43,7 @@ class OtpServicesActorSupervisor extends Actor with ActorLogging {
 
 }
 
-class OtpServicesActor extends Actor with ActorLogging with AlianzaActors with FutureResponse {
+class OtpServicesActor extends Actor with ActorLogging with FutureResponse {
 
   import scala.concurrent.ExecutionContext
   implicit val _: ExecutionContext = context.dispatcher
