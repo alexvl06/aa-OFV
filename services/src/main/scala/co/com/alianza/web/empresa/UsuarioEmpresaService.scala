@@ -8,7 +8,7 @@ import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.infrastructure.messages.GuardarPermisosAgenteMessage
 import co.com.alianza.infrastructure.messages.empresa.{ CrearAgenteEMessageJsonSupport, CrearAgenteMessage }
 import spray.routing.{ Directives, RequestContext }
-import co.com.alianza.app.{ AlianzaActors, AlianzaCommons, CrossHeaders }
+import co.com.alianza.app.{ AlianzaCommons, CrossHeaders }
 import co.com.alianza.infrastructure.messages.empresa._
 import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{ DataAccessAdapter => DataAccessAdapterClienteAdmin }
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth

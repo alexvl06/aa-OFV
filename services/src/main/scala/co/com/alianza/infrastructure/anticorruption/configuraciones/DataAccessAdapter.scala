@@ -2,10 +2,12 @@ package co.com.alianza.infrastructure.anticorruption.configuraciones
 
 import java.sql.Timestamp
 
+import akka.actor.ActorSystem
+
 import scalaz.Validation
 import scala.concurrent.{ ExecutionContext, Future }
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.app.MainActors
+
 import scalaz.{ Failure => zFailure, Success => zSuccess }
 import co.com.alianza.infrastructure.dto.Configuracion
 import co.com.alianza.persistence.entities.{ Configuraciones => eConfiguraciones }
@@ -14,8 +16,9 @@ import com.typesafe.config.Config
 
 object DataAccessAdapter {
 
-  implicit val ec: ExecutionContext = MainActors.dataAccesEx
-  implicit val conf: Config = MainActors.conf
+  implicit val system: ActorSystem
+  import system.dispatcher
+  implicit val conf: Config = system.settings.config
 
   def obtenerConfiguraciones(): Future[Validation[PersistenceException, List[Configuracion]]] = {
     val repo = new ConfiguracionesRepository()

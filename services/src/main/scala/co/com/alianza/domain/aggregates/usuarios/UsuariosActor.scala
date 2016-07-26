@@ -7,7 +7,7 @@ import co.com.alianza.persistence.messages.ConsultaClienteRequest
 
 import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 import scala.util.{ Failure => sFailure, Success => sSuccess }
-import co.com.alianza.app.{ AlianzaActors, MainActors }
+
 import co.com.alianza.util.json.MarshallableImplicits._
 import spray.http.StatusCodes._
 

@@ -93,7 +93,7 @@ class ApiSupervisor(r: RequestContext, props: Props, message: MessageService) ex
 
 trait ApiRequestCreator {
 
-  import co.com.alianza.app.MainActors._
+  ._
 
   def apiRequest(r: RequestContext, props: Props, message: MessageService) =
     system.actorOf(Props(new ApiSupervisor(r, props, message)))

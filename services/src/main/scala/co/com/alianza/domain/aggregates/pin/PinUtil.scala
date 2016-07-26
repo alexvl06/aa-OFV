@@ -3,7 +3,6 @@ package co.com.alianza.domain.aggregates.pin
 import java.security.MessageDigest
 import java.util.Date
 
-import co.com.alianza.app.MainActors
 import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.domain.aggregates.usuarios.{ ErrorPersistence, ErrorValidacion, ErrorPin }
 import co.com.alianza.exceptions.{ BusinessLevel, PersistenceException }

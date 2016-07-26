@@ -1,7 +1,8 @@
 package co.com.alianza.domain.aggregates.autenticacion
 
 import akka.pattern.ask
-import akka.actor.{ Actor, ActorRef, ActorSelection, ActorSystem }
+import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSelection, ActorSystem }
+import akka.util.Timeout
 import co.com.alianza.util.token.{ AesUtil, Token }
 import co.com.alianza.util.transformers.ValidationT
 import co.com.alianza.infrastructure.messages._
@@ -20,16 +21,18 @@ import scalaz.std.AllInstances._
 import scala.util.{ Failure => sFailure, Success => sSuccess }
 import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 import spray.http.StatusCodes._
+import scala.concurrent.duration.DurationInt
 
 /**
  * Created by manuel on 16/12/14.
  */
-class AutorizacionUsuarioEmpresarialActor()(implicit val supervisor : ActorRef, implicit val system : ActorSystem)
-  extends AutorizacionActor with ValidacionesAutenticacionUsuarioEmpresarial {
-
+class AutorizacionUsuarioEmpresarialActor()(implicit val supervisor: ActorRef, implicit val system: ActorSystem)
+    extends Actor with ActorLogging with ValidacionesAutenticacionUsuarioEmpresarial {
+  import system.dispatcher
+  implicit val timeout = Timeout(120 seconds)
   import co.com.alianza.util.json.MarshallableImplicits._
 
-  override def receive = {
+  def receive = {
 
     case message: AutorizarUsuarioEmpresarialMessage =>
       val currentSender = sender()
@@ -38,11 +41,15 @@ class AutorizacionUsuarioEmpresarialActor()(implicit val supervisor : ActorRef, 
         sesion <- ValidationT(obtieneSesion(message.token))
         tuplaUsuarioOptionEstadoEmpresa <- ValidationT(obtieneUsuarioEmpresarial(message.token))
         validUs <- ValidationT(validarUsuario(tuplaUsuarioOptionEstadoEmpresa match { case None => None case _ => Some(tuplaUsuarioOptionEstadoEmpresa.get._1) }))
-        validacionEstadoEmpresa <- ValidationT(validarEstadoEmpresa(tuplaUsuarioOptionEstadoEmpresa match { case None => None case _ =>
-          Some(tuplaUsuarioOptionEstadoEmpresa.get._2) }))
+        validacionEstadoEmpresa <- ValidationT(validarEstadoEmpresa(tuplaUsuarioOptionEstadoEmpresa match {
+          case None => None case _ =>
+            Some(tuplaUsuarioOptionEstadoEmpresa.get._2)
+        }))
         validacionIp <- ValidationT(validarIpEmpresa(sesion, message.ip))
-        result <- ValidationT(autorizarRecursoAgente(tuplaUsuarioOptionEstadoEmpresa match { case None => None case _ =>
-          Some(tuplaUsuarioOptionEstadoEmpresa.get._1) }, message.url))
+        result <- ValidationT(autorizarRecursoAgente(tuplaUsuarioOptionEstadoEmpresa match {
+          case None => None case _ =>
+            Some(tuplaUsuarioOptionEstadoEmpresa.get._1)
+        }, message.url))
       } yield {
         result
       }).run
@@ -320,6 +327,25 @@ class AutorizacionUsuarioEmpresarialActor()(implicit val supervisor : ActorRef, 
    */
   private def filtrarRecursosPerfilClienteAdmin(recurso: RecursoPerfilClienteAdmin, url: String): Boolean =
     filtrarRecursos(recurso.urlRecurso, recurso.acceso, url)
+
+  protected def filtrarRecursos(urlRecurso: String, acceso: Boolean, url: String) = {
+    //TODO: quitar esos "ifseses"
+    if (urlRecurso.equals(url)) acceso
+    else if (urlRecurso.endsWith("/*")) {
+      val urlC = urlRecurso.substring(0, urlRecurso.lastIndexOf("*"))
+      if (urlC.equals(url + "/")) acceso
+      else {
+        if (url.length >= urlC.length) {
+          //TODO: Whhhattt ??? if (url.endsWith("/")) "" else ""
+          val ends = if (url.endsWith("/")) "" else ""
+          val urlSuffix = url.substring(0, urlC.length) + ends
+          if (urlSuffix.equals(urlC)) acceso
+          else false
+        } else false
+      }
+
+    } else false
+  }
 
 }
 

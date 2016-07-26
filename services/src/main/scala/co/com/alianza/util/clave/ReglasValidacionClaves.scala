@@ -14,7 +14,7 @@ import scalaz.Validation.FlatMap._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.app.MainActors
+
 import java.util.regex.Pattern
 
 abstract sealed class Regla(val name: String) {

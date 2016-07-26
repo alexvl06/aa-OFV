@@ -4,7 +4,6 @@ import scala.concurrent.{ Future, ExecutionContext }
 import scalaz.{ Failure => zFailure, Success => zSuccess }
 import scalaz.Validation
 
-import co.com.alianza.app.MainActors
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.dto._
 import co.com.alianza.persistence.repositories.PermisoTransaccionalRepository

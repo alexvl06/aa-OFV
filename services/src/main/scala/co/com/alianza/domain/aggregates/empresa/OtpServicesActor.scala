@@ -2,7 +2,7 @@ package co.com.alianza.domain.aggregates.empresa
 
 import akka.actor.{ ActorRef, Props, ActorLogging, Actor }
 import akka.routing.RoundRobinPool
-import co.com.alianza.app.{ MainActors, AlianzaActors }
+
 import co.com.alianza.util.FutureResponse
 import com.typesafe.config.Config
 import co.com.alianza.infrastructure.messages.empresa._

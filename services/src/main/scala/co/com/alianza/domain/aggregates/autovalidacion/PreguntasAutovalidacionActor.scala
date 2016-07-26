@@ -2,7 +2,7 @@ package co.com.alianza.domain.aggregates.autovalidacion
 
 import akka.actor.{ Actor, ActorLogging, ActorSystem, Props }
 import akka.routing.RoundRobinPool
-import co.com.alianza.app.{ AlianzaActors, MainActors }
+
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.domain.aggregates.usuarios.{ ErrorAutovalidacion, ErrorValidacion }
 import co.com.alianza.exceptions.PersistenceException

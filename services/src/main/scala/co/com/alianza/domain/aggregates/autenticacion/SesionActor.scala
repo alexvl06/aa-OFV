@@ -6,7 +6,7 @@ import akka.actor._
 import akka.pattern.ask
 import akka.cluster.{ Member, MemberStatus }
 import akka.util.Timeout
-import co.com.alianza.app.MainActors
+
 import co.com.alianza.infrastructure.dto.{ Empresa, HorarioEmpresa }
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.util.token.AesUtil

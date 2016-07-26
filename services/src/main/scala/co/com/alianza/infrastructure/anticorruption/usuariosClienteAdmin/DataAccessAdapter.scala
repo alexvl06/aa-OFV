@@ -7,7 +7,7 @@ import scalaz.{ Validation }
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.dto.{ UsuarioEmpresarialAdmin }
 import co.com.alianza.persistence.repositories.{ UsuarioEmpresarialAdminRepository }
-import co.com.alianza.app.MainActors
+
 import co.com.alianza.persistence.entities.{ UsuarioEmpresarialAdmin => eUsuarioAdmin }
 import co.com.alianza.persistence.repositories.empresa.UsuariosEmpresaRepository
 import scalaz.{ Failure => zFailure, Success => zSuccess }

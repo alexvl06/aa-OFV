@@ -3,7 +3,7 @@ package co.com.alianza.domain.aggregates.pin
 import java.sql.Timestamp
 
 import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, Props }
-import co.com.alianza.app.{ AlianzaActors, MainActors }
+
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente

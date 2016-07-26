@@ -5,7 +5,7 @@ import java.sql.Timestamp
 import co.com.alianza.infrastructure.auditing.AuditingUser.AuditingUserData
 import co.com.alianza.persistence.entities.{ PinEmpresa => ePinEmpresa, UsuarioEmpresarial => eUsuario, _ }
 import co.com.alianza.persistence.repositories.UsuariosEmpresarialRepository
-import co.com.alianza.app.MainActors
+
 import co.com.alianza.exceptions.PersistenceException
 import enumerations.EstadosEmpresaEnum
 import scala.concurrent.{ ExecutionContext, Future }

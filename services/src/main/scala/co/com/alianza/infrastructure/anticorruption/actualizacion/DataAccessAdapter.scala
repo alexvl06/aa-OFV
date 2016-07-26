@@ -5,14 +5,12 @@ import co.com.alianza.persistence.messages.ActualizacionRequest
 import scalaz.Validation
 import scala.concurrent.{ ExecutionContext, Future }
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.app.MainActors
+
 import scalaz.{ Failure => zFailure, Success => zSuccess }
 import co.com.alianza.infrastructure.dto._
 import co.com.alianza.persistence.repositories.core.{ ActualizacionRepository }
 
 object DataAccessAdapter {
-
-  implicit val ec: ExecutionContext = MainActors.dataAccesEx
 
   //Consulta datos cliente
 

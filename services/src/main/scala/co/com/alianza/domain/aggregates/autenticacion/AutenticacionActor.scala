@@ -1,9 +1,7 @@
 package co.com.alianza.domain.aggregates.autenticacion
 
-import akka.actor.{ Props, ActorLogging, Actor }
+import akka.actor.{ Actor, ActorLogging, Props }
 import akka.routing.RoundRobinPool
-
-import co.com.alianza.app.MainActors
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import co.com.alianza.constants.TiposConfiguracion
@@ -15,24 +13,27 @@ import co.com.alianza.infrastructure.anticorruption.clientes.{ DataAccessAdapter
 import co.com.alianza.infrastructure.anticorruption.grupos.{ DataAccessAdapter => DataAdapterGrupos }
 import co.com.alianza.infrastructure.anticorruption.contrasenas.{ DataAccessAdapter => RgDataAdapter }
 import co.com.alianza.infrastructure.anticorruption.configuraciones.{ DataAccessAdapter => ConfDataAdapter }
-import co.com.alianza.infrastructure.dto.{ Configuracion, Cliente, Usuario }
+import co.com.alianza.infrastructure.dto.{ Cliente, Configuracion, Usuario }
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.persistence.entities.ReglasContrasenas
 import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.token.Token
 import co.com.alianza.util.transformers.ValidationT
-import enumerations.{ TipoIdentificacion, EstadosCliente, AppendPasswordUser, EstadosUsuarioEnum }
+import enumerations.{ AppendPasswordUser, EstadosCliente, EstadosUsuarioEnum, TipoIdentificacion }
 import java.sql.Timestamp
 import java.util.Date
+
+import akka.remote.ContainerFormats.ActorRef
 import org.joda.time.DateTime
 import spray.http.StatusCodes._
+
 import scala.concurrent.Future
-import scala.util.{ Success => sSuccess, Failure => sFailure }
+import scala.util.{ Failure => sFailure, Success => sSuccess }
 import scalaz.std.AllInstances._
-import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 import scalaz.Validation.FlatMap._
 
-class AutenticacionActorSupervisor extends Actor with ActorLogging {
+class AutenticacionActorSupervisor(implicit val supervisor: ActorRef) extends Actor with ActorLogging {
   import akka.actor.SupervisorStrategy._
   import akka.actor.OneForOneStrategy
 
@@ -358,7 +359,7 @@ class AutenticacionActor extends Actor with ActorLogging {
    */
   def crearSesion(token: String, expiracionInactividad: Int): Future[Validation[ErrorAutenticacion, Boolean]] = {
     log.info("Creando sesion")
-    MainActors.sesionActorSupervisor ! CrearSesionUsuario(token, expiracionInactividad)
+    supervisor ! CrearSesionUsuario(token, expiracionInactividad)
     Future.successful(Validation.success(true))
   }
 

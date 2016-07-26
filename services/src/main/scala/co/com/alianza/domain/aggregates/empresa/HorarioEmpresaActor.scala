@@ -4,7 +4,6 @@ import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, OneForOneStrateg
 import akka.actor.SupervisorStrategy._
 import akka.pattern._
 import akka.routing.RoundRobinPool
-import co.com.alianza.app.AlianzaActors
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
@@ -14,7 +13,7 @@ import co.com.alianza.infrastructure.messages._
 import co.com.alianza.infrastructure.messages.empresa.{ AgregarHorarioEmpresaMessage, DiaFestivoMessage, ObtenerHorarioEmpresaMessage, ValidarHorarioEmpresaMessage }
 import co.com.alianza.persistence.entities.HorarioEmpresa
 import co.com.alianza.util.transformers.ValidationT
-import co.com.alianza.app.MainActors
+
 import co.com.alianza.exceptions.BusinessLevel
 import co.com.alianza.domain.aggregates.autenticacion.{ ActualizarHorarioEmpresa, ValidacionesAutenticacionUsuarioEmpresarial }
 import spray.http.StatusCodes._

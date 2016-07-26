@@ -1,7 +1,7 @@
 package co.com.alianza.domain.aggregates.usuarios
 
 import akka.actor.{ Actor, ActorLogging }
-import co.com.alianza.app.{ MainActors, AlianzaActors }
+
 import co.com.alianza.infrastructure.messages._
 import scalaz.{ Failure => zFailure, Success => zSuccess }
 import scala.util.{ Failure => sFailure, Success => sSuccess }

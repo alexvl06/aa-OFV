@@ -7,7 +7,7 @@ import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJson
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import spray.http.StatusCodes
 import spray.routing._
-import co.com.alianza.app.{ AlianzaActors, CrossHeaders }
+import co.com.alianza.app.CrossHeaders
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper.requestWithAuiditing
 

@@ -3,7 +3,7 @@ package co.com.alianza.infrastructure.security
 import akka.actor._
 import akka.pattern.ask
 import akka.util.Timeout
-import co.com.alianza.app.MainActors
+
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.infrastructure.dto.Usuario
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
@@ -26,7 +26,7 @@ trait ServiceAuthorization {
   implicit val system: ActorSystem
   import system.dispatcher
 
-  implicit val autorizacionActorSupervisor : ActorRef
+  implicit val autorizacionActorSupervisor: ActorRef
   implicit val conf: Config = system.settings.config
   implicit val timeout: Timeout = Timeout(10 seconds)
 

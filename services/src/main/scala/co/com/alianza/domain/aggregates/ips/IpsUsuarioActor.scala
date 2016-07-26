@@ -5,7 +5,6 @@ import akka.actor.SupervisorStrategy._
 import akka.routing.RoundRobinPool
 import akka.pattern._
 import akka.util.Timeout
-import co.com.alianza.app.AlianzaActors
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.exceptions.PersistenceException
@@ -13,7 +12,7 @@ import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.persistence.entities.{ Empresa, IpsEmpresa, IpsUsuario }
 import co.com.alianza.util.transformers.ValidationT
-import co.com.alianza.app.MainActors
+
 import co.com.alianza.domain.aggregates.autenticacion.{ AgregarIp, RemoverIp }
 import co.com.alianza.exceptions.BusinessLevel
 import com.typesafe.config.Config

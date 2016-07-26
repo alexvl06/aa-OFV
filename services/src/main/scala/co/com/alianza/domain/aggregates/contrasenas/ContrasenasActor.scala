@@ -3,7 +3,7 @@ package co.com.alianza.domain.aggregates.contrasenas
 import java.sql.Timestamp
 
 import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, Props }
-import co.com.alianza.app.{ AlianzaActors, MainActors }
+
 import co.com.alianza.infrastructure.anticorruption.contrasenas.DataAccessAdapter
 import co.com.alianza.infrastructure.anticorruption.ultimasContrasenas.{ DataAccessAdapter => DataAccessAdapterUltimaContrasena }
 import co.com.alianza.infrastructure.messages._

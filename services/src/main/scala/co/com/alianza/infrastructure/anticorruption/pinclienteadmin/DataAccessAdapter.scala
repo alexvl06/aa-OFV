@@ -1,6 +1,5 @@
 package co.com.alianza.infrastructure.anticorruption.pinclienteadmin
 
-import co.com.alianza.app.MainActors
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.dto.PinUsuarioEmpresarialAdmin
 

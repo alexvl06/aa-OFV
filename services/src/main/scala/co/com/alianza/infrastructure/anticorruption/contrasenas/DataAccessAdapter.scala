@@ -1,6 +1,5 @@
 package co.com.alianza.infrastructure.anticorruption.contrasenas
 
-import co.com.alianza.app.MainActors
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.clientes.DataAccessTranslator
 import co.com.alianza.infrastructure.dto.Cliente
@@ -19,7 +18,6 @@ import co.com.alianza.util.clave.Crypto
  */
 object DataAccessAdapter {
 
-  implicit val ec: ExecutionContext = MainActors.dataAccesEx
   val repo = new ReglasContrasenasRepository()
 
   def consultarReglasContrasenas(): Future[Validation[PersistenceException, Seq[ReglasContrasenas]]] = {

@@ -12,7 +12,7 @@ import scala.util.{ Failure, Success }
 import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
 
 import co.com.alianza.persistence.entities.{ IpsEmpresa, IpsUsuario }
-import co.com.alianza.app.MainActors
+
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => usuarioAdaptador }
 import co.com.alianza.infrastructure.dto.{ Empresa, HorarioEmpresa }
 import co.com.alianza.infrastructure.messages._
