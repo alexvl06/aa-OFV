@@ -1,6 +1,6 @@
 package co.com.alianza.domain.aggregates.autenticacion
 
-import akka.actor.{ Actor, ActorLogging, ActorRef }
+import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem }
 import akka.pattern.ask
 import akka.util.Timeout
 import co.com.alianza.commons.enumerations.TiposCliente
@@ -36,9 +36,10 @@ import scalaz.std.AllInstances._
 import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 import scalaz.Validation.FlatMap._
 
-class AutenticacionUsuarioEmpresaActor(implicit SupervisorUsuario: ActorRef, implicit val SupervisorSession: ActorRef)
+class AutenticacionUsuarioEmpresaActor(implicit val SupervisorUsuario: ActorRef, implicit val SupervisorSession: ActorRef, implicit val system: ActorSystem)
     extends Actor with ActorLogging with ValidacionesAutenticacionUsuarioEmpresarial {
 
+  import system.dispatcher
   implicit val timeout: Timeout = Timeout(10 seconds)
 
   override def receive = {
