@@ -3,12 +3,12 @@ package co.com.alianza.infrastructure.anticorruption.recursos
 import co.com.alianza.persistence.repositories.RecursosPerfilRepository
 
 import scalaz.Validation
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import co.com.alianza.exceptions.PersistenceException
 
-import scalaz.{Failure => zFailure, Success => zSuccess}
+import scalaz.{ Failure => zFailure, Success => zSuccess }
 import co.com.alianza.infrastructure.dto.RecursoUsuario
-import co.com.alianza.persistence.entities.{RecursoPerfil => eRecursoPerfil}
+import co.com.alianza.persistence.entities.{ RecursoPerfil => eRecursoPerfil }
 import co.com.alianza.persistence.util.DataBaseExecutionContext
 
 object DataAccessAdapter {

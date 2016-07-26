@@ -3,14 +3,14 @@ package co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.auditing.AuditingUser.AuditingUserData
 import co.com.alianza.infrastructure.dto.UsuarioEmpresarialAdmin
-import co.com.alianza.persistence.entities.{UsuarioEmpresarialAdmin => eUsuarioAdmin}
+import co.com.alianza.persistence.entities.{ UsuarioEmpresarialAdmin => eUsuarioAdmin }
 import co.com.alianza.persistence.repositories.UsuarioEmpresarialAdminRepository
 import co.com.alianza.persistence.repositories.empresa.UsuariosEmpresaRepository
 import co.com.alianza.persistence.util.DataBaseExecutionContext
 import co.com.alianza.util.clave.Crypto
 
-import scala.concurrent.{ExecutionContext, Future}
-import scalaz.{Validation, Failure => zFailure, Success => zSuccess}
+import scala.concurrent.{ ExecutionContext, Future }
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 
 /**
  * Created by josegarcia on 30/01/15.

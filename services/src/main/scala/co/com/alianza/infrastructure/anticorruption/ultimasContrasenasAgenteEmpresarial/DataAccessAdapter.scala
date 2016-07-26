@@ -9,7 +9,7 @@ import co.com.alianza.persistence.entities.UltimaContrasenaUsuarioAgenteEmpresar
 import co.com.alianza.persistence.repositories.UltimasContrasenasUsuarioAgenteEmpresarialRepository
 import co.com.alianza.persistence.util.DataBaseExecutionContext
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scalaz.Validation
 
 /**

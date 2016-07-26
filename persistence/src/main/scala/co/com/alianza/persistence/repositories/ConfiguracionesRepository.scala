@@ -5,7 +5,7 @@ import co.com.alianza.persistence.entities.CustomDriver.simple._
 import co.com.alianza.persistence.entities._
 import slick.lifted.TableQuery
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scalaz.Validation
 
 class ConfiguracionesRepository(implicit executionContext: ExecutionContext) extends AlianzaRepository {

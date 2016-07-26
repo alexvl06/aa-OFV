@@ -1,22 +1,22 @@
 package co.com.alianza.domain.aggregates.usuarios
 
 import co.com.alianza.constants.TiposConfiguracion
-import co.com.alianza.exceptions.{PersistenceException, ServiceException}
+import co.com.alianza.exceptions.{ PersistenceException, ServiceException }
 import spray.http.StatusCodes._
 
-import scalaz.{Validation, Failure => zFailure, Success => zSuccess}
-import co.com.alianza.infrastructure.messages.{ErrorMessage, ResponseMessage, UsuarioMessage}
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
+import co.com.alianza.infrastructure.messages.{ ErrorMessage, ResponseMessage, UsuarioMessage }
 
-import scala.concurrent.{ExecutionContext, Future}
-import co.com.alianza.infrastructure.dto.{Cliente, Configuracion, Usuario}
-import co.com.alianza.infrastructure.anticorruption.clientes.{DataAccessAdapter => DataAccessAdapterCliente}
-import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => DataAccessAdapterUsuario}
-import co.com.alianza.infrastructure.anticorruption.configuraciones.{DataAccessAdapter => dataAccesAdaptarConf}
+import scala.concurrent.{ ExecutionContext, Future }
+import co.com.alianza.infrastructure.dto.{ Cliente, Configuracion, Usuario }
+import co.com.alianza.infrastructure.anticorruption.clientes.{ DataAccessAdapter => DataAccessAdapterCliente }
+import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => DataAccessAdapterUsuario }
+import co.com.alianza.infrastructure.anticorruption.configuraciones.{ DataAccessAdapter => dataAccesAdaptarConf }
 import co.com.alianza.persistence.util.DataBaseExecutionContext
-import enumerations.{EstadosCliente, PerfilesUsuario, TipoIdentificacion}
+import enumerations.{ EstadosCliente, PerfilesUsuario, TipoIdentificacion }
 
 import scalaz.Validation.FlatMap._
-import co.com.alianza.util.clave.{Crypto, ErrorValidacionClave, ValidarClave}
+import co.com.alianza.util.clave.{ Crypto, ErrorValidacionClave, ValidarClave }
 import co.com.alianza.util.captcha.ValidarCaptcha
 import com.typesafe.config.Config
 
@@ -74,7 +74,7 @@ object ValidacionesUsuario {
     })
   }
 
-  def validaCaptcha(message: UsuarioMessage): Future[Validation[ErrorValidacion, Unit.type]] = {
+  def validaCaptcha(message: UsuarioMessage)(implicit config: Config): Future[Validation[ErrorValidacion, Unit.type]] = {
     val validador = new ValidarCaptcha()
     val validacionFuture = validador.validarCaptcha(message.clientIp.get, message.challenge, message.uresponse)
 

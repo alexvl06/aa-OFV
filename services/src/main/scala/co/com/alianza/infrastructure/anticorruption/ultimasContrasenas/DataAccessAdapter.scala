@@ -5,7 +5,7 @@ import co.com.alianza.persistence.entities.UltimaContrasena
 import co.com.alianza.persistence.repositories.UltimasContrasenasRepository
 import co.com.alianza.persistence.util.DataBaseExecutionContext
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scalaz.Validation
 
 /**

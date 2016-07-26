@@ -47,7 +47,7 @@ object DataAccessAdapter {
     repo.caducarFechaUltimoCambioContrasenaAgenteEmpresarial(idUsuario)
   }
 
-  def cambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa): Future[Validation[PersistenceException, Int]]={
+  def cambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa): Future[Validation[PersistenceException, Int]] = {
     repo.cambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial, estado)
   }
 

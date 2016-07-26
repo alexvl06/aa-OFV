@@ -3,12 +3,12 @@ package co.com.alianza.infrastructure.anticorruption.recursosAgenteEmpresarial
 import co.com.alianza.persistence.repositories.RecursoPerfilAgenteRepository
 
 import scalaz.Validation
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import co.com.alianza.exceptions.PersistenceException
 
-import scalaz.{Failure => zFailure, Success => zSuccess}
+import scalaz.{ Failure => zFailure, Success => zSuccess }
 import co.com.alianza.infrastructure.dto.RecursoPerfilAgente
-import co.com.alianza.persistence.entities.{RecursoPerfilAgente => eRecursoPerfilAgente}
+import co.com.alianza.persistence.entities.{ RecursoPerfilAgente => eRecursoPerfilAgente }
 import co.com.alianza.persistence.util.DataBaseExecutionContext
 /**
  * Created by manuel on 3/02/15.

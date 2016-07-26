@@ -4,21 +4,21 @@ import java.security.MessageDigest
 import java.util.Date
 
 import co.com.alianza.constants.TiposConfiguracion
-import co.com.alianza.domain.aggregates.usuarios.{ErrorPersistence, ErrorPin, ErrorValidacion}
-import co.com.alianza.exceptions.{BusinessLevel, PersistenceException}
-import co.com.alianza.infrastructure.anticorruption.configuraciones.{DataAccessAdapter => dataAccesAdaptarConf, DataAccessTranslator => dataAccessTransConf}
-import co.com.alianza.infrastructure.dto.{Configuracion, PinUsuario, PinUsuarioAgenteEmpresarial, PinUsuarioEmpresarialAdmin}
-import co.com.alianza.infrastructure.messages.{ErrorMessage, ResponseMessage}
+import co.com.alianza.domain.aggregates.usuarios.{ ErrorPersistence, ErrorPin, ErrorValidacion }
+import co.com.alianza.exceptions.{ BusinessLevel, PersistenceException }
+import co.com.alianza.infrastructure.anticorruption.configuraciones.{ DataAccessAdapter => dataAccesAdaptarConf, DataAccessTranslator => dataAccessTransConf }
+import co.com.alianza.infrastructure.dto.{ Configuracion, PinUsuario, PinUsuarioAgenteEmpresarial, PinUsuarioEmpresarialAdmin }
+import co.com.alianza.infrastructure.messages.{ ErrorMessage, ResponseMessage }
 import co.com.alianza.util.json.MarshallableImplicits._
 import spray.http.StatusCodes._
 
-import scala.util.{Failure, Success}
-import scalaz.{Failure => zFailure, Success => zSuccess}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{ Failure, Success }
+import scalaz.{ Failure => zFailure, Success => zSuccess }
+import scala.concurrent.{ ExecutionContext, Future }
 import scalaz.Validation
 import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
-import enumerations.{EstadosEmpresaEnum, EstadosUsuarioEnum}
-import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => uDataAccessAdapter}
+import enumerations.{ EstadosEmpresaEnum, EstadosUsuarioEnum }
+import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => uDataAccessAdapter }
 import co.com.alianza.persistence.util.DataBaseExecutionContext
 
 object PinUtil {

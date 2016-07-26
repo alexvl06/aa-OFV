@@ -1,35 +1,30 @@
 package co.com.alianza.domain.aggregates.empresa
 
-import akka.actor.ActorSystem
-import enumerations.empresa.EstadosDeEmpresaEnum
-
-import scala.concurrent.{ ExecutionContext, Future }
-import scalaz.{ Failure, Success, Validation }
 import co.com.alianza.domain.aggregates.usuarios._
-import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{ DataAccessAdapter => DataAccessAdapterClienteAdmin }
-import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => UsDataAdapter }
-import co.com.alianza.infrastructure.dto._
-import co.com.alianza.util.clave.{ Crypto, ErrorValidacionClave, ValidarClave }
-
-import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
-import com.typesafe.config.Config
-import co.com.alianza.infrastructure.dto.UsuarioEmpresarialAdmin
-import co.com.alianza.infrastructure.messages.ErrorMessage
-import enumerations.{ EstadosEmpresaEnum, EstadosUsuarioEnum, PerfilesUsuario }
 import co.com.alianza.exceptions.PersistenceException
+import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => UsDataAdapter}
+import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{DataAccessAdapter => DataAccessAdapterClienteAdmin}
+import co.com.alianza.infrastructure.dto.{UsuarioEmpresarialAdmin, _}
+import co.com.alianza.infrastructure.messages.ErrorMessage
+import co.com.alianza.persistence.util.DataBaseExecutionContext
+import co.com.alianza.util.clave.{Crypto, ErrorValidacionClave, ValidarClave}
+import enumerations.empresa.EstadosDeEmpresaEnum
+import enumerations.{EstadosEmpresaEnum, PerfilesUsuario}
 
+import scala.concurrent.{ExecutionContext, Future}
 import scalaz.Validation.FlatMap._
+import scalaz.{Validation, Failure => zFailure, Success => zSuccess}
 
 /**
  * Created by josegarcia on 30/01/15.
  */
 object ValidacionesClienteAdmin {
 
+  implicit val ec: ExecutionContext = DataBaseExecutionContext.executionContext
   import co.com.alianza.util.json.MarshallableImplicits._
-  implicit val system: ActorSystem
-  import system.dispatcher
 
-  def validacionConsultaContrasenaActualClienteAdmin(pw_actual: String, idUsuario: Int): Future[Validation[ErrorValidacion, Option[UsuarioEmpresarialAdmin]]] = {
+  def validacionConsultaContrasenaActualClienteAdmin(pw_actual: String, idUsuario: Int):
+  Future[Validation[ErrorValidacion, Option[UsuarioEmpresarialAdmin]]] = {
     val contrasenaActualFuture = DataAccessAdapterClienteAdmin.consultaContrasenaActual(Crypto.hashSha512(pw_actual, idUsuario), idUsuario)
     contrasenaActualFuture.map(_.leftMap(pe => ErrorPersistence(pe.message, pe)).flatMap {
       (x: Option[UsuarioEmpresarialAdmin]) =>

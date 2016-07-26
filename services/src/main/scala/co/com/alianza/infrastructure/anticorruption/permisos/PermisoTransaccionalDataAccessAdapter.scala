@@ -1,7 +1,7 @@
 package co.com.alianza.infrastructure.anticorruption.permisos
 
-import scala.concurrent.{ExecutionContext, Future}
-import scalaz.{Failure => zFailure, Success => zSuccess}
+import scala.concurrent.{ ExecutionContext, Future }
+import scalaz.{ Failure => zFailure, Success => zSuccess }
 import scalaz.Validation
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.dto._

@@ -5,8 +5,8 @@ import co.com.alianza.infrastructure.dto.Cliente
 import co.com.alianza.persistence.repositories.core.ClienteRepository
 import co.com.alianza.persistence.util.DataBaseExecutionContext
 
-import scala.concurrent.{ExecutionContext, Future}
-import scalaz.{Validation, Failure => zFailure, Success => zSuccess}
+import scala.concurrent.{ ExecutionContext, Future }
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 
 object DataAccessAdapter {
 
