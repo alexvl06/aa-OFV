@@ -149,18 +149,4 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
     }
   }
 
-  /**
-   * Devuelve la naturaleza de la persona
-   * @param idTipoIdent Id del tipo de identificacion
-   * @return F si es fiduciaria, J si es juridica y N si es natural
-   */
-  private def getNaturaleza(idTipoIdent: Int): String = {
-    idTipoIdent match {
-      case TipoIdentificacion.FID.identificador => "F"
-      case TipoIdentificacion.NIT.identificador => "J"
-      case TipoIdentificacion.SOCIEDAD_EXTRANJERA.identificador => "S"
-      case _ => "N"
-    }
-  }
-
 }
