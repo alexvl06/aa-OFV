@@ -20,6 +20,8 @@ case class UsuarioEmpresarialDAO(implicit dcConfig: DBConfig) extends TableQuery
     run(this.filter(u => u.identificacion === identificacion && u.usuario === usuario).result.headOption)
   }
 
+  def createToken(idUsuario: Int, token: String): Future[Int] = ???
+
   def updateIncorrectEntries(idUsuario: Int, numeroIntentos: Int): Future[Int] = {
     run(this.filter(_.id === idUsuario).map(_.numeroIngresosErroneos).update(numeroIntentos))
   }

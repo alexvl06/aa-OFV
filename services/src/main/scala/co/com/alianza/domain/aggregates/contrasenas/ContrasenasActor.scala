@@ -53,7 +53,7 @@ class ContrasenasActorSupervisor extends Actor with ActorLogging {
  * Created by david on 16/06/14.
  */
 
-class ContrasenasActor(implicit val system: ActorSystem) extends Actor with ActorLogging {
+case class ContrasenasActor() extends Actor with ActorLogging {
 
   import scalaz._
   import scalaz.std.string._
@@ -73,7 +73,7 @@ class ContrasenasActor(implicit val system: ActorSystem) extends Actor with Acto
   import co.com.alianza.util.json.MarshallableImplicits._
   import ValidacionesUsuario._
 
-  import system.dispatcher
+  import context.dispatcher
 
   def receive = {
     case message: InboxMessage => obtenerReglasContrasenas()

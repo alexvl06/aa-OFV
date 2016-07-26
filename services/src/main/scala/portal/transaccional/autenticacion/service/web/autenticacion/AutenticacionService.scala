@@ -9,12 +9,13 @@ import spray.routing._
 import co.com.alianza.app.CrossHeaders
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper.requestWithAuiditing
-import portal.transaccional.autenticacion.service.drivers.autenticacion.AutenticacionRepository
+import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionEmpresaRepository, AutenticacionRepository }
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success }
 
-case class AutenticacionService(autenticacionRepositorio: AutenticacionRepository, kafkaActor: ActorSelection)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
+case class AutenticacionService(autenticacionRepositorio: AutenticacionRepository, autenticacionEmpresaRepositorio: AutenticacionEmpresaRepository,
+    kafkaActor: ActorSelection)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   val autenticar = "autenticar"
   val autenticarUsuarioEmpresa = "autenticarUsuarioEmpresa"

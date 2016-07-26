@@ -11,8 +11,8 @@ import scala.concurrent.{ Future, ExecutionContext }
 case class UsuarioEmpresarialAdminDriverRepository(usuarioDAO: UsuarioEmpresarialAdminDAOs)(implicit val ex: ExecutionContext)
     extends UsuarioEmpresarialAdminRepository {
 
-  def getByIdentificacion(numeroIdentificacion: String): Future[Option[UsuarioEmpresarialAdmin]] = {
-    usuarioDAO.getByIdentity(numeroIdentificacion)
+  def getByIdentificacion(identificacion: String, usuario: String): Future[Option[UsuarioEmpresarialAdmin]] = {
+    usuarioDAO.getByIdentityAndUser(identificacion, usuario)
   }
 
 }

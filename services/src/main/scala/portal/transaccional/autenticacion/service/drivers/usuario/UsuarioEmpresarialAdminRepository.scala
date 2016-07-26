@@ -9,6 +9,6 @@ import scala.concurrent.Future
  */
 trait UsuarioEmpresarialAdminRepository {
 
-  def getByIdentificacion(numeroIdentificacion: String): Future[Option[UsuarioEmpresarialAdmin]]
+  def getByIdentificacion(identificacion: String, usuario: String): Future[Option[UsuarioEmpresarialAdmin]]
 
 }

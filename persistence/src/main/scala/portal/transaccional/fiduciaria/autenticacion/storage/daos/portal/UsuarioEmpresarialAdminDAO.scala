@@ -17,9 +17,11 @@ case class UsuarioEmpresarialAdminDAO(implicit dcConfig: DBConfig) extends Table
   import dcConfig.db._
   import dcConfig.profile.api._
 
-  def getByIdentity(numeroIdentificacion: String): Future[Option[UsuarioEmpresarialAdmin]] = {
-    run(this.filter(_.identificacion === numeroIdentificacion).result.headOption)
+  def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[UsuarioEmpresarialAdmin]] = {
+    run(this.filter(u => u.identificacion === identificacion && u.usuario === usuario).result.headOption)
   }
+
+  def createToken(idUsuario: Int, token: String): Future[Int] = ???
 
   def updateIncorrectEntries(idUsuario: Int, numeroIntentos: Int): Future[Int] = {
     run(this.filter(_.id === idUsuario).map(_.numeroIngresosErroneos).update(numeroIntentos))

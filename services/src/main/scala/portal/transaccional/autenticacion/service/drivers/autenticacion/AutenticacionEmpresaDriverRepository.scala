@@ -6,7 +6,7 @@ import portal.transaccional.autenticacion.service.drivers.empresa.EmpresaReposit
 import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaRepository
 import portal.transaccional.autenticacion.service.drivers.usuario.{ UsuarioEmpresarialAdminRepository, UsuarioEmpresarialRepository }
 
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * Created by hernando on 26/07/16.
@@ -14,7 +14,7 @@ import scala.concurrent.Future
 case class AutenticacionEmpresaDriverRepository(
     usuarioRepo: UsuarioEmpresarialRepository, usuarioAdminRepo: UsuarioEmpresarialAdminRepository, empresaRepo: EmpresaRepository,
     reglaRepo: ReglaContrasenaRepository
-) extends AutenticacionEmpresaRepository {
+)(implicit val ex: ExecutionContext) extends AutenticacionEmpresaRepository {
 
   /**
    * Flujo:
@@ -68,7 +68,7 @@ case class AutenticacionEmpresaDriverRepository(
       //sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt, empresa, None))
       //validacionIps <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token, usuarioAgente.tipoIdentificacion, "true"))
 
-      token <- Some("token")
+      token <- Future.successful("token")
     } yield token
     /*
     def validaciones: Future[Validation[ErrorAutenticacion, String]] = (for {

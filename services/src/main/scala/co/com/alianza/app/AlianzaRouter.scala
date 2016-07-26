@@ -8,9 +8,9 @@ import spray.routing._
 import spray.util.LoggingContext
 import co.com.alianza.web._
 import co.com.alianza.webvalidarPinClienteAdmin.PinService
-import portal.transaccional.autenticacion.service.drivers.autenticacion.AutenticacionRepository
+import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionEmpresaRepository, AutenticacionRepository }
 
-case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, kafkaActor: ActorSelection, preguntasAutovalidacionActor: ActorSelection,
+case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, autenticacionEmpresaRepositorio: AutenticacionEmpresaRepository, kafkaActor: ActorSelection, preguntasAutovalidacionActor: ActorSelection,
   usuariosActor: ActorSelection, confrontaActor: ActorSelection, actualizacionActor: ActorSelection, permisoTransaccionalActor: ActorSelection, agenteEmpresarialActor: ActorSelection,
   pinActor: ActorSelection, pinUsuarioEmpresarialAdminActor: ActorSelection, pinUsuarioAgenteEmpresarialActor: ActorSelection, ipsUsuarioActor: ActorSelection,
   horarioEmpresaActor: ActorSelection, contrasenasAgenteEmpresarialActor: ActorSelection, contrasenasClienteAdminActor: ActorSelection,
@@ -21,7 +21,7 @@ case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, kafkaActor:
 
   val routes =
     //AutorizacionService(kafkaActor, autorizacionActor, autorizacionUsuarioEmpresarialActor).route ~
-    portal.transaccional.autenticacion.service.web.autenticacion.AutenticacionService(autenticacionRepo, kafkaActor).route ~
+    portal.transaccional.autenticacion.service.web.autenticacion.AutenticacionService(autenticacionRepo, autenticacionEmpresaRepositorio, kafkaActor).route ~
       //AutenticacionService(kafkaActor, autenticacionActor, autenticacionUsuarioEmpresaActor).route ~
       new ConfrontaService(confrontaActor).route ~
       new EnumeracionService().route ~

@@ -19,16 +19,17 @@ import co.com.alianza.persistence.config.oracle.OracleConfig
 import co.com.alianza.persistence.config.pg.PGConfig
 import co.com.alianza.util.ConfigApp
 import com.typesafe.config.Config
-import portal.transaccional.autenticacion.service.drivers.autenticacion.AutenticacionDriverRepository
+import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionDriverRepository, AutenticacionEmpresaDriverRepository }
 import portal.transaccional.autenticacion.service.drivers.cliente.ClienteDriverCoreRepository
 import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionDriverRepository
+import portal.transaccional.autenticacion.service.drivers.empresa.{ EmpresaDriverRepository, EmpresaRepository }
 import portal.transaccional.autenticacion.service.drivers.ipusuario.IpUsuarioDriverRepository
-import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaDriverRepository
+import portal.transaccional.autenticacion.service.drivers.reglas.{ ReglaContrasenaDriverRepository, ReglaContrasenaRepository }
 import portal.transaccional.autenticacion.service.drivers.respuesta.RespuestaUsuarioDriverRepository
-import portal.transaccional.autenticacion.service.drivers.usuario.UsuarioDriverRepository
+import portal.transaccional.autenticacion.service.drivers.usuario._
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.core.ClienteDAO
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.daos.driver.UsuarioDAO
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ RespuestaUsuarioDAO, IpUsuarioDAO, ReglaContrasenaDAO, ConfiguracionDAO }
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal._
 
 /**
  * Method override for the unique ActorSystem instance
@@ -48,7 +49,6 @@ trait BootedCore extends Core {
   implicit lazy val system = ActorSystem("alianza-fid-auth-service")
   implicit lazy val ex: ExecutionContext = system.dispatcher
   implicit lazy val cluster = Cluster.get(system)
-  implicit lazy val dataAccesEx: ExecutionContext = system.dispatcher
 
   sys.addShutdownHook(system.terminate())
 }
@@ -108,25 +108,33 @@ trait CoreActors {
 }
 
 trait Storage extends StoragePGAlianzaDB with BootedCore {
+  lazy val empresaRepo = EmpresaDriverRepository(empresaDAO)(ex)
   lazy val usuarioRepo = UsuarioDriverRepository(usuarioDAO)(ex)
   lazy val clienteRepo = ClienteDriverCoreRepository(clienteDAO)(ex)
   lazy val ipUsuarioRepo = IpUsuarioDriverRepository(ipUsuarioDAO)(ex)
   lazy val configuracionRepo = ConfiguracionDriverRepository(configuracionDAO)(ex)
   lazy val reglaContrasenaRepo = ReglaContrasenaDriverRepository(reglaContrasenaDAO)(ex)
+  lazy val usuarioAgenteRepo = UsuarioEmpresarialDriverRepository(usuarioAgenteDAO)(ex)
   lazy val respuestaUsuarioRepo = RespuestaUsuarioDriverRepository(respuestaUsuarioDAO)(ex)
-  lazy val autenticacionRepo = AutenticacionDriverRepository(usuarioRepo, clienteRepo, configuracionRepo, reglaContrasenaRepo, ipUsuarioRepo, respuestaUsuarioRepo)(ex)
+  lazy val usuarioAdminRepo = UsuarioEmpresarialAdminDriverRepository(usuarioAdminDAO)(ex)
+  lazy val autenticacionRepo = AutenticacionDriverRepository(usuarioRepo, clienteRepo, configuracionRepo, reglaContrasenaRepo, ipUsuarioRepo,
+    respuestaUsuarioRepo)(ex)
+  lazy val autenticacionEmpresaRepo = AutenticacionEmpresaDriverRepository(usuarioAgenteRepo, usuarioAdminRepo, empresaRepo, reglaContrasenaRepo)(ex)
 }
 
 private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
   implicit val config: DBConfig = new DBConfig with PGConfig
   implicit val configCore: DBConfig = new DBConfig with OracleConfig
 
+  lazy val empresaDAO = EmpresaDAO()(config)
   lazy val usuarioDAO = UsuarioDAO()(config)
-  lazy val clienteDAO = ClienteDAO()(ex, configCore)
   lazy val ipUsuarioDAO = IpUsuarioDAO()(config)
+  lazy val clienteDAO = ClienteDAO()(ex, configCore)
   lazy val configuracionDAO = ConfiguracionDAO()(config)
   lazy val reglaContrasenaDAO = ReglaContrasenaDAO()(config)
+  lazy val usuarioAgenteDAO = UsuarioEmpresarialDAO()(config)
   lazy val respuestaUsuarioDAO = RespuestaUsuarioDAO()(config)
+  lazy val usuarioAdminDAO = UsuarioEmpresarialAdminDAO()(config)
 }
 
 /**

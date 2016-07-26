@@ -29,8 +29,6 @@ object ValidacionesUsuario {
   import co.com.alianza.util.json.MarshallableImplicits._
   implicit val ec: ExecutionContext = DataBaseExecutionContext.executionContext
 
-  //implicit private val config: Config = MainActors.conf
-
   def validacionReglasClaveAutoregistro(message: UsuarioMessage): Future[Validation[ErrorValidacion, Unit.type]] = {
 
     val usuarioFuture: Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = ValidarClave.aplicarReglas(message.contrasena, None, PerfilesUsuario.clienteIndividual, ValidarClave.reglasGeneralesAutoregistro: _*)
