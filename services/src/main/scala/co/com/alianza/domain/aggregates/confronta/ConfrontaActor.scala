@@ -1,12 +1,14 @@
 package co.com.alianza.domain.aggregates.confronta
 
 import java.sql.Timestamp
-import akka.actor.{ ActorRef, Actor, Props, ActorLogging }
+
+import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, Props }
+
 import scalaz.{ Failure => zFailure, Success => zSuccess }
 import scalaz.std.AllInstances._
-import scala.util.{ Success, Failure }
-import co.com.alianza.app.{ MainActors, AlianzaActors }
-import com.typesafe.config.{ ConfigFactory, Config }
+import scala.util.{ Failure, Success }
+import co.com.alianza.app.{ AlianzaActors }
+import com.typesafe.config.{ Config }
 import co.cifin.confrontaultra.dto.ultra._
 import com.asobancaria.cifinpruebas.cifin.confrontav2plusws.services.ConfrontaUltraWS.{ ConfrontaUltraWSSoapBindingStub, ConfrontaUltraWebServiceServiceLocator }
 import co.cifin.confrontaultra.dto.ultras.RespuestaCuestionarioULTRADTO
@@ -17,7 +19,7 @@ import enumerations.{ AppendPasswordUser, PerfilesUsuario }
 import co.com.alianza.domain.aggregates.usuarios.ErrorPersistence
 import akka.routing.RoundRobinPool
 import co.com.alianza.persistence.entities.PerfilUsuario
-import co.com.alianza.infrastructure.messages.{ ValidarCuestionarioDesbloqueoRequestMessage, ObtenerCuestionarioAdicionalRequestMessage, UsuarioMessage, ValidarCuestionarioRequestMessage }
+import co.com.alianza.infrastructure.messages.{ ObtenerCuestionarioAdicionalRequestMessage, UsuarioMessage, ValidarCuestionarioDesbloqueoRequestMessage, ValidarCuestionarioRequestMessage }
 import co.com.alianza.persistence.entities.UltimaContrasena
 import co.com.alianza.util.transformers.ValidationT
 
@@ -42,11 +44,12 @@ class ConfrontaActorSupervisor extends Actor with ActorLogging {
   }
 }
 
-class ConfrontaActor extends Actor with ActorLogging with AlianzaActors {
-  import scala.concurrent.ExecutionContext
-  implicit val _: ExecutionContext = context.dispatcher
+class ConfrontaActor(implicit val system: ActorSystem) extends Actor with ActorLogging with AlianzaActors {
+
+  import system.dispatcher
+  implicit val config: Config = system.settings.config
   import co.com.alianza.util.json.MarshallableImplicits._
-  private val config: Config = MainActors.conf
+
 
   def receive = {
 
