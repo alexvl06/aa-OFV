@@ -7,8 +7,8 @@ import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, Props }
 import scalaz.{ Failure => zFailure, Success => zSuccess }
 import scalaz.std.AllInstances._
 import scala.util.{ Failure, Success }
-import co.com.alianza.app.{ AlianzaActors, MainActors }
-import com.typesafe.config.{ Config, ConfigFactory }
+import co.com.alianza.app.{ AlianzaActors }
+import com.typesafe.config.{ Config }
 import co.cifin.confrontaultra.dto.ultra._
 import com.asobancaria.cifinpruebas.cifin.confrontav2plusws.services.ConfrontaUltraWS.{ ConfrontaUltraWSSoapBindingStub, ConfrontaUltraWebServiceServiceLocator }
 import co.cifin.confrontaultra.dto.ultras.RespuestaCuestionarioULTRADTO
@@ -52,6 +52,7 @@ case class ConfrontaActor (implicit val system: ActorSystem) extends Actor with 
   import system.dispatcher
 
   implicit val config: Config = system.settings.config
+  import co.com.alianza.util.json.MarshallableImplicits._
 
 
   def receive = {

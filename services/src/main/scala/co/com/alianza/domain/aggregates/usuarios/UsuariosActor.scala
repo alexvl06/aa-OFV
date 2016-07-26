@@ -1,53 +1,59 @@
 package co.com.alianza.domain.aggregates.usuarios
 
-import akka.actor.{ ActorRef, Actor, ActorLogging }
+import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, Props }
 import co.com.alianza.infrastructure.anticorruption.clientes.DataAccessAdapter
 import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.DataAccessAdapter
 import co.com.alianza.persistence.messages.ConsultaClienteRequest
-import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
+
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 import scala.util.{ Failure => sFailure, Success => sSuccess }
-import co.com.alianza.app.{ MainActors, AlianzaActors }
+import co.com.alianza.app.{ AlianzaActors, MainActors }
 import co.com.alianza.util.json.MarshallableImplicits._
 import spray.http.StatusCodes._
+
 import scala.concurrent.Future
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => DataAccessAdapterUsuario }
 import co.com.alianza.infrastructure.anticorruption.pin.{ DataAccessTranslator => DataAccessTranslatorPin }
 import co.com.alianza.infrastructure.anticorruption.pinclienteadmin.{ DataAccessTranslator => DataAccessTranslatorPinClienteAdmin }
 import co.com.alianza.util.clave.Crypto
 import com.typesafe.config.Config
-import enumerations.{ EstadosEmpresaEnum, EstadosUsuarioEnum, AppendPasswordUser }
-
-import akka.actor.Props
-import co.com.alianza.util.token.{ TokenPin, PinData }
+import enumerations.{ AppendPasswordUser, EstadosEmpresaEnum, EstadosUsuarioEnum }
+import co.com.alianza.util.token.{ PinData, TokenPin }
 import akka.routing.RoundRobinPool
+
 import scalaz.Failure
-import scala.util.{ Success, Failure }
+import scala.util.{ Failure, Success }
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.infrastructure.dto._
+
 import scalaz.Success
 import co.com.alianza.util.transformers.ValidationT
 import co.com.alianza.persistence.entities
 import co.com.alianza.microservices.{ MailMessage, SmtpServiceClient }
+
 import scalaz.Failure
 import scalaz.Success
 import scala.util.Success
 import java.util.{ Calendar, Date }
+
 import scalaz.std.AllInstances._
 import co.com.alianza.util.FutureResponse
+
 import scala.Some
 import co.com.alianza.infrastructure.messages.OlvidoContrasenaMessage
 import co.com.alianza.util.transformers.ValidationT
 import co.com.alianza.microservices.MailMessage
+
 import scalaz.Validation.FlatMap._
 import akka.routing.RoundRobinPool
 import co.com.alianza.util.token.PinData
 import co.com.alianza.infrastructure.messages.UsuarioMessage
 import co.com.alianza.infrastructure.messages.ResponseMessage
 import com.asobancaria.cifinpruebas.cifin.confrontav2plusws.services.ConfrontaUltraWS.{ ConfrontaUltraWSSoapBindingStub, ConfrontaUltraWebServiceServiceLocator }
-import co.cifin.confrontaultra.dto.ultra.{ ResultadoEvaluacionCuestionarioULTRADTO, CuestionarioULTRADTO, ParametrosULTRADTO, ParametrosSeguridadULTRADTO }
+import co.cifin.confrontaultra.dto.ultra.{ CuestionarioULTRADTO, ParametrosSeguridadULTRADTO, ParametrosULTRADTO, ResultadoEvaluacionCuestionarioULTRADTO }
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.exceptions.{ BusinessLevel, PersistenceException }
-import co.com.alianza.domain.aggregates.autenticacion.errores.{ ErrorCredencialesInvalidas, ErrorPersistencia, ErrorAutenticacion }
+import co.com.alianza.domain.aggregates.autenticacion.errores.{ ErrorAutenticacion, ErrorCredencialesInvalidas, ErrorPersistencia }
 import co.com.alianza.infrastructure.dto.Empresa
 import enumerations.empresa.EstadosDeEmpresaEnum
 
@@ -79,13 +85,10 @@ class UsuariosActorSupervisor extends Actor with ActorLogging {
 /**
  *
  */
-class UsuariosActor extends Actor with ActorLogging {
+class UsuariosActor(implicit val system: ActorSystem) extends Actor with ActorLogging {
 
-  import scala.concurrent.ExecutionContext
-
-  implicit val ex: ExecutionContext = MainActors.dataAccesEx
-  implicit val sys = context.system
-  implicit private val config: Config = MainActors.conf
+  import system.dispatcher
+  implicit val config: Config = system.settings.config
 
   import ValidacionesUsuario._
 
