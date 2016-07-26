@@ -11,11 +11,14 @@ import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.util.clave.Crypto
 import enumerations.AppendPasswordUser
 
+import scala.concurrent.ExecutionContext
+
 /**
  *
  * @author seven4n
  */
-case class UsuarioService(kafkaActor: ActorSelection, usuariosActor: ActorSelection) extends Directives with AlianzaCommons with CrossHeaders {
+case class UsuarioService(kafkaActor: ActorSelection, usuariosActor: ActorSelection) (implicit val ec: ExecutionContext) extends Directives with AlianzaCommons
+  with CrossHeaders {
 
   import UsuariosMessagesJsonSupport._
 

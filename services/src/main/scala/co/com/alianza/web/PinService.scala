@@ -10,8 +10,10 @@ import co.com.alianza.util.clave.Crypto
 import enumerations.AppendPasswordUser
 import spray.routing.{ Directives, RequestContext }
 
+import scala.concurrent.ExecutionContext
+
 case class PinService(kafkaActor: ActorSelection, pinActor: ActorSelection, pinUsuarioEmpresarialAdminActor: ActorSelection,
-    pinUsuarioAgenteEmpresarialActor: ActorSelection) extends Directives with AlianzaCommons with CrossHeaders {
+    pinUsuarioAgenteEmpresarialActor: ActorSelection) (implicit val ec: ExecutionContext)extends Directives with AlianzaCommons with CrossHeaders {
 
   def route = {
     path("validarPin" / Segment / IntNumber) {

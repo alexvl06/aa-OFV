@@ -21,7 +21,8 @@ import scala.concurrent.ExecutionContext
 /**
  * Created by seven4n on 01/09/14.
  */
-case class AdministrarContrasenaService(kafkaActor: ActorSelection, contrasenasActor: ActorSelection, contrasenasAgenteEmpresarialActor: ActorSelection, contrasenasClienteAdminActor: ActorSelection)(implicit val ec: ExecutionContext) extends Directives with AlianzaCommons {
+case class AdministrarContrasenaService(kafkaActor: ActorSelection, contrasenasActor: ActorSelection, contrasenasAgenteEmpresarialActor: ActorSelection,
+  contrasenasClienteAdminActor: ActorSelection)(implicit val ec: ExecutionContext) extends Directives with AlianzaCommons {
 
   import AdministrarContrasenaMessagesJsonSupport._
 
@@ -40,7 +41,8 @@ case class AdministrarContrasenaService(kafkaActor: ActorSelection, contrasenasA
                         val token = r.request.headers.find(header => header.name equals "token")
                         val usuario = DataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
 
-                        requestWithFutureAuditing[PersistenceException, CambiarContrasenaMessage](r, AuditingHelper.fiduciariaTopic, AuditingHelper.cambioContrasenaIndex, ip.value, kafkaActor, usuario, Some(data.copy(pw_actual = null, pw_nuevo = null)))
+                        requestWithFutureAuditing[PersistenceException, CambiarContrasenaMessage](r, AuditingHelper.fiduciariaTopic,
+                          AuditingHelper.cambioContrasenaIndex, ip.value, kafkaActor, usuario, Some(data.copy(pw_actual = null, pw_nuevo = null)))
                     } {
                       val dataComplete: CambiarContrasenaMessage = data.copy(idUsuario = Some(user.id))
                       requestExecute(dataComplete, contrasenasActor)

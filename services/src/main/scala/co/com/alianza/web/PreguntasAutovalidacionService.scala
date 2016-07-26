@@ -8,12 +8,14 @@ import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.infrastructure.messages._
 import spray.routing.{ Directives, RequestContext }
 
+import scala.concurrent.ExecutionContext
+
 /**
  *
  * @author seven4n
  */
-case class PreguntasAutovalidacionService(kafkaActor: ActorSelection, preguntasAutovalidacionActor: ActorSelection) extends Directives with AlianzaCommons
-    with CrossHeaders {
+case class PreguntasAutovalidacionService(kafkaActor: ActorSelection, preguntasAutovalidacionActor: ActorSelection) (implicit val ec: ExecutionContext)
+  extends Directives with AlianzaCommons with CrossHeaders {
 
   import co.com.alianza.infrastructure.messages.PreguntasAutovalidacionMessagesJsonSupport._
 
