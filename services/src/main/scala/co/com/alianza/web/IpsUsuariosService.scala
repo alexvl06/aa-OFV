@@ -1,6 +1,6 @@
 package co.com.alianza.web
 
-import akka.actor.ActorSelection
+import akka.actor.{ ActorLogging, ActorSelection, ActorSystem }
 import co.com.alianza.app.{ AlianzaCommons, CrossHeaders }
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.exceptions.PersistenceException
@@ -16,10 +16,12 @@ import spray.routing.RequestContext
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import spray.routing.Directives
 
+import scala.concurrent.ExecutionContext
+
 /**
  * Created by david on 16/06/14.
  */
-case class IpsUsuariosService(kafkaActor: ActorSelection, ipsUsuarioActor: ActorSelection) extends Directives with AlianzaCommons with CrossHeaders {
+case class IpsUsuariosService(kafkaActor: ActorSelection, ipsUsuarioActor: ActorSelection)(implicit val ec: ExecutionContext) extends Directives with AlianzaCommons with CrossHeaders {
 
   import IpsUsuarioMessagesJsonSupport._
   val ipsUsuarios = "ipsUsuarios"

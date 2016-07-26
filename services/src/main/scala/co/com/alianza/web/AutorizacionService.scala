@@ -28,8 +28,7 @@ case class AutorizacionService(
   autorizacionUsuarioEmpresarialActor: ActorSelection
 )(implicit val ec: ExecutionContext)
     extends Directives
-    with AlianzaCommons
-    with CacheHelper {
+    with AlianzaCommons {
 
   import AutenticacionMessagesJsonSupport._
 

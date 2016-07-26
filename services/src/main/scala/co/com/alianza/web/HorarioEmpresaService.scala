@@ -10,10 +10,12 @@ import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.infrastructure.messages.empresa._
 import spray.routing.{ Directives, RequestContext }
 
+import scala.concurrent.ExecutionContext
+
 /**
  * @author hernando on 16/06/15.
  */
-case class HorarioEmpresaService(kafkaActor: ActorSelection, horarioEmpresaActor: ActorSelection) extends Directives with AlianzaCommons with CrossHeaders {
+case class HorarioEmpresaService(kafkaActor: ActorSelection, horarioEmpresaActor: ActorSelection)(implicit val ec: ExecutionContext) extends Directives with AlianzaCommons with CrossHeaders {
 
   import HorarioEmpresaJsonSupport._
 
