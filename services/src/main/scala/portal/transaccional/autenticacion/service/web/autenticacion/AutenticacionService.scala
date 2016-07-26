@@ -2,7 +2,6 @@ package portal.transaccional.autenticacion.service.web.autenticacion
 
 import akka.actor.{ ActorRef, ActorSelection }
 import co.com.alianza.exceptions.{ PersistenceException, ValidacionException }
-import portal.transaccional.autenticacion.service.drivers.autenticacion.AutenticacionRepository
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import spray.http.StatusCodes
@@ -10,6 +9,7 @@ import spray.routing._
 import co.com.alianza.app.CrossHeaders
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper.requestWithAuiditing
+import portal.transaccional.autenticacion.service.drivers.autenticacion.AutenticacionRepository
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success }
@@ -22,7 +22,7 @@ case class AutenticacionService(autenticacionRepositorio: AutenticacionRepositor
   val route: Route = {
     pathPrefix(autenticar) {
       pathEndOrSingleSlash {
-        autenticarUsuarioIndividual ~ autenticarUsuarioEmpresarial
+        autenticarUsuarioIndividual// ~ autenticarUsuarioEmpresarial
       }
     }
   }
@@ -46,7 +46,7 @@ case class AutenticacionService(autenticacionRepositorio: AutenticacionRepositor
     }
   }
 
-  private def autenticarUsuarioEmpresarial = {
+ /* private def autenticarUsuarioEmpresarial = {
     path(autenticarUsuarioEmpresa) {
       post {
         entity(as[AutenticarUsuarioEmpresarialRequest]) {
@@ -54,7 +54,7 @@ case class AutenticacionService(autenticacionRepositorio: AutenticacionRepositor
             clientIP { ip =>
               val request = autenticacionRequest.copy(clientIp = ip.value)
               val resultado: Future[String] =
-                autenticacionRepositorio.autenticarUsuarioEmpresa(request.tipoIdentificacion, request.numeroIdentificacion, request.usuario, request.password, request.clientIp)
+                autenticacionRepositorio.(request.tipoIdentificacion, request.numeroIdentificacion, request.usuario, request.password, request.clientIp)
               mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.autenticacionIndex, ip.value, kafkaActor, autenticacionRequest.copy(password = null, clientIp = ip.value))) {
                 onComplete(resultado) {
                   case Success(value) => complete(value.toString)
@@ -65,7 +65,7 @@ case class AutenticacionService(autenticacionRepositorio: AutenticacionRepositor
         }
       }
     }
-  }
+  }*/
 
   def execution(ex: Any): StandardRoute = {
     ex match {

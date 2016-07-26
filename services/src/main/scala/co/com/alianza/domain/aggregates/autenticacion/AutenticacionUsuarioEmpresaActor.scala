@@ -36,10 +36,8 @@ import scalaz.std.AllInstances._
 import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 import scalaz.Validation.FlatMap._
 
-class AutenticacionUsuarioEmpresaActor(implicit val SupervisorUsuario: ActorRef, implicit val SupervisorSession: ActorRef)
+class AutenticacionUsuarioEmpresaActor(implicit SupervisorUsuario: ActorRef, implicit val SupervisorSession: ActorRef)
     extends Actor with ActorLogging with ValidacionesAutenticacionUsuarioEmpresarial {
-
-
 
   implicit val timeout: Timeout = Timeout(10 seconds)
 
@@ -549,7 +547,7 @@ class AutenticacionUsuarioEmpresaActor(implicit val SupervisorUsuario: ActorRef,
    * Success => True
    * ErrorAutenticacion => ErrorUsuarioBloqueadoIntentosErroneos || ErrorUsuarioBloqueadoPendienteActivacion || ErrorUsuarioBloqueadoPendienteReinicio
    */
-   def validarEstadosUsuario(estadoUsuario: Int): Future[Validation[ErrorAutenticacion, Boolean]] = Future {
+  def validarEstadosUsuario(estadoUsuario: Int): Future[Validation[ErrorAutenticacion, Boolean]] = Future {
     log.info("Validando estados usuario")
     if (estadoUsuario == EstadosEmpresaEnum.bloqueContraseña.id) Validation.failure(ErrorUsuarioBloqueadoIntentosErroneos())
     else if (estadoUsuario == EstadosEmpresaEnum.pendienteActivacion.id) Validation.failure(ErrorUsuarioBloqueadoPendienteActivacion())
@@ -591,7 +589,6 @@ class AutenticacionUsuarioEmpresaActor(implicit val SupervisorUsuario: ActorRef,
       Validation.success(!respuestas.isEmpty toString)
     })
   }
-
 
   //TODO Metodos replicados de AutenticacionActor
 
