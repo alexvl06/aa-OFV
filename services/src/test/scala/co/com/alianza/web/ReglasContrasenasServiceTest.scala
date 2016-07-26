@@ -1,4 +1,4 @@
-package co.com.alianza.web
+/*package co.com.alianza.web
 
 import co.com.alianza.infrastructure.messages.InboxMessage
 import org.specs2.mutable.Specification
@@ -34,3 +34,4 @@ class ReglasContrasenasServiceTest extends Specification with Specs2RouteTest {
   // curl -X POST -H 'Content-Type: application/json' -d '{"reglasContrasenas": [{"CANTIDAD_REINTENTOS_INGRESO_CONTRASENA":"3"},{"DIAS_VALIDA":"3"}]}' http://localhost:4900/reglasContrasenas
 
 }
+*/

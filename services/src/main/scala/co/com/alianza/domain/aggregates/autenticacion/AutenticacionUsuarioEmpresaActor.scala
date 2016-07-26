@@ -1,4 +1,4 @@
-package co.com.alianza.domain.aggregates.autenticacion
+/*package co.com.alianza.domain.aggregates.autenticacion
 
 import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem }
 import akka.pattern.ask
@@ -731,4 +731,4 @@ class AutenticacionUsuarioEmpresaActor(implicit val SupervisorUsuario: ActorRef,
     }
   }
 
-}
+}*/ 

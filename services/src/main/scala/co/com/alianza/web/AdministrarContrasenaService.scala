@@ -1,6 +1,6 @@
 package co.com.alianza.web
 
-import akka.actor.ActorSelection
+import akka.actor.{ ActorSelection, ActorSystem }
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.messages.empresa.{ CambiarContrasenaCaducadaAgenteEmpresarialMessage, CambiarContrasenaCaducadaClienteAdminMessage }
@@ -22,8 +22,9 @@ import scala.concurrent.ExecutionContext
  * Created by seven4n on 01/09/14.
  */
 case class AdministrarContrasenaService(kafkaActor: ActorSelection, contrasenasActor: ActorSelection, contrasenasAgenteEmpresarialActor: ActorSelection,
-    contrasenasClienteAdminActor: ActorSelection)(implicit val ec: ExecutionContext) extends Directives with AlianzaCommons {
+    contrasenasClienteAdminActor: ActorSelection)(implicit val system: ActorSystem) extends Directives with AlianzaCommons {
 
+  import system.dispatcher
   import AdministrarContrasenaMessagesJsonSupport._
 
   def secureRoute(user: UsuarioAuth) =

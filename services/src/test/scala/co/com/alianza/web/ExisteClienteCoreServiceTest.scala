@@ -1,4 +1,4 @@
-package co.com.alianza.web
+/*package co.com.alianza.web
 
 import scala.concurrent.duration.DurationInt
 
@@ -42,4 +42,4 @@ class ExisteClienteCoreServiceTest extends Specification with Specs2RouteTest {
     }
   }
 
-}
+}*/

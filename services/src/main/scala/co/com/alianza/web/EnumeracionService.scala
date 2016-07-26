@@ -1,5 +1,6 @@
 package co.com.alianza.web
 
+import akka.actor.ActorSystem
 import spray.routing.Directives
 import spray.http.StatusCodes._
 import co.com.alianza.app.AlianzaCommons
@@ -10,7 +11,7 @@ import enumerations.{ TipoIdentificacion, TipoIdentificaciones }
 
 import scala.concurrent.ExecutionContext;
 
-class EnumeracionService(implicit val ec: ExecutionContext) extends Directives with AlianzaCommons {
+class EnumeracionService(implicit val system: ActorSystem) extends Directives with AlianzaCommons {
 
   val enumeracion = "enumeracion"
   val tiposIdentificacion = "tiposIdentificacion"

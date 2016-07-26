@@ -1,6 +1,6 @@
 package co.com.alianza.web
 
-import akka.actor.ActorSelection
+import akka.actor.{ ActorSelection, ActorSystem }
 import co.com.alianza.app.{ AlianzaCommons, CrossHeaders }
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
@@ -14,7 +14,7 @@ import scala.concurrent.ExecutionContext
  *
  * @author seven4n
  */
-case class PreguntasAutovalidacionService(kafkaActor: ActorSelection, preguntasAutovalidacionActor: ActorSelection)(implicit val ec: ExecutionContext)
+case class PreguntasAutovalidacionService(kafkaActor: ActorSelection, preguntasAutovalidacionActor: ActorSelection)(implicit val system: ActorSystem)
     extends Directives with AlianzaCommons with CrossHeaders {
 
   import co.com.alianza.infrastructure.messages.PreguntasAutovalidacionMessagesJsonSupport._

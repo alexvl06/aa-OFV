@@ -22,7 +22,7 @@ case class AutenticacionService(autenticacionRepositorio: AutenticacionRepositor
   val route: Route = {
     pathPrefix(autenticar) {
       pathEndOrSingleSlash {
-        autenticarUsuarioIndividual// ~ autenticarUsuarioEmpresarial
+        autenticarUsuarioIndividual // ~ autenticarUsuarioEmpresarial
       }
     }
   }
@@ -46,7 +46,7 @@ case class AutenticacionService(autenticacionRepositorio: AutenticacionRepositor
     }
   }
 
- /* private def autenticarUsuarioEmpresarial = {
+  /* private def autenticarUsuarioEmpresarial = {
     path(autenticarUsuarioEmpresa) {
       post {
         entity(as[AutenticarUsuarioEmpresarialRequest]) {

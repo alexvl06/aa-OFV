@@ -1,6 +1,6 @@
 package co.com.alianza.webvalidarPinClienteAdmin
 
-import akka.actor.ActorSelection
+import akka.actor.{ ActorSelection, ActorSystem }
 import co.com.alianza.app.{ AlianzaCommons, CrossHeaders }
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
@@ -13,7 +13,7 @@ import spray.routing.{ Directives, RequestContext }
 import scala.concurrent.ExecutionContext
 
 case class PinService(kafkaActor: ActorSelection, pinActor: ActorSelection, pinUsuarioEmpresarialAdminActor: ActorSelection,
-    pinUsuarioAgenteEmpresarialActor: ActorSelection)(implicit val ec: ExecutionContext) extends Directives with AlianzaCommons with CrossHeaders {
+    pinUsuarioAgenteEmpresarialActor: ActorSelection)(implicit val system: ActorSystem) extends Directives with AlianzaCommons with CrossHeaders {
 
   def route = {
     path("validarPin" / Segment / IntNumber) {

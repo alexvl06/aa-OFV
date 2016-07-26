@@ -1,6 +1,6 @@
 package co.com.alianza.web
 
-import scala.concurrent.duration.DurationInt
+/*import scala.concurrent.duration.DurationInt
 
 import spray.http._
 import spray.testkit.Specs2RouteTest
@@ -31,4 +31,4 @@ class ConfrontaServiceTest extends Specification with Specs2RouteTest {
     }
   }
 
-}
+}*/

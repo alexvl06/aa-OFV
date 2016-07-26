@@ -1,6 +1,6 @@
 package co.com.alianza.web
 
-import akka.actor.ActorSelection
+import akka.actor.{ ActorSelection, ActorSystem }
 import co.com.alianza.app.{ AlianzaCommons, CrossHeaders }
 import co.com.alianza.domain.aggregates.actualizacion.ActualizacionActor
 import co.com.alianza.infrastructure.auditing.{ AuditingHelper, KafkaActor }
@@ -18,7 +18,7 @@ import scala.concurrent.ExecutionContext
 /**
  * Created by david on 16/06/14.
  */
-case class ActualizacionService(actualizacionActor: ActorSelection, kafkaActor: ActorSelection)(implicit val ec: ExecutionContext)
+case class ActualizacionService(actualizacionActor: ActorSelection, kafkaActor: ActorSelection)(implicit val system: ActorSystem)
     extends Directives with AlianzaCommons with CrossHeaders {
 
   val datos = "datos"

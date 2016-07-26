@@ -1,6 +1,6 @@
 package co.com.alianza.web.empresa
 
-import akka.actor.ActorSelection
+import akka.actor.{ ActorSelection, ActorSystem }
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
 import co.com.alianza.infrastructure.auditing.AuditingHelper
@@ -18,11 +18,11 @@ import scala.concurrent.ExecutionContext
 /**
  * Created by s4n on 17/12/14.
  */
-case class UsuarioEmpresaService(kafkaActor: ActorSelection, agenteEmpresarialActor: ActorSelection)(implicit val ec: ExecutionContext)
+case class UsuarioEmpresaService(kafkaActor: ActorSelection, agenteEmpresarialActor: ActorSelection)(implicit val system: ActorSystem)
     extends Directives with AlianzaCommons with CrossHeaders {
 
   import CrearAgenteEMessageJsonSupport._
-
+  import system.dispatcher
   def secureUserRouteEmpresa(user: UsuarioAuth) = {
     pathPrefix("empresa") {
       path("consultarUsuarios") {

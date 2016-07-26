@@ -1,6 +1,6 @@
 package co.com.alianza.web
 
-import akka.actor.ActorSelection
+import akka.actor.{ ActorSelection, ActorSystem }
 import co.com.alianza.app.{ AlianzaCommons, CrossHeaders }
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.DataAccessAdapter
@@ -15,10 +15,10 @@ import scala.concurrent.ExecutionContext
 /**
  * @author hernando on 16/06/15.
  */
-case class HorarioEmpresaService(kafkaActor: ActorSelection, horarioEmpresaActor: ActorSelection)(implicit val ec: ExecutionContext) extends Directives with AlianzaCommons with CrossHeaders {
+case class HorarioEmpresaService(kafkaActor: ActorSelection, horarioEmpresaActor: ActorSelection)(implicit val system: ActorSystem) extends Directives with AlianzaCommons with CrossHeaders {
 
   import HorarioEmpresaJsonSupport._
-
+  import system.dispatcher
   val diaFestivo = "diaFestivo"
   val horarioEmpresa = "horarioEmpresa"
   val validarHorario = "validarHorario"

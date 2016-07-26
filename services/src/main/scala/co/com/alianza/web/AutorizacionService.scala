@@ -17,7 +17,7 @@ import spray.routing.{ Directives, RequestContext }
 import co.com.alianza.app.AlianzaCommons
 import co.com.alianza.infrastructure.messages.{ AutorizarUrl, InvalidarToken }
 import co.com.alianza.infrastructure.cache.CacheHelper
-import akka.actor.ActorSelection
+import akka.actor.{ ActorSelection, ActorSystem }
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scalaz.Validation
@@ -26,10 +26,10 @@ case class AutorizacionService(
   kafkaActor: ActorSelection,
   autorizacionActor: ActorSelection,
   autorizacionUsuarioEmpresarialActor: ActorSelection
-)(implicit val ec: ExecutionContext)
+)(implicit val system: ActorSystem)
     extends Directives
     with AlianzaCommons {
-
+  import system.dispatcher
   import AutenticacionMessagesJsonSupport._
 
   def route = {

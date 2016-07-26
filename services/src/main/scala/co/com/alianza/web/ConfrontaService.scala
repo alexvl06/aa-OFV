@@ -1,6 +1,6 @@
 package co.com.alianza.web
 
-import akka.actor.ActorSelection
+import akka.actor.{ ActorSelection, ActorSystem }
 import spray.routing.Directives
 import co.com.alianza.app.AlianzaCommons
 import co.com.alianza.infrastructure.messages.{ ObtenerCuestionarioAdicionalRequestMessage, ObtenerCuestionarioRequestMessage, ValidarCuestionarioDesbloqueoRequestMessage, ValidarCuestionarioRequestMessage }
@@ -9,7 +9,7 @@ import co.com.alianza.util.json.JsonUtil
 
 import scala.concurrent.ExecutionContext
 
-case class ConfrontaService(confrontaActor: ActorSelection)(implicit val ec: ExecutionContext) extends Directives with AlianzaCommons {
+case class ConfrontaService(confrontaActor: ActorSelection)(implicit val system: ActorSystem) extends Directives with AlianzaCommons {
   import co.com.alianza.infrastructure.messages.ConfrontaMessagesJsonSupport._
 
   val confronta = "confronta"

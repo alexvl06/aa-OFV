@@ -1,6 +1,6 @@
 package co.com.alianza.web.empresa
 
-import akka.actor.ActorSelection
+import akka.actor.{ ActorSelection, ActorSystem }
 import co.com.alianza.app.AlianzaCommons
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{ DataAccessAdapter => DataAccessAdapterAgenteEmpresarial }
@@ -19,8 +19,9 @@ import scala.concurrent.ExecutionContext
  * Created by S4N on 17/12/14.
  */
 case class AdministrarContrasenaEmpresaService(kafkaActor: ActorSelection, contrasenasAgenteEmpresarialActor: ActorSelection,
-    contrasenasClienteAdminActor: ActorSelection)(implicit val ec: ExecutionContext) extends Directives with AlianzaCommons {
+    contrasenasClienteAdminActor: ActorSelection)(implicit val system: ActorSystem) extends Directives with AlianzaCommons {
 
+  import system.dispatcher
   import AdministrarContrasenaEmpresaMessagesJsonSupport._
 
   def secureRouteEmpresa(user: UsuarioAuth) = {

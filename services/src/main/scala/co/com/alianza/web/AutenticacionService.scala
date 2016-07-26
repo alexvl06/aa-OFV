@@ -1,6 +1,6 @@
 package co.com.alianza.web
 
-import akka.actor.ActorSelection
+import akka.actor.{ ActorSelection, ActorSystem }
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.commons.enumerations.TiposCliente
@@ -11,10 +11,10 @@ import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 
 import scala.concurrent.ExecutionContext
 
-case class AutenticacionService(kafkaActor: ActorSelection, autenticacionActor: ActorSelection, autenticacionUsuarioEmpresaActor: ActorSelection)(implicit val ec: ExecutionContext) extends Directives with AlianzaCommons with CrossHeaders {
+case class AutenticacionService(kafkaActor: ActorSelection, autenticacionActor: ActorSelection, autenticacionUsuarioEmpresaActor: ActorSelection)(implicit val system: ActorSystem) extends Directives with AlianzaCommons with CrossHeaders {
 
   import AutenticacionMessagesJsonSupport._
-
+  import system.dispatcher
   def route = {
     path("autenticar") {
       post {

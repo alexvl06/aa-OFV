@@ -1,4 +1,4 @@
-package co.com.alianza.domain.aggregates.autenticacion
+/*package co.com.alianza.domain.aggregates.autenticacion
 
 import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import akka.routing.RoundRobinPool
@@ -477,3 +477,4 @@ class AutenticacionActor(implicit val supervisor: ActorRef) extends Actor with A
   }
 
 }
+*/ 

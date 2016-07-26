@@ -21,8 +21,8 @@ import scala.concurrent.ExecutionContext
 /**
  * Created by david on 16/06/14.
  */
-case class IpsUsuariosService(kafkaActor: ActorSelection, ipsUsuarioActor: ActorSelection)(implicit val ec: ExecutionContext) extends Directives with AlianzaCommons with CrossHeaders {
-
+case class IpsUsuariosService(kafkaActor: ActorSelection, ipsUsuarioActor: ActorSelection)(implicit val system: ActorSystem) extends Directives with AlianzaCommons with CrossHeaders {
+  import system.dispatcher
   import IpsUsuarioMessagesJsonSupport._
   val ipsUsuarios = "ipsUsuarios"
   val ponerIpHabitual = "ponerIpHabitual"

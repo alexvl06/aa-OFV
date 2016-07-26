@@ -1,6 +1,6 @@
 package co.com.alianza.web
 
-import akka.actor.ActorSelection
+import akka.actor.{ ActorSelection, ActorSystem }
 import co.com.alianza.app.{ AlianzaCommons, CrossHeaders }
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.messages._
@@ -17,7 +17,7 @@ import scala.concurrent.ExecutionContext
  *
  * @author seven4n
  */
-case class UsuarioService(kafkaActor: ActorSelection, usuariosActor: ActorSelection)(implicit val ec: ExecutionContext) extends Directives with AlianzaCommons
+case class UsuarioService(kafkaActor: ActorSelection, usuariosActor: ActorSelection)(implicit val system: ActorSystem) extends Directives with AlianzaCommons
     with CrossHeaders {
 
   import UsuariosMessagesJsonSupport._

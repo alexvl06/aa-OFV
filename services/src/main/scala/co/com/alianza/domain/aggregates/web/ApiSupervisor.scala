@@ -21,7 +21,7 @@ import co.com.alianza.infrastructure.messages.ResponseMessage
 import scala.Some
 import akka.actor.OneForOneStrategy
 
-class ApiSupervisor(r: RequestContext, props: Props, message: MessageService) extends Actor with AlianzaCommons {
+class ApiSupervisor(r: RequestContext, props: Props, message: MessageService)(implicit val system: ActorSystem) extends Actor with AlianzaCommons {
 
   import context._
 

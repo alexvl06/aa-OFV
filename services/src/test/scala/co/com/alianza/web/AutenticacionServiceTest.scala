@@ -1,4 +1,4 @@
-package co.com.alianza.web
+/*package co.com.alianza.web
 
 import scala.concurrent.duration.DurationInt
 
@@ -54,4 +54,4 @@ class AutenticacionServiceTest extends Specification with Specs2RouteTest {
 
   }
 
-}
+}*/

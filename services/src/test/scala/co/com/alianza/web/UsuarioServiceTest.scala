@@ -1,4 +1,4 @@
-package co.com.alianza.web
+/*package co.com.alianza.web
 
 import scala.concurrent.duration.DurationInt
 
@@ -61,4 +61,4 @@ class UsuarioServiceTest extends Specification with Specs2RouteTest {
     }
   }
 
-}
+}*/
