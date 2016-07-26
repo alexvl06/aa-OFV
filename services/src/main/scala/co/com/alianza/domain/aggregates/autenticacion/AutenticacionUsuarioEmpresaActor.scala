@@ -1,6 +1,6 @@
 package co.com.alianza.domain.aggregates.autenticacion
 
-import akka.actor.ActorLogging
+import akka.actor.{ Actor, ActorLogging, ActorRef }
 import akka.pattern.ask
 import akka.util.Timeout
 import co.com.alianza.commons.enumerations.TiposCliente
@@ -16,10 +16,16 @@ import co.com.alianza.util.transformers.ValidationT
 import java.sql.Timestamp
 import java.util.Date
 
-import akka.remote.ContainerFormats.ActorRef
+import co.com.alianza.commons.enumerations.TiposCliente._
+import co.com.alianza.infrastructure.anticorruption.grupos.{ DataAccessAdapter => DataAdapterGrupos }
 import co.com.alianza.infrastructure.anticorruption.autovalidacion.{ DataAccessAdapter => DataAccesAdapterPreguntas }
-import enumerations.{ EstadosEmpresaEnum, TipoIdentificacion }
+import co.com.alianza.infrastructure.anticorruption.clientes.{ DataAccessAdapter => ClDataAdapter }
+import co.com.alianza.infrastructure.anticorruption.contrasenas.{ DataAccessAdapter => RgDataAdapter }
+import co.com.alianza.infrastructure.anticorruption.configuraciones.{ DataAccessAdapter => ConfDataAdapter }
+import co.com.alianza.util.clave.Crypto
+import enumerations.{ AppendPasswordUser, EstadosCliente, EstadosEmpresaEnum, TipoIdentificacion }
 import enumerations.empresa.EstadosDeEmpresaEnum
+import org.joda.time.DateTime
 
 import scala.concurrent.duration._
 import scala.concurrent.Future
@@ -31,9 +37,9 @@ import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 import scalaz.Validation.FlatMap._
 
 class AutenticacionUsuarioEmpresaActor(implicit val SupervisorUsuario: ActorRef, implicit val SupervisorSession: ActorRef)
-    extends AutenticacionActor with ActorLogging with ValidacionesAutenticacionUsuarioEmpresarial {
+    extends Actor with ActorLogging with ValidacionesAutenticacionUsuarioEmpresarial {
 
-  import context.dispatcher
+
 
   implicit val timeout: Timeout = Timeout(10 seconds)
 
@@ -543,7 +549,7 @@ class AutenticacionUsuarioEmpresaActor(implicit val SupervisorUsuario: ActorRef,
    * Success => True
    * ErrorAutenticacion => ErrorUsuarioBloqueadoIntentosErroneos || ErrorUsuarioBloqueadoPendienteActivacion || ErrorUsuarioBloqueadoPendienteReinicio
    */
-  override def validarEstadosUsuario(estadoUsuario: Int): Future[Validation[ErrorAutenticacion, Boolean]] = Future {
+   def validarEstadosUsuario(estadoUsuario: Int): Future[Validation[ErrorAutenticacion, Boolean]] = Future {
     log.info("Validando estados usuario")
     if (estadoUsuario == EstadosEmpresaEnum.bloqueContraseña.id) Validation.failure(ErrorUsuarioBloqueadoIntentosErroneos())
     else if (estadoUsuario == EstadosEmpresaEnum.pendienteActivacion.id) Validation.failure(ErrorUsuarioBloqueadoPendienteActivacion())
@@ -584,6 +590,147 @@ class AutenticacionUsuarioEmpresaActor(implicit val SupervisorUsuario: ActorRef,
     future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap { respuestas =>
       Validation.success(!respuestas.isEmpty toString)
     })
+  }
+
+
+  //TODO Metodos replicados de AutenticacionActor
+
+  /**
+   * Valida que los passwords concuerden
+   * @param passwordPeticion Password de la peticion
+   * @param passwordUsuario Password del usuario en BD
+   * @return  Future[Validation[ErrorAutenticacion, Boolean] ]
+   * Success => True
+   * ErrorAutenticacion => ErrorPasswordInvalido
+   */
+  def validarPasswords(passwordPeticion: String, passwordUsuario: String, identificacionUsuario: Option[String], idUsuario: Option[Int], numIngresosErroneosUsuario: Int): Future[Validation[ErrorAutenticacion, Boolean]] = Future {
+    log.info("Validando passwords")
+    val hash = Crypto.hashSha512(passwordPeticion.concat(AppendPasswordUser.appendUsuariosFiducia), idUsuario.get)
+    if (hash.contentEquals(passwordUsuario)) Validation.success(true)
+    else Validation.failure(ErrorPasswordInvalido(identificacionUsuario, idUsuario, numIngresosErroneosUsuario))
+  }
+
+  /**
+   * Valida que el usuario exista en el core de alianza
+   * @param identificacionUsuario numero de identificacion del usuario
+   * @return Future[Validation[ErrorAutenticacion, Cliente] ]
+   * Success => Cliente
+   * ErrorAutenticacion => ErrorPersistencia | ErrorClienteNoExisteCore
+   */
+  def obtenerClienteSP(identificacionUsuario: String, tipoIdentificacion: Int): Future[Validation[ErrorAutenticacion, Cliente]] = {
+    log.info("Validando que el cliente exista en el core de alianza")
+    if (tipoIdentificacion == TipoIdentificacion.GRUPO.identificador) {
+      val future: Future[Validation[PersistenceException, Option[Cliente]]] = DataAdapterGrupos.consultarGrupo(identificacionUsuario.toInt)
+      future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap {
+        case Some(cliente) =>
+          Validation.success(cliente)
+        case None =>
+          Validation.failure(ErrorClienteNoExisteCore())
+      })
+    } else {
+      val future: Future[Validation[PersistenceException, Option[Cliente]]] = ClDataAdapter.consultarCliente(identificacionUsuario)
+      future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap {
+        case Some(cliente) =>
+          Validation.success(cliente)
+        case None =>
+          Validation.failure(ErrorClienteNoExisteCore())
+      })
+    }
+  }
+
+  /**
+   * Valida los estados del usuario del core de alianza
+   * @param cliente cliente a validar
+   * @return Future[Validation[ErrorAutenticacion, Boolean] ]
+   * Success => True
+   * ErrorAutenticacion => ErrorClienteNoExisteCore | ErrorClienteInactivoCore
+   */
+  def validarClienteSP(cliente: Cliente): Future[Validation[ErrorAutenticacion, Boolean]] = Future {
+    log.info("Validando los estados del cliente del core", cliente)
+    if (cliente.wcli_estado != EstadosCliente.inactivo && cliente.wcli_estado != EstadosCliente.bloqueado &&
+      cliente.wcli_estado != EstadosCliente.activo)
+      Validation.failure(ErrorClienteInactivoCore())
+    else Validation.success(true)
+  }
+
+  /**
+   * Valida la fecha de caducidad de la contraseña de un usuario
+   * @param idUsuario Id del usuario a validar
+   * @param fechaActualizacionUsuario Fecha de actualizacion del usuario
+   * @return Future[Validation[ErrorAutenticacion, Boolean] ]
+   * Success => True
+   * ErrorAutenticacion => ErrorPersistencia | ErrorRegla | ErrorPasswordCaducado
+   */
+  def validarCaducidadPassword(tipoCliente: TiposCliente, idUsuario: Int, fechaActualizacionUsuario: Date): Future[Validation[ErrorAutenticacion, Boolean]] = {
+    log.info("Validando fecha de caducidad del password")
+    val future: Future[Validation[PersistenceException, Option[ReglasContrasenas]]] = RgDataAdapter.obtenerRegla("DIAS_VALIDA")
+    future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap {
+      case None => Validation.failure(ErrorRegla("DIAS_VALIDA"))
+      case Some(regla) =>
+        if (new DateTime().isAfter(new DateTime(fechaActualizacionUsuario.getTime).plusDays(regla.valor.toInt))) {
+          val token: String = Token.generarTokenCaducidadContrasena(tipoCliente, idUsuario)
+          Validation.failure(ErrorPasswordCaducado(token))
+        } else {
+          Validation.success(true)
+        }
+    })
+  }
+
+  /**
+   * Busca una configuracion dado una llave por parametro
+   * @param llave llave de la configuracion a buscar
+   * @return Future[Validation[ErrorAutenticacion, Configuracion] ]
+   * Success => Configuracion
+   * ErrorAutenticacion => ErrorPersistencia | ErrorRegla
+   */
+  def buscarConfiguracion(llave: String): Future[Validation[ErrorAutenticacion, Configuracion]] = {
+    val future = ConfDataAdapter.obtenerConfiguracionPorLlave(llave)
+    future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap {
+      case None => Validation.failure(ErrorRegla(llave))
+      case Some(conf) => Validation.success(conf)
+    })
+  }
+
+  /**
+   * Busca una regla dado una llave por parametro
+   * @param llave llave de la regla a buscar
+   * @return Future[Validation[ErrorAutenticacion, ReglasContrasenas] ]
+   * Success => ReglasContrasenas
+   * ErrorAutenticacion => ErrorPersistencia | ErrorRegla
+   */
+  def buscarRegla(llave: String): Future[Validation[ErrorAutenticacion, ReglasContrasenas]] = {
+    val future = RgDataAdapter.obtenerRegla(llave)
+    future.map(_.leftMap(pe => ErrorPersistencia(pe.message, pe)).flatMap {
+      case None => Validation.failure(ErrorRegla(llave))
+      case Some(regla) => Validation.success(regla)
+    })
+  }
+
+  /**
+   * Crea la sesion del usuario en el cluster
+   * @param token Token para crear la sesion
+   * @return Future[Validation[ErrorAutenticacion, Boolean] ]
+   * Success => True
+   * ErrorAutenticacion => ErrorPersistencia
+   */
+  def crearSesion(token: String, expiracionInactividad: Int): Future[Validation[ErrorAutenticacion, Boolean]] = {
+    log.info("Creando sesion")
+    SupervisorUsuario ! CrearSesionUsuario(token, expiracionInactividad)
+    Future.successful(Validation.success(true))
+  }
+
+  /**
+   * Devuelve el tipo de identificacion de la persona
+   * @param idTipoIdent Id del tipo de identificacion
+   * @return F si es fiduciaria, J si es juridica y N si es natural
+   */
+  protected def getTipoPersona(idTipoIdent: Int): String = {
+    idTipoIdent match {
+      case TipoIdentificacion.FID.identificador => "F"
+      case TipoIdentificacion.NIT.identificador => "J"
+      case TipoIdentificacion.SOCIEDAD_EXTRANJERA.identificador => "S"
+      case _ => "N"
+    }
   }
 
 }
