@@ -1,10 +1,11 @@
 package co.com.alianza.domain.aggregates.usuarios
 
-import akka.actor.{ Actor, ActorLogging, ActorSystem }
+import akka.actor.{Actor, ActorLogging}
 import co.com.alianza.infrastructure.messages._
+import co.com.alianza.persistence.util.DataBaseExecutionContext
 
-import scalaz.{ Failure => zFailure, Success => zSuccess }
-import scala.util.{ Failure => sFailure, Success => sSuccess }
+import scalaz.{Failure => zFailure, Success => zSuccess}
+import scala.util.{Failure => sFailure, Success => sSuccess}
 import scala.concurrent.ExecutionContext
 
 /**

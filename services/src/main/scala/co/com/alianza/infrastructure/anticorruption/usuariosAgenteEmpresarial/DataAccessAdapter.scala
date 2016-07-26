@@ -24,7 +24,6 @@ import co.com.alianza.persistence.entities.UsuarioEmpresarialEmpresa
  */
 object DataAccessAdapter {
 
-  implicit val ec: ExecutionContext = MainActors.dataAccesEx
   val repo = new UsuariosEmpresarialRepository()
 
   def consultaContrasenaActualAgenteEmpresarial(pw_actual: String, idUsuario: Int): Future[Validation[PersistenceException, Option[dtoUsuario]]] = {
@@ -48,7 +47,7 @@ object DataAccessAdapter {
     repo.caducarFechaUltimoCambioContrasenaAgenteEmpresarial(idUsuario)
   }
 
-  def cambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa): Future[Validation[PersistenceException, Int]] = {
+  def cambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa): Future[Validation[PersistenceException, Int]]={
     repo.cambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial, estado)
   }
 

@@ -1,19 +1,21 @@
 package co.com.alianza.infrastructure.anticorruption.permisos
 
-import scala.concurrent.{ Future, ExecutionContext }
-import scalaz.{ Failure => zFailure, Success => zSuccess }
+import scala.concurrent.{ExecutionContext, Future}
+import scalaz.{Failure => zFailure, Success => zSuccess}
 import scalaz.Validation
-
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.dto._
 import co.com.alianza.persistence.repositories.PermisoTransaccionalRepository
+import co.com.alianza.persistence.util.DataBaseExecutionContext
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * Created by manuel on 8/01/15.
  */
 object PermisoTransaccionalDataAccessAdapter {
 
-  implicit val ec: ExecutionContext = MainActors.dataAccesEx
+  implicit val ec: ExecutionContext = DataBaseExecutionContext.executionContext
 
   val DataAccessTranslator = PermisoTransaccionalDataAccessTranslator
 
