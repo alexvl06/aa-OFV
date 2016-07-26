@@ -46,7 +46,7 @@ class PermisoTransaccionalActorSupervisor extends Actor with ActorLogging {
 
 class PermisoTransaccionalActor extends Actor with ActorLogging with FutureResponse {
 
-  import system.dispatcher
+  import context.dispatcher
 
   implicit val timeout: Timeout = 120.seconds
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.errorValidacion

@@ -47,11 +47,11 @@ class HorarioEmpresaActorSupervisor extends Actor with ActorLogging {
 
 }
 
-class HorarioEmpresaActor(implicit val Supervisor: ActorRef) extends Actor
+class HorarioEmpresaActor extends Actor
     with ActorLogging with ValidacionesAutenticacionUsuarioEmpresarial {
 
   import co.com.alianza.util.json.MarshallableImplicits._
-  import system.dispatcher
+  import context.dispatcher
 
   def receive = {
     case message: ObtenerHorarioEmpresaMessage => obtenerHorarioEmpresa(message)
@@ -115,7 +115,7 @@ class HorarioEmpresaActor(implicit val Supervisor: ActorRef) extends Actor
 
   def agregarHorarioSesionEmpresa(empresaId: Int, horario: HorarioEmpresaDTO): Future[Validation[PersistenceException, Boolean]] = {
     implicit val timeout = Timeout(120 seconds)
-    Supervisor ? ObtenerEmpresaSesionActorId(empresaId) map {
+    context.parent ? ObtenerEmpresaSesionActorId(empresaId) map {
       case Some(empresaSesionActor: ActorRef) =>
         empresaSesionActor ! ActualizarHorarioEmpresa(horario); zSuccess(true)
       case None => zSuccess(false)

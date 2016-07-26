@@ -65,8 +65,8 @@ class ContrasenasClienteAdminActorSupervisor extends Actor with ActorLogging {
  */
 class ContrasenasClienteAdminActor extends Actor with ActorLogging {
 
-  import system.dispatcher
-  implicit val conf: Config = system.settings.config
+  import context.dispatcher
+  implicit val conf: Config = context.system.settings.config
 
   import scalaz._
   import scalaz.std.string._

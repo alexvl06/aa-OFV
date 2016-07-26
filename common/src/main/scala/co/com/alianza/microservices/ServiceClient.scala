@@ -1,11 +1,14 @@
 package co.com.alianza.microservices
 
-import spray.http.{ HttpResponse, StatusCode, HttpEntity }
+import akka.actor.ActorSystem
+import spray.http.{ HttpEntity, HttpResponse, StatusCode }
+
 import scala.concurrent.{ ExecutionContext, Future }
-import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
-import co.com.alianza.exceptions.{ TimeoutLevel, TechnicalLevel, ServiceException }
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
+import co.com.alianza.exceptions.{ ServiceException, TechnicalLevel, TimeoutLevel }
 import spray.can.Http.RequestTimeoutException
 import co.com.alianza.infrastructure.messages.MessageService
+import com.typesafe.config.Config
 
 /**
  *
@@ -13,7 +16,10 @@ import co.com.alianza.infrastructure.messages.MessageService
  */
 trait ServiceClient {
 
-  implicit val context: ExecutionContext
+
+  implicit val system: ActorSystem
+  import system.dispatcher
+  implicit val conf: Config = system.settings.config
 
   /**
    *

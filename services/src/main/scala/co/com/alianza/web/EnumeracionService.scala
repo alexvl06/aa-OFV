@@ -11,7 +11,7 @@ import enumerations.{ TipoIdentificacion, TipoIdentificaciones }
 
 import scala.concurrent.ExecutionContext;
 
-class EnumeracionService extends Directives with AlianzaCommons {
+class EnumeracionService(implicit val system: ActorSystem) extends Directives with AlianzaCommons {
 
   val enumeracion = "enumeracion"
   val tiposIdentificacion = "tiposIdentificacion"

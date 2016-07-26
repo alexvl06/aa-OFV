@@ -35,7 +35,7 @@ import enumerations.{ AppendPasswordUser, EstadosEmpresaEnum, PerfilesUsuario }
  */
 class PinUsuarioEmpresarialAdminActor extends Actor with ActorLogging with FutureResponse {
 
-  import system.dispatcher
+  import context.dispatcher
   import co.com.alianza.domain.aggregates.empresa.ValidacionesClienteAdmin._
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario._
 

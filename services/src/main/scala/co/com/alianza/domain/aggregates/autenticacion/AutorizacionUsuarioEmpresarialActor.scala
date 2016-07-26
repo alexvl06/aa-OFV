@@ -28,7 +28,7 @@ import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
  */
 class AutorizacionUsuarioEmpresarialActor()(implicit val supervisor: ActorRef, implicit val system: ActorSystem)
     extends Actor with ActorLogging with ValidacionesAutenticacionUsuarioEmpresarial {
-  import system.dispatcher
+  import context.dispatcher
   implicit val timeout = Timeout(120 seconds)
 
   def receive = {

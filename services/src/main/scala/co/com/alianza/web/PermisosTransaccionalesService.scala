@@ -16,11 +16,11 @@ import scala.concurrent.ExecutionContext
 /**
  * Created by manuel on 7/01/15.
  */
-case class PermisosTransaccionalesService(kafkaActor: ActorSelection, permisoTransaccionalActor: ActorSelection)
+case class PermisosTransaccionalesService(kafkaActor: ActorSelection, permisoTransaccionalActor: ActorSelection)(implicit val system: ActorSystem)
     extends Directives with AlianzaCommons with CrossHeaders {
   import system.dispatcher
   import PermisosTransaccionalesJsonSupport._
-  import system.dispatcher
+
   val rutaPermisosTx = "permisosTx"
   val permisosLogin = "permisosLogin"
 

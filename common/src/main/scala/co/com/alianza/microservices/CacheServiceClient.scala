@@ -9,9 +9,9 @@ import co.com.alianza.exceptions.ServiceException
 import akka.actor.ActorSystem
 import co.com.alianza.infrastructure.messages.MessageService
 
-class CacheServiceClient(implicit executor: ExecutionContext, conf: Config, system: ActorSystem) extends ServiceClient {
+class CacheServiceClient(implicit val system: ActorSystem) extends ServiceClient {
 
-  val context: ExecutionContext = executor
+  import system.dispatcher
 
   def getKey[T](key: MessageService, functionSuccess: (HttpEntity, StatusCode, MessageService) => T): Future[Validation[ServiceException, T]] = {
     val endPoint = conf.getString("cache.fiducia.location")

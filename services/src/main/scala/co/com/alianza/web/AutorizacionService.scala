@@ -26,7 +26,7 @@ case class AutorizacionService(
   kafkaActor: ActorSelection,
   autorizacionActor: ActorSelection,
   autorizacionUsuarioEmpresarialActor: ActorSelection
-)
+)(implicit val system: ActorSystem)
     extends Directives
     with AlianzaCommons {
   import system.dispatcher

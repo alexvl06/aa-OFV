@@ -46,8 +46,8 @@ class IpsUsuarioActorSupervisor extends Actor with ActorLogging {
  * Created by david on 16/06/14.
  */
 class IpsUsuarioActor(Supervisor: ActorRef) extends Actor with ActorLogging {
-  import system.dispatcher
-  implicit val config: Config = system.settings.config
+  import context.dispatcher
+  implicit val config: Config = context.system.settings.config
   implicit val timeout = Timeout(120.seconds)
   import co.com.alianza.util.json.MarshallableImplicits._
 

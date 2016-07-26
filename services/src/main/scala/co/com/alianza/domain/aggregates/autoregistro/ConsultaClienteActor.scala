@@ -38,9 +38,9 @@ class ConsultaClienteActorSupervisor extends Actor with ActorLogging {
  */
 class ConsultaClienteActor extends Actor with ActorLogging {
 
-  import system.dispatcher
+  import context.dispatcher
 
-  implicit val conf: Config = system.settings.config
+  implicit val conf: Config = context.system.settings.config
 
   import co.com.alianza.util.json.MarshallableImplicits._
 

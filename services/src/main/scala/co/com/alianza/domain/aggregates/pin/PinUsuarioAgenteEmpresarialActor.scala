@@ -29,7 +29,7 @@ import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
  */
 class PinUsuarioAgenteEmpresarialActor extends Actor with ActorLogging with FutureResponse {
 
-  import system.dispatcher
+  import context.dispatcher
 
   import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial._
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.errorValidacion

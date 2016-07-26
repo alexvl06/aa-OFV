@@ -19,9 +19,9 @@ import scala.util.{ Failure, Success }
 class SesionActorSupervisor(implicit val cluster: Cluster) extends Actor
     with ActorLogging {
 
-  import system.dispatcher
+  import context.dispatcher
 
-  implicit val conf: Config = system.settings.config
+  implicit val conf: Config = context.system.settings.config
   implicit val timeout: Timeout = 10 seconds
 
   def receive = {

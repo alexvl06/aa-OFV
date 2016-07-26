@@ -18,7 +18,7 @@ import scala.concurrent.ExecutionContext
 /**
  * Created by s4n on 17/12/14.
  */
-case class UsuarioEmpresaService(kafkaActor: ActorSelection, agenteEmpresarialActor: ActorSelection)
+case class UsuarioEmpresaService(kafkaActor: ActorSelection, agenteEmpresarialActor: ActorSelection)(implicit val system: ActorSystem)
     extends Directives with AlianzaCommons with CrossHeaders {
 
   import CrearAgenteEMessageJsonSupport._

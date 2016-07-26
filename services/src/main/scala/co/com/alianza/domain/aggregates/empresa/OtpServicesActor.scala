@@ -46,8 +46,8 @@ class OtpServicesActorSupervisor extends Actor with ActorLogging {
 
 class OtpServicesActor extends Actor with ActorLogging with FutureResponse {
 
-  import system.dispatcher
-  implicit val config: Config = system.settings.config
+  import context.dispatcher
+  implicit val config: Config = context.system.settings.config
 
   val application = config.getInt("service.otp.application")
 

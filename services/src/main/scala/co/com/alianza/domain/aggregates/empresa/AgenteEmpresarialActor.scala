@@ -61,8 +61,8 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with FutureResponse
   import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial.validarUsuarioAgente
   import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial.validacionEstadoActualizacionAgenteEmpresarial
 
-  import system.dispatcher
-  implicit val config: Config = system.settings.config
+  import context.dispatcher
+  implicit val config: Config = context.system.settings.config
 
   def receive = {
 
@@ -150,7 +150,7 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with FutureResponse
    */
   private def enviarCorreoPin(pin: PinEmpresa, confTiempo: Configuracion, plantilla: String, asunto: String, usuario: String, correo: String): Future[Validation[ErrorValidacion, Int]] = {
     val message = buildMessage(pin, confTiempo.valor.toInt, plantilla, asunto, usuario, correo)
-    toErrorValidationCorreo(new SmtpServiceClient().send(message, (_, _) => 1))
+    toErrorValidationCorreo(new SmtpServiceClient()(context.system).send(message, (_, _) => 1))
   }
 
   /**
