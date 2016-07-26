@@ -16,11 +16,10 @@ import com.typesafe.config.Config
 
 object DataAccessAdapter {
 
-  implicit val system: ActorSystem
-  import system.dispatcher
-  implicit val conf: Config = system.settings.config
+  /*import system.dispatcher
+  implicit val conf: Config = system.settings.config*/
 
-  def obtenerConfiguraciones(): Future[Validation[PersistenceException, List[Configuracion]]] = {
+  def obtenerConfiguraciones(implicit system: ActorSystem): Future[Validation[PersistenceException, List[Configuracion]]] = {
     val repo = new ConfiguracionesRepository()
     repo.obtenerConfiguraciones() map {
       x => transformValidationList(x)

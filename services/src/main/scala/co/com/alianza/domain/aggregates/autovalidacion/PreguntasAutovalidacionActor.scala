@@ -75,7 +75,7 @@ case class PreguntasAutovalidacionActor(implicit val system: ActorSystem) extend
     val currentSender = sender()
     val future: Future[Validation[PersistenceException, (List[Pregunta], List[Configuracion])]] = (for {
       preguntas <- ValidationT(DataAccessAdapter.obtenerPreguntas())
-      configuraciones <- ValidationT(DataAdapterConfiguracion.obtenerConfiguraciones())
+      configuraciones <- ValidationT(DataAdapterConfiguracion.obtenerConfiguraciones(system))
     } yield (preguntas, configuraciones)).run
     resolveFutureValidation(future, (response: (List[Pregunta], List[Configuracion])) => {
       val numeroPreguntas = obtenerValorEntero(response._2, ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS.name)
