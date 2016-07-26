@@ -1,5 +1,9 @@
 package portal.transaccional.autenticacion.service.drivers.autenticacion
 
+import co.com.alianza.constants.LlavesReglaContrasena
+import co.com.alianza.persistence.entities.Empresa
+import portal.transaccional.autenticacion.service.drivers.empresa.EmpresaRepository
+import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaRepository
 import portal.transaccional.autenticacion.service.drivers.usuario.{ UsuarioEmpresarialAdminRepository, UsuarioEmpresarialRepository }
 
 import scala.concurrent.Future
@@ -8,7 +12,8 @@ import scala.concurrent.Future
  * Created by hernando on 26/07/16.
  */
 case class AutenticacionEmpresaDriverRepository(
-  usuarioRepo: UsuarioEmpresarialRepository, usuarioAdminRepo: UsuarioEmpresarialAdminRepository
+    usuarioRepo: UsuarioEmpresarialRepository, usuarioAdminRepo: UsuarioEmpresarialAdminRepository, empresaRepo: EmpresaRepository,
+    reglaRepo: ReglaContrasenaRepository
 ) extends AutenticacionEmpresaRepository {
 
   /**
@@ -29,6 +34,8 @@ case class AutenticacionEmpresaDriverRepository(
 
   /**
    * Flujo:
+   * 1) Buscar y validar empresa
+   *
    * 1) Busca el usuario en la base de datos, si no se encuentra se devuelve CredencialesInvalidas
    * 2) Valida los estados del usuario encontrado, esta validacion devuelve un tipo de error por estado, si es exitosa se continúa el proceso
    * 3) Se comparan los passwords de la petición y el usuario, si coinciden se prosigue de lo contrario se debe ejecutar la excepcion de pw inválido
@@ -43,13 +50,17 @@ case class AutenticacionEmpresaDriverRepository(
    * 11)Se crea la sesion del usuario en el cluster
    * 12)Se valida que el usuario ingrese con una ip valida para la empresa a la que pertenece
    */
-  private def autenticarAgente(): Future[String] = {
+  private def autenticarAgente(tipoIdentificacion: Int, identificacion: String,
+    usuario: String, contrasena: String, ip: String): Future[String] = {
+
     for {
-      //estadoEmpresaOk <- ValidationT(validarEstadoEmpresa(message.nit))
-      //usuarioAgente <- ValidationT(obtenerUsuarioEmpresarialAgente(message.nit, message.usuario))
-      //estadoValido <- ValidationT(validarEstadosUsuario(usuarioAgente.estado))
-      //passwordValido <- ValidationT(validarPasswords(message.password, usuarioAgente.contrasena.getOrElse(""), None, Some(usuarioAgente.id), usuarioAgente.numeroIngresosErroneos))
+      empresa <- obtenerEmpresaValida(identificacion)
+      usuarioOption <- usuarioRepo.getByIdentityAndUser(identificacion, usuario)
+      valido <- usuarioRepo.validarUsuario(usuarioOption, contrasena)
+      reintentosErroneos <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA.llave)
+
       //passwordCaduco <- ValidationT(validarCaducidadPassword(TiposCliente.agenteEmpresarial, usuarioAgente.id, usuarioAgente.fechaCaducidad))
+
       //actualizacionInfo <- ValidationT(actualizarInformacionUsuarioEmpresarialAgente(usuarioAgente.id, message.clientIp.get))
       //inactividadConfig <- ValidationT(buscarConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave))
       //token <- ValidationT(generarYAsociarTokenUsuarioEmpresarialAgente(usuarioAgente, message.nit, inactividadConfig.valor, message.clientIp.get))
@@ -166,6 +177,13 @@ case class AutenticacionEmpresaDriverRepository(
         }
     * */
     Future.successful("")
+  }
+
+  private def obtenerEmpresaValida(nit: String): Future[Empresa] = {
+    for {
+      empresa <- empresaRepo.getByIdentity(nit)
+      validar <- empresaRepo.validarEmpresa(empresa)
+    } yield empresa.get
   }
 
 }

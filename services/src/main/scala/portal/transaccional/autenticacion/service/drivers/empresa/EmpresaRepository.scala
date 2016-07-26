@@ -11,4 +11,6 @@ trait EmpresaRepository {
 
   def getByIdentity(nit: String): Future[Option[Empresa]]
 
+  def validarEmpresa(empresaOption: Option[Empresa]): Future[Boolean]
+
 }

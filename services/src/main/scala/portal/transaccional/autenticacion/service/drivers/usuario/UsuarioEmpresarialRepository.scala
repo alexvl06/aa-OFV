@@ -9,6 +9,14 @@ import scala.concurrent.Future
  */
 trait UsuarioEmpresarialRepository {
 
-  def getByIdentificacion(numeroIdentificacion: String): Future[Option[UsuarioEmpresarial]]
+  def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[UsuarioEmpresarial]]
+
+  def validarUsuario(usuarioOption: Option[UsuarioEmpresarial], contrasena: String): Future[UsuarioEmpresarial]
+
+  def validarExiste(usuarioOption: Option[UsuarioEmpresarial]): Future[UsuarioEmpresarial]
+
+  def validarEstado(usuario: UsuarioEmpresarial): Future[Boolean]
+
+  def validarContrasena(contrasena: String, usuario: UsuarioEmpresarial): Future[Boolean]
 
 }

@@ -14,8 +14,8 @@ case class UsuarioEmpresarialDAO(implicit dcConfig: DBConfig) extends TableQuery
   import dcConfig.db._
   import dcConfig.profile.api._
 
-  def getByIdentity(numeroIdentificacion: String): Future[Option[UsuarioEmpresarial]] = {
-    run(this.filter(_.identificacion === numeroIdentificacion).result.headOption)
+  def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[UsuarioEmpresarial]] = {
+    run(this.filter(u => u.identificacion === identificacion && u.usuario === usuario).result.headOption)
   }
 
 }
