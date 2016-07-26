@@ -1,5 +1,7 @@
 package portal.transaccional.autenticacion.service.drivers.usuario
 
+import java.sql.Timestamp
+
 import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.persistence.entities.UsuarioEmpresarial
 import co.com.alianza.util.clave.Crypto
@@ -15,6 +17,46 @@ case class UsuarioEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs
 
   def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[UsuarioEmpresarial]] = {
     usuarioDAO.getByIdentityAndUser(identificacion, usuario)
+  }
+
+  /**
+   * Asociar el token al usuario
+   * @param idUsuario
+   * @param token
+   * @return
+   */
+  def actualizarToken(idUsuario: Int, token: String): Future[Int] = {
+    usuarioDAO.createToken(idUsuario, token)
+  }
+
+  /**
+   * Actualiza los ingresos erroneos de un usuario al numero especificado por parametro
+   * @param idUsuario
+   * @param numeroIntentos
+   * @return
+   */
+  def actualizarIngresosErroneosUsuario(idUsuario: Int, numeroIntentos: Int): Future[Int] = {
+    usuarioDAO.updateIncorrectEntries(idUsuario, numeroIntentos)
+  }
+
+  /**
+   * Actualizar ultima ip
+   * @param idUsuario
+   * @param ip
+   * @return
+   */
+  def actualizarIp(idUsuario: Int, ip: String): Future[Int] = {
+    usuarioDAO.updateLastIp(idUsuario, ip)
+  }
+
+  /**
+   * Actualizar fecha ingreso
+   * @param idUsuario
+   * @param fechaActual
+   * @return
+   */
+  def actualizarFechaIngreso(idUsuario: Int, fechaActual: Timestamp): Future[Int] = {
+    usuarioDAO.updateLastDate(idUsuario, fechaActual)
   }
 
   ///////////////////////////////////// validaciones ///////////////////////////////////////

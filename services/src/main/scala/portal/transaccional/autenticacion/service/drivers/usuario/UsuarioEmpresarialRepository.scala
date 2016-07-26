@@ -1,5 +1,7 @@
 package portal.transaccional.autenticacion.service.drivers.usuario
 
+import java.sql.Timestamp
+
 import co.com.alianza.persistence.entities.UsuarioEmpresarial
 
 import scala.concurrent.Future
@@ -18,5 +20,13 @@ trait UsuarioEmpresarialRepository {
   def validarEstado(usuario: UsuarioEmpresarial): Future[Boolean]
 
   def validarContrasena(contrasena: String, usuario: UsuarioEmpresarial): Future[Boolean]
+
+  def actualizarToken(idUsuario: Int, token: String): Future[Int]
+
+  def actualizarIngresosErroneosUsuario(idUsuario: Int, numeroIntentos: Int): Future[Int]
+
+  def actualizarIp(idUsuario: Int, ip: String): Future[Int]
+
+  def actualizarFechaIngreso(idUsuario: Int, fechaActual: Timestamp): Future[Int]
 
 }
