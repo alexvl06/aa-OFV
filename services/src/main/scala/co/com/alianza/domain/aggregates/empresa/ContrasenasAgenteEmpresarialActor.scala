@@ -78,7 +78,7 @@ class ContrasenasAgenteEmpresarialActorSupervisor extends Actor with ActorLoggin
  * *
  * Actor que se encarga de procesar los mensajes relacionados con la administración de contraseñas de los usuarios emopresa (Cliente Administrador y Agente Empresarial)
  */
-class ContrasenasAgenteEmpresarialActor(implicit val system: ActorSystem) extends Actor with ActorLogging {
+class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging {
 
   import system.dispatcher
   implicit val config: Config = system.settings.config

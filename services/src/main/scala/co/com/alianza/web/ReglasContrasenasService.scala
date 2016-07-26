@@ -10,7 +10,7 @@ import scala.concurrent.ExecutionContext
 /**
  * Created by david on 16/06/14.
  */
-case class ReglasContrasenasService(contrasenasActor: ActorSelection)(implicit val system: ActorSystem) extends Directives with AlianzaCommons {
+case class ReglasContrasenasService(contrasenasActor: ActorSelection) extends Directives with AlianzaCommons {
 
   val reglasContrasenas = "reglasContrasenas"
 

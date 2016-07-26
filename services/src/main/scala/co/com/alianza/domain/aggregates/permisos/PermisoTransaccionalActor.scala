@@ -44,11 +44,11 @@ class PermisoTransaccionalActorSupervisor extends Actor with ActorLogging {
 
 }
 
-class PermisoTransaccionalActor(implicit val system: ActorSystem) extends Actor with ActorLogging with FutureResponse {
+class PermisoTransaccionalActor extends Actor with ActorLogging with FutureResponse {
 
   import system.dispatcher
 
-  implicit val timeout: Timeout = 120 seconds
+  implicit val timeout: Timeout = 120.seconds
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.errorValidacion
 
   var numeroPermisos = 0
@@ -94,7 +94,7 @@ class PermisoTransaccionalActor(implicit val system: ActorSystem) extends Actor 
         DataAccessAdapter consultaPermisosAgente idAgente,
         { (x: (List[co.com.alianza.infrastructure.dto.Permiso], List[co.com.alianza.infrastructure.dto.EncargoPermisos])) =>
           context stop self
-          PermisosRespuesta(x._1, x._2) toJson
+          PermisosRespuesta(x._1, x._2).toJson
         }, errorValidacion, currentSender
       )
 
@@ -149,7 +149,7 @@ class PermisoTransaccionalActor(implicit val system: ActorSystem) extends Actor 
 
     } yield cliente).run
     //TODO: Await ???
-    val extraccionFuturo = Await.result(cliente, 8 seconds)
+    val extraccionFuturo = Await.result(cliente, 8.seconds)
     extraccionFuturo match {
       case zSuccess(cliente) =>
         cliente.wcli_cias_pagos_masivos == PermisosFideicomisosCoreAlianza.`SI`.nombre

@@ -66,7 +66,7 @@ class AutorizacionActorSupervisor extends Actor with ActorLogging {
  * Realiza la validación de un token y si se está autorizado para acceder a la url
  * @author smontanez
  */
-class AutorizacionActor(implicit val system: ActorSystem, implicit val sesionActorSupervisor: ActorRef) extends Actor with ActorLogging with FutureResponse {
+class AutorizacionActor(implicit val sesionActorSupervisor: ActorRef) extends Actor with ActorLogging with FutureResponse {
 
   import system.dispatcher
   import co.com.alianza.util.json.MarshallableImplicits._

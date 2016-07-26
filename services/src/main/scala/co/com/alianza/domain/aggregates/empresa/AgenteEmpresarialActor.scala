@@ -50,7 +50,7 @@ class AgenteEmpresarialActorSupervisor extends Actor with ActorLogging with Futu
 
 }
 
-class AgenteEmpresarialActor(implicit val system: ActorSystem) extends Actor with ActorLogging with FutureResponse {
+class AgenteEmpresarialActor extends Actor with ActorLogging with FutureResponse {
 
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.errorValidacion
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.toErrorValidation

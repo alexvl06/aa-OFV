@@ -43,13 +43,13 @@ class ActualizacionActorSupervisor extends Actor with ActorLogging {
 
 }
 
-class ActualizacionActor(implicit val system: ActorSystem) extends Actor with ActorLogging {
+class ActualizacionActor extends Actor with ActorLogging {
 
   import co.com.alianza.util.json.MarshallableImplicits._
 
-  import system.dispatcher
+  import context.dispatcher
 
-  implicit val conf: Config = system.settings.config
+  implicit val conf: Config = context.system.settings.config
 
   def receive = {
     case message: ObtenerPaises => obtenerPaises()

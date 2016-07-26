@@ -85,7 +85,7 @@ class UsuariosActorSupervisor extends Actor with ActorLogging {
 /**
  *
  */
-class UsuariosActor(implicit val system: ActorSystem) extends Actor with ActorLogging {
+class UsuariosActor extends Actor with ActorLogging {
 
   import system.dispatcher
   implicit val config: Config = system.settings.config

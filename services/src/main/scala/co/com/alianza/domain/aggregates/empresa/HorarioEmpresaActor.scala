@@ -47,7 +47,7 @@ class HorarioEmpresaActorSupervisor extends Actor with ActorLogging {
 
 }
 
-class HorarioEmpresaActor(implicit val system: ActorSystem, implicit val Supervisor: ActorRef) extends Actor
+class HorarioEmpresaActor(implicit val Supervisor: ActorRef) extends Actor
     with ActorLogging with ValidacionesAutenticacionUsuarioEmpresarial {
 
   import co.com.alianza.util.json.MarshallableImplicits._

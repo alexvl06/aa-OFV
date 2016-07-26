@@ -28,12 +28,12 @@ trait ServiceAuthorization {
 
   implicit val autorizacionActorSupervisor: ActorRef
   implicit val conf: Config = system.settings.config
-  implicit val timeout: Timeout = Timeout(10 seconds)
+  implicit val timeout: Timeout = Timeout(10.seconds)
 
   def authenticateUser: ContextAuthenticator[UsuarioAuth] = {
     ctx =>
       val token = ctx.request.headers.find(header => header.name equals "token")
-      log info (token toString)
+      log info (token.toString)
       if (token.isEmpty) {
         Future(Left(AuthenticationFailedRejection(CredentialsMissing, List())))
       } else {

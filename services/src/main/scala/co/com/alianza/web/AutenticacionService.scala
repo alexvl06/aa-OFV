@@ -11,7 +11,7 @@ import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 
 import scala.concurrent.ExecutionContext
 
-case class AutenticacionService(kafkaActor: ActorSelection, autenticacionActor: ActorSelection, autenticacionUsuarioEmpresaActor: ActorSelection)(implicit val system: ActorSystem) extends Directives with AlianzaCommons with CrossHeaders {
+case class AutenticacionService(kafkaActor: ActorSelection, autenticacionActor: ActorSelection, autenticacionUsuarioEmpresaActor: ActorSelection) extends Directives with AlianzaCommons with CrossHeaders {
 
   import AutenticacionMessagesJsonSupport._
   import system.dispatcher

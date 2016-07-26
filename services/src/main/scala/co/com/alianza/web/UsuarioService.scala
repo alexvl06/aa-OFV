@@ -17,7 +17,7 @@ import scala.concurrent.ExecutionContext
  *
  * @author seven4n
  */
-case class UsuarioService(kafkaActor: ActorSelection, usuariosActor: ActorSelection)(implicit val system: ActorSystem) extends Directives with AlianzaCommons
+case class UsuarioService(kafkaActor: ActorSelection, usuariosActor: ActorSelection) extends Directives with AlianzaCommons
     with CrossHeaders {
 
   import UsuariosMessagesJsonSupport._

@@ -49,7 +49,7 @@ class PinActorSupervisor extends Actor with ActorLogging {
   }
 }
 
-class PinActor(implicit val system: ActorSystem) extends Actor with ActorLogging with FutureResponse {
+class PinActor extends Actor with ActorLogging with FutureResponse {
 
   import system.dispatcher
 

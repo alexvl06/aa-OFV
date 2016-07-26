@@ -9,7 +9,7 @@ import co.com.alianza.util.json.JsonUtil
 
 import scala.concurrent.ExecutionContext
 
-case class ConfrontaService(confrontaActor: ActorSelection)(implicit val system: ActorSystem) extends Directives with AlianzaCommons {
+case class ConfrontaService(confrontaActor: ActorSelection) extends Directives with AlianzaCommons {
   import co.com.alianza.infrastructure.messages.ConfrontaMessagesJsonSupport._
 
   val confronta = "confronta"
