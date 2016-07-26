@@ -69,10 +69,8 @@ class AutorizacionActorSupervisor extends Actor with ActorLogging {
  * @author smontanez
  */
 class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
-
-  import scala.concurrent.ExecutionContext
+  
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.errorValidacion
-  implicit val _: ExecutionContext = context.dispatcher
   implicit val timeout: Timeout = 10.seconds
 
   def receive = {
