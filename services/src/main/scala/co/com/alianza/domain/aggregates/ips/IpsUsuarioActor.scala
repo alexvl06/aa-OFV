@@ -4,6 +4,7 @@ import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, OneForOneStrateg
 import akka.actor.SupervisorStrategy._
 import akka.routing.RoundRobinPool
 import akka.pattern._
+import akka.util.Timeout
 import co.com.alianza.app.AlianzaActors
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente._
@@ -17,7 +18,7 @@ import co.com.alianza.domain.aggregates.autenticacion.{ AgregarIp, RemoverIp }
 import co.com.alianza.exceptions.BusinessLevel
 import com.typesafe.config.Config
 import spray.http.StatusCodes._
-
+import scala.concurrent.duration.DurationInt
 import scala.util.{ Failure, Success }
 import scala.concurrent.Future
 import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
@@ -47,6 +48,7 @@ class IpsUsuarioActorSupervisor extends Actor with ActorLogging {
 class IpsUsuarioActor(implicit val system: ActorSystem) extends Actor with ActorLogging {
   import system.dispatcher
   implicit val config: Config = system.settings.config
+  implicit val timeout = Timeout(120 seconds)
   import co.com.alianza.util.json.MarshallableImplicits._
 
   def receive = {

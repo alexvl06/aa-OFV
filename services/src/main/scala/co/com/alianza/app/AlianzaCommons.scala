@@ -13,8 +13,6 @@ import scala.util.{ Success, Failure }
 
 trait AlianzaCommons extends ApiRequestCreator {
 
-  implicit val ec: ExecutionContext = MainActors.ex
-
   val mediaType = MediaType.custom("application/json")
 
   //Definición del origin para crosssite

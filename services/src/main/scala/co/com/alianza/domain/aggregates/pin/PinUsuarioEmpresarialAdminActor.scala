@@ -33,7 +33,7 @@ import enumerations.{ AppendPasswordUser, EstadosEmpresaEnum, PerfilesUsuario }
 /**
  * Created by manuel on 6/01/15.
  */
-class PinUsuarioEmpresarialAdminActor (implicit val system: ActorSystem)extends Actor with ActorLogging with AlianzaActors with FutureResponse {
+class PinUsuarioEmpresarialAdminActor(implicit val system: ActorSystem) extends Actor with ActorLogging with AlianzaActors with FutureResponse {
 
   import system.dispatcher
   import co.com.alianza.domain.aggregates.empresa.ValidacionesClienteAdmin._

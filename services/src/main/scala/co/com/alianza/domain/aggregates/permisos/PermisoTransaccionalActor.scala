@@ -44,7 +44,7 @@ class PermisoTransaccionalActorSupervisor extends Actor with ActorLogging {
 
 }
 
-class PermisoTransaccionalActor (implicit val system: ActorSystem) extends Actor with ActorLogging with FutureResponse {
+class PermisoTransaccionalActor(implicit val system: ActorSystem) extends Actor with ActorLogging with FutureResponse {
 
   import system.dispatcher
 

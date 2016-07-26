@@ -44,7 +44,7 @@ class ActualizacionActorSupervisor extends Actor with ActorLogging {
 
 }
 
-class ActualizacionActor (implicit val system: ActorSystem)extends Actor with ActorLogging {
+class ActualizacionActor(implicit val system: ActorSystem) extends Actor with ActorLogging {
 
   import co.com.alianza.util.json.MarshallableImplicits._
 

@@ -2,12 +2,10 @@ package co.com.alianza.domain.aggregates.autenticacion
 
 import java.util.Date
 
-import akka.actor.{ ActorLogging, Actor }
-import akka.actor.Props
+import akka.actor.{ Actor, ActorLogging, ActorSystem, Props }
 import akka.pattern.ask
 import akka.routing.RoundRobinPool
 import akka.util.Timeout
-
 import co.com.alianza.app.MainActors
 import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.domain.aggregates.autenticacion.errores.TokenInvalido
@@ -22,15 +20,13 @@ import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.token.{ AesUtil, Token }
 import co.com.alianza.util.transformers.ValidationT
 import enumerations.CryptoAesParameters
-
 import spray.http.StatusCodes._
 
 import scala.concurrent.duration._
 import scala.concurrent.Future
-import scalaz.std.AllInstances._
-import scala.util.{ Success, Failure }
+import scala.util.{ Failure, Success }
 import scalaz.Validation
-import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 
 class AutorizacionActorSupervisor extends Actor with ActorLogging {
 
@@ -68,9 +64,11 @@ class AutorizacionActorSupervisor extends Actor with ActorLogging {
  * Realiza la validación de un token y si se está autorizado para acceder a la url
  * @author smontanez
  */
-class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
-
+class AutorizacionActor(implicit val system: ActorSystem) extends Actor with ActorLogging with FutureResponse {
+  import system.dispatcher
+  import co.com.alianza.util.json.MarshallableImplicits._
   import scalaz.std.AllInstances._
+  import scalaz.Validation
 
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.errorValidacion
   implicit val timeout: Timeout = 10.seconds

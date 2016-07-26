@@ -50,9 +50,8 @@ class AgenteEmpresarialActorSupervisor extends Actor with ActorLogging with Futu
 
 }
 
-class AgenteEmpresarialActor (implicit val system: ActorSystem)extends Actor with ActorLogging with AlianzaActors with FutureResponse {
+class AgenteEmpresarialActor(implicit val system: ActorSystem) extends Actor with ActorLogging with AlianzaActors with FutureResponse {
 
-  import scala.concurrent.ExecutionContext
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.errorValidacion
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.toErrorValidation
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.toErrorValidationCorreo
@@ -63,7 +62,7 @@ class AgenteEmpresarialActor (implicit val system: ActorSystem)extends Actor wit
   import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial.validacionEstadoActualizacionAgenteEmpresarial
 
   import system.dispatcher
-  implicit val conf: Config = system.settings.config
+  implicit val config: Config = system.settings.config
 
   def receive = {
 

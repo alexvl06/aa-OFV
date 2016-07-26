@@ -18,7 +18,7 @@ import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
 import scala.util.{ Failure, Success }
 
-class SesionActorSupervisor (implicit val system: ActorSystem) extends Actor with ActorLogging {
+class SesionActorSupervisor(implicit val system: ActorSystem) extends Actor with ActorLogging {
 
   import system.dispatcher
 

@@ -17,19 +17,19 @@ import spray.routing.{ Directives, RequestContext }
 import co.com.alianza.app.AlianzaCommons
 import co.com.alianza.infrastructure.messages.{ AutorizarUrl, InvalidarToken }
 import co.com.alianza.infrastructure.cache.CacheHelper
-import akka.actor.{ ActorSelection, ActorSystem }
+import akka.actor.ActorSelection
 
-import scala.concurrent.ExecutionContext
-import com.typesafe.config.Config
-import co.com.alianza.app.MainActors
-import co.com.alianza.infrastructure.cache.CachingDirectiveAlianza
-
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 import scalaz.Validation
 
-case class AutorizacionService(kafkaActor: ActorSelection, autorizacionActor: ActorSelection, autorizacionUsuarioEmpresarialActor: ActorSelection) extends Directives with AlianzaCommons with CacheHelper {
-
-  import CachingDirectiveAlianza._
+case class AutorizacionService(
+  kafkaActor: ActorSelection,
+  autorizacionActor: ActorSelection,
+  autorizacionUsuarioEmpresarialActor: ActorSelection
+)(implicit val ec: ExecutionContext)
+    extends Directives
+    with AlianzaCommons
+    with CacheHelper {
 
   import AutenticacionMessagesJsonSupport._
 
