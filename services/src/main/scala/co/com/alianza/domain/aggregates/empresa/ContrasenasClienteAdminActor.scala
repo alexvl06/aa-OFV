@@ -65,9 +65,7 @@ class ContrasenasClienteAdminActorSupervisor extends Actor with ActorLogging {
  */
 class ContrasenasClienteAdminActor (implicit val system: ActorSystem) extends Actor with ActorLogging {
 
-  implicit val system: ActorSystem
   import system.dispatcher
-
   implicit val conf: Config = system.settings.config
 
   import scalaz._

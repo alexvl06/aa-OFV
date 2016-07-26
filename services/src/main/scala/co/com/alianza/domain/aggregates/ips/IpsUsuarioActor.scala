@@ -1,6 +1,6 @@
 package co.com.alianza.domain.aggregates.ips
 
-import akka.actor.{ Actor, ActorRef, ActorLogging, Props, OneForOneStrategy }
+import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, OneForOneStrategy, Props }
 import akka.actor.SupervisorStrategy._
 import akka.routing.RoundRobinPool
 import akka.pattern._
@@ -10,16 +10,17 @@ import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
 import co.com.alianza.infrastructure.messages._
-import co.com.alianza.persistence.entities.{ IpsEmpresa, Empresa, IpsUsuario }
+import co.com.alianza.persistence.entities.{ Empresa, IpsEmpresa, IpsUsuario }
 import co.com.alianza.util.transformers.ValidationT
 import co.com.alianza.app.MainActors
-import co.com.alianza.domain.aggregates.autenticacion.{ RemoverIp, AgregarIp }
+import co.com.alianza.domain.aggregates.autenticacion.{ AgregarIp, RemoverIp }
 import co.com.alianza.exceptions.BusinessLevel
+import com.typesafe.config.Config
 import spray.http.StatusCodes._
 
 import scala.util.{ Failure, Success }
 import scala.concurrent.Future
-import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 import scalaz.std.AllInstances._
 
 class IpsUsuarioActorSupervisor extends Actor with ActorLogging {
@@ -43,9 +44,9 @@ class IpsUsuarioActorSupervisor extends Actor with ActorLogging {
 /**
  * Created by david on 16/06/14.
  */
-class IpsUsuarioActor extends Actor with ActorLogging with AlianzaActors {
-  import scala.concurrent.ExecutionContext
-  implicit val _: ExecutionContext = context.dispatcher
+class IpsUsuarioActor(implicit val system: ActorSystem) extends Actor with ActorLogging{
+  import system.dispatcher
+  implicit val config: Config = system.settings.config
   import co.com.alianza.util.json.MarshallableImplicits._
 
   def receive = {

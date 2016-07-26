@@ -1,27 +1,30 @@
 package co.com.alianza.domain.aggregates.empresa
 
 import java.util.Calendar
-import akka.actor.{ ActorRef, Actor, ActorLogging, Props }
+
+import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, Props }
 import akka.routing.RoundRobinPool
 import co.com.alianza.app.{ AlianzaActors, MainActors }
-import co.com.alianza.domain.aggregates.usuarios.{ ErrorPersistence, MailMessageUsuario, ErrorValidacion }
-import co.com.alianza.exceptions.{ LevelException, AlianzaException, PersistenceException }
+import co.com.alianza.domain.aggregates.usuarios.{ ErrorPersistence, ErrorValidacion, MailMessageUsuario }
+import co.com.alianza.exceptions.{ AlianzaException, LevelException, PersistenceException }
 import co.com.alianza.infrastructure.anticorruption.ultimasContrasenasAgenteEmpresarial.{ DataAccessAdapter => dataAccessUltimasContrasenasAgente }
 import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{ DataAccessAdapter, DataAccessTranslator }
 import co.com.alianza.infrastructure.anticorruption.empresa.{ DataAccessAdapter => EmpresaDataAccessAdapter }
-import co.com.alianza.infrastructure.dto.{ UsuarioEmpresarial, Configuracion, PinEmpresa }
-import co.com.alianza.infrastructure.messages.{ ErrorMessage, UsuarioMessage, ResponseMessage }
+import co.com.alianza.infrastructure.dto.{ Configuracion, PinEmpresa, UsuarioEmpresarial }
+import co.com.alianza.infrastructure.messages.{ ErrorMessage, ResponseMessage, UsuarioMessage }
 import co.com.alianza.infrastructure.messages.empresa._
 import co.com.alianza.microservices.{ MailMessage, SmtpServiceClient }
-import co.com.alianza.util.token.{ Token, PinData, TokenPin }
+import co.com.alianza.util.token.{ PinData, Token, TokenPin }
 import co.com.alianza.util.transformers.ValidationT
 import com.typesafe.config.Config
 import enumerations._
 import enumerations.empresa.EstadosDeEmpresaEnum
+
 import scalaz.std.AllInstances._
 import scala.util.{ Failure => sFailure, Success => sSuccess }
 import scalaz.{ Failure => zFailure, Success => zSuccess }
 import co.com.alianza.persistence.entities
+
 import scala.concurrent.{ ExecutionContext, Future }
 import scalaz.Validation
 import spray.http.StatusCodes._
@@ -29,6 +32,7 @@ import co.com.alianza.util.clave.Crypto
 import co.com.alianza.persistence.entities.{ Empresa, ReglasContrasenas, UltimaContrasenaUsuarioAgenteEmpresarial }
 import java.sql.Timestamp
 import java.util.Date
+
 import co.com.alianza.infrastructure.messages.empresa.CambiarContrasenaAgenteEmpresarialMessage
 import co.com.alianza.infrastructure.dto.PinEmpresa
 import co.com.alianza.util.transformers.ValidationT
@@ -74,13 +78,10 @@ class ContrasenasAgenteEmpresarialActorSupervisor extends Actor with ActorLoggin
  * *
  * Actor que se encarga de procesar los mensajes relacionados con la administración de contraseñas de los usuarios emopresa (Cliente Administrador y Agente Empresarial)
  */
-class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging {
+class ContrasenasAgenteEmpresarialActor(implicit val system: ActorSystem) extends Actor with ActorLogging {
 
-  import scala.concurrent.ExecutionContext
-
-  implicit val ex: ExecutionContext = MainActors.dataAccesEx
-  implicit val sys = context.system
-  implicit private val config: Config = MainActors.conf
+  import system.dispatcher
+  implicit val config: Config = system.settings.config
 
   import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial._
 
