@@ -9,7 +9,7 @@ import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{ DataA
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => UsDataAdapter }
 import co.com.alianza.infrastructure.dto._
 import co.com.alianza.util.clave.{ ValidarClave, ErrorValidacionClave, Crypto }
-import co.com.alianza.app.MainActors
+
 import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
 import com.typesafe.config.Config
 import co.com.alianza.infrastructure.dto.UsuarioEmpresarialAdmin

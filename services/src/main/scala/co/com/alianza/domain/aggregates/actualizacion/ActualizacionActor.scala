@@ -4,7 +4,6 @@ import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, OneForOneStrateg
 import akka.actor.SupervisorStrategy._
 import akka.routing.RoundRobinPool
 import akka.pattern._
-import co.com.alianza.app.AlianzaActors
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.actualizacion.DataAccessAdapter
@@ -15,7 +14,7 @@ import co.com.alianza.infrastructure.messages._
 import co.com.alianza.infrastructure.dto.{ DatosCliente, Usuario }
 import co.com.alianza.persistence.messages.{ ActualizacionRequest, DatosEmpresaRequest }
 import co.com.alianza.util.transformers.ValidationT
-import co.com.alianza.app.MainActors
+
 import co.com.alianza.exceptions.BusinessLevel
 import com.typesafe.config.Config
 import enumerations.TiposIdentificacionCore

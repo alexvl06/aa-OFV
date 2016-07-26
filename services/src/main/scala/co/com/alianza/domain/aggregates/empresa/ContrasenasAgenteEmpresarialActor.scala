@@ -4,7 +4,7 @@ import java.util.Calendar
 
 import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, Props }
 import akka.routing.RoundRobinPool
-import co.com.alianza.app.{ AlianzaActors, MainActors }
+
 import co.com.alianza.domain.aggregates.usuarios.{ ErrorPersistence, ErrorValidacion, MailMessageUsuario }
 import co.com.alianza.exceptions.{ AlianzaException, LevelException, PersistenceException }
 import co.com.alianza.infrastructure.anticorruption.ultimasContrasenasAgenteEmpresarial.{ DataAccessAdapter => dataAccessUltimasContrasenasAgente }

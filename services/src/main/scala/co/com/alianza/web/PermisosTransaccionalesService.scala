@@ -6,7 +6,7 @@ import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import spray.routing.{ Directives, RequestContext }
-import co.com.alianza.app.{ AlianzaActors, AlianzaCommons, CrossHeaders, MainActors }
+import co.com.alianza.app.{ AlianzaCommons, CrossHeaders, MainActors }
 import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth

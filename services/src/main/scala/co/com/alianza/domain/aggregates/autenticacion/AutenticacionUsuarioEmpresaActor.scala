@@ -3,7 +3,6 @@ package co.com.alianza.domain.aggregates.autenticacion
 import akka.actor.ActorLogging
 import akka.pattern.ask
 import akka.util.Timeout
-import co.com.alianza.app.MainActors
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.domain.aggregates.autenticacion.errores._
@@ -17,6 +16,7 @@ import co.com.alianza.util.transformers.ValidationT
 import java.sql.Timestamp
 import java.util.Date
 
+import akka.remote.ContainerFormats.ActorRef
 import co.com.alianza.infrastructure.anticorruption.autovalidacion.{ DataAccessAdapter => DataAccesAdapterPreguntas }
 import enumerations.{ EstadosEmpresaEnum, TipoIdentificacion }
 import enumerations.empresa.EstadosDeEmpresaEnum
@@ -30,7 +30,8 @@ import scalaz.std.AllInstances._
 import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 import scalaz.Validation.FlatMap._
 
-class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogging with ValidacionesAutenticacionUsuarioEmpresarial {
+class AutenticacionUsuarioEmpresaActor(implicit val SupervisorUsuario: ActorRef, implicit val SupervisorSession: ActorRef)
+    extends AutenticacionActor with ActorLogging with ValidacionesAutenticacionUsuarioEmpresarial {
 
   import context.dispatcher
 
@@ -51,11 +52,11 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
     case message: AutenticarUsuarioEmpresarialMessage =>
       val originalSender = sender()
 
-      MainActors.usuariosActorSupervisor ? ConsultaUsuarioEmpresarialMessage(usuario = Some(message.usuario), nit = Some(message.nit), tipoIdentificacion = message.tipoIdentificacion) onComplete {
+      SupervisorUsuario ? ConsultaUsuarioEmpresarialMessage(usuario = Some(message.usuario), nit = Some(message.nit), tipoIdentificacion = message.tipoIdentificacion) onComplete {
         case sSuccess(Some(usuarioEmpresarialAgente)) =>
           self tell (AutenticarUsuarioEmpresarialAgenteMessage(message.tipoIdentificacion, message.numeroIdentificacion, message.nit, message.usuario, message.password, message.clientIp), originalSender)
         case sSuccess(None) =>
-          MainActors.usuariosActorSupervisor ? ConsultaUsuarioEmpresarialAdminMessage(tipoIdentificacion = message.tipoIdentificacion, usuario = Some(message.usuario), nit = Some(message.nit)) onComplete {
+          SupervisorUsuario ? ConsultaUsuarioEmpresarialAdminMessage(tipoIdentificacion = message.tipoIdentificacion, usuario = Some(message.usuario), nit = Some(message.nit)) onComplete {
             case sSuccess(Some(usuarioEmpresarialAdmin)) =>
               self tell (AutenticarUsuarioEmpresarialAdminMessage(message.tipoIdentificacion, message.numeroIdentificacion, message.nit, message.usuario, message.password, message.clientIp), originalSender)
             case sSuccess(None) =>
@@ -560,7 +561,7 @@ class AutenticacionUsuarioEmpresaActor extends AutenticacionActor with ActorLogg
    */
   def crearSesion(token: String, expiracionInactividad: Int, empresa: Empresa, horario: Option[HorarioEmpresa] = None): Future[Validation[ErrorAutenticacion, Boolean]] = {
     log.info("Creando sesion")
-    MainActors.sesionActorSupervisor ! CrearSesionUsuario(token, expiracionInactividad, Some(empresa), horario)
+    SupervisorSession ! CrearSesionUsuario(token, expiracionInactividad, Some(empresa), horario)
     Future.successful(Validation.success(true))
   }
 

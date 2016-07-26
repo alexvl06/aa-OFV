@@ -3,7 +3,7 @@ package co.com.alianza.domain.aggregates.pin
 import java.sql.Timestamp
 
 import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem }
-import co.com.alianza.app.{ AlianzaActors, MainActors }
+
 import co.com.alianza.domain.aggregates.usuarios.{ ErrorPersistence, ErrorValidacion }
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.pinagenteempresarial.{ DataAccessAdapter => pDataAccessAdapter }
@@ -27,7 +27,7 @@ import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 /**
  * Created by manuel on 6/01/15.
  */
-class PinUsuarioAgenteEmpresarialActor(implicit val system: ActorSystem) extends Actor with ActorLogging with AlianzaActors with FutureResponse {
+class PinUsuarioAgenteEmpresarialActor(implicit val system: ActorSystem) extends Actor with ActorLogging with FutureResponse {
 
   import system.dispatcher
 

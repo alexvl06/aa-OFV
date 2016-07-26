@@ -17,7 +17,7 @@ import enumerations.{ EstadosCliente, PerfilesUsuario, TipoIdentificacion }
 import scalaz.Validation.FlatMap._
 import co.com.alianza.util.clave.{ Crypto, ErrorValidacionClave, ValidarClave }
 import co.com.alianza.util.captcha.ValidarCaptcha
-import co.com.alianza.app.MainActors
+
 import com.typesafe.config.Config
 
 /**

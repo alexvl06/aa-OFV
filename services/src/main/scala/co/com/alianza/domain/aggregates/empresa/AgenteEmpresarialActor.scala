@@ -4,7 +4,7 @@ import java.util.Calendar
 
 import akka.actor.{ Actor, ActorLogging, ActorSystem, Props }
 import akka.routing.RoundRobinPool
-import co.com.alianza.app.{ AlianzaActors, MainActors }
+
 import co.com.alianza.domain.aggregates.usuarios.ErrorValidacion
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.DataAccessTranslator
@@ -50,7 +50,7 @@ class AgenteEmpresarialActorSupervisor extends Actor with ActorLogging with Futu
 
 }
 
-class AgenteEmpresarialActor(implicit val system: ActorSystem) extends Actor with ActorLogging with AlianzaActors with FutureResponse {
+class AgenteEmpresarialActor(implicit val system: ActorSystem) extends Actor with ActorLogging with FutureResponse {
 
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.errorValidacion
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.toErrorValidation

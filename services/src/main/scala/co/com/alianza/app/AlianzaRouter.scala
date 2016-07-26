@@ -1,6 +1,6 @@
 package co.com.alianza.app
 
-import akka.actor.{ ActorLogging, ActorSelection, ActorSystem }
+import akka.actor.{ ActorLogging, ActorRef, ActorSelection, ActorSystem }
 import co.com.alianza.app.handler.CustomRejectionHandler
 import co.com.alianza.infrastructure.security.ServiceAuthorization
 import co.com.alianza.web.empresa.{ AdministrarContrasenaEmpresaService, UsuarioEmpresaService }
@@ -16,7 +16,7 @@ case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, kafkaActor:
   pinActor: ActorSelection, pinUsuarioEmpresarialAdminActor: ActorSelection, pinUsuarioAgenteEmpresarialActor: ActorSelection, ipsUsuarioActor: ActorSelection,
   horarioEmpresaActor: ActorSelection, autorizacionActor: ActorSelection,
   autorizacionUsuarioEmpresarialActor: ActorSelection, contrasenasAgenteEmpresarialActor: ActorSelection, contrasenasClienteAdminActor: ActorSelection,
-  contrasenasActor: ActorSelection)(implicit val system: ActorSystem) extends HttpServiceActor with RouteConcatenation with CrossHeaders
+  contrasenasActor: ActorSelection, autorizacionActorSupervisor: ActorRef)(implicit val system: ActorSystem) extends HttpServiceActor with RouteConcatenation with CrossHeaders
     with ServiceAuthorization with ActorLogging {
 
   import system.dispatcher

@@ -4,7 +4,7 @@ import co.com.alianza.persistence.repositories.RecursoPerfilAgenteRepository
 import scalaz.Validation
 import scala.concurrent.{ ExecutionContext, Future }
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.app.MainActors
+
 import scalaz.{ Failure => zFailure, Success => zSuccess }
 import co.com.alianza.infrastructure.dto.RecursoPerfilAgente
 import co.com.alianza.persistence.entities.{ RecursoPerfilAgente => eRecursoPerfilAgente }
@@ -12,8 +12,6 @@ import co.com.alianza.persistence.entities.{ RecursoPerfilAgente => eRecursoPerf
  * Created by manuel on 3/02/15.
  */
 object DataAccessAdapter {
-
-  implicit val ec: ExecutionContext = MainActors.dataAccesEx
 
   def obtenerRecursos(idUsuario: Int): Future[Validation[PersistenceException, List[RecursoPerfilAgente]]] =
     new RecursoPerfilAgenteRepository obtenerRecursosPerfiles (idUsuario) map transformValidationList

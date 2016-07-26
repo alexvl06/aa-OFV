@@ -3,7 +3,7 @@ package co.com.alianza.domain.aggregates.pin
 import java.sql.Timestamp
 
 import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, Props }
-import co.com.alianza.app.{ AlianzaActors, MainActors }
+
 import co.com.alianza.domain.aggregates.usuarios.{ ErrorPersistence, ErrorValidacion, ValidacionesUsuario }
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => DataAdapterUsuario }
@@ -49,7 +49,7 @@ class PinActorSupervisor extends Actor with ActorLogging {
   }
 }
 
-class PinActor(implicit val system: ActorSystem) extends Actor with ActorLogging with AlianzaActors with FutureResponse {
+class PinActor(implicit val system: ActorSystem) extends Actor with ActorLogging with FutureResponse {
 
   import system.dispatcher
 

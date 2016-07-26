@@ -1,6 +1,5 @@
 package co.com.alianza.domain.aggregates.empresa
 
-import co.com.alianza.app.MainActors
 import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.domain.aggregates.usuarios._
 import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{ DataAccessAdapter => DataAccessAdapterUsuarioAE }

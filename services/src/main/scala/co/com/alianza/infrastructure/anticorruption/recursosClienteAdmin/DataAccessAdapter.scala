@@ -4,7 +4,7 @@ import co.com.alianza.persistence.repositories.RecursoPerfilClienteAdminReposito
 import scalaz.Validation
 import scala.concurrent.{ ExecutionContext, Future }
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.app.MainActors
+
 import scalaz.{ Failure => zFailure, Success => zSuccess }
 import co.com.alianza.infrastructure.dto.RecursoPerfilClienteAdmin
 import co.com.alianza.persistence.entities.{ RecursoPerfilClienteAdmin => eRecursoPerfilClienteAdmin }

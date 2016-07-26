@@ -1,6 +1,5 @@
 package co.com.alianza.infrastructure.anticorruption.grupos
 
-import co.com.alianza.app.MainActors
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.dto.Cliente
 import co.com.alianza.persistence.repositories.core.ClienteRepository

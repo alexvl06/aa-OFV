@@ -3,7 +3,7 @@ package co.com.alianza.domain.aggregates.pin
 import java.sql.Timestamp
 
 import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, Props }
-import co.com.alianza.app.{ AlianzaActors, MainActors }
+
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
@@ -33,7 +33,7 @@ import enumerations.{ AppendPasswordUser, EstadosEmpresaEnum, PerfilesUsuario }
 /**
  * Created by manuel on 6/01/15.
  */
-class PinUsuarioEmpresarialAdminActor(implicit val system: ActorSystem) extends Actor with ActorLogging with AlianzaActors with FutureResponse {
+class PinUsuarioEmpresarialAdminActor(implicit val system: ActorSystem) extends Actor with ActorLogging with FutureResponse {
 
   import system.dispatcher
   import co.com.alianza.domain.aggregates.empresa.ValidacionesClienteAdmin._

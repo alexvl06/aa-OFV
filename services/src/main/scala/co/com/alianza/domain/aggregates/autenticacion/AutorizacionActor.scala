@@ -6,7 +6,7 @@ import akka.actor.{ Actor, ActorLogging, ActorSystem, Props }
 import akka.pattern.ask
 import akka.routing.RoundRobinPool
 import akka.util.Timeout
-import co.com.alianza.app.MainActors
+
 import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.domain.aggregates.autenticacion.errores.TokenInvalido
 import co.com.alianza.exceptions.PersistenceException

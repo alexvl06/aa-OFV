@@ -1,6 +1,5 @@
 package co.com.alianza.infrastructure.anticorruption.pin
 
-import co.com.alianza.app.MainActors
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.dto.PinUsuario
 
@@ -14,7 +13,6 @@ import java.sql.Timestamp
 
 object DataAccessAdapter {
 
-  implicit val ec: ExecutionContext = MainActors.dataAccesEx
   val repo = new PinRepository()
 
   def obtenerPin(tokenHash: String): Future[Validation[PersistenceException, Option[PinUsuario]]] = {

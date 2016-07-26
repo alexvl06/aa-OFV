@@ -8,7 +8,7 @@ import co.com.alianza.persistence.repositories._
 import scalaz.Validation
 import scala.concurrent.{ ExecutionContext, Future }
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.app.MainActors
+
 import scalaz.{ Failure => zFailure, Success => zSuccess }
 import co.com.alianza.infrastructure.dto._
 import co.com.alianza.persistence.entities.{
@@ -28,7 +28,7 @@ import co.com.alianza.persistence.repositories.{ IpsUsuarioRepository, UsuariosR
 import scalaz.Validation
 import scala.concurrent.{ ExecutionContext, Future }
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.app.MainActors
+
 import scalaz.{ Failure => zFailure, Success => zSuccess }
 import co.com.alianza.infrastructure.dto.Usuario
 import co.com.alianza.persistence.entities.{ Usuario => eUsuario, PinUsuario => ePinUsuario, PerfilUsuario, IpsUsuario }
@@ -36,8 +36,6 @@ import co.com.alianza.persistence.messages.AutenticacionRequest
 import enumerations.EstadosUsuarioEnum
 
 object DataAccessAdapter {
-
-  implicit val ec: ExecutionContext = MainActors.dataAccesEx
 
   def obtenerUsuarios(): Future[Validation[PersistenceException, List[Usuario]]] = {
     val repo = new UsuariosRepository()

@@ -1,6 +1,5 @@
 package co.com.alianza.infrastructure.anticorruption.ultimasContrasenas
 
-import co.com.alianza.app.MainActors
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.persistence.entities.UltimaContrasena
 import co.com.alianza.persistence.repositories.UltimasContrasenasRepository

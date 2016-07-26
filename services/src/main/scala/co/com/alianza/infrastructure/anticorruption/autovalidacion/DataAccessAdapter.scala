@@ -1,6 +1,5 @@
 package co.com.alianza.infrastructure.anticorruption.autovalidacion
 
-import co.com.alianza.app.MainActors
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.dto.{ RespuestaCompleta, Respuesta, Pregunta }
 import co.com.alianza.persistence.entities.{ RespuestasAutovalidacionUsuario, PreguntasAutovalidacion }
@@ -10,8 +9,6 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
 
 object DataAccessAdapter {
-
-  implicit val ec: ExecutionContext = MainActors.dataAccesEx
 
   def obtenerPreguntas(): Future[Validation[PersistenceException, List[Pregunta]]] = {
     val repo = new PreguntasAutovalidacionRepository()

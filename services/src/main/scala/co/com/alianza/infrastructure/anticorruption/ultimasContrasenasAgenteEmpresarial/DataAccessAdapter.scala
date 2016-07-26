@@ -3,7 +3,7 @@ package co.com.alianza.infrastructure.anticorruption.ultimasContrasenasAgenteEmp
 /**
  * Created by manuel on 7/01/15.
  */
-import co.com.alianza.app.MainActors
+
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.persistence.entities.UltimaContrasenaUsuarioAgenteEmpresarial
 import co.com.alianza.persistence.repositories.UltimasContrasenasUsuarioAgenteEmpresarialRepository
