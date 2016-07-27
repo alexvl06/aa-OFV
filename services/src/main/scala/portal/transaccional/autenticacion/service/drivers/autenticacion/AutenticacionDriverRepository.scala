@@ -43,11 +43,12 @@ case class AutenticacionDriverRepository(usuarioRepo: UsuarioRepository, cliente
    * 14) Se valida si el usuario tiene alguna ip guardada, si es así se procede a validar si es una ip habitual, de lo contrario se genera un token (10), una sesion (11) y se responde con ErrorControlIpsDesactivado
    */
   def autenticar(tipoIdentificacion: Int, numeroIdentificacion: String, contrasena: String, ip: String): Future[String] = {
+    println("ENTRO AL AUTENTICAR")
     for {
       usuario <- usuarioRepo.getByIdentificacion(numeroIdentificacion)
       estado <- usuarioRepo.validarEstados(usuario.estado)
-      reintentosErroneos <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA.llave)
-      contrasena <- usuarioRepo.validarContrasena(contrasena, usuario, reintentosErroneos.llave.toInt)
+      reintentosErroneos <- reglaRepo.getRegla(LlavesReglaContrasena.CANTIDAD_REINTENTOS_INGRESO_CONTRASENA.llave)
+      contrasena <- usuarioRepo.validarContrasena(contrasena, usuario, reintentosErroneos.valor.toInt)
       cliente <- clienteCoreRepo.getCliente(numeroIdentificacion)
       estadoCore <- clienteCoreRepo.validarEstado(cliente)
       reglaDias <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA.llave)

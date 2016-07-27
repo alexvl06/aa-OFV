@@ -43,7 +43,7 @@ class ConfrontaActorSupervisor extends Actor with ActorLogging {
   }
 }
 
-case class ConfrontaActor () extends Actor with ActorLogging {
+case class ConfrontaActor() extends Actor with ActorLogging {
   self: ActorLogging =>
 
   import co.com.alianza.util.json.MarshallableImplicits._

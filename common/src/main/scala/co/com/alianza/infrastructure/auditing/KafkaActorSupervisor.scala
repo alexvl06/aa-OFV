@@ -69,7 +69,7 @@ class KafkaActor extends Actor with ActorLogging {
     val data = new KeyedMessage[String, String](topic, "key", "partKey", message)
 
     try {
-      producer.send(data)
+      //producer.send(data)
       println("Mensaje enviado exitosamente a los brokers de kafka")
     } catch {
       case e: Exception =>

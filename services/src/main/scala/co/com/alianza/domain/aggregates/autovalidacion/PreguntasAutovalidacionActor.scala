@@ -42,7 +42,7 @@ class PreguntasAutovalidacionSupervisor extends Actor with ActorLogging {
   }
 }
 
-case class PreguntasAutovalidacionActor()extends Actor with ActorLogging with FutureResponse {
+case class PreguntasAutovalidacionActor() extends Actor with ActorLogging with FutureResponse {
 
   import scalaz.std.AllInstances._
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.errorValidacion

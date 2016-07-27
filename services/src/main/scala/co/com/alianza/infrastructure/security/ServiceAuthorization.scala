@@ -40,7 +40,7 @@ trait ServiceAuthorization {
         var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token.get.value)
         val tipoCliente = Token.getToken(decryptedToken).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
         val p = promise[Any]
-        val futuro: Future[Any] = Future{""}
+        val futuro: Future[Any] = Future { "" }
         //TODO: hay que poner el repo refactorizado
         /*if (tipoCliente == TiposCliente.agenteEmpresarial.toString)
           futuro = autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialMessage(token.get.value, None, obtenerIp(ctx).get.value)

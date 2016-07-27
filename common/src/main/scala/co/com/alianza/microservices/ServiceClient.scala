@@ -16,7 +16,6 @@ import com.typesafe.config.Config
  */
 trait ServiceClient {
 
-
   implicit val system: ActorSystem
   import system.dispatcher
   implicit val conf: Config = system.settings.config

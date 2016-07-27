@@ -16,7 +16,6 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.util.{ Failure, Success }
 
-
 case class SesionActorSupervisor() extends Actor
     with ActorLogging {
 
@@ -94,7 +93,7 @@ case class SesionActorSupervisor() extends Actor
     var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
     var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
     val actorName = generarNombreSesionActor(decryptedToken)
-    ClusterUtil.obtenerNodos( cluster) foreach { member =>
+    ClusterUtil.obtenerNodos(cluster) foreach { member =>
       context.actorSelection(RootActorPath(member.address) / "user" / "sesionActorSupervisor") ! DeleteSession(actorName)
     }
   }

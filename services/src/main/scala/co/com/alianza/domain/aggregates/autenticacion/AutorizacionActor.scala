@@ -32,7 +32,7 @@ object AutorizacionActorSupervisor {
   def props(sesionActorSupervisor: ActorRef) = Props(AutorizacionActorSupervisor(sesionActorSupervisor))
 }
 
-case class AutorizacionActorSupervisor(sesionActorSupervisor: ActorRef)  extends Actor with ActorLogging {
+case class AutorizacionActorSupervisor(sesionActorSupervisor: ActorRef) extends Actor with ActorLogging {
 
   import akka.actor.SupervisorStrategy._
   import akka.actor.OneForOneStrategy

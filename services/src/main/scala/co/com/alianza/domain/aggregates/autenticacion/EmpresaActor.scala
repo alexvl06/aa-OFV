@@ -86,7 +86,6 @@ object EmpresaActor {
 
 class BuscadorActorCluster(nombreActorPadre: String) extends Actor {
 
-
   private val cluster = Cluster.get(context.system)
   var numResp = 0
   var resp: Option[ActorRef] = None
