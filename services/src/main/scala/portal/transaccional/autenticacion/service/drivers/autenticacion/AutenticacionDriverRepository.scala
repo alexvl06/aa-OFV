@@ -3,9 +3,13 @@ package portal.transaccional.autenticacion.service.drivers.autenticacion
 import java.sql.Timestamp
 import java.util.Date
 
+import akka.actor.ActorRef
+import akka.pattern.ask
+import akka.util.Timeout
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.constants.{ LlavesReglaContrasena, TiposConfiguracion }
 import co.com.alianza.infrastructure.dto.Cliente
+import co.com.alianza.infrastructure.messages.CrearSesionUsuario
 import co.com.alianza.persistence.entities.Usuario
 import co.com.alianza.util.token.Token
 import portal.transaccional.autenticacion.service.drivers.cliente.ClienteRepository
@@ -15,14 +19,18 @@ import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasena
 import portal.transaccional.autenticacion.service.drivers.respuesta.RespuestaUsuarioRepository
 import portal.transaccional.autenticacion.service.drivers.usuario.UsuarioRepository
 
+import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
+import scala.reflect.ClassTag
 
 /**
  * Created by hernando on 25/07/16.
  */
 case class AutenticacionDriverRepository(usuarioRepo: UsuarioRepository, clienteCoreRepo: ClienteRepository,
     configuracionRepo: ConfiguracionRepository, reglaRepo: ReglaContrasenaRepository, ipRepo: IpUsuarioRepository,
-    respuestasRepo: RespuestaUsuarioRepository)(implicit val ex: ExecutionContext) extends AutenticacionRepository {
+    respuestasRepo: RespuestaUsuarioRepository)(implicit val ex: ExecutionContext, sessionActor: ActorRef) extends AutenticacionRepository {
+
+  implicit val timeout = Timeout(5.seconds)
 
   /**
    * Flujo:
@@ -62,11 +70,16 @@ case class AutenticacionDriverRepository(usuarioRepo: UsuarioRepository, cliente
       token <- generarToken(usuario, cliente, ip, inactividad.valor)
       asociarToken <- usuarioRepo.actualizarToken(numeroIdentificacion, token)
       //TODO: pendiente agregar método de creación de la sesión
+      sesion <- actorResponse(sessionActor, CrearSesionUsuario(token, inactividad.valor.toInt))
       //sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
       respuestas <- respuestasRepo.getRespuestasById(usuario.id.get)
       ips <- ipRepo.getIpsUsuarioById(usuario.id.get)
       validacionIps <- ipRepo.validarControlIp(ip, ips, token, !respuestas.isEmpty)
     } yield validacionIps
+  }
+
+  def actorResponse[T: ClassTag](actor: ActorRef, msg: CrearSesionUsuario): Future[T] = {
+    (actor ? msg).mapTo[T]
   }
 
   /**

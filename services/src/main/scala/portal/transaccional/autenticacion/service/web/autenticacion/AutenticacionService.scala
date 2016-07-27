@@ -22,7 +22,7 @@ case class AutenticacionService(autenticacionRepositorio: AutenticacionRepositor
   val route: Route = {
     pathPrefix(autenticar) {
       pathEndOrSingleSlash {
-        autenticarUsuarioIndividual // ~ autenticarUsuarioEmpresarial
+        autenticarUsuarioIndividual ~ autenticarUsuarioEmpresarial
       }
     }
   }
@@ -46,16 +46,17 @@ case class AutenticacionService(autenticacionRepositorio: AutenticacionRepositor
     }
   }
 
-  /* private def autenticarUsuarioEmpresarial = {
+  private def autenticarUsuarioEmpresarial = {
     path(autenticarUsuarioEmpresa) {
       post {
         entity(as[AutenticarUsuarioEmpresarialRequest]) {
-          autenticacionRequest =>
+          request =>
             clientIP { ip =>
-              val request = autenticacionRequest.copy(clientIp = ip.value)
               val resultado: Future[String] =
-                autenticacionRepositorio.(request.tipoIdentificacion, request.numeroIdentificacion, request.usuario, request.password, request.clientIp)
-              mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.autenticacionIndex, ip.value, kafkaActor, autenticacionRequest.copy(password = null, clientIp = ip.value))) {
+                autenticacionEmpresaRepositorio.autenticarUsuarioEmpresa(request.tipoIdentificacion, request.numeroIdentificacion,
+                  request.usuario, request.password, ip.value)
+              mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.autenticacionIndex,
+                ip.value, kafkaActor, request.copy(password = null))) {
                 onComplete(resultado) {
                   case Success(value) => complete(value.toString)
                   case Failure(ex) => execution(ex)
@@ -65,13 +66,14 @@ case class AutenticacionService(autenticacionRepositorio: AutenticacionRepositor
         }
       }
     }
-  }*/
+  }
 
   def execution(ex: Any): StandardRoute = {
     ex match {
       case ex: ValidacionException => complete((StatusCodes.Unauthorized, ex))
-      case ex: PersistenceException => complete((StatusCodes.InternalServerError, "Error inesperado"))
-      case ex: Throwable => complete((StatusCodes.InternalServerError, "Error inesperado"))
+      case ex: PersistenceException =>
+        ex.printStackTrace(); complete((StatusCodes.InternalServerError, "Error inesperado"))
+      case ex: Throwable => ex.printStackTrace(); complete((StatusCodes.InternalServerError, "Error inesperado"))
     }
   }
 

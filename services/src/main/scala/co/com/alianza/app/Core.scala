@@ -109,7 +109,7 @@ trait CoreActors {
 
 trait Storage extends StoragePGAlianzaDB with BootedCore {
 
-  implicit val sessionActor : ActorRef
+  implicit val sessionActor: ActorRef
 
   lazy val empresaRepo = EmpresaDriverRepository(empresaDAO)(ex)
   lazy val usuarioRepo = UsuarioDriverRepository(usuarioDAO)(ex)
@@ -122,7 +122,7 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val respuestaUsuarioRepo = RespuestaUsuarioDriverRepository(respuestaUsuarioDAO)(ex)
   lazy val usuarioAdminRepo = UsuarioEmpresarialAdminDriverRepository(usuarioAdminDAO)(ex)
   lazy val autenticacionRepo = AutenticacionDriverRepository(usuarioRepo, clienteRepo, configuracionRepo, reglaContrasenaRepo, ipUsuarioRepo,
-    respuestaUsuarioRepo)(ex)
+    respuestaUsuarioRepo)(ex, sessionActor)
   lazy val autenticacionEmpresaRepo = AutenticacionEmpresaDriverRepository(usuarioAgenteRepo, usuarioAdminRepo, clienteRepo, empresaRepo,
     reglaContrasenaRepo, configuracionRepo, ipEmpresaRepo)(ex, sessionActor)
 }

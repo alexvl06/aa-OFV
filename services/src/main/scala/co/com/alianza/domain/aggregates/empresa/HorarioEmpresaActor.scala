@@ -9,13 +9,12 @@ import akka.routing.RoundRobinPool
 import akka.util.Timeout
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.domain.aggregates.autenticacion.errores.{ ErrorAutenticacion, ErrorCredencialesInvalidas, ErrorPersistencia }
-import co.com.alianza.domain.aggregates.autenticacion.{ ActualizarHorarioEmpresa, ValidacionesAutenticacionUsuarioEmpresarial }
+import co.com.alianza.domain.aggregates.autenticacion.{ ValidacionesAutenticacionUsuarioEmpresarial }
 import co.com.alianza.exceptions.{ BusinessLevel, PersistenceException }
-import co.com.alianza.infrastructure.anticorruption.horario.{ DataAccessTranslator => HorarioTrans }
 import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
 import co.com.alianza.infrastructure.dto.{ Empresa, HorarioEmpresa => HorarioEmpresaDTO }
 import co.com.alianza.infrastructure.messages._
-import co.com.alianza.infrastructure.messages.empresa.{ AgregarHorarioEmpresaMessage, DiaFestivoMessage, ObtenerHorarioEmpresaMessage, ValidarHorarioEmpresaMessage }
+import co.com.alianza.infrastructure.messages.empresa.{ ValidarHorarioEmpresaMessage, AgregarHorarioEmpresaMessage, DiaFestivoMessage, ObtenerHorarioEmpresaMessage }
 import co.com.alianza.persistence.entities.HorarioEmpresa
 import co.com.alianza.util.transformers.ValidationT
 import spray.http.StatusCodes._
@@ -97,7 +96,6 @@ class HorarioEmpresaActor extends Actor
         idEmpresa <- ValidationT(DataAccessAdapter.obtenerIdEmpresa(message.idUsuario.get, message.tipoCliente))
         existeHorario <- ValidationT(DataAccessAdapter.existeHorarioEmpresa(idEmpresa))
         horarioEmpresa <- ValidationT(DataAccessAdapter.agregarHorarioEmpresa(toEntity(message, idEmpresa), existeHorario))
-        horarioEmpresa <- ValidationT(agregarHorarioSesionEmpresa(idEmpresa, HorarioTrans translateHorarioEmpresa (toEntity(message, idEmpresa))))
       } yield horarioEmpresa).run
     }
     result onComplete {
@@ -110,16 +108,6 @@ class HorarioEmpresaActor extends Actor
           case zFailure(error) =>
             currentSender ! error
         }
-    }
-  }
-
-  def agregarHorarioSesionEmpresa(empresaId: Int, horario: HorarioEmpresaDTO): Future[Validation[PersistenceException, Boolean]] = {
-    implicit val timeout = Timeout(120 seconds)
-    context.parent ? ObtenerEmpresaSesionActorId(empresaId) map {
-      case Some(empresaSesionActor: ActorRef) =>
-        empresaSesionActor ! ActualizarHorarioEmpresa(horario); zSuccess(true)
-      case None => zSuccess(false)
-      case _ => zFailure(PersistenceException(new Exception(), BusinessLevel, "Error"))
     }
   }
 

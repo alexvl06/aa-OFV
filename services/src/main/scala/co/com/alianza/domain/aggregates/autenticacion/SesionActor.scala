@@ -6,7 +6,7 @@ import akka.actor.{ Props, _ }
 import akka.cluster.Cluster
 import akka.pattern.ask
 import akka.util.Timeout
-import co.com.alianza.infrastructure.dto.{ Empresa, HorarioEmpresa }
+import co.com.alianza.infrastructure.dto.Empresa
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.util.token.AesUtil
 import com.typesafe.config.Config
@@ -32,7 +32,7 @@ case class SesionActorSupervisor() extends Actor with ActorLogging {
     //
 
     // When an user authenticates
-    case message: CrearSesionUsuario => crearSesion(message.token, message.tiempoExpiracion, message.empresa, message.horario)
+    case message: CrearSesionUsuario => crearSesion(message.token, message.tiempoExpiracion, message.empresa)
 
     // When a user logout
     case message: InvalidarSesion => invalidarSesion(message.token)
@@ -59,9 +59,9 @@ case class SesionActorSupervisor() extends Actor with ActorLogging {
 
     case BuscarSesion(token) => buscarSesion(token)
 
-    case CrearEmpresaActor(empresa, horario) =>
+    case CrearEmpresaActor(empresa) =>
       log info "Creando empresa Actor: " + s"empresa${empresa.id}"
-      sender ! context.actorOf(EmpresaActor.props(empresa, horario), s"empresa${empresa.id}")
+      sender ! context.actorOf(EmpresaActor.props(empresa), s"empresa${empresa.id}")
 
     case ObtenerEmpresaSesionActorId(empresaId) => obtenerEmpresaSesionActorId(empresaId)
   }
@@ -97,11 +97,15 @@ case class SesionActorSupervisor() extends Actor with ActorLogging {
     }
   }
 
-  def crearSesion(token: String, expiration: Int, empresa: Option[Empresa], horario: Option[HorarioEmpresa]): Unit = {
+  def crearSesion(token: String, expiration: Int, empresa: Option[Empresa]): Unit = {
+
+    println("...................................")
+    println("........CREAR SESSION..............")
+
     var util: AesUtil = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
     var decryptedToken: String = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
     val name: String = generarNombreSesionActor(decryptedToken)
-    context.actorOf(SesionActor.props(expiration, empresa, horario), name)
+    context.actorOf(SesionActor.props(expiration, empresa), name)
     log.info("Creando sesion de usuario. Tiempo de expiracion: " + expiration + " minutos.")
   }
 
@@ -119,7 +123,7 @@ case class SesionActorSupervisor() extends Actor with ActorLogging {
   }
 }
 
-class SesionActor(expiracionSesion: Int, empresa: Option[Empresa], horario: Option[HorarioEmpresa]) extends Actor with ActorLogging {
+class SesionActor(expiracionSesion: Int, empresa: Option[Empresa]) extends Actor with ActorLogging {
 
   implicit val _: ExecutionContext = context dispatcher
   implicit val timeout: Timeout = 120 seconds
@@ -166,7 +170,7 @@ class SesionActor(expiracionSesion: Int, empresa: Option[Empresa], horario: Opti
     context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(s"empresa${empresa.get.id}") map {
       case Some(empresaActor: ActorRef) => self ! empresaActor
       case None =>
-        context.parent ? CrearEmpresaActor(empresa.get, horario) map {
+        context.parent ? CrearEmpresaActor(empresa.get) map {
           case empresaActor: ActorRef => self ! empresaActor
           case None => log error s"Sesión empresa '${empresa.get.id}' no creada!!"
         }
@@ -177,9 +181,9 @@ class SesionActor(expiracionSesion: Int, empresa: Option[Empresa], horario: Opti
 
 object SesionActor {
 
-  def props(expirationTime: Int, empresa: Option[Empresa], horario: Option[HorarioEmpresa]): Props = {
+  def props(expirationTime: Int, empresa: Option[Empresa]): Props = {
 
-    Props(new SesionActor(expirationTime, empresa, horario))
+    Props(new SesionActor(expirationTime, empresa))
   }
 
 }
@@ -188,7 +192,7 @@ case class DeleteSession(actorName: String)
 
 case class ActualizarEmpresa(empresa: Empresa)
 
-case class CrearEmpresaActor(empresa: Empresa, horarioEmpresa: Option[HorarioEmpresa] = None)
+case class CrearEmpresaActor(empresa: Empresa)
 
 case object ObtenerEmpresaActor
 

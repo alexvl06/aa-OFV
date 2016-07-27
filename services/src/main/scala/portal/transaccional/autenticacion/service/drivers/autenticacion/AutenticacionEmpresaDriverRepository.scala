@@ -29,8 +29,8 @@ import scala.reflect.ClassTag
  */
 case class AutenticacionEmpresaDriverRepository(
     usuarioRepo: UsuarioEmpresarialRepository, usuarioAdminRepo: UsuarioEmpresarialAdminRepository, clienteCoreRepo: ClienteRepository,
-    empresaRepo: EmpresaRepository, reglaRepo: ReglaContrasenaRepository, configuracionRepo: ConfiguracionRepository, ipRepo: IpEmpresaRepository )
-  (implicit val ex: ExecutionContext, sessionActor : ActorRef) extends AutenticacionEmpresaRepository {
+    empresaRepo: EmpresaRepository, reglaRepo: ReglaContrasenaRepository, configuracionRepo: ConfiguracionRepository, ipRepo: IpEmpresaRepository
+)(implicit val ex: ExecutionContext, sessionActor: ActorRef) extends AutenticacionEmpresaRepository {
 
   implicit val timeout = Timeout(5.seconds)
 
@@ -46,11 +46,28 @@ case class AutenticacionEmpresaDriverRepository(
    */
   def autenticarUsuarioEmpresa(tipoIdentificacion: Int, identificacion: String,
     usuario: String, contrasena: String, ip: String): Future[String] = {
+    println("autenticar usuairo empresaaaaaaaaaaaa")
     for {
       esAgente <- usuarioRepo.getByIdentityAndUser(identificacion, usuario)
       esAdmin <- usuarioAdminRepo.getByIdentityAndUser(identificacion, usuario)
       autenticacion <- autenticar(esAgente, esAdmin, ip)
     } yield autenticacion
+  }
+
+  /**
+   * Autentica según el tipo de cliente (Agente, o Admin)
+   * @param agente
+   * @param admin
+   * @param ip
+   * @return Future[Boolean]
+   * Success => True
+   */
+  private def autenticar(agente: Option[UsuarioEmpresarial], admin: Option[UsuarioEmpresarialAdmin], ip: String): Future[String] = {
+    if (agente.isDefined) {
+      autenticarAgente(agente.get, ip)
+    } else if (admin.isDefined) {
+      autenticarAdministrador(admin.get, ip)
+    } else { Future.failed(ValidacionException("401.3", "Error Credenciales")) }
   }
 
   /**
@@ -72,12 +89,14 @@ case class AutenticacionEmpresaDriverRepository(
    * - asociar token
    * - crear session de usuario
    */
-  private def autenticarAgente(agente : UsuarioEmpresarial , ip: String): Future[String] = {
+  //TODO: CONTRASENA
+  private def autenticarAgente(agente: UsuarioEmpresarial, ip: String): Future[String] = {
+    println("autenticacion agente !!!!!!!!!!!!!!")
     for {
       empresa <- obtenerEmpresaValida(agente.identificacion)
       usuarioOption <- usuarioRepo.getByIdentityAndUser(agente.identificacion, agente.usuario)
       reintentosErroneos <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA.llave)
-      usuario <- usuarioRepo.validarUsuario(usuarioOption, agente.contrasena.get , reintentosErroneos.llave.toInt)
+      usuario <- usuarioRepo.validarUsuario(usuarioOption, agente.contrasena.get, reintentosErroneos.llave.toInt)
       estado <- validarEstadoUsuario(usuario.estado)
       cliente <- clienteCoreRepo.getCliente(agente.identificacion)
       estadoCore <- clienteCoreRepo.validarEstado(cliente)
@@ -89,14 +108,14 @@ case class AutenticacionEmpresaDriverRepository(
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
       token <- generarTokenAgente(usuario, ip, inactividad.llave)
       asociarToken <- usuarioRepo.actualizarToken(usuario.id, token)
-      sesion <- actorResponse (sessionActor , CrearSesionUsuario(token, inactividad.valor.toInt, None, None))
+      //TODO: poner la empresa (dto)
+      sesion <- actorResponse(sessionActor, CrearSesionUsuario(token, inactividad.valor.toInt))
     } yield token
   }
 
-  def actorResponse[T : ClassTag](actor: ActorRef, msg: CrearSesionUsuario): Future[T] = {
+  def actorResponse[T: ClassTag](actor: ActorRef, msg: CrearSesionUsuario): Future[T] = {
     (actor ? msg).mapTo[T]
   }
-
 
   /**
    * Flujo:
@@ -112,7 +131,7 @@ case class AutenticacionEmpresaDriverRepository(
    * 9) Se crea la sesion del usuario en el cluster
    * 10) Se valida si el usuario tiene alguna ip guardada, si es así se procede a validar si es una ip habitual, de lo contrario se genera un token (10), una sesion (11) y se responde con ErrorControlIpsDesactivado
    */
-  private def autenticarAdministrador(admin : UsuarioEmpresarialAdmin , ip : String): Future[String] = {
+  private def autenticarAdministrador(admin: UsuarioEmpresarialAdmin, ip: String): Future[String] = {
     /*
     val validaciones: Future[Validation[ErrorAutenticacion, String]] = (for {
         estadoEmpresaOk <- ValidationT(validarEstadoEmpresa(message.nit))
@@ -199,20 +218,6 @@ case class AutenticacionEmpresaDriverRepository(
     else if (estado == EstadosEmpresaEnum.bloqueadoPorAdmin.id)
       Future.failed(ValidacionException("401.14", "Usuario Desactivado"))
     else Future.successful(true)
-  }
-
-  /**
-   * Autentica según el tipo de cliente (Agente, o Admin)
-   * @param agente
-   * @param admin
-   * @param ip
-   * @return Future[Boolean]
-   * Success => True
-   */
-  def autenticar (agente: Option[UsuarioEmpresarial], admin: Option[UsuarioEmpresarialAdmin], ip: String): Future[String] = {
-    if (agente.isDefined) { autenticarAgente(agente.get, ip)
-    } else if (admin.isDefined) { autenticarAdministrador(admin.get, ip)
-    } else { Future.failed(ValidacionException("401.3", "Error Credenciales")) }
   }
 
 }

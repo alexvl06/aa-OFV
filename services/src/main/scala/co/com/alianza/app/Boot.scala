@@ -6,7 +6,7 @@ import spray.can.Http
 
 object Boot extends App with HostBinding with Core with BootedCore with CoreActors with Storage {
 
- implicit val sessionActor: ActorRef = sesionActorSupervisor
+  implicit val sessionActor: ActorRef = sesionActorSupervisor
   private val rootService = system.actorOf(Props(AlianzaRouter(autenticacionRepo, autenticacionEmpresaRepo, usuarioRepo,
     kafkaActor, preguntasAutovalidacionActor, usuariosActor, confrontaActor, actualizacionActor, permisoTransaccionalActor, agenteEmpresarialActor,
     pinActor, pinUsuarioEmpresarialAdminActor, pinUsuarioAgenteEmpresarialActor, ipsUsuarioActor, horarioEmpresaActor,
