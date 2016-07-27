@@ -65,7 +65,7 @@ trait CoreActors {
   //val autenticacionActorSupervisor = system.actorOf(Props[AutenticacionActorSupervisor], "autenticacionActorSupervisor")
   //val autenticacionActor = system.actorSelection(autenticacionActorSupervisor.path)
   //val autenticacionUsuarioEmpresaActor = system.actorSelection(autenticacionActorSupervisor.path)
-  val autorizacionActorSupervisor = system.actorOf(AutorizacionActorSupervisor.props(sesionActorSupervisor), "autorizacionActorSupervisor")
+
   //val autorizacionActor = system.actorSelection(autenticacionActorSupervisor.path)
   //val autorizacionUsuarioEmpresarialActor = system.actorSelection(autenticacionActorSupervisor.path)
   val consultaClienteActorSupervisor = system.actorOf(Props[ConsultaClienteActorSupervisor], "consultaClienteActorSupervisor")
@@ -91,6 +91,7 @@ trait CoreActors {
   val pinUsuarioAgenteEmpresarialActor = system.actorSelection(pinActorSupervisor.path + "/pinUsuarioAgenteEmpresarialActor")
 
   val sesionActorSupervisor = system.actorOf(Props[SesionActorSupervisor], "sesionActorSupervisor")
+  val autorizacionActorSupervisor = system.actorOf(AutorizacionActorSupervisor.props(sesionActorSupervisor), "autorizacionActorSupervisor")
 
   val agenteEmpresarialActorSupervisor = system.actorOf(Props[AgenteEmpresarialActorSupervisor], "agenteEmpresarialActorSupervisor")
   val agenteEmpresarialActor = system.actorSelection(agenteEmpresarialActorSupervisor.path)
