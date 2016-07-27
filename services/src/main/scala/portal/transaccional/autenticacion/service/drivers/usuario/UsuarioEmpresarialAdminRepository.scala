@@ -9,7 +9,7 @@ import scala.concurrent.Future
  */
 trait UsuarioEmpresarialAdminRepository {
 
-  def getByIdentificacion(identificacion: String, usuario: String): Future[Option[UsuarioEmpresarialAdmin]]
+  def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[UsuarioEmpresarialAdmin]]
 
   def invalidarToken(token: String): Future[Int]
 

@@ -133,7 +133,7 @@ case class ContrasenasActor() extends Actor with ActorLogging {
       case sFailure(failure) => currentSender ! failure
       case sSuccess(value) =>
         value match {
-          case zSuccess(response: List[ReglasContrasenas]) =>
+          case zSuccess(response: Seq[ReglasContrasenas]) =>
             currentSender ! ResponseMessage(OK, response.toJson)
           case zFailure(error) => currentSender ! error
         }
