@@ -119,8 +119,13 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val usuarioAdminRepo = UsuarioEmpresarialAdminDriverRepository(usuarioAdminDAO)(ex)
   lazy val autenticacionRepo = AutenticacionDriverRepository(usuarioRepo, clienteRepo, configuracionRepo, reglaContrasenaRepo, ipUsuarioRepo,
     respuestaUsuarioRepo)(ex)
-  lazy val autenticacionEmpresaRepo = AutenticacionEmpresaDriverRepository(usuarioAgenteRepo, usuarioAdminRepo, empresaRepo, reglaContrasenaRepo)(ex)
+  lazy val autenticacionEmpresaRepo = AutenticacionEmpresaDriverRepository(usuarioAgenteRepo, usuarioAdminRepo, clienteRepo, empresaRepo, reglaContrasenaRepo, configuracionRepo)(ex)
 }
+
+/*
+  usuarioRepo: UsuarioEmpresarialRepository, usuarioAdminRepo: UsuarioEmpresarialAdminRepository, clienteCoreRepo: ClienteRepository,
+    empresaRepo: EmpresaRepository, reglaRepo: ReglaContrasenaRepository, configuracionRepo: ConfiguracionRepository
+ */
 
 private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
   implicit val config: DBConfig = new DBConfig with PGConfig

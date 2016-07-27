@@ -3,8 +3,8 @@ package portal.transaccional.autenticacion.service.drivers.autenticacion
 import java.util.Date
 
 import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.constants.{TiposConfiguracion, LlavesReglaContrasena}
-import co.com.alianza.persistence.entities.{UsuarioEmpresarial, Empresa}
+import co.com.alianza.constants.{ TiposConfiguracion, LlavesReglaContrasena }
+import co.com.alianza.persistence.entities.{ UsuarioEmpresarial, Empresa }
 import co.com.alianza.util.token.Token
 import enumerations.TipoIdentificacion
 import portal.transaccional.autenticacion.service.drivers.cliente.ClienteRepository
@@ -156,7 +156,7 @@ case class AutenticacionEmpresaDriverRepository(
     } yield empresa.get
   }
 
-  private def generarTokenAgente(usuario: UsuarioEmpresarial, ip: String, inactividad: String): Future[String] = Future{
+  private def generarTokenAgente(usuario: UsuarioEmpresarial, ip: String, inactividad: String): Future[String] = Future {
     Token.generarToken(usuario.nombreUsuario, usuario.correo, getTipoPersona(usuario.tipoIdentificacion),
       usuario.ipUltimoIngreso.get, usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())),
       inactividad, TiposCliente.agenteEmpresarial, Some(usuario.identificacion))

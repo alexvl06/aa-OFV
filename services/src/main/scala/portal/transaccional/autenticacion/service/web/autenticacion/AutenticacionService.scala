@@ -1,6 +1,6 @@
 package portal.transaccional.autenticacion.service.web.autenticacion
 
-import akka.actor.{ ActorRef, ActorSelection }
+import akka.actor.{ ActorSelection }
 import co.com.alianza.exceptions.{ PersistenceException, ValidacionException }
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
@@ -10,7 +10,6 @@ import co.com.alianza.app.CrossHeaders
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper.requestWithAuiditing
 import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionEmpresaRepository, AutenticacionRepository }
-
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success }
 
@@ -38,7 +37,7 @@ case class AutenticacionService(autenticacionRepositorio: AutenticacionRepositor
             mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.autenticacionIndex,
               ip.value, kafkaActor, request.copy(password = null))) {
               onComplete(resultado) {
-                case Success(value) => complete(value.toString)
+                case Success(value) => complete(value)
                 case Failure(ex) => execution(ex)
               }
             }

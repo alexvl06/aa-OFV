@@ -9,19 +9,21 @@ import spray.util.LoggingContext
 import co.com.alianza.web._
 import co.com.alianza.webvalidarPinClienteAdmin.PinService
 import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionEmpresaRepository, AutenticacionRepository }
+import portal.transaccional.autenticacion.service.drivers.usuario.UsuarioRepository
 
-case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, autenticacionEmpresaRepositorio: AutenticacionEmpresaRepository, kafkaActor: ActorSelection, preguntasAutovalidacionActor: ActorSelection,
-  usuariosActor: ActorSelection, confrontaActor: ActorSelection, actualizacionActor: ActorSelection, permisoTransaccionalActor: ActorSelection, agenteEmpresarialActor: ActorSelection,
-  pinActor: ActorSelection, pinUsuarioEmpresarialAdminActor: ActorSelection, pinUsuarioAgenteEmpresarialActor: ActorSelection, ipsUsuarioActor: ActorSelection,
-  horarioEmpresaActor: ActorSelection, contrasenasAgenteEmpresarialActor: ActorSelection, contrasenasClienteAdminActor: ActorSelection,
-  contrasenasActor: ActorSelection)(implicit val system: ActorSystem) extends HttpServiceActor with RouteConcatenation with CrossHeaders
+case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, autenticacionEmpresaRepositorio: AutenticacionEmpresaRepository,
+  usuarioRepositorio: UsuarioRepository, kafkaActor: ActorSelection, preguntasAutovalidacionActor: ActorSelection,
+  usuariosActor: ActorSelection, confrontaActor: ActorSelection, actualizacionActor: ActorSelection, permisoTransaccionalActor: ActorSelection,
+  agenteEmpresarialActor: ActorSelection, pinActor: ActorSelection, pinUsuarioEmpresarialAdminActor: ActorSelection,
+  pinUsuarioAgenteEmpresarialActor: ActorSelection, ipsUsuarioActor: ActorSelection, horarioEmpresaActor: ActorSelection,
+  contrasenasAgenteEmpresarialActor: ActorSelection, contrasenasClienteAdminActor: ActorSelection, contrasenasActor: ActorSelection)(implicit val system: ActorSystem) extends HttpServiceActor with RouteConcatenation with CrossHeaders
     with ServiceAuthorization with ActorLogging {
 
   import system.dispatcher
 
   val routes =
-    //AutorizacionService(kafkaActor, autorizacionActor, autorizacionUsuarioEmpresarialActor).route ~
-    portal.transaccional.autenticacion.service.web.autenticacion.AutenticacionService(autenticacionRepo, autenticacionEmpresaRepositorio, kafkaActor).route ~
+    portal.transaccional.autenticacion.service.web.autorizacion.AutorizacionService(usuarioRepositorio).route ~
+      portal.transaccional.autenticacion.service.web.autenticacion.AutenticacionService(autenticacionRepo, autenticacionEmpresaRepositorio, kafkaActor).route ~
       //AutenticacionService(kafkaActor, autenticacionActor, autenticacionUsuarioEmpresaActor).route ~
       new ConfrontaService(confrontaActor).route ~
       new EnumeracionService().route ~

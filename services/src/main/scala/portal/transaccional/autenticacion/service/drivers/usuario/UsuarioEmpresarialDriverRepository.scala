@@ -8,11 +8,11 @@ import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.persistence.entities.UsuarioEmpresarial
 import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.token.Token
-import enumerations.{EstadosUsuarioEnum, AppendPasswordUser, EstadosEmpresaEnum}
+import enumerations.{ EstadosUsuarioEnum, AppendPasswordUser, EstadosEmpresaEnum }
 import org.joda.time.DateTime
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.UsuarioEmpresarialDAOs
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * Created by hernando on 26/07/16.
@@ -64,11 +64,11 @@ case class UsuarioEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs
   }
 
   def actualizarInfoUsuario(usuario: UsuarioEmpresarial, ip: String): Future[Int] = {
-    for{
+    for {
       intentos <- usuarioDAO.updateIncorrectEntries(usuario.id, 0)
       ip <- usuarioDAO.updateLastIp(usuario.id, ip)
       fecha <- usuarioDAO.updateLastDate(usuario.id, new Timestamp((new Date).getTime))
-    }yield fecha
+    } yield fecha
   }
 
   /////////////////////////////// validaciones //////////////////////////////////
@@ -125,7 +125,7 @@ case class UsuarioEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs
    */
   def validarContrasena(contrasena: String, usuario: UsuarioEmpresarial, reintentosErroneos: Int): Future[Boolean] = {
     val hash = Crypto.hashSha512(contrasena.concat(AppendPasswordUser.appendUsuariosFiducia), usuario.id)
-    if (hash.contentEquals(usuario.contrasena.get)){
+    if (hash.contentEquals(usuario.contrasena.get)) {
       //si las contraseñas no concuerdan, se debe:
       //1. actualizar ingresos erroneos
       //2. bloquear usuario si es necesario
@@ -134,8 +134,7 @@ case class UsuarioEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs
         actualizarIngresos <- actualizarIngresosErroneosUsuario(usuario.id, reintentos)
         bloquear <- validarBloqueoUsuario(usuario.id, reintentos, reintentosErroneos)
       } yield bloquear
-    }
-    else Future.failed(ValidacionException("401.3", "Error Credenciales"))
+    } else Future.failed(ValidacionException("401.3", "Error Credenciales"))
   }
 
   /**
