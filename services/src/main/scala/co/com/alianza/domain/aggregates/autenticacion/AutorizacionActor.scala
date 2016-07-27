@@ -87,6 +87,7 @@ case class AutorizacionActor(sesionActorSupervisor: ActorRef) extends Actor with
   implicit val timeout: Timeout = 10.seconds
 
   def receive = {
+
     case message: AutorizarUrl =>
       val currentSender = sender()
       val future = (for {

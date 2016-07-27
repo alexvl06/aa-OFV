@@ -34,7 +34,6 @@ case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, autenticaci
       authenticate(authenticateUser) {
         user =>
           IpsUsuariosService(kafkaActor, ipsUsuarioActor).route(user) ~
-            IpsUsuariosService(kafkaActor, ipsUsuarioActor).route(user) ~
             ActualizacionService(actualizacionActor, kafkaActor).route(user) ~
             HorarioEmpresaService(kafkaActor, horarioEmpresaActor).route(user) ~
             new AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).secureRoute(user) ~

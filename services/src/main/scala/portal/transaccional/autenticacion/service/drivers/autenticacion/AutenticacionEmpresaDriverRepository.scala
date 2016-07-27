@@ -72,7 +72,6 @@ case class AutenticacionEmpresaDriverRepository(
   /**
    * Flujo:
    * - buscar y validar empresa
-   * - obtener usuario
    * - obtener regla de reintentos
    * - validar usuario
    * - validar estado
@@ -88,11 +87,9 @@ case class AutenticacionEmpresaDriverRepository(
    * - asociar token
    * - crear session de usuario
    */
-  //TODO: CONTRASENA
   private def autenticarAgente(usuario: UsuarioEmpresarial, contrasena: String, ip: String): Future[String] = {
     for {
       empresa <- obtenerEmpresaValida(usuario.identificacion)
-      usuarioOption <- usuarioRepo.getByIdentityAndUser(usuario.identificacion, usuario.usuario)
       reintentosErroneos <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA.llave)
       validar <- usuarioRepo.validarUsuario(usuario, contrasena, reintentosErroneos.valor.toInt)
       cliente <- clienteCoreRepo.getCliente(usuario.identificacion)
@@ -116,7 +113,6 @@ case class AutenticacionEmpresaDriverRepository(
 
   /**
    * Flujo:
-   * 1) Busca el usuario administrados en la base de datos, si no se encuentra se devuelve CredencialesInvalidas
    * 2) Valida los estados del usuario encontrado, esta validacion devuelve un tipo de error por estado, si es exitosa se continúa el proceso
    * 3) Se comparan los passwords de la petición y el usuario, si coinciden se prosigue de lo contrario se debe ejecutar la excepcion de pw inválido
    * 4) Se busca el cliente en el core de alianza, si no se encuentra se debe devolver ErrorClienteNoExisteCore
@@ -128,23 +124,56 @@ case class AutenticacionEmpresaDriverRepository(
    * 9) Se crea la sesion del usuario en el cluster
    * 10) Se valida si el usuario tiene alguna ip guardada, si es así se procede a validar si es una ip habitual, de lo contrario se genera un token (10), una sesion (11) y se responde con ErrorControlIpsDesactivado
    */
-  private def autenticarAdministrador(admin: UsuarioEmpresarialAdmin, contrasena: String, ip: String): Future[String] = {
+  /**
+   * Flujo:
+   * - buscar y validar empresa
+   * - obtener regla de reintentos
+   * - validar usuario
+   * - obtener cliente core
+   * - validar estado cliente core
+   * - obtener regla dias
+   * - validar caducidad
+   * - actualizar usuario
+   * - obtener ips
+   * - validar ips
+   * - obtener configuracion inactividad
+   * - generar token
+   * - asociar token
+   * - crear session de usuario
+   */
+  private def autenticarAdministrador(usuario: UsuarioEmpresarialAdmin, contrasena: String, ip: String): Future[String] = {
+    for{
+      empresa <- obtenerEmpresaValida(usuario.identificacion)
+      reintentosErroneos <- reglaRepo.getRegla(LlavesReglaContrasena.CANTIDAD_REINTENTOS_INGRESO_CONTRASENA.llave)
+      validar <- usuarioAdminRepo.validarUsuario(usuario, contrasena, reintentosErroneos.valor.toInt)
+      cliente <- clienteCoreRepo.getCliente(usuario.identificacion)
+      estadoCore <- clienteCoreRepo.validarEstado(cliente)
+
+      reglaDias <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA.llave)
+      caducidad <- usuarioAdminRepo.validarCaducidadContrasena(TiposCliente.agenteEmpresarial, usuario, reglaDias.valor.toInt)
+      actualizar <- usuarioAdminRepo.actualizarInfoUsuario(usuario, ip)
+
+
+      inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
+
+
+
+      token <- generarTokenAdmin(usuario, ip, inactividad.llave)
+
+      ips <- ipRepo.getIpsByEmpresaId(empresa.id)
+      validacionIps <- ipRepo.validarControlIpAdmin(ip, ips, token, true)
+
+
+      asociarToken <- usuarioAdminRepo.actualizarToken(usuario.id, token)
+      //TODO: poner la empresa (dto)
+      sesion <- actorResponse[SesionActorSupervisor.SesionUsuarioCreada](sessionActor, CrearSesionUsuario(token, inactividad.valor.toInt))
+
+      //validacionPreguntas <- ValidationT(validarPreguntasUsuarioAdmin(usuarioAdmin.id))
+      //validacionIps <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token, usuarioAdmin.tipoIdentificacion, validacionPreguntas))
+    }yield
     /*
     val validaciones: Future[Validation[ErrorAutenticacion, String]] = (for {
-        estadoEmpresaOk <- ValidationT(validarEstadoEmpresa(message.nit))
-        usuarioAdmin <- ValidationT(obtenerUsuarioEmpresarialAdmin(message.nit, message.usuario))
-        estadoValido <- ValidationT(validarEstadosUsuario(usuarioAdmin.estado))
-        passwordValido <- ValidationT(validarPasswords(message.password, usuarioAdmin.contrasena.getOrElse(""), None, Some(usuarioAdmin.id), usuarioAdmin.numeroIngresosErroneos))
-        cliente <- ValidationT(obtenerClienteSP(usuarioAdmin.identificacion, usuarioAdmin.tipoIdentificacion))
-        cienteValido <- ValidationT(validarClienteSP(cliente))
-        passwordCaduco <- ValidationT(validarCaducidadPassword(TiposCliente.clienteAdministrador, usuarioAdmin.id, usuarioAdmin.fechaCaducidad))
-        actualizacionInfo <- ValidationT(actualizarInformacionUsuarioEmpresarialAdmin(usuarioAdmin.id, message.clientIp.get))
-        inactividadConfig <- ValidationT(buscarConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave))
-        token <- ValidationT(generarYAsociarTokenUsuarioEmpresarialAdmin(cliente, usuarioAdmin, message.nit, inactividadConfig.valor, message.clientIp.get))
-        sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
-        empresa <- ValidationT(obtenerEmpresaPorNit(message.nit))
-        validacionPreguntas <- ValidationT(validarPreguntasUsuarioAdmin(usuarioAdmin.id))
-        validacionIps <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token, usuarioAdmin.tipoIdentificacion, validacionPreguntas))
+
       } yield validacionIps).run
 
       validaciones.onComplete {
@@ -174,7 +203,6 @@ case class AutenticacionEmpresaDriverRepository(
           }
         }
     * */
-    Future.successful("")
   }
 
   private def obtenerEmpresaValida(nit: String): Future[Empresa] = {
@@ -186,6 +214,12 @@ case class AutenticacionEmpresaDriverRepository(
 
   private def generarTokenAgente(usuario: UsuarioEmpresarial, ip: String, inactividad: String): Future[String] = Future {
     Token.generarToken(usuario.nombreUsuario, usuario.correo, getTipoPersona(usuario.tipoIdentificacion),
+      usuario.ipUltimoIngreso.get, usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())),
+      inactividad, TiposCliente.agenteEmpresarial, Some(usuario.identificacion))
+  }
+
+  private def generarTokenAdmin(usuario: UsuarioEmpresarialAdmin, ip: String, inactividad: String): Future[String] = Future {
+    Token.generarToken(usuario.usuario, usuario.correo, getTipoPersona(usuario.tipoIdentificacion),
       usuario.ipUltimoIngreso.get, usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())),
       inactividad, TiposCliente.agenteEmpresarial, Some(usuario.identificacion))
   }

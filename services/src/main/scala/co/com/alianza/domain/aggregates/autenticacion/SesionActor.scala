@@ -95,7 +95,7 @@ case class SesionActorSupervisor() extends Actor with ActorLogging {
     val currentSender: ActorRef = sender()
     val actorName: String = generarNombreSesionActor(decryptedToken)
     context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(actorName) onComplete {
-      case Failure(error) => log error("Error al obtener la sesión", error)
+      case Failure(error) => log error ("Error al obtener la sesión", error)
       case Success(actor) => currentSender ! actor
     }
   }
@@ -117,10 +117,11 @@ case class SesionActorSupervisor() extends Actor with ActorLogging {
       .map { _ =>
         log.info("Creando sesion de usuario. Tiempo de expiracion: " + expiration + " minutos.")
         sender() ! SesionUsuarioCreada()
-      }.recover { case e =>
-      e.printStackTrace()
-      sender() ! SesionUsuarioNoCreada()
-    }.get
+      }.recover {
+        case e =>
+          e.printStackTrace()
+          sender() ! SesionUsuarioNoCreada()
+      }.get
   }
 
   private def generarNombreSesionActor(token: String): String = {
@@ -132,7 +133,7 @@ case class SesionActorSupervisor() extends Actor with ActorLogging {
     val currentSender = sender()
     context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(s"empresa$empresaId") onComplete {
       case Failure(error) =>
-        log error("/*/ Error al obtener la sesion de empresa ", error)
+        log error ("/*/ Error al obtener la sesion de empresa ", error)
       case Success(actor) =>
         currentSender ! actor
     }
