@@ -25,13 +25,10 @@ import portal.transaccional.autenticacion.service.drivers.usuario.{ UsuarioEmpre
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.reflect.ClassTag
 
-/**
- * Created by hernando on 26/07/16.
- */
 case class AutenticacionEmpresaDriverRepository(
     usuarioRepo: UsuarioEmpresarialRepository, usuarioAdminRepo: UsuarioEmpresarialAdminRepository, clienteCoreRepo: ClienteRepository,
-    empresaRepo: EmpresaRepository, reglaRepo: ReglaContrasenaRepository, configuracionRepo: ConfiguracionRepository, ipRepo: IpEmpresaRepository
-)(implicit val ex: ExecutionContext, sessionActor: ActorRef) extends AutenticacionEmpresaRepository {
+    empresaRepo: EmpresaRepository, reglaRepo: ReglaContrasenaRepository, configuracionRepo: ConfiguracionRepository, ipRepo: IpEmpresaRepository,
+    sessionActor: ActorRef )(implicit val ex: ExecutionContext) extends AutenticacionEmpresaRepository {
 
   implicit val timeout = Timeout(5.seconds)
 
@@ -55,9 +52,9 @@ case class AutenticacionEmpresaDriverRepository(
 
   /**
    * Autentica según el tipo de cliente (Agente, o Admin)
-   * @param agente
-   * @param admin
-   * @param ip
+   * @param agente Posible agente empresarial que quiera autenticarse
+   * @param admin Posible admin empresarial que quiera autenticarse
+   * @param ip Ip del usuario que desea autenticarse
    * @return Future[Boolean]
    * Success => True
    */

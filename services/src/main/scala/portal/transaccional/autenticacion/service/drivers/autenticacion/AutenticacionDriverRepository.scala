@@ -24,12 +24,9 @@ import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.reflect.ClassTag
 
-/**
- * Created by hernando on 25/07/16.
- */
 case class AutenticacionDriverRepository(usuarioRepo: UsuarioRepository, clienteCoreRepo: ClienteRepository,
     configuracionRepo: ConfiguracionRepository, reglaRepo: ReglaContrasenaRepository, ipRepo: IpUsuarioRepository,
-    respuestasRepo: RespuestaUsuarioRepository)(implicit val ex: ExecutionContext, sessionActor: ActorRef) extends AutenticacionRepository {
+    respuestasRepo: RespuestaUsuarioRepository, sessionActor: ActorRef)(implicit val ex: ExecutionContext) extends AutenticacionRepository {
 
   implicit val timeout = Timeout(5.seconds)
 
@@ -73,7 +70,7 @@ case class AutenticacionDriverRepository(usuarioRepo: UsuarioRepository, cliente
       rsp <- actorResponse[SesionActorSupervisor.SesionUsuarioCreada](sessionActor, CrearSesionUsuario(token, inactividad.valor.toInt))
       respuestas <- respuestasRepo.getRespuestasById(usuario.id.get)
       ips <- ipRepo.getIpsUsuarioById(usuario.id.get)
-      validacionIps <- ipRepo.validarControlIp(ip, ips, token, !respuestas.isEmpty)
+      validacionIps <- ipRepo.validarControlIp(ip, ips, token, respuestas.nonEmpty)
     } yield validacionIps
   }
 
@@ -83,10 +80,10 @@ case class AutenticacionDriverRepository(usuarioRepo: UsuarioRepository, cliente
 
   /**
    * Generar token
-   * @param usuario
-   * @param cliente
-   * @param ip
-   * @param inactividad
+   * @param usuario Usuario que accede al servicio
+   * @param cliente  Cliente
+   * @param ip Ip por la cual accede el usuario
+   * @param inactividad Inactividad del usuario
    * @return
    */
   private def generarToken(usuario: Usuario, cliente: Cliente, ip: String, inactividad: String): Future[String] = Future {
