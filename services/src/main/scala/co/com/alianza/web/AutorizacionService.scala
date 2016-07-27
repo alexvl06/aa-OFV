@@ -39,7 +39,6 @@ case class AutorizacionService(
           respondWithMediaType(mediaType) {
             parameters('url, 'ipRemota) {
               (url, ipRemota) =>
-
                 val tipoCliente = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
                 var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
                 var encryptedToken = util.encrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)

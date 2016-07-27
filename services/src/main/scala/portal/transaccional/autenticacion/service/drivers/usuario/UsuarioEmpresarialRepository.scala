@@ -34,4 +34,6 @@ trait UsuarioEmpresarialRepository {
 
   def validarCaducidadContrasena(tipoCliente: TiposCliente, usuario: UsuarioEmpresarial, dias: Int): Future[Boolean]
 
+  def invalidarToken(token: String): Future[Int]
+
 }

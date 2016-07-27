@@ -11,4 +11,6 @@ trait UsuarioEmpresarialAdminRepository {
 
   def getByIdentificacion(identificacion: String, usuario: String): Future[Option[UsuarioEmpresarialAdmin]]
 
+  def invalidarToken(token: String): Future[Int]
+
 }

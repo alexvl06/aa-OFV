@@ -38,4 +38,8 @@ case class UsuarioEmpresarialDAO(implicit dcConfig: DBConfig) extends TableQuery
     run(this.filter(_.id === idUsuario).map(_.estado).update(estado))
   }
 
+  def deleteToken(token: String): Future[Int] = {
+    run(this.filter(_.token === token).map(_.token).update(Some(null)))
+  }
+
 }

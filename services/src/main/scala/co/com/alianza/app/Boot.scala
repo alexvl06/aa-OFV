@@ -9,7 +9,7 @@ object Boot extends App with HostBinding with Core with BootedCore with CoreActo
 
   import system.dispatcher
 
-  private val rootService = system.actorOf(Props(AlianzaRouter(autenticacionRepo, autenticacionEmpresaRepo, usuarioRepo,
+  private val rootService = system.actorOf(Props(AlianzaRouter(autenticacionRepo, autenticacionEmpresaRepo, usuarioRepo, usuarioAgenteRepo, usuarioAdminRepo,
     kafkaActor, preguntasAutovalidacionActor, usuariosActor, confrontaActor, actualizacionActor, permisoTransaccionalActor, agenteEmpresarialActor,
     pinActor, pinUsuarioEmpresarialAdminActor, pinUsuarioAgenteEmpresarialActor, ipsUsuarioActor, horarioEmpresaActor,
     contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor, contrasenasActor)), name = "api-AlianzaRouter")
