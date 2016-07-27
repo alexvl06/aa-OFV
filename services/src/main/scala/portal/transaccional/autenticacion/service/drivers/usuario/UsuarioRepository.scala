@@ -28,4 +28,6 @@ trait UsuarioRepository {
 
   def validarCaducidadContrasena(tipoCliente: TiposCliente, usuario: Usuario, dias: Int): Future[Boolean]
 
+  def invalidarToken(token: String): Future[Int]
+
 }

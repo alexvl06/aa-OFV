@@ -25,7 +25,7 @@ import portal.transaccional.autenticacion.service.drivers.configuracion.Configur
 import portal.transaccional.autenticacion.service.drivers.empresa.EmpresaDriverRepository
 import portal.transaccional.autenticacion.service.drivers.ipempresa.IpEmpresaDriverRepository
 import portal.transaccional.autenticacion.service.drivers.ipusuario.IpUsuarioDriverRepository
-import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaDriverRepository
+import portal.transaccional.autenticacion.service.drivers.reglas.{ ReglaContrasenaDriverRepository }
 import portal.transaccional.autenticacion.service.drivers.respuesta.RespuestaUsuarioDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuario._
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.core.ClienteDAO
