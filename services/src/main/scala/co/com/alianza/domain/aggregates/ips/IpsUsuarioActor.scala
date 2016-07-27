@@ -45,7 +45,7 @@ class IpsUsuarioActorSupervisor extends Actor with ActorLogging {
 /**
  * Created by david on 16/06/14.
  */
-class IpsUsuarioActor(Supervisor: ActorRef) extends Actor with ActorLogging {
+class IpsUsuarioActor extends Actor with ActorLogging {
   import context.dispatcher
   implicit val config: Config = context.system.settings.config
   implicit val timeout = Timeout(120.seconds)
@@ -136,7 +136,7 @@ class IpsUsuarioActor(Supervisor: ActorRef) extends Actor with ActorLogging {
   }
 
   private def agregarIpSesionEmpresa(empresaId: Int, ip: String) =
-    Supervisor ? ObtenerEmpresaSesionActorId(empresaId) map {
+    context.parent ? ObtenerEmpresaSesionActorId(empresaId) map {
       case Some(empresaSesionActor: ActorRef) =>
         empresaSesionActor ! AgregarIp(ip); zSuccess((): Unit)
       case None => zSuccess((): Unit)
@@ -144,7 +144,7 @@ class IpsUsuarioActor(Supervisor: ActorRef) extends Actor with ActorLogging {
     }
 
   private def removerIpSesionEmpresa(empresaId: Int, ip: String) =
-    Supervisor ? ObtenerEmpresaSesionActorId(empresaId) map {
+    context.parent ? ObtenerEmpresaSesionActorId(empresaId) map {
       case Some(empresaSesionActor: ActorRef) =>
         empresaSesionActor ! RemoverIp(ip); zSuccess((): Unit)
       case None => zSuccess((): Unit)

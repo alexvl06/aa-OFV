@@ -84,8 +84,10 @@ object EmpresaActor {
   def props(empresa: Empresa, horario: Option[HorarioEmpresa]) = Props(new EmpresaActor(empresa, horario))
 }
 
-class BuscadorActorCluster(nombreActorPadre: String)(implicit val cluster: Cluster) extends Actor {
+class BuscadorActorCluster(nombreActorPadre: String) extends Actor {
 
+
+  private val cluster = Cluster.get(context.system)
   var numResp = 0
   var resp: Option[ActorRef] = None
   val nodosBusqueda: SortedSet[Member] = ClusterUtil.obtenerNodos(cluster)
