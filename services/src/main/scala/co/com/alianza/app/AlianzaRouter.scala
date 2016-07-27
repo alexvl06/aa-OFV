@@ -23,7 +23,7 @@ case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, autenticaci
 
   val routes =
     portal.transaccional.autenticacion.service.web.autorizacion.AutorizacionService(usuarioRepositorio, usuarioAgenteRepositorio,
-      usuarioAdminRepositorio, kafkaActor).route
+      usuarioAdminRepositorio, kafkaActor).route ~
   portal.transaccional.autenticacion.service.web.autenticacion.AutenticacionService(autenticacionRepo, autenticacionEmpresaRepositorio, kafkaActor).route ~
     new ConfrontaService(confrontaActor).route ~
     new EnumeracionService().route ~
