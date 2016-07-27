@@ -14,8 +14,4 @@ case class RespuestaUsuarioDriverRepository(respuestaDAO: RespuestaUsuarioDAOs)(
     respuestaDAO.getById(idUsuario)
   }
 
-  def validarRespuestas(respuestas: Seq[RespuestasAutovalidacionUsuario]): Future[Boolean] = {
-    Future { !respuestas.isEmpty }
-  }
-
 }

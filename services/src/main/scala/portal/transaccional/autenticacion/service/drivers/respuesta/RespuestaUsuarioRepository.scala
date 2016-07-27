@@ -11,6 +11,4 @@ trait RespuestaUsuarioRepository {
 
   def getRespuestasById(idUsuario: Int): Future[Seq[RespuestasAutovalidacionUsuario]]
 
-  def validarRespuestas(respuestas: Seq[RespuestasAutovalidacionUsuario]): Future[Boolean]
-
 }

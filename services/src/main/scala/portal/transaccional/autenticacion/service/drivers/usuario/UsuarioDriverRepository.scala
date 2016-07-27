@@ -7,9 +7,9 @@ import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.persistence.entities.Usuario
 import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.token.Token
-import enumerations.{ AppendPasswordUser, EstadosUsuarioEnum, TipoIdentificacion }
+import enumerations.{ AppendPasswordUser, EstadosUsuarioEnum }
 import org.joda.time.DateTime
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.daos.driver.UsuarioDAOs
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.UsuarioDAOs
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -72,15 +72,15 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
 
   /**
    * Valida el estado del usuario
-   * @param estadoUsuario El estado del usuario a validar
+   * @param estado El estado del usuario a validar
    * @return Future[Boolean]
    */
-  def validarEstados(estadoUsuario: Int): Future[Boolean] = {
-    if (estadoUsuario == EstadosUsuarioEnum.bloqueContraseña.id)
+  def validarEstado(estado: Int): Future[Boolean] = {
+    if (estado == EstadosUsuarioEnum.bloqueContraseña.id)
       Future.failed(ValidacionException("401.8", "Usuario Bloqueado"))
-    else if (estadoUsuario == EstadosUsuarioEnum.pendienteActivacion.id)
+    else if (estado == EstadosUsuarioEnum.pendienteActivacion.id)
       Future.failed(ValidacionException("401.10", "Usuario Bloqueado"))
-    else if (estadoUsuario == EstadosUsuarioEnum.pendienteReinicio.id)
+    else if (estado == EstadosUsuarioEnum.pendienteReinicio.id)
       Future.failed(ValidacionException("401.12", "Usuario Bloqueado"))
     else Future.successful(true)
   }
@@ -95,15 +95,18 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
   def validarContrasena(contrasena: String, usuario: Usuario, reintentosErroneos: Int): Future[Boolean] = {
     val hash = Crypto.hashSha512(contrasena.concat(AppendPasswordUser.appendUsuariosFiducia), usuario.id.get)
     if (hash.contentEquals(usuario.contrasena.get)) {
-      //si las contraseñas no concuerdan, se debe:
+      Future.successful(true)
+    } else {
+      //si las contraseñas no concuerdan:
       //1. actualizar ingresos erroneos
       //2. bloquear usuario si es necesario
       val reintentos: Int = usuario.numeroIngresosErroneos + 1
       for {
         actualizarIngresos <- actualizarIngresosErroneosUsuario(usuario.id.get, reintentos)
         bloquear <- validarBloqueoUsuario(usuario.id.get, reintentos, reintentosErroneos)
-      } yield bloquear
-    } else Future.failed(ValidacionException("401.3", "Error Credenciales"))
+        error <- Future.failed(ValidacionException("401.3", "Error Credenciales"))
+      } yield error
+    }
   }
 
   /**
