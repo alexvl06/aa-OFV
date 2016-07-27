@@ -1,29 +1,42 @@
 package portal.transaccional.autenticacion.service.web.autorizacion
 
+import akka.actor.ActorSelection
 import co.com.alianza.app.CrossHeaders
+import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.exceptions.{ PersistenceException, ValidacionException }
-import portal.transaccional.autenticacion.service.drivers.usuario.UsuarioRepository
+import co.com.alianza.infrastructure.auditing.{ AuditingHelper, KafkaActor }
+import co.com.alianza.infrastructure.auditing.AuditingHelper._
+import co.com.alianza.infrastructure.dto.Usuario
+import co.com.alianza.util.token.{ AesUtil, Token }
+import enumerations.CryptoAesParameters
+import portal.transaccional.autenticacion.service.drivers.usuario.{ UsuarioEmpresarialAdminRepository, UsuarioEmpresarialRepository, UsuarioRepository }
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import spray.http.StatusCodes
-import spray.routing.{ Route, StandardRoute }
+import spray.routing.{ RequestContext, Route, StandardRoute }
+
 import scala.util.{ Failure, Success }
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * Created by jonathan on 27/07/16.
  */
-case class AutorizacionService(usuarioRepository: UsuarioRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters
+case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgenteRepository: UsuarioEmpresarialRepository,
+  usuarioAdminRepository: UsuarioEmpresarialAdminRepository, kafkaActor: ActorSelection)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters
     with CrossHeaders {
 
   val invalidarTokenPath = "invalidarToken"
+  val validarTokenPath = "validarToken"
 
   val route: Route = {
-    pathPrefix(invalidarTokenPath) {
+    path(invalidarTokenPath) {
       pathEndOrSingleSlash {
         invalidarToken
       }
-    }
+    } /*~path(validarTokenPath / Segment) {
+      token =>
+        validarToken(token)
+    }*/
   }
 
   private def invalidarToken = {
@@ -31,15 +44,40 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository)(implicit va
       token =>
         delete {
           clientIP { ip =>
-            val resultado: Future[Int] = usuarioRepository.invalidarToken(token.token)
+            val util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
+            val decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token.token)
+            val tipoCliente = Token.getToken(decryptedToken).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
+            val resultado: Future[Int] = if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
+              usuarioAgenteRepository.invalidarToken(token.token)
+            } else if (tipoCliente == TiposCliente.clienteAdministrador.toString) {
+              usuarioAdminRepository.invalidarToken(token.token)
+            } else {
+              usuarioRepository.invalidarToken(token.token)
+            }
+
+            /*mapRequestContext((r: RequestContext) => requestWithFutureAuditing[PersistenceException, Usuario]
+              (r, AuditingHelper.fiduciariaTopic, AuditingHelper.cierreSesionIndex, ip.value, kafkaActor, usuario)) {*/
             onComplete(resultado) {
-              case Success(value: Int) => complete(value.toString)
+              case Success(value) => complete(value.toString)
               case Failure(ex) => execution(ex)
             }
+            //}
+
           }
         }
     }
   }
+
+  /*private def validarToken(token: String) = {
+    get {
+        parameters('url, 'ipRemota) {
+          (url, ipRemota) =>
+            val util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
+            val encryptedToken = util.encrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
+              requestExecute(AutorizarUrl(encryptedToken, url), autorizacionActor)
+        }
+    }
+  }*/
 
   def execution(ex: Any): StandardRoute = {
     ex match {

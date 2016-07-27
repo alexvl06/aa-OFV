@@ -15,6 +15,8 @@ trait UsuarioEmpresarialAdminDAOs {
 
   def createToken(idUsuario: Int, token: String): Future[Int]
 
+  def deleteToken(token: String): Future[Int]
+
   def updateIncorrectEntries(idUsuario: Int, numeroIntentos: Int): Future[Int]
 
   def updateLastIp(idUsuario: Int, ip: String): Future[Int]
