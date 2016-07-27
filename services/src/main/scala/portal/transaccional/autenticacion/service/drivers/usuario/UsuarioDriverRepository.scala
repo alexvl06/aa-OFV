@@ -7,9 +7,9 @@ import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.persistence.entities.Usuario
 import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.token.Token
-import enumerations.{ AppendPasswordUser, EstadosUsuarioEnum, TipoIdentificacion }
+import enumerations.{ AppendPasswordUser, EstadosUsuarioEnum }
 import org.joda.time.DateTime
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.daos.driver.UsuarioDAOs
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.UsuarioDAOs
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -72,15 +72,15 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
 
   /**
    * Valida el estado del usuario
-   * @param estadoUsuario El estado del usuario a validar
+   * @param estado El estado del usuario a validar
    * @return Future[Boolean]
    */
-  def validarEstados(estadoUsuario: Int): Future[Boolean] = {
-    if (estadoUsuario == EstadosUsuarioEnum.bloqueContraseña.id)
+  def validarEstado(estado: Int): Future[Boolean] = {
+    if (estado == EstadosUsuarioEnum.bloqueContraseña.id)
       Future.failed(ValidacionException("401.8", "Usuario Bloqueado"))
-    else if (estadoUsuario == EstadosUsuarioEnum.pendienteActivacion.id)
+    else if (estado == EstadosUsuarioEnum.pendienteActivacion.id)
       Future.failed(ValidacionException("401.10", "Usuario Bloqueado"))
-    else if (estadoUsuario == EstadosUsuarioEnum.pendienteReinicio.id)
+    else if (estado == EstadosUsuarioEnum.pendienteReinicio.id)
       Future.failed(ValidacionException("401.12", "Usuario Bloqueado"))
     else Future.successful(true)
   }

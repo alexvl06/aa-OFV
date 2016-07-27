@@ -9,6 +9,6 @@ import scala.concurrent.Future
  */
 trait IpEmpresaDAOs {
 
-  def getById(idUsuario: Int): Future[Seq[IpsEmpresa]]
+  def getById(idEmpresa: Int): Future[Seq[IpsEmpresa]]
 
 }

@@ -1,4 +1,4 @@
-package portal.transaccional.fiduciaria.autenticacion.storage.daos.daos.driver
+package portal.transaccional.fiduciaria.autenticacion.storage.daos.portal
 
 import java.sql.Timestamp
 

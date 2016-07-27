@@ -1,4 +1,4 @@
-package portal.transaccional.fiduciaria.autenticacion.storage.daos.daos.driver
+package portal.transaccional.fiduciaria.autenticacion.storage.daos.portal
 
 import co.com.alianza.persistence.config.DBConfig
 import co.com.alianza.persistence.entities.{ PerfilUsuarioTable, RecursoPerfil, RecursoPerfilTable, UsuarioTable }

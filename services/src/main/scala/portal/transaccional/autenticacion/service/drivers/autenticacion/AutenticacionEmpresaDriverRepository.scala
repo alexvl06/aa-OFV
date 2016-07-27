@@ -3,13 +3,15 @@ package portal.transaccional.autenticacion.service.drivers.autenticacion
 import java.util.Date
 
 import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.constants.{TiposConfiguracion, LlavesReglaContrasena}
-import co.com.alianza.persistence.entities.{UsuarioEmpresarial, Empresa}
+import co.com.alianza.constants.{ LlavesReglaContrasena, TiposConfiguracion }
+import co.com.alianza.exceptions.ValidacionException
+import co.com.alianza.persistence.entities.{ Empresa, UsuarioEmpresarial }
 import co.com.alianza.util.token.Token
-import enumerations.TipoIdentificacion
+import enumerations.{ EstadosEmpresaEnum, TipoIdentificacion }
 import portal.transaccional.autenticacion.service.drivers.cliente.ClienteRepository
 import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionRepository
 import portal.transaccional.autenticacion.service.drivers.empresa.EmpresaRepository
+import portal.transaccional.autenticacion.service.drivers.ipempresa.IpEmpresaRepository
 import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaRepository
 import portal.transaccional.autenticacion.service.drivers.usuario.{ UsuarioEmpresarialAdminRepository, UsuarioEmpresarialRepository }
 
@@ -20,7 +22,7 @@ import scala.concurrent.{ ExecutionContext, Future }
  */
 case class AutenticacionEmpresaDriverRepository(
     usuarioRepo: UsuarioEmpresarialRepository, usuarioAdminRepo: UsuarioEmpresarialAdminRepository, clienteCoreRepo: ClienteRepository,
-    empresaRepo: EmpresaRepository, reglaRepo: ReglaContrasenaRepository, configuracionRepo: ConfiguracionRepository
+    empresaRepo: EmpresaRepository, reglaRepo: ReglaContrasenaRepository, configuracionRepo: ConfiguracionRepository, ipRepo: IpEmpresaRepository
 )(implicit val ex: ExecutionContext) extends AutenticacionEmpresaRepository {
 
   /**
@@ -41,30 +43,22 @@ case class AutenticacionEmpresaDriverRepository(
 
   /**
    * Flujo:
-   * -) buscar y validar empresa
-   * -) obtener usuario
-   * -) obtener cliente core
-   * -) obtener regla de reintentos
-   * -) validar usuario
-   * -) validar caducidad
-   * -) actualizar usuario
-   * -) obtener configuracion inactividad
-   * -) generar token
-   * -) asociar token
-   *
-   * 1) Busca el usuario en la base de datos, si no se encuentra se devuelve CredencialesInvalidas
-   * 2) Valida los estados del usuario encontrado, esta validacion devuelve un tipo de error por estado, si es exitosa se continúa el proceso
-   * 3) Se comparan los passwords de la petición y el usuario, si coinciden se prosigue de lo contrario se debe ejecutar la excepcion de pw inválido
-   * 4) Se valida la fecha de caducacion del password, si caducó se debe devolver ErrorPasswordCaducado, de lo contrario se prosigue
-   * ------- Si pasan las 4 validaciones anteriores, el usuario se considera como usuario autenticado --------
-   * 5) Se actualiza la información de numIngresosErroneos, ipUltimoIngreso y fechaUltimoIngreso del usuario
-   * 6) Se busca el tiempo de expiración de la sesión
-   * 7) Se genera un token y se asocia al usuario
-   * 8) Se busca la empresa a la que pertenece el agente
-   * 9) Se busca la configuración de horario de la empresa
-   * 10)Se valida que el horario corresponda
-   * 11)Se crea la sesion del usuario en el cluster
-   * 12)Se valida que el usuario ingrese con una ip valida para la empresa a la que pertenece
+   * - buscar y validar empresa
+   * - obtener usuario
+   * - obtener regla de reintentos
+   * - validar usuario
+   * - validar estado
+   * - obtener cliente core
+   * - validar estado cliente core
+   * - obtener regla dias
+   * - validar caducidad
+   * - actualizar usuario
+   * - obtener ips
+   * - validar ips
+   * - obtener configuracion inactividad
+   * - generar token
+   * - asociar token
+   * - crear session de usuario
    */
   private def autenticarAgente(tipoIdentificacion: Int, identificacion: String,
     usuario: String, contrasena: String, ip: String): Future[String] = {
@@ -73,16 +67,19 @@ case class AutenticacionEmpresaDriverRepository(
       usuarioOption <- usuarioRepo.getByIdentityAndUser(identificacion, usuario)
       reintentosErroneos <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA.llave)
       usuario <- usuarioRepo.validarUsuario(usuarioOption, contrasena, reintentosErroneos.llave.toInt)
+      estado <- validarEstadoUsuario(usuario.estado)
       cliente <- clienteCoreRepo.getCliente(identificacion)
-      caducidad <- usuarioRepo.validarCaducidadContrasena(TiposCliente.agenteEmpresarial, usuario, reintentosErroneos.llave.toInt)
+      estadoCore <- clienteCoreRepo.validarEstado(cliente)
+      reglaDias <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA.llave)
+      caducidad <- usuarioRepo.validarCaducidadContrasena(TiposCliente.agenteEmpresarial, usuario, reglaDias.valor.toInt)
       actualizar <- usuarioRepo.actualizarInfoUsuario(usuario, ip)
+      ips <- ipRepo.getIpsByEmpresaId(empresa.id)
+      validacionIps <- ipRepo.validarControlIpAgente(ip, ips)
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
       token <- generarTokenAgente(usuario, ip, inactividad.llave)
       asociarToken <- usuarioRepo.actualizarToken(usuario.id, token)
-      //TODO: agregar llamado actor session
+      //TODO: pendiente agregar método de creación de la sesión
       //sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt, empresa, None))
-
-      //validacionIps <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token, usuarioAgente.tipoIdentificacion, "true"))
     } yield token
   }
 
@@ -156,7 +153,7 @@ case class AutenticacionEmpresaDriverRepository(
     } yield empresa.get
   }
 
-  private def generarTokenAgente(usuario: UsuarioEmpresarial, ip: String, inactividad: String): Future[String] = Future{
+  private def generarTokenAgente(usuario: UsuarioEmpresarial, ip: String, inactividad: String): Future[String] = Future {
     Token.generarToken(usuario.nombreUsuario, usuario.correo, getTipoPersona(usuario.tipoIdentificacion),
       usuario.ipUltimoIngreso.get, usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())),
       inactividad, TiposCliente.agenteEmpresarial, Some(usuario.identificacion))
@@ -169,6 +166,24 @@ case class AutenticacionEmpresaDriverRepository(
       case TipoIdentificacion.SOCIEDAD_EXTRANJERA.identificador => "S"
       case _ => "N"
     }
+  }
+
+  /**
+   * Valida el estado del usuario
+   * @param estado del usuario
+   * @return Future[Boolean]
+   * Success => True
+   */
+  private def validarEstadoUsuario(estado: Int): Future[Boolean] = {
+    if (estado == EstadosEmpresaEnum.bloqueContraseña.id)
+      Future.failed(ValidacionException("401.8", "Usuario Bloqueado"))
+    else if (estado == EstadosEmpresaEnum.pendienteActivacion.id)
+      Future.failed(ValidacionException("401.10", "Usuario Bloqueado"))
+    else if (estado == EstadosEmpresaEnum.pendienteReiniciarContrasena.id)
+      Future.failed(ValidacionException("401.12", "Usuario Bloqueado"))
+    else if (estado == EstadosEmpresaEnum.bloqueadoPorAdmin.id)
+      Future.failed(ValidacionException("401.14", "Usuario Desactivado"))
+    else Future.successful(true)
   }
 
 }
