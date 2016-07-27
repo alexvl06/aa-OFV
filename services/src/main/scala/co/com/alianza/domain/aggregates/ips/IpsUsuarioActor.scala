@@ -45,10 +45,10 @@ class IpsUsuarioActorSupervisor extends Actor with ActorLogging {
 /**
  * Created by david on 16/06/14.
  */
-class IpsUsuarioActor(Supervisor: ActorRef)(implicit val system: ActorSystem) extends Actor with ActorLogging {
-  import system.dispatcher
-  implicit val config: Config = system.settings.config
-  implicit val timeout = Timeout(120 seconds)
+class IpsUsuarioActor extends Actor with ActorLogging {
+  import context.dispatcher
+  implicit val config: Config = context.system.settings.config
+  implicit val timeout = Timeout(120.seconds)
   import co.com.alianza.util.json.MarshallableImplicits._
 
   def receive = {
@@ -136,7 +136,7 @@ class IpsUsuarioActor(Supervisor: ActorRef)(implicit val system: ActorSystem) ex
   }
 
   private def agregarIpSesionEmpresa(empresaId: Int, ip: String) =
-    Supervisor ? ObtenerEmpresaSesionActorId(empresaId) map {
+    context.parent ? ObtenerEmpresaSesionActorId(empresaId) map {
       case Some(empresaSesionActor: ActorRef) =>
         empresaSesionActor ! AgregarIp(ip); zSuccess((): Unit)
       case None => zSuccess((): Unit)
@@ -144,7 +144,7 @@ class IpsUsuarioActor(Supervisor: ActorRef)(implicit val system: ActorSystem) ex
     }
 
   private def removerIpSesionEmpresa(empresaId: Int, ip: String) =
-    Supervisor ? ObtenerEmpresaSesionActorId(empresaId) map {
+    context.parent ? ObtenerEmpresaSesionActorId(empresaId) map {
       case Some(empresaSesionActor: ActorRef) =>
         empresaSesionActor ! RemoverIp(ip); zSuccess((): Unit)
       case None => zSuccess((): Unit)

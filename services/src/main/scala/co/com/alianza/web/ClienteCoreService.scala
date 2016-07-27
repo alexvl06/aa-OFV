@@ -11,7 +11,7 @@ import scala.concurrent.ExecutionContext
  *
  * @author smontanez
  */
-case class ClienteCoreService(consultaClienteActor: ActorSelection)(implicit val system: ActorSystem) extends Directives with AlianzaCommons {
+case class ClienteCoreService(consultaClienteActor: ActorSelection)(implicit val system : ActorSystem) extends Directives with AlianzaCommons {
 
   import ExisteClienteCoreMessagesJsonSupport._
 

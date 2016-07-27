@@ -65,7 +65,7 @@ trait CoreActors {
   //val autenticacionActorSupervisor = system.actorOf(Props[AutenticacionActorSupervisor], "autenticacionActorSupervisor")
   //val autenticacionActor = system.actorSelection(autenticacionActorSupervisor.path)
   //val autenticacionUsuarioEmpresaActor = system.actorSelection(autenticacionActorSupervisor.path)
-  val autorizacionActorSupervisor = system.actorOf(Props[AutorizacionActorSupervisor], "autorizacionActorSupervisor")
+  val autorizacionActorSupervisor = system.actorOf(AutorizacionActorSupervisor.props(sesionActorSupervisor), "autorizacionActorSupervisor")
   //val autorizacionActor = system.actorSelection(autenticacionActorSupervisor.path)
   //val autorizacionUsuarioEmpresarialActor = system.actorSelection(autenticacionActorSupervisor.path)
   val consultaClienteActorSupervisor = system.actorOf(Props[ConsultaClienteActorSupervisor], "consultaClienteActorSupervisor")
@@ -77,26 +77,26 @@ trait CoreActors {
   val contrasenasAgenteEmpresarialActor = system.actorSelection(contrasenasAgenteEmpresarialActorSupervisor.path)
 
   val contrasenasClienteAdminActorSupervisor = system.actorOf(Props[ContrasenasClienteAdminActorSupervisor], "contrasenasClienteAdminActorSupervisor")
-  val contrasenasClienteAdminActor = MainActors.system.actorSelection(MainActors.contrasenasClienteAdminActorSupervisor.path)
+  val contrasenasClienteAdminActor = system.actorSelection(contrasenasClienteAdminActorSupervisor.path)
 
   val ipsUsuarioActorSupervisor = system.actorOf(Props[IpsUsuarioActorSupervisor], "ipsUsuarioActorSupervisor")
-  val ipsUsuarioActor = MainActors.system.actorSelection(MainActors.ipsUsuarioActorSupervisor.path)
+  val ipsUsuarioActor = system.actorSelection(ipsUsuarioActorSupervisor.path)
 
   val horarioEmpresaActorSupervisor = system.actorOf(Props[HorarioEmpresaActorSupervisor], "horarioEmpresaActorSupervisor")
-  val horarioEmpresaActor = MainActors.system.actorSelection(MainActors.horarioEmpresaActorSupervisor.path)
+  val horarioEmpresaActor = system.actorSelection(horarioEmpresaActorSupervisor.path)
 
   val pinActorSupervisor = system.actorOf(Props[PinActorSupervisor], "PinActorSupervisor")
-  val pinActor = MainActors.system.actorSelection(pinActorSupervisor.path)
-  val pinUsuarioEmpresarialAdminActor = MainActors.system.actorSelection(MainActors.pinActorSupervisor.path + "/pinUsuarioEmpresarialAdminActor")
-  val pinUsuarioAgenteEmpresarialActor = MainActors.system.actorSelection(MainActors.pinActorSupervisor.path + "/pinUsuarioAgenteEmpresarialActor")
+  val pinActor = system.actorSelection(pinActorSupervisor.path)
+  val pinUsuarioEmpresarialAdminActor = system.actorSelection(pinActorSupervisor.path + "/pinUsuarioEmpresarialAdminActor")
+  val pinUsuarioAgenteEmpresarialActor = system.actorSelection(pinActorSupervisor.path + "/pinUsuarioAgenteEmpresarialActor")
 
   val sesionActorSupervisor = system.actorOf(Props[SesionActorSupervisor], "sesionActorSupervisor")
 
   val agenteEmpresarialActorSupervisor = system.actorOf(Props[AgenteEmpresarialActorSupervisor], "agenteEmpresarialActorSupervisor")
-  val agenteEmpresarialActor = MainActors.system.actorSelection(MainActors.agenteEmpresarialActorSupervisor.path)
+  val agenteEmpresarialActor = system.actorSelection(agenteEmpresarialActorSupervisor.path)
 
   val permisoTransaccionalActorSupervisor = system.actorOf(Props[PermisoTransaccionalActorSupervisor], "permisoTransaccionalActorSupervisor")
-  val permisoTransaccionalActor = MainActors.system.actorSelection(MainActors.permisoTransaccionalActorSupervisor.path)
+  val permisoTransaccionalActor = system.actorSelection(permisoTransaccionalActorSupervisor.path)
 
   val actualizacionActorSupervisor = system.actorOf(Props[ActualizacionActorSupervisor], "actualizacionActorSupervisor")
   val actualizacionActor = system.actorSelection(actualizacionActorSupervisor.path)

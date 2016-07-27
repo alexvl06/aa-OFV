@@ -78,10 +78,10 @@ class ContrasenasAgenteEmpresarialActorSupervisor extends Actor with ActorLoggin
  * *
  * Actor que se encarga de procesar los mensajes relacionados con la administración de contraseñas de los usuarios emopresa (Cliente Administrador y Agente Empresarial)
  */
-class ContrasenasAgenteEmpresarialActor(implicit val system: ActorSystem) extends Actor with ActorLogging {
+class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging {
 
-  import system.dispatcher
-  implicit val config: Config = system.settings.config
+  import context.dispatcher
+  implicit val config: Config = context.system.settings.config
 
   import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial._
 
@@ -240,7 +240,7 @@ class ContrasenasAgenteEmpresarialActor(implicit val system: ActorSystem) extend
                     case zFailure(fail) => currentSender ! fail
                     case zSuccess(intResult) =>
                       if (intResult == 1) {
-                        new SmtpServiceClient().send(buildMessage(responseFutureReiniciarContraAE._3.valor.toInt, pin, UsuarioMessageCorreo(message.correoUsuarioAgenteEmpresarial, message.numIdentificacionAgenteEmpresarial, message.tipoIdentiAgenteEmpresarial), "alianza.smtp.templatepin.reiniciarContrasenaEmpresa", "alianza.smtp.asunto.reiniciarContrasenaEmpresa"), (_, _) => Unit)
+                        new SmtpServiceClient()(context.system).send(buildMessage(responseFutureReiniciarContraAE._3.valor.toInt, pin, UsuarioMessageCorreo(message.correoUsuarioAgenteEmpresarial, message.numIdentificacionAgenteEmpresarial, message.tipoIdentiAgenteEmpresarial), "alianza.smtp.templatepin.reiniciarContrasenaEmpresa", "alianza.smtp.asunto.reiniciarContrasenaEmpresa"), (_, _) => Unit)
                         currentSender ! ResponseMessage(Created, "Reinicio de contraseña agente empresarial OK")
                       } else {
                         log.info("Error... Al momento de guardar el pin empresa")
@@ -280,7 +280,7 @@ class ContrasenasAgenteEmpresarialActor(implicit val system: ActorSystem) extend
               val resultCrearPinEmpresaAgenteEmpresarial = for {
                 idResultEliminarPinesEmpresaAnteriores <- DataAccessAdapter.eliminarPinEmpresaReiniciarAnteriores(responseFutureBloquearDesbloquearAgenteFuture._1._1, UsoPinEmpresaEnum.usoReinicioContrasena.id)
                 idResultGuardarPinEmpresa <- DataAccessAdapter.crearPinEmpresaAgenteEmpresarial(pinEmpresaAgenteEmpresarial)
-                correoEnviado <- new SmtpServiceClient().send(buildMessage(responseFutureBloquearDesbloquearAgenteFuture._3.valor.toInt, pin, UsuarioMessageCorreo(message.correoUsuarioAgenteEmpresarial, message.numIdentificacionAgenteEmpresarial, message.tipoIdentiAgenteEmpresarial), "alianza.smtp.templatepin.reiniciarContrasenaEmpresa", "alianza.smtp.asunto.reiniciarContrasenaEmpresa"), (_, _) => Unit)
+                correoEnviado <- new SmtpServiceClient()(context.system).send(buildMessage(responseFutureBloquearDesbloquearAgenteFuture._3.valor.toInt, pin, UsuarioMessageCorreo(message.correoUsuarioAgenteEmpresarial, message.numIdentificacionAgenteEmpresarial, message.tipoIdentiAgenteEmpresarial), "alianza.smtp.templatepin.reiniciarContrasenaEmpresa", "alianza.smtp.asunto.reiniciarContrasenaEmpresa"), (_, _) => Unit)
               } yield { correoEnviado }
 
               resultCrearPinEmpresaAgenteEmpresarial onComplete {

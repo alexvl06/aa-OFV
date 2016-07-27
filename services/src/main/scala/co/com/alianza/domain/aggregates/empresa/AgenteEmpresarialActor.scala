@@ -50,7 +50,7 @@ class AgenteEmpresarialActorSupervisor extends Actor with ActorLogging with Futu
 
 }
 
-class AgenteEmpresarialActor(implicit val system: ActorSystem) extends Actor with ActorLogging with FutureResponse {
+class AgenteEmpresarialActor extends Actor with ActorLogging with FutureResponse {
 
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.errorValidacion
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.toErrorValidation
@@ -61,8 +61,8 @@ class AgenteEmpresarialActor(implicit val system: ActorSystem) extends Actor wit
   import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial.validarUsuarioAgente
   import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial.validacionEstadoActualizacionAgenteEmpresarial
 
-  import system.dispatcher
-  implicit val config: Config = system.settings.config
+  import context.dispatcher
+  implicit val config: Config = context.system.settings.config
 
   def receive = {
 
@@ -150,7 +150,7 @@ class AgenteEmpresarialActor(implicit val system: ActorSystem) extends Actor wit
    */
   private def enviarCorreoPin(pin: PinEmpresa, confTiempo: Configuracion, plantilla: String, asunto: String, usuario: String, correo: String): Future[Validation[ErrorValidacion, Int]] = {
     val message = buildMessage(pin, confTiempo.valor.toInt, plantilla, asunto, usuario, correo)
-    toErrorValidationCorreo(new SmtpServiceClient().send(message, (_, _) => 1))
+    toErrorValidationCorreo(new SmtpServiceClient()(context.system).send(message, (_, _) => 1))
   }
 
   /**

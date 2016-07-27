@@ -9,8 +9,8 @@ import scalaz.{ Failure => zFailure, Success => zSuccess }
 /**
  * Created by manuel on 18/12/14.
  */
-class UsuarioEmpresarialActor(implicit val system: ActorSystem) extends Actor with ActorLogging {
-  import system.dispatcher
+class UsuarioEmpresarialActor extends Actor with ActorLogging {
+  import context.dispatcher
 
   def receive = {
     case message: ConsultaUsuarioEmpresarialMessage =>

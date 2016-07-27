@@ -42,15 +42,15 @@ class PreguntasAutovalidacionSupervisor extends Actor with ActorLogging {
   }
 }
 
-case class PreguntasAutovalidacionActor(implicit val system: ActorSystem) extends Actor with ActorLogging with FutureResponse {
+case class PreguntasAutovalidacionActor()extends Actor with ActorLogging with FutureResponse {
 
   import scalaz.std.AllInstances._
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.errorValidacion
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.toErrorValidation
 
-  import system.dispatcher
+  import context.dispatcher
 
-  implicit val conf: Config = system.settings.config
+  implicit val conf: Config = context.system.settings.config
 
   def receive = {
 

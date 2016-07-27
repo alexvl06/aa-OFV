@@ -25,15 +25,14 @@ trait ServiceAuthorization {
 
   implicit val system: ActorSystem
   import system.dispatcher
-
-  implicit val autorizacionActorSupervisor: ActorRef
   implicit val conf: Config = system.settings.config
-  implicit val timeout: Timeout = Timeout(10 seconds)
+
+  implicit val timeout: Timeout = Timeout(10.seconds)
 
   def authenticateUser: ContextAuthenticator[UsuarioAuth] = {
     ctx =>
       val token = ctx.request.headers.find(header => header.name equals "token")
-      log info (token toString)
+      log info (token.toString)
       if (token.isEmpty) {
         Future(Left(AuthenticationFailedRejection(CredentialsMissing, List())))
       } else {
@@ -41,13 +40,14 @@ trait ServiceAuthorization {
         var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token.get.value)
         val tipoCliente = Token.getToken(decryptedToken).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
         val p = promise[Any]
-        var futuro: Future[Any] = null
-        if (tipoCliente == TiposCliente.agenteEmpresarial.toString)
+        val futuro: Future[Any] = Future{""}
+        //TODO: hay que poner el repo refactorizado
+        /*if (tipoCliente == TiposCliente.agenteEmpresarial.toString)
           futuro = autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialMessage(token.get.value, None, obtenerIp(ctx).get.value)
         else if (tipoCliente == TiposCliente.clienteAdministrador.toString)
           futuro = autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialAdminMessage(token.get.value, None)
         else
-          futuro = autorizacionActorSupervisor ? AutorizarUrl(token.get.value, "")
+          futuro = autorizacionActorSupervisor ? AutorizarUrl(token.get.value, "")*/
         futuro map {
           case r: ResponseMessage =>
             r.statusCode match {

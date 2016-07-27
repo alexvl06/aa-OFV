@@ -27,12 +27,17 @@ import scala.util.{ Failure, Success }
 import scalaz.Validation
 import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 
-class AutorizacionActorSupervisor extends Actor with ActorLogging {
+object AutorizacionActorSupervisor {
+
+  def props(sesionActorSupervisor: ActorRef) = Props(AutorizacionActorSupervisor(sesionActorSupervisor))
+}
+
+case class AutorizacionActorSupervisor(sesionActorSupervisor: ActorRef)  extends Actor with ActorLogging {
 
   import akka.actor.SupervisorStrategy._
   import akka.actor.OneForOneStrategy
 
-  val autorizacionActor = context.actorOf(Props[AutorizacionActor].withRouter(RoundRobinPool(nrOfInstances = 1)), "autorizacionActor")
+  val autorizacionActor = context.actorOf(AutorizacionActor.props(sesionActorSupervisor).withRouter(RoundRobinPool(nrOfInstances = 1)), "autorizacionActor")
   val autorizacionUsuarioEmpresarialActor = context.actorOf(
     Props[AutorizacionUsuarioEmpresarialActor].withRouter(RoundRobinPool(nrOfInstances = 1)),
     "autorizacionUsuarioEmpresarialActor"
@@ -62,13 +67,18 @@ class AutorizacionActorSupervisor extends Actor with ActorLogging {
 
 }
 
+object AutorizacionActor {
+
+  def props(sesionActorSupervisor: ActorRef) = Props(AutorizacionActor(sesionActorSupervisor))
+}
+
 /**
  * Realiza la validación de un token y si se está autorizado para acceder a la url
  * @author smontanez
  */
-class AutorizacionActor(implicit val system: ActorSystem, implicit val sesionActorSupervisor: ActorRef) extends Actor with ActorLogging with FutureResponse {
+case class AutorizacionActor(sesionActorSupervisor: ActorRef) extends Actor with ActorLogging with FutureResponse {
 
-  import system.dispatcher
+  import context.dispatcher
   import co.com.alianza.util.json.MarshallableImplicits._
   import scalaz.std.AllInstances._
   import scalaz.Validation

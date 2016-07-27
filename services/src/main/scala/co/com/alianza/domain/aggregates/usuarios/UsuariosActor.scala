@@ -85,10 +85,10 @@ class UsuariosActorSupervisor extends Actor with ActorLogging {
 /**
  *
  */
-class UsuariosActor(implicit val system: ActorSystem) extends Actor with ActorLogging {
+class UsuariosActor extends Actor with ActorLogging {
 
-  import system.dispatcher
-  implicit val config: Config = system.settings.config
+  import context.dispatcher
+  implicit val config: Config = context.system.settings.config
 
   import ValidacionesUsuario._
 
@@ -286,11 +286,11 @@ class UsuariosActor(implicit val system: ActorSystem) extends Actor with ActorLo
                   case zSuccess(intResult) =>
                     pin match {
                       case pinUsuarioDto @ PinUsuario(param1, param2, param3, param4, param5) =>
-                        new SmtpServiceClient().send(buildMessage(pinUsuarioDto, responseConf.valor.toInt, UsuarioMessage(correoCliente, identificacion, tipoIdentificacion, null, false, None), template, asunto), (_, _) => Unit)
+                        new SmtpServiceClient()(context.system).send(buildMessage(pinUsuarioDto, responseConf.valor.toInt, UsuarioMessage(correoCliente, identificacion, tipoIdentificacion, null, false, None), template, asunto), (_, _) => Unit)
                         currentSender ! ResponseMessage(Created)
 
                       case pinUsuarioEmpresarialAdminDto @ PinUsuarioEmpresarialAdmin(param1, param2, param3, param4, param5) =>
-                        new SmtpServiceClient().send(buildMessage(pinUsuarioEmpresarialAdminDto, responseConf.valor.toInt, UsuarioMessage(correoCliente, identificacion, tipoIdentificacion, null, false, None), template, asunto), (_, _) => Unit)
+                        new SmtpServiceClient()(context.system).send(buildMessage(pinUsuarioEmpresarialAdminDto, responseConf.valor.toInt, UsuarioMessage(correoCliente, identificacion, tipoIdentificacion, null, false, None), template, asunto), (_, _) => Unit)
                         currentSender ! ResponseMessage(Created)
                     }
                 }

@@ -20,7 +20,7 @@ case class PermisosTransaccionalesService(kafkaActor: ActorSelection, permisoTra
     extends Directives with AlianzaCommons with CrossHeaders {
   import system.dispatcher
   import PermisosTransaccionalesJsonSupport._
-  import system.dispatcher
+
   val rutaPermisosTx = "permisosTx"
   val permisosLogin = "permisosLogin"
 

@@ -26,9 +26,9 @@ import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 /**
  * Created by manuel on 16/12/14.
  */
-class AutorizacionUsuarioEmpresarialActor()(implicit val supervisor: ActorRef, implicit val system: ActorSystem)
-    extends Actor with ActorLogging with ValidacionesAutenticacionUsuarioEmpresarial {
-  import system.dispatcher
+class AutorizacionUsuarioEmpresarialActor() extends Actor with ActorLogging with ValidacionesAutenticacionUsuarioEmpresarial {
+
+  import context.dispatcher
   implicit val timeout = Timeout(120 seconds)
 
   def receive = {
@@ -114,7 +114,7 @@ class AutorizacionUsuarioEmpresarialActor()(implicit val supervisor: ActorRef, i
   }
 
   private def obtieneSesion(token: String): Future[Validation[ErrorAutorizacion, ActorRef]] =
-    supervisor ? BuscarSesion(token) map {
+    context.parent ? BuscarSesion(token) map {
       case Some(sesionActor: ActorRef) =>
         Validation.success(sesionActor)
       case None =>
@@ -219,7 +219,7 @@ class AutorizacionUsuarioEmpresarialActor()(implicit val supervisor: ActorRef, i
    */
   private def guardaTokenCache(usuarioOption: Option[UsuarioEmpresarial], message: AutorizarUsuarioEmpresarialMessage): Future[Option[UsuarioEmpresarial]] = {
 
-    val validacionSesion: Future[Boolean] = ask(supervisor, ValidarSesion(message.token)).mapTo[Boolean]
+    val validacionSesion: Future[Boolean] = ask(context.parent, ValidarSesion(message.token)).mapTo[Boolean]
     validacionSesion.map {
       case true => usuarioOption.map(usuario => usuario.copy(contrasena = None))
       case false => None
@@ -235,7 +235,7 @@ class AutorizacionUsuarioEmpresarialActor()(implicit val supervisor: ActorRef, i
    */
   private def guardaTokenAdminCache(usuarioOption: Option[(UsuarioEmpresarialAdmin, Int)], token: String): Future[Option[(UsuarioEmpresarialAdmin, Int)]] = {
 
-    val validacionSesion: Future[Boolean] = ask(supervisor, ValidarSesion(token)).mapTo[Boolean]
+    val validacionSesion: Future[Boolean] = ask(context.parent, ValidarSesion(token)).mapTo[Boolean]
     validacionSesion.map {
       case true => usuarioOption.map(usuario => (usuario._1.copy(contrasena = None), usuario._2))
       case false => None

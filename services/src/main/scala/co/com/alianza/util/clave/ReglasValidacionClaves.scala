@@ -162,7 +162,7 @@ case object UltimasContrasenas extends Regla("ULTIMAS_CONTRASENAS_NO_VALIDAS") {
                 }
             }
 
-            val extraccionFuturo = Await.result(UltimaContrasenaExiste, 8 seconds)
+            val extraccionFuturo = Await.result(UltimaContrasenaExiste, 8.seconds)
 
             extraccionFuturo match {
               case zSuccess(responseBol) =>
@@ -210,7 +210,7 @@ object ValidarClave {
 
   private def obtenerReglasToMap: Future[Validation[PersistenceException, Map[String, String]]] = {
     val reglasFuture = DataAccessAdapter.consultarReglasContrasenas()
-    reglasFuture.map(_.flatMap(list => zSuccess(list.map(x => (x.llave, x.valor)) toMap)))
+    reglasFuture.map(_.flatMap(list => zSuccess(list.map(x => (x.llave, x.valor)).toMap)))
 
   }
 
