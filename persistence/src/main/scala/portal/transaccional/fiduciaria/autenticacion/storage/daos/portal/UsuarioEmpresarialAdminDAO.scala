@@ -21,7 +21,9 @@ case class UsuarioEmpresarialAdminDAO(implicit dcConfig: DBConfig) extends Table
     run(this.filter(u => u.identificacion === identificacion && u.usuario === usuario).result.headOption)
   }
 
-  def createToken(idUsuario: Int, token: String): Future[Int] = ???
+  def createToken(idUsuario: Int, token: String): Future[Int] = {
+    run(this.filter(_.id === idUsuario).map(_.token).update(Some(token)))
+  }
 
   def updateIncorrectEntries(idUsuario: Int, numeroIntentos: Int): Future[Int] = {
     run(this.filter(_.id === idUsuario).map(_.numeroIngresosErroneos).update(numeroIntentos))

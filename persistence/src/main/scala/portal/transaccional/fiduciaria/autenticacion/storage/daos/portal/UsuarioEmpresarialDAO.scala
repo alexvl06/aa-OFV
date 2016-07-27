@@ -21,10 +21,6 @@ case class UsuarioEmpresarialDAO(implicit dcConfig: DBConfig) extends TableQuery
   }
 
   def createToken(idUsuario: Int, token: String): Future[Int] = {
-    println("createToken")
-    println("createToken")
-    println("createToken")
-    println("createToken")
     run(this.filter(_.id === idUsuario).map(_.token).update(Some(token)))
   }
 

@@ -28,7 +28,8 @@ import scala.reflect.ClassTag
 case class AutenticacionEmpresaDriverRepository(
     usuarioRepo: UsuarioEmpresarialRepository, usuarioAdminRepo: UsuarioEmpresarialAdminRepository, clienteCoreRepo: ClienteRepository,
     empresaRepo: EmpresaRepository, reglaRepo: ReglaContrasenaRepository, configuracionRepo: ConfiguracionRepository, ipRepo: IpEmpresaRepository,
-    sessionActor: ActorRef )(implicit val ex: ExecutionContext) extends AutenticacionEmpresaRepository {
+    sessionActor: ActorRef
+)(implicit val ex: ExecutionContext) extends AutenticacionEmpresaRepository {
 
   implicit val timeout = Timeout(5.seconds)
 
@@ -128,7 +129,7 @@ case class AutenticacionEmpresaDriverRepository(
    * - crear session de usuario
    */
   private def autenticarAdministrador(usuario: UsuarioEmpresarialAdmin, contrasena: String, ip: String): Future[String] = {
-    for{
+    for {
       empresa <- obtenerEmpresaValida(usuario.identificacion)
       reintentosErroneos <- reglaRepo.getRegla(LlavesReglaContrasena.CANTIDAD_REINTENTOS_INGRESO_CONTRASENA.llave)
       validar <- usuarioAdminRepo.validarUsuario(usuario, contrasena, reintentosErroneos.valor.toInt)
@@ -141,11 +142,11 @@ case class AutenticacionEmpresaDriverRepository(
       token <- generarTokenAdmin(usuario, ip, inactividad.llave)
       ips <- ipRepo.getIpsByEmpresaId(empresa.id)
       //respuestas <- respuestasRepo.getRespuestasById(usuario.id.get)
-      validacionIps <- ipRepo.validarControlIpAdmin(ip, ips, token, true)//TODO: AGREGAR LA PREGUNTA DE LAS RESPUESTAS(respuestas.nonEmpty)
+      validacionIps <- ipRepo.validarControlIpAdmin(ip, ips, token, true) //TODO: AGREGAR LA PREGUNTA DE LAS RESPUESTAS(respuestas.nonEmpty)
       asociarToken <- usuarioAdminRepo.actualizarToken(usuario.id, token)
       //TODO: poner la empresa (dto)
       sesion <- actorResponse[SesionActorSupervisor.SesionUsuarioCreada](sessionActor, CrearSesionUsuario(token, inactividad.valor.toInt))
-    }yield validacionIps
+    } yield validacionIps
   }
 
   private def obtenerEmpresaValida(nit: String): Future[Empresa] = {
