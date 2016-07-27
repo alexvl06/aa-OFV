@@ -28,8 +28,7 @@ class EmpresaActor(var empresa: Empresa, var horario: Option[HorarioEmpresa]) ex
   def receive = {
     case ActualizarEmpresa(empresa) => this.empresa = empresa
 
-    case AgregarSesion(sesion) =>
-      sesionesActivas = if (!sesionesActivas.contains(sesion)) List(sesion) ::: sesionesActivas else sesionesActivas
+    case AgregarSesion(sesion) => sesionesActivas = if (!sesionesActivas.contains(sesion)) List(sesion) ::: sesionesActivas else sesionesActivas
 
     case RemoverSesion(sesion) =>
       sesionesActivas = sesionesActivas filterNot { _ == sesion }
@@ -94,7 +93,7 @@ class BuscadorActorCluster(nombreActorPadre: String) extends Actor {
 
   def receive: Receive = {
     case BuscarActor(actorName) =>
-      interesado = sender;
+      interesado = sender
       nodosBusqueda foreach { member =>
         this.context.actorSelection(RootActorPath(member.address) / "user" / nombreActorPadre) ! EncontrarActor(actorName)
       }
@@ -115,7 +114,7 @@ object ClusterUtil {
   def obtenerNodos(implicit cluster: Cluster) = {
     val nodosUnreach: Set[Member] = cluster.state.unreachable // Lista de nodos en estado unreachable
     val nodosUp: SortedSet[Member] = cluster.state.members.filter(_.status == MemberStatus.up) // Lista de nodos en estado UP
-    nodosUp.filter(m => !nodosUnreach.contains(m)) // Lista de nodos que estan en estado UP y no son estan unreachable
+    nodosUp.diff(nodosUnreach) // Lista de nodos que estan en estado UP y no son estan unreachable
   }
 }
 

@@ -16,8 +16,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.util.{ Failure, Success }
 
-case class SesionActorSupervisor() extends Actor
-    with ActorLogging {
+case class SesionActorSupervisor() extends Actor with ActorLogging {
 
   import context.dispatcher
 
@@ -79,10 +78,10 @@ case class SesionActorSupervisor() extends Actor
   }
 
   private def buscarSesion(token: String) = {
-    var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT);
-    var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token);
-    val currentSender = sender()
-    val actorName = generarNombreSesionActor(decryptedToken)
+    var util: AesUtil = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT);
+    var decryptedToken: String = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token);
+    val currentSender: ActorRef = sender()
+    val actorName: String = generarNombreSesionActor(decryptedToken)
     context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(actorName) onComplete {
       case Failure(error) => log error ("Error al obtener la sesión", error)
       case Success(actor) => currentSender ! actor
@@ -98,15 +97,15 @@ case class SesionActorSupervisor() extends Actor
     }
   }
 
-  private def crearSesion(token: String, expiration: Int, empresa: Option[Empresa], horario: Option[HorarioEmpresa]) = {
-    var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
-    var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
-    val name = generarNombreSesionActor(decryptedToken)
+  def crearSesion(token: String, expiration: Int, empresa: Option[Empresa], horario: Option[HorarioEmpresa]): Unit = {
+    var util: AesUtil = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
+    var decryptedToken: String = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
+    val name: String = generarNombreSesionActor(decryptedToken)
     context.actorOf(SesionActor.props(expiration, empresa, horario), name)
     log.info("Creando sesion de usuario. Tiempo de expiracion: " + expiration + " minutos.")
   }
 
-  private def generarNombreSesionActor(token: String) =
+  private def generarNombreSesionActor(token: String): String =
     MessageDigest.getInstance("MD5").digest(token.split("\\.")(2).getBytes).map { b => String.format("%02X", java.lang.Byte.valueOf(b)) }.mkString("") // Actor's name
 
   private def obtenerEmpresaSesionActorId(empresaId: Int) = {
