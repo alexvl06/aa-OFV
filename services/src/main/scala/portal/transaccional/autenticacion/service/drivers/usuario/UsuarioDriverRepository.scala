@@ -95,15 +95,18 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
   def validarContrasena(contrasena: String, usuario: Usuario, reintentosErroneos: Int): Future[Boolean] = {
     val hash = Crypto.hashSha512(contrasena.concat(AppendPasswordUser.appendUsuariosFiducia), usuario.id.get)
     if (hash.contentEquals(usuario.contrasena.get)) {
-      //si las contraseñas no concuerdan, se debe:
+      Future.successful(true)
+    } else {
+      //si las contraseñas no concuerdan:
       //1. actualizar ingresos erroneos
       //2. bloquear usuario si es necesario
       val reintentos: Int = usuario.numeroIngresosErroneos + 1
       for {
         actualizarIngresos <- actualizarIngresosErroneosUsuario(usuario.id.get, reintentos)
         bloquear <- validarBloqueoUsuario(usuario.id.get, reintentos, reintentosErroneos)
-      } yield bloquear
-    } else Future.failed(ValidacionException("401.3", "Error Credenciales"))
+        error <- Future.failed(ValidacionException("401.3", "Error Credenciales"))
+      } yield error
+    }
   }
 
   /**

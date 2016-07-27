@@ -21,7 +21,7 @@ case class ClienteDriverCoreRepository(clienteCoreRepo: ClienteDAOs)(implicit va
     } yield cliente
   }
 
-  def validarCliente(clienteOption: Option[Cliente]): Future[Cliente] = {
+  private def validarCliente(clienteOption: Option[Cliente]): Future[Cliente] = {
     clienteOption match {
       case Some(cliente: Cliente) => Future.successful(cliente)
       case _ => Future.failed(ValidacionException("401.2", "No existe cliente core"))

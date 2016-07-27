@@ -26,20 +26,24 @@ case class AutenticacionDriverRepository(usuarioRepo: UsuarioRepository, cliente
 
   /**
    * Flujo:
-   * -) obtener usuario
-   * -) obtener regla de reintentos
-   * -) validar usuario
-   * -) obtener cliente core
-   * -) validar estado cliente core
-   * -) obtener regla dias
-   * -) validar caducidad
-   * -) actualizar usuario
-   * -) obtener ips
-   * -) validar ips
-   * -) obtener configuracion inactividad
-   * -) generar token
-   * -) asociar token
-   * -) crear session de usuario
+   * - obtener usuario
+   * - validar estado
+   * - obtener regla de reintentos
+   * - validar contrasena
+   * - obtener cliente core
+   * - validar estado cliente core
+   * - obtener regla dias
+   * - validar caducidad
+   * - actualizar ingresos erroneos
+   * - actualizar ip
+   * - actualizar fecha
+   * - obtener configuracion inactividad
+   * - generar token
+   * - asociar token
+   * - crear session de usuario
+   * - obtener respuestas
+   * - obtener ips
+   * - validar ip y respuestas
    */
   def autenticar(tipoIdentificacion: Int, numeroIdentificacion: String, contrasena: String, ip: String): Future[String] = {
     for {
@@ -60,9 +64,8 @@ case class AutenticacionDriverRepository(usuarioRepo: UsuarioRepository, cliente
       //TODO: pendiente agregar método de creación de la sesión
       //sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
       respuestas <- respuestasRepo.getRespuestasById(usuario.id.get)
-      tieneRespuestas <- respuestasRepo.validarRespuestas(respuestas)
       ips <- ipRepo.getIpsUsuarioById(usuario.id.get)
-      validacionIps <- ipRepo.validarControlIp(ip, ips, token, tieneRespuestas)
+      validacionIps <- ipRepo.validarControlIp(ip, ips, token, !respuestas.isEmpty)
     } yield validacionIps
   }
 
