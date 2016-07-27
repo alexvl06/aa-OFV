@@ -11,7 +11,7 @@ trait DomainJsonFormatters {
   this: CommonRESTFul =>
   //autenticacion
   implicit val autenticarFormatter = jsonFormat3(AutenticarRequest)
-  implicit val AutenticarUsuarioEmpresarialFormatter = jsonFormat4(AutenticarUsuarioEmpresarialRequest)
+  implicit val AutenticarUsuarioEmpresarialFormatter = jsonFormat3(AutenticarUsuarioEmpresarialRequest)
 
   //autorizacion
   implicit val invalidarTokenFormatter = jsonFormat1(InvalidarTokenRequest)

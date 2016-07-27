@@ -75,28 +75,15 @@ case class UsuarioEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs
 
   /**
    * Validacion de existencia, estado y contrasena
-   * @param usuarioOption
+   * @param usuario
    * @param contrasena
    * @return
    */
-  def validarUsuario(usuarioOption: Option[UsuarioEmpresarial], contrasena: String, reintentosErroneos: Int): Future[UsuarioEmpresarial] = {
+  def validarUsuario(usuario: UsuarioEmpresarial, contrasena: String, reintentosErroneos: Int): Future[Boolean] = {
     for {
-      usuario <- validarExiste(usuarioOption)
       estado <- validarEstado(usuario)
       contrasena <- validarContrasena(contrasena, usuario, reintentosErroneos)
-    } yield usuario
-  }
-
-  /**
-   * Validar si el usuario existe
-   * @param usuarioOption
-   * @return
-   */
-  def validarExiste(usuarioOption: Option[UsuarioEmpresarial]): Future[UsuarioEmpresarial] = {
-    usuarioOption match {
-      case Some(usuario: UsuarioEmpresarial) => Future.successful(usuario)
-      case _ => Future.failed(ValidacionException("401.3", "Error Credenciales"))
-    }
+    } yield contrasena
   }
 
   /**

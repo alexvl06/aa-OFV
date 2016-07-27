@@ -52,38 +52,7 @@ case class AutorizacionService(
             }
           }
         }
-    } ~ path("invalidarToken") {
-      entity(as[InvalidarToken]) {
-        token =>
-          delete {
-            respondWithMediaType(mediaType) {
-              var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
-              var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token.token)
-              clientIP { ip =>
-                mapRequestContext {
-                  r: RequestContext =>
-                    val tipoCliente = Token.getToken(decryptedToken).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
-                    val usuario: Future[Validation[PersistenceException, Option[AuditingUser.AuditingUserData]]] = if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
-                      AgenteEmpresarialDataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.token)
-                    } else if (tipoCliente == TiposCliente.clienteAdministrador.toString) {
-                      ClienteAdminDataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.token)
-                    } else {
-                      DataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.token)
-                    }
-                    requestWithFutureAuditing[PersistenceException, Usuario](r, AuditingHelper.fiduciariaTopic, AuditingHelper.cierreSesionIndex, ip.value, kafkaActor, usuario)
-                } {
-                  val tipoCliente = Token.getToken(decryptedToken).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
-                  if (tipoCliente == TiposCliente.agenteEmpresarial.toString)
-                    requestExecute(InvalidarTokenAgente(token.token), autorizacionActor)
-                  else if (tipoCliente == TiposCliente.clienteAdministrador.toString)
-                    requestExecute(InvalidarTokenClienteAdmin(token.token), autorizacionActor)
-                  else
-                    requestExecute(InvalidarToken(token.token), autorizacionActor)
-                }
-              }
-            }
-          }
-      }
     }
   }
+
 }

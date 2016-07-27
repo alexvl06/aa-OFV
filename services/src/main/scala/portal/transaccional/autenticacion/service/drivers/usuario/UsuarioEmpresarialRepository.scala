@@ -24,9 +24,7 @@ trait UsuarioEmpresarialRepository {
 
   def actualizarInfoUsuario(usuario: UsuarioEmpresarial, ip: String): Future[Int]
 
-  def validarUsuario(usuarioOption: Option[UsuarioEmpresarial], contrasena: String, reintentosErroneos: Int): Future[UsuarioEmpresarial]
-
-  def validarExiste(usuarioOption: Option[UsuarioEmpresarial]): Future[UsuarioEmpresarial]
+  def validarUsuario(usuario: UsuarioEmpresarial, contrasena: String, reintentosErroneos: Int): Future[Boolean]
 
   def validarEstado(usuario: UsuarioEmpresarial): Future[Boolean]
 

@@ -7,6 +7,6 @@ import scala.concurrent.Future
  */
 trait AutenticacionEmpresaRepository {
 
-  def autenticarUsuarioEmpresa(tipoIdentificacion: Int, numeroIdentificacion: String, usuario: String, password: String, clientIp: String): Future[String]
+  def autenticarUsuarioEmpresa(numeroIdentificacion: String, usuario: String, password: String, clientIp: String): Future[String]
 
 }

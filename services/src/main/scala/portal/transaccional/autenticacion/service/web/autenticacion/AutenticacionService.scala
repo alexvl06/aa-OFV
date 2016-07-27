@@ -22,9 +22,14 @@ case class AutenticacionService(autenticacionRepositorio: AutenticacionRepositor
   val route: Route = {
     pathPrefix(autenticar) {
       pathEndOrSingleSlash {
-        autenticarUsuarioIndividual ~ autenticarUsuarioEmpresarial
+        autenticarUsuarioIndividual
       }
-    }
+    } ~
+      pathPrefix(autenticarUsuarioEmpresa) {
+        pathEndOrSingleSlash {
+          autenticarUsuarioEmpresarial
+        }
+      }
   }
 
   private def autenticarUsuarioIndividual = {
@@ -47,25 +52,27 @@ case class AutenticacionService(autenticacionRepositorio: AutenticacionRepositor
   }
 
   private def autenticarUsuarioEmpresarial = {
-    path(autenticarUsuarioEmpresa) {
-      post {
-        entity(as[AutenticarUsuarioEmpresarialRequest]) {
-          request =>
-            clientIP { ip =>
-              val resultado: Future[String] =
-                autenticacionEmpresaRepositorio.autenticarUsuarioEmpresa(request.tipoIdentificacion, request.numeroIdentificacion,
-                  request.usuario, request.password, ip.value)
-              mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.autenticacionIndex,
-                ip.value, kafkaActor, request.copy(password = null))) {
-                onComplete(resultado) {
-                  case Success(value) => complete(value.toString)
-                  case Failure(ex) => execution(ex)
-                }
+    post {
+      entity(as[AutenticarUsuarioEmpresarialRequest]) {
+        request =>
+          clientIP { ip =>
+            println("en el servicio ")
+            val resultado: Future[String] =
+              autenticacionEmpresaRepositorio.autenticarUsuarioEmpresa(
+                request.nit,
+                request.usuario, request.password, ip.value
+              )
+            mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.autenticacionIndex,
+              ip.value, kafkaActor, request.copy(password = null))) {
+              onComplete(resultado) {
+                case Success(value) => complete(value.toString)
+                case Failure(ex) => execution(ex)
               }
             }
-        }
+          }
       }
     }
+
   }
 
   def execution(ex: Any): StandardRoute = {

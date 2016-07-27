@@ -1,12 +1,15 @@
 package portal.transaccional.autenticacion.service.web.autorizacion
 
-import akka.actor.ActorSelection
+import java.security.MessageDigest
+
+import akka.actor.{ ActorSelection, RootActorPath }
 import co.com.alianza.app.CrossHeaders
 import co.com.alianza.commons.enumerations.TiposCliente
+import co.com.alianza.domain.aggregates.autenticacion.{ ClusterUtil, DeleteSession }
 import co.com.alianza.exceptions.{ PersistenceException, ValidacionException }
 import co.com.alianza.infrastructure.auditing.{ AuditingHelper, KafkaActor }
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
-import co.com.alianza.infrastructure.dto.Usuario
+import co.com.alianza.infrastructure.dto.{ Empresa, Usuario }
 import co.com.alianza.util.token.{ AesUtil, Token }
 import enumerations.CryptoAesParameters
 import portal.transaccional.autenticacion.service.drivers.usuario.{ UsuarioEmpresarialAdminRepository, UsuarioEmpresarialRepository, UsuarioRepository }
@@ -67,17 +70,6 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
         }
     }
   }
-
-  /*private def validarToken(token: String) = {
-    get {
-        parameters('url, 'ipRemota) {
-          (url, ipRemota) =>
-            val util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
-            val encryptedToken = util.encrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
-              requestExecute(AutorizarUrl(encryptedToken, url), autorizacionActor)
-        }
-    }
-  }*/
 
   def execution(ex: Any): StandardRoute = {
     ex match {

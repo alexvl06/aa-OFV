@@ -44,13 +44,11 @@ case class AutenticacionEmpresaDriverRepository(
    *
    * Si no se cumple ninguna de las dos cosas se retorna ErrorCredencialesInvalidas
    */
-  def autenticarUsuarioEmpresa(tipoIdentificacion: Int, identificacion: String,
-    usuario: String, contrasena: String, ip: String): Future[String] = {
-    println("autenticar usuairo empresaaaaaaaaaaaa")
+  def autenticarUsuarioEmpresa(identificacion: String, usuario: String, contrasena: String, ip: String): Future[String] = {
     for {
       esAgente <- usuarioRepo.getByIdentityAndUser(identificacion, usuario)
       esAdmin <- usuarioAdminRepo.getByIdentityAndUser(identificacion, usuario)
-      autenticacion <- autenticar(esAgente, esAdmin, ip)
+      autenticacion <- autenticar(esAgente, esAdmin, contrasena, ip)
     } yield autenticacion
   }
 
@@ -62,11 +60,11 @@ case class AutenticacionEmpresaDriverRepository(
    * @return Future[Boolean]
    * Success => True
    */
-  private def autenticar(agente: Option[UsuarioEmpresarial], admin: Option[UsuarioEmpresarialAdmin], ip: String): Future[String] = {
+  private def autenticar(agente: Option[UsuarioEmpresarial], admin: Option[UsuarioEmpresarialAdmin], contrasena: String, ip: String): Future[String] = {
     if (agente.isDefined) {
-      autenticarAgente(agente.get, ip)
+      autenticarAgente(agente.get, contrasena, ip)
     } else if (admin.isDefined) {
-      autenticarAdministrador(admin.get, ip)
+      autenticarAdministrador(admin.get, contrasena, ip)
     } else { Future.failed(ValidacionException("401.3", "Error Credenciales")) }
   }
 
@@ -90,15 +88,13 @@ case class AutenticacionEmpresaDriverRepository(
    * - crear session de usuario
    */
   //TODO: CONTRASENA
-  private def autenticarAgente(agente: UsuarioEmpresarial, ip: String): Future[String] = {
-    println("autenticacion agente !!!!!!!!!!!!!!")
+  private def autenticarAgente(usuario: UsuarioEmpresarial, contrasena: String, ip: String): Future[String] = {
     for {
-      empresa <- obtenerEmpresaValida(agente.identificacion)
-      usuarioOption <- usuarioRepo.getByIdentityAndUser(agente.identificacion, agente.usuario)
+      empresa <- obtenerEmpresaValida(usuario.identificacion)
+      usuarioOption <- usuarioRepo.getByIdentityAndUser(usuario.identificacion, usuario.usuario)
       reintentosErroneos <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA.llave)
-      usuario <- usuarioRepo.validarUsuario(usuarioOption, agente.contrasena.get, reintentosErroneos.llave.toInt)
-      estado <- validarEstadoUsuario(usuario.estado)
-      cliente <- clienteCoreRepo.getCliente(agente.identificacion)
+      validar <- usuarioRepo.validarUsuario(usuario, contrasena, reintentosErroneos.valor.toInt)
+      cliente <- clienteCoreRepo.getCliente(usuario.identificacion)
       estadoCore <- clienteCoreRepo.validarEstado(cliente)
       reglaDias <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA.llave)
       caducidad <- usuarioRepo.validarCaducidadContrasena(TiposCliente.agenteEmpresarial, usuario, reglaDias.valor.toInt)
@@ -108,8 +104,8 @@ case class AutenticacionEmpresaDriverRepository(
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
       token <- generarTokenAgente(usuario, ip, inactividad.llave)
       asociarToken <- usuarioRepo.actualizarToken(usuario.id, token)
-      //TODO: poner la empresa (dto)
-      sesion <- actorResponse(sessionActor, CrearSesionUsuario(token, inactividad.valor.toInt))
+      //TODO: poner la empresa (dto) y arreglar session
+      //sesion <- actorResponse(sessionActor, CrearSesionUsuario(token, inactividad.valor.toInt))
     } yield token
   }
 
@@ -131,7 +127,7 @@ case class AutenticacionEmpresaDriverRepository(
    * 9) Se crea la sesion del usuario en el cluster
    * 10) Se valida si el usuario tiene alguna ip guardada, si es así se procede a validar si es una ip habitual, de lo contrario se genera un token (10), una sesion (11) y se responde con ErrorControlIpsDesactivado
    */
-  private def autenticarAdministrador(admin: UsuarioEmpresarialAdmin, ip: String): Future[String] = {
+  private def autenticarAdministrador(admin: UsuarioEmpresarialAdmin, contrasena: String, ip: String): Future[String] = {
     /*
     val validaciones: Future[Validation[ErrorAutenticacion, String]] = (for {
         estadoEmpresaOk <- ValidationT(validarEstadoEmpresa(message.nit))

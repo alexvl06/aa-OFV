@@ -70,7 +70,7 @@ case class AutenticacionDriverRepository(usuarioRepo: UsuarioRepository, cliente
       token <- generarToken(usuario, cliente, ip, inactividad.valor)
       asociarToken <- usuarioRepo.actualizarToken(numeroIdentificacion, token)
       //TODO: pendiente agregar método de creación de la sesión
-      sesion <- actorResponse(sessionActor, CrearSesionUsuario(token, inactividad.valor.toInt))
+      //sesion <- actorResponse(sessionActor, CrearSesionUsuario(token, inactividad.valor.toInt))
       //sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
       respuestas <- respuestasRepo.getRespuestasById(usuario.id.get)
       ips <- ipRepo.getIpsUsuarioById(usuario.id.get)
