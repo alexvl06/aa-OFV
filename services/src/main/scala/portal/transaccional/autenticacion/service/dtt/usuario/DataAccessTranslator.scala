@@ -4,7 +4,6 @@ import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.infrastructure.dto.UsuarioEmpresarialAdmin
 import co.com.alianza.persistence.entities.{ UsuarioEmpresarialAdmin => eUsuarioEmpresarialAdmin }
 
-}
 /**
  * Created by alexandra on 27/07/16.
  */

@@ -1,6 +1,6 @@
 package co.com.alianza.app
 
-import akka.actor.{ ActorSystem, Props }
+import akka.actor.{ ActorRef, ActorSystem, Props }
 import akka.cluster.Cluster
 import co.com.alianza.domain.aggregates.actualizacion.ActualizacionActorSupervisor
 import co.com.alianza.domain.aggregates.autenticacion._
@@ -25,7 +25,7 @@ import portal.transaccional.autenticacion.service.drivers.configuracion.Configur
 import portal.transaccional.autenticacion.service.drivers.empresa.EmpresaDriverRepository
 import portal.transaccional.autenticacion.service.drivers.ipempresa.IpEmpresaDriverRepository
 import portal.transaccional.autenticacion.service.drivers.ipusuario.IpUsuarioDriverRepository
-import portal.transaccional.autenticacion.service.drivers.reglas.{ ReglaContrasenaDriverRepository }
+import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaDriverRepository
 import portal.transaccional.autenticacion.service.drivers.respuesta.RespuestaUsuarioDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuario._
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.core.ClienteDAO
@@ -108,6 +108,9 @@ trait CoreActors {
 }
 
 trait Storage extends StoragePGAlianzaDB with BootedCore {
+
+  implicit val sessionActor : ActorRef
+
   lazy val empresaRepo = EmpresaDriverRepository(empresaDAO)(ex)
   lazy val usuarioRepo = UsuarioDriverRepository(usuarioDAO)(ex)
   lazy val clienteRepo = ClienteDriverCoreRepository(clienteDAO)(ex)
@@ -121,7 +124,7 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val autenticacionRepo = AutenticacionDriverRepository(usuarioRepo, clienteRepo, configuracionRepo, reglaContrasenaRepo, ipUsuarioRepo,
     respuestaUsuarioRepo)(ex)
   lazy val autenticacionEmpresaRepo = AutenticacionEmpresaDriverRepository(usuarioAgenteRepo, usuarioAdminRepo, clienteRepo, empresaRepo,
-    reglaContrasenaRepo, configuracionRepo, ipEmpresaRepo)(ex)
+    reglaContrasenaRepo, configuracionRepo, ipEmpresaRepo)(ex, sessionActor)
 }
 
 private[app] sealed trait StoragePGAlianzaDB extends BootedCore {

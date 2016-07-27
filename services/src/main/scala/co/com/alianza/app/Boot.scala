@@ -1,14 +1,12 @@
 package co.com.alianza.app
 
-import akka.actor.{ ActorSelection, ActorSystem, Props }
+import akka.actor.{ ActorRef, Props }
 import akka.io.IO
-import portal.transaccional.autenticacion.service.drivers.autenticacion.AutenticacionRepository
 import spray.can.Http
 
 object Boot extends App with HostBinding with Core with BootedCore with CoreActors with Storage {
 
-  import system.dispatcher
-
+ implicit val sessionActor: ActorRef = sesionActorSupervisor
   private val rootService = system.actorOf(Props(AlianzaRouter(autenticacionRepo, autenticacionEmpresaRepo, usuarioRepo,
     kafkaActor, preguntasAutovalidacionActor, usuariosActor, confrontaActor, actualizacionActor, permisoTransaccionalActor, agenteEmpresarialActor,
     pinActor, pinUsuarioEmpresarialAdminActor, pinUsuarioAgenteEmpresarialActor, ipsUsuarioActor, horarioEmpresaActor,
