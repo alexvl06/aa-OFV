@@ -6,7 +6,8 @@ import spray.can.Http
 
 object Boot extends App with HostBinding with Core with BootedCore with CoreActors with Storage {
 
-  implicit val sessionActor: ActorRef = sesionActorSupervisor
+  val sessionActor: ActorRef = sesionActorSupervisor
+
   private val rootService = system.actorOf(Props(AlianzaRouter(autenticacionRepo, autenticacionEmpresaRepo, usuarioRepo, usuarioAgenteRepo, usuarioAdminRepo,
     kafkaActor, preguntasAutovalidacionActor, usuariosActor, confrontaActor, actualizacionActor, permisoTransaccionalActor, agenteEmpresarialActor,
     pinActor, pinUsuarioEmpresarialAdminActor, pinUsuarioAgenteEmpresarialActor, ipsUsuarioActor, horarioEmpresaActor,
@@ -25,5 +26,5 @@ trait HostBinding {
     "0.0.0.0" //NetworkInterface.getByName( s"eth0" ).getInetAddresses.map( matchIp ).flatten.mkString
 
   private def matchIp(address: InetAddress): Option[String] =
-    """\b(?:\d{1,3}\.){3}\d{1,3}\b""".r.findFirstIn(address.getHostAddress())
+    """\b(?:\d{1,3}\.){3}\d{1,3}\b""".r.findFirstIn(address.getHostAddress)
 }
