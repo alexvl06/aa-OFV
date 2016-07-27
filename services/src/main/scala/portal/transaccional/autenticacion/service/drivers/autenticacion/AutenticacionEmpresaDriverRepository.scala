@@ -89,7 +89,6 @@ case class AutenticacionEmpresaDriverRepository(
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
       token <- generarTokenAgente(usuario, ip, inactividad.llave)
       asociarToken <- usuarioRepo.actualizarToken(usuario.id, token)
-      //TODO: pendiente agregar método de creación de la sesión
       sesion <- actorResponse (sessionActor , CrearSesionUsuario(token, inactividad.valor.toInt, None, None))
     } yield token
   }
