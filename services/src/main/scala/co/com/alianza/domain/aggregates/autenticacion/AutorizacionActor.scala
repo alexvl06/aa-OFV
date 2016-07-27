@@ -51,7 +51,7 @@ case class AutorizacionActorSupervisor(sesionActorSupervisor: ActorRef) extends 
     case m: AutorizarUsuarioEmpresarialAdminMessage =>
       autorizacionUsuarioEmpresarialActor forward m; log.info(m.toString)
 
-    case message: Any => autorizacionActor forward message; log.info(message.toString)
+    case message: Any => println("LO ESTOY MANEJANDO !!") ;  autorizacionActor forward message; log.info(message.toString)
 
   }
 
@@ -134,6 +134,7 @@ case class AutorizacionActor(sesionActorSupervisor: ActorRef) extends Actor with
    * @param token El token para realizar validación
    */
   private def validarToken(token: String): Future[Validation[PersistenceException, Option[Usuario]]] = {
+    println("2.0 LO ESTOY MANEJANDO !!") ;
     var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
     var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
     Token.autorizarToken(decryptedToken) match {
@@ -156,10 +157,11 @@ case class AutorizacionActor(sesionActorSupervisor: ActorRef) extends Actor with
    * @return
    */
   private def guardaTokenCache(usuarioOption: Option[Usuario], token: String): Future[Option[Usuario]] = {
+    println("3.0 LO ESTOY MANEJANDO !!") ;
     val validacionSesion: Future[Boolean] = ask(sesionActorSupervisor, ValidarSesion(token)).mapTo[Boolean]
     validacionSesion.map {
-      case true => usuarioOption.map(usuario => usuario.copy(contrasena = None))
-      case false => None
+      case true => println("4.0.1 LO ESTOY MANEJANDO !!") ; usuarioOption.map(usuario => usuario.copy(contrasena = None))
+      case false => println("4.0.2 LO ESTOY MANEJANDO !!") ; None
     }
   }
 

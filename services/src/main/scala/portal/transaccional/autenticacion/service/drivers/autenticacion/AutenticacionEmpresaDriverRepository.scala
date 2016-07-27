@@ -142,7 +142,7 @@ case class AutenticacionEmpresaDriverRepository(
       ips <- ipRepo.getIpsByEmpresaId(empresa.id)
       //respuestas <- respuestasRepo.getRespuestasById(usuario.id.get)
       validacionIps <- ipRepo.validarControlIpAdmin(ip, ips, token, true)//TODO: AGREGAR LA PREGUNTA DE LAS RESPUESTAS(respuestas.nonEmpty)
-      asociarToken <- usuarioAdminRepo.actualizarToken(usuario.id, token)
+      //asociarToken <- usuarioAdminRepo.actualizarToken(usuario.id, token) //TODO: NO ESTA IMPLEMENTADO EL DAO
       //TODO: poner la empresa (dto)
       sesion <- actorResponse[SesionActorSupervisor.SesionUsuarioCreada](sessionActor, CrearSesionUsuario(token, inactividad.valor.toInt))
     }yield validacionIps

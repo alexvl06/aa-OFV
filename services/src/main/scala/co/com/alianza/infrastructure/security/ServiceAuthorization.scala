@@ -42,7 +42,6 @@ trait ServiceAuthorization {
         var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token.get.value)
         val tipoCliente = Token.getToken(decryptedToken).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
 
-        //TODO: hay que poner el repo refactorizado
         val futuro =
           if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
             autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialMessage(token.get.value, None, obtenerIp(ctx).get.value)
@@ -69,7 +68,10 @@ trait ServiceAuthorization {
                 val user = JsonUtil.fromJson[UsuarioForbidden](r.responseBody)
                 Right(UsuarioAuth(user.usuario.id.get, user.usuario.tipoCliente, user.usuario.identificacion, user.usuario.tipoIdentificacion))
             }
-          case _ =>
+          case ex : Any =>
+            println("*************************")
+            println(ex)
+            println("*************************")
             Left(AuthenticationFailedRejection(CredentialsRejected, List()))
         }
       }
