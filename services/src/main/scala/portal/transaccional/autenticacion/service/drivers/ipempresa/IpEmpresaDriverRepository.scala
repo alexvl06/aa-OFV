@@ -26,10 +26,10 @@ case class IpEmpresaDriverRepository(ipDAO: IpEmpresaDAOs)(implicit val ex: Exec
    * @param ips
    * @return
    */
-  def validarControlIpAgente(ip: String, ips: Seq[IpsEmpresa]): Future[Boolean] = {
+  def validarControlIpAgente(ip: String, ips: Seq[IpsEmpresa], token: String): Future[Boolean] = {
     val tieneIp = ips.exists(_.ip == ip)
     if (tieneIp) Future.successful(true)
-    else Future.failed(ValidacionException("401.4", "Error control ip"))
+    else Future.failed(ValidacionException("401.4", token))
   }
 
   /**
