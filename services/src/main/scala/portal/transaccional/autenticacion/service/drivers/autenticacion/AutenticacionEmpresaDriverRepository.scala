@@ -9,6 +9,7 @@ import akka.util.Timeout
 import scala.concurrent.duration._
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.constants.{ LlavesReglaContrasena, TiposConfiguracion }
+import co.com.alianza.domain.aggregates.autenticacion.SesionActorSupervisor
 import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.infrastructure.messages.CrearSesionUsuario
 import co.com.alianza.persistence.entities.{ Empresa, UsuarioEmpresarial, UsuarioEmpresarialAdmin }
@@ -104,8 +105,8 @@ case class AutenticacionEmpresaDriverRepository(
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
       token <- generarTokenAgente(usuario, ip, inactividad.llave)
       asociarToken <- usuarioRepo.actualizarToken(usuario.id, token)
-      //TODO: poner la empresa (dto) y arreglar session
-      //sesion <- actorResponse(sessionActor, CrearSesionUsuario(token, inactividad.valor.toInt))
+      //TODO: poner la empresa (dto)
+      sesion <- actorResponse[SesionActorSupervisor.SesionUsuarioCreada](sessionActor, CrearSesionUsuario(token, inactividad.valor.toInt))
     } yield token
   }
 

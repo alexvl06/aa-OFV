@@ -8,6 +8,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.constants.{ LlavesReglaContrasena, TiposConfiguracion }
+import co.com.alianza.domain.aggregates.autenticacion.SesionActorSupervisor
 import co.com.alianza.infrastructure.dto.Cliente
 import co.com.alianza.infrastructure.messages.CrearSesionUsuario
 import co.com.alianza.persistence.entities.Usuario
@@ -69,9 +70,7 @@ case class AutenticacionDriverRepository(usuarioRepo: UsuarioRepository, cliente
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
       token <- generarToken(usuario, cliente, ip, inactividad.valor)
       asociarToken <- usuarioRepo.actualizarToken(numeroIdentificacion, token)
-      //TODO: pendiente agregar método de creación de la sesión
-      //sesion <- actorResponse(sessionActor, CrearSesionUsuario(token, inactividad.valor.toInt))
-      //sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
+      rsp <- actorResponse[SesionActorSupervisor.SesionUsuarioCreada](sessionActor, CrearSesionUsuario(token, inactividad.valor.toInt))
       respuestas <- respuestasRepo.getRespuestasById(usuario.id.get)
       ips <- ipRepo.getIpsUsuarioById(usuario.id.get)
       validacionIps <- ipRepo.validarControlIp(ip, ips, token, !respuestas.isEmpty)
