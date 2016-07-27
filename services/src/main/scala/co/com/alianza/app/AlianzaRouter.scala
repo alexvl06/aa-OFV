@@ -12,12 +12,13 @@ import portal.transaccional.autenticacion.service.drivers.autenticacion.{ Autent
 import portal.transaccional.autenticacion.service.drivers.usuario.{ UsuarioEmpresarialAdminRepository, UsuarioEmpresarialRepository, UsuarioRepository }
 
 case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, autenticacionEmpresaRepositorio: AutenticacionEmpresaRepository,
-    usuarioRepositorio: UsuarioRepository, usuarioAgenteRepositorio: UsuarioEmpresarialRepository, usuarioAdminRepositorio: UsuarioEmpresarialAdminRepository,
-    kafkaActor: ActorSelection, preguntasAutovalidacionActor: ActorSelection,
-    usuariosActor: ActorSelection, confrontaActor: ActorSelection, actualizacionActor: ActorSelection, permisoTransaccionalActor: ActorSelection,
-    agenteEmpresarialActor: ActorSelection, pinActor: ActorSelection, pinUsuarioEmpresarialAdminActor: ActorSelection,
-    pinUsuarioAgenteEmpresarialActor: ActorSelection, ipsUsuarioActor: ActorSelection, horarioEmpresaActor: ActorSelection,
-    contrasenasAgenteEmpresarialActor: ActorSelection, contrasenasClienteAdminActor: ActorSelection, contrasenasActor: ActorSelection)(implicit val system: ActorSystem) extends HttpServiceActor with RouteConcatenation with CrossHeaders with ServiceAuthorization with ActorLogging {
+  usuarioRepositorio: UsuarioRepository, usuarioAgenteRepositorio: UsuarioEmpresarialRepository, usuarioAdminRepositorio: UsuarioEmpresarialAdminRepository,
+  kafkaActor: ActorSelection, preguntasAutovalidacionActor: ActorSelection, usuariosActor: ActorSelection, confrontaActor: ActorSelection,
+  actualizacionActor: ActorSelection, permisoTransaccionalActor: ActorSelection, agenteEmpresarialActor: ActorSelection, pinActor: ActorSelection,
+  pinUsuarioEmpresarialAdminActor: ActorSelection, pinUsuarioAgenteEmpresarialActor: ActorSelection, ipsUsuarioActor: ActorSelection,
+  horarioEmpresaActor: ActorSelection, contrasenasAgenteEmpresarialActor: ActorSelection, contrasenasClienteAdminActor: ActorSelection,
+  contrasenasActor: ActorSelection, autorizacionActorSupervisor: ActorRef )(implicit val system: ActorSystem) extends HttpServiceActor with RouteConcatenation
+  with CrossHeaders with ServiceAuthorization with ActorLogging {
 
   import system.dispatcher
 

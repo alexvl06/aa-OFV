@@ -38,23 +38,17 @@ case class AutorizacionActorSupervisor(sesionActorSupervisor: ActorRef) extends 
   import akka.actor.OneForOneStrategy
 
   val autorizacionActor = context.actorOf(AutorizacionActor.props(sesionActorSupervisor).withRouter(RoundRobinPool(nrOfInstances = 1)), "autorizacionActor")
-  val autorizacionUsuarioEmpresarialActor = context.actorOf(
-    Props[AutorizacionUsuarioEmpresarialActor].withRouter(RoundRobinPool(nrOfInstances = 1)),
+  val autorizacionUsuarioEmpresarialActor = context.actorOf( Props[AutorizacionUsuarioEmpresarialActor].withRouter(RoundRobinPool(nrOfInstances = 1)),
     "autorizacionUsuarioEmpresarialActor"
   )
 
-  def receive = {
+  def receive: PartialFunction[Any, Unit] = {
 
-    case m: AutorizarUsuarioEmpresarialMessage =>
-      autorizacionUsuarioEmpresarialActor forward m
-      log info (m toString)
+    case m: AutorizarUsuarioEmpresarialMessage => autorizacionUsuarioEmpresarialActor forward m ; log.info(m.toString)
 
-    case m: AutorizarUsuarioEmpresarialAdminMessage =>
-      autorizacionUsuarioEmpresarialActor forward m
-      log info (m toString)
+    case m: AutorizarUsuarioEmpresarialAdminMessage => autorizacionUsuarioEmpresarialActor forward m ; log.info(m.toString)
 
-    case message: Any =>
-      autorizacionActor forward message; log info (message toString)
+    case message: Any => autorizacionActor forward message; log.info(message.toString)
 
   }
 
