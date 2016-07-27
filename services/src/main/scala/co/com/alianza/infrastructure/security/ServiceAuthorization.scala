@@ -27,29 +27,38 @@ trait ServiceAuthorization {
   import system.dispatcher
   implicit val conf: Config = system.settings.config
 
+  val autorizacionActorSupervisor: ActorRef
+
   implicit val timeout: Timeout = Timeout(10.seconds)
 
   def authenticateUser: ContextAuthenticator[UsuarioAuth] = {
     ctx =>
       val token = ctx.request.headers.find(header => header.name equals "token")
-      log info (token.toString)
+      log.info(token.toString)
       if (token.isEmpty) {
         Future(Left(AuthenticationFailedRejection(CredentialsMissing, List())))
       } else {
         var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
         var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token.get.value)
         val tipoCliente = Token.getToken(decryptedToken).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
-        val p = promise[Any]
-        val futuro: Future[Any] = Future { "" }
+
         //TODO: hay que poner el repo refactorizado
-        /*if (tipoCliente == TiposCliente.agenteEmpresarial.toString)
-          futuro = autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialMessage(token.get.value, None, obtenerIp(ctx).get.value)
-        else if (tipoCliente == TiposCliente.clienteAdministrador.toString)
-          futuro = autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialAdminMessage(token.get.value, None)
-        else
-          futuro = autorizacionActorSupervisor ? AutorizarUrl(token.get.value, "")*/
-        futuro map {
+        val futuro =
+          if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
+            autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialMessage(token.get.value, None, obtenerIp(ctx).get.value)
+          } else if (tipoCliente == TiposCliente.clienteAdministrador.toString) {
+            autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialAdminMessage(token.get.value, None)
+          } else {
+            autorizacionActorSupervisor ? AutorizarUrl(token.get.value, "")
+          }
+
+        futuro.map {
           case r: ResponseMessage =>
+
+            println("*************************")
+            println(r)
+            println("*************************")
+
             r.statusCode match {
               case Unauthorized =>
                 Left(AuthenticationFailedRejection(CredentialsRejected, List(), Some(Unauthorized.intValue), Some(r.responseBody)))
@@ -59,7 +68,6 @@ trait ServiceAuthorization {
               case Forbidden =>
                 val user = JsonUtil.fromJson[UsuarioForbidden](r.responseBody)
                 Right(UsuarioAuth(user.usuario.id.get, user.usuario.tipoCliente, user.usuario.identificacion, user.usuario.tipoIdentificacion))
-
             }
           case _ =>
             Left(AuthenticationFailedRejection(CredentialsRejected, List()))

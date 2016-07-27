@@ -14,10 +14,22 @@ import enumerations.CryptoAesParameters
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
-import scala.util.{ Failure, Success }
+import scala.util.{ Failure, Success, Try }
+
+/**
+ * Define los mensajes generados por el actor que maneja las sessiones
+ */
+object SesionActorSupervisor {
+
+  case class SesionUsuarioCreada()
+
+  case class SesionUsuarioNoCreada()
+
+}
 
 case class SesionActorSupervisor() extends Actor with ActorLogging {
 
+  import SesionActorSupervisor._
   import context.dispatcher
 
   implicit val conf: Config = context.system.settings.config
@@ -98,19 +110,24 @@ case class SesionActorSupervisor() extends Actor with ActorLogging {
   }
 
   def crearSesion(token: String, expiration: Int, empresa: Option[Empresa]): Unit = {
-
-    println("...................................")
-    println("........CREAR SESSION..............")
-
     var util: AesUtil = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
     var decryptedToken: String = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
     val name: String = generarNombreSesionActor(decryptedToken)
-    context.actorOf(SesionActor.props(expiration, empresa), name)
-    log.info("Creando sesion de usuario. Tiempo de expiracion: " + expiration + " minutos.")
+    Try(context.actorOf(SesionActor.props(expiration, empresa), name))
+      .map { _ =>
+        log.info("Creando sesion de usuario. Tiempo de expiracion: " + expiration + " minutos.")
+        sender() ! SesionUsuarioCreada()
+      }.recover {
+        case e =>
+          e.printStackTrace()
+          sender() ! SesionUsuarioNoCreada()
+      }.get
   }
 
-  private def generarNombreSesionActor(token: String): String =
-    MessageDigest.getInstance("MD5").digest(token.split("\\.")(2).getBytes).map { b => String.format("%02X", java.lang.Byte.valueOf(b)) }.mkString("") // Actor's name
+  private def generarNombreSesionActor(token: String): String = {
+    MessageDigest.getInstance("MD5").digest(token.split("\\.")(2).getBytes).map { b => String.format("%02X", java.lang.Byte.valueOf(b)) }
+      .mkString("")
+  } // Actor's name
 
   private def obtenerEmpresaSesionActorId(empresaId: Int) = {
     val currentSender = sender()
@@ -137,7 +154,9 @@ class SesionActor(expiracionSesion: Int, empresa: Option[Empresa]) extends Actor
   private var killTask: Cancellable = scheduler.scheduleOnce(expiracionSesion.minutes, self, ExpirarSesion())
 
   // PostStop function
-  override def postStop(): Unit = killTask.cancel()
+  override def postStop(): Unit = {
+    killTask.cancel()
+  }
 
   var empresaActor: Option[ActorRef] = None
 
@@ -154,8 +173,9 @@ class SesionActor(expiracionSesion: Int, empresa: Option[Empresa]) extends Actor
 
     case msg: ExpirarSesion =>
       log.info("Eliminando sesión de usuario: " + self.path.name)
-      if (empresaActor.isDefined)
+      if (empresaActor.isDefined) {
         empresaActor.get ! RemoverSesion(self)
+      }
       context.stop(self)
 
     case empresaActor: ActorRef =>
@@ -166,14 +186,16 @@ class SesionActor(expiracionSesion: Int, empresa: Option[Empresa]) extends Actor
 
   }
 
-  private def inicializaEmpresaActor() = if (empresa.isDefined) {
-    context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(s"empresa${empresa.get.id}") map {
-      case Some(empresaActor: ActorRef) => self ! empresaActor
-      case None =>
-        context.parent ? CrearEmpresaActor(empresa.get) map {
-          case empresaActor: ActorRef => self ! empresaActor
-          case None => log error s"Sesión empresa '${empresa.get.id}' no creada!!"
-        }
+  private def inicializaEmpresaActor() = {
+    if (empresa.isDefined) {
+      context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(s"empresa${empresa.get.id}") map {
+        case Some(empresaActor: ActorRef) => self ! empresaActor
+        case None =>
+          context.parent ? CrearEmpresaActor(empresa.get) map {
+            case empresaActor: ActorRef => self ! empresaActor
+            case None => log error s"Sesión empresa '${empresa.get.id}' no creada!!"
+          }
+      }
     }
   }
 

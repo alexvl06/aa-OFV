@@ -9,6 +9,7 @@ import akka.util.Timeout
 import scala.concurrent.duration._
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.constants.{ LlavesReglaContrasena, TiposConfiguracion }
+import co.com.alianza.domain.aggregates.autenticacion.SesionActorSupervisor
 import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.infrastructure.messages.CrearSesionUsuario
 import co.com.alianza.persistence.entities.{ Empresa, UsuarioEmpresarial, UsuarioEmpresarialAdmin }
@@ -24,13 +25,10 @@ import portal.transaccional.autenticacion.service.drivers.usuario.{ UsuarioEmpre
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.reflect.ClassTag
 
-/**
- * Created by hernando on 26/07/16.
- */
 case class AutenticacionEmpresaDriverRepository(
     usuarioRepo: UsuarioEmpresarialRepository, usuarioAdminRepo: UsuarioEmpresarialAdminRepository, clienteCoreRepo: ClienteRepository,
-    empresaRepo: EmpresaRepository, reglaRepo: ReglaContrasenaRepository, configuracionRepo: ConfiguracionRepository, ipRepo: IpEmpresaRepository
-)(implicit val ex: ExecutionContext, sessionActor: ActorRef) extends AutenticacionEmpresaRepository {
+    empresaRepo: EmpresaRepository, reglaRepo: ReglaContrasenaRepository, configuracionRepo: ConfiguracionRepository, ipRepo: IpEmpresaRepository,
+    sessionActor: ActorRef )(implicit val ex: ExecutionContext) extends AutenticacionEmpresaRepository {
 
   implicit val timeout = Timeout(5.seconds)
 
@@ -54,9 +52,9 @@ case class AutenticacionEmpresaDriverRepository(
 
   /**
    * Autentica según el tipo de cliente (Agente, o Admin)
-   * @param agente
-   * @param admin
-   * @param ip
+   * @param agente Posible agente empresarial que quiera autenticarse
+   * @param admin Posible admin empresarial que quiera autenticarse
+   * @param ip Ip del usuario que desea autenticarse
    * @return Future[Boolean]
    * Success => True
    */
@@ -87,11 +85,9 @@ case class AutenticacionEmpresaDriverRepository(
    * - asociar token
    * - crear session de usuario
    */
-  //TODO: CONTRASENA
   private def autenticarAgente(usuario: UsuarioEmpresarial, contrasena: String, ip: String): Future[String] = {
     for {
       empresa <- obtenerEmpresaValida(usuario.identificacion)
-      usuarioOption <- usuarioRepo.getByIdentityAndUser(usuario.identificacion, usuario.usuario)
       reintentosErroneos <- reglaRepo.getRegla(LlavesReglaContrasena.CANTIDAD_REINTENTOS_INGRESO_CONTRASENA.llave)
       validar <- usuarioRepo.validarUsuario(usuario, contrasena, reintentosErroneos.valor.toInt)
       cliente <- clienteCoreRepo.getCliente(usuario.identificacion)
@@ -104,8 +100,8 @@ case class AutenticacionEmpresaDriverRepository(
       ips <- ipRepo.getIpsByEmpresaId(empresa.id)
       validacionIps <- ipRepo.validarControlIpAgente(ip, ips, token)
       asociarToken <- usuarioRepo.actualizarToken(usuario.id, token)
-      //TODO: poner la empresa (dto) y arreglar session
-      //sesion <- actorResponse(sessionActor, CrearSesionUsuario(token, inactividad.valor.toInt))
+      //TODO: poner la empresa (dto)
+      sesion <- actorResponse[SesionActorSupervisor.SesionUsuarioCreada](sessionActor, CrearSesionUsuario(token, inactividad.valor.toInt))
     } yield token
   }
 
@@ -115,65 +111,41 @@ case class AutenticacionEmpresaDriverRepository(
 
   /**
    * Flujo:
-   * 1) Busca el usuario administrados en la base de datos, si no se encuentra se devuelve CredencialesInvalidas
-   * 2) Valida los estados del usuario encontrado, esta validacion devuelve un tipo de error por estado, si es exitosa se continúa el proceso
-   * 3) Se comparan los passwords de la petición y el usuario, si coinciden se prosigue de lo contrario se debe ejecutar la excepcion de pw inválido
-   * 4) Se busca el cliente en el core de alianza, si no se encuentra se debe devolver ErrorClienteNoExisteCore
-   * 5) Se valida el cliente encontrado, este metodo devuelve un error de la validacion que no cumple
-   * 6) Se valida la fecha de caducacion del password, si caducó se debe devolver ErrorPasswordCaducado, de lo contrario se prosigue
-   * ------- Si pasan las 6 validaciones anteriores, el usuario se considera como usuario autenticado --------
-   * 7) Se actualiza la información de numIngresosErroneos, ipUltimoIngreso y fechaUltimoIngreso del usuario
-   * 8) Se genera un token y se asocia al usuario
-   * 9) Se crea la sesion del usuario en el cluster
-   * 10) Se valida si el usuario tiene alguna ip guardada, si es así se procede a validar si es una ip habitual, de lo contrario se genera un token (10), una sesion (11) y se responde con ErrorControlIpsDesactivado
+   * - buscar y validar empresa
+   * - obtener regla de reintentos
+   * - validar usuario
+   * - obtener cliente core
+   * - validar estado cliente core
+   * - obtener regla dias
+   * - validar caducidad
+   * - actualizar usuario
+   * - obtener configuracion inactividad
+   * - generar token
+   * - obtener ips
+   * - obtener respuestas
+   * - validar ips
+   * - asociar token
+   * - crear session de usuario
    */
-  private def autenticarAdministrador(admin: UsuarioEmpresarialAdmin, contrasena: String, ip: String): Future[String] = {
-    /*
-    val validaciones: Future[Validation[ErrorAutenticacion, String]] = (for {
-        estadoEmpresaOk <- ValidationT(validarEstadoEmpresa(message.nit))
-        usuarioAdmin <- ValidationT(obtenerUsuarioEmpresarialAdmin(message.nit, message.usuario))
-        estadoValido <- ValidationT(validarEstadosUsuario(usuarioAdmin.estado))
-        passwordValido <- ValidationT(validarPasswords(message.password, usuarioAdmin.contrasena.getOrElse(""), None, Some(usuarioAdmin.id), usuarioAdmin.numeroIngresosErroneos))
-        cliente <- ValidationT(obtenerClienteSP(usuarioAdmin.identificacion, usuarioAdmin.tipoIdentificacion))
-        cienteValido <- ValidationT(validarClienteSP(cliente))
-        passwordCaduco <- ValidationT(validarCaducidadPassword(TiposCliente.clienteAdministrador, usuarioAdmin.id, usuarioAdmin.fechaCaducidad))
-        actualizacionInfo <- ValidationT(actualizarInformacionUsuarioEmpresarialAdmin(usuarioAdmin.id, message.clientIp.get))
-        inactividadConfig <- ValidationT(buscarConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave))
-        token <- ValidationT(generarYAsociarTokenUsuarioEmpresarialAdmin(cliente, usuarioAdmin, message.nit, inactividadConfig.valor, message.clientIp.get))
-        sesion <- ValidationT(crearSesion(token, inactividadConfig.valor.toInt))
-        empresa <- ValidationT(obtenerEmpresaPorNit(message.nit))
-        validacionPreguntas <- ValidationT(validarPreguntasUsuarioAdmin(usuarioAdmin.id))
-        validacionIps <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token, usuarioAdmin.tipoIdentificacion, validacionPreguntas))
-      } yield validacionIps).run
-
-      validaciones.onComplete {
-        case sFailure(_) => originalSender ! _
-        case sSuccess(resp) => resp match {
-          case zSuccess(token) => originalSender ! token
-          case zFailure(errorAutenticacion) => errorAutenticacion match {
-            case err @ ErrorPersistencia(_, ep1) => originalSender ! ep1
-            case err @ ErrorPasswordInvalido(_, idUsuario, numIngresosErroneosUsuario) =>
-
-              val ejecucion: Future[Validation[ErrorAutenticacion, Boolean]] = (for {
-                ingresosErroneos <- ValidationT(actualizarIngresosErroneosUsuarioEmpresarialAdmin(idUsuario.get, numIngresosErroneosUsuario + 1))
-                regla <- ValidationT(buscarRegla("CANTIDAD_REINTENTOS_INGRESO_CONTRASENA"))
-                bloqueo <- ValidationT(bloquearUsuarioEmpresarialAdmin(idUsuario.get, numIngresosErroneosUsuario, regla))
-              } yield bloqueo).run
-
-              ejecucion.onFailure { case _ => originalSender ! _ }
-              ejecucion.onSuccess {
-                case zSuccess(_) => originalSender ! ResponseMessage(Unauthorized, err.msg)
-                case zFailure(errorBloqueo) => errorBloqueo match {
-                  case errb @ ErrorPersistencia(_, ep2) => originalSender ! ep2
-                  case _ => originalSender ! ResponseMessage(Unauthorized, errorBloqueo.msg)
-                }
-              }
-
-            case _ => originalSender ! ResponseMessage(Unauthorized, errorAutenticacion.msg)
-          }
-        }
-    * */
-    Future.successful("")
+  private def autenticarAdministrador(usuario: UsuarioEmpresarialAdmin, contrasena: String, ip: String): Future[String] = {
+    for{
+      empresa <- obtenerEmpresaValida(usuario.identificacion)
+      reintentosErroneos <- reglaRepo.getRegla(LlavesReglaContrasena.CANTIDAD_REINTENTOS_INGRESO_CONTRASENA.llave)
+      validar <- usuarioAdminRepo.validarUsuario(usuario, contrasena, reintentosErroneos.valor.toInt)
+      cliente <- clienteCoreRepo.getCliente(usuario.identificacion)
+      estadoCore <- clienteCoreRepo.validarEstado(cliente)
+      reglaDias <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA.llave)
+      caducidad <- usuarioAdminRepo.validarCaducidadContrasena(TiposCliente.agenteEmpresarial, usuario, reglaDias.valor.toInt)
+      actualizar <- usuarioAdminRepo.actualizarInfoUsuario(usuario, ip)
+      inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
+      token <- generarTokenAdmin(usuario, ip, inactividad.llave)
+      ips <- ipRepo.getIpsByEmpresaId(empresa.id)
+      //respuestas <- respuestasRepo.getRespuestasById(usuario.id.get)
+      validacionIps <- ipRepo.validarControlIpAdmin(ip, ips, token, true)//TODO: AGREGAR LA PREGUNTA DE LAS RESPUESTAS(respuestas.nonEmpty)
+      asociarToken <- usuarioAdminRepo.actualizarToken(usuario.id, token)
+      //TODO: poner la empresa (dto)
+      sesion <- actorResponse[SesionActorSupervisor.SesionUsuarioCreada](sessionActor, CrearSesionUsuario(token, inactividad.valor.toInt))
+    }yield validacionIps
   }
 
   private def obtenerEmpresaValida(nit: String): Future[Empresa] = {
@@ -185,6 +157,12 @@ case class AutenticacionEmpresaDriverRepository(
 
   private def generarTokenAgente(usuario: UsuarioEmpresarial, ip: String, inactividad: String): Future[String] = Future {
     Token.generarToken(usuario.nombreUsuario, usuario.correo, getTipoPersona(usuario.tipoIdentificacion),
+      usuario.ipUltimoIngreso.get, usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())),
+      inactividad, TiposCliente.agenteEmpresarial, Some(usuario.identificacion))
+  }
+
+  private def generarTokenAdmin(usuario: UsuarioEmpresarialAdmin, ip: String, inactividad: String): Future[String] = Future {
+    Token.generarToken(usuario.usuario, usuario.correo, getTipoPersona(usuario.tipoIdentificacion),
       usuario.ipUltimoIngreso.get, usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())),
       inactividad, TiposCliente.agenteEmpresarial, Some(usuario.identificacion))
   }

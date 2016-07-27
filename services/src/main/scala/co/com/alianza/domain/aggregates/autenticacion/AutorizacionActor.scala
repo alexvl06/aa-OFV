@@ -43,18 +43,15 @@ case class AutorizacionActorSupervisor(sesionActorSupervisor: ActorRef) extends 
     "autorizacionUsuarioEmpresarialActor"
   )
 
-  def receive = {
+  def receive: PartialFunction[Any, Unit] = {
 
     case m: AutorizarUsuarioEmpresarialMessage =>
-      autorizacionUsuarioEmpresarialActor forward m
-      log info (m toString)
+      autorizacionUsuarioEmpresarialActor forward m; log.info(m.toString)
 
     case m: AutorizarUsuarioEmpresarialAdminMessage =>
-      autorizacionUsuarioEmpresarialActor forward m
-      log info (m toString)
+      autorizacionUsuarioEmpresarialActor forward m; log.info(m.toString)
 
-    case message: Any =>
-      autorizacionActor forward message; log info (message toString)
+    case message: Any => autorizacionActor forward message; log.info(message.toString)
 
   }
 
@@ -87,6 +84,7 @@ case class AutorizacionActor(sesionActorSupervisor: ActorRef) extends Actor with
   implicit val timeout: Timeout = 10.seconds
 
   def receive = {
+
     case message: AutorizarUrl =>
       val currentSender = sender()
       val future = (for {
