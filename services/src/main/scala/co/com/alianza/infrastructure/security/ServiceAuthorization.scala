@@ -27,7 +27,7 @@ trait ServiceAuthorization {
   import system.dispatcher
   implicit val conf: Config = system.settings.config
 
-  val autorizacionActorSupervisor : ActorRef
+  val autorizacionActorSupervisor: ActorRef
 
   implicit val timeout: Timeout = Timeout(10.seconds)
 
@@ -42,19 +42,23 @@ trait ServiceAuthorization {
         var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token.get.value)
         val tipoCliente = Token.getToken(decryptedToken).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
 
-
         //TODO: hay que poner el repo refactorizado
-        val futuro  =
-        if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
-          autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialMessage(token.get.value, None, obtenerIp(ctx).get.value)
-        } else if (tipoCliente == TiposCliente.clienteAdministrador.toString) {
-          autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialAdminMessage(token.get.value, None)
-        } else {
-          autorizacionActorSupervisor ? AutorizarUrl(token.get.value, "")
-        }
+        val futuro =
+          if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
+            autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialMessage(token.get.value, None, obtenerIp(ctx).get.value)
+          } else if (tipoCliente == TiposCliente.clienteAdministrador.toString) {
+            autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialAdminMessage(token.get.value, None)
+          } else {
+            autorizacionActorSupervisor ? AutorizarUrl(token.get.value, "")
+          }
 
         futuro.map {
           case r: ResponseMessage =>
+
+            println("*************************")
+            println(r)
+            println("*************************")
+
             r.statusCode match {
               case Unauthorized =>
                 Left(AuthenticationFailedRejection(CredentialsRejected, List(), Some(Unauthorized.intValue), Some(r.responseBody)))
@@ -64,7 +68,6 @@ trait ServiceAuthorization {
               case Forbidden =>
                 val user = JsonUtil.fromJson[UsuarioForbidden](r.responseBody)
                 Right(UsuarioAuth(user.usuario.id.get, user.usuario.tipoCliente, user.usuario.identificacion, user.usuario.tipoIdentificacion))
-
             }
           case _ =>
             Left(AuthenticationFailedRejection(CredentialsRejected, List()))

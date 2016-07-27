@@ -110,19 +110,6 @@ case class AutenticacionEmpresaDriverRepository(
 
   /**
    * Flujo:
-   * 2) Valida los estados del usuario encontrado, esta validacion devuelve un tipo de error por estado, si es exitosa se continúa el proceso
-   * 3) Se comparan los passwords de la petición y el usuario, si coinciden se prosigue de lo contrario se debe ejecutar la excepcion de pw inválido
-   * 4) Se busca el cliente en el core de alianza, si no se encuentra se debe devolver ErrorClienteNoExisteCore
-   * 5) Se valida el cliente encontrado, este metodo devuelve un error de la validacion que no cumple
-   * 6) Se valida la fecha de caducacion del password, si caducó se debe devolver ErrorPasswordCaducado, de lo contrario se prosigue
-   * ------- Si pasan las 6 validaciones anteriores, el usuario se considera como usuario autenticado --------
-   * 7) Se actualiza la información de numIngresosErroneos, ipUltimoIngreso y fechaUltimoIngreso del usuario
-   * 8) Se genera un token y se asocia al usuario
-   * 9) Se crea la sesion del usuario en el cluster
-   * 10) Se valida si el usuario tiene alguna ip guardada, si es así se procede a validar si es una ip habitual, de lo contrario se genera un token (10), una sesion (11) y se responde con ErrorControlIpsDesactivado
-   */
-  /**
-   * Flujo:
    * - buscar y validar empresa
    * - obtener regla de reintentos
    * - validar usuario
@@ -131,10 +118,11 @@ case class AutenticacionEmpresaDriverRepository(
    * - obtener regla dias
    * - validar caducidad
    * - actualizar usuario
-   * - obtener ips
-   * - validar ips
    * - obtener configuracion inactividad
    * - generar token
+   * - obtener ips
+   * - obtener respuestas
+   * - validar ips
    * - asociar token
    * - crear session de usuario
    */
@@ -145,61 +133,18 @@ case class AutenticacionEmpresaDriverRepository(
       validar <- usuarioAdminRepo.validarUsuario(usuario, contrasena, reintentosErroneos.valor.toInt)
       cliente <- clienteCoreRepo.getCliente(usuario.identificacion)
       estadoCore <- clienteCoreRepo.validarEstado(cliente)
-
       reglaDias <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA.llave)
       caducidad <- usuarioAdminRepo.validarCaducidadContrasena(TiposCliente.agenteEmpresarial, usuario, reglaDias.valor.toInt)
       actualizar <- usuarioAdminRepo.actualizarInfoUsuario(usuario, ip)
-
-
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
-
-
-
       token <- generarTokenAdmin(usuario, ip, inactividad.llave)
-
       ips <- ipRepo.getIpsByEmpresaId(empresa.id)
-      validacionIps <- ipRepo.validarControlIpAdmin(ip, ips, token, true)
-
-
+      //respuestas <- respuestasRepo.getRespuestasById(usuario.id.get)
+      validacionIps <- ipRepo.validarControlIpAdmin(ip, ips, token, true)//TODO: AGREGAR LA PREGUNTA DE LAS RESPUESTAS(respuestas.nonEmpty)
       asociarToken <- usuarioAdminRepo.actualizarToken(usuario.id, token)
       //TODO: poner la empresa (dto)
       sesion <- actorResponse[SesionActorSupervisor.SesionUsuarioCreada](sessionActor, CrearSesionUsuario(token, inactividad.valor.toInt))
-
-      //validacionPreguntas <- ValidationT(validarPreguntasUsuarioAdmin(usuarioAdmin.id))
-      //validacionIps <- ValidationT(validarControlIpsUsuarioEmpresarial(empresa.id, message.clientIp.get, token, usuarioAdmin.tipoIdentificacion, validacionPreguntas))
-    }yield
-    /*
-    val validaciones: Future[Validation[ErrorAutenticacion, String]] = (for {
-
-      } yield validacionIps).run
-
-      validaciones.onComplete {
-        case sFailure(_) => originalSender ! _
-        case sSuccess(resp) => resp match {
-          case zSuccess(token) => originalSender ! token
-          case zFailure(errorAutenticacion) => errorAutenticacion match {
-            case err @ ErrorPersistencia(_, ep1) => originalSender ! ep1
-            case err @ ErrorPasswordInvalido(_, idUsuario, numIngresosErroneosUsuario) =>
-
-              val ejecucion: Future[Validation[ErrorAutenticacion, Boolean]] = (for {
-                ingresosErroneos <- ValidationT(actualizarIngresosErroneosUsuarioEmpresarialAdmin(idUsuario.get, numIngresosErroneosUsuario + 1))
-                regla <- ValidationT(buscarRegla("CANTIDAD_REINTENTOS_INGRESO_CONTRASENA"))
-                bloqueo <- ValidationT(bloquearUsuarioEmpresarialAdmin(idUsuario.get, numIngresosErroneosUsuario, regla))
-              } yield bloqueo).run
-
-              ejecucion.onFailure { case _ => originalSender ! _ }
-              ejecucion.onSuccess {
-                case zSuccess(_) => originalSender ! ResponseMessage(Unauthorized, err.msg)
-                case zFailure(errorBloqueo) => errorBloqueo match {
-                  case errb @ ErrorPersistencia(_, ep2) => originalSender ! ep2
-                  case _ => originalSender ! ResponseMessage(Unauthorized, errorBloqueo.msg)
-                }
-              }
-
-            case _ => originalSender ! ResponseMessage(Unauthorized, errorAutenticacion.msg)
-          }
-        }
-    * */
+    }yield validacionIps
   }
 
   private def obtenerEmpresaValida(nit: String): Future[Empresa] = {

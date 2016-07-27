@@ -8,7 +8,7 @@ import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.persistence.entities.UsuarioEmpresarialAdmin
 import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.token.Token
-import enumerations.{AppendPasswordUser, EstadosEmpresaEnum, EstadosUsuarioEnum}
+import enumerations.{ AppendPasswordUser, EstadosEmpresaEnum, EstadosUsuarioEnum }
 import org.joda.time.DateTime
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.UsuarioEmpresarialAdminDAOs
 
