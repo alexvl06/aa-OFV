@@ -3,16 +3,17 @@ package portal.transaccional.autenticacion.service.drivers.autorizacion
 import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
+import co.com.alianza.domain.aggregates.autenticacion.SesionActorSupervisor
 import co.com.alianza.exceptions.ValidacionException
-import co.com.alianza.infrastructure.dto.{RecursoUsuario}
+import co.com.alianza.infrastructure.dto.RecursoUsuario
 import co.com.alianza.infrastructure.messages.ValidarSesion
-import co.com.alianza.persistence.entities.{Usuario => UsuarioDTO}
+import co.com.alianza.persistence.entities.{ Usuario => UsuarioDTO }
 import co.com.alianza.persistence.entities.Usuario
-import co.com.alianza.util.token.{Token, AesUtil}
+import co.com.alianza.util.token.{ AesUtil, Token }
 import enumerations.CryptoAesParameters
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{AlianzaDAOs, UsuarioDAOs}
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ AlianzaDAOs, UsuarioDAOs }
 
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.reflect.ClassTag
 import scala.concurrent.duration._
 
@@ -29,11 +30,10 @@ case class AutorizacionUsuarioDriverRepository(usuarioDAO: UsuarioDAOs, alianzaD
       validar <- validarToken(token)
       usuarioOption <- usuarioDAO.getByToken(token)
       usuario <- validarUsario(usuarioOption)
-      validarSesion <- Future{true}//Llamar al actoractorResponse[SesionActorSupervisor.SesionUsuarioCreada](sessionActor, CrearSesionUsuario(token, inactividad.valor.toInt))
-
+      validarSesion <- actorResponse[SesionActorSupervisor.SesionUsuarioValidada](sessionActor, ValidarSesion(token))
       recursosFuturo = alianzaDAO.getResources(usuario.id.get)
 
-      validarrecurso <- resolveMessageRecursos(usuario, x.filter(filtrarRecursos(_, url))
+      validarrecurso <- resolveMessageRecursos(usuario, x.filter(filtrarRecursos(_, url)))
 
     }yield validarSesion
   }
@@ -82,17 +82,10 @@ case class AutorizacionUsuarioDriverRepository(usuarioDAO: UsuarioDAOs, alianzaD
   private def filtrarRecursos(recurso: RecursoUsuario, url: String): Boolean = filtrarRecursos(recurso.urlRecurso, recurso.acceso, url)
 
   private def filtrarRecursos(urlRecurso: String, acceso: Boolean, url: String) = {
-
     val urlC = urlRecurso.substring(0, urlRecurso.lastIndexOf("*"))
-
-    if (urlRecurso.equals(url) || (urlRecurso.endsWith("/*") && urlC.equals(url + "/"))) {
-      acceso
-    } else if (urlRecurso.endsWith("/*") && url.length >= urlC.length) {
-      val urlSuffix = url.substring(0, urlC.length)
-      urlSuffix.equals(urlC) && acceso
-    } else {
-      false
-    }
+    if (urlRecurso.equals(url) || (urlRecurso.endsWith("/*") && urlC.equals(url + "/"))) { acceso
+    } else if (urlRecurso.endsWith("/*") && url.length >= urlC.length) { url.substring(0, urlC.length).equals(urlC) && acceso
+    } else { false }
   }
 
   private def actorResponse[T: ClassTag](actor: ActorRef, msg: ValidarSesion): Future[T] = {

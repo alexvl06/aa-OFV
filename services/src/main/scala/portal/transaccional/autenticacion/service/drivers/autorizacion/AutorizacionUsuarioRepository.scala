@@ -16,7 +16,4 @@ trait AutorizacionUsuarioRepository {
 
   def validarToken(token: String): Future[Boolean]
 
-
-
-
 }
