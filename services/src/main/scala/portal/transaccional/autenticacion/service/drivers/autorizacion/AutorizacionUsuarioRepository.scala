@@ -5,6 +5,4 @@ package portal.transaccional.autenticacion.service.drivers.autorizacion
  */
 trait AutorizacionUsuarioRepository {
 
-
-
 }

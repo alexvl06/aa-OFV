@@ -90,7 +90,8 @@ case class SesionActorSupervisor() extends Actor with ActorLogging {
     val actorName = generarNombreSesionActor(decryptedToken)
     val response = context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(actorName)
     response.map {
-      case Some(sesionActor: ActorRef) => val actualizacion = sesionActor ? ActualizarSesion()  ; actualizacion.map { case _ => currentSender ! SesionUsuarioValidada() }
+      case Some(sesionActor: ActorRef) =>
+        val actualizacion = sesionActor ? ActualizarSesion(); actualizacion.map { case _ => currentSender ! SesionUsuarioValidada() }
       case None => currentSender ! SesionUsuarioNoValidada()
     }
   }
@@ -120,11 +121,12 @@ case class SesionActorSupervisor() extends Actor with ActorLogging {
     var util: AesUtil = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
     var decryptedToken: String = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
     val name: String = generarNombreSesionActor(decryptedToken)
-    Try{
+    Try {
       context.actorOf(SesionActor.props(expiration, empresa), name)
       log.info("Creando sesion de usuario. Tiempo de expiracion: " + expiration + " minutos.")
       sender() ! SesionUsuarioCreada()
-    }.recover { case e => e.printStackTrace() ; sender() ! SesionUsuarioNoCreada()
+    }.recover {
+      case e => e.printStackTrace(); sender() ! SesionUsuarioNoCreada()
     }.get
   }
 

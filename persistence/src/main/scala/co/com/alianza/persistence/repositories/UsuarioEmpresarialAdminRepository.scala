@@ -50,7 +50,6 @@ class UsuarioEmpresarialAdminRepository(implicit executionContext: ExecutionCont
       resolveTry(resultTry, "Actualizar token de usuario empresarial")
   }
 
-
   def actualizarEstadoUsuario(idUsuario: Int, estado: Int): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
       val resultTry = session.database.run(usuariosEmpresarialesAdmin.filter(_.id === idUsuario).map(_.estado).update(estado))

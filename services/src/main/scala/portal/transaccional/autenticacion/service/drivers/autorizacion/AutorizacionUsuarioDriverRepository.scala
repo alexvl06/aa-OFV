@@ -4,15 +4,13 @@ import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
 import co.com.alianza.exceptions.ValidacionException
-import co.com.alianza.infrastructure.dto.{RecursoUsuario}
 import co.com.alianza.infrastructure.messages.ValidarSesion
-import co.com.alianza.persistence.entities.{Usuario => UsuarioDTO}
-import co.com.alianza.persistence.entities.Usuario
-import co.com.alianza.util.token.{Token, AesUtil}
+import co.com.alianza.persistence.entities.{ RecursoPerfil, Usuario }
+import co.com.alianza.util.token.{ Token, AesUtil }
 import enumerations.CryptoAesParameters
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{AlianzaDAOs, UsuarioDAOs}
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ AlianzaDAOs, UsuarioDAOs }
 
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.{ Future, ExecutionContext }
 import scala.reflect.ClassTag
 import scala.concurrent.duration._
 
@@ -24,23 +22,20 @@ case class AutorizacionUsuarioDriverRepository(usuarioDAO: UsuarioDAOs, alianzaD
   implicit val timeout = Timeout(5.seconds)
 
   def autorizarUrl(token: String, url: String): Future[Boolean] = {
-    for{
+    for {
       validar <- validarToken(token)
       usuarioOption <- usuarioDAO.getByToken(token)
       usuario <- validarUsario(usuarioOption)
-      validarSesion <- Future{true}//Llamar al actoractorResponse[SesionActorSupervisor.SesionUsuarioCreada](sessionActor, CrearSesionUsuario(token, inactividad.valor.toInt))
-
-      recursosFuturo = alianzaDAO.getResources(usuario.id.get)
-
-      validarrecurso <- resolveMessageRecursos(usuario, x.filter(filtrarRecursos(_, url))
-
-    }yield validarSesion
+      validarSesion <- Future { true }
+      recursos <- alianzaDAO.getResources(usuario.id.get)
+      validarRecurso <- resolveMessageRecursos(recursos.filter(filtrarRecursos(_, url)))
+    } yield validarRecurso
   }
 
   def validarUsario(usuarioOption: Option[Usuario]): Future[Usuario] = {
     usuarioOption match {
       case Some(usuario: Usuario) => Future.successful(usuario)
-      case _ => Future.failed(ValidacionException("500" , "usuario no existe"))
+      case _ => Future.failed(ValidacionException("500", "usuario no existe"))
       //TODO: validar si ese es el codigo
     }
   }
@@ -50,7 +45,7 @@ case class AutorizacionUsuarioDriverRepository(usuarioDAO: UsuarioDAOs, alianzaD
     val tokenDesencriptado = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
     Token.autorizarToken(tokenDesencriptado) match {
       case true => Future.successful(true)
-      case _ => Future.failed(ValidacionException("500" , "Token erróneo"))
+      case _ => Future.failed(ValidacionException("500", "Token erróneo"))
       //TODO: validar si ese es el codigo
     }
   }
@@ -60,7 +55,7 @@ case class AutorizacionUsuarioDriverRepository(usuarioDAO: UsuarioDAOs, alianzaD
    * @param recursos Listado de recursos
    * @return
    */
-  private def resolveMessageRecursos(recursos: List[RecursoUsuario]): Future[Boolean] = {
+  private def resolveMessageRecursos(recursos: Seq[RecursoPerfil]): Future[Boolean] = {
     recursos.nonEmpty match {
       case false => Future.failed(ValidacionException("403.1", "No tiene permiso"))
       case true =>
@@ -78,10 +73,10 @@ case class AutorizacionUsuarioDriverRepository(usuarioDAO: UsuarioDAOs, alianzaD
    * @param url la url a validar
    * @return
    */
-  private def filtrarRecursos(recurso: RecursoUsuario, url: String): Boolean =
+  def filtrarRecursos(recurso: RecursoPerfil, url: String): Boolean =
     filtrarRecursos(recurso.urlRecurso, recurso.acceso, url)
 
-  private def filtrarRecursos(urlRecurso: String, acceso: Boolean, url: String) = {
+  def filtrarRecursos(urlRecurso: String, acceso: Boolean, url: String): Boolean = {
     //TODO: quitar esos "ifseses"
     if (urlRecurso.equals(url)) acceso
     else if (urlRecurso.endsWith("/*")) {

@@ -12,11 +12,10 @@ import scala.concurrent.Future
 import scalaz.Validation
 
 case class UsuarioEmpresarialAdminDAO(implicit dcConfig: DBConfig) extends TableQuery(new UsuarioEmpresarialAdminTable(_))
-  with UsuarioEmpresarialAdminDAOs {
+    with UsuarioEmpresarialAdminDAOs {
 
   import dcConfig.db._
   import dcConfig.profile.api._
-
 
   def getById(idUsuario: Int): Future[Option[UsuarioEmpresarialAdmin]] = {
     run(this.filter(_.id === idUsuario).result.headOption)
@@ -30,7 +29,7 @@ case class UsuarioEmpresarialAdminDAO(implicit dcConfig: DBConfig) extends Table
     run(this.filter(_.token === token).result.headOption)
   }
 
-  def getByNit(nitEmpresa: String): Future[Boolean] ={
+  def getByNit(nitEmpresa: String): Future[Boolean] = {
     val estado = EstadosEmpresaEnum.activo.id
     val query = this.filter(u => u.identificacion === nitEmpresa && u.estado === estado).exists.result
     run(query)
