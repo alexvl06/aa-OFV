@@ -7,14 +7,14 @@ import slick.lifted.TableQuery
 import scala.concurrent.Future
 
 /**
- * Created by hernando on 26/07/16.
+ * Created by s4n on 2016
  */
-case class EmpresaDAO(implicit dcConfig: DBConfig) extends TableQuery(new EmpresaTable(_)) with EmpresaDAOs {
+case class EmpresaDAO()(implicit dcConfig: DBConfig) extends TableQuery(new EmpresaTable(_)) with EmpresaDAOs {
 
   import dcConfig.db._
   import dcConfig.profile.api._
 
-  def getByIdentity(nit: String): Future[Option[Empresa]] = {
+  def getByNit(nit: String): Future[Option[Empresa]] = {
     run(this.filter(_.nit === nit).result.headOption)
   }
 

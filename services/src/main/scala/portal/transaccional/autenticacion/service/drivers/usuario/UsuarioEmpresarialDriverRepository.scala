@@ -15,7 +15,7 @@ import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.Usuario
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
- * Created by hernando on 26/07/16.
+ * Created by s4n on 2016
  */
 case class UsuarioEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs)(implicit val ex: ExecutionContext) extends UsuarioEmpresarialRepository {
 
@@ -30,7 +30,7 @@ case class UsuarioEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs
    * @return
    */
   def actualizarToken(idUsuario: Int, token: String): Future[Int] = {
-    usuarioDAO.createToken(idUsuario, token)
+    usuarioDAO.updateToken(idUsuario, token)
   }
 
   /**
@@ -60,14 +60,14 @@ case class UsuarioEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs
    * @return
    */
   def actualizarFechaIngreso(idUsuario: Int, fechaActual: Timestamp): Future[Int] = {
-    usuarioDAO.updateLastDate(idUsuario, fechaActual)
+    usuarioDAO.updateLastEntryDate(idUsuario, fechaActual)
   }
 
   def actualizarInfoUsuario(usuario: UsuarioEmpresarial, ip: String): Future[Int] = {
     for {
       intentos <- usuarioDAO.updateIncorrectEntries(usuario.id, 0)
       ip <- usuarioDAO.updateLastIp(usuario.id, ip)
-      fecha <- usuarioDAO.updateLastDate(usuario.id, new Timestamp((new Date).getTime))
+      fecha <- usuarioDAO.updateLastEntryDate(usuario.id, new Timestamp((new Date).getTime))
     } yield fecha
   }
 

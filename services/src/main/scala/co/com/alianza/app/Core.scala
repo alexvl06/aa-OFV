@@ -19,6 +19,7 @@ import co.com.alianza.persistence.config.oracle.OracleConfig
 import co.com.alianza.persistence.config.pg.PGConfig
 import co.com.alianza.util.ConfigApp
 import com.typesafe.config.Config
+import portal.transaccional.autenticacion.service.drivers.Recurso.RecursoDriverRepository
 import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionDriverRepository, AutenticacionEmpresaDriverRepository }
 import portal.transaccional.autenticacion.service.drivers.autorizacion.AutorizacionUsuarioDriverRepository
 import portal.transaccional.autenticacion.service.drivers.cliente.ClienteDriverCoreRepository
@@ -113,21 +114,22 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
 
   val sessionActor: ActorRef
 
-  lazy val empresaRepo = EmpresaDriverRepository(empresaDAO)(ex)
-  lazy val usuarioRepo = UsuarioDriverRepository(usuarioDAO)(ex)
-  lazy val clienteRepo = ClienteDriverCoreRepository(clienteDAO)(ex)
-  lazy val ipUsuarioRepo = IpUsuarioDriverRepository(ipUsuarioDAO)(ex)
-  lazy val ipEmpresaRepo = IpEmpresaDriverRepository(ipEmpresaDAO)(ex)
-  lazy val configuracionRepo = ConfiguracionDriverRepository(configuracionDAO)(ex)
-  lazy val reglaContrasenaRepo = ReglaContrasenaDriverRepository(reglaContrasenaDAO)(ex)
-  lazy val usuarioAgenteRepo = UsuarioEmpresarialDriverRepository(usuarioAgenteDAO)(ex)
-  lazy val respuestaUsuarioRepo = RespuestaUsuarioDriverRepository(respuestaUsuarioDAO)(ex)
-  lazy val usuarioAdminRepo = UsuarioEmpresarialAdminDriverRepository(usuarioAdminDAO)(ex)
-  lazy val autorizacionUsuarioRepo = AutorizacionUsuarioDriverRepository(usuarioDAO, alianzaDAO, sessionActor)(ex)
+  lazy val empresaRepo = EmpresaDriverRepository(empresaDAO)
+  lazy val usuarioRepo = UsuarioDriverRepository(usuarioDAO)
+  lazy val clienteRepo = ClienteDriverCoreRepository(clienteDAO)
+  lazy val ipUsuarioRepo = IpUsuarioDriverRepository(ipUsuarioDAO)
+  lazy val ipEmpresaRepo = IpEmpresaDriverRepository(ipEmpresaDAO)
+  lazy val configuracionRepo = ConfiguracionDriverRepository(configuracionDAO)
+  lazy val reglaContrasenaRepo = ReglaContrasenaDriverRepository(reglaContrasenaDAO)
+  lazy val usuarioAgenteRepo = UsuarioEmpresarialDriverRepository(usuarioAgenteDAO)
+  lazy val respuestaUsuarioRepo = RespuestaUsuarioDriverRepository(respuestaUsuarioDAO)
+  lazy val usuarioAdminRepo = UsuarioEmpresarialAdminDriverRepository(usuarioAdminDAO)
+  lazy val recursoRepo = RecursoDriverRepository(alianzaDAO)
+  lazy val autorizacionUsuarioRepo = AutorizacionUsuarioDriverRepository(usuarioDAO, recursoRepo, sessionActor)
   lazy val autenticacionRepo = AutenticacionDriverRepository(usuarioRepo, clienteRepo, configuracionRepo, reglaContrasenaRepo, ipUsuarioRepo,
-    respuestaUsuarioRepo, sessionActor)(ex)
+    respuestaUsuarioRepo, sessionActor)
   lazy val autenticacionEmpresaRepo = AutenticacionEmpresaDriverRepository(usuarioAgenteRepo, usuarioAdminRepo, clienteRepo, empresaRepo, reglaContrasenaRepo,
-    configuracionRepo, ipEmpresaRepo, sessionActor, respuestaUsuarioRepo)(ex)
+    configuracionRepo, ipEmpresaRepo, sessionActor, respuestaUsuarioRepo)
 }
 
 private[app] sealed trait StoragePGAlianzaDB extends BootedCore {

@@ -3,6 +3,7 @@ package portal.transaccional.fiduciaria.autenticacion.storage.daos.portal
 import java.sql.Timestamp
 
 import co.com.alianza.persistence.entities.UsuarioEmpresarial
+import enumerations.EstadosEmpresaEnum
 
 import scala.concurrent.Future
 
@@ -11,18 +12,32 @@ import scala.concurrent.Future
  */
 trait UsuarioEmpresarialDAOs {
 
-  def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[UsuarioEmpresarial]]
+  def create(agenteEmpresarial: UsuarioEmpresarial): Future[Int]
 
-  def createToken(idUsuario: Int, token: String): Future[Int]
+  def update(id: Int, usuario: String, correo: String, nombreUsuario: String, cargo: String, descripcion: String): Future[Int]
 
-  def deleteToken(token: String): Future[Int]
+  def updateStateByTime (idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa, timestamp: Timestamp): Future[Int]
 
   def updateIncorrectEntries(idUsuario: Int, numeroIntentos: Int): Future[Int]
 
-  def updateLastIp(idUsuario: Int, ip: String): Future[Int]
+  def updateLastIp(idUsuario: Int, ipActual: String): Future[Int]
 
-  def updateLastDate(idUsuario: Int, fechaActual: Timestamp): Future[Int]
+  def updateLastEntryDate(idUsuario: Int, fechaActual: Timestamp): Future[Int]
 
   def updateStateById(idUsuario: Int, estado: Int): Future[Int]
+
+  def updateState(idUsuario: Int, estado: Int): Future[Int]
+
+  def getById(idUsuario: Int): Future[Option[UsuarioEmpresarial]]
+
+  def getByToken(token: String): Future[Option[UsuarioEmpresarial]]
+
+  def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[UsuarioEmpresarial]]
+
+  def isExists(idUsuario: Int, nit: String, usuario: String): Future[Boolean]
+
+  def updateToken(idUsuario: Int, token: String): Future[Int]
+
+  def deleteToken(token: String): Future[Int]
 
 }

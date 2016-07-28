@@ -11,7 +11,7 @@ import co.com.alianza.persistence.entities._
 import CustomDriver.simple._
 
 /**
- * Created by manuel on 9/12/14.
+ * Created by s4n on 2014
  */
 class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext) extends AlianzaRepository {
 
@@ -22,36 +22,20 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
   val usuariosEmpresarialesAdminEmpresa = TableQuery[UsuarioEmpresarialAdminEmpresaTable]
   val pinempresa = TableQuery[PinEmpresaTable]
 
-  def obtenerUsuarioEmpresarialPorId(idUsuario: Int): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = loan {
-    implicit session =>
-      val resultTry = session.database.run(usuariosEmpresariales.filter(_.id === idUsuario).result.headOption)
-      resolveTry(resultTry, "Obtener agente empresarial por ID ")
-  }
-
-  def existeUsuario(idUsuario: Int, nit: String, usuario: String): Future[Validation[PersistenceException, Boolean]] = loan {
-    implicit session =>
-      val resultTry = session.database.run(usuariosEmpresariales.filter(usu => usu.usuario === usuario && usu.identificacion === nit && usu.id =!= idUsuario).exists.result)
-      resolveTry(resultTry, "Existe agente con mismo usuario pero diferente id ?")
-  }
-
-  def obtenerUsuarioEmpresarialAdminPorId(idUsuario: Int): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = loan {
-    implicit session =>
-      val resultTry = session.database.run(usuariosEmpresarialesAdmin.filter(_.id === idUsuario).result.headOption)
-      resolveTry(resultTry, "Obtener agente empresarial admin por ID ")
-  }
+  // ---------------------- ALIANZA DAO ----------------------------------
 
   def obtieneUsuarioEmpresaPorNitYUsuario(nit: String, usuario: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = loan {
     implicit session =>
       val resultTry = session.database.run(
         (
-        for {
-          ((usuarioEmpresarial, usuarioEmpresarialEmpresa), empresa) <- usuariosEmpresariales join usuariosEmpresarialesEmpresa on {
-            (ue, uee) => ue.id === uee.idUsuarioEmpresarial && ue.usuario === usuario
-          } join empresas on {
-            case ((ue, uee), e) => e.nit === nit && uee.idEmpresa === e.id
-          }
-        } yield (usuarioEmpresarial)
-      ).result.headOption
+          for {
+            ((usuarioEmpresarial, usuarioEmpresarialEmpresa), empresa) <- usuariosEmpresariales join usuariosEmpresarialesEmpresa on {
+              (ue, uee) => ue.id === uee.idUsuarioEmpresarial && ue.usuario === usuario
+            } join empresas on {
+              case ((ue, uee), e) => e.nit === nit && uee.idEmpresa === e.id
+            }
+          } yield (usuarioEmpresarial)
+          ).result.headOption
       )
 
       resolveTry(resultTry, "Consulta usuario empresarial por nit y usuario")
@@ -61,24 +45,34 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
     implicit session =>
       val resultTry = session.database.run(
         (
-        for {
-          ((usuarioEmpresarial, usuarioEmpresarialEmpresa), empresa) <- usuariosEmpresarialesAdmin join usuariosEmpresarialesAdminEmpresa on {
-            (ue, uee) => ue.id === uee.idUsuarioEmpresarialAdmin && ue.usuario === usuario
-          } join empresas on {
-            case ((ue, uee), e) => e.nit === nit && uee.idEmpresa === e.id
-          }
-        } yield (usuarioEmpresarial)
-      ).result.headOption
+          for {
+            ((usuarioEmpresarial, usuarioEmpresarialEmpresa), empresa) <- usuariosEmpresarialesAdmin join usuariosEmpresarialesAdminEmpresa on {
+              (ue, uee) => ue.id === uee.idUsuarioEmpresarialAdmin && ue.usuario === usuario
+            } join empresas on {
+              case ((ue, uee), e) => e.nit === nit && uee.idEmpresa === e.id
+            }
+          } yield usuarioEmpresarial
+          ).result.headOption
       )
 
       resolveTry(resultTry, "Obtiene id agente empresarial de acuerdo a los 3 paramteros dados")
   }
 
-  def asociarTokenUsuario(usuarioId: Int, token: String): Future[Validation[PersistenceException, Int]] = loan {
-
+  //Obtengo como resultado una tupla que me devuelve el usuarioEmpresarial junto con el estado de la empresa
+  def obtenerUsuarioToken(token: String): Future[Validation[PersistenceException, Option[(UsuarioEmpresarial, Int)]]] = loan {
     implicit session =>
-      val resultTry = session.database.run(usuariosEmpresariales.filter(_.id === usuarioId).map(_.token).update(Some(token)))
-      resolveTry(resultTry, "Actualizar token de usuario empresarial")
+      val query = for {
+        (agenteEmpresarial, empresa) <- usuariosEmpresariales join usuariosEmpresarialesEmpresa on {
+          (ue, uee) => ue.token === token && ue.id === uee.idUsuarioEmpresarial
+        } join empresas on {
+          case ((ue, uee), e) => uee.idEmpresa === e.id
+        }
+      } yield {
+        (agenteEmpresarial._1, empresa.estadoEmpresa)
+      }
+
+      val resultTry = session.database.run(query.result.headOption)
+      resolveTry(resultTry, "Consulta usuario empresarial por token: " + token)
   }
 
   def validacionAgenteEmpresarial(numIdentificacionAgenteEmpresarial: String, correoUsuarioAgenteEmpresarial: String, tipoIdentiAgenteEmpresarial: Int, idClienteAdmin: Int): Future[Validation[PersistenceException, Option[(Int, Int)]]] = loan {
@@ -107,18 +101,32 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
       resolveTry(resultIdUsuarioAE, "Obtiene id agente empresarial de acuerdo a los 3 parametros dados")
   }
 
+
+
+  // ---------------------------------- EMPRESA ---------------------------------------------------------------
+
+  def obtenerEmpresaPorNit(nit: String): Future[Validation[PersistenceException, Option[Empresa]]] = loan {
+    implicit session =>
+      val resultTry = session.database.run((empresas.filter(_.nit === nit).result.headOption))
+      resolveTry(resultTry, "Agregar ips agente empresarial")
+  }
+
+  //------------------------------------ USUARIOS EMPRESARIALES ADMIN ----------------------------------------------
+
+  def obtenerUsuarioEmpresarialAdminPorId(idUsuario: Int): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = loan {
+    implicit session =>
+      val resultTry = session.database.run(usuariosEmpresarialesAdmin.filter(_.id === idUsuario).result.headOption)
+      resolveTry(resultTry, "Obtener agente empresarial admin por ID ")
+  }
+
+  //------------------------------------ USUARIOS EMPRESARIALES  ----------------------------------------------
+
   def AcambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
-      val query = for { u <- usuariosEmpresariales if u.id === idUsuarioAgenteEmpresarial } yield (u.estado)
+      val query = for { u <- usuariosEmpresariales if u.id === idUsuarioAgenteEmpresarial } yield u.estado
 
       val resultTry = session.database.run(query.update(estado.id))
       resolveTry(resultTry, "Cambiar Estado Usuario Agente Empresarial")
-  }
-
-  def invalidarTokenUsuario(token: String): Future[Validation[PersistenceException, Int]] = loan {
-    implicit session =>
-      val resultTry = session.database.run(usuariosEmpresariales.filter(_.token === token).map(_.token).update(Some(null)))
-      resolveTry(resultTry, "Invalidar token usuario")
   }
 
   def cambiarBloqueoDesbloqueoAgenteEmpresarial(idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa, timestamp: Timestamp): Future[Validation[PersistenceException, Int]] = loan {
@@ -128,57 +136,43 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
       resolveTry(resultTry, "Cambiar Estado Usuario Agente Empresarial")
   }
 
-  //Obtengo como resultado una tupla que me devuelve el usuarioEmpresarial junto con el estado de la empresa
-  def obtenerUsuarioToken(token: String): Future[Validation[PersistenceException, Option[(UsuarioEmpresarial, Int)]]] = loan {
-    implicit session =>
-      val query = for {
-        (agenteEmpresarial, empresa) <- usuariosEmpresariales join usuariosEmpresarialesEmpresa on {
-          (ue, uee) => ue.token === token && ue.id === uee.idUsuarioEmpresarial
-        } join empresas on {
-          case ((ue, uee), e) => uee.idEmpresa === e.id
-        }
-      } yield {
-        (agenteEmpresarial._1, empresa.estadoEmpresa)
-      }
-
-      val resultTry = session.database.run(query.result.headOption)
-      resolveTry(resultTry, "Consulta usuario empresarial por token: " + token)
-  }
-
-  def obtenerUsuarioPorToken(token: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = loan {
-    implicit session =>
-      val resultTry = session.database.run(usuariosEmpresariales.filter(_.token === token).result.headOption)
-      resolveTry(resultTry, "Consulta usuario empresarial con token" + token)
-  }
-
-  def guardarPinEmpresaAgenteEmpresarial(pinEmpresaAgenteEmpresarial: PinEmpresa): Future[Validation[PersistenceException, Int]] = loan {
-    implicit session =>
-      val resultTry = session.database.run((pinempresa += pinEmpresaAgenteEmpresarial))
-      resolveTry(resultTry, "Agregar pin empresa del agente empresarial")
-  }
-
-  def eliminarPinEmpresaReiniciarAnteriores(idUsuarioAgenteEmpresarial: Int, usoPinEmpresa: Int): Future[Validation[PersistenceException, Int]] = loan {
-    implicit session =>
-      val resultTry = session.database.run(pinempresa.filter(x => x.idUsuarioEmpresarial === idUsuarioAgenteEmpresarial && x.uso === usoPinEmpresa).delete)
-      resolveTry(resultTry, "Eliminar pin(es) empresa anteriores del agente empresarial asociado cuando el uso es reiniciar contrasena")
-  }
-
   def insertarAgenteEmpresarial(agenteEmpresarial: UsuarioEmpresarial): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
       val resultTry = session.database.run((usuariosEmpresariales returning usuariosEmpresariales.map(_.id)) += agenteEmpresarial)
       resolveTry(resultTry, "Agregar agente empresarial")
   }
 
-  def obtenerEmpresaPorNit(nit: String): Future[Validation[PersistenceException, Option[Empresa]]] = loan {
+  def obtenerUsuarioEmpresarialPorId(idUsuario: Int): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = loan {
     implicit session =>
-      val resultTry = session.database.run((empresas.filter(_.nit === nit).result.headOption))
-      resolveTry(resultTry, "Agregar ips agente empresarial")
+      val resultTry = session.database.run(usuariosEmpresariales.filter(_.id === idUsuario).result.headOption)
+      resolveTry(resultTry, "Obtener agente empresarial por ID ")
   }
 
-  def asociarAgenteEmpresarialConEmpresa(usuarioEmpresarialEmpresa: UsuarioEmpresarialEmpresa) = loan {
+  def existeUsuario(idUsuario: Int, nit: String, usuario: String): Future[Validation[PersistenceException, Boolean]] = loan {
     implicit session =>
-      val resultTry = session.database.run((usuariosEmpresarialesEmpresa += usuarioEmpresarialEmpresa))
-      resolveTry(resultTry, "Asociar usuario agente empresarial a la empresa")
+      val resultTry = session.database.run(usuariosEmpresariales.filter(usu => usu.usuario === usuario && usu.identificacion === nit && usu.id =!= idUsuario).exists.result)
+      resolveTry(resultTry, "Existe agente con mismo usuario pero diferente id ?")
+  }
+
+
+  def asociarTokenUsuario(usuarioId: Int, token: String): Future[Validation[PersistenceException, Int]] = loan {
+
+    implicit session =>
+      val resultTry = session.database.run(usuariosEmpresariales.filter(_.id === usuarioId).map(_.token).update(Some(token)))
+      resolveTry(resultTry, "Actualizar token de usuario empresarial")
+  }
+
+
+  def invalidarTokenUsuario(token: String): Future[Validation[PersistenceException, Int]] = loan {
+    implicit session =>
+      val resultTry = session.database.run(usuariosEmpresariales.filter(_.token === token).map(_.token).update(Some(null)))
+      resolveTry(resultTry, "Invalidar token usuario")
+  }
+
+  def obtenerUsuarioPorToken(token: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = loan {
+    implicit session =>
+      val resultTry = session.database.run(usuariosEmpresariales.filter(_.token === token).result.headOption)
+      resolveTry(resultTry, "Consulta usuario empresarial con token" + token)
   }
 
   def actualizarNumeroIngresosErroneos(idUsuario: Int, numeroIntentos: Int): Future[Validation[PersistenceException, Int]] = loan {
@@ -227,5 +221,32 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
       val resultTry = session.database.run(query.update(correo, usuario, nombreUsuario, cargo, descripcion))
       resolveTry(resultTry, "Actualizar usuario empresarial agente")
   }
+
+
+  //--------------------------------------- USUARIO EMPRESARIAL EMPRESA  ---------------------------------------------------
+
+  def asociarAgenteEmpresarialConEmpresa(usuarioEmpresarialEmpresa: UsuarioEmpresarialEmpresa) = loan {
+    implicit session =>
+      val resultTry = session.database.run(usuariosEmpresarialesEmpresa += usuarioEmpresarialEmpresa)
+      resolveTry(resultTry, "Asociar usuario agente empresarial a la empresa")
+  }
+
+  //------------------------------------------- PIN EMPRESA  ----------------------------------------------------
+
+  def guardarPinEmpresaAgenteEmpresarial(pinEmpresaAgenteEmpresarial: PinEmpresa): Future[Validation[PersistenceException, Int]] = loan {
+    implicit session =>
+      val resultTry = session.database.run((pinempresa += pinEmpresaAgenteEmpresarial))
+      resolveTry(resultTry, "Agregar pin empresa del agente empresarial")
+  }
+
+  def eliminarPinEmpresaReiniciarAnteriores(idUsuarioAgenteEmpresarial: Int, usoPinEmpresa: Int): Future[Validation[PersistenceException, Int]] = loan {
+    implicit session =>
+      val resultTry = session.database.run(pinempresa.filter(x => x.idUsuarioEmpresarial === idUsuarioAgenteEmpresarial && x.uso === usoPinEmpresa).delete)
+      resolveTry(resultTry, "Eliminar pin(es) empresa anteriores del agente empresarial asociado cuando el uso es reiniciar contrasena")
+  }
+
+  //------------------------------------------------------------------------------------------------------------
+
+
 
 }
