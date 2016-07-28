@@ -56,7 +56,6 @@ case class AutenticacionService(autenticacionRepositorio: AutenticacionRepositor
       entity(as[AutenticarUsuarioEmpresarialRequest]) {
         request =>
           clientIP { ip =>
-            println("en el servicio ")
             val resultado: Future[String] =
               autenticacionEmpresaRepositorio.autenticarUsuarioEmpresa(
                 request.nit,
