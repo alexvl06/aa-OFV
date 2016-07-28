@@ -62,6 +62,12 @@ object Token {
     var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
     var encryptedToken = util.encrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, signedJWT.serialize())
 
+    println("--------------------")
+    println("--------------------")
+    println("Token.scala")
+    println("--------------------")
+    println(signedJWT.serialize())
+
     encryptedToken
   }
 

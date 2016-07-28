@@ -33,6 +33,8 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
       }
     } ~ path(validarTokenPath / Segment) {
       token =>
+        println("*****************************************")
+        println(token)
         validarToken(token)
     }
   }
@@ -85,8 +87,9 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
           }
           // TODO: Auditoria
           onComplete(resultado) {
-            case Success(value) => complete(value.toString)
-            case Failure(ex) => execution(ex)
+            case Success(value) =>
+              println("OK"); complete(value.toString)
+            case Failure(ex) => ex.printStackTrace(); execution(ex)
           }
       }
     }
