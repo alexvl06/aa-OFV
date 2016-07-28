@@ -1,18 +1,15 @@
 package co.com.alianza.domain.aggregates.autenticacion
 
-import java.util.Date
-
-import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, Props }
+import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import akka.pattern.ask
 import akka.routing.RoundRobinPool
 import akka.util.Timeout
-import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.domain.aggregates.autenticacion.errores.TokenInvalido
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.configuraciones.{ DataAccessAdapter => confDataAdapter }
-import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => usDataAdapter }
 import co.com.alianza.infrastructure.anticorruption.recursos.{ DataAccessAdapter => rDataAccessAdapter }
-import co.com.alianza.infrastructure.dto.{ Configuracion, RecursoUsuario, Usuario }
+import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => usDataAdapter }
+import co.com.alianza.infrastructure.dto.{ RecursoUsuario, Usuario }
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.util.FutureResponse
 import co.com.alianza.util.json.JsonUtil
@@ -21,11 +18,10 @@ import co.com.alianza.util.transformers.ValidationT
 import enumerations.CryptoAesParameters
 import spray.http.StatusCodes._
 
-import scala.concurrent.duration._
 import scala.concurrent.Future
+import scala.concurrent.duration._
 import scala.util.{ Failure, Success }
-import scalaz.Validation
-import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
+import scalaz.{ Failure => zFailure, Success => zSuccess }
 
 object AutorizacionActorSupervisor {
 
@@ -34,8 +30,8 @@ object AutorizacionActorSupervisor {
 
 case class AutorizacionActorSupervisor(sesionActorSupervisor: ActorRef) extends Actor with ActorLogging {
 
-  import akka.actor.SupervisorStrategy._
   import akka.actor.OneForOneStrategy
+  import akka.actor.SupervisorStrategy._
 
   val autorizacionActor = context.actorOf(AutorizacionActor.props(sesionActorSupervisor).withRouter(RoundRobinPool(nrOfInstances = 1)), "autorizacionActor")
   val autorizacionUsuarioEmpresarialActor = context.actorOf(
@@ -51,7 +47,7 @@ case class AutorizacionActorSupervisor(sesionActorSupervisor: ActorRef) extends 
     case m: AutorizarUsuarioEmpresarialAdminMessage =>
       autorizacionUsuarioEmpresarialActor forward m; log.info(m.toString)
 
-    case message: Any => println("LO ESTOY MANEJANDO !!") ;  autorizacionActor forward message; log.info(message.toString)
+    case message: Any => autorizacionActor forward message; log.info(message.toString)
 
   }
 
@@ -75,17 +71,17 @@ object AutorizacionActor {
  */
 case class AutorizacionActor(sesionActorSupervisor: ActorRef) extends Actor with ActorLogging with FutureResponse {
 
-  import context.dispatcher
-  import co.com.alianza.util.json.MarshallableImplicits._
-  import scalaz.std.AllInstances._
-  import scalaz.Validation
-
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.errorValidacion
+  import context.dispatcher
+
+  import scalaz.Validation
+  import scalaz.std.AllInstances._
   implicit val timeout: Timeout = 10.seconds
 
   def receive = {
 
     case message: AutorizarUrl =>
+
       val currentSender = sender()
       val future = (for {
         usuarioOption <- ValidationT(validarToken(message.token))
@@ -134,9 +130,8 @@ case class AutorizacionActor(sesionActorSupervisor: ActorRef) extends Actor with
    * @param token El token para realizar validación
    */
   private def validarToken(token: String): Future[Validation[PersistenceException, Option[Usuario]]] = {
-    println("2.0 LO ESTOY MANEJANDO !!") ;
-    var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
-    var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
+    var util: AesUtil = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
+    var decryptedToken: String = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
     Token.autorizarToken(decryptedToken) match {
       case true =>
         usDataAdapter.obtenerUsuarioToken(token).flatMap { x =>
@@ -157,11 +152,10 @@ case class AutorizacionActor(sesionActorSupervisor: ActorRef) extends Actor with
    * @return
    */
   private def guardaTokenCache(usuarioOption: Option[Usuario], token: String): Future[Option[Usuario]] = {
-    println("3.0 LO ESTOY MANEJANDO !!") ;
     val validacionSesion: Future[Boolean] = ask(sesionActorSupervisor, ValidarSesion(token)).mapTo[Boolean]
     validacionSesion.map {
-      case true => println("4.0.1 LO ESTOY MANEJANDO !!") ; usuarioOption.map(usuario => usuario.copy(contrasena = None))
-      case false => println("4.0.2 LO ESTOY MANEJANDO !!") ; None
+      case true => usuarioOption.map(usuario => usuario.copy(contrasena = None))
+      case false => None
     }
   }
 
