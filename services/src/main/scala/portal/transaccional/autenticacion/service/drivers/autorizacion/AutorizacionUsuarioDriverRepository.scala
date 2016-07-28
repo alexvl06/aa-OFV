@@ -3,21 +3,23 @@ package portal.transaccional.autenticacion.service.drivers.autorizacion
 import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
+import co.com.alianza.domain.aggregates.autenticacion.SesionActorSupervisor
 import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.infrastructure.messages.ValidarSesion
 import co.com.alianza.persistence.entities.{ RecursoPerfil, Usuario }
-import co.com.alianza.util.token.{ Token, AesUtil }
+import co.com.alianza.util.token.{ AesUtil, Token }
 import enumerations.CryptoAesParameters
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ AlianzaDAOs, UsuarioDAOs }
 
-import scala.concurrent.{ Future, ExecutionContext }
-import scala.reflect.ClassTag
 import scala.concurrent.duration._
+import scala.concurrent.{ ExecutionContext, Future }
+import scala.reflect.ClassTag
 
 /**
  * Created by hernando on 27/07/16.
  */
-case class AutorizacionUsuarioDriverRepository(usuarioDAO: UsuarioDAOs, alianzaDAO: AlianzaDAOs, sessionActor: ActorRef)(implicit val ex: ExecutionContext) {
+case class AutorizacionUsuarioDriverRepository(usuarioDAO: UsuarioDAOs, alianzaDAO: AlianzaDAOs, sessionActor: ActorRef)(implicit val ex: ExecutionContext)
+    extends AutorizacionUsuarioRepository {
 
   implicit val timeout = Timeout(5.seconds)
 
@@ -26,7 +28,7 @@ case class AutorizacionUsuarioDriverRepository(usuarioDAO: UsuarioDAOs, alianzaD
       validar <- validarToken(token)
       usuarioOption <- usuarioDAO.getByToken(token)
       usuario <- validarUsario(usuarioOption)
-      validarSesion <- Future { true }
+      validarSesion <- actorResponse[SesionActorSupervisor.SesionUsuarioValidada](sessionActor, ValidarSesion(token))
       recursos <- alianzaDAO.getResources(usuario.id.get)
       validarRecurso <- resolveMessageRecursos(recursos.filter(filtrarRecursos(_, url)))
     } yield validarRecurso
@@ -73,28 +75,19 @@ case class AutorizacionUsuarioDriverRepository(usuarioDAO: UsuarioDAOs, alianzaD
    * @param url la url a validar
    * @return
    */
-  def filtrarRecursos(recurso: RecursoPerfil, url: String): Boolean =
-    filtrarRecursos(recurso.urlRecurso, recurso.acceso, url)
+  private def filtrarRecursos(recurso: RecursoPerfil, url: String): Boolean = filtrarRecursos(recurso.urlRecurso, recurso.acceso, url)
 
-  def filtrarRecursos(urlRecurso: String, acceso: Boolean, url: String): Boolean = {
-    //TODO: quitar esos "ifseses"
-    if (urlRecurso.equals(url)) acceso
-    else if (urlRecurso.endsWith("/*")) {
-      val urlC = urlRecurso.substring(0, urlRecurso.lastIndexOf("*"))
-      if (urlC.equals(url + "/")) acceso
-      else {
-        if (url.length >= urlC.length) {
-          val urlSuffix = url.substring(0, urlC.length)
-          urlSuffix.equals(urlC) && acceso
-        } else false
-      }
-    } else false
+  private def filtrarRecursos(urlRecurso: String, acceso: Boolean, url: String) = {
+    val urlC = urlRecurso.substring(0, urlRecurso.lastIndexOf("*"))
+    if (urlRecurso.equals(url) || (urlRecurso.endsWith("/*") && urlC.equals(url + "/"))) {
+      acceso
+    } else if (urlRecurso.endsWith("/*") && url.length >= urlC.length) {
+      url.substring(0, urlC.length).equals(urlC) && acceso
+    } else { false }
   }
 
-  def actorResponse[T: ClassTag](actor: ActorRef, msg: ValidarSesion): Future[T] = {
+  private def actorResponse[T: ClassTag](actor: ActorRef, msg: ValidarSesion): Future[T] = {
     (actor ? msg).mapTo[T]
   }
 
 }
-
-case class ForbiddenMessage(usuario: Usuario, filtro: Option[String], code: String)
