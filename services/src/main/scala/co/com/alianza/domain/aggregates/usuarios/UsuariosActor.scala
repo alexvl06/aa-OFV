@@ -195,8 +195,7 @@ class UsuariosActor extends Actor with ActorLogging with AlianzaActors {
                                   case zSuccess(_) =>
                                     //El olvido de contrasena queda para usuarios en estado diferente a bloqueado por super admin
                                     // y pendiente activacion
-                                    if (valueResponseUsuarioEmpresarial.estado != EstadosEmpresaEnum.bloqueadoPorAdmin.id &&
-                                      valueResponseUsuarioEmpresarial.estado != EstadosEmpresaEnum.pendienteActivacion.id) {
+                                    if (valueResponseUsuarioEmpresarial.estado != EstadosEmpresaEnum.bloqueadoPorAdmin.id) {
                                       //Se cambia a estado reinicio de contraseña cuando el cliente hace click en el enlace del correo
                                       enviarCorreoDefinirContrasena(message.perfilCliente, message.identificacion, message.tipoIdentificacion, responseCliente.wcli_dir_correo, currentSender, Some(valueResponseUsuarioEmpresarial.id))
                                     } else
