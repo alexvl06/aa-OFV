@@ -46,18 +46,6 @@ case class AutorizacionUsuarioDriverRepository(usuarioDAO: UsuarioDAOs, sessionA
   }
 
  /*
-    case message: AutorizarUrl =>
-      val currentSender = sender()
-      val future = (for {
-        usuarioOption <- ValidationT(validarToken(message.token))
-        resultAutorizar <- ValidationT(validarRecurso(usuarioOption, message.url))
-      } yield {
-        resultAutorizar
-      }).run
-      resolveFutureValidation(future, (x: ResponseMessage) => x, errorValidacion, currentSender)
-
-  }
-
 
   /**
    * Se valida si el recurso solicitado esta asociado al usuario

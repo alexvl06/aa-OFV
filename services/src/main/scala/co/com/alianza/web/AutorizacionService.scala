@@ -1,26 +1,14 @@
 package co.com.alianza.web
 
+import akka.actor.{ ActorSelection, ActorSystem }
+import co.com.alianza.app.AlianzaCommons
 import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.infrastructure.auditing.{ AuditingHelper, AuditingUser }
-import co.com.alianza.infrastructure.messages._
-import co.com.alianza.infrastructure.messages.AutorizarUsuarioEmpresarialMessage
-import co.com.alianza.infrastructure.messages.AutorizarUsuarioEmpresarialAdminMessage
-import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
 import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{ DataAccessAdapter => AgenteEmpresarialDataAccessAdapter }
 import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{ DataAccessAdapter => ClienteAdminDataAccessAdapter }
-import co.com.alianza.infrastructure.dto.Usuario
+import co.com.alianza.infrastructure.messages.{ AutorizarUrl, AutorizarUsuarioEmpresarialAdminMessage, AutorizarUsuarioEmpresarialMessage }
 import co.com.alianza.util.token.{ AesUtil, Token }
-import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import enumerations.CryptoAesParameters
-import spray.routing.{ Directives, RequestContext }
-import co.com.alianza.app.AlianzaCommons
-import co.com.alianza.infrastructure.messages.{ AutorizarUrl, InvalidarToken }
-import co.com.alianza.infrastructure.cache.CacheHelper
-import akka.actor.{ ActorSelection, ActorSystem }
-
-import scala.concurrent.{ ExecutionContext, Future }
-import scalaz.Validation
+import spray.routing.Directives
 
 case class AutorizacionService(
   kafkaActor: ActorSelection,
@@ -29,8 +17,6 @@ case class AutorizacionService(
 )(implicit val system: ActorSystem)
     extends Directives
     with AlianzaCommons {
-  import system.dispatcher
-  import AutenticacionMessagesJsonSupport._
 
   def route = {
     path("validarToken" / Segment) {

@@ -20,6 +20,7 @@ import portal.transaccional.autenticacion.service.drivers.configuracion.Configur
 import portal.transaccional.autenticacion.service.drivers.empresa.EmpresaRepository
 import portal.transaccional.autenticacion.service.drivers.ipempresa.IpEmpresaRepository
 import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaRepository
+import portal.transaccional.autenticacion.service.drivers.respuesta.RespuestaUsuarioRepository
 import portal.transaccional.autenticacion.service.drivers.usuario.{ UsuarioEmpresarialAdminRepository, UsuarioEmpresarialRepository }
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -28,7 +29,7 @@ import scala.reflect.ClassTag
 case class AutenticacionEmpresaDriverRepository(
     usuarioRepo: UsuarioEmpresarialRepository, usuarioAdminRepo: UsuarioEmpresarialAdminRepository, clienteCoreRepo: ClienteRepository,
     empresaRepo: EmpresaRepository, reglaRepo: ReglaContrasenaRepository, configuracionRepo: ConfiguracionRepository, ipRepo: IpEmpresaRepository,
-    sessionActor: ActorRef
+    sessionActor: ActorRef, respuestasRepo: RespuestaUsuarioRepository
 )(implicit val ex: ExecutionContext) extends AutenticacionEmpresaRepository {
 
   implicit val timeout = Timeout(5.seconds)
@@ -141,8 +142,8 @@ case class AutenticacionEmpresaDriverRepository(
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
       token <- generarTokenAdmin(usuario, ip, inactividad.llave)
       ips <- ipRepo.getIpsByEmpresaId(empresa.id)
-      //respuestas <- respuestasRepo.getRespuestasById(usuario.id.get)
-      validacionIps <- ipRepo.validarControlIpAdmin(ip, ips, token, true) //TODO: AGREGAR LA PREGUNTA DE LAS RESPUESTAS(respuestas.nonEmpty)
+      respuestas <- respuestasRepo.getRespuestasById(usuario.id)
+      validacionIps <- ipRepo.validarControlIpAdmin(ip, ips, token, respuestas.nonEmpty) //TODO: AGREGAR LA PREGUNTA DE LAS RESPUESTAS(respuestas.nonEmpty)
       asociarToken <- usuarioAdminRepo.actualizarToken(usuario.id, token)
       //TODO: poner la empresa (dto)
       sesion <- actorResponse[SesionActorSupervisor.SesionUsuarioCreada](sessionActor, CrearSesionUsuario(token, inactividad.valor.toInt))
@@ -165,7 +166,7 @@ case class AutenticacionEmpresaDriverRepository(
   private def generarTokenAdmin(usuario: UsuarioEmpresarialAdmin, ip: String, inactividad: String): Future[String] = Future {
     Token.generarToken(usuario.usuario, usuario.correo, getTipoPersona(usuario.tipoIdentificacion),
       usuario.ipUltimoIngreso.get, usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())),
-      inactividad, TiposCliente.agenteEmpresarial, Some(usuario.identificacion))
+      inactividad, TiposCliente.clienteAdministrador, Some(usuario.identificacion))
   }
 
   private def getTipoPersona(idTipoIdent: Int): String = {

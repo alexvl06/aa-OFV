@@ -68,7 +68,7 @@ trait ServiceAuthorization {
                 val user = JsonUtil.fromJson[UsuarioForbidden](r.responseBody)
                 Right(UsuarioAuth(user.usuario.id.get, user.usuario.tipoCliente, user.usuario.identificacion, user.usuario.tipoIdentificacion))
             }
-          case ex : Any =>
+          case ex: Any =>
             println("*************************")
             println(ex)
             println("*************************")
