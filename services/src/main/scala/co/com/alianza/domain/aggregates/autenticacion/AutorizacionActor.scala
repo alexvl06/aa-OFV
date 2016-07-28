@@ -106,9 +106,7 @@ case class AutorizacionActor(sesionActorSupervisor: ActorRef) extends Actor with
     Token.autorizarToken(decryptedToken) match {
       case true =>
         usDataAdapter.obtenerUsuarioToken(token).flatMap { x =>
-          val y: Validation[PersistenceException, Future[Option[Usuario]]] = x.map { userOpt =>
-            guardaTokenCache(userOpt, token)
-          }
+          val y: Validation[PersistenceException, Future[Option[Usuario]]] = x.map { userOpt => guardaTokenCache(userOpt, token) }
           co.com.alianza.util.transformers.Validation.sequence(y)
         }
       case false =>
@@ -180,9 +178,7 @@ case class AutorizacionActor(sesionActorSupervisor: ActorRef) extends Actor with
       if (urlC.equals(url + "/")) acceso
       else {
         if (url.length >= urlC.length) {
-          //TODO: Whhhattt ??? if (url.endsWith("/")) "" else ""
-          val ends = if (url.endsWith("/")) "" else ""
-          val urlSuffix = url.substring(0, urlC.length) + ends
+          val urlSuffix = url.substring(0, urlC.length) + ""
           if (urlSuffix.equals(urlC)) acceso
           else false
         } else false
