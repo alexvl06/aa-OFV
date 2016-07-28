@@ -24,15 +24,26 @@ case class AutorizacionUsuarioDriverRepository (usuarioDAO: UsuarioDAOs, rescurs
 
   implicit val timeout = Timeout(5.seconds)
 
+  val aesUtil = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
+
   def autorizarUrl(token: String, url: String): Future[Boolean] = {
+    val encriptedToken = encriptarToken(token)
     for {
-      validar <- validarToken(token)
-      usuarioOption <- usuarioDAO.getByToken(token)
+      validar <- validarToken(encriptedToken)
+      usuarioOption <- usuarioDAO.getByToken(encriptedToken)
       usuario <- validarUsario(usuarioOption)
       validarSesion <- actorResponse[SesionActorSupervisor.SesionUsuarioValidada](sessionActor, ValidarSesion(token))
       recursos <- rescursoRepo.obtenerRecursos(usuario.id.get)
-      validarRecurso <- resolveMessageRecursos(recursos.filter(rescursoRepo.filtrarRecursos(_, url)))
+      validarRecurso <- resolveMessageRecursos(recursos.filter(filtrarRecursos(_, url)))
     } yield validarRecurso
+  }
+
+  def encriptarToken(token: String): String = {
+    aesUtil.encrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
+  }
+
+  def desencriptarToken(encriptedToken: String): String = {
+    aesUtil.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, encriptedToken)
   }
 
   def validarUsario(usuarioOption: Option[Usuario]): Future[Usuario] = {
@@ -43,10 +54,14 @@ case class AutorizacionUsuarioDriverRepository (usuarioDAO: UsuarioDAOs, rescurs
     }
   }
 
-  def validarToken(token: String): Future[Boolean] = {
-    val util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
-    val tokenDesencriptado = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
-    Token.autorizarToken(tokenDesencriptado) match {
+  def validarToken(encriptedToken: String): Future[Boolean] = {
+    println("--------------------")
+    println("--------------------")
+    println("validarToken")
+    println("--------------------")
+    println(encriptedToken)
+    val token = desencriptarToken(encriptedToken)
+    Token.autorizarToken(token) match {
       case true => Future.successful(true)
       case _ => Future.failed(ValidacionException("500", "Token erróneo"))
       //TODO: validar si ese es el codigo
