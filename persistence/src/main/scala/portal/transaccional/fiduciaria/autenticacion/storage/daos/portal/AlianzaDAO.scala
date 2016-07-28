@@ -26,12 +26,10 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
    * @return
    */
   def getResources(idUsuario: Int): Future[Seq[RecursoPerfil]] = {
-
       val usuariosRecursosJoin = for {
         ((usu: UsuarioTable, per: PerfilUsuarioTable), rec: RecursoPerfilTable) <-
         usuarios join perfilesUsuario on (_.id === _.idUsuario) join recursos on (_._2.idPerfil === _.idPerfil) if usu.id === idUsuario
       } yield rec
-
       run(usuariosRecursosJoin.result)
   }
 
@@ -42,7 +40,6 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
    * @return
    */
   def getAdminToken(token: String): Future[Option[(UsuarioEmpresarialAdmin, Int)]] = {
-
       val query = for {
         (clienteAdministrador, empresa) <- usuariosEmpresarialesAdmin join usuariosEmpresarialesAdminEmpresa on {
           (uea, ueae) => uea.token === token && uea.id === ueae.idUsuarioEmpresarialAdmin
