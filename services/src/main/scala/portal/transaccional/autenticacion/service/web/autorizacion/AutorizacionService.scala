@@ -6,6 +6,7 @@ import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.exceptions.{ PersistenceException, ValidacionException }
 import co.com.alianza.util.token.{ AesUtil, Token }
 import enumerations.CryptoAesParameters
+import portal.transaccional.autenticacion.service.drivers.autorizacion.AutorizacionUsuarioRepository
 import portal.transaccional.autenticacion.service.drivers.usuario.{ UsuarioEmpresarialAdminRepository, UsuarioEmpresarialRepository, UsuarioRepository }
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
@@ -19,8 +20,8 @@ import scala.concurrent.{ ExecutionContext, Future }
  * Created by jonathan on 27/07/16.
  */
 case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgenteRepository: UsuarioEmpresarialRepository,
-  usuarioAdminRepository: UsuarioEmpresarialAdminRepository, kafkaActor: ActorSelection)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters
-    with CrossHeaders {
+    usuarioAdminRepository: UsuarioEmpresarialAdminRepository, autorizacionRepository: AutorizacionUsuarioRepository,
+    kafkaActor: ActorSelection)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   val invalidarTokenPath = "invalidarToken"
   val validarTokenPath = "validarToken"
@@ -30,10 +31,10 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
       pathEndOrSingleSlash {
         invalidarToken
       }
-    } /*~path(validarTokenPath / Segment) {
+    } ~ path(validarTokenPath / Segment) {
       token =>
         validarToken(token)
-    }*/
+    }
   }
 
   private def invalidarToken = {
@@ -68,20 +69,19 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
     }
   }
 
-  /*private def validarToken(token: String) = {
+  private def validarToken(token: String) = {
     get {
       parameters('url, 'ipRemota) {
         (url, ipRemota) =>
           val tipoCliente = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
-          var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
-          var encryptedToken = util.encrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
-
-          val resultado: Future[Int] = if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
-            //repo.metodo
-          }else if (tipoCliente == TiposCliente.clienteAdministrador.toString) {
-            //repo.metodo
-          }else {
-            //repo.metodo
+          val resultado: Future[Boolean] = if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
+            autorizacionRepository.autorizarUrl(token, url)
+          } else if (tipoCliente == TiposCliente.clienteAdministrador.toString) {
+            //TODO: aqui va el empresarial
+            autorizacionRepository.autorizarUrl(token, url)
+          } else {
+            //TODO: aqui va el empresarial
+            autorizacionRepository.autorizarUrl(token, url)
           }
           // TODO: Auditoria
           onComplete(resultado) {
@@ -90,7 +90,7 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
           }
       }
     }
-  }*/
+  }
 
   def execution(ex: Any): StandardRoute = {
     ex match {

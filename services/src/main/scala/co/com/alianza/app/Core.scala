@@ -20,6 +20,7 @@ import co.com.alianza.persistence.config.pg.PGConfig
 import co.com.alianza.util.ConfigApp
 import com.typesafe.config.Config
 import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionDriverRepository, AutenticacionEmpresaDriverRepository }
+import portal.transaccional.autenticacion.service.drivers.autorizacion.AutorizacionUsuarioDriverRepository
 import portal.transaccional.autenticacion.service.drivers.cliente.ClienteDriverCoreRepository
 import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionDriverRepository
 import portal.transaccional.autenticacion.service.drivers.empresa.EmpresaDriverRepository
@@ -122,6 +123,7 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val usuarioAgenteRepo = UsuarioEmpresarialDriverRepository(usuarioAgenteDAO)(ex)
   lazy val respuestaUsuarioRepo = RespuestaUsuarioDriverRepository(respuestaUsuarioDAO)(ex)
   lazy val usuarioAdminRepo = UsuarioEmpresarialAdminDriverRepository(usuarioAdminDAO)(ex)
+  lazy val autorizacionUsuarioRepo = AutorizacionUsuarioDriverRepository(usuarioDAO, alianzaDAO, sessionActor)(ex)
   lazy val autenticacionRepo = AutenticacionDriverRepository(usuarioRepo, clienteRepo, configuracionRepo, reglaContrasenaRepo, ipUsuarioRepo,
     respuestaUsuarioRepo, sessionActor)(ex)
   lazy val autenticacionEmpresaRepo = AutenticacionEmpresaDriverRepository(usuarioAgenteRepo, usuarioAdminRepo, clienteRepo, empresaRepo, reglaContrasenaRepo,
@@ -132,6 +134,7 @@ private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
   implicit val config: DBConfig = new DBConfig with PGConfig
   implicit val configCore: DBConfig = new DBConfig with OracleConfig
 
+  lazy val alianzaDAO = AlianzaDAO()(config)
   lazy val empresaDAO = EmpresaDAO()(config)
   lazy val usuarioDAO = UsuarioDAO()(config)
   lazy val ipUsuarioDAO = IpUsuarioDAO()(config)

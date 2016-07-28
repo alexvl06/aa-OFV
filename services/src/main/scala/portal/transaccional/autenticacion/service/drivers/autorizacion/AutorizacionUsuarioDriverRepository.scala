@@ -18,6 +18,7 @@ import scala.reflect.ClassTag
 /**
  * Created by hernando on 27/07/16.
  */
+//TODO: Crear el repo para los recursos y no usar el alianza dao
 case class AutorizacionUsuarioDriverRepository(usuarioDAO: UsuarioDAOs, alianzaDAO: AlianzaDAOs, sessionActor: ActorRef)(implicit val ex: ExecutionContext)
     extends AutorizacionUsuarioRepository {
 
