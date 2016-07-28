@@ -20,7 +20,7 @@ object DataAccessTranslator {
 
   def translateUsuario(usuario: Seq[dUsuario]): List[Usuario] = {
     usuario.map(usu => Usuario(usu.id, usu.correo, new Date(usu.fechaActualizacion.getTime), usu.identificacion, usu.tipoIdentificacion, usu.estado,
-      usu.contrasena, usu.numeroIngresosErroneos, usu.ipUltimoIngreso, usu.fechaUltimoIngreso, TiposCliente.clienteIndividual)).toList
+      usu.numeroIngresosErroneos, usu.ipUltimoIngreso, usu.fechaUltimoIngreso, TiposCliente.clienteIndividual)).toList
   }
 
   def translateEmpresa(emp: dEmpresa): Empresa = {
@@ -32,7 +32,7 @@ object DataAccessTranslator {
   }
 
   def translateUsuario(usu: dUsuario): Usuario = {
-    Usuario(usu.id, usu.correo, new Date(usu.fechaActualizacion.getTime), usu.identificacion, usu.tipoIdentificacion, usu.estado, usu.contrasena,
+    Usuario(usu.id, usu.correo, new Date(usu.fechaActualizacion.getTime), usu.identificacion, usu.tipoIdentificacion, usu.estado,
       usu.numeroIngresosErroneos, usu.ipUltimoIngreso, usu.fechaUltimoIngreso, TiposCliente.clienteIndividual)
   }
 
