@@ -33,8 +33,6 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
       }
     } ~ path(validarTokenPath / Segment) {
       token =>
-        println("*****************************************")
-        println(token)
         validarToken(token)
     }
   }
@@ -88,7 +86,7 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
           // TODO: Auditoria
           onComplete(resultado) {
             case Success(value) =>
-              println("OK"); complete(value.toString)
+              complete(value.toString)
             case Failure(ex) => ex.printStackTrace(); execution(ex)
           }
       }
@@ -97,7 +95,7 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
 
   def execution(ex: Any): StandardRoute = {
     ex match {
-      case ex: ValidacionException => complete((StatusCodes.Conflict, ex))
+      case ex: ValidacionException => complete((StatusCodes.Forbidden, ex))
       case ex: PersistenceException => complete((StatusCodes.InternalServerError, "Error inesperado"))
       case ex: Throwable => complete((StatusCodes.InternalServerError, "Error inesperado"))
     }

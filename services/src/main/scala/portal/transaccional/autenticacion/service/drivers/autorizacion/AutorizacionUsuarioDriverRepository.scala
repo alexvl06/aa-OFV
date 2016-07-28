@@ -55,11 +55,6 @@ case class AutorizacionUsuarioDriverRepository(usuarioDAO: UsuarioDAOs, alianzaD
   }
 
   def validarToken(encriptedToken: String): Future[Boolean] = {
-    println("--------------------")
-    println("--------------------")
-    println("validarToken")
-    println("--------------------")
-    println(encriptedToken)
     val token = desencriptarToken(encriptedToken)
     Token.autorizarToken(token) match {
       case true => Future.successful(true)
@@ -91,15 +86,9 @@ case class AutorizacionUsuarioDriverRepository(usuarioDAO: UsuarioDAOs, alianzaD
    * @param url la url a validar
    * @return
    */
-  private def filtrarRecursos(recurso: RecursoPerfil, url: String): Boolean = filtrarRecursos(recurso.urlRecurso, recurso.acceso, url)
-
-  private def filtrarRecursos(urlRecurso: String, acceso: Boolean, url: String) = {
-    val urlC = urlRecurso.substring(0, urlRecurso.lastIndexOf("*"))
-    if (urlRecurso.equals(url) || (urlRecurso.endsWith("/*") && urlC.equals(url + "/"))) {
-      acceso
-    } else if (urlRecurso.endsWith("/*") && url.length >= urlC.length) {
-      url.substring(0, urlC.length).equals(urlC) && acceso
-    } else { false }
+  private def filtrarRecursos(recurso: RecursoPerfil, url: String): Boolean = {
+    val urlR = recurso.urlRecurso
+    urlR.contains(url) && urlR.substring(0, urlR.lastIndexOf("/")).equals(url) && recurso.acceso
   }
 
   private def actorResponse[T: ClassTag](actor: ActorRef, msg: ValidarSesion): Future[T] = {
