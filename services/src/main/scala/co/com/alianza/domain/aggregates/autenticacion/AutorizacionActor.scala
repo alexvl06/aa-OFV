@@ -95,35 +95,6 @@ case class AutorizacionActor(sesionActorSupervisor: ActorRef) extends Actor with
       }).run
       resolveFutureValidation(future, (x: ResponseMessage) => x, errorValidacion, currentSender)
 
-    case message: InvalidarToken =>
-      val currentSender = sender()
-      val futureInvalidarToken = usDataAdapter.invalidarTokenUsuario(message.token)
-      futureInvalidarToken onComplete {
-        case Failure(failure) => currentSender ! failure
-        case Success(value) =>
-          sesionActorSupervisor ! InvalidarSesion(message.token)
-          currentSender ! ResponseMessage(OK, "El token ha sido removido")
-      }
-
-    case message: InvalidarTokenAgente =>
-      val currentSender = sender()
-      val futureInvalidarToken = usDataAdapter.invalidarTokenAgente(message.token)
-      futureInvalidarToken onComplete {
-        case Failure(failure) => currentSender ! failure
-        case Success(value) =>
-          sesionActorSupervisor ! InvalidarSesion(message.token)
-          currentSender ! ResponseMessage(OK, "El token ha sido removido")
-      }
-
-    case message: InvalidarTokenClienteAdmin =>
-      val currentSender = sender()
-      val futureInvalidarToken = usDataAdapter.invalidarTokenClienteAdmin(message.token)
-      futureInvalidarToken onComplete {
-        case Failure(failure) => currentSender ! failure
-        case Success(value) =>
-          sesionActorSupervisor ! InvalidarSesion(message.token)
-          currentSender ! ResponseMessage(OK, "El token ha sido removido")
-      }
   }
 
   /**
@@ -160,8 +131,8 @@ case class AutorizacionActor(sesionActorSupervisor: ActorRef) extends Actor with
     println("3.0 LO ESTOY MANEJANDO !!") ;
     val validacionSesion: Future[Boolean] = ask(sesionActorSupervisor, ValidarSesion(token)).mapTo[Boolean]
     validacionSesion.map {
-      case true => println("4.0.1 LO ESTOY MANEJANDO !!") ; usuarioOption.map(usuario => usuario.copy(contrasena = None))
-      case false => println("4.0.2 LO ESTOY MANEJANDO !!") ; None
+      case true => usuarioOption.map(usuario => usuario.copy(contrasena = None))
+      case false => None
     }
   }
 
