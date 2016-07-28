@@ -19,7 +19,8 @@ import scala.concurrent.duration._
 /**
  * Created by hernando on 27/07/16.
  */
-case class AutorizacionUsuarioDriverRepository(usuarioDAO: UsuarioDAOs, alianzaDAO: AlianzaDAOs, sessionActor: ActorRef)(implicit val ex: ExecutionContext) {
+case class AutorizacionUsuarioDriverRepository(usuarioDAO: UsuarioDAOs, alianzaDAO: AlianzaDAOs, sessionActor: ActorRef)(implicit val ex: ExecutionContext)
+  extends AutorizacionUsuarioRepository {
 
   implicit val timeout = Timeout(5.seconds)
 
@@ -78,25 +79,23 @@ case class AutorizacionUsuarioDriverRepository(usuarioDAO: UsuarioDAOs, alianzaD
    * @param url la url a validar
    * @return
    */
-  private def filtrarRecursos(recurso: RecursoUsuario, url: String): Boolean =
-    filtrarRecursos(recurso.urlRecurso, recurso.acceso, url)
+  private def filtrarRecursos(recurso: RecursoUsuario, url: String): Boolean = filtrarRecursos(recurso.urlRecurso, recurso.acceso, url)
 
   private def filtrarRecursos(urlRecurso: String, acceso: Boolean, url: String) = {
-    //TODO: quitar esos "ifseses"
-    if (urlRecurso.equals(url)) acceso
-    else if (urlRecurso.endsWith("/*")) {
-      val urlC = urlRecurso.substring(0, urlRecurso.lastIndexOf("*"))
-      if (urlC.equals(url + "/")) acceso
-      else {
-        if (url.length >= urlC.length) {
-          val urlSuffix = url.substring(0, urlC.length)
-          urlSuffix.equals(urlC) && acceso
-        } else false
-      }
-    } else false
+
+    val urlC = urlRecurso.substring(0, urlRecurso.lastIndexOf("*"))
+
+    if (urlRecurso.equals(url) || (urlRecurso.endsWith("/*") && urlC.equals(url + "/"))) {
+      acceso
+    } else if (urlRecurso.endsWith("/*") && url.length >= urlC.length) {
+      val urlSuffix = url.substring(0, urlC.length)
+      urlSuffix.equals(urlC) && acceso
+    } else {
+      false
+    }
   }
 
-  def actorResponse[T: ClassTag](actor: ActorRef, msg: ValidarSesion): Future[T] = {
+  private def actorResponse[T: ClassTag](actor: ActorRef, msg: ValidarSesion): Future[T] = {
     (actor ? msg).mapTo[T]
   }
 
