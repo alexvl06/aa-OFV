@@ -1,22 +1,16 @@
 package portal.transaccional.autenticacion.service.web.autorizacion
 
-import java.security.MessageDigest
-
-import akka.actor.{ ActorSelection, RootActorPath }
+import akka.actor.{ ActorSelection }
 import co.com.alianza.app.CrossHeaders
 import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.domain.aggregates.autenticacion.{ ClusterUtil, DeleteSession }
 import co.com.alianza.exceptions.{ PersistenceException, ValidacionException }
-import co.com.alianza.infrastructure.auditing.{ AuditingHelper, KafkaActor }
-import co.com.alianza.infrastructure.auditing.AuditingHelper._
-import co.com.alianza.infrastructure.dto.{ Empresa, Usuario }
 import co.com.alianza.util.token.{ AesUtil, Token }
 import enumerations.CryptoAesParameters
 import portal.transaccional.autenticacion.service.drivers.usuario.{ UsuarioEmpresarialAdminRepository, UsuarioEmpresarialRepository, UsuarioRepository }
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import spray.http.StatusCodes
-import spray.routing.{ RequestContext, Route, StandardRoute }
+import spray.routing.{ Route, StandardRoute }
 
 import scala.util.{ Failure, Success }
 import scala.concurrent.{ ExecutionContext, Future }
@@ -50,6 +44,8 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
             val util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
             val decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token.token)
             val tipoCliente = Token.getToken(decryptedToken).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
+
+            // TODO: Matar sesion
             val resultado: Future[Int] = if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
               usuarioAgenteRepository.invalidarToken(token.token)
             } else if (tipoCliente == TiposCliente.clienteAdministrador.toString) {
@@ -58,6 +54,7 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
               usuarioRepository.invalidarToken(token.token)
             }
 
+            // TODO: Auditoria
             /*mapRequestContext((r: RequestContext) => requestWithFutureAuditing[PersistenceException, Usuario]
               (r, AuditingHelper.fiduciariaTopic, AuditingHelper.cierreSesionIndex, ip.value, kafkaActor, usuario)) {*/
             onComplete(resultado) {
@@ -70,6 +67,30 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
         }
     }
   }
+
+  /*private def validarToken(token: String) = {
+    get {
+      parameters('url, 'ipRemota) {
+        (url, ipRemota) =>
+          val tipoCliente = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
+          var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
+          var encryptedToken = util.encrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
+
+          val resultado: Future[Int] = if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
+            //repo.metodo
+          }else if (tipoCliente == TiposCliente.clienteAdministrador.toString) {
+            //repo.metodo
+          }else {
+            //repo.metodo
+          }
+          // TODO: Auditoria
+          onComplete(resultado) {
+            case Success(value) => complete(value.toString)
+            case Failure(ex) => execution(ex)
+          }
+      }
+    }
+  }*/
 
   def execution(ex: Any): StandardRoute = {
     ex match {
