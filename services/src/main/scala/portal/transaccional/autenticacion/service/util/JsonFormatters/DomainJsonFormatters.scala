@@ -25,8 +25,7 @@ trait DomainJsonFormatters {
 
   //TiposCliente
   implicit val tipoClienteFormat = new RootJsonFormat[TiposCliente] {
-    //TODO: ajustar el 'read' del metodo para que encuentre el valor real
-    def read(json: JsValue): TiposCliente = TiposCliente.clienteIndividual
+    def read(json: JsValue): TiposCliente = json.convertTo[Int]
     def write(tipo: TiposCliente) = JsNumber(tipo.id)
   }
 
