@@ -3,7 +3,6 @@ package co.com.alianza.infrastructure.dto
 import java.util.Date
 import co.com.alianza.commons.enumerations.TiposCliente
 import TiposCliente._
-import co.com.alianza.commons.enumerations.TiposCliente
 
 /**
  *

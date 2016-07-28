@@ -33,7 +33,7 @@ case class AutorizacionUsuarioDriverRepository(usuarioDAO: UsuarioDAOs, recursoR
       validar <- validarToken(encriptedToken)
       usuarioOption <- usuarioDAO.getByToken(encriptedToken)
       usuario <- validarUsario(usuarioOption)
-      validarSesion <- actorResponse[SesionActorSupervisor.SesionUsuarioValidada](sessionActor, ValidarSesion(token))
+      validarSesion <- actorResponse[SesionActorSupervisor.SesionUsuarioValidada](sessionActor, ValidarSesion(encriptedToken))
       recursos <- recursoRepo.obtenerRecursos(usuario.id.get)
       validarRecurso <- resolveMessageRecursos(usuario, recursos, url)
     } yield validarRecurso
