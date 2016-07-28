@@ -1,6 +1,6 @@
 package portal.transaccional.autenticacion.service.drivers.autorizacion
 
-import co.com.alianza.infrastructure.dto.RecursoUsuario
+import co.com.alianza.infrastructure.dto.{ Usuario => UsuarioDTO }
 import co.com.alianza.persistence.entities.Usuario
 
 import scala.concurrent.Future
@@ -10,7 +10,7 @@ import scala.concurrent.Future
  */
 trait AutorizacionUsuarioRepository {
 
-  def autorizarUrl(token: String, url: String): Future[Boolean]
+  def autorizarUrl(token: String, url: String): Future[UsuarioDTO]
 
   def validarUsario(usuarioOption: Option[Usuario]): Future[Usuario]
 

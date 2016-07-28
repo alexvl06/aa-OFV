@@ -1,9 +1,10 @@
 package portal.transaccional.autenticacion.service.web.autorizacion
 
-import akka.actor.{ ActorSelection }
+import akka.actor.ActorSelection
 import co.com.alianza.app.CrossHeaders
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.exceptions.{ PersistenceException, ValidacionException }
+import co.com.alianza.infrastructure.dto.Usuario
 import co.com.alianza.util.token.{ AesUtil, Token }
 import enumerations.CryptoAesParameters
 import portal.transaccional.autenticacion.service.drivers.autorizacion.AutorizacionUsuarioRepository
@@ -74,7 +75,7 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
       parameters('url, 'ipRemota) {
         (url, ipRemota) =>
           val tipoCliente = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
-          val resultado: Future[Boolean] = if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
+          val resultado: Future[Usuario] = if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
             autorizacionRepository.autorizarUrl(token, url)
           } else if (tipoCliente == TiposCliente.clienteAdministrador.toString) {
             //TODO: aqui va el empresarial
@@ -85,9 +86,8 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
           }
           // TODO: Auditoria
           onComplete(resultado) {
-            case Success(value) =>
-              complete(value.toString)
-            case Failure(ex) => ex.printStackTrace(); execution(ex)
+            case Success(value) => complete(value.toString)
+            case Failure(ex) => execution(ex)
           }
       }
     }

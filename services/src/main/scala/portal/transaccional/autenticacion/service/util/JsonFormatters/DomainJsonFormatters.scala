@@ -1,6 +1,7 @@
 package portal.transaccional.autenticacion.service.util.JsonFormatters
 
 import co.com.alianza.exceptions.ValidacionException
+import co.com.alianza.infrastructure.dto.Usuario
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import portal.transaccional.autenticacion.service.web.Ipsuario.AgregarIpHabitualRequest
 import portal.transaccional.autenticacion.service.web.autenticacion.{ AutenticarRequest, AutenticarUsuarioEmpresarialRequest }
@@ -9,6 +10,7 @@ import portal.transaccional.autenticacion.service.web.autorizacion.InvalidarToke
 trait DomainJsonFormatters {
 
   this: CommonRESTFul =>
+
   //autenticacion
   implicit val autenticarFormatter = jsonFormat3(AutenticarRequest)
   implicit val AutenticarUsuarioEmpresarialFormatter = jsonFormat3(AutenticarUsuarioEmpresarialRequest)
@@ -21,5 +23,8 @@ trait DomainJsonFormatters {
 
   //validacion
   implicit val validacionExceptionFormatter = jsonFormat2(ValidacionException)
+
+  //usuario
+  implicit val usuarioFormatter = jsonFormat10(Usuario)
 
 }

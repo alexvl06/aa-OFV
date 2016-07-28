@@ -16,7 +16,6 @@ case class Usuario(
   identificacion: String,
   tipoIdentificacion: Int,
   estado: Int,
-  contrasena: Option[String],
   numeroIngresosErroneos: Int,
   ipUltimoIngreso: Option[String],
   fechaUltimoIngreso: Option[Date],
