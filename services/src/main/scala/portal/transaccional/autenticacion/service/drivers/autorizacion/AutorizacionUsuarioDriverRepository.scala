@@ -4,10 +4,11 @@ import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
 import co.com.alianza.domain.aggregates.autenticacion.SesionActorSupervisor
-import co.com.alianza.exceptions.ValidacionException
+import co.com.alianza.exceptions._
 import co.com.alianza.infrastructure.dto.{ Usuario => UsuarioDTO }
 import co.com.alianza.infrastructure.messages.ValidarSesion
 import co.com.alianza.persistence.entities.{ RecursoPerfil, Usuario }
+import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.token.{ AesUtil, Token }
 import enumerations.CryptoAesParameters
 import portal.transaccional.autenticacion.service.drivers.Recurso.RecursoRepository
@@ -27,7 +28,7 @@ case class AutorizacionUsuarioDriverRepository(usuarioDAO: UsuarioDAOs, recursoR
 
   val aesUtil = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
 
-  def autorizarUrl(token: String, url: String): Future[UsuarioDTO] = {
+  def autorizarUrl(token: String, url: String): Future[ValidacionAutorizacion] = {
     val encriptedToken = encriptarToken(token)
     for {
       validar <- validarToken(encriptedToken)
@@ -50,8 +51,7 @@ case class AutorizacionUsuarioDriverRepository(usuarioDAO: UsuarioDAOs, recursoR
   def validarUsario(usuarioOption: Option[Usuario]): Future[Usuario] = {
     usuarioOption match {
       case Some(usuario: Usuario) => Future.successful(usuario)
-      case _ => Future.failed(ValidacionException("500", "usuario no existe"))
-      //TODO: validar si ese es el codigo
+      case _ => Future.failed(NoAutorizado("usuario no existe"))
     }
   }
 
@@ -59,8 +59,7 @@ case class AutorizacionUsuarioDriverRepository(usuarioDAO: UsuarioDAOs, recursoR
     val token = desencriptarToken(encriptedToken)
     Token.autorizarToken(token) match {
       case true => Future.successful(true)
-      case _ => Future.failed(ValidacionException("500", "Token erróneo"))
-      //TODO: validar si ese es el codigo
+      case _ => Future.failed(NoAutorizado("Token erróneo"))
     }
   }
 
@@ -70,16 +69,21 @@ case class AutorizacionUsuarioDriverRepository(usuarioDAO: UsuarioDAOs, recursoR
    * @param recursos Listado de recursos
    * @return
    */
-  private def resolveMessageRecursos(usuario: Usuario, recursos: Seq[RecursoPerfil], url: String): Future[UsuarioDTO] = {
+  private def resolveMessageRecursos(usuario: Usuario, recursos: Seq[RecursoPerfil], url: String): Future[ValidacionAutorizacion] = Future {
+    val usuarioDTO: UsuarioDTO = DataAccessTranslator.entityToDto(usuario)
     val recursosFiltro = recursoRepo.filtrarRecursos(recursos, url)
     recursosFiltro.nonEmpty match {
-      case false => Future.failed(ValidacionException("403.1", "No tiene permiso"))
+      case false =>
+        val usuarioForbidden: ForbiddenMessage = ForbiddenMessage(usuarioDTO, None)
+        Prohibido("403.1", JsonUtil.toJson(usuarioForbidden))
       case true =>
         recursos.head.filtro match {
-          case Some(filtro) => Future.failed(ValidacionException("403.2", "No tiene permiso"))
+          case filtro @ Some(_) =>
+            val usuarioForbidden: ForbiddenMessage = ForbiddenMessage(usuarioDTO, filtro)
+            Prohibido("403.2", JsonUtil.toJson(usuarioForbidden))
           case None =>
-            val usuarioDTO = DataAccessTranslator.entityToDto(usuario)
-            Future.successful(usuarioDTO)
+            val usuarioJson: String = JsonUtil.toJson(usuarioDTO)
+            Autorizado(usuarioJson)
         }
     }
   }
@@ -89,3 +93,5 @@ case class AutorizacionUsuarioDriverRepository(usuarioDAO: UsuarioDAOs, recursoR
   }
 
 }
+
+case class ForbiddenMessage(usuario: UsuarioDTO, filtro: Option[String])

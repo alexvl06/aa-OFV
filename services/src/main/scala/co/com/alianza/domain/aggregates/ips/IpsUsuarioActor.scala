@@ -78,9 +78,9 @@ class IpsUsuarioActor extends Actor with ActorLogging {
         currentSender ! failure
       case Success(value) =>
         value match {
-          case zSuccess(response: Vector[IpsUsuario]) =>
+          case zSuccess(response: Seq[IpsUsuario]) =>
             currentSender ! ResponseMessage(OK, response.toJson)
-          case zSuccess(response: Vector[IpsEmpresa]) =>
+          case zSuccess(response: Seq[IpsEmpresa]) =>
             currentSender ! ResponseMessage(OK, response.toJson)
           case zFailure(error) =>
             currentSender ! error

@@ -3,7 +3,7 @@ package portal.transaccional.autenticacion.service.web.autorizacion
 import akka.actor.ActorSelection
 import co.com.alianza.app.CrossHeaders
 import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.exceptions.{ PersistenceException, ValidacionException }
+import co.com.alianza.exceptions._
 import co.com.alianza.infrastructure.dto.Usuario
 import co.com.alianza.util.token.{ AesUtil, Token }
 import enumerations.CryptoAesParameters
@@ -34,11 +34,6 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
       }
     } ~ path(validarTokenPath / Segment) {
       token =>
-        println("--------------------")
-        println("--------------------")
-        println("AutorizacionService.scala")
-        println("--------------------")
-        println(token)
         validarToken(token)
     }
   }
@@ -80,7 +75,7 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
       parameters('url, 'ipRemota) {
         (url, ipRemota) =>
           val tipoCliente = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
-          val resultado: Future[Usuario] = if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
+          val resultado: Future[ValidacionAutorizacion] = if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
             autorizacionRepository.autorizarUrl(token, url)
           } else if (tipoCliente == TiposCliente.clienteAdministrador.toString) {
             //TODO: aqui va el empresarial
@@ -91,9 +86,8 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
           }
           // TODO: Auditoria
           onComplete(resultado) {
-            case Success(value) =>
-              println(value); complete(value)
-            case Failure(ex) => ex.printStackTrace(); execution(ex)
+            case Success(value) => execution(value)
+            case Failure(ex) => execution(ex)
           }
       }
     }
@@ -101,7 +95,9 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
 
   def execution(ex: Any): StandardRoute = {
     ex match {
-      case ex: ValidacionException => complete((StatusCodes.Forbidden, ex))
+      case value: Autorizado => complete((StatusCodes.OK, value.usuario))
+      case value: Prohibido => complete((StatusCodes.Forbidden, value.usuario))
+      case ex: NoAutorizado => complete((StatusCodes.Unauthorized, ex))
       case ex: PersistenceException => complete((StatusCodes.InternalServerError, "Error inesperado"))
       case ex: Throwable => complete((StatusCodes.InternalServerError, "Error inesperado"))
     }

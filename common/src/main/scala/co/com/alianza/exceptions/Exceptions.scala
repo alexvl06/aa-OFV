@@ -51,3 +51,10 @@ object AlianzaException {
   def apply(exc: Throwable, level: LevelException, message: String) = new AlianzaException(exc, level, message, currentTime = System.currentTimeMillis())
 }
 
+/**
+ * Validaciones autorizacion token
+ */
+abstract class ValidacionAutorizacion() extends NoStackTrace
+case class NoAutorizado(codigo: String) extends ValidacionAutorizacion
+case class Autorizado(usuario: String) extends ValidacionAutorizacion
+case class Prohibido(codigo: String, usuario: String) extends ValidacionAutorizacion

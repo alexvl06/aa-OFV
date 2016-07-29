@@ -11,7 +11,7 @@ object DataAccessTranslator {
 
   def entityToDto(usuario: eUsuario): Usuario = {
     Usuario(usuario.id, usuario.correo, usuario.fechaActualizacion, usuario.identificacion, usuario.tipoIdentificacion, usuario.estado,
-      usuario.numeroIngresosErroneos, usuario.ipUltimoIngreso, usuario.fechaUltimoIngreso, TiposCliente.clienteAdministrador)
+      usuario.numeroIngresosErroneos, usuario.ipUltimoIngreso, usuario.fechaUltimoIngreso, TiposCliente.clienteIndividual)
   }
 
   def dtoToEntity(usuario: Usuario): eUsuario = ???

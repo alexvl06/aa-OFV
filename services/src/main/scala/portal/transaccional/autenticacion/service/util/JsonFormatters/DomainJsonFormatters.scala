@@ -16,19 +16,6 @@ trait DomainJsonFormatters {
 
   this: CommonRESTFul =>
 
-  //date
-  implicit val dateFormatter = new RootJsonFormat[Date] {
-    private[this] val format = new java.text.SimpleDateFormat("dd-MM-yyyy")
-    def read(json: JsValue) = format.parse(json.convertTo[String])
-    def write(date: Date) = JsString(format.format(date))
-  }
-
-  //TiposCliente
-  implicit val tipoClienteFormat = new RootJsonFormat[TiposCliente] {
-    def read(json: JsValue): TiposCliente = json.convertTo[Int]
-    def write(tipo: TiposCliente) = JsNumber(tipo.id)
-  }
-
   //autenticacion
   implicit val autenticarFormatter = jsonFormat3(AutenticarRequest)
   implicit val AutenticarUsuarioEmpresarialFormatter = jsonFormat3(AutenticarUsuarioEmpresarialRequest)
@@ -41,8 +28,5 @@ trait DomainJsonFormatters {
 
   //validacion
   implicit val validacionExceptionFormatter = jsonFormat2(ValidacionException)
-
-  //usuario
-  implicit val usuarioFormatter = jsonFormat10(Usuario)
 
 }

@@ -45,7 +45,8 @@ case class IpsUsuariosService(kafkaActor: ActorSelection, ipsUsuarioActor: Actor
                   case TiposCliente.clienteAdministrador => DataAccessAdapterClienteAdmin.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(stringToken)
                   case TiposCliente.agenteEmpresarial => DataAccessAdapterAgenteEmpresarial.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(stringToken)
                 }
-                requestWithFutureAuditing[PersistenceException, Any](r, AuditingHelper.fiduciariaTopic, AuditingHelper.usuarioConsultarIpIndex, ip.value, kafkaActor, usuario, None)
+                requestWithFutureAuditing[PersistenceException, Any](r, AuditingHelper.fiduciariaTopic, AuditingHelper.usuarioConsultarIpIndex,
+                  ip.value, kafkaActor, usuario, None)
             } {
               requestExecute(new ObtenerIpsUsuarioMessage(user.id, user.tipoCliente), ipsUsuarioActor)
             }

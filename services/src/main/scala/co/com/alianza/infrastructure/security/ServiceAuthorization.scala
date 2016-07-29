@@ -5,6 +5,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 
 import co.com.alianza.commons.enumerations.TiposCliente
+import co.com.alianza.exceptions.{ Prohibido, Autorizado, NoAutorizado }
 import co.com.alianza.infrastructure.dto.Usuario
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.infrastructure.messages._
@@ -13,6 +14,8 @@ import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.token.{ AesUtil, Token }
 import com.typesafe.config.Config
 import enumerations.CryptoAesParameters
+import oracle.net.aso.r
+import portal.transaccional.autenticacion.service.drivers.autorizacion.AutorizacionUsuarioRepository
 import spray.http.StatusCodes._
 import spray.routing.RequestContext
 import spray.routing.authentication.ContextAuthenticator
@@ -27,7 +30,7 @@ trait ServiceAuthorization {
   import system.dispatcher
   implicit val conf: Config = system.settings.config
 
-  val autorizacionActorSupervisor: ActorRef
+  val autorizacionUsuarioRepo: AutorizacionUsuarioRepository
 
   implicit val timeout: Timeout = Timeout(10.seconds)
 
@@ -38,40 +41,34 @@ trait ServiceAuthorization {
       if (token.isEmpty) {
         Future(Left(AuthenticationFailedRejection(CredentialsMissing, List())))
       } else {
-        var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
-        var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token.get.value)
+        val encriptedToken: String = token.get.value
+        val util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
+        val decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, encriptedToken)
         val tipoCliente = Token.getToken(decryptedToken).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
 
         val futuro =
           if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
-            autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialMessage(token.get.value, None, obtenerIp(ctx).get.value)
+            autorizacionUsuarioRepo.autorizarUrl(encriptedToken, "")
+            //TODO: poner para empresarial
+            //autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialMessage(token.get.value, None, obtenerIp(ctx).get.value)
           } else if (tipoCliente == TiposCliente.clienteAdministrador.toString) {
-            autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialAdminMessage(token.get.value, None)
+            autorizacionUsuarioRepo.autorizarUrl(encriptedToken, "")
+            //TODO: poner para empresarial
+            //autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialAdminMessage(token.get.value, None)
           } else {
-            autorizacionActorSupervisor ? AutorizarUrl(token.get.value, "")
+            autorizacionUsuarioRepo.autorizarUrl(decryptedToken, "") // ? AutorizarUrl(token.get.value, "")
           }
 
         futuro.map {
-          case r: ResponseMessage =>
-
-            println("*************************")
-            println(r)
-            println("*************************")
-
-            r.statusCode match {
-              case Unauthorized =>
-                Left(AuthenticationFailedRejection(CredentialsRejected, List(), Some(Unauthorized.intValue), Some(r.responseBody)))
-              case OK =>
-                val user = JsonUtil.fromJson[Usuario](r.responseBody)
-                Right(UsuarioAuth(user.id.get, user.tipoCliente, user.identificacion, user.tipoIdentificacion))
-              case Forbidden =>
-                val user = JsonUtil.fromJson[UsuarioForbidden](r.responseBody)
-                Right(UsuarioAuth(user.usuario.id.get, user.usuario.tipoCliente, user.usuario.identificacion, user.usuario.tipoIdentificacion))
-            }
+          case validacion: NoAutorizado =>
+            Left(AuthenticationFailedRejection(CredentialsRejected, List(), Some(Unauthorized.intValue), None))
+          case validacion: Autorizado =>
+            val user = JsonUtil.fromJson[Usuario](validacion.usuario)
+            Right(UsuarioAuth(user.id.get, user.tipoCliente, user.identificacion, user.tipoIdentificacion))
+          case validacion: Prohibido =>
+            val user = JsonUtil.fromJson[UsuarioForbidden](validacion.usuario)
+            Right(UsuarioAuth(user.usuario.id.get, user.usuario.tipoCliente, user.usuario.identificacion, user.usuario.tipoIdentificacion))
           case ex: Any =>
-            println("*************************")
-            println(ex)
-            println("*************************")
             Left(AuthenticationFailedRejection(CredentialsRejected, List()))
         }
       }
@@ -84,4 +81,4 @@ trait ServiceAuthorization {
 
 }
 
-case class UsuarioForbidden(usuario: Usuario, filtro: String, code: String)
+case class UsuarioForbidden(usuario: Usuario, filtro: String)

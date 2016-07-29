@@ -59,14 +59,8 @@ object Token {
     val signer: MACSigner = new MACSigner(SIGNING_KEY)
     signedJWT.sign(signer)
 
-    var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
-    var encryptedToken = util.encrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, signedJWT.serialize())
-
-    println("-----------")
-    println("TOKEN")
-    println("-----------")
-    println(signedJWT.serialize())
-
+    val util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
+    val encryptedToken = util.encrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, signedJWT.serialize())
     encryptedToken
   }
 
