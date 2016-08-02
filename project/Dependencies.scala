@@ -33,6 +33,9 @@ object Dependencies {
     // Hay un problema de compatibilidad binaria con play-json que que no fue posible resolver de la forma correcta haciendo upgrade o downgrade
     def jodaTimeExclude: ModuleID = module.logScalaExclude.exclude("joda-time", "joda-time")
 
+    // Hay un problema de compatibilidad binaria con spray-testkit que que no fue posible resolver de la forma correcta haciendo upgrade o downgrade
+    def specs2Exclude: ModuleID = module.logScalaExclude.exclude("org.specs2", "specs2_2.11")
+
     def logScalaExclude: ModuleID = module.logbackExclude.scalaLibraryExclude
 
     def logbackExclude: ModuleID = {
@@ -142,7 +145,7 @@ object Dependencies {
     val restAssuredLib  = "com.jayway.restassured"  % "rest-assured"  % restAssured % Test logScalaExclude
     val scalatestLib    = "org.scalatest"          %% "scalatest"     % scalatest % Test logScalaExclude
     val scalacheckLib   = "org.scalacheck"         %% "scalacheck"    % scalacheck % Test logScalaExclude
-    val sprayTestkitLib = "io.spray"               %% "spray-testkit" % spray % Test logScalaExclude
+    val sprayTestkitLib = "io.spray"               %% "spray-testkit" % spray % Test specs2Exclude
     val specs2Lib       = "org.specs2"             %% "specs2"        % specs2 % Test logScalaExclude
   }
 
@@ -151,14 +154,14 @@ object Dependencies {
 
   val scalaLibs: Seq[ModuleID]      = Seq(scalaCompiler, scalaReflect, scalaLibrary)
   val akkaLibs: Seq[ModuleID]       = Seq(akkaActor, akkaClusterLib, akkaSlf4j, logbackClassic)
-  val sprayLibs: Seq[ModuleID]      = Seq(sprayCan, sprayRouting, sprayClient, sprayHttp, sprayHttpx, sprayJsonLib)
+  val sprayLibs: Seq[ModuleID]      = Seq(sprayCan, sprayCaching, sprayRouting, sprayClient, sprayHttp, sprayHttpx, sprayJsonLib)
   val kafkaLibs: Seq[ModuleID]      = Seq(kafkaLib)
   val functionalLibs: Seq[ModuleID] = Seq(scalaIOCore, scalaIOFile, scalazLib, shapelessLib)
   val slickLibs: Seq[ModuleID]      = Seq(slickLib, slickPGLib, slickPGJodaTimeLib)
   val dbLibs: Seq[ModuleID]         = Seq(postgresqlLib, c3p0Lib, oracleLib, h2Lib)
 
   val utilLibs: Seq[ModuleID]       = Seq(
-    commonsLang3Lib, commonsCodecLib, discoveryLib, playJsonLib, jacksonDatabindLib, jacksonModuleScalaLib, jasyptLib, scalateLib, axisLib, jaxrpcLib, wss4jLib, ninbusLib, jsonTokenLib
+    commonsLang3Lib, commonsCodecLib, discoveryLib, playJsonLib, wsdl4jLib, jacksonDatabindLib, jacksonModuleScalaLib, jasyptLib, scalateLib, axisLib, jaxrpcLib, wss4jLib, ninbusLib, jsonTokenLib
   )
 
   val recaptchaLibs: Seq[ModuleID]  = Seq(recaptcha4jLib)
