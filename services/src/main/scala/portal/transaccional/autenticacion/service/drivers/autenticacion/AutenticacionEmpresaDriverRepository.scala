@@ -23,6 +23,7 @@ import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasena
 import portal.transaccional.autenticacion.service.drivers.respuesta.RespuestaUsuarioRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioEmpresarialAdminRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialRepository
+import portal.transaccional.autenticacion.service.drivers.empresa.{ DataAccessTranslator => EmpresaDTO}
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.reflect.ClassTag
@@ -101,12 +102,12 @@ case class AutenticacionEmpresaDriverRepository(
       caducidad <- usuarioRepo.validarCaducidadContrasena(TiposCliente.agenteEmpresarial, usuario, reglaDias.valor.toInt)
       actualizar <- usuarioRepo.actualizarInfoUsuario(usuario, ip)
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
-      token <- generarTokenAgente(usuario, ip, inactividad.llave)
+      token <- generarTokenAgente(usuario, ip, inactividad.valor)
       ips <- ipRepo.getIpsByEmpresaId(empresa.id)
       validacionIps <- ipRepo.validarControlIpAgente(ip, ips, token)
       asociarToken <- usuarioRepo.actualizarToken(usuario.id, token)
-      //TODO: poner la empresa (dto)
-      sesion <- actorResponse[SesionActorSupervisor.SesionUsuarioCreada](sessionActor, CrearSesionUsuario(token, inactividad.valor.toInt))
+      sesion <- actorResponse[SesionActorSupervisor.SesionUsuarioCreada](sessionActor, CrearSesionUsuario(token, inactividad.valor.toInt,
+        Option(EmpresaDTO.entityToDto(empresa))))
     } yield token
   }
 
@@ -148,7 +149,6 @@ case class AutenticacionEmpresaDriverRepository(
       respuestas <- respuestasRepo.getRespuestasById(usuario.id)
       validacionIps <- ipRepo.validarControlIpAdmin(ip, ips, token, respuestas.nonEmpty) //TODO: AGREGAR LA PREGUNTA DE LAS RESPUESTAS(respuestas.nonEmpty)
       asociarToken <- usuarioAdminRepo.actualizarToken(usuario.id, token)
-      //TODO: poner la empresa (dto)
       sesion <- actorResponse[SesionActorSupervisor.SesionUsuarioCreada](sessionActor, CrearSesionUsuario(token, inactividad.valor.toInt))
     } yield validacionIps
   }
