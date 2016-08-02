@@ -62,7 +62,6 @@ case class AutenticacionEmpresaDriverRepository(
    * Success => True
    */
   private def autenticar(agente: Option[UsuarioEmpresarial], admin: Option[UsuarioEmpresarialAdmin], contrasena: String, ip: String): Future[String] = {
-    println(agente,admin,contrasena)
     if (agente.isDefined) {
       autenticarAgente(agente.get, contrasena, ip)
     } else if (admin.isDefined) {

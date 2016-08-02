@@ -30,7 +30,7 @@ trait ServiceAuthorization {
   implicit val conf: Config = system.settings.config
 
   val autorizacionUsuarioRepo: AutorizacionUsuarioRepository
-  val autorizacionAgenteRepo : AutorizacionUsuarioEmpresarialRepository
+  val autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository
 
   implicit val timeout: Timeout = Timeout(10.seconds)
 

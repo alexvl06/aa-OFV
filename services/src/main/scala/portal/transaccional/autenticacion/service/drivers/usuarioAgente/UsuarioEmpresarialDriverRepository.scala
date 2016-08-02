@@ -91,7 +91,7 @@ case class UsuarioEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs
     val estado = usuario.estado
     if (estado == EstadosEmpresaEnum.bloqueContraseña.id) {
       Future.failed(ValidacionException("401.8", "Usuario Bloqueado"))
-    } else if (estado == EstadosEmpresaEnum.pendienteActivacion.id){
+    } else if (estado == EstadosEmpresaEnum.pendienteActivacion.id) {
       Future.failed(ValidacionException("401.10", "Usuario Bloqueado"))
     } else if (estado == EstadosEmpresaEnum.pendienteReiniciarContrasena.id) {
       Future.failed(ValidacionException("401.12", "Usuario Bloqueado"))

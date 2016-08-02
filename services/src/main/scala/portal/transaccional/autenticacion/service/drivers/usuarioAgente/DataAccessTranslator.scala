@@ -10,8 +10,8 @@ import co.com.alianza.persistence.entities.{ UsuarioEmpresarial => eUsuarioEmpre
 object DataAccessTranslator {
 
   def entityToDto(agente: eUsuarioEmpresarial): UsuarioEmpresarial = {
-    UsuarioEmpresarial (agente.id, agente.correo, agente.fechaActualizacion, agente.identificacion, agente.tipoIdentificacion, agente.usuario, agente.estado,
-    agente.contrasena, agente.numeroIngresosErroneos, agente.ipUltimoIngreso, agente.fechaUltimoIngreso, TiposCliente.agenteEmpresarial,
+    UsuarioEmpresarial(agente.id, agente.correo, agente.fechaActualizacion, agente.identificacion, agente.tipoIdentificacion, agente.usuario, agente.estado,
+      agente.contrasena, agente.numeroIngresosErroneos, agente.ipUltimoIngreso, agente.fechaUltimoIngreso, TiposCliente.agenteEmpresarial,
       Option(agente.nombreUsuario))
   }
 

@@ -39,10 +39,12 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
     run(usuariosRecursosJoin.result)
   }
 
-  def getAdminResources(idUsuario: Int): Future[Seq[RecursoPerfilAgente]] =  {
-      val resources  = for { ((usu, per), rec) <- usuariosEmpresariales join perfilesAgentes on (_.id === _.idUsuario) join recursosPerfilesAgentes on
-        (_._2.idPerfil === _.idPerfil) if usu.id === idUsuario} yield rec
-      run(resources.result)
+  def getAdminResources(idUsuario: Int): Future[Seq[RecursoPerfilAgente]] = {
+    val resources = for {
+      ((usu, per), rec) <- usuariosEmpresariales join perfilesAgentes on (_.id === _.idUsuario) join recursosPerfilesAgentes on
+        (_._2.idPerfil === _.idPerfil) if usu.id === idUsuario
+    } yield rec
+    run(resources.result)
   }
 
   //  --------------- Usuario empresarial -------------------

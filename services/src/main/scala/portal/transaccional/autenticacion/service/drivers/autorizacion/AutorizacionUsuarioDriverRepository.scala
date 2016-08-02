@@ -22,8 +22,7 @@ import scala.reflect.ClassTag
 /**
  * Created by seven4n on 2016
  */
-case class AutorizacionUsuarioDriverRepository(usuarioDAO: UsuarioDAOs, recursoRepo: RecursoRepository, sessionActor: ActorRef)
-  (implicit val ex: ExecutionContext) extends AutorizacionUsuarioRepository {
+case class AutorizacionUsuarioDriverRepository(usuarioDAO: UsuarioDAOs, recursoRepo: RecursoRepository, sessionActor: ActorRef)(implicit val ex: ExecutionContext) extends AutorizacionUsuarioRepository {
 
   implicit val timeout = Timeout(5.seconds)
 

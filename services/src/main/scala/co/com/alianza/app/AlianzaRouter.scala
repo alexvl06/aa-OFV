@@ -23,7 +23,8 @@ case class AlianzaRouter(
   actualizacionActor: ActorSelection, permisoTransaccionalActor: ActorSelection, agenteEmpresarialActor: ActorSelection, pinActor: ActorSelection,
   pinUsuarioEmpresarialAdminActor: ActorSelection, pinUsuarioAgenteEmpresarialActor: ActorSelection, ipsUsuarioActor: ActorSelection,
   horarioEmpresaActor: ActorSelection, contrasenasAgenteEmpresarialActor: ActorSelection, contrasenasClienteAdminActor: ActorSelection,
-  contrasenasActor: ActorSelection, autorizacionActorSupervisor: ActorRef, autorizacionAgenteRepo : AutorizacionUsuarioEmpresarialRepository)(implicit val system: ActorSystem) extends HttpServiceActor with RouteConcatenation
+  contrasenasActor: ActorSelection, autorizacionActorSupervisor: ActorRef, autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository
+)(implicit val system: ActorSystem) extends HttpServiceActor with RouteConcatenation
     with CrossHeaders with ServiceAuthorization with ActorLogging {
 
   import system.dispatcher

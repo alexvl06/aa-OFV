@@ -24,24 +24,25 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * Created by s4n on 2016
  */
-case class AutorizacionUsuarioEmpresarialDriverRepository (agenteRepo : UsuarioEmpresarialDriverRepository, alianzaDAO: AlianzaDAO, sesionActor : ActorRef,
-  recursoRepo: RecursoRepository )(implicit val ex: ExecutionContext) extends AutorizacionUsuarioEmpresarialRepository {
+case class AutorizacionUsuarioEmpresarialDriverRepository(agenteRepo: UsuarioEmpresarialDriverRepository, alianzaDAO: AlianzaDAO, sesionActor: ActorRef,
+    recursoRepo: RecursoRepository)(implicit val ex: ExecutionContext) extends AutorizacionUsuarioEmpresarialRepository {
 
-  implicit val timeout = Timeout(120.seconds)
+  implicit val timeout = Timeout(5.seconds)
+
   var aesUtil = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
 
-  def autorizar (token: String, url: String, ip: String): Future[ValidacionAutorizacion] = {
+  def autorizar(token: String, url: String, ip: String): Future[ValidacionAutorizacion] = {
     val encriptedToken = encriptarToken(token)
     for {
-      _             <- validarToken(encriptedToken)
-      _             <- Future { (sesionActor ? ValidarSesion(encriptedToken)).mapTo[SesionUsuarioValidada] }
-      sesion        <- obtieneSesion(encriptedToken)
-      agenteEstado  <- alianzaDAO.getByTokenAgente(encriptedToken)
-      _             <- validarEstadoEmpresa(agenteEstado._2)
-      ips           <- obtenerIps(sesion)
-      validarIp     <- validarIps(ips, ip)
-      recursos      <- alianzaDAO.getAdminResources(agenteEstado._1.id )
-      result        <- resolveMessageRecursos(DataAccessTranslator.entityToDto(agenteEstado._1), recursos, url)
+      _ <- validarToken(encriptedToken)
+      _ <- Future { (sesionActor ? ValidarSesion(encriptedToken)).mapTo[SesionUsuarioValidada] }
+      sesion <- obtieneSesion(encriptedToken)
+      agenteEstado <- alianzaDAO.getByTokenAgente(encriptedToken)
+      _ <- validarEstadoEmpresa(agenteEstado._2)
+      ips <- obtenerIps(sesion)
+      validarIp <- validarIps(ips, ip)
+      recursos <- alianzaDAO.getAdminResources(agenteEstado._1.id)
+      result <- resolveMessageRecursos(DataAccessTranslator.entityToDto(agenteEstado._1), recursos, url)
     } yield result
   }
 
@@ -63,9 +64,9 @@ case class AutorizacionUsuarioEmpresarialDriverRepository (agenteRepo : UsuarioE
   private def obtieneSesion(token: String) = {
     val actor: Future[Any] = sesionActor ? BuscarSesion(token)
     actor flatMap {
-      case Some(sesionActor: ActorRef) => println("1.1 Entro aqui super bien"); Future.successful(sesionActor)
-      case None => println("1.2 Entro aqui bien"); Future.failed(ValidacionException("403.9", "Error sesión"))
-      case _ => println("1.3 Entro aqui "); Future.failed(ValidacionException("403.9", "SE JODIO TODO"))
+      case Some(sesionActor: ActorRef) => Future.successful(sesionActor)
+      case None => Future.failed(ValidacionException("403.9", "Error sesión"))
+      case _ => Future.failed(ValidacionException("403.9", "SE JODIO TODO"))
     }
   }
 
@@ -76,7 +77,6 @@ case class AutorizacionUsuarioEmpresarialDriverRepository (agenteRepo : UsuarioE
       case _ => Future.failed(ValidacionException("401.23", "Error sesión"))
     }
   }
-
 
   /**
    * De acuerdo si la lista tiene contenido retorna un ResponseMessage
@@ -102,15 +102,16 @@ case class AutorizacionUsuarioEmpresarialDriverRepository (agenteRepo : UsuarioE
     }
   }
 
-  private def obtenerIps(sesion: ActorRef ): Future[List[String]] = {
-    println("Entro aqui bien !! ")
+  private def obtenerIps(sesion: ActorRef): Future[List[String]] = {
+
     (sesion ? ObtenerEmpresaActor).flatMap {
-      case Some(empresaSesionActor: ActorRef) => println("3.1 Entro aqui super bien");(empresaSesionActor ? ObtenerIps).mapTo[List[String]]
-      case _ => println("3.2 Entro aqui super bien"); Future.failed(ValidacionException("401.21", "Error sesión")) }
+      case Some(empresaSesionActor: ActorRef) => (empresaSesionActor ? ObtenerIps).mapTo[List[String]]
+      case _ => Future.failed(ValidacionException("401.21", "Error sesión"))
+    }
   }
 
-  private def validarIps( ips: List[String] , ip : String): Future[String] = {
-    if (ips.contains(ip) ) {
+  private def validarIps(ips: List[String], ip: String): Future[String] = {
+    if (ips.contains(ip)) {
       Future.successful(ip)
     } else {
       Future.failed(ValidacionException("401.21", "Error sesión"))

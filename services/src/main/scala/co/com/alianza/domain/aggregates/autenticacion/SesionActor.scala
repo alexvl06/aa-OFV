@@ -67,8 +67,7 @@ case class SesionActorSupervisor() extends Actor with ActorLogging {
       }
 
     case EncontrarActor(actorName) =>
-      val currentSender = sender
-      println("ENTRO A ENCOTNRAR ACTOR ")
+      val currentSender = sender()
       context.actorSelection("akka://alianza-fid-auth-service/user/sesionActorSupervisor/" + actorName).resolveOne().onComplete {
         case Success(actor) => currentSender ! ActorEncontrado(actor)
         case Failure(ex) => currentSender ! ActorNoEncontrado
@@ -103,7 +102,7 @@ case class SesionActorSupervisor() extends Actor with ActorLogging {
     val currentSender: ActorRef = sender()
     val actorName: String = generarNombreSesionActor(decryptedToken)
     val future: Future[Any] = context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(actorName)
-    future.map {
+    future.onComplete {
       case Failure(error) => log error ("Error al obtener la sesión", error)
       case Success(actor) => currentSender ! actor
     }

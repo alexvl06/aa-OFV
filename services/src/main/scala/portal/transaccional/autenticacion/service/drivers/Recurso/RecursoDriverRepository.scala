@@ -27,7 +27,6 @@ case class RecursoDriverRepository(generalDAO: AlianzaDAOs) extends RecursoRepos
     urlR.contains(url) && urlR.substring(0, urlR.lastIndexOf("/")).equals(url) && recurso.acceso
   }
 
-
   def filtrarRecursosAgente(recursos: Seq[RecursoPerfilAgente], url: String): Seq[RecursoPerfilAgente] = {
     recursos.filter(filtrarRecursosAgente(_, url))
   }
@@ -38,7 +37,7 @@ case class RecursoDriverRepository(generalDAO: AlianzaDAOs) extends RecursoRepos
    * @param url la url a validar
    * @return
    */
-  private def filtrarRecursosAgente (recurso: RecursoPerfilAgente, url: String): Boolean = {
+  private def filtrarRecursosAgente(recurso: RecursoPerfilAgente, url: String): Boolean = {
     val urlR = recurso.urlRecurso
     urlR.contains(url) && urlR.substring(0, urlR.lastIndexOf("/")).equals(url) && recurso.acceso
   }

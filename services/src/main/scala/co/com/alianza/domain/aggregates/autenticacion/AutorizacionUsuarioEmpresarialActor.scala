@@ -29,7 +29,7 @@ import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 class AutorizacionUsuarioEmpresarialActor() extends Actor with ActorLogging with ValidacionesAutenticacionUsuarioEmpresarial {
 
   import context.dispatcher
-  implicit val timeout = Timeout(120 seconds)
+  implicit val timeout = Timeout(7.seconds)
 
   def receive = {
 
@@ -40,9 +40,10 @@ class AutorizacionUsuarioEmpresarialActor() extends Actor with ActorLogging with
         sesion <- ValidationT(obtieneSesion(message.token))
         tuplaUsuarioOptionEstadoEmpresa <- ValidationT(obtieneUsuarioEmpresarial(message.token))
         validUs <- ValidationT(validarUsuario(tuplaUsuarioOptionEstadoEmpresa match { case None => None case _ => Some(tuplaUsuarioOptionEstadoEmpresa.get._1) }))
-        validacionEstadoEmpresa <- ValidationT(validarEstadoEmpresa( tuplaUsuarioOptionEstadoEmpresa match { case None => None case _ => Some(tuplaUsuarioOptionEstadoEmpresa.get._2) }))
+        validacionEstadoEmpresa <- ValidationT(validarEstadoEmpresa(tuplaUsuarioOptionEstadoEmpresa match { case None => None case _ => Some(tuplaUsuarioOptionEstadoEmpresa.get._2) }))
         validacionIp <- ValidationT(validarIpEmpresa(sesion, message.ip))
-        result <- ValidationT(autorizarRecursoAgente(tuplaUsuarioOptionEstadoEmpresa match { case None => None case _ =>  Some(tuplaUsuarioOptionEstadoEmpresa.get._1)
+        result <- ValidationT(autorizarRecursoAgente(tuplaUsuarioOptionEstadoEmpresa match {
+          case None => None case _ => Some(tuplaUsuarioOptionEstadoEmpresa.get._1)
         }, message.url))
       } yield {
         result

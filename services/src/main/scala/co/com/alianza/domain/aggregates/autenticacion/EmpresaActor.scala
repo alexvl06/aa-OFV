@@ -90,10 +90,8 @@ class BuscadorActorCluster(nombreActorPadre: String) extends Actor {
   def receive: Receive = {
     case BuscarActor(actorName) =>
       interesado = sender
-      println(s"ENTRO A BUSCAR SESION EN LA EMPRESA $nombreActorPadre")
-      println("NODOS BUSQUEDA", nodosBusqueda.isEmpty)
       nodosBusqueda foreach { member =>
-        println("member");this.context.actorSelection(RootActorPath(member.address) / "user" / nombreActorPadre) ! EncontrarActor(actorName)
+        this.context.actorSelection(RootActorPath(member.address) / "user" / nombreActorPadre) ! EncontrarActor(actorName)
       }
     case ActorEncontrado(actorRef) =>
       numResp += 1
@@ -104,7 +102,7 @@ class BuscadorActorCluster(nombreActorPadre: String) extends Actor {
       replyIfReady()
   }
 
-  def replyIfReady() = if (numResp == nodosBusqueda.size) { interesado ! resp; this.context.stop(self) }
+  def replyIfReady() = if (numResp == nodosBusqueda.size) { interesado ! resp ;this.context.stop(self) }
 
 }
 

@@ -22,10 +22,10 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * Created by jonathan on 27/07/16.
  */
-case class AutorizacionService( usuarioRepository: UsuarioRepository, usuarioAgenteRepository: UsuarioEmpresarialRepository,
+case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgenteRepository: UsuarioEmpresarialRepository,
   usuarioAdminRepository: UsuarioEmpresarialAdminRepository, autorizacionRepository: AutorizacionUsuarioRepository, kafkaActor: ActorSelection,
-  autorizacionAgenteRepo : AutorizacionUsuarioEmpresarialRepository )(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters
-  with CrossHeaders {
+  autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters
+    with CrossHeaders {
 
   val invalidarTokenPath = "invalidarToken"
   val validarTokenPath = "validarToken"
@@ -81,16 +81,16 @@ case class AutorizacionService( usuarioRepository: UsuarioRepository, usuarioAge
           val resultado: Future[ValidacionAutorizacion] =
             if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
               autorizacionAgenteRepo.autorizar(token, url, ipRemota)
-          } else if (tipoCliente == TiposCliente.clienteAdministrador.toString) {
-            //TODO: aqui va el admin
-            autorizacionRepository.autorizarUrl(token, url)
-          } else {
-            autorizacionRepository.autorizarUrl(token, url)
-          }
+            } else if (tipoCliente == TiposCliente.clienteAdministrador.toString) {
+              //TODO: aqui va el admin
+              autorizacionRepository.autorizarUrl(token, url)
+            } else {
+              autorizacionRepository.autorizarUrl(token, url)
+            }
           // TODO: Auditoria
           onComplete(resultado) {
-            case Success(value) => println("REULTADO EXITOSOOOO !! ....... ");execution(value)
-            case Failure(ex) => println("REULTADO NO EXITOSOOOO !! ....... ",ex);execution(ex)
+            case Success(value) => execution(value)
+            case Failure(ex) => execution(ex)
           }
       }
     }
