@@ -1,4 +1,4 @@
-package portal.transaccional.autenticacion.service.dtt.usuario
+package portal.transaccional.autenticacion.service.drivers.usuarioIndividual
 
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.infrastructure.dto.Usuario

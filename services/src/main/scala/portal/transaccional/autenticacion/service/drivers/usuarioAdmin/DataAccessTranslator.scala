@@ -1,4 +1,4 @@
-package portal.transaccional.autenticacion.service.dtt.usuarioAdmin
+package portal.transaccional.autenticacion.service.drivers.usuarioAdmin
 
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.infrastructure.dto.UsuarioEmpresarialAdmin

@@ -5,7 +5,7 @@ import akka.cluster.{ Cluster, Member, MemberStatus }
 import akka.pattern.ask
 import akka.util.Timeout
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => usuarioAdaptador }
-import co.com.alianza.infrastructure.dto.{ Empresa }
+import co.com.alianza.infrastructure.dto.Empresa
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.persistence.entities.IpsEmpresa
 
@@ -48,7 +48,7 @@ class EmpresaActor(var empresa: Empresa) extends Actor with ActorLogging {
 
     case ObtenerIps =>
       val currentSender = sender
-      self ? CargarIps onComplete {
+      (self ? CargarIps).map {
         case Success(true) => currentSender ! ips
         case Success(false) => log error "*++*+ Falló la carga de ips"
         case Failure(error) => log error ("+++ Falló la carga de ips de la empresa", error)
@@ -90,8 +90,10 @@ class BuscadorActorCluster(nombreActorPadre: String) extends Actor {
   def receive: Receive = {
     case BuscarActor(actorName) =>
       interesado = sender
+      println(s"ENTRO A BUSCAR SESION EN LA EMPRESA $nombreActorPadre")
+      println("NODOS BUSQUEDA", nodosBusqueda.isEmpty)
       nodosBusqueda foreach { member =>
-        this.context.actorSelection(RootActorPath(member.address) / "user" / nombreActorPadre) ! EncontrarActor(actorName)
+        println("member");this.context.actorSelection(RootActorPath(member.address) / "user" / nombreActorPadre) ! EncontrarActor(actorName)
       }
     case ActorEncontrado(actorRef) =>
       numResp += 1

@@ -12,6 +12,7 @@ import CustomDriver.simple._
 /**
  * Created by manuel on 3/02/15.
  */
+//Ya esta en el refactor ! AlianzaDAO.getAdminResources
 class RecursoPerfilAgenteRepository(implicit executionContext: ExecutionContext) extends AlianzaRepository {
 
   val recursosPerfilesAgentes = TableQuery[RecursoPerfilAgenteTable]

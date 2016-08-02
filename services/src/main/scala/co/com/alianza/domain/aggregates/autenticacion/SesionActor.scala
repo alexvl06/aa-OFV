@@ -12,7 +12,7 @@ import co.com.alianza.util.token.AesUtil
 import com.typesafe.config.Config
 import enumerations.CryptoAesParameters
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.concurrent.duration._
 import scala.util.{ Failure, Success, Try }
 
@@ -37,7 +37,7 @@ case class SesionActorSupervisor() extends Actor with ActorLogging {
   import context.dispatcher
 
   implicit val conf: Config = context.system.settings.config
-  implicit val timeout: Timeout = 10 seconds
+  implicit val timeout: Timeout = 10.seconds
 
   private val cluster = Cluster.get(context.system)
 
@@ -68,6 +68,7 @@ case class SesionActorSupervisor() extends Actor with ActorLogging {
 
     case EncontrarActor(actorName) =>
       val currentSender = sender
+      println("ENTRO A ENCOTNRAR ACTOR ")
       context.actorSelection("akka://alianza-fid-auth-service/user/sesionActorSupervisor/" + actorName).resolveOne().onComplete {
         case Success(actor) => currentSender ! ActorEncontrado(actor)
         case Failure(ex) => currentSender ! ActorNoEncontrado
@@ -101,7 +102,7 @@ case class SesionActorSupervisor() extends Actor with ActorLogging {
     var decryptedToken: String = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token);
     val currentSender: ActorRef = sender()
     val actorName: String = generarNombreSesionActor(decryptedToken)
-    val future = context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(actorName)
+    val future: Future[Any] = context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(actorName)
     future.map {
       case Failure(error) => log error ("Error al obtener la sesión", error)
       case Success(actor) => currentSender ! actor

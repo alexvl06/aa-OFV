@@ -1,4 +1,4 @@
-package portal.transaccional.autenticacion.service.drivers.usuario
+package portal.transaccional.autenticacion.service.drivers.usuarioAdmin
 
 import java.sql.Timestamp
 

@@ -13,6 +13,7 @@ import CustomDriver.simple._
 /**
  * Created by s4n on 2014
  */
+//Todo : Borrrar ! Ya esta en el refactor By : Alexa
 class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext) extends AlianzaRepository {
 
   val empresas = TableQuery[EmpresaTable]

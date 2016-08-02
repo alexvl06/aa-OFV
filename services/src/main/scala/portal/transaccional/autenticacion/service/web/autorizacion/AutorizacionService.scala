@@ -7,8 +7,10 @@ import co.com.alianza.exceptions._
 import co.com.alianza.infrastructure.dto.Usuario
 import co.com.alianza.util.token.{ AesUtil, Token }
 import enumerations.CryptoAesParameters
-import portal.transaccional.autenticacion.service.drivers.autorizacion.AutorizacionUsuarioRepository
-import portal.transaccional.autenticacion.service.drivers.usuario.{ UsuarioEmpresarialAdminRepository, UsuarioEmpresarialRepository, UsuarioRepository }
+import portal.transaccional.autenticacion.service.drivers.autorizacion.{ AutorizacionUsuarioEmpresarialRepository, AutorizacionUsuarioRepository }
+import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioEmpresarialAdminRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioRepository
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import spray.http.StatusCodes
@@ -20,9 +22,10 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * Created by jonathan on 27/07/16.
  */
-case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgenteRepository: UsuarioEmpresarialRepository,
-    usuarioAdminRepository: UsuarioEmpresarialAdminRepository, autorizacionRepository: AutorizacionUsuarioRepository,
-    kafkaActor: ActorSelection)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
+case class AutorizacionService( usuarioRepository: UsuarioRepository, usuarioAgenteRepository: UsuarioEmpresarialRepository,
+  usuarioAdminRepository: UsuarioEmpresarialAdminRepository, autorizacionRepository: AutorizacionUsuarioRepository, kafkaActor: ActorSelection,
+  autorizacionAgenteRepo : AutorizacionUsuarioEmpresarialRepository )(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters
+  with CrossHeaders {
 
   val invalidarTokenPath = "invalidarToken"
   val validarTokenPath = "validarToken"
@@ -75,19 +78,19 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
       parameters('url, 'ipRemota) {
         (url, ipRemota) =>
           val tipoCliente = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
-          val resultado: Future[ValidacionAutorizacion] = if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
-            autorizacionRepository.autorizarUrl(token, url)
+          val resultado: Future[ValidacionAutorizacion] =
+            if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
+              autorizacionAgenteRepo.autorizar(token, url, ipRemota)
           } else if (tipoCliente == TiposCliente.clienteAdministrador.toString) {
-            //TODO: aqui va el empresarial
+            //TODO: aqui va el admin
             autorizacionRepository.autorizarUrl(token, url)
           } else {
-            //TODO: aqui va el empresarial
             autorizacionRepository.autorizarUrl(token, url)
           }
           // TODO: Auditoria
           onComplete(resultado) {
-            case Success(value) => execution(value)
-            case Failure(ex) => execution(ex)
+            case Success(value) => println("REULTADO EXITOSOOOO !! ....... ");execution(value)
+            case Failure(ex) => println("REULTADO NO EXITOSOOOO !! ....... ",ex);execution(ex)
           }
       }
     }

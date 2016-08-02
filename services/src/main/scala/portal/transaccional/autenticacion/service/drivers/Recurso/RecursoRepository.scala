@@ -1,6 +1,6 @@
 package portal.transaccional.autenticacion.service.drivers.Recurso
 
-import co.com.alianza.persistence.entities.RecursoPerfil
+import co.com.alianza.persistence.entities.{ RecursoPerfil, RecursoPerfilAgente }
 
 import scala.concurrent.Future
 
@@ -14,6 +14,6 @@ trait RecursoRepository {
 
   def filtrarRecursos(recursos: Seq[RecursoPerfil], url: String): Seq[RecursoPerfil]
 
-  def filtrarRecursos(recurso: RecursoPerfil, url: String): Boolean
+  def filtrarRecursosAgente(recursos: Seq[RecursoPerfilAgente], url: String): Seq[RecursoPerfilAgente]
 
 }

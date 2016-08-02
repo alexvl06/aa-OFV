@@ -40,14 +40,9 @@ class AutorizacionUsuarioEmpresarialActor() extends Actor with ActorLogging with
         sesion <- ValidationT(obtieneSesion(message.token))
         tuplaUsuarioOptionEstadoEmpresa <- ValidationT(obtieneUsuarioEmpresarial(message.token))
         validUs <- ValidationT(validarUsuario(tuplaUsuarioOptionEstadoEmpresa match { case None => None case _ => Some(tuplaUsuarioOptionEstadoEmpresa.get._1) }))
-        validacionEstadoEmpresa <- ValidationT(validarEstadoEmpresa(tuplaUsuarioOptionEstadoEmpresa match {
-          case None => None case _ =>
-            Some(tuplaUsuarioOptionEstadoEmpresa.get._2)
-        }))
+        validacionEstadoEmpresa <- ValidationT(validarEstadoEmpresa( tuplaUsuarioOptionEstadoEmpresa match { case None => None case _ => Some(tuplaUsuarioOptionEstadoEmpresa.get._2) }))
         validacionIp <- ValidationT(validarIpEmpresa(sesion, message.ip))
-        result <- ValidationT(autorizarRecursoAgente(tuplaUsuarioOptionEstadoEmpresa match {
-          case None => None case _ =>
-            Some(tuplaUsuarioOptionEstadoEmpresa.get._1)
+        result <- ValidationT(autorizarRecursoAgente(tuplaUsuarioOptionEstadoEmpresa match { case None => None case _ =>  Some(tuplaUsuarioOptionEstadoEmpresa.get._1)
         }, message.url))
       } yield {
         result
@@ -94,7 +89,6 @@ class AutorizacionUsuarioEmpresarialActor() extends Actor with ActorLogging with
    * Realiza la validación del Token, llamando a [[Token.autorizarToken]]
    * Retorna un futuro con un Validationm, donde el caso de contiene el Option[Usuario]
    *
-   *
    * @param token El token para realizar validación
    */
   private def validarTokenAdmin(token: String): Future[Validation[ErrorAutorizacion, Option[(UsuarioEmpresarialAdmin, Int)]]] = {
@@ -131,8 +125,7 @@ class AutorizacionUsuarioEmpresarialActor() extends Actor with ActorLogging with
       case Some(empresaSesionActor: ActorRef) =>
         empresaSesionActor ? ObtenerIps map {
           case ips: List[String] if ips.contains(ip) => Validation.success(ip)
-          case ips: List[String] if ips.isEmpty || !ips.contains(ip) =>
-            Validation.failure(ErrorSesionIpInvalida(ip))
+          case ips: List[String] if ips.isEmpty || !ips.contains(ip) => Validation.failure(ErrorSesionIpInvalida(ip))
         }
       case None =>
         Future.successful(Validation.failure(ErrorSesionIpInvalida(ip)))
@@ -163,10 +156,8 @@ class AutorizacionUsuarioEmpresarialActor() extends Actor with ActorLogging with
         Validation.failure(RecursoInexistente(usuario))
       case false =>
         recursos.head.filtro match {
-          case f @ Some(_) =>
-            Validation.failure(RecursoRestringido(usuario, f))
-          case None =>
-            Validation.success(usuario)
+          case f @ Some(_) => Validation.failure(RecursoRestringido(usuario, f))
+          case None => Validation.success(usuario)
         }
     }
   }

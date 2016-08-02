@@ -18,7 +18,7 @@ import portal.transaccional.autenticacion.service.drivers.configuracion.Configur
 import portal.transaccional.autenticacion.service.drivers.ipusuario.IpUsuarioRepository
 import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaRepository
 import portal.transaccional.autenticacion.service.drivers.respuesta.RespuestaUsuarioRepository
-import portal.transaccional.autenticacion.service.drivers.usuario.UsuarioRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioRepository
 
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }

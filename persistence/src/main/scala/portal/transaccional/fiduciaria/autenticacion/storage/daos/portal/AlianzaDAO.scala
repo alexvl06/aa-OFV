@@ -17,6 +17,8 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
   val usuariosEmpresariales = TableQuery[UsuarioEmpresarialTable]
   val usuariosEmpresarialesEmpresa = TableQuery[UsuarioEmpresarialEmpresaTable]
   val pinempresa = TableQuery[PinEmpresaTable]
+  val recursosPerfilesAgentes = TableQuery[RecursoPerfilAgenteTable]
+  val perfilesAgentes = TableQuery[PerfilAgenteAgenteTable]
 
   import dcConfig.db._
   import dcConfig.profile.api._
@@ -31,9 +33,16 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
 
   def getResources(idUsuario: Int): Future[Seq[RecursoPerfil]] = {
     val usuariosRecursosJoin = for {
-      ((usu: UsuarioTable, per: PerfilUsuarioTable), rec: RecursoPerfilTable) <- usuarios join perfilesUsuario on (_.id === _.idUsuario) join recursos on (_._2.idPerfil === _.idPerfil) if usu.id === idUsuario
+      ((usu: UsuarioTable, per: PerfilUsuarioTable), rec: RecursoPerfilTable) <- usuarios join perfilesUsuario on (_.id === _.idUsuario) join recursos on
+        (_._2.idPerfil === _.idPerfil) if usu.id === idUsuario
     } yield rec
     run(usuariosRecursosJoin.result)
+  }
+
+  def getAdminResources(idUsuario: Int): Future[Seq[RecursoPerfilAgente]] =  {
+      val resources  = for { ((usu, per), rec) <- usuariosEmpresariales join perfilesAgentes on (_.id === _.idUsuario) join recursosPerfilesAgentes on
+        (_._2.idPerfil === _.idPerfil) if usu.id === idUsuario} yield rec
+      run(resources.result)
   }
 
   //  --------------- Usuario empresarial -------------------
@@ -69,7 +78,7 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
   }
 
   //Obtengo como resultado una tupla que me devuelve el usuarioEmpresarial junto con el estado de la empresa
-  def getByTokenAgente(token: String): Future[Option[(UsuarioEmpresarial, Int)]] = {
+  def getByTokenAgente(token: String): Future[(UsuarioEmpresarial, Int)] = {
     val query =
       for {
         (agenteEmpresarial, empresa) <- usuariosEmpresariales join usuariosEmpresarialesEmpresa on {
@@ -77,10 +86,9 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
         } join empresas on {
           case ((ue, uee), e) => uee.idEmpresa === e.id
         }
-      } yield {
-        (agenteEmpresarial._1, empresa.estadoEmpresa)
-      }
-    run(query.result.headOption)
+      } yield (agenteEmpresarial._1, empresa.estadoEmpresa)
+
+    run(query.result.head)
   }
 
   def validateAgente(id: String, correo: String, tipoId: Int, idClienteAdmin: Int): Future[Option[UsuarioEmpresarial]] = {

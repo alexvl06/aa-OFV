@@ -1,8 +1,8 @@
-package portal.transaccional.autenticacion.service.drivers.usuario
+package portal.transaccional.autenticacion.service.drivers.usuarioIndividual
 
 import java.sql.Timestamp
 
-import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
+import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.persistence.entities.Usuario
 import co.com.alianza.util.clave.Crypto
@@ -30,6 +30,7 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
 
   /**
    * Asociar el token al usuario
+   *
    * @param numeroIdentificacion
    * @param token
    * @return
@@ -40,6 +41,7 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
 
   /**
    * Actualiza los ingresos erroneos de un usuario al numero especificado por parametro
+   *
    * @param idUsuario
    * @param numeroIntentos
    * @return
@@ -50,6 +52,7 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
 
   /**
    * Actualizar ultima ip
+   *
    * @param numeroIdentificacion
    * @param ip
    * @return
@@ -60,6 +63,7 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
 
   /**
    * Actualizar fecha ingreso
+   *
    * @param numeroIdentificacion
    * @param fechaActual
    * @return
@@ -72,6 +76,7 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
 
   /**
    * Valida el estado del usuario
+   *
    * @param estado El estado del usuario a validar
    * @return Future[Boolean]
    */
@@ -87,6 +92,7 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
 
   /**
    * Valida que las contrasenas concuerden
+   *
    * @param contrasena
    * @param usuario
    * @param reintentosErroneos
@@ -111,6 +117,7 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
 
   /**
    * Bloquea el usuario si se incumple la regla por parametro
+   *
    * @param idUsuario
    * @param reintentos
    * @param reintentosErroneos
@@ -124,6 +131,7 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
 
   /**
    * Validar que correspondan los tipos de identificación
+   *
    * @param tipoIdentificacion
    * @param tipoIdentificacionUsuario
    * @return
@@ -138,6 +146,7 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
 
   /**
    * Valida la fecha de caducidad de la contraseña de un usuario
+   *
    * @param tipoCliente
    * @param usuario
    * @param dias
@@ -154,6 +163,7 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
 
   /**
    * Invalidar el token al usuario
+   *
    * @param token
    * @return
    */

@@ -21,7 +21,8 @@ import portal.transaccional.autenticacion.service.drivers.empresa.EmpresaReposit
 import portal.transaccional.autenticacion.service.drivers.ipempresa.IpEmpresaRepository
 import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaRepository
 import portal.transaccional.autenticacion.service.drivers.respuesta.RespuestaUsuarioRepository
-import portal.transaccional.autenticacion.service.drivers.usuario.{ UsuarioEmpresarialAdminRepository, UsuarioEmpresarialRepository }
+import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioEmpresarialAdminRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialRepository
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.reflect.ClassTag
@@ -32,7 +33,7 @@ case class AutenticacionEmpresaDriverRepository(
     sessionActor: ActorRef, respuestasRepo: RespuestaUsuarioRepository
 )(implicit val ex: ExecutionContext) extends AutenticacionEmpresaRepository {
 
-  implicit val timeout = Timeout(5.seconds)
+  implicit val timeout = Timeout(10.seconds)
 
   /**
    * Flujo:
@@ -61,11 +62,14 @@ case class AutenticacionEmpresaDriverRepository(
    * Success => True
    */
   private def autenticar(agente: Option[UsuarioEmpresarial], admin: Option[UsuarioEmpresarialAdmin], contrasena: String, ip: String): Future[String] = {
+    println(agente,admin,contrasena)
     if (agente.isDefined) {
       autenticarAgente(agente.get, contrasena, ip)
     } else if (admin.isDefined) {
       autenticarAdministrador(admin.get, contrasena, ip)
-    } else { Future.failed(ValidacionException("401.3", "Error Credenciales")) }
+    } else {
+      Future.failed(ValidacionException("401.3", "Error Credenciales"))
+    }
   }
 
   /**

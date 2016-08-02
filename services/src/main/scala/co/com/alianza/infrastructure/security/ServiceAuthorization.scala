@@ -3,9 +3,8 @@ package co.com.alianza.infrastructure.security
 import akka.actor._
 import akka.pattern.ask
 import akka.util.Timeout
-
 import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.exceptions.{ Prohibido, Autorizado, NoAutorizado }
+import co.com.alianza.exceptions.{ Autorizado, NoAutorizado, Prohibido }
 import co.com.alianza.infrastructure.dto.Usuario
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.infrastructure.messages._
@@ -15,7 +14,7 @@ import co.com.alianza.util.token.{ AesUtil, Token }
 import com.typesafe.config.Config
 import enumerations.CryptoAesParameters
 import oracle.net.aso.r
-import portal.transaccional.autenticacion.service.drivers.autorizacion.AutorizacionUsuarioRepository
+import portal.transaccional.autenticacion.service.drivers.autorizacion.{ AutorizacionUsuarioEmpresarialRepository, AutorizacionUsuarioRepository }
 import spray.http.StatusCodes._
 import spray.routing.RequestContext
 import spray.routing.authentication.ContextAuthenticator
@@ -31,6 +30,7 @@ trait ServiceAuthorization {
   implicit val conf: Config = system.settings.config
 
   val autorizacionUsuarioRepo: AutorizacionUsuarioRepository
+  val autorizacionAgenteRepo : AutorizacionUsuarioEmpresarialRepository
 
   implicit val timeout: Timeout = Timeout(10.seconds)
 
@@ -44,12 +44,13 @@ trait ServiceAuthorization {
         val encriptedToken: String = token.get.value
         val util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
         val decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, encriptedToken)
+
         val tipoCliente = Token.getToken(decryptedToken).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
 
         val futuro =
           if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
-            autorizacionUsuarioRepo.autorizarUrl(encriptedToken, "")
-            //TODO: poner para empresarial
+            autorizacionAgenteRepo.autorizar(decryptedToken, "", obtenerIp(ctx).get.value)
+            //TODO: poner para agente empresarial
             //autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialMessage(token.get.value, None, obtenerIp(ctx).get.value)
           } else if (tipoCliente == TiposCliente.clienteAdministrador.toString) {
             autorizacionUsuarioRepo.autorizarUrl(encriptedToken, "")
