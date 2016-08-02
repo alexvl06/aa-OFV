@@ -45,7 +45,7 @@ class HorarioEmpresaActorSupervisor extends Actor with ActorLogging {
 
 }
 
-class HorarioEmpresaActor extends Actor with ActorLogging with AlianzaActors with ValidacionesAutenticacionUsuarioEmpresarial {
+case class HorarioEmpresaActor() extends Actor with ActorLogging with AlianzaActors with ValidacionesAutenticacionUsuarioEmpresarial {
   import scala.concurrent.ExecutionContext
   implicit val _: ExecutionContext = context.dispatcher
   import co.com.alianza.util.json.MarshallableImplicits._
