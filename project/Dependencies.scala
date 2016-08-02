@@ -158,7 +158,7 @@ object Dependencies {
   val dbLibs: Seq[ModuleID]         = Seq(postgresqlLib, c3p0Lib, oracleLib, h2Lib)
 
   val utilLibs: Seq[ModuleID]       = Seq(
-    commonsLang3Lib, commonsCodecLib, playJsonLib, jacksonDatabindLib, jacksonModuleScalaLib, jasyptLib, scalateLib, axisLib, jaxrpcLib, wss4jLib, ninbusLib, jsonTokenLib
+    commonsLang3Lib, commonsCodecLib, discoveryLib, playJsonLib, jacksonDatabindLib, jacksonModuleScalaLib, jasyptLib, scalateLib, axisLib, jaxrpcLib, wss4jLib, ninbusLib, jsonTokenLib
   )
 
   val recaptchaLibs: Seq[ModuleID]  = Seq(recaptcha4jLib)
