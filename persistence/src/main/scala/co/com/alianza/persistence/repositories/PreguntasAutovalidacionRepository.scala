@@ -20,7 +20,7 @@ class PreguntasAutovalidacionRepository(implicit executionContext: ExecutionCont
 
   val preguntasTable = TableQuery[PreguntasAutovalidacionTable]
   val respuestasUsuarioTable = TableQuery[RespuestasAutovalidacionUsuarioTable]
-  val respuestasClienteAdministradorTable = TableQuery[RespuestasAutovalidacionClienteAdministradorTable]
+  val respuestasClienteAdministradorTable = TableQuery[RespuestasAutovalidacionUsuarioAdministradorTable]
 
   def obtenerPreguntas(): Future[Validation[PersistenceException, Seq[PreguntasAutovalidacion]]] = loan {
     implicit session =>
