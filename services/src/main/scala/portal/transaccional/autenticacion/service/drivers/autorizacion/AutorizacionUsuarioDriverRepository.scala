@@ -26,26 +26,16 @@ case class AutorizacionUsuarioDriverRepository(usuarioDAO: UsuarioDAOs, recursoR
 
   implicit val timeout = Timeout(5.seconds)
 
-  val aesUtil = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
-
   def autorizarUrl(token: String, url: String): Future[ValidacionAutorizacion] = {
-    val encriptedToken = encriptarToken(token)
+    val encriptedToken = AesUtil.encriptarToken(token)
     for {
       validar <- validarToken(encriptedToken)
+      validarSesion <- actorResponse[SesionActorSupervisor.SesionUsuarioValidada](sessionActor, ValidarSesion(encriptedToken))
       usuarioOption <- usuarioDAO.getByToken(encriptedToken)
       usuario <- validarUsario(usuarioOption)
-      validarSesion <- actorResponse[SesionActorSupervisor.SesionUsuarioValidada](sessionActor, ValidarSesion(encriptedToken))
       recursos <- recursoRepo.obtenerRecursos(usuario.id.get)
       validarRecurso <- resolveMessageRecursos(usuario, recursos, url)
     } yield validarRecurso
-  }
-
-  def encriptarToken(token: String): String = {
-    aesUtil.encrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
-  }
-
-  def desencriptarToken(encriptedToken: String): String = {
-    aesUtil.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, encriptedToken)
   }
 
   def validarUsario(usuarioOption: Option[Usuario]): Future[Usuario] = {
@@ -56,7 +46,7 @@ case class AutorizacionUsuarioDriverRepository(usuarioDAO: UsuarioDAOs, recursoR
   }
 
   def validarToken(encriptedToken: String): Future[Boolean] = {
-    val token = desencriptarToken(encriptedToken)
+    val token = AesUtil.desencriptarToken(encriptedToken)
     Token.autorizarToken(token) match {
       case true => Future.successful(true)
       case _ => Future.failed(NoAutorizado("Token erróneo"))

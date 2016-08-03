@@ -46,10 +46,8 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
       token =>
         delete {
           clientIP { ip =>
-            val util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
-            val decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token.token)
+            val decryptedToken = AesUtil.desencriptarToken(token.token)
             val tipoCliente = Token.getToken(decryptedToken).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
-
             // TODO: Matar sesion
             val resultado: Future[Int] = if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
               usuarioAgenteRepository.invalidarToken(token.token)
@@ -82,7 +80,6 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
             if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
               autorizacionAgenteRepo.autorizar(token, url, ipRemota)
             } else if (tipoCliente == TiposCliente.clienteAdministrador.toString) {
-              //TODO: aqui va el admin
               autorizacionAdminRepo.autorizar(token, url, ipRemota)
             } else {
               autorizacionRepository.autorizarUrl(token, url)

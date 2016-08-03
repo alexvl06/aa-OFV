@@ -23,12 +23,13 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
 
 // TODO: Implement 256-bit version like: http://securejava.wordpress.com/2012/10/25/aes-256/
-public class AesUtil {
+public class Aes {
+
     private final int keySize;
     private final int iterationCount;
     private final Cipher cipher;
 
-    public AesUtil(int keySize, int iterationCount) {
+    public Aes(int keySize, int iterationCount) {
         this.keySize = keySize;
         this.iterationCount = iterationCount;
         try {
