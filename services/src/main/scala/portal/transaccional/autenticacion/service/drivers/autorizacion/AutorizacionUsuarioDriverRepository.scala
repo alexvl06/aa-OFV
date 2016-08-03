@@ -34,7 +34,6 @@ case class AutorizacionUsuarioDriverRepository(usuarioRepo : UsuarioRepository, 
       validarSesion <- Future(actorResponse[SesionActorSupervisor.SesionUsuarioValidada](sessionActor, ValidarSesion(encriptedToken)))
       usuarioOption <- usuarioRepo.getByToken(encriptedToken)
       usuario <- validarUsario(usuarioOption)
-      validarSesion <- actorResponse[SesionActorSupervisor.SesionUsuarioValidada](sessionActor, ValidarSesion(encriptedToken))
       recursos <- recursoRepo.obtenerRecursos(usuario.id.get)
       validarRecurso <- resolveMessageRecursos(usuario, recursos, url)
     } yield validarRecurso
