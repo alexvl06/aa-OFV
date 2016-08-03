@@ -4,7 +4,6 @@ import akka.actor.ActorSelection
 import co.com.alianza.app.CrossHeaders
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.exceptions._
-import co.com.alianza.infrastructure.dto.Usuario
 import co.com.alianza.util.token.{ AesUtil, Token }
 import enumerations.CryptoAesParameters
 import portal.transaccional.autenticacion.service.drivers.autorizacion.{ AutorizacionUsuarioEmpresarialAdminRepository, AutorizacionUsuarioEmpresarialRepository, AutorizacionUsuarioRepository }
@@ -20,7 +19,7 @@ import scala.util.{ Failure, Success }
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
- * Created by jonathan on 27/07/16.
+ * Created by s4n on 27/07/16.
  */
 case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgenteRepository: UsuarioEmpresarialRepository,
   usuarioAdminRepository: UsuarioEmpresarialAdminRepository, autorizacionRepository: AutorizacionUsuarioRepository, kafkaActor: ActorSelection,

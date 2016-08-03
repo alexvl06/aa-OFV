@@ -12,5 +12,4 @@ object DataAccessTranslator {
 
   def entityToDto (e : eEmpresarial): Empresa = Empresa(e.id,e.nit,e.estadoEmpresa)
 
-
 }
