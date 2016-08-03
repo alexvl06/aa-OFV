@@ -25,7 +25,7 @@ case class RecursoDriverRepository(generalDAO: AlianzaDAOs) extends RecursoRepos
   private def filtrarRecursos(recurso: RecursoPerfil, url: String): Boolean = {
     val indexSlash: Int = recurso.urlRecurso.lastIndexOf("/")
     val myUrl: String = if (recurso.urlRecurso.contains("/*") && url.size > recurso.urlRecurso.size)
-        url.substring(0, indexSlash) else url
+      url.substring(0, indexSlash) else url
     val urlR: String = recurso.urlRecurso.substring(0, indexSlash)
     urlR.contains(myUrl) && urlR.equals(myUrl) && recurso.acceso
   }

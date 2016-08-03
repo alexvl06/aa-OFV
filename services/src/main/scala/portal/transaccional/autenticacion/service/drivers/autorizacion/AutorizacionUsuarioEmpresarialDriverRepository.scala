@@ -105,14 +105,16 @@ case class AutorizacionUsuarioEmpresarialDriverRepository(agenteRepo: UsuarioEmp
     (sesion ? ObtenerEmpresaActor).flatMap {
       case Some(empresaSesionActor: ActorRef) => (empresaSesionActor ? ObtenerIps).mapTo[List[String]]
       case None => Future.failed(ValidacionException("401.21", "Error sesión"))
-      case _ =>  Future.failed(ValidacionException("401.21", "esta devolviendo otra cosa"))
+      case _ => Future.failed(ValidacionException("401.21", "esta devolviendo otra cosa"))
     }
   }
 
   private def validarIps(ips: List[String], ip: String): Future[String] = {
-    if (ips.contains(ip)) { Future.successful(ip)
+    if (ips.contains(ip)) {
+      Future.successful(ip)
     } else {
-      Future.failed(ValidacionException("401.21 -- ", "Error sesión")) }
+      Future.failed(ValidacionException("401.21 -- ", "Error sesión"))
+    }
   }
 
 }
