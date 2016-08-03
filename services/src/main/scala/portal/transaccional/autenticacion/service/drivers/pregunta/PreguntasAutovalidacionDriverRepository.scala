@@ -1,14 +1,12 @@
-package portal.transaccional.autenticacion.service.drivers.preguntasAutovalidacion
+package portal.transaccional.autenticacion.service.drivers.pregunta
 
 import akka.util.Timeout
 import co.com.alianza.infrastructure.dto.Configuracion
 import co.com.alianza.persistence.entities.{Configuraciones, PreguntaAutovalidacion}
 import enumerations.ConfiguracionEnum
-import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionRepository
-import portal.transaccional.autenticacion.service.drivers.pregunta.PreguntasRepository
-import portal.transaccional.autenticacion.service.drivers.preguntasAutovalidacion.{DataAccessTranslator => preguntasAutovalidacionDTO}
-import portal.transaccional.autenticacion.service.drivers.configuracion.{DataAccessTranslator => configuracionDTO}
-import portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.PreguntasResponse
+import portal.transaccional.autenticacion.service.drivers.configuracion.{ConfiguracionRepository, DataAccessTranslator => configuracionDTO}
+import portal.transaccional.autenticacion.service.drivers.pregunta.{DataAccessTranslator => preguntasAutovalidacionDTO}
+import portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.Response
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -24,7 +22,7 @@ case class PreguntasAutovalidacionDriverRepository(preguntasRepository: Pregunta
     * El numero de preguntas que se envia, es igual a el numero de preguntas
     * que debe aparecer en la lista desplegable.
     */
-  def obtenerPreguntas(): Future[PreguntasResponse] = {
+  def obtenerPreguntas(): Future[Response] = {
     for {
       preguntas <- preguntasRepository.obtenerPreguntas()
       configuraciones <- configuracionRepository.getAll()
@@ -33,14 +31,14 @@ case class PreguntasAutovalidacionDriverRepository(preguntasRepository: Pregunta
   }
 
 
-  private def resolveObtenerPreguntas(preguntasEntities :List[PreguntaAutovalidacion], configuracionesEntities: List[Configuraciones]): Future[PreguntasResponse] = Future {
+  private def resolveObtenerPreguntas(preguntasEntities :List[PreguntaAutovalidacion], configuracionesEntities: List[Configuraciones]): Future[Response] = Future {
     val preguntasDto = preguntasEntities.map(pregunta => preguntasAutovalidacionDTO.entityToDto(pregunta))
     val configuracionesDto = configuracionesEntities.map(conf => configuracionDTO.entityToDto(conf))
 
     val numeroPreguntas = obtenerValorEntero(configuracionesDto, ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS.name)
     val numeroPreguntasLista = obtenerValorEntero(configuracionesDto, ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS_LISTA.name)
     val preguntas = Random.shuffle(preguntasDto).take(numeroPreguntasLista)
-    PreguntasResponse(preguntasDto, numeroPreguntas)
+    Response(preguntasDto, numeroPreguntas)
   }
 
   private def obtenerValorEntero(configuraciones: List[Configuracion], llave: String): Int = {

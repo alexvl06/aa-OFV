@@ -18,4 +18,12 @@ case class RespuestaUsuarioDAO()(implicit dcConfig: DBConfig) extends TableQuery
     run(this.filter(_.idUsuario === idUsuario).result)
   }
 
+  def delete(idUsuario: Int): Future[Int] = {
+    run(this.filter(_.idUsuario === idUsuario).delete)
+  }
+
+  def insert(respuestas: List[RespuestasAutovalidacionUsuario]): Future[Option[Int]] = {
+    run(this ++= respuestas)
+  }
+
 }

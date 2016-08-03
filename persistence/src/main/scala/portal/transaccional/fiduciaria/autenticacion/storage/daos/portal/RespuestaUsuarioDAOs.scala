@@ -11,4 +11,8 @@ trait RespuestaUsuarioDAOs {
 
   def getById(idUsuario: Int): Future[Seq[RespuestasAutovalidacionUsuario]]
 
+  def delete(idUsuario: Int): Future[Int]
+
+  def insert(respuestas: List[RespuestasAutovalidacionUsuario]): Future[Option[Int]]
+
 }

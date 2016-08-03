@@ -10,7 +10,8 @@ import spray.util.LoggingContext
 import co.com.alianza.web._
 import co.com.alianza.webvalidarPinClienteAdmin.PinService
 import portal.transaccional.autenticacion.service.drivers.autenticacion.{AutenticacionEmpresaRepository, AutenticacionRepository}
-import portal.transaccional.autenticacion.service.drivers.preguntasAutovalidacion.PreguntasAutovalidacionRepository
+import portal.transaccional.autenticacion.service.drivers.pregunta.PreguntasAutovalidacionRepository
+import portal.transaccional.autenticacion.service.drivers.respuesta.RespuestaUsuarioRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioEmpresarialAdminRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioRepository
@@ -24,7 +25,7 @@ case class AlianzaRouter(
   pinUsuarioEmpresarialAdminActor: ActorSelection, pinUsuarioAgenteEmpresarialActor: ActorSelection, ipsUsuarioActor: ActorSelection,
   horarioEmpresaActor: ActorSelection, contrasenasAgenteEmpresarialActor: ActorSelection, contrasenasClienteAdminActor: ActorSelection,
   contrasenasActor: ActorSelection, autorizacionActorSupervisor: ActorRef, autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository,
-  autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository, preguntasValidacionRepository: PreguntasAutovalidacionRepository
+  autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository, preguntasValidacionRepository: PreguntasAutovalidacionRepository, respuestaUsuarioRepository: RespuestaUsuarioRepository
 )(implicit val system: ActorSystem) extends HttpServiceActor with RouteConcatenation
     with CrossHeaders with ServiceAuthorization with ActorLogging {
 
@@ -34,7 +35,6 @@ case class AlianzaRouter(
       portal.transaccional.autenticacion.service.web.autorizacion.AutorizacionService(usuarioRepositorio, usuarioAgenteRepositorio,
       usuarioAdminRepositorio, autorizacionUsuarioRepo, kafkaActor, autorizacionAgenteRepo, autorizacionAdminRepo).route ~
       portal.transaccional.autenticacion.service.web.autenticacion.AutenticacionService(autenticacionRepo, autenticacionEmpresaRepositorio, kafkaActor).route ~
-        portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.PreguntasAutovalidacionService(preguntasValidacionRepository).route ~
       new ConfrontaService(confrontaActor).route ~
       new EnumeracionService().route ~
       UsuarioService(kafkaActor, usuariosActor).route ~
@@ -51,8 +51,8 @@ case class AlianzaRouter(
             // TODO Cambiar al authenticate de cliente empresarial
             new AdministrarContrasenaEmpresaService(kafkaActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).secureRouteEmpresa(user) ~
             UsuarioEmpresaService(kafkaActor, agenteEmpresarialActor).secureUserRouteEmpresa(user) ~
-            PermisosTransaccionalesService(kafkaActor, permisoTransaccionalActor).route(user)
-            //PreguntasAutovalidacionService(kafkaActor, preguntasAutovalidacionActor).route(user) Viejo
+            PermisosTransaccionalesService(kafkaActor, permisoTransaccionalActor).route(user) ~
+            portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.PreguntasAutovalidacionService(user, preguntasValidacionRepository,respuestaUsuarioRepository).route
       }
 
   def receive = runRoute(respondWithHeaders(listCrossHeaders) { routes })(

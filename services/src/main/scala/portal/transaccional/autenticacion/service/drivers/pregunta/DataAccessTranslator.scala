@@ -1,4 +1,4 @@
-package portal.transaccional.autenticacion.service.drivers.preguntasAutovalidacion
+package portal.transaccional.autenticacion.service.drivers.pregunta
 
 import co.com.alianza.infrastructure.dto.Pregunta
 import co.com.alianza.persistence.entities.{PreguntaAutovalidacion => ePregunta}

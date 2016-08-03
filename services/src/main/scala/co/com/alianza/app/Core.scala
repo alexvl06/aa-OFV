@@ -27,10 +27,9 @@ import portal.transaccional.autenticacion.service.drivers.configuracion.Configur
 import portal.transaccional.autenticacion.service.drivers.empresa.EmpresaDriverRepository
 import portal.transaccional.autenticacion.service.drivers.ipempresa.IpEmpresaDriverRepository
 import portal.transaccional.autenticacion.service.drivers.ipusuario.IpUsuarioDriverRepository
-import portal.transaccional.autenticacion.service.drivers.pregunta.PreguntasDriverRepository
-import portal.transaccional.autenticacion.service.drivers.preguntasAutovalidacion.PreguntasAutovalidacionDriverRepository
+import portal.transaccional.autenticacion.service.drivers.pregunta.{PreguntasAutovalidacionDriverRepository, PreguntasDriverRepository}
 import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaDriverRepository
-import portal.transaccional.autenticacion.service.drivers.respuesta.{ RespuestaUsuarioAdminDriverRepository, RespuestaUsuarioDriverRepository }
+import portal.transaccional.autenticacion.service.drivers.respuesta.{RespuestaUsuarioAdminDriverRepository, RespuestaUsuarioDriverRepository}
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioEmpresarialAdminDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioDriverRepository
@@ -131,7 +130,7 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val configuracionRepo = ConfiguracionDriverRepository(configuracionDAO)
   lazy val reglaContrasenaRepo = ReglaContrasenaDriverRepository(reglaContrasenaDAO)
   lazy val usuarioAgenteRepo = UsuarioEmpresarialDriverRepository(usuarioAgenteDAO)
-  lazy val respuestaUsuarioRepo = RespuestaUsuarioDriverRepository(respuestaUsuarioDAO)
+  lazy val respuestaUsuarioRepo = RespuestaUsuarioDriverRepository(respuestaUsuarioDAO, configuracionRepo)
   lazy val usuarioAdminRepo = UsuarioEmpresarialAdminDriverRepository(usuarioAdminDAO)
   lazy val respuestaUsuariAdminoRepo = RespuestaUsuarioAdminDriverRepository(respuestaUsuarioAdminDAO)
   lazy val autorizacionUsuarioRepo = AutorizacionUsuarioDriverRepository(usuarioDAO, recursoRepo, sessionActor)
