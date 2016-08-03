@@ -11,4 +11,6 @@ trait AutorizacionUsuarioEmpresarialAdminRepository {
 
   def autorizar(token: String, url: String, ip: String): Future[ValidacionAutorizacion]
 
+  def invalidarToken (token : String): Future[Int]
+
 }

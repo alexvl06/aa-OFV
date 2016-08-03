@@ -7,23 +7,24 @@ import co.com.alianza.domain.aggregates.autenticacion.SesionActorSupervisor.Sesi
 import co.com.alianza.domain.aggregates.autenticacion.{ ObtenerEmpresaActor, ObtenerIps }
 import co.com.alianza.exceptions.{ Autorizado, Prohibido, ValidacionAutorizacion, ValidacionException }
 import co.com.alianza.infrastructure.dto.UsuarioEmpresarial
-import co.com.alianza.infrastructure.messages.{ BuscarSesion, ResponseMessage, ValidarSesion }
+import co.com.alianza.infrastructure.messages.{ BuscarSesion, InvalidarSesion, ResponseMessage, ValidarSesion }
 import co.com.alianza.persistence.entities.RecursoPerfilAgente
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.token.{ AesUtil, Token }
 import enumerations.CryptoAesParameters
 import enumerations.empresa.EstadosDeEmpresaEnum
 import portal.transaccional.autenticacion.service.drivers.Recurso.RecursoRepository
-import portal.transaccional.autenticacion.service.drivers.usuarioAgente.{ DataAccessTranslator, UsuarioEmpresarialDriverRepository }
+import portal.transaccional.autenticacion.service.drivers.usuarioAgente.{ DataAccessTranslator, UsuarioEmpresarialRepository }
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.AlianzaDAO
 import spray.http.StatusCodes._
+
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * Created by s4n on 2016
  */
-case class AutorizacionUsuarioEmpresarialDriverRepository(agenteRepo: UsuarioEmpresarialDriverRepository, alianzaDAO: AlianzaDAO, sesionActor: ActorRef,
+case class AutorizacionUsuarioEmpresarialDriverRepository(agenteRepo: UsuarioEmpresarialRepository, alianzaDAO: AlianzaDAO, sesionActor: ActorRef,
     recursoRepo: RecursoRepository)(implicit val ex: ExecutionContext) extends AutorizacionUsuarioEmpresarialRepository {
 
   implicit val timeout = Timeout(5.seconds)
@@ -31,7 +32,7 @@ case class AutorizacionUsuarioEmpresarialDriverRepository(agenteRepo: UsuarioEmp
   def autorizar(token: String, url: String, ip: String): Future[ValidacionAutorizacion] = {
     val encriptedToken = AesUtil.encriptarToken(token)
     for {
-      _ <- validarToken(encriptedToken)
+      _ <- validarToken(token)
       _ <- Future { (sesionActor ? ValidarSesion(encriptedToken)).mapTo[SesionUsuarioValidada] }
       sesion <- obtieneSesion(encriptedToken)
       agenteEstado <- alianzaDAO.getByTokenAgente(encriptedToken)
@@ -43,8 +44,15 @@ case class AutorizacionUsuarioEmpresarialDriverRepository(agenteRepo: UsuarioEmp
     } yield result
   }
 
+  def invalidarToken (token : String): Future[Int] = {
+    for {
+      x <- agenteRepo.invalidarToken(token)
+      _ <- sesionActor ? InvalidarSesion(token)
+    } yield x
+  }
+
   private def validarToken(token: String): Future[Boolean] = {
-    Token.autorizarToken(AesUtil.desencriptarToken(token)) match {
+    Token.autorizarToken(token) match {
       case true => Future.successful(true)
       case false => Future.failed(ValidacionException("401.24", "Error token"))
     }

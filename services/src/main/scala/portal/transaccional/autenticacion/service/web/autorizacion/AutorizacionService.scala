@@ -31,6 +31,9 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
   val invalidarTokenPath = "invalidarToken"
   val validarTokenPath = "validarToken"
 
+  val agente = TiposCliente.agenteEmpresarial.toString
+  val admin = TiposCliente.clienteAdministrador.toString
+
   val route: Route = {
     path(invalidarTokenPath) {
       pathEndOrSingleSlash {
@@ -47,16 +50,16 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
       token =>
         delete {
           clientIP { ip =>
-            val usuario = getTokenData(token.token)
 
-            val agente = TiposCliente.agenteEmpresarial.toString
-            val admin = TiposCliente.clienteAdministrador.toString
-
-            // TODO: Matar sesion
+            val decryptedToken = AesUtil.desencriptarToken(token.token)
+            val usuario = getTokenData(decryptedToken)
             val resultado = usuario.tipoCliente match {
               case agente => usuarioAgenteRepository.invalidarToken(token.token)
               case admin => usuarioAdminRepository.invalidarToken(token.token)
               case _ => usuarioRepository.invalidarToken(token.token)
+              case `agente` => autorizacionAgenteRepo.invalidarToken(token.token)
+              case `admin` =>  autorizacionAdminRepo.invalidarToken(token.token)
+              case _ => autorizacionRepository.invalidarToken(token.token)
             }
 
             mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.cierreSesionIndex, ip.value,
@@ -75,15 +78,14 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
     get {
       parameters('url, 'ipRemota) {
         (url, ipRemota) =>
-          val tipoCliente = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
-          val resultado: Future[ValidacionAutorizacion] =
-            if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
-              autorizacionAgenteRepo.autorizar(token, url, ipRemota)
-            } else if (tipoCliente == TiposCliente.clienteAdministrador.toString) {
-              autorizacionAdminRepo.autorizar(token, url, ipRemota)
-            } else {
-              autorizacionRepository.autorizarUrl(token, url)
-            }
+
+          val usuario = getTokenData(token)
+
+          val resultado = usuario.tipoCliente match {
+            case `agente` => autorizacionAgenteRepo.autorizar(token, url, ipRemota)
+            case `admin` =>  autorizacionAdminRepo.autorizar(token, url, ipRemota)
+            case _ => autorizacionRepository.autorizarUrl(token, url)
+          }
 
           onComplete(resultado) {
             case Success(value) => execution(value)
@@ -104,8 +106,9 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
   }
 
   private def getTokenData(token: String): AuditityUser = {
-    val decryptedToken = AesUtil.desencriptarToken(token)
-    val nToken = Token.getToken(decryptedToken).getJWTClaimsSet
+
+    val nToken = Token.getToken(token).getJWTClaimsSet
+
     val tipoCliente = nToken.getCustomClaim("tipoCliente").toString
     val nit = nToken.getCustomClaim("nit").toString
     val lastIp = nToken.getCustomClaim("ultimaIpIngreso").toString

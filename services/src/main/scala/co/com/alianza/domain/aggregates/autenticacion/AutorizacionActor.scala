@@ -99,7 +99,9 @@ case class AutorizacionActor(sesionActorSupervisor: ActorRef) extends Actor with
    * @param token El token para realizar validación
    */
   private def validarToken(token: String): Future[Validation[PersistenceException, Option[Usuario]]] = {
+
     var decryptedToken: String = AesUtil.desencriptarToken(token)
+
     Token.autorizarToken(decryptedToken) match {
       case true =>
         usDataAdapter.obtenerUsuarioToken(token).flatMap { x =>
