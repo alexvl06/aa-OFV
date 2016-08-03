@@ -17,7 +17,6 @@ import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioE
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioRepository
 import portal.transaccional.autenticacion.service.web.autorizacion.AutorizacionService
 import portal.transaccional.autenticacion.service.web.autenticacion.AutenticacionService
-import portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.PreguntasAutovalidacionService
 
 case class AlianzaRouter(
   autenticacionRepo: AutenticacionRepository, autenticacionEmpresaRepositorio: AutenticacionEmpresaRepository,
@@ -28,7 +27,8 @@ case class AlianzaRouter(
   pinUsuarioEmpresarialAdminActor: ActorSelection, pinUsuarioAgenteEmpresarialActor: ActorSelection, ipsUsuarioActor: ActorSelection,
   horarioEmpresaActor: ActorSelection, contrasenasAgenteEmpresarialActor: ActorSelection, contrasenasClienteAdminActor: ActorSelection,
   contrasenasActor: ActorSelection, autorizacionActorSupervisor: ActorRef, autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository,
-  autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository, preguntasValidacionRepository: PreguntasAutovalidacionRepository, respuestaUsuarioRepository: RespuestaUsuarioRepository
+  autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository, preguntasValidacionRepository: PreguntasAutovalidacionRepository,
+  respuestaUsuarioRepository: RespuestaUsuarioRepository, respuestaUsuarioAdminRepository: RespuestaUsuarioRepository
 )(implicit val system: ActorSystem) extends HttpServiceActor with RouteConcatenation
     with CrossHeaders with ServiceAuthorization with ActorLogging {
 
@@ -55,7 +55,8 @@ case class AlianzaRouter(
             new AdministrarContrasenaEmpresaService(kafkaActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).secureRouteEmpresa(user) ~
             UsuarioEmpresaService(kafkaActor, agenteEmpresarialActor).secureUserRouteEmpresa(user) ~
             PermisosTransaccionalesService(kafkaActor, permisoTransaccionalActor).route(user) ~
-            portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.PreguntasAutovalidacionService(user, preguntasValidacionRepository,respuestaUsuarioRepository).route
+            portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.PreguntasAutovalidacionService(user,
+              preguntasValidacionRepository,respuestaUsuarioRepository,respuestaUsuarioAdminRepository).route
       }
 
   def receive = runRoute(respondWithHeaders(listCrossHeaders) { routes })(

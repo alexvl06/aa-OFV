@@ -1,6 +1,5 @@
 package portal.transaccional.autenticacion.service.drivers.respuesta
 
-import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.infrastructure.dto.Respuesta
 import co.com.alianza.persistence.entities.RespuestasAutovalidacionUsuario
@@ -20,7 +19,7 @@ case class RespuestaUsuarioDriverRepository(respuestaDAO: RespuestaUsuarioDAOs,
     respuestaDAO.getById(idUsuario)
   }
 
-  def guardarRespuestas(idUsuario: Int, tipoCliente: TiposCliente, respuestas: List[Respuesta]): Future[Option[Int]] = {
+  def guardarRespuestas(idUsuario: Int, respuestas: List[Respuesta]): Future[Option[Int]] = {
     val llave = ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS.name
     val respuestasPersistencia = respuestas.map(x => new RespuestasAutovalidacionUsuario(x.idPregunta, idUsuario, x.respuesta))
     for {

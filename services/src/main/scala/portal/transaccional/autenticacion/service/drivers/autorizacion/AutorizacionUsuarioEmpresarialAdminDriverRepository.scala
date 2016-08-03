@@ -62,8 +62,7 @@ case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo : Usuar
     val actor: Future[Any] = sesionActor ? BuscarSesion(token)
     actor flatMap {
       case Some(sesionActor: ActorRef) => Future.successful(sesionActor)
-      case None => Future.failed(ValidacionException("403.9", "Error sesión"))
-      case _ => Future.failed(ValidacionException("403.9", "SE JODIO TODO"))
+      case _ => Future.failed(ValidacionException("403.9", "Error sesión"))
     }
   }
 

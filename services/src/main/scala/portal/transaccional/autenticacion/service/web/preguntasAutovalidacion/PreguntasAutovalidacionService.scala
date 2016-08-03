@@ -1,6 +1,7 @@
 package portal.transaccional.autenticacion.service.web.preguntasAutovalidacion
 
 import co.com.alianza.app.CrossHeaders
+import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.exceptions._
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import portal.transaccional.autenticacion.service.drivers.pregunta.PreguntasAutovalidacionRepository
@@ -17,7 +18,8 @@ import scala.util.{Failure, Success}
   * Created by s4n on 3/08/16.
   */
 case class PreguntasAutovalidacionService(user: UsuarioAuth, preguntasValidacionRepository: PreguntasAutovalidacionRepository,
-                                          respuestaUsuarioRepository: RespuestaUsuarioRepository)
+                                          respuestaUsuarioRepository: RespuestaUsuarioRepository,
+                                          respuestaUsuarioAdminRepository: RespuestaUsuarioRepository)
   (implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   val preguntasAutovalidacionPath = "preguntasAutovalidacion"
@@ -45,7 +47,12 @@ case class PreguntasAutovalidacionService(user: UsuarioAuth, preguntasValidacion
     put {
       entity(as[RespuestasRequest]) {
         request =>
-          val resultado: Future[Option[Int]] = respuestaUsuarioRepository.guardarRespuestas(user.id, user.tipoCliente, request.respuestas)
+          val resultado: Future[Option[Int]] = user.tipoCliente match {
+            case TiposCliente.clienteIndividual =>
+              respuestaUsuarioRepository.guardarRespuestas(user.id, request.respuestas)
+            case TiposCliente.clienteAdministrador      =>
+              respuestaUsuarioAdminRepository.guardarRespuestas(user.id, request.respuestas)
+          }
           onComplete(resultado) {
             case Success(value) => complete(value.toString)
             case Failure(ex) => execution(ex)
