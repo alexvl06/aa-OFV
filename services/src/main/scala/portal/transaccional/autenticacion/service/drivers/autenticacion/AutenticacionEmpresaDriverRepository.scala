@@ -141,10 +141,8 @@ case class AutenticacionEmpresaDriverRepository(
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
       token <- generarTokenAdmin(usuario, ip, inactividad.llave)
       ips <- ipRepo.getIpsByEmpresaId(empresa.id)
-
       respuestas <- respuestasRepo.getRespuestasById(usuario.id)
-      validacionIps <- ipRepo.validarControlIpAdmin(ip, ips, token, respuestas.nonEmpty) //TODO: AGREGAR LA PREGUNTA DE LAS RESPUESTAS(respuestas.nonEmpty)
-
+      validacionIps <- ipRepo.validarControlIpAdmin(ip, ips, token, respuestas.nonEmpty)
       asociarToken <- usuarioAdminRepo.actualizarToken(usuario.id, token)
       sesion <- actorResponse[SesionActorSupervisor.SesionUsuarioCreada](sessionActor, mensajeCrearSesion(token, inactividad.valor.toInt, empresa))
     } yield validacionIps
