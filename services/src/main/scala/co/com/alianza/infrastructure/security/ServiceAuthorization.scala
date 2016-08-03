@@ -50,8 +50,6 @@ trait ServiceAuthorization {
         val futuro =
           if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
             autorizacionAgenteRepo.autorizar(decryptedToken, "", obtenerIp(ctx).get.value)
-            //TODO: poner para agente empresarial
-            //autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialMessage(token.get.value, None, obtenerIp(ctx).get.value)
           } else if (tipoCliente == TiposCliente.clienteAdministrador.toString) {
             autorizacionUsuarioRepo.autorizarUrl(encriptedToken, "")
             //TODO: poner para empresarial

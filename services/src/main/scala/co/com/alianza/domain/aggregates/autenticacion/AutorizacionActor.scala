@@ -171,7 +171,6 @@ case class AutorizacionActor(sesionActorSupervisor: ActorRef) extends Actor with
     filtrarRecursos(recurso.urlRecurso, recurso.acceso, url)
 
   protected def filtrarRecursos(urlRecurso: String, acceso: Boolean, url: String) = {
-    //TODO: quitar esos "ifseses"
     if (urlRecurso.equals(url)) acceso
     else if (urlRecurso.endsWith("/*")) {
       val urlC = urlRecurso.substring(0, urlRecurso.lastIndexOf("*"))

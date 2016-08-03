@@ -118,9 +118,7 @@ case class PreguntasAutovalidacionActor() extends Actor with ActorLogging with F
     val comparacion = numeroRespuestas == numeroRespuestasParametrizadas
     comparacion match {
       case true => zSuccess(comparacion)
-      case false =>
-        //TODO: definir los codigos de error a enviar para este error y el comportamiento
-        zFailure(ErrorAutovalidacion("Error comprobacion parametrizacion campos"))
+      case false => zFailure(ErrorAutovalidacion("Error comprobacion parametrizacion campos"))
     }
   }
 

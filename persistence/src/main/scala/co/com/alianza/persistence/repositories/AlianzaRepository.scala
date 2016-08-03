@@ -46,7 +46,7 @@ class AlianzaRepository(implicit val executionContex: ExecutionContext) {
   def resolveTry[T](operation: Future[T], messageInfo: String): Validation[PersistenceException, T] = {
     import scala.concurrent.duration._
     //TODO: QUITAR ESTO POR FAVOR !!
-    Await.result(operation, 15 seconds)
+    Await.result(operation, 15.seconds)
     operation.value match {
       case Some(e) => e match {
         case scala.util.Success(response) =>
