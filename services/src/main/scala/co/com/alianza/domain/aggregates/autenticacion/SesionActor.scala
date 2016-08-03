@@ -87,10 +87,10 @@ case class SesionActorSupervisor() extends Actor with ActorLogging {
     val decryptedToken = AesUtil.desencriptarToken(message.token)
     val actorName = generarNombreSesionActor(decryptedToken)
     val response = context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(actorName)
-    response.map {
-      case Some(sesionActor: ActorRef) =>
-        val actualizacion = sesionActor ? ActualizarSesion(); actualizacion.map { case _ => currentSender ! SesionUsuarioValidada() }
-      case None => currentSender ! SesionUsuarioNoValidada()
+
+    response map {
+      case Some(sesionActor: ActorRef) => sesionActor ? ActualizarSesion() onComplete { case _ => currentSender ! true }
+      case None => currentSender ! false
     }
   }
 
