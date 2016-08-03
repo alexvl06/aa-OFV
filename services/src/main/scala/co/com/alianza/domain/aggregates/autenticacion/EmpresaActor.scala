@@ -16,12 +16,12 @@ import scala.util.{ Failure, Success }
 import scalaz.{ Failure => zFailure, Success => zSuccess }
 
 /**
- * Created by manuel on 3/03/15.
+ * Created by seven4n 2016
  */
 class EmpresaActor(var empresa: Empresa) extends Actor with ActorLogging {
 
   implicit val _: ExecutionContext = context dispatcher
-  implicit val timeout: Timeout = 120 seconds
+  implicit val timeout: Timeout = 5.seconds
   var sesionesActivas = List[ActorRef]()
   var ips = List[String]()
 
@@ -39,16 +39,13 @@ class EmpresaActor(var empresa: Empresa) extends Actor with ActorLogging {
 
     case RemoverIp(ip) => ips = if (ips.contains(ip)) ips filterNot { _ == ip } else ips
 
-    case CerrarSesiones => {
-      sesionesActivas foreach { _ ! ExpirarSesion() }
-      context.stop(self)
-    }
+    case CerrarSesiones => sesionesActivas foreach { _ ! ExpirarSesion() } ; context.stop(self)
 
     case CargarIps => cargaIpsEmpresa()
 
     case ObtenerIps =>
       val currentSender = sender
-      (self ? CargarIps).map {
+      (self ? CargarIps).onComplete {
         case Success(true) => currentSender ! ips
         case Success(false) => log error "*++*+ Falló la carga de ips"
         case Failure(error) => log error ("+++ Falló la carga de ips de la empresa", error)
