@@ -19,6 +19,8 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
   val pinempresa = TableQuery[PinEmpresaTable]
   val recursosPerfilesAgentes = TableQuery[RecursoPerfilAgenteTable]
   val perfilesAgentes = TableQuery[PerfilAgenteAgenteTable]
+  val perfilesClientesAdmin = TableQuery[PerfilClienteAdminClienteAdminTable]
+  val recursosPerfilesAdmin = TableQuery[RecursoPerfilClienteAdminTable]
 
   import dcConfig.db._
   import dcConfig.profile.api._
@@ -39,9 +41,17 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
     run(usuariosRecursosJoin.result)
   }
 
-  def getAdminResources(idUsuario: Int): Future[Seq[RecursoPerfilAgente]] = {
+  def getAgenteResources(idUsuario: Int): Future[Seq[RecursoPerfilAgente]] = {
     val resources = for {
       ((usu, per), rec) <- usuariosEmpresariales join perfilesAgentes on (_.id === _.idUsuario) join recursosPerfilesAgentes on
+        (_._2.idPerfil === _.idPerfil) if usu.id === idUsuario
+    } yield rec
+    run(resources.result)
+  }
+
+  def getAdminResources(idUsuario: Int): Future[Seq[RecursoPerfilClienteAdmin]] = {
+    val resources = for {
+      ((usu, per), rec) <- usuariosEmpresarialesAdmin join perfilesClientesAdmin on (_.id === _.idUsuario) join recursosPerfilesAdmin on
         (_._2.idPerfil === _.idPerfil) if usu.id === idUsuario
     } yield rec
     run(resources.result)
@@ -130,6 +140,19 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
       }
     } yield usuarioEmpresarial).result.headOption
     )
+  }
+
+  //Obtengo como resultado una tupla que me devuelve el usuarioEmpresarialAdmin junto con el estado de la empresa
+  def getByTokenAdmin(token: String): Future[(UsuarioEmpresarialAdmin, Int)] = {
+    val query =
+      for {
+        (agenteEmpresarialAdmin, empresa) <- usuariosEmpresarialesAdmin join usuariosEmpresarialesAdminEmpresa on {
+          (ue, uee) => ue.token === token && ue.id === uee.idUsuarioEmpresarialAdmin
+        } join empresas on {
+          case ((ue, uee), e) => uee.idEmpresa === e.id
+        }
+      } yield (agenteEmpresarialAdmin._1, empresa.estadoEmpresa)
+    run(query.result.head)
   }
 
 }

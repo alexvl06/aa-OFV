@@ -8,7 +8,9 @@ trait AlianzaDAOs {
 
   def getResources(idUsuario: Int): Future[Seq[RecursoPerfil]]
 
-  def getAdminResources(idUsuario: Int): Future[Seq[RecursoPerfilAgente]]
+  def getAgenteResources(idUsuario: Int): Future[Seq[RecursoPerfilAgente]]
+
+  def getAdminResources(idUsuario: Int): Future[Seq[RecursoPerfilClienteAdmin]]
 
   def getAdminTokenAgente(token: String): Future[Option[(UsuarioEmpresarialAdmin, Int)]]
 

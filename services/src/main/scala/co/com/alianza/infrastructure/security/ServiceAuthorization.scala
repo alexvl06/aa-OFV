@@ -4,23 +4,23 @@ import akka.actor._
 import akka.pattern.ask
 import akka.util.Timeout
 import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.exceptions.{ Autorizado, NoAutorizado, Prohibido }
+import co.com.alianza.exceptions.{Autorizado, NoAutorizado, Prohibido}
 import co.com.alianza.infrastructure.dto.Usuario
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.infrastructure.messages._
-import co.com.alianza.infrastructure.security.AuthenticationFailedRejection.{ CredentialsMissing, CredentialsRejected }
+import co.com.alianza.infrastructure.security.AuthenticationFailedRejection.{CredentialsMissing, CredentialsRejected}
 import co.com.alianza.util.json.JsonUtil
-import co.com.alianza.util.token.{ AesUtil, Token }
+import co.com.alianza.util.token.{AesUtil, Token}
 import com.typesafe.config.Config
 import enumerations.CryptoAesParameters
 import oracle.net.aso.r
-import portal.transaccional.autenticacion.service.drivers.autorizacion.{ AutorizacionUsuarioEmpresarialRepository, AutorizacionUsuarioRepository }
+import portal.transaccional.autenticacion.service.drivers.autorizacion.{AutorizacionUsuarioEmpresarialAdminRepository, AutorizacionUsuarioEmpresarialRepository, AutorizacionUsuarioRepository}
 import spray.http.StatusCodes._
 import spray.routing.RequestContext
 import spray.routing.authentication.ContextAuthenticator
 
 import scala.concurrent.duration._
-import scala.concurrent.{ Future, promise }
+import scala.concurrent.{Future, promise}
 
 trait ServiceAuthorization {
   self: ActorLogging =>
@@ -31,6 +31,7 @@ trait ServiceAuthorization {
 
   val autorizacionUsuarioRepo: AutorizacionUsuarioRepository
   val autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository
+  val autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository
 
   implicit val timeout: Timeout = Timeout(10.seconds)
 
@@ -51,7 +52,7 @@ trait ServiceAuthorization {
           if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
             autorizacionAgenteRepo.autorizar(decryptedToken, "", obtenerIp(ctx).get.value)
           } else if (tipoCliente == TiposCliente.clienteAdministrador.toString) {
-            autorizacionUsuarioRepo.autorizarUrl(encriptedToken, "")
+            autorizacionAdminRepo.autorizar(decryptedToken, "",obtenerIp(ctx).get.value)
             //TODO: poner para empresarial
             //autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialAdminMessage(token.get.value, None)
           } else {

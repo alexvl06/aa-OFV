@@ -1,6 +1,6 @@
 package portal.transaccional.autenticacion.service.drivers.Recurso
 
-import co.com.alianza.persistence.entities.{ RecursoPerfil, RecursoPerfilAgente }
+import co.com.alianza.persistence.entities.{ RecursoPerfil, RecursoPerfilAgente, RecursoPerfilClienteAdmin }
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ AlianzaDAO, AlianzaDAOs }
 
 import scala.concurrent.Future
@@ -46,6 +46,21 @@ case class RecursoDriverRepository(generalDAO: AlianzaDAOs) extends RecursoRepos
       url.substring(0, indexSlash) else url
     val urlR: String = recurso.urlRecurso.substring(0, indexSlash)
     urlR.contains(myUrl) && urlR.equals(myUrl) && recurso.acceso
+  }
+
+  def filtrarRecursosClienteAdmin(recursos: Seq[RecursoPerfilClienteAdmin], url: String): Seq[RecursoPerfilClienteAdmin] = {
+    recursos.filter(filtrarRecursosClienteAdmin(_, url))
+  }
+
+  /**
+   * Filtra el listado de recursos que concuerden con la url
+   * @param recurso recursos asociados al admin
+   * @param url la url a validar
+   * @return
+   */
+  private def filtrarRecursosClienteAdmin(recurso: RecursoPerfilClienteAdmin, url: String): Boolean = {
+    val urlR = recurso.urlRecurso
+    urlR.contains(url) && urlR.substring(0, urlR.lastIndexOf("/")).equals(url) && recurso.acceso
   }
 
 }
