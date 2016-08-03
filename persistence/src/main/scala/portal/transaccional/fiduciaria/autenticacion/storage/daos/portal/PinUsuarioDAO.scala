@@ -6,8 +6,7 @@ import slick.lifted.TableQuery
 
 import scala.concurrent.Future
 
-//TODO: poner el trait
-class PinUsuarioDAO(implicit val dcConfig: DBConfig) extends TableQuery(new PinUsuarioTable(_)) {
+class PinUsuarioDAO(implicit val dcConfig: DBConfig) extends TableQuery(new PinUsuarioTable(_)) with PinUsuarioDAOs {
 
   import dcConfig.db._
   import dcConfig.profile.api._

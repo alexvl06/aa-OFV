@@ -51,6 +51,7 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
 
             val agente = TiposCliente.agenteEmpresarial.toString
             val admin = TiposCliente.clienteAdministrador.toString
+
             // TODO: Matar sesion
             val resultado = usuario.tipoCliente match {
               case agente => usuarioAgenteRepository.invalidarToken(token.token)
@@ -80,7 +81,6 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
             if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
               autorizacionAgenteRepo.autorizar(token, url, ipRemota)
             } else if (tipoCliente == TiposCliente.clienteAdministrador.toString) {
-              //TODO: aqui va el admin
               autorizacionAdminRepo.autorizar(token, url, ipRemota)
             } else {
               autorizacionRepository.autorizarUrl(token, url)
