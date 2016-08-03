@@ -77,6 +77,7 @@ case class PreguntasAutovalidacionActor() extends Actor with ActorLogging with F
       preguntas <- ValidationT(DataAccessAdapter.obtenerPreguntas())
       configuraciones <- ValidationT(DataAdapterConfiguracion.obtenerConfiguraciones())
     } yield (preguntas, configuraciones)).run
+
     resolveFutureValidation(future, (response: (List[Pregunta], List[Configuracion])) => {
       val numeroPreguntas = obtenerValorEntero(response._2, ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS.name)
       val numeroPreguntasLista = obtenerValorEntero(response._2, ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS_LISTA.name)

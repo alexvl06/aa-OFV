@@ -39,7 +39,8 @@ class EmpresaActor(var empresa: Empresa) extends Actor with ActorLogging {
 
     case RemoverIp(ip) => ips = if (ips.contains(ip)) ips filterNot { _ == ip } else ips
 
-    case CerrarSesiones => sesionesActivas foreach { _ ! ExpirarSesion() } ; context.stop(self)
+    case CerrarSesiones =>
+      sesionesActivas foreach { _ ! ExpirarSesion() }; context.stop(self)
 
     case CargarIps => cargaIpsEmpresa()
 

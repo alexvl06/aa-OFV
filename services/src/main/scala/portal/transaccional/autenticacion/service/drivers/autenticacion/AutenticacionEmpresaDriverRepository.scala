@@ -23,7 +23,7 @@ import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasena
 import portal.transaccional.autenticacion.service.drivers.respuesta.RespuestaUsuarioRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioEmpresarialAdminRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialRepository
-import portal.transaccional.autenticacion.service.drivers.empresa.{ DataAccessTranslator => EmpresaDTO}
+import portal.transaccional.autenticacion.service.drivers.empresa.{ DataAccessTranslator => EmpresaDTO }
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.reflect.ClassTag
@@ -106,13 +106,8 @@ case class AutenticacionEmpresaDriverRepository(
       ips <- ipRepo.getIpsByEmpresaId(empresa.id)
       validacionIps <- ipRepo.validarControlIpAgente(ip, ips, token)
       asociarToken <- usuarioRepo.actualizarToken(usuario.id, token)
-      sesion <- actorResponse[SesionActorSupervisor.SesionUsuarioCreada](sessionActor, CrearSesionUsuario(token, inactividad.valor.toInt,
-        Option(EmpresaDTO.entityToDto(empresa))))
+      sesion <- actorResponse[SesionActorSupervisor.SesionUsuarioCreada](sessionActor, mensajeCrearSesion(token, inactividad.valor.toInt, empresa))
     } yield token
-  }
-
-  def actorResponse[T: ClassTag](actor: ActorRef, msg: CrearSesionUsuario): Future[T] = {
-    (actor ? msg).mapTo[T]
   }
 
   /**
@@ -144,13 +139,21 @@ case class AutenticacionEmpresaDriverRepository(
       caducidad <- usuarioAdminRepo.validarCaducidadContrasena(TiposCliente.agenteEmpresarial, usuario, reglaDias.valor.toInt)
       actualizar <- usuarioAdminRepo.actualizarInfoUsuario(usuario, ip)
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
-      token <- generarTokenAdmin(usuario, ip, inactividad.llave)
+      token <- generarTokenAdmin(usuario, ip, inactividad.valor)
       ips <- ipRepo.getIpsByEmpresaId(empresa.id)
       respuestas <- respuestasRepo.getRespuestasById(usuario.id)
-      validacionIps <- ipRepo.validarControlIpAdmin(ip, ips, token, respuestas.nonEmpty) //TODO: AGREGAR LA PREGUNTA DE LAS RESPUESTAS(respuestas.nonEmpty)
+      validacionIps <- ipRepo.validarControlIpAdmin(ip, ips, token, respuestas.nonEmpty)
       asociarToken <- usuarioAdminRepo.actualizarToken(usuario.id, token)
-      sesion <- actorResponse[SesionActorSupervisor.SesionUsuarioCreada](sessionActor, CrearSesionUsuario(token, inactividad.valor.toInt))
+      sesion <- actorResponse[SesionActorSupervisor.SesionUsuarioCreada](sessionActor, mensajeCrearSesion(token, inactividad.valor.toInt, empresa))
     } yield validacionIps
+  }
+
+  private def mensajeCrearSesion(token: String, inactividad: Int, empresa: Empresa) = {
+    CrearSesionUsuario(token, inactividad, Option(EmpresaDTO.entityToDto(empresa)))
+  }
+
+  private def actorResponse[T: ClassTag](actor: ActorRef, msg: CrearSesionUsuario): Future[T] = {
+    (actor ? msg).mapTo[T]
   }
 
   private def obtenerEmpresaValida(nit: String): Future[Empresa] = {

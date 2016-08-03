@@ -13,7 +13,7 @@ object Boot extends App with HostBinding with Core with BootedCore with CoreActo
     kafkaActor, preguntasAutovalidacionActor, usuariosActor, confrontaActor, actualizacionActor, permisoTransaccionalActor, agenteEmpresarialActor,
     pinActor, pinUsuarioEmpresarialAdminActor, pinUsuarioAgenteEmpresarialActor, ipsUsuarioActor, horarioEmpresaActor,
     contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor, contrasenasActor, autorizacionActorSupervisor,
-    autorizacionAgenteRepo, autorizacionAdminRepo)), name = "api-AlianzaRouter")
+    autorizacionAgenteRepo, autorizacionAdminRepo, preguntasValidacionRepository)), name = "api-AlianzaRouter")
 
   IO(Http)(system) ! Http.Bind(rootService, interface = machineIp(), port = portNumber(args))
 }
