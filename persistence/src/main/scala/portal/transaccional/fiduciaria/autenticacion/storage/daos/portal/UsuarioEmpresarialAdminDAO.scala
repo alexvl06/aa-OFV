@@ -25,10 +25,6 @@ case class UsuarioEmpresarialAdminDAO(implicit dcConfig: DBConfig) extends Table
     run(this.filter(u => u.identificacion === identificacion && u.usuario === usuario).result.headOption)
   }
 
-  def getByToken(token: String): Future[Option[UsuarioEmpresarialAdmin]] = {
-    run(this.filter(_.token === token).result.headOption)
-  }
-
   def getByNit(nitEmpresa: String): Future[Boolean] = {
     val estado = EstadosEmpresaEnum.activo.id
     val query = this.filter(u => u.identificacion === nitEmpresa && u.estado === estado).exists.result

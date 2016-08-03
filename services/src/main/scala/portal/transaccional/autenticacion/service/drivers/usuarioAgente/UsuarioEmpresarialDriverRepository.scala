@@ -153,8 +153,7 @@ case class UsuarioEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs
       Future.failed(ValidacionException("401.9", token))
     } else {
       Future.successful(true)
-    }
-  }
+    }  }
 
   /**
    * Invalidar el token al usuario
