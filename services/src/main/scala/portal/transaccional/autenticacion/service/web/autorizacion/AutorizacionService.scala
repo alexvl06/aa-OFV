@@ -33,6 +33,7 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
 
   val agente = TiposCliente.agenteEmpresarial.toString
   val admin = TiposCliente.clienteAdministrador.toString
+  val individual = TiposCliente.clienteIndividual.toString
 
   val route: Route = {
     path(invalidarTokenPath) {
@@ -52,6 +53,7 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
           clientIP { ip =>
 
             val decryptedToken = AesUtil.desencriptarToken(token.token)
+
             val usuario = getTokenData(decryptedToken)
             val resultado = usuario.tipoCliente match {
               case agente => usuarioAgenteRepository.invalidarToken(token.token)
@@ -110,7 +112,7 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
     val nToken = Token.getToken(token).getJWTClaimsSet
 
     val tipoCliente = nToken.getCustomClaim("tipoCliente").toString
-    val nit = nToken.getCustomClaim("nit").toString
+    val nit = if (tipoCliente == individual ) ""  else nToken.getCustomClaim("nit").toString
     val lastIp = nToken.getCustomClaim("ultimaIpIngreso").toString
     val user = nToken.getCustomClaim("nombreUsuario").toString
     val email = nToken.getCustomClaim("correo").toString
