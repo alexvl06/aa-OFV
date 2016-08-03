@@ -591,8 +591,6 @@ class AutenticacionUsuarioEmpresaActor(implicit val SupervisorUsuario: ActorRef,
     })
   }
 
-  //TODO Metodos replicados de AutenticacionActor
-
   /**
    * Valida que los passwords concuerden
    * @param passwordPeticion Password de la peticion

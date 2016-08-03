@@ -58,10 +58,7 @@ object Token {
     val signedJWT = new SignedJWT(new JWSHeader(JWSHeader.parse(Base64URL.encode(headersJWT))), claimsSet)
     val signer: MACSigner = new MACSigner(SIGNING_KEY)
     signedJWT.sign(signer)
-
-    val util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
-    val encryptedToken = util.encrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, signedJWT.serialize())
-    encryptedToken
+    AesUtil.encriptarToken(signedJWT.serialize())
   }
 
   def generarTokenCaducidadContrasena(tipoUsuario: TiposCliente, idUsuario: Int) = {

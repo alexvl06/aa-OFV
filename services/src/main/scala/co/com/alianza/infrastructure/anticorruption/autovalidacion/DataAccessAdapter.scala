@@ -2,7 +2,7 @@ package co.com.alianza.infrastructure.anticorruption.autovalidacion
 
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.dto.{ Pregunta, Respuesta, RespuestaCompleta }
-import co.com.alianza.persistence.entities.{ PreguntasAutovalidacion, RespuestasAutovalidacionUsuario }
+import co.com.alianza.persistence.entities.{ PreguntaAutovalidacion, RespuestasAutovalidacionUsuario }
 import co.com.alianza.persistence.repositories.PreguntasAutovalidacionRepository
 import co.com.alianza.persistence.util.DataBaseExecutionContext
 
@@ -80,9 +80,9 @@ object DataAccessAdapter {
     repo.bloquearRespuestasClienteAdministrador(idUsuario)
   }
 
-  private def transformPreguntaList(origin: Validation[PersistenceException, Seq[PreguntasAutovalidacion]]): Validation[PersistenceException, List[Pregunta]] = {
+  private def transformPreguntaList(origin: Validation[PersistenceException, Seq[PreguntaAutovalidacion]]): Validation[PersistenceException, List[Pregunta]] = {
     origin match {
-      case zSuccess(response: Seq[PreguntasAutovalidacion]) => zSuccess(DataAccessTranslator.translatePregunta(response).toList)
+      case zSuccess(response: Seq[PreguntaAutovalidacion]) => zSuccess(DataAccessTranslator.translatePregunta(response).toList)
       case zFailure(error) => zFailure(error)
     }
   }
@@ -95,23 +95,23 @@ object DataAccessAdapter {
     }
   }
 
-  private def toPreguntaList(origin: Validation[PersistenceException, Seq[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]]): Validation[PersistenceException, List[Pregunta]] = {
+  private def toPreguntaList(origin: Validation[PersistenceException, Seq[(PreguntaAutovalidacion, RespuestasAutovalidacionUsuario)]]): Validation[PersistenceException, List[Pregunta]] = {
     origin match {
-      case zSuccess(response: Seq[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]) => zSuccess(DataAccessTranslator.toPreguntaList(response))
+      case zSuccess(response: Seq[(PreguntaAutovalidacion, RespuestasAutovalidacionUsuario)]) => zSuccess(DataAccessTranslator.toPreguntaList(response))
       case zFailure(error) => zFailure(error)
     }
   }
 
-  private def toRespuestaList(origin: Validation[PersistenceException, Seq[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]]): Validation[PersistenceException, List[Respuesta]] = {
+  private def toRespuestaList(origin: Validation[PersistenceException, Seq[(PreguntaAutovalidacion, RespuestasAutovalidacionUsuario)]]): Validation[PersistenceException, List[Respuesta]] = {
     origin match {
-      case zSuccess(response: Seq[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]) => zSuccess(DataAccessTranslator.toRespuestaList(response))
+      case zSuccess(response: Seq[(PreguntaAutovalidacion, RespuestasAutovalidacionUsuario)]) => zSuccess(DataAccessTranslator.toRespuestaList(response))
       case zFailure(error) => zFailure(error)
     }
   }
 
-  private def toRespuestaCompletaList(origin: Validation[PersistenceException, Seq[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]]): Validation[PersistenceException, List[RespuestaCompleta]] = {
+  private def toRespuestaCompletaList(origin: Validation[PersistenceException, Seq[(PreguntaAutovalidacion, RespuestasAutovalidacionUsuario)]]): Validation[PersistenceException, List[RespuestaCompleta]] = {
     origin match {
-      case zSuccess(response: Seq[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]) => zSuccess(DataAccessTranslator.toRespuestaCompletaList(response))
+      case zSuccess(response: Seq[(PreguntaAutovalidacion, RespuestasAutovalidacionUsuario)]) => zSuccess(DataAccessTranslator.toRespuestaCompletaList(response))
       case zFailure(error) => zFailure(error)
     }
   }

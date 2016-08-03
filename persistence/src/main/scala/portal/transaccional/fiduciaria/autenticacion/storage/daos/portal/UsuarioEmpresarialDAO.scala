@@ -55,10 +55,6 @@ case class UsuarioEmpresarialDAO(implicit dcConfig: DBConfig) extends TableQuery
     run(this.filter(_.id === idUsuario).result.headOption)
   }
 
-  def getByToken(token: String): Future[Option[UsuarioEmpresarial]] = {
-    run(this.filter(_.token === token).result.headOption)
-  }
-
   def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[UsuarioEmpresarial]] = {
     run(this.filter(u => u.identificacion === identificacion && u.usuario === usuario).result.headOption)
   }

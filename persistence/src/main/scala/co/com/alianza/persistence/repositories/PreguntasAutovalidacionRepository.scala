@@ -22,7 +22,7 @@ class PreguntasAutovalidacionRepository(implicit executionContext: ExecutionCont
   val respuestasUsuarioTable = TableQuery[RespuestasAutovalidacionUsuarioTable]
   val respuestasClienteAdministradorTable = TableQuery[RespuestasAutovalidacionUsuarioAdministradorTable]
 
-  def obtenerPreguntas(): Future[Validation[PersistenceException, Seq[PreguntasAutovalidacion]]] = loan {
+  def obtenerPreguntas(): Future[Validation[PersistenceException, Seq[PreguntaAutovalidacion]]] = loan {
     implicit session =>
       val resultTry = session.database.run(preguntasTable.result)
       resolveTry(resultTry, "Consulta todas las preguntas")
@@ -50,7 +50,7 @@ class PreguntasAutovalidacionRepository(implicit executionContext: ExecutionCont
       resolveTry(resultTry, "Guardar respuestas de autovalidacion para cliente administrador")
   }
 
-  def obtenerPreguntasClienteIndividual(idUsuario: Int): Future[Validation[PersistenceException, Seq[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]]] = loan {
+  def obtenerPreguntasClienteIndividual(idUsuario: Int): Future[Validation[PersistenceException, Seq[(PreguntaAutovalidacion, RespuestasAutovalidacionUsuario)]]] = loan {
     implicit session =>
       val respuestaJoin = for {
         (pregunta, respuesta) <- preguntasTable join respuestasUsuarioTable on (_.id === _.idPregunta)
@@ -61,7 +61,7 @@ class PreguntasAutovalidacionRepository(implicit executionContext: ExecutionCont
       resolveTry(resultTry, "Obtener las preguntas definidas del cliente individual")
   }
 
-  def obtenerPreguntasClienteAdministrador(idUsuario: Int): Future[Validation[PersistenceException, Seq[(PreguntasAutovalidacion, RespuestasAutovalidacionUsuario)]]] = loan {
+  def obtenerPreguntasClienteAdministrador(idUsuario: Int): Future[Validation[PersistenceException, Seq[(PreguntaAutovalidacion, RespuestasAutovalidacionUsuario)]]] = loan {
     implicit session =>
       val respuestaJoin = for {
         (pregunta, respuesta) <- preguntasTable join respuestasClienteAdministradorTable on (_.id === _.idPregunta)

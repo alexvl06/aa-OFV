@@ -63,8 +63,7 @@ case class IpsUsuariosService(kafkaActor: ActorSelection, ipsUsuarioActor: Actor
                       val token = r.request.headers.find(header => header.name equals "token")
                       val stringToken = token match {
                         case Some(s) =>
-                          var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
-                          util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, s.value)
+                          AesUtil.desencriptarToken(s.value)
                         case _ => ""
                       }
                       val usuario = user.tipoCliente match {

@@ -30,8 +30,6 @@ trait UsuarioEmpresarialDAOs {
 
   def getById(idUsuario: Int): Future[Option[UsuarioEmpresarial]]
 
-  def getByToken(token: String): Future[Option[UsuarioEmpresarial]]
-
   def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[UsuarioEmpresarial]]
 
   def isExists(idUsuario: Int, nit: String, usuario: String): Future[Boolean]

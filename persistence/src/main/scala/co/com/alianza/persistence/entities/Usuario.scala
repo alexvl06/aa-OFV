@@ -15,7 +15,6 @@ case class Usuario(id: Option[Int], correo: String, fechaActualizacion: Timestam
 class UsuarioTable(tag: Tag) extends Table[Usuario](tag, "USUARIO") {
   def id = column[Option[Int]]("ID", O.PrimaryKey, O.AutoInc)
   def correo = column[String]("CORREO")
-  //TODO:Cambiar nombrecolumna
   def fechaActualizacion = column[Timestamp]("FECHA_ACTUALIZACION")
   def identificacion = column[String]("IDENTIFICACION")
   def tipoIdentificacion = column[Int]("TIPO_IDENTIFICACION")

@@ -139,7 +139,7 @@ case class AutenticacionEmpresaDriverRepository(
       caducidad <- usuarioAdminRepo.validarCaducidadContrasena(TiposCliente.agenteEmpresarial, usuario, reglaDias.valor.toInt)
       actualizar <- usuarioAdminRepo.actualizarInfoUsuario(usuario, ip)
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
-      token <- generarTokenAdmin(usuario, ip, inactividad.llave)
+      token <- generarTokenAdmin(usuario, ip, inactividad.valor)
       ips <- ipRepo.getIpsByEmpresaId(empresa.id)
       respuestas <- respuestasRepo.getRespuestasById(usuario.id)
       validacionIps <- ipRepo.validarControlIpAdmin(ip, ips, token, respuestas.nonEmpty)

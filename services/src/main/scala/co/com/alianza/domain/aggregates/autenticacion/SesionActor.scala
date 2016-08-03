@@ -84,9 +84,7 @@ case class SesionActorSupervisor() extends Actor with ActorLogging {
 
   private def validarSesion(message: ValidarSesion): Unit = {
     val currentSender = sender()
-
-    var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT);
-    var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, message.token);
+    val decryptedToken = AesUtil.desencriptarToken(message.token)
     val actorName = generarNombreSesionActor(decryptedToken)
     val response = context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(actorName)
     response.map {
@@ -97,8 +95,7 @@ case class SesionActorSupervisor() extends Actor with ActorLogging {
   }
 
   private def buscarSesion(token: String): Unit = {
-    var util: AesUtil = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT);
-    var decryptedToken: String = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token);
+    var decryptedToken = AesUtil.desencriptarToken(token)
     val currentSender: ActorRef = sender()
     val actorName: String = generarNombreSesionActor(decryptedToken)
     val future: Future[Any] = context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(actorName)
@@ -109,8 +106,7 @@ case class SesionActorSupervisor() extends Actor with ActorLogging {
   }
 
   private def invalidarSesion(token: String): Unit = {
-    var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
-    var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
+    var decryptedToken = AesUtil.desencriptarToken(token)
     val actorName = generarNombreSesionActor(decryptedToken)
     ClusterUtil.obtenerNodos(cluster) foreach { member =>
       context.actorSelection(RootActorPath(member.address) / "user" / "sesionActorSupervisor") ! DeleteSession(actorName)
@@ -118,8 +114,7 @@ case class SesionActorSupervisor() extends Actor with ActorLogging {
   }
 
   def crearSesion(token: String, expiration: Int, empresa: Option[Empresa]): Unit = {
-    var util: AesUtil = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
-    var decryptedToken: String = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
+    var decryptedToken = AesUtil.desencriptarToken(token)
     val name: String = generarNombreSesionActor(decryptedToken)
     Try {
       context.actorOf(SesionActor.props(expiration, empresa), name)

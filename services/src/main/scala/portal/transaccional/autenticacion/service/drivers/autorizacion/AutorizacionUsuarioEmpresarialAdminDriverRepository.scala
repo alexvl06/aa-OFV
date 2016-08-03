@@ -28,10 +28,9 @@ case class AutorizacionUsuarioEmpresarialAdminDriverRepository(sesionActor: Acto
     recursoRepo: RecursoRepository)(implicit val ex: ExecutionContext) extends AutorizacionUsuarioEmpresarialAdminRepository {
 
   implicit val timeout = Timeout(5.seconds)
-  var aesUtil = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
 
   def autorizar(token: String, url: String, ip: String): Future[ValidacionAutorizacion] = {
-    val encriptedToken = encriptarToken(token)
+    val encriptedToken = AesUtil.encriptarToken(token)
     for {
       _ <- validarToken(encriptedToken)
       _ <- Future { (sesionActor ? ValidarSesion(encriptedToken)).mapTo[SesionUsuarioValidada] }
@@ -45,16 +44,8 @@ case class AutorizacionUsuarioEmpresarialAdminDriverRepository(sesionActor: Acto
     } yield result
   }
 
-  private def encriptarToken(token: String): String = {
-    aesUtil.encrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
-  }
-
-  private def desencriptarToken(encriptedToken: String): String = {
-    aesUtil.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, encriptedToken)
-  }
-
   private def validarToken(token: String): Future[Boolean] = {
-    Token.autorizarToken(desencriptarToken(token)) match {
+    Token.autorizarToken(AesUtil.desencriptarToken(token)) match {
       case true => Future.successful(true)
       case false => Future.failed(ValidacionException("401.24", "Error token"))
     }

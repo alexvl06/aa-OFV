@@ -12,4 +12,6 @@ case class ConfiguracionDriverRepository(configuracionDAO: ConfiguracionDAOs)(im
 
   def getConfiguracion(llave: String): Future[Configuraciones] = { configuracionDAO.getByKey(llave) }
 
+  def getAll(): Future[Seq[Configuraciones]] = { configuracionDAO.getAll() }
+
 }

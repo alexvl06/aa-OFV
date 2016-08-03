@@ -13,7 +13,7 @@ import co.com.alianza.persistence.entities.Usuario
  *
  * @author seven4n
  */
-//TODO : Borrarlo ! , ya esta en el refactor
+//TODO : Borrarlo ! , ya esta en el refactor By : Alexa
 class UsuariosRepository(implicit executionContext: ExecutionContext) extends AlianzaRepository {
 
   val usuarios = TableQuery[UsuarioTable]

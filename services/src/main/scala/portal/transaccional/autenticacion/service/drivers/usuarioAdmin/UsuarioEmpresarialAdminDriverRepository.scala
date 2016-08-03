@@ -72,6 +72,15 @@ case class UsuarioEmpresarialAdminDriverRepository(usuarioDAO: UsuarioEmpresaria
     } yield fecha
   }
 
+  /**
+   * Invalidar el token al usuario
+   * @param token
+   * @return
+   */
+  def invalidarToken(token: String): Future[Int] = {
+    usuarioDAO.deleteToken(token)
+  }
+
   /////////////////////////////// validaciones //////////////////////////////////
 
   /**
@@ -159,15 +168,6 @@ case class UsuarioEmpresarialAdminDriverRepository(usuarioDAO: UsuarioEmpresaria
     } else {
       Future.successful(true)
     }
-  }
-
-  /**
-   * Invalidar el token al usuario
-   * @param token
-   * @return
-   */
-  def invalidarToken(token: String): Future[Int] = {
-    usuarioDAO.deleteToken(token)
   }
 
 }

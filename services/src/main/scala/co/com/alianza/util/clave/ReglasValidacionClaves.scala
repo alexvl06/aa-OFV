@@ -218,7 +218,7 @@ object ValidarClave {
 
   def reglasGeneralesAutoregistro = List(MinCaracteres, MinCaracteresEspeciales, MinNumDigitos, MinMayusculas, MinMinusculas, CaracteresPermitidos)
 
-  //TODO:CambioContrasena Falta realizar la validacion de la fecha sumando los días establecidos en la DB
+  //TODO: CambioContrasena Falta realizar la validacion de la fecha sumando los días establecidos en la DB
   def reglasIngresoUsuario = List(IntentosIngresoContrasena, CambioContrasena)
 
 }

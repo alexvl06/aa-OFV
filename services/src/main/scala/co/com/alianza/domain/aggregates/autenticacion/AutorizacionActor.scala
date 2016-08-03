@@ -15,12 +15,10 @@ import co.com.alianza.util.FutureResponse
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.token.{ AesUtil, Token }
 import co.com.alianza.util.transformers.ValidationT
-import enumerations.CryptoAesParameters
 import spray.http.StatusCodes._
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.{ Failure, Success }
 import scalaz.{ Failure => zFailure, Success => zSuccess }
 
 object AutorizacionActorSupervisor {
@@ -101,8 +99,7 @@ case class AutorizacionActor(sesionActorSupervisor: ActorRef) extends Actor with
    * @param token El token para realizar validación
    */
   private def validarToken(token: String): Future[Validation[PersistenceException, Option[Usuario]]] = {
-    var util: AesUtil = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
-    var decryptedToken: String = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
+    var decryptedToken: String = AesUtil.desencriptarToken(token)
     Token.autorizarToken(decryptedToken) match {
       case true =>
         usDataAdapter.obtenerUsuarioToken(token).flatMap { x =>
@@ -171,7 +168,6 @@ case class AutorizacionActor(sesionActorSupervisor: ActorRef) extends Actor with
     filtrarRecursos(recurso.urlRecurso, recurso.acceso, url)
 
   protected def filtrarRecursos(urlRecurso: String, acceso: Boolean, url: String) = {
-    //TODO: quitar esos "ifseses"
     if (urlRecurso.equals(url)) acceso
     else if (urlRecurso.endsWith("/*")) {
       val urlC = urlRecurso.substring(0, urlRecurso.lastIndexOf("*"))

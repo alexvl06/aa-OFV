@@ -7,7 +7,7 @@ import slick.lifted.TableQuery
 import scala.concurrent.Future
 
 /**
- * Created by hernando on 25/07/16.
+ * Created by seven4n 2016
  */
 case class ConfiguracionDAO()(implicit dcConfig: DBConfig) extends TableQuery(new ConfiguracionesTable(_)) with ConfiguracionDAOs {
 

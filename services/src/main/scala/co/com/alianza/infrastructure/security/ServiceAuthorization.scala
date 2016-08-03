@@ -43,16 +43,13 @@ trait ServiceAuthorization {
         Future(Left(AuthenticationFailedRejection(CredentialsMissing, List())))
       } else {
         val encriptedToken: String = token.get.value
-        val util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
-        val decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, encriptedToken)
+        val decryptedToken = AesUtil.desencriptarToken(encriptedToken)
 
         val tipoCliente = Token.getToken(decryptedToken).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
 
         val futuro =
           if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
             autorizacionAgenteRepo.autorizar(decryptedToken, "", obtenerIp(ctx).get.value)
-            //TODO: poner para agente empresarial
-            //autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialMessage(token.get.value, None, obtenerIp(ctx).get.value)
           } else if (tipoCliente == TiposCliente.clienteAdministrador.toString) {
             autorizacionAdminRepo.autorizar(decryptedToken, "", obtenerIp(ctx).get.value)
             //TODO: poner para empresarial

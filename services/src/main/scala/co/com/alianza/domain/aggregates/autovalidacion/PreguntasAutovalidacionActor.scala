@@ -77,6 +77,7 @@ case class PreguntasAutovalidacionActor() extends Actor with ActorLogging with F
       preguntas <- ValidationT(DataAccessAdapter.obtenerPreguntas())
       configuraciones <- ValidationT(DataAdapterConfiguracion.obtenerConfiguraciones())
     } yield (preguntas, configuraciones)).run
+
     resolveFutureValidation(future, (response: (List[Pregunta], List[Configuracion])) => {
       val numeroPreguntas = obtenerValorEntero(response._2, ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS.name)
       val numeroPreguntasLista = obtenerValorEntero(response._2, ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS_LISTA.name)
@@ -118,9 +119,7 @@ case class PreguntasAutovalidacionActor() extends Actor with ActorLogging with F
     val comparacion = numeroRespuestas == numeroRespuestasParametrizadas
     comparacion match {
       case true => zSuccess(comparacion)
-      case false =>
-        //TODO: definir los codigos de error a enviar para este error y el comportamiento
-        zFailure(ErrorAutovalidacion("Error comprobacion parametrizacion campos"))
+      case false => zFailure(ErrorAutovalidacion("Error comprobacion parametrizacion campos"))
     }
   }
 

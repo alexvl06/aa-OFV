@@ -37,8 +37,8 @@ case class AutenticacionService(autenticacionRepositorio: AutenticacionRepositor
       entity(as[AutenticarRequest]) {
         request =>
           clientIP { ip =>
-            val resultado: Future[String] =
-              autenticacionRepositorio.autenticar(request.tipoIdentificacion, request.numeroIdentificacion, request.password, ip.value)
+            val resultado: Future[String] = autenticacionRepositorio.autenticar(request.tipoIdentificacion, request.numeroIdentificacion, request.password, ip.value)
+
             mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.autenticacionIndex,
               ip.value, kafkaActor, request.copy(password = null))) {
               onComplete(resultado) {
