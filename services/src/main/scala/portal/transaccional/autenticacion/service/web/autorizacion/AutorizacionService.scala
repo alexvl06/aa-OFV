@@ -26,10 +26,14 @@ import scala.util.{ Failure, Success }
 case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgenteRepository: UsuarioEmpresarialRepository,
   usuarioAdminRepository: UsuarioEmpresarialAdminRepository, autorizacionRepository: AutorizacionUsuarioRepository, kafkaActor: ActorSelection,
   autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository, autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters
-  with CrossHeaders {
+    with CrossHeaders {
 
   val invalidarTokenPath = "invalidarToken"
   val validarTokenPath = "validarToken"
+
+  val agente = TiposCliente.agenteEmpresarial.toString
+  val admin = TiposCliente.clienteAdministrador.toString
+  val individual = TiposCliente.clienteIndividual.toString
 
   val route: Route = {
     path(invalidarTokenPath) {
@@ -47,19 +51,21 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
       token =>
         delete {
           clientIP { ip =>
-            val usuario = getTokenData(token.token)
 
-            val agente = TiposCliente.agenteEmpresarial.toString
-            val admin = TiposCliente.clienteAdministrador.toString
-            // TODO: Matar sesion
+            val decryptedToken = AesUtil.desencriptarToken(token.token)
+
+            val usuario = getTokenData(decryptedToken)
             val resultado = usuario.tipoCliente match {
               case agente => usuarioAgenteRepository.invalidarToken(token.token)
-              case admin =>  usuarioAdminRepository.invalidarToken(token.token)
+              case admin => usuarioAdminRepository.invalidarToken(token.token)
               case _ => usuarioRepository.invalidarToken(token.token)
+              case `agente` => autorizacionAgenteRepo.invalidarToken(token.token)
+              case `admin` =>  autorizacionAdminRepo.invalidarToken(token.token)
+              case _ => autorizacionRepository.invalidarToken(token.token)
             }
 
             mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.cierreSesionIndex, ip.value,
-              kafkaActor, usuario)){
+              kafkaActor, usuario)) {
               onComplete(resultado) {
                 case Success(value) => complete(value.toString)
                 case Failure(ex) => execution(ex)
@@ -70,21 +76,18 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
     }
   }
 
-
   private def validarToken(token: String) = {
     get {
       parameters('url, 'ipRemota) {
         (url, ipRemota) =>
-          val tipoCliente = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
-          val resultado: Future[ValidacionAutorizacion] =
-            if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
-              autorizacionAgenteRepo.autorizar(token, url, ipRemota)
-            } else if (tipoCliente == TiposCliente.clienteAdministrador.toString) {
-              //TODO: aqui va el admin
-              autorizacionAdminRepo.autorizar(token, url, ipRemota)
-            } else {
-              autorizacionRepository.autorizarUrl(token, url)
-            }
+
+          val usuario = getTokenData(token)
+
+          val resultado = usuario.tipoCliente match {
+            case `agente` => autorizacionAgenteRepo.autorizar(token, url, ipRemota)
+            case `admin` =>  autorizacionAdminRepo.autorizar(token, url, ipRemota)
+            case _ => autorizacionRepository.autorizarUrl(token, url)
+          }
 
           onComplete(resultado) {
             case Success(value) => execution(value)
@@ -104,21 +107,19 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
     }
   }
 
-  private def getTokenData(token : String): AuditityUser = {
+  private def getTokenData(token: String): AuditityUser = {
 
-    val util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
-    val decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
+    val nToken = Token.getToken(token).getJWTClaimsSet
 
-    val nToken = Token.getToken(decryptedToken).getJWTClaimsSet
     val tipoCliente = nToken.getCustomClaim("tipoCliente").toString
-    val nit = nToken.getCustomClaim("nit").toString
+    val nit = if (tipoCliente == individual ) ""  else nToken.getCustomClaim("nit").toString
     val lastIp = nToken.getCustomClaim("ultimaIpIngreso").toString
     val user = nToken.getCustomClaim("nombreUsuario").toString
     val email = nToken.getCustomClaim("correo").toString
     val lastEntry = nToken.getCustomClaim("ultimaFechaIngreso").toString
     val nitType = nToken.getCustomClaim("tipoIdentificacion").toString
 
-    AuditityUser(email,nit,nitType,user,lastIp,lastEntry, tipoCliente)
+    AuditityUser(email, nit, nitType, user, lastIp, lastEntry, tipoCliente)
   }
 
 }

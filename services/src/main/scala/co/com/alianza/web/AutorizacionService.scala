@@ -26,12 +26,11 @@ case class AutorizacionService(
             parameters('url, 'ipRemota) {
               (url, ipRemota) =>
                 val tipoCliente = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
-                var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
-                var encryptedToken = util.encrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
+                var encryptedToken = AesUtil.encriptarToken(token)
                 if (tipoCliente == TiposCliente.agenteEmpresarial.toString)
                   requestExecute(AutorizarUsuarioEmpresarialMessage(encryptedToken, Some(url), ipRemota), autorizacionUsuarioEmpresarialActor)
                 else if (tipoCliente == TiposCliente.clienteAdministrador.toString)
-                  requestExecute(AutorizarUsuarioEmpresarialAdminMessage(encryptedToken, Some(url)), autorizacionUsuarioEmpresarialActor) // Ya lo empece By :Alexa
+                  requestExecute(AutorizarUsuarioEmpresarialAdminMessage(encryptedToken, Some(url)), autorizacionUsuarioEmpresarialActor)
                 else
                   requestExecute(AutorizarUrl(encryptedToken, url), autorizacionActor)
             }

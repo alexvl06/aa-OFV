@@ -3,7 +3,7 @@ package portal.transaccional.autenticacion.service.drivers.autorizacion
 import akka.actor.ActorRef
 import co.com.alianza.domain.aggregates.autenticacion.SesionActorSupervisor.SesionUsuarioValidada
 import co.com.alianza.exceptions.{ Autorizado, Prohibido, ValidacionAutorizacion, ValidacionException }
-import co.com.alianza.infrastructure.messages.{ BuscarSesion, ResponseMessage, ValidarSesion }
+import co.com.alianza.infrastructure.messages.{ BuscarSesion, InvalidarSesion, ResponseMessage, ValidarSesion }
 import co.com.alianza.util.token.{ AesUtil, Token }
 import enumerations.CryptoAesParameters
 import akka.pattern.ask
@@ -16,7 +16,7 @@ import enumerations.empresa.EstadosDeEmpresaEnum
 import portal.transaccional.autenticacion.service.drivers.Recurso.RecursoRepository
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.AlianzaDAO
 import spray.http.StatusCodes._
-import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.DataAccessTranslator
+import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.{ DataAccessTranslator, UsuarioEmpresarialAdminRepository }
 
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
@@ -24,14 +24,13 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * Created by seven4n on 2016
  */
-case class AutorizacionUsuarioEmpresarialAdminDriverRepository(sesionActor: ActorRef, alianzaDAO: AlianzaDAO,
+case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo : UsuarioEmpresarialAdminRepository ,sesionActor: ActorRef, alianzaDAO: AlianzaDAO,
     recursoRepo: RecursoRepository)(implicit val ex: ExecutionContext) extends AutorizacionUsuarioEmpresarialAdminRepository {
 
   implicit val timeout = Timeout(5.seconds)
-  var aesUtil = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
 
   def autorizar(token: String, url: String, ip: String): Future[ValidacionAutorizacion] = {
-    val encriptedToken = encriptarToken(token)
+    val encriptedToken = AesUtil.encriptarToken(token)
     for {
       _ <- validarToken(encriptedToken)
       _ <- Future { (sesionActor ? ValidarSesion(encriptedToken)).mapTo[SesionUsuarioValidada] }
@@ -45,16 +44,15 @@ case class AutorizacionUsuarioEmpresarialAdminDriverRepository(sesionActor: Acto
     } yield result
   }
 
-  private def encriptarToken(token: String): String = {
-    aesUtil.encrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
-  }
-
-  private def desencriptarToken(encriptedToken: String): String = {
-    aesUtil.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, encriptedToken)
+  def invalidarToken (token : String): Future[Int] = {
+    for {
+      x <- adminRepo.invalidarToken(token)
+      _ <- sesionActor ? InvalidarSesion(token)
+    } yield x
   }
 
   private def validarToken(token: String): Future[Boolean] = {
-    Token.autorizarToken(desencriptarToken(token)) match {
+    Token.autorizarToken(AesUtil.desencriptarToken(token)) match {
       case true => Future.successful(true)
       case false => Future.failed(ValidacionException("401.24", "Error token"))
     }

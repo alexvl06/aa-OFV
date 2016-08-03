@@ -1,7 +1,7 @@
 package portal.transaccional.fiduciaria.autenticacion.storage.daos.portal
 
 import co.com.alianza.persistence.config.DBConfig
-import co.com.alianza.persistence.entities.{PreguntaAutovalidacion, PreguntasAutovalidacionTable}
+import co.com.alianza.persistence.entities.{ PreguntaAutovalidacion, PreguntasAutovalidacionTable }
 import slick.lifted.TableQuery
 
 import scala.concurrent.Future

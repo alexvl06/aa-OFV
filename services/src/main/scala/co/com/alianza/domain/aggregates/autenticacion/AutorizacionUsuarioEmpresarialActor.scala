@@ -71,8 +71,7 @@ class AutorizacionUsuarioEmpresarialActor() extends Actor with ActorLogging with
    * @param message El token para realizar validación
    */
   private def validarToken(message: AutorizarUsuarioEmpresarialMessage): Future[Validation[ErrorAutorizacion, Option[UsuarioEmpresarial]]] = {
-    var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
-    var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, message.token)
+    val decryptedToken = AesUtil.desencriptarToken(message.token)
     Token.autorizarToken(decryptedToken) match {
       case true =>
         usDataAdapter.obtenerUsuarioEmpresarialToken(message.token).flatMap { x =>
@@ -93,8 +92,7 @@ class AutorizacionUsuarioEmpresarialActor() extends Actor with ActorLogging with
    * @param token El token para realizar validación
    */
   private def validarTokenAdmin(token: String): Future[Validation[ErrorAutorizacion, Option[(UsuarioEmpresarialAdmin, Int)]]] = {
-    var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
-    var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
+    val decryptedToken = AesUtil.desencriptarToken(token)
     Token.autorizarToken(decryptedToken) match {
       case true =>
         usDataAdapter.obtenerUsuarioEmpresarialAdminToken(token).flatMap { x =>

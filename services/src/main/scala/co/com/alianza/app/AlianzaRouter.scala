@@ -15,6 +15,9 @@ import portal.transaccional.autenticacion.service.drivers.respuesta.RespuestaUsu
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioEmpresarialAdminRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioRepository
+import portal.transaccional.autenticacion.service.web.autorizacion.AutorizacionService
+import portal.transaccional.autenticacion.service.web.autenticacion.AutenticacionService
+import portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.PreguntasAutovalidacionService
 
 case class AlianzaRouter(
   autenticacionRepo: AutenticacionRepository, autenticacionEmpresaRepositorio: AutenticacionEmpresaRepository,
@@ -32,9 +35,9 @@ case class AlianzaRouter(
   import system.dispatcher
 
   val routes =
-      portal.transaccional.autenticacion.service.web.autorizacion.AutorizacionService(usuarioRepositorio, usuarioAgenteRepositorio,
-      usuarioAdminRepositorio, autorizacionUsuarioRepo, kafkaActor, autorizacionAgenteRepo, autorizacionAdminRepo).route ~
-      portal.transaccional.autenticacion.service.web.autenticacion.AutenticacionService(autenticacionRepo, autenticacionEmpresaRepositorio, kafkaActor).route ~
+    AutorizacionService(usuarioRepositorio, usuarioAgenteRepositorio, usuarioAdminRepositorio, autorizacionUsuarioRepo, kafkaActor, autorizacionAgenteRepo,
+      autorizacionAdminRepo).route ~
+      AutenticacionService(autenticacionRepo, autenticacionEmpresaRepositorio, kafkaActor).route ~
       new ConfrontaService(confrontaActor).route ~
       new EnumeracionService().route ~
       UsuarioService(kafkaActor, usuariosActor).route ~

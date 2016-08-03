@@ -7,7 +7,6 @@ import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
  */
 case class InvalidarTokenRequest(token: String)
 
-case class AuditityUser ( correo : String, documento : String, tipoDocuemnto : String, usuario : String, ultimaIp : String, ultimoIngreso : String ,
-  tipoCliente : String)
-
+case class AuditityUser(correo: String, documento: String, tipoDocuemnto: String, usuario: String, ultimaIp: String, ultimoIngreso: String,
+  tipoCliente: String)
 

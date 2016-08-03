@@ -14,6 +14,8 @@ trait UsuarioRepository {
 
   def getByIdentificacion(numeroIdentificacion: String): Future[Usuario]
 
+  def getByToken(token: String): Future[Option[Usuario]]
+
   def validarEstado(estado: Int): Future[Boolean]
 
   def validarContrasena(contrasena: String, usuario: Usuario, reintentosErroneos: Int): Future[Boolean]

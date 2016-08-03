@@ -16,7 +16,6 @@ case class PreguntasAutovalidacionDriverRepository(preguntasRepository: Pregunta
 
   implicit val timeout = Timeout(5.seconds)
 
-
   /**
     * Obtener las preguntas disponibles
     * El numero de preguntas que se envia, es igual a el numero de preguntas
@@ -31,7 +30,7 @@ case class PreguntasAutovalidacionDriverRepository(preguntasRepository: Pregunta
   }
 
 
-  private def resolveObtenerPreguntas(preguntasEntities :List[PreguntaAutovalidacion], configuracionesEntities: List[Configuraciones]): Future[Response] = Future {
+  private def resolveObtenerPreguntas(preguntasEntities: List[PreguntaAutovalidacion], configuracionesEntities: List[Configuraciones]): Future[Response] = Future {
     val preguntasDto = preguntasEntities.map(pregunta => preguntasAutovalidacionDTO.entityToDto(pregunta))
     val configuracionesDto = configuracionesEntities.map(conf => configuracionDTO.entityToDto(conf))
 
@@ -44,6 +43,5 @@ case class PreguntasAutovalidacionDriverRepository(preguntasRepository: Pregunta
   private def obtenerValorEntero(configuraciones: List[Configuracion], llave: String): Int = {
     configuraciones.filter(conf => conf.llave.equals(llave)).head.valor.toInt
   }
-
 
 }

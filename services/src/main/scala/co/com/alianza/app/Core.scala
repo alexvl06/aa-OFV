@@ -1,6 +1,6 @@
 package co.com.alianza.app
 
-import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.actor.{ ActorRef, ActorSystem, Props }
 import akka.cluster.Cluster
 import co.com.alianza.domain.aggregates.actualizacion.ActualizacionActorSupervisor
 import co.com.alianza.domain.aggregates.autenticacion._
@@ -8,7 +8,7 @@ import co.com.alianza.domain.aggregates.autoregistro.ConsultaClienteActorSupervi
 import co.com.alianza.domain.aggregates.autovalidacion.PreguntasAutovalidacionSupervisor
 import co.com.alianza.domain.aggregates.confronta.ConfrontaActorSupervisor
 import co.com.alianza.domain.aggregates.contrasenas.ContrasenasActorSupervisor
-import co.com.alianza.domain.aggregates.empresa.{AgenteEmpresarialActorSupervisor, ContrasenasAgenteEmpresarialActorSupervisor, ContrasenasClienteAdminActorSupervisor, HorarioEmpresaActorSupervisor}
+import co.com.alianza.domain.aggregates.empresa.{ AgenteEmpresarialActorSupervisor, ContrasenasAgenteEmpresarialActorSupervisor, ContrasenasClienteAdminActorSupervisor, HorarioEmpresaActorSupervisor }
 import co.com.alianza.domain.aggregates.ips.IpsUsuarioActorSupervisor
 import co.com.alianza.domain.aggregates.permisos.PermisoTransaccionalActorSupervisor
 import co.com.alianza.domain.aggregates.pin.PinActorSupervisor
@@ -19,9 +19,9 @@ import co.com.alianza.persistence.config.oracle.OracleConfig
 import co.com.alianza.persistence.config.pg.PGConfig
 import co.com.alianza.util.ConfigApp
 import com.typesafe.config.Config
-import portal.transaccional.autenticacion.service.drivers.Recurso.{RecursoDriverRepository, RecursoRepository}
-import portal.transaccional.autenticacion.service.drivers.autenticacion.{AutenticacionDriverRepository, AutenticacionEmpresaDriverRepository}
-import portal.transaccional.autenticacion.service.drivers.autorizacion.{AutorizacionUsuarioDriverRepository, AutorizacionUsuarioEmpresarialAdminDriverRepository, AutorizacionUsuarioEmpresarialDriverRepository}
+import portal.transaccional.autenticacion.service.drivers.Recurso.{ RecursoDriverRepository, RecursoRepository }
+import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionDriverRepository, AutenticacionEmpresaDriverRepository }
+import portal.transaccional.autenticacion.service.drivers.autorizacion.{ AutorizacionUsuarioDriverRepository, AutorizacionUsuarioEmpresarialAdminDriverRepository, AutorizacionUsuarioEmpresarialDriverRepository }
 import portal.transaccional.autenticacion.service.drivers.cliente.ClienteDriverCoreRepository
 import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionDriverRepository
 import portal.transaccional.autenticacion.service.drivers.empresa.EmpresaDriverRepository
@@ -133,7 +133,7 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val respuestaUsuarioRepo = RespuestaUsuarioDriverRepository(respuestaUsuarioDAO, configuracionRepo)
   lazy val usuarioAdminRepo = UsuarioEmpresarialAdminDriverRepository(usuarioAdminDAO)
   lazy val respuestaUsuariAdminoRepo = RespuestaUsuarioAdminDriverRepository(respuestaUsuarioAdminDAO)
-  lazy val autorizacionUsuarioRepo = AutorizacionUsuarioDriverRepository(usuarioDAO, recursoRepo, sessionActor)
+  lazy val autorizacionUsuarioRepo = AutorizacionUsuarioDriverRepository(usuarioRepo, recursoRepo, sessionActor)
   lazy val autenticacionRepo = AutenticacionDriverRepository(usuarioRepo, clienteRepo, configuracionRepo, reglaContrasenaRepo, ipUsuarioRepo,
     respuestaUsuarioRepo, sessionActor)
   lazy val autenticacionEmpresaRepo = AutenticacionEmpresaDriverRepository(usuarioAgenteRepo, usuarioAdminRepo, clienteRepo, empresaRepo, reglaContrasenaRepo,
@@ -143,7 +143,7 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
     usuarioAgenteRepo, alianzaDAO, sessionActor: ActorRef, recursoRepo
   )
   lazy val autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminDriverRepository =
-    AutorizacionUsuarioEmpresarialAdminDriverRepository(sessionActor: ActorRef, alianzaDAO, recursoRepo)
+    AutorizacionUsuarioEmpresarialAdminDriverRepository(usuarioAdminRepo, sessionActor: ActorRef, alianzaDAO, recursoRepo)
 
   lazy val prguntasRepo: PreguntasDriverRepository =
     PreguntasDriverRepository(preguntaDAO)

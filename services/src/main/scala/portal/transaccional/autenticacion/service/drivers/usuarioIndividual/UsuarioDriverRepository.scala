@@ -28,6 +28,8 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
     }
   }
 
+  def getByToken(token: String): Future[Option[Usuario]] = usuarioDAO.getByToken(token)
+
   /**
    * Asociar el token al usuario
    *

@@ -23,6 +23,8 @@ case class UsuarioEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs
     usuarioDAO.getByIdentityAndUser(identificacion, usuario)
   }
 
+  def invalidarToken (token : String ) = usuarioDAO.deleteToken(token)
+
   /**
    * Asociar el token al usuario
    * @param idUsuario
@@ -153,15 +155,6 @@ case class UsuarioEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs
       Future.failed(ValidacionException("401.9", token))
     } else {
       Future.successful(true)
-    }  }
-
-  /**
-   * Invalidar el token al usuario
-   * @param token
-   * @return
-   */
-  def invalidarToken(token: String): Future[Int] = {
-    usuarioDAO.deleteToken(token)
+    }
   }
-
 }
