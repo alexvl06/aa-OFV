@@ -21,7 +21,7 @@ import co.com.alianza.util.ConfigApp
 import com.typesafe.config.Config
 import portal.transaccional.autenticacion.service.drivers.Recurso.{ RecursoDriverRepository, RecursoRepository }
 import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionDriverRepository, AutenticacionEmpresaDriverRepository }
-import portal.transaccional.autenticacion.service.drivers.autorizacion.{ AutorizacionUsuarioDriverRepository, AutorizacionUsuarioEmpresarialDriverRepository }
+import portal.transaccional.autenticacion.service.drivers.autorizacion.{ AutorizacionUsuarioDriverRepository, AutorizacionUsuarioEmpresarialAdminDriverRepository, AutorizacionUsuarioEmpresarialDriverRepository }
 import portal.transaccional.autenticacion.service.drivers.cliente.ClienteDriverCoreRepository
 import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionDriverRepository
 import portal.transaccional.autenticacion.service.drivers.empresa.EmpresaDriverRepository
@@ -135,6 +135,8 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
     configuracionRepo, ipEmpresaRepo, sessionActor, respuestaUsuarioRepo)
 
   lazy val autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialDriverRepository = AutorizacionUsuarioEmpresarialDriverRepository(usuarioAgenteRepo, alianzaDAO, sessionActor: ActorRef, recursoRepo)
+  lazy val autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminDriverRepository =
+    AutorizacionUsuarioEmpresarialAdminDriverRepository(sessionActor: ActorRef, alianzaDAO, recursoRepo)
 }
 
 private[app] sealed trait StoragePGAlianzaDB extends BootedCore {

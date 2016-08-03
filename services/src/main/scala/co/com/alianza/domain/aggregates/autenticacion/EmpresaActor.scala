@@ -102,7 +102,7 @@ class BuscadorActorCluster(nombreActorPadre: String) extends Actor {
       replyIfReady()
   }
 
-  def replyIfReady() = if (numResp == nodosBusqueda.size) { interesado ! resp ;this.context.stop(self) }
+  def replyIfReady() = if (numResp == nodosBusqueda.size) { interesado ! resp; this.context.stop(self) }
 
 }
 

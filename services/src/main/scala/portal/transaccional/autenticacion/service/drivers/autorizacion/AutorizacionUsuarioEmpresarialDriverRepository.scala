@@ -17,7 +17,6 @@ import portal.transaccional.autenticacion.service.drivers.Recurso.RecursoReposit
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.{ DataAccessTranslator, UsuarioEmpresarialDriverRepository }
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.AlianzaDAO
 import spray.http.StatusCodes._
-
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -41,7 +40,7 @@ case class AutorizacionUsuarioEmpresarialDriverRepository(agenteRepo: UsuarioEmp
       _ <- validarEstadoEmpresa(agenteEstado._2)
       ips <- obtenerIps(sesion)
       validarIp <- validarIps(ips, ip)
-      recursos <- alianzaDAO.getAdminResources(agenteEstado._1.id)
+      recursos <- alianzaDAO.getAgenteResources(agenteEstado._1.id)
       result <- resolveMessageRecursos(DataAccessTranslator.entityToDto(agenteEstado._1), recursos, url)
     } yield result
   }

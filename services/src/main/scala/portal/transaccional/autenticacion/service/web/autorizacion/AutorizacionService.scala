@@ -7,7 +7,7 @@ import co.com.alianza.exceptions._
 import co.com.alianza.infrastructure.dto.Usuario
 import co.com.alianza.util.token.{ AesUtil, Token }
 import enumerations.CryptoAesParameters
-import portal.transaccional.autenticacion.service.drivers.autorizacion.{ AutorizacionUsuarioEmpresarialRepository, AutorizacionUsuarioRepository }
+import portal.transaccional.autenticacion.service.drivers.autorizacion.{ AutorizacionUsuarioEmpresarialAdminRepository, AutorizacionUsuarioEmpresarialRepository, AutorizacionUsuarioRepository }
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioEmpresarialAdminRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioRepository
@@ -24,7 +24,7 @@ import scala.concurrent.{ ExecutionContext, Future }
  */
 case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgenteRepository: UsuarioEmpresarialRepository,
   usuarioAdminRepository: UsuarioEmpresarialAdminRepository, autorizacionRepository: AutorizacionUsuarioRepository, kafkaActor: ActorSelection,
-  autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters
+  autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository, autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters
     with CrossHeaders {
 
   val invalidarTokenPath = "invalidarToken"
@@ -83,7 +83,7 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
               autorizacionAgenteRepo.autorizar(token, url, ipRemota)
             } else if (tipoCliente == TiposCliente.clienteAdministrador.toString) {
               //TODO: aqui va el admin
-              autorizacionRepository.autorizarUrl(token, url)
+              autorizacionAdminRepo.autorizar(token, url, ipRemota)
             } else {
               autorizacionRepository.autorizarUrl(token, url)
             }
