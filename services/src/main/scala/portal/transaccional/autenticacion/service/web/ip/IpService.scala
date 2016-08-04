@@ -33,7 +33,6 @@ case class IpService(user: UsuarioAuth, ipRepo : IpRepository)(implicit val ec: 
         entity(as[AgregarIpRequest]) {
           ponerIpHabitual =>
               clientIP { ip =>
-                println(user.tipoCliente)
                 val resultado  = user.tipoCliente match {
                       case TiposCliente.clienteIndividual => ipRepo.agregarIpHabitualUsuario(user.identificacionUsuario, ip.value)
                       case _ => ipRepo.agregarIPHabitualUsuarioEmpresarialAdmin(user.id, ip.value)
@@ -41,7 +40,7 @@ case class IpService(user: UsuarioAuth, ipRepo : IpRepository)(implicit val ec: 
 
                 onComplete(resultado) {
                   case Success(value) => complete("Registro de IP Exitoso")
-                  case Failure(ex) => println(ex) ; complete((StatusCodes.Unauthorized, "El usuario no esta autorizado para registrar ip"))
+                  case Failure(ex) => complete((StatusCodes.Unauthorized, "El usuario no esta autorizado para registrar ip"))
                 }
               }
         }

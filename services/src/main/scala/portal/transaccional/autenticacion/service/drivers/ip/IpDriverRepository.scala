@@ -61,7 +61,6 @@ case class IpDriverRepository(usuarioRepo: UsuarioRepository, usuarioAgenteRepo:
    */
   private def asociarIpUsuario(idUsuario: Int, ipPeticion: String): Future[String] = {
     //log.info("Asociando ip usuario individual")
-    println("VALIDACION 4") ;
     ipDAO.create(IpsUsuario(idUsuario,ipPeticion)) flatMap {
       case r : String => Future.successful("Se asocio el usuario")
       case _ => Future.failed(ValidacionException("401.3", "No se pudo asociar la ip"))

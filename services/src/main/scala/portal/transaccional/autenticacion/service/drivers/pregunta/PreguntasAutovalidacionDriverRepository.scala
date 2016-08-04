@@ -123,19 +123,8 @@ case class PreguntasAutovalidacionDriverRepository(
     */
   private def validarRespuestasValidation(response: List[RespuestaCompleta], respuestas: List[Respuesta], numeroPreguntasCambio: Int): Future[String] = Future {
     val respuestasGuardadas: List[Respuesta] = response.map(res => Respuesta(res.idPregunta, res.respuesta))
-
-    println("respuestasGuardadas")
-    println(respuestasGuardadas)
-
-    println("respuestas")
-    println(respuestas)
-
-
     //comprobar que las respuestas concuerden
     val existe: Boolean = respuestas.foldLeft(true)((existe, respuesta) => existe && respuestasGuardadas.contains(respuesta))
-    println("existe")
-    println(existe)
-
     existe match {
       case true => "OK"
       case false => {

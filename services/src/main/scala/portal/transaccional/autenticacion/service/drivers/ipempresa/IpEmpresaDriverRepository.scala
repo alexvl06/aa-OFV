@@ -41,7 +41,6 @@ case class IpEmpresaDriverRepository(ipDAO: IpEmpresaDAOs)(implicit val ex: Exec
    * @return
    */
   def validarControlIpAdmin(ip: String, ips: Seq[IpsEmpresa], token: String, tieneRespuestas: Boolean): Future[String] = {
-    println("ESTA VAINA SE TOTEA AQUI !! ", ip, ips, token, tieneRespuestas)
     val tieneIp = ips.exists(_.ip == ip)
     if (tieneRespuestas) {
       if (tieneIp) Future.successful(token) else Future.failed(ValidacionException("401.4", token))
