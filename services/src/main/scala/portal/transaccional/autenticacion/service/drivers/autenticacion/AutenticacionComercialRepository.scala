@@ -8,6 +8,7 @@ import scalaz.Validation
 
 trait AutenticacionComercialRepository {
 
-  def authenticateLDAP( userType: Int, username: String, password: String, ip: String ): Future[  String, AuthenticationSuccess  ] ;
+  def authenticateLDAP( userType: Int, username: String, password: String, ip: String ): Future[ String, AuthenticationSuccess ]
 
+  def authenticateAdmin( username: String, password: String, ip: String ): Future[ String, AuthenticationSuccess ]
 }
