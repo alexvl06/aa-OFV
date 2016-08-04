@@ -100,7 +100,7 @@ case class AutorizacionActor(sesionActorSupervisor: ActorRef) extends Actor with
    */
   private def validarToken(token: String): Future[Validation[PersistenceException, Option[Usuario]]] = {
 
-    var decryptedToken: String = AesUtil.desencriptarToken(token)
+    var decryptedToken: String = AesUtil.desencriptarToken(token, "AutorizacionActor.validarToken")
 
     Token.autorizarToken(decryptedToken) match {
       case true =>

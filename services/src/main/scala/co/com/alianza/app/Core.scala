@@ -25,6 +25,7 @@ import portal.transaccional.autenticacion.service.drivers.autorizacion.{ Autoriz
 import portal.transaccional.autenticacion.service.drivers.cliente.ClienteDriverCoreRepository
 import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionDriverRepository
 import portal.transaccional.autenticacion.service.drivers.empresa.EmpresaDriverRepository
+import portal.transaccional.autenticacion.service.drivers.ip.IpDriverRepository
 import portal.transaccional.autenticacion.service.drivers.ipempresa.IpEmpresaDriverRepository
 import portal.transaccional.autenticacion.service.drivers.ipusuario.IpUsuarioDriverRepository
 import portal.transaccional.autenticacion.service.drivers.pregunta.{ PreguntasAutovalidacionDriverRepository, PreguntasDriverRepository }
@@ -149,6 +150,8 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
     PreguntasDriverRepository(preguntaDAO)
   lazy val preguntasValidacionRepository: PreguntasAutovalidacionDriverRepository =
     PreguntasAutovalidacionDriverRepository(prguntasRepo, configuracionRepo, alianzaDAO)
+
+  lazy val ipRepo = IpDriverRepository(usuarioRepo,usuarioAgenteRepo,empresaAdminDAO,ipEmpresaDAO ,usuarioAdminRepo, clienteRepo, ipUsuarioDAO)
 }
 
 private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
@@ -168,6 +171,7 @@ private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
   lazy val usuarioAdminDAO = UsuarioEmpresarialAdminDAO()(config)
   lazy val respuestaUsuarioAdminDAO = RespuestaUsuarioAdminDAO()(config)
   lazy val preguntaDAO = PreguntasDAO()(config)
+  lazy val empresaAdminDAO = EmpresaAdminDAO()(config)
 }
 
 /**

@@ -30,7 +30,7 @@ case class AutorizacionUsuarioEmpresarialDriverRepository(agenteRepo: UsuarioEmp
   implicit val timeout = Timeout(5.seconds)
 
   def autorizar(token: String, url: String, ip: String): Future[ValidacionAutorizacion] = {
-    val encriptedToken = AesUtil.encriptarToken(token)
+    val encriptedToken = AesUtil.encriptarToken(token, "AutorizacionUsuarioEmpresarialDriverRepository.autorizar")
     for {
       _ <- validarToken(token)
       _ <- Future { (sesionActor ? ValidarSesion(encriptedToken)).mapTo[SesionUsuarioValidada] }

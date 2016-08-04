@@ -5,7 +5,7 @@ import java.util.Date
 
 import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import co.com.alianza.exceptions.ValidacionException
-import co.com.alianza.persistence.entities.UsuarioEmpresarialAdmin
+import co.com.alianza.persistence.entities.{ Usuario, UsuarioEmpresarialAdmin }
 import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.token.Token
 import enumerations.{ AppendPasswordUser, EstadosEmpresaEnum, EstadosUsuarioEnum }
@@ -19,6 +19,16 @@ import scala.concurrent.{ ExecutionContext, Future }
  */
 case class UsuarioEmpresarialAdminDriverRepository(usuarioDAO: UsuarioEmpresarialAdminDAOs)(implicit val ex: ExecutionContext)
     extends UsuarioEmpresarialAdminRepository {
+
+  def getById (id : Int): Future[UsuarioEmpresarialAdmin] = {
+    usuarioDAO.getById(id) flatMap {
+      (usuarioOption: Option[UsuarioEmpresarialAdmin]) =>
+        usuarioOption match {
+          case Some(admin: UsuarioEmpresarialAdmin) => Future.successful(admin)
+          case _ => Future.failed(ValidacionException("401.3", "Error admin no existe"))
+        }
+    }
+  }
 
   def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[UsuarioEmpresarialAdmin]] = {
     usuarioDAO.getByIdentityAndUser(identificacion, usuario)

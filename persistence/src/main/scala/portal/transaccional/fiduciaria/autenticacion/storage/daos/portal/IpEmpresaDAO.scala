@@ -14,8 +14,9 @@ case class IpEmpresaDAO()(implicit dcConfig: DBConfig) extends TableQuery(new Ip
   import dcConfig.db._
   import dcConfig.profile.api._
 
-  def getById(idEmpresa: Int): Future[Seq[IpsEmpresa]] = {
-    run(this.filter(_.idEmpresa === idEmpresa).result)
-  }
+  def getById(idEmpresa: Int): Future[Seq[IpsEmpresa]] = run(this.filter(_.idEmpresa === idEmpresa).result)
+
+  def create(ip: IpsEmpresa): Future[String] = run(this returning this.map(_.ip) += ip)
+
 
 }

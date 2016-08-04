@@ -43,7 +43,7 @@ trait ServiceAuthorization {
         Future(Left(AuthenticationFailedRejection(CredentialsMissing, List())))
       } else {
         val encriptedToken: String = token.get.value
-        val decryptedToken = AesUtil.desencriptarToken(encriptedToken)
+        val decryptedToken = AesUtil.desencriptarToken(encriptedToken, "ServiceAuthorization.authenticateUser")
 
         val tipoCliente = Token.getToken(decryptedToken).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
 

@@ -84,7 +84,8 @@ case class SesionActorSupervisor() extends Actor with ActorLogging {
 
   private def validarSesion(message: ValidarSesion): Unit = {
     val currentSender = sender()
-    val decryptedToken = AesUtil.desencriptarToken(message.token)
+
+    val decryptedToken = AesUtil.desencriptarToken(message.token, "SesionActor.validarSesion")
     val actorName = generarNombreSesionActor(decryptedToken)
     val response = context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(actorName)
 
@@ -95,7 +96,7 @@ case class SesionActorSupervisor() extends Actor with ActorLogging {
   }
 
   private def buscarSesion(token: String): Unit = {
-    var decryptedToken = AesUtil.desencriptarToken(token)
+    var decryptedToken = AesUtil.desencriptarToken(token, "SesionActor.buscarSesion")
     val currentSender: ActorRef = sender()
     val actorName: String = generarNombreSesionActor(decryptedToken)
     val future: Future[Any] = context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(actorName)
@@ -106,7 +107,7 @@ case class SesionActorSupervisor() extends Actor with ActorLogging {
   }
 
   private def invalidarSesion(token: String): Unit = {
-    var decryptedToken = AesUtil.desencriptarToken(token)
+    var decryptedToken = AesUtil.desencriptarToken(token, "SesionActor.invalidarSesion")
     val actorName = generarNombreSesionActor(decryptedToken)
     ClusterUtil.obtenerNodos(cluster) foreach { member =>
       context.actorSelection(RootActorPath(member.address) / "user" / "sesionActorSupervisor") ! DeleteSession(actorName)
@@ -114,7 +115,7 @@ case class SesionActorSupervisor() extends Actor with ActorLogging {
   }
 
   def crearSesion(token: String, expiration: Int, empresa: Option[Empresa]): Unit = {
-    var decryptedToken = AesUtil.desencriptarToken(token)
+    var decryptedToken = AesUtil.desencriptarToken(token, "SesionActor.crearSesion")
     val name: String = generarNombreSesionActor(decryptedToken)
     Try {
       context.actorOf(SesionActor.props(expiration, empresa), name)

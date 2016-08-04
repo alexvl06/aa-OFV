@@ -30,11 +30,13 @@ case class IpUsuarioDriverRepository(ipDAO: IpUsuarioDAOs)(implicit val ex: Exec
    */
   def validarControlIp(ip: String, ips: Seq[IpsUsuario], token: String, tieneRespuestas: Boolean): Future[String] = {
     val tieneIp = ips.exists(_.ip == ip)
-    if (tieneRespuestas)
-      if (tieneIp) Future.successful(token)
-      else Future.failed(ValidacionException("401.4", token))
-    else if (tieneIp) Future.failed(ValidacionException("401.18", token))
-    else Future.failed(ValidacionException("401.17", token))
+    if (tieneRespuestas) {
+      if (tieneIp) Future.successful(token) else Future.failed(ValidacionException("401.4", token))
+    } else if (tieneIp) {
+      Future.failed(ValidacionException("401.18", token))
+    } else {
+      Future.failed(ValidacionException("401.17", token))
+    }
   }
 
 }

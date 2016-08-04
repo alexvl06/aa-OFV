@@ -97,7 +97,7 @@ case class AutenticacionEmpresaDriverRepository(
       reintentosErroneos <- reglaRepo.getRegla(LlavesReglaContrasena.CANTIDAD_REINTENTOS_INGRESO_CONTRASENA.llave)
       validar <- usuarioRepo.validarUsuario(usuario, contrasena, reintentosErroneos.valor.toInt)
       cliente <- clienteCoreRepo.getCliente(usuario.identificacion)
-      estadoCore <- clienteCoreRepo.validarEstado(cliente)
+      estadoCore <- clienteCoreRepo.validarEstado(cliente)   // DE AQUI SE SACA EL ESTADO
       reglaDias <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA.llave)
       caducidad <- usuarioRepo.validarCaducidadContrasena(TiposCliente.agenteEmpresarial, usuario, reglaDias.valor.toInt)
       actualizar <- usuarioRepo.actualizarInfoUsuario(usuario, ip)
@@ -142,8 +142,8 @@ case class AutenticacionEmpresaDriverRepository(
       token <- generarTokenAdmin(usuario, ip, inactividad.valor)
       sesion <- actorResponse[SesionActorSupervisor.SesionUsuarioCreada](sessionActor, mensajeCrearSesion(token, inactividad.valor.toInt, empresa))
       asociarToken <- usuarioAdminRepo.actualizarToken(usuario.id, token)
-      ips <- ipRepo.getIpsByEmpresaId(empresa.id)
       respuestas <- respuestasRepo.getRespuestasById(usuario.id)
+      ips <- ipRepo.getIpsByEmpresaId(empresa.id)
       validacionIps <- ipRepo.validarControlIpAdmin(ip, ips, token, respuestas.nonEmpty)
     } yield validacionIps
   }

@@ -41,8 +41,7 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
         invalidarToken
       }
     } ~ path(validarTokenPath / Segment) {
-      token =>
-        validarToken(token)
+      token =>  validarToken(token)
     }
   }
 
@@ -52,13 +51,10 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
         delete {
           clientIP { ip =>
 
-            val decryptedToken = AesUtil.desencriptarToken(token.token)
+            val decryptedToken = AesUtil.desencriptarToken(token.token, "AutorizacionService.invalidarToken")
 
             val usuario = getTokenData(decryptedToken)
             val resultado = usuario.tipoCliente match {
-              case agente => usuarioAgenteRepository.invalidarToken(token.token)
-              case admin => usuarioAdminRepository.invalidarToken(token.token)
-              case _ => usuarioRepository.invalidarToken(token.token)
               case `agente` => autorizacionAgenteRepo.invalidarToken(token.token)
               case `admin` => autorizacionAdminRepo.invalidarToken(token.token)
               case _ => autorizacionRepository.invalidarToken(token.token)
@@ -110,7 +106,6 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
   private def getTokenData(token: String): AuditityUser = {
 
     val nToken = Token.getToken(token).getJWTClaimsSet
-
     val tipoCliente = nToken.getCustomClaim("tipoCliente").toString
     val nit = if (tipoCliente == individual) "" else nToken.getCustomClaim("nit").toString
     val lastIp = nToken.getCustomClaim("ultimaIpIngreso").toString

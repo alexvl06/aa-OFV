@@ -11,6 +11,7 @@ import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 /**
  * Created by david on 12/06/14.
  */
+// Todo : Ya se puede borrar !!! By : Alexa
 class IpsUsuarioRepository(implicit executionContext: ExecutionContext) extends AlianzaRepository {
 
   val ipsUsuario = TableQuery[IpsUsuarioTable]
