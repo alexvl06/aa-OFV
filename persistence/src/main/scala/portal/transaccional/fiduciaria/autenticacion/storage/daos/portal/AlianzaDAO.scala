@@ -159,11 +159,11 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
 
   //  ------------------  Preguntas ---------------------------
 
-  def getIndividualClientQuestions(idUsuario: Int): Future[Seq[PreguntaAutovalidacion]] = {
+  def getIndividualClientQuestions(idUsuario: Int): Future[Seq[(PreguntaAutovalidacion, RespuestasAutovalidacionUsuario)]] = {
     val query = for {
       (pregunta, respuesta) <- preguntasTable join respuestasUsuarioTable on (_.id === _.idPregunta)
       if respuesta.idUsuario === idUsuario
-    } yield pregunta
+    } yield (pregunta, respuesta)
     run(query.result)
   }
 }

@@ -49,7 +49,7 @@ case class PreguntasAutovalidacionService(user: UsuarioAuth, preguntasAutoValida
 
   private def guardarRespuestas(user: UsuarioAuth) = {
     put {
-      entity(as[RespuestasRequest]) {
+      entity(as[GuardarRespuestasRequest]) {
         request =>
           val resultado: Future[Option[Int]] = user.tipoCliente match {
             case TiposCliente.clienteIndividual =>
@@ -72,6 +72,20 @@ case class PreguntasAutovalidacionService(user: UsuarioAuth, preguntasAutoValida
       onComplete(resultado) {
         case Success(value) => complete(value)
         case Failure(ex) => execution(ex)
+      }
+    }~ post {
+      entity(as[RespuestasComprobacionRequest]) {
+        request =>
+          clientIP {
+            ip =>
+              // TODO: AUDITORIA by:Jonathan
+              val resultado: Future[Unit] =
+                preguntasAutoValidacionRepository.validarRespuestas(user.id, user.tipoCliente, request.respuestas, request.numeroIntentos)
+              onComplete(resultado) {
+                case Success(value) => complete(value.toString)
+                case Failure(ex) => execution(ex)
+              }
+          }
       }
     }
   }
