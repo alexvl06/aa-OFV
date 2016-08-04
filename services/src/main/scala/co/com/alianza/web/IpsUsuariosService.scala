@@ -24,7 +24,7 @@ import scalaz.Validation
  * Created by david on 16/06/14.
  */
 case class IpsUsuariosService(kafkaActor: ActorSelection, ipsUsuarioActor: ActorSelection)(implicit val system: ActorSystem) extends Directives
-  with AlianzaCommons with CrossHeaders {
+    with AlianzaCommons with CrossHeaders {
 
   import system.dispatcher
   import IpsUsuarioMessagesJsonSupport._
@@ -38,7 +38,7 @@ case class IpsUsuariosService(kafkaActor: ActorSelection, ipsUsuarioActor: Actor
           clientIP { ip =>
             mapRequestContext {
               r: RequestContext =>
-                val usuario = obtenerUsuario (r, user)
+                val usuario = obtenerUsuario(r, user)
                 requestWithFutureAuditing[PersistenceException, Any](r, AuditingHelper.fiduciariaTopic, AuditingHelper.usuarioConsultarIpIndex,
                   ip.value, kafkaActor, usuario, None)
             } {
@@ -54,7 +54,7 @@ case class IpsUsuariosService(kafkaActor: ActorSelection, ipsUsuarioActor: Actor
                 clientIP { ip =>
                   mapRequestContext {
                     r: RequestContext =>
-                      val usuario = obtenerUsuario (r, user)
+                      val usuario = obtenerUsuario(r, user)
 
                       requestWithFutureAuditing[PersistenceException, AgregarIpsUsuarioMessage](r, AuditingHelper.fiduciariaTopic,
                         AuditingHelper.usuarioAgregarIpIndex, ip.value, kafkaActor, usuario, Some(agregarIpsUsuarioMessage))
@@ -73,7 +73,7 @@ case class IpsUsuariosService(kafkaActor: ActorSelection, ipsUsuarioActor: Actor
                 clientIP { ip =>
                   mapRequestContext {
                     r: RequestContext =>
-                      val usuario = obtenerUsuario (r, user)
+                      val usuario = obtenerUsuario(r, user)
                       requestWithFutureAuditing[PersistenceException, EliminarIpsUsuarioMessage](r, AuditingHelper.fiduciariaTopic,
                         AuditingHelper.usuarioEliminarIpIndex, ip.value, kafkaActor, usuario, Some(eliminarIpsUsuarioMessage))
                   } {
@@ -87,8 +87,7 @@ case class IpsUsuariosService(kafkaActor: ActorSelection, ipsUsuarioActor: Actor
     }
   }
 
-
-  private def obtenerUsuario (r : RequestContext, user: UsuarioAuth ): Future[Validation[PersistenceException, Option[AuditingUserData]]] = {
+  private def obtenerUsuario(r: RequestContext, user: UsuarioAuth): Future[Validation[PersistenceException, Option[AuditingUserData]]] = {
     val token = r.request.headers.find(header => header.name equals "token")
     val stringToken = token match {
       case Some(s) => s.value

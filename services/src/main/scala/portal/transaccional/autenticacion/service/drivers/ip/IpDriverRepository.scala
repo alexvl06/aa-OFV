@@ -13,9 +13,8 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * Created by s4n on 2016
  */
-case class IpDriverRepository(usuarioRepo: UsuarioRepository, usuarioAgenteRepo: UsuarioEmpresarialRepository, empresaDAO : EmpresaAdminDAOs,
-  ipEmpresaDAO : IpEmpresaDAOs, usuarioAdminRepo: UsuarioEmpresarialAdminRepository,  clienteCoreRepo: ClienteRepository, ipDAO : IpUsuarioDAOs)
-  (implicit val ex: ExecutionContext) extends IpRepository {
+case class IpDriverRepository(usuarioRepo: UsuarioRepository, usuarioAgenteRepo: UsuarioEmpresarialRepository, empresaDAO: EmpresaAdminDAOs,
+    ipEmpresaDAO: IpEmpresaDAOs, usuarioAdminRepo: UsuarioEmpresarialAdminRepository, clienteCoreRepo: ClienteRepository, ipDAO: IpUsuarioDAOs)(implicit val ex: ExecutionContext) extends IpRepository {
 
   /**
    * Flujo:
@@ -24,7 +23,7 @@ case class IpDriverRepository(usuarioRepo: UsuarioRepository, usuarioAgenteRepo:
    * 3) Se valida el estado del cliente en el core
    * 4) Se relaciona la ip con el id del usuario
    */
-  def agregarIpHabitualUsuario( idUsuario: String , clientIp: String): Future[String] = {
+  def agregarIpHabitualUsuario(idUsuario: String, clientIp: String): Future[String] = {
     for {
       usuario <- usuarioRepo.getByIdentificacion(idUsuario.toString)
       cliente <- clienteCoreRepo.getCliente(idUsuario.toString)
@@ -41,7 +40,7 @@ case class IpDriverRepository(usuarioRepo: UsuarioRepository, usuarioAgenteRepo:
    * 4) Se busca la empresa a la cual esta asociada el admin
    * 4) Se relaciona la ip con el id del admin
    */
-  def agregarIPHabitualUsuarioEmpresarialAdmin( idUsuario: Int , clientIp: String ): Future[String] = {
+  def agregarIPHabitualUsuarioEmpresarialAdmin(idUsuario: Int, clientIp: String): Future[String] = {
     for {
       usuarioAdmin <- usuarioAdminRepo.getById(idUsuario)
       cliente <- clienteCoreRepo.getCliente(usuarioAdmin.identificacion)
@@ -61,9 +60,9 @@ case class IpDriverRepository(usuarioRepo: UsuarioRepository, usuarioAgenteRepo:
    */
   private def asociarIpUsuario(idUsuario: Int, ipPeticion: String): Future[String] = {
     //log.info("Asociando ip usuario individual")
-    println("VALIDACION 4") ;
-    ipDAO.create(IpsUsuario(idUsuario,ipPeticion)) flatMap {
-      case r : String => Future.successful("Se asocio el usuario")
+    println("VALIDACION 4");
+    ipDAO.create(IpsUsuario(idUsuario, ipPeticion)) flatMap {
+      case r: String => Future.successful("Se asocio el usuario")
       case _ => Future.failed(ValidacionException("401.3", "No se pudo asociar la ip"))
     }
   }
@@ -74,7 +73,7 @@ case class IpDriverRepository(usuarioRepo: UsuarioRepository, usuarioAgenteRepo:
   }
 
   private def asociarIpEmpresa(idEmpresa: Int, ipPeticion: String): Future[String] = {
-    ipEmpresaDAO.create(IpsEmpresa(idEmpresa,ipPeticion))
+    ipEmpresaDAO.create(IpsEmpresa(idEmpresa, ipPeticion))
   }
 
 }

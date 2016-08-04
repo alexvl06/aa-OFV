@@ -65,7 +65,7 @@ case class SesionActorSupervisor() extends Actor with ActorLogging {
     case message: DeleteSession =>
       context.actorSelection("akka://alianza-fid-auth-service/user/sesionActorSupervisor/" + message.actorName).resolveOne().onComplete {
         case Success(session) => session ! ExpirarSesion()
-        case Failure(ex) => ValidacionException("410.10","NO ELIMINO LA SESION")
+        case Failure(ex) => ValidacionException("410.10", "NO ELIMINO LA SESION")
       }
 
     case EncontrarActor(actorName) =>
