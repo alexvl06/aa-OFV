@@ -86,7 +86,6 @@ case class AutenticacionService(autenticacionRepositorio: AutenticacionRepositor
         clientIP { ip =>
           validate( TiposCliente.contains(request.tipoUsuario), "Invalid user type" ) {
             requestUri { uri =>
-              complete {
                 val resultado: Future[String, Any] = if ( request.tipoUsuario == TiposCliente.comercialAdmin.id )
                   autenticacionComercialRepositorio.authenticateAdmin(request.user, request.password, ip.value)
                   /*
@@ -102,6 +101,9 @@ case class AutenticacionService(autenticacionRepositorio: AutenticacionRepositor
                     case scalaz.Failure( error )    => StatusCodes.Unauthorized -> createBasicHalErrResource( uri.path.toString(), error )
                   }
                   */
+              onComplete(resultado) {
+                case Success(value) => complete(value.toString)
+                case Failure(ex) => execution(ex)
               }
             }
         }
