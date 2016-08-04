@@ -4,4 +4,4 @@ case class AutenticarRequest(tipoIdentificacion: Int, numeroIdentificacion: Stri
 
 case class AutenticarUsuarioEmpresarialRequest(nit: String, usuario: String, password: String)
 
-case class AutenticarUsuarioComercialRequest(user: String, password: String)
+case class AutenticarUsuarioComercialRequest(user: String, password: String, tipoUsuario: Int)
