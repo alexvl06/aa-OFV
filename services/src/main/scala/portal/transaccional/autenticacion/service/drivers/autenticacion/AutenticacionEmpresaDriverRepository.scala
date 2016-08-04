@@ -31,8 +31,7 @@ import scala.reflect.ClassTag
 case class AutenticacionEmpresaDriverRepository(
     usuarioRepo: UsuarioEmpresarialRepository, usuarioAdminRepo: UsuarioEmpresarialAdminRepository, clienteCoreRepo: ClienteRepository,
     empresaRepo: EmpresaRepository, reglaRepo: ReglaContrasenaRepository, configuracionRepo: ConfiguracionRepository, ipRepo: IpEmpresaRepository,
-    sessionActor: ActorRef, respuestasRepo: RespuestaUsuarioRepository
-)(implicit val ex: ExecutionContext) extends AutenticacionEmpresaRepository {
+    sessionActor: ActorRef, respuestasRepo: RespuestaUsuarioRepository)(implicit val ex: ExecutionContext) extends AutenticacionEmpresaRepository {
 
   implicit val timeout = Timeout(10.seconds)
 
@@ -145,7 +144,7 @@ case class AutenticacionEmpresaDriverRepository(
       respuestas <- respuestasRepo.getRespuestasById(usuario.id)
       ips <- ipRepo.getIpsByEmpresaId(empresa.id)
       validacionIps <- ipRepo.validarControlIpAdmin(ip, ips, token, respuestas.nonEmpty)
-    } yield validacionIps
+    } yield token
   }
 
   private def mensajeCrearSesion(token: String, inactividad: Int, empresa: Empresa) = {

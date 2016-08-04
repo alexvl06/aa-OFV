@@ -9,6 +9,6 @@ trait IpRepository {
 
   def agregarIpHabitualUsuario( idUsuario: String, clientIp: String): Future[String]
 
-  def agregarIPHabitualUsuarioEmpresarialAdmin( idUsuario: String , clientIp: String ): Future[String]
+  def agregarIPHabitualUsuarioEmpresarialAdmin( idUsuario: Int , clientIp: String ): Future[String]
 
 }

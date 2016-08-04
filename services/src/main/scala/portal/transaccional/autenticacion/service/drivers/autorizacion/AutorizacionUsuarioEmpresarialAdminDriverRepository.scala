@@ -37,8 +37,8 @@ case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: Usuari
       sesion <- obtieneSesion(encriptedToken)
       adminEstado <- alianzaDAO.getByTokenAdmin(encriptedToken)
       _ <- validarEstadoEmpresa(adminEstado._2)
-      ips <- obtenerIps(sesion)
-      validarIp <- validarIps(ips, ip)
+//      ips <- obtenerIps(sesion)
+//      validarIp <- validarIps(ips, ip)
       recursos <- alianzaDAO.getAdminResources(adminEstado._1.id)
       result <- resolveMessageRecursos(DataAccessTranslator.entityToDto(adminEstado._1), recursos, url)
     } yield result
@@ -47,7 +47,7 @@ case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: Usuari
   def invalidarToken(token: String): Future[Int] = {
     for {
       x <- adminRepo.invalidarToken(token)
-      _ <- sesionActor ? InvalidarSesion(token)
+      _ <- Future { sesionActor ? InvalidarSesion(token) }
     } yield x
   }
 
@@ -75,10 +75,13 @@ case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: Usuari
   }
 
   private def obtenerIps(sesion: ActorRef): Future[List[String]] = {
-
     (sesion ? ObtenerEmpresaActor).flatMap {
-      case Some(empresaSesionActor: ActorRef) => (empresaSesionActor ? ObtenerIps).mapTo[List[String]]
-      case _ => Future.failed(ValidacionException("401.21", "Error sesión"))
+      case Some(empresaSesionActor: ActorRef) =>
+        (empresaSesionActor ? ObtenerIps).flatMap{
+          case r : List[String] => Future.successful(r)
+          case _ =>  Future.failed(ValidacionException("401.21YYY", "Error obtener ips"))
+        }
+      case _ => Future.failed(ValidacionException("401.21YYY", "Error sesión"))
     }
   }
 
@@ -86,7 +89,7 @@ case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: Usuari
     if (ips.contains(ip)) {
       Future.successful(ip)
     } else {
-      Future.failed(ValidacionException("401.21", "Error sesión"))
+      Future.failed(ValidacionException("401.21XXX", "Error sesión"))
     }
   }
 

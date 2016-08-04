@@ -47,7 +47,7 @@ case class AutorizacionUsuarioEmpresarialDriverRepository(agenteRepo: UsuarioEmp
   def invalidarToken(token: String): Future[Int] = {
     for {
       x <- agenteRepo.invalidarToken(token)
-      _ <- sesionActor ? InvalidarSesion(token)
+      _ <- Future { sesionActor ? InvalidarSesion(token) }
     } yield x
   }
 
@@ -100,6 +100,7 @@ case class AutorizacionUsuarioEmpresarialDriverRepository(agenteRepo: UsuarioEmp
   }
 
   private def obtenerIps(sesion: ActorRef): Future[List[String]] = {
+
     (sesion ? ObtenerEmpresaActor).flatMap {
       case Some(empresaSesionActor: ActorRef) => (empresaSesionActor ? ObtenerIps).mapTo[List[String]]
       case None => Future.failed(ValidacionException("401.21", "Error sesión"))

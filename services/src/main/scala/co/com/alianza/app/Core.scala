@@ -89,9 +89,6 @@ trait CoreActors {
   val contrasenasClienteAdminActorSupervisor = system.actorOf(Props[ContrasenasClienteAdminActorSupervisor], "contrasenasClienteAdminActorSupervisor")
   val contrasenasClienteAdminActor = system.actorSelection(contrasenasClienteAdminActorSupervisor.path)
 
-  val ipsUsuarioActorSupervisor = system.actorOf(Props[IpsUsuarioActorSupervisor], "ipsUsuarioActorSupervisor")
-  val ipsUsuarioActor = system.actorSelection(ipsUsuarioActorSupervisor.path)
-
   val horarioEmpresaActorSupervisor = system.actorOf(Props[HorarioEmpresaActorSupervisor], "horarioEmpresaActorSupervisor")
   val horarioEmpresaActor = system.actorSelection(horarioEmpresaActorSupervisor.path)
 
@@ -102,6 +99,9 @@ trait CoreActors {
 
   val sesionActorSupervisor = system.actorOf(Props[SesionActorSupervisor], "sesionActorSupervisor")
   val autorizacionActorSupervisor = system.actorOf(AutorizacionActorSupervisor.props(sesionActorSupervisor), "autorizacionActorSupervisor")
+
+  val ipsUsuarioActorSupervisor = system.actorOf(IpsUsuarioActorSupervisor.props(sesionActorSupervisor), "ipsUsuarioActorSupervisor")
+  val ipsUsuarioActor = system.actorSelection(ipsUsuarioActorSupervisor.path)
 
   val agenteEmpresarialActorSupervisor = system.actorOf(Props[AgenteEmpresarialActorSupervisor], "agenteEmpresarialActorSupervisor")
   val agenteEmpresarialActor = system.actorSelection(agenteEmpresarialActorSupervisor.path)
@@ -135,10 +135,12 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val usuarioAdminRepo = UsuarioEmpresarialAdminDriverRepository(usuarioAdminDAO)
   lazy val respuestaUsuariAdminoRepo = RespuestaUsuarioAdminDriverRepository(respuestaUsuarioAdminDAO, configuracionRepo)
   lazy val autorizacionUsuarioRepo = AutorizacionUsuarioDriverRepository(usuarioRepo, recursoRepo, sessionActor)
+
   lazy val autenticacionRepo = AutenticacionDriverRepository(usuarioRepo, clienteRepo, configuracionRepo, reglaContrasenaRepo, ipUsuarioRepo,
     respuestaUsuarioRepo, sessionActor)
+
   lazy val autenticacionEmpresaRepo = AutenticacionEmpresaDriverRepository(usuarioAgenteRepo, usuarioAdminRepo, clienteRepo, empresaRepo, reglaContrasenaRepo,
-    configuracionRepo, ipEmpresaRepo, sessionActor, respuestaUsuarioRepo)
+    configuracionRepo, ipEmpresaRepo, sessionActor, respuestaUsuariAdminoRepo)
 
   lazy val autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialDriverRepository = AutorizacionUsuarioEmpresarialDriverRepository(
     usuarioAgenteRepo, alianzaDAO, sessionActor: ActorRef, recursoRepo

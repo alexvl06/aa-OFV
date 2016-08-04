@@ -41,12 +41,12 @@ case class IpDriverRepository(usuarioRepo: UsuarioRepository, usuarioAgenteRepo:
    * 4) Se busca la empresa a la cual esta asociada el admin
    * 4) Se relaciona la ip con el id del admin
    */
-  def agregarIPHabitualUsuarioEmpresarialAdmin( idUsuario: String , clientIp: String ): Future[String] = {
+  def agregarIPHabitualUsuarioEmpresarialAdmin( idUsuario: Int , clientIp: String ): Future[String] = {
     for {
-      usuarioAdmin <- usuarioAdminRepo.getById(idUsuario.toInt)
-      cliente <- clienteCoreRepo.getCliente(idUsuario.toString)
+      usuarioAdmin <- usuarioAdminRepo.getById(idUsuario)
+      cliente <- clienteCoreRepo.getCliente(usuarioAdmin.identificacion)
       estadoCore <- clienteCoreRepo.validarEstado(cliente)
-      idEmpresa <- obtenerEmpresaIdUsuarioAdmin(idUsuario.toInt)
+      idEmpresa <- obtenerEmpresaIdUsuarioAdmin(idUsuario)
       relacionarIp <- asociarIpEmpresa(idEmpresa, clientIp)
     } yield relacionarIp
   }

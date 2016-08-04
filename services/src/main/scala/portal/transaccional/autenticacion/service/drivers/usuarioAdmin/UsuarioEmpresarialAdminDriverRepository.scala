@@ -4,7 +4,7 @@ import java.sql.Timestamp
 import java.util.Date
 
 import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
-import co.com.alianza.exceptions.ValidacionException
+import co.com.alianza.exceptions.{ PersistenceException, ValidacionException }
 import co.com.alianza.persistence.entities.{ Usuario, UsuarioEmpresarialAdmin }
 import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.token.Token

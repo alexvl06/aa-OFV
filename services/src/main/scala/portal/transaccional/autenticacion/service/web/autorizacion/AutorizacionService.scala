@@ -52,8 +52,9 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
           clientIP { ip =>
 
             val decryptedToken = AesUtil.desencriptarToken(token.token, "AutorizacionService.invalidarToken")
-
             val usuario = getTokenData(decryptedToken)
+
+
             val resultado = usuario.tipoCliente match {
               case `agente` => autorizacionAgenteRepo.invalidarToken(token.token)
               case `admin` => autorizacionAdminRepo.invalidarToken(token.token)

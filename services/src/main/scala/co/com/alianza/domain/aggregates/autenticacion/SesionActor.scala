@@ -6,6 +6,7 @@ import akka.actor.{ Props, _ }
 import akka.cluster.Cluster
 import akka.pattern.ask
 import akka.util.Timeout
+import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.infrastructure.dto.Empresa
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.util.token.AesUtil
@@ -15,6 +16,7 @@ import enumerations.CryptoAesParameters
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.concurrent.duration._
 import scala.util.{ Failure, Success, Try }
+import scala.xml.dtd.ValidationException
 
 /**
  * Define los mensajes generados por el actor que maneja las sessiones
@@ -63,7 +65,7 @@ case class SesionActorSupervisor() extends Actor with ActorLogging {
     case message: DeleteSession =>
       context.actorSelection("akka://alianza-fid-auth-service/user/sesionActorSupervisor/" + message.actorName).resolveOne().onComplete {
         case Success(session) => session ! ExpirarSesion()
-        case Failure(ex) =>
+        case Failure(ex) => ValidacionException("410.10","NO ELIMINO LA SESION")
       }
 
     case EncontrarActor(actorName) =>

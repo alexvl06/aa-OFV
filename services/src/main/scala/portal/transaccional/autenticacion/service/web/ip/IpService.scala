@@ -36,7 +36,7 @@ case class IpService(user: UsuarioAuth, ipRepo : IpRepository)(implicit val ec: 
                 println(user.tipoCliente)
                 val resultado  = user.tipoCliente match {
                       case TiposCliente.clienteIndividual => ipRepo.agregarIpHabitualUsuario(user.identificacionUsuario, ip.value)
-                      case _ => ipRepo.agregarIPHabitualUsuarioEmpresarialAdmin(user.identificacionUsuario, ip.value)
+                      case _ => ipRepo.agregarIPHabitualUsuarioEmpresarialAdmin(user.id, ip.value)
                     }
 
                 onComplete(resultado) {
