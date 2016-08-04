@@ -3,21 +3,24 @@ package portal.transaccional.autenticacion.service.drivers.autenticacion
 import javax.naming.NamingException
 
 import co.com.alianza.commons.enumerations.UserTypesEnumeration
+import co.com.alianza.exceptions.ExpiredPasswordException
 import co.com.alianza.util.ConfigReader
 import org.joda.time.DateTime
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.ldap.AlianzaLdapDAO
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{AdministradoresDAO, UsuariosLoginDAO}
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{UsuarioAdminComercialDAO, UsuarioComercialDAO}
 
 import scala.concurrent.{ExecutionContext, Future}
 import slick.driver.JdbcProfile
 import slick.jdbc.JdbcBackend._
+
 import scalaz.Validation
 
-case class AutenticacionComercialDriverRepository ( alianzaLdapDAO : AlianzaLdapDAO, adminDao : AdministradoresDAO ) extends AutenticacionComercialRepository {
+case class AutenticacionComercialDriverRepository ( alianzaLdapDAO : AlianzaLdapDAO, adminDao : UsuarioAdminComercialDAO ) extends AutenticacionComercialRepository {
 
   /**
    * Method that authenticates an user
-   * @param userType Users type. (1 -> Fid, 2 -> Val)
+    *
+    * @param userType Users type. (1 -> Fid, 2 -> Val)
    * @param username Users username
    * @param password Users password
    * @return A future with a Validation inside.
@@ -31,7 +34,7 @@ case class AutenticacionComercialDriverRepository ( alianzaLdapDAO : AlianzaLdap
     val host: String = ConfigReader.readString( s"ldap.$organization.host" )
     val domain: String = ConfigReader.readString( s"ldap.$organization.domain" )
     val userName = username.toLowerCase
-    val uLoginDao: UsuariosLoginDAO = new UsuariosLoginDAO()
+    val uLoginDao: UsuarioComercialDAO = new UsuarioComercialDAO()
 
     ( for {
       context <- alianzaLdapDAO.getLdapContext( host, domain, userName, password ) // Throws naming exception
@@ -55,7 +58,8 @@ case class AutenticacionComercialDriverRepository ( alianzaLdapDAO : AlianzaLdap
 
   /**
    * Method that authenticates an administrator
-   * @param username Admin's username
+    *
+    * @param username Admin's username
    * @param password Admin's password
    * @param ip Request ip
    * @param ec Execution context for future manipulation (implicit)
@@ -88,7 +92,8 @@ case class AutenticacionComercialDriverRepository ( alianzaLdapDAO : AlianzaLdap
 
   /**
    * Checks if the password has expired
-   * @param date
+    *
+    * @param date
    * @param ec
    * @return
    */
