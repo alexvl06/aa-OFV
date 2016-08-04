@@ -15,12 +15,12 @@ import scala.util.{ Failure, Success }
 /**
  * Created by s4n on 2016
  */
-case class IpService(user: UsuarioAuth, ipRepo : IpRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters
-  with CrossHeaders {
+case class IpService(user: UsuarioAuth, ipRepo: IpRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters
+    with CrossHeaders {
 
   val ponerIpHabitual = "ponerIpHabitual"
 
-  val route : Route = {
+  val route: Route = {
     path(ponerIpHabitual) {
       pathEndOrSingleSlash {
         guardar()
@@ -28,30 +28,30 @@ case class IpService(user: UsuarioAuth, ipRepo : IpRepository)(implicit val ec: 
     }
   }
 
-  private def guardar () = {
-      post {
-        entity(as[AgregarIpRequest]) {
-          ponerIpHabitual =>
-              clientIP { ip =>
-                println(user.tipoCliente)
-                val resultado  = user.tipoCliente match {
-                      case TiposCliente.clienteIndividual => ipRepo.agregarIpHabitualUsuario(user.identificacionUsuario, ip.value)
-                      case _ => ipRepo.agregarIPHabitualUsuarioEmpresarialAdmin(user.id, ip.value)
-                    }
+  private def guardar() = {
+    post {
+      entity(as[AgregarIpRequest]) {
+        ponerIpHabitual =>
+          clientIP { ip =>
+            println(user.tipoCliente)
+            val resultado = user.tipoCliente match {
+              case TiposCliente.clienteIndividual => ipRepo.agregarIpHabitualUsuario(user.identificacionUsuario, ip.value)
+              case _ => ipRepo.agregarIPHabitualUsuarioEmpresarialAdmin(user.id, ip.value)
+            }
 
-                onComplete(resultado) {
-                  case Success(value) => complete("Registro de IP Exitoso")
-                  case Failure(ex) => println(ex) ; complete((StatusCodes.Unauthorized, "El usuario no esta autorizado para registrar ip"))
-                }
-              }
-        }
+            onComplete(resultado) {
+              case Success(value) => complete("Registro de IP Exitoso")
+              case Failure(ex) => println(ex); complete((StatusCodes.Unauthorized, "El usuario no esta autorizado para registrar ip"))
+            }
+          }
       }
+    }
   }
 
-//    ~ path("actualizarInactividad") {
-//      post {
-//        complete { "ok" }
-//      }
-//    }
-//  }
+  //    ~ path("actualizarInactividad") {
+  //      post {
+  //        complete { "ok" }
+  //      }
+  //    }
+  //  }
 }

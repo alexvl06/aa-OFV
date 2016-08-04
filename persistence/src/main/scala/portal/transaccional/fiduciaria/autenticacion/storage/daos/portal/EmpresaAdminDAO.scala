@@ -15,6 +15,6 @@ case class EmpresaAdminDAO()(implicit dcConfig: DBConfig) extends TableQuery(new
   import dcConfig.profile.api._
 
   def obtenerIdEmpresa(idUsuario: Int): Future[Int] = {
-     run(this.filter(_.idUsuario === idUsuario).map(_.idEmpresa).result.head)
+    run(this.filter(_.idUsuario === idUsuario).map(_.idEmpresa).result.head)
   }
 }

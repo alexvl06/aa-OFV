@@ -20,7 +20,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 case class UsuarioEmpresarialAdminDriverRepository(usuarioDAO: UsuarioEmpresarialAdminDAOs)(implicit val ex: ExecutionContext)
     extends UsuarioEmpresarialAdminRepository {
 
-  def getById (id : Int): Future[UsuarioEmpresarialAdmin] = {
+  def getById(id: Int): Future[UsuarioEmpresarialAdmin] = {
     usuarioDAO.getById(id) flatMap {
       (usuarioOption: Option[UsuarioEmpresarialAdmin]) =>
         usuarioOption match {

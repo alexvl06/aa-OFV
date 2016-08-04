@@ -13,7 +13,7 @@ import co.com.alianza.domain.aggregates.autenticacion.SesionActorSupervisor
 import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.infrastructure.messages.CrearSesionUsuario
 import co.com.alianza.persistence.entities.{ Empresa, UsuarioEmpresarial, UsuarioEmpresarialAdmin }
-import co.com.alianza.util.token.Token
+import co.com.alianza.util.token.{ AesUtil, Token }
 import enumerations.{ EstadosEmpresaEnum, TipoIdentificacion }
 import portal.transaccional.autenticacion.service.drivers.cliente.ClienteRepository
 import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionRepository
@@ -31,7 +31,8 @@ import scala.reflect.ClassTag
 case class AutenticacionEmpresaDriverRepository(
     usuarioRepo: UsuarioEmpresarialRepository, usuarioAdminRepo: UsuarioEmpresarialAdminRepository, clienteCoreRepo: ClienteRepository,
     empresaRepo: EmpresaRepository, reglaRepo: ReglaContrasenaRepository, configuracionRepo: ConfiguracionRepository, ipRepo: IpEmpresaRepository,
-    sessionActor: ActorRef, respuestasRepo: RespuestaUsuarioRepository)(implicit val ex: ExecutionContext) extends AutenticacionEmpresaRepository {
+    sessionActor: ActorRef, respuestasRepo: RespuestaUsuarioRepository
+)(implicit val ex: ExecutionContext) extends AutenticacionEmpresaRepository {
 
   implicit val timeout = Timeout(10.seconds)
 
@@ -96,7 +97,7 @@ case class AutenticacionEmpresaDriverRepository(
       reintentosErroneos <- reglaRepo.getRegla(LlavesReglaContrasena.CANTIDAD_REINTENTOS_INGRESO_CONTRASENA.llave)
       validar <- usuarioRepo.validarUsuario(usuario, contrasena, reintentosErroneos.valor.toInt)
       cliente <- clienteCoreRepo.getCliente(usuario.identificacion)
-      estadoCore <- clienteCoreRepo.validarEstado(cliente)   // DE AQUI SE SACA EL ESTADO
+      estadoCore <- clienteCoreRepo.validarEstado(cliente) // DE AQUI SE SACA EL ESTADO
       reglaDias <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA.llave)
       caducidad <- usuarioRepo.validarCaducidadContrasena(TiposCliente.agenteEmpresarial, usuario, reglaDias.valor.toInt)
       actualizar <- usuarioRepo.actualizarInfoUsuario(usuario, ip)
@@ -104,7 +105,7 @@ case class AutenticacionEmpresaDriverRepository(
       token <- generarTokenAgente(usuario, ip, inactividad.valor)
       ips <- ipRepo.getIpsByEmpresaId(empresa.id)
       validacionIps <- ipRepo.validarControlIpAgente(ip, ips, token)
-      asociarToken <- usuarioRepo.actualizarToken(usuario.id, token)
+      asociarToken <- usuarioRepo.actualizarToken(usuario.id, AesUtil.encriptarToken(token, "autenticacion empresa agente"))
       sesion <- actorResponse[SesionActorSupervisor.SesionUsuarioCreada](sessionActor, mensajeCrearSesion(token, inactividad.valor.toInt, empresa))
     } yield token
   }
@@ -140,7 +141,7 @@ case class AutenticacionEmpresaDriverRepository(
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
       token <- generarTokenAdmin(usuario, ip, inactividad.valor)
       sesion <- actorResponse[SesionActorSupervisor.SesionUsuarioCreada](sessionActor, mensajeCrearSesion(token, inactividad.valor.toInt, empresa))
-      asociarToken <- usuarioAdminRepo.actualizarToken(usuario.id, token)
+      asociarToken <- usuarioAdminRepo.actualizarToken(usuario.id, AesUtil.encriptarToken(token, "autenticacion empresa admin"))
       respuestas <- respuestasRepo.getRespuestasById(usuario.id)
       ips <- ipRepo.getIpsByEmpresaId(empresa.id)
       validacionIps <- ipRepo.validarControlIpAdmin(ip, ips, token, respuestas.nonEmpty)

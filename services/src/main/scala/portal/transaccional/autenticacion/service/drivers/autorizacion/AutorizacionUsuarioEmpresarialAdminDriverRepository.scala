@@ -1,14 +1,11 @@
 package portal.transaccional.autenticacion.service.drivers.autorizacion
 
 import akka.actor.ActorRef
-import co.com.alianza.domain.aggregates.autenticacion.SesionActorSupervisor.SesionUsuarioValidada
 import co.com.alianza.exceptions.{ Autorizado, Prohibido, ValidacionAutorizacion, ValidacionException }
 import co.com.alianza.infrastructure.messages.{ BuscarSesion, InvalidarSesion, ResponseMessage, ValidarSesion }
 import co.com.alianza.util.token.{ AesUtil, Token }
-import enumerations.CryptoAesParameters
 import akka.pattern.ask
 import akka.util.Timeout
-import co.com.alianza.domain.aggregates.autenticacion.{ ObtenerEmpresaActor, ObtenerIps }
 import co.com.alianza.infrastructure.dto.UsuarioEmpresarialAdmin
 import co.com.alianza.persistence.entities.RecursoPerfilClienteAdmin
 import co.com.alianza.util.json.JsonUtil
@@ -30,15 +27,13 @@ case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: Usuari
   implicit val timeout = Timeout(5.seconds)
 
   def autorizar(token: String, url: String, ip: String): Future[ValidacionAutorizacion] = {
-    val encriptedToken = AesUtil.encriptarToken(token, "AutorizacionUsuarioEmpresarialAdminDriverRepository.autorizar")
+    val encriptedToken = AesUtil.encriptarToken(token, "AutorizacionUsuarioEmpresarialAdminDriverRepository.autorizarUrl")
     for {
-      _ <- validarToken(encriptedToken)
-      _ <- Future { (sesionActor ? ValidarSesion(encriptedToken)).mapTo[SesionUsuarioValidada] }
-      sesion <- obtieneSesion(encriptedToken)
+      _ <- validarToken(token)
+      _ <- validarSesion(token)
+      sesion <- obtienerSesion(token)
       adminEstado <- alianzaDAO.getByTokenAdmin(encriptedToken)
       _ <- validarEstadoEmpresa(adminEstado._2)
-//      ips <- obtenerIps(sesion)
-//      validarIp <- validarIps(ips, ip)
       recursos <- alianzaDAO.getAdminResources(adminEstado._1.id)
       result <- resolveMessageRecursos(DataAccessTranslator.entityToDto(adminEstado._1), recursos, url)
     } yield result
@@ -52,13 +47,21 @@ case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: Usuari
   }
 
   private def validarToken(token: String): Future[Boolean] = {
-    Token.autorizarToken(AesUtil.desencriptarToken(token, "AutorizacionUsuarioEmpresarialAdminDriverRepository.validarToken")) match {
+    Token.autorizarToken(token) match {
       case true => Future.successful(true)
       case false => Future.failed(ValidacionException("401.24", "Error token"))
     }
   }
 
-  private def obtieneSesion(token: String) = {
+  private def validarSesion(token: String): Future[Boolean] = {
+    val actor: Future[Any] = sesionActor ? ValidarSesion(token)
+    actor flatMap {
+      case true => Future.successful(true)
+      case _ => Future.failed(ValidacionException("403.9", "Error sesión"))
+    }
+  }
+
+  private def obtienerSesion(token: String) = {
     val actor: Future[Any] = sesionActor ? BuscarSesion(token)
     actor flatMap {
       case Some(sesionActor: ActorRef) => Future.successful(sesionActor)
@@ -71,25 +74,6 @@ case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: Usuari
     estado match {
       case `empresaActiva` => Future.successful(ResponseMessage(OK, "Empresa Activa"))
       case _ => Future.failed(ValidacionException("401.23", "Error sesión"))
-    }
-  }
-
-  private def obtenerIps(sesion: ActorRef): Future[List[String]] = {
-    (sesion ? ObtenerEmpresaActor).flatMap {
-      case Some(empresaSesionActor: ActorRef) =>
-        (empresaSesionActor ? ObtenerIps).flatMap{
-          case r : List[String] => Future.successful(r)
-          case _ =>  Future.failed(ValidacionException("401.21YYY", "Error obtener ips"))
-        }
-      case _ => Future.failed(ValidacionException("401.21YYY", "Error sesión"))
-    }
-  }
-
-  private def validarIps(ips: List[String], ip: String): Future[String] = {
-    if (ips.contains(ip)) {
-      Future.successful(ip)
-    } else {
-      Future.failed(ValidacionException("401.21XXX", "Error sesión"))
     }
   }
 
