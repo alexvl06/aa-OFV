@@ -19,6 +19,8 @@ case class AutenticacionService(autenticacionRepositorio: AutenticacionRepositor
 
   val autenticar = "autenticar"
   val autenticarUsuarioEmpresa = "autenticarUsuarioEmpresa"
+  val comercialPath = "comercial"
+
 
   val route: Route = {
     pathPrefix(autenticar) {
@@ -27,6 +29,11 @@ case class AutenticacionService(autenticacionRepositorio: AutenticacionRepositor
       }
     } ~
       pathPrefix(autenticarUsuarioEmpresa) {
+        pathEndOrSingleSlash {
+          autenticarUsuarioEmpresarial
+        }
+      } ~
+      pathPrefix(comercialPath/autenticar) {
         pathEndOrSingleSlash {
           autenticarUsuarioEmpresarial
         }
@@ -67,7 +74,34 @@ case class AutenticacionService(autenticacionRepositorio: AutenticacionRepositor
           }
       }
     }
+  }
 
+  private def autenticarUsuarioComercial = {
+    post {
+      entity(as[AutenticarUsuarioComercialRequest]) {
+        request =>
+          clientIP { ip =>
+            parameter( "usertype".as[Int]) { userType =>
+              validate( UserTypesEnumeration.contains( userType ), "Invalid user type" ) {
+                requestUri { uri =>
+                  complete {
+                    if ( userType == UserTypesEnumeration.admin.id )
+                      repository.authenticateAdmin( request.user, request.password, ip.value ).map {
+                        case scalaz.Success( response ) => StatusCodes.Created -> createBasicHalResource( uri.path.toString(), response )
+                        case scalaz.Failure( error )    => StatusCodes.Unauthorized -> createBasicHalErrResource( uri.path.toString(), error )
+                      }
+                    else
+                      repository.authenticateLDAP( userType, request.user, request.password, ip.value ).map {
+                        case scalaz.Success( response ) => StatusCodes.Created -> createBasicHalResource( uri.path.toString(), response )
+                        case scalaz.Failure( error )    => StatusCodes.Unauthorized -> createBasicHalErrResource( uri.path.toString(), error )
+                      }
+                  }
+                }
+              }
+            }
+          }
+      }
+    }
   }
 
   def execution(ex: Any): StandardRoute = {

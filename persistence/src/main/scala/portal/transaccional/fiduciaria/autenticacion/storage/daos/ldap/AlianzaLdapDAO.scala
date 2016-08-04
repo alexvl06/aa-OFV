@@ -10,7 +10,7 @@ import co.com.alianza.persistence.entities.User
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class AlianzaLdapDAO extends AlianzaLdapDAOs{
+case class AlianzaLdapDAO() extends AlianzaLdapDAOs{
 
   /**
    * Method that retrieves ldap context
