@@ -44,7 +44,7 @@ case class AutorizacionUsuarioEmpresarialDriverRepository(agenteRepo: UsuarioEmp
     } yield result
   }
 
-  def invalidarToken (token : String): Future[Int] = {
+  def invalidarToken(token: String): Future[Int] = {
     for {
       x <- agenteRepo.invalidarToken(token)
       _ <- sesionActor ? InvalidarSesion(token)

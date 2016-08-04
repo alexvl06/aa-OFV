@@ -24,7 +24,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * Created by seven4n on 2016
  */
-case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo : UsuarioEmpresarialAdminRepository ,sesionActor: ActorRef, alianzaDAO: AlianzaDAO,
+case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: UsuarioEmpresarialAdminRepository, sesionActor: ActorRef, alianzaDAO: AlianzaDAO,
     recursoRepo: RecursoRepository)(implicit val ex: ExecutionContext) extends AutorizacionUsuarioEmpresarialAdminRepository {
 
   implicit val timeout = Timeout(5.seconds)
@@ -44,7 +44,7 @@ case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo : Usuar
     } yield result
   }
 
-  def invalidarToken (token : String): Future[Int] = {
+  def invalidarToken(token: String): Future[Int] = {
     for {
       x <- adminRepo.invalidarToken(token)
       _ <- sesionActor ? InvalidarSesion(token)

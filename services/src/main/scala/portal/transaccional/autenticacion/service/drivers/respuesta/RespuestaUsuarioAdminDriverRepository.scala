@@ -5,7 +5,7 @@ import co.com.alianza.infrastructure.dto.Respuesta
 import co.com.alianza.persistence.entities.RespuestasAutovalidacionUsuario
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.RespuestaUsuarioDAOs
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * Created by hernando on 25/07/16.

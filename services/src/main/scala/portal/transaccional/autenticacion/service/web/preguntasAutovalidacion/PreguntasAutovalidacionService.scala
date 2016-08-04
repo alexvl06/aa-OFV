@@ -10,23 +10,22 @@ import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import spray.http.StatusCodes
 import spray.routing._
 
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
+import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{ Failure, Success }
 
 /**
-  * Created by s4n on 3/08/16.
-  */
+ * Created by s4n on 3/08/16.
+ */
 case class PreguntasAutovalidacionService(user: UsuarioAuth, preguntasValidacionRepository: PreguntasAutovalidacionRepository,
-                                          respuestaUsuarioRepository: RespuestaUsuarioRepository)
-  (implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
+    respuestaUsuarioRepository: RespuestaUsuarioRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   val preguntasAutovalidacionPath = "preguntasAutovalidacion"
 
-  val route : Route = {
+  val route: Route = {
     path(preguntasAutovalidacionPath) {
       pathEndOrSingleSlash {
         obtenerPreguntasAutovalidacion() ~
-        guardarRespuestas(user)
+          guardarRespuestas(user)
       }
     }
   }

@@ -1,6 +1,6 @@
 package co.com.alianza.app
 
-import akka.actor.{ ActorRef, ActorSystem, Props }
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.cluster.Cluster
 import co.com.alianza.domain.aggregates.actualizacion.ActualizacionActorSupervisor
 import co.com.alianza.domain.aggregates.autenticacion._
@@ -8,7 +8,7 @@ import co.com.alianza.domain.aggregates.autoregistro.ConsultaClienteActorSupervi
 import co.com.alianza.domain.aggregates.autovalidacion.PreguntasAutovalidacionSupervisor
 import co.com.alianza.domain.aggregates.confronta.ConfrontaActorSupervisor
 import co.com.alianza.domain.aggregates.contrasenas.ContrasenasActorSupervisor
-import co.com.alianza.domain.aggregates.empresa.{ AgenteEmpresarialActorSupervisor, ContrasenasAgenteEmpresarialActorSupervisor, ContrasenasClienteAdminActorSupervisor, HorarioEmpresaActorSupervisor }
+import co.com.alianza.domain.aggregates.empresa.{AgenteEmpresarialActorSupervisor, ContrasenasAgenteEmpresarialActorSupervisor, ContrasenasClienteAdminActorSupervisor, HorarioEmpresaActorSupervisor}
 import co.com.alianza.domain.aggregates.ips.IpsUsuarioActorSupervisor
 import co.com.alianza.domain.aggregates.permisos.PermisoTransaccionalActorSupervisor
 import co.com.alianza.domain.aggregates.pin.PinActorSupervisor
@@ -19,9 +19,9 @@ import co.com.alianza.persistence.config.oracle.OracleConfig
 import co.com.alianza.persistence.config.pg.PGConfig
 import co.com.alianza.util.ConfigApp
 import com.typesafe.config.Config
-import portal.transaccional.autenticacion.service.drivers.Recurso.{ RecursoDriverRepository, RecursoRepository }
-import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionDriverRepository, AutenticacionEmpresaDriverRepository }
-import portal.transaccional.autenticacion.service.drivers.autorizacion.{ AutorizacionUsuarioDriverRepository, AutorizacionUsuarioEmpresarialAdminDriverRepository, AutorizacionUsuarioEmpresarialDriverRepository }
+import portal.transaccional.autenticacion.service.drivers.Recurso.{RecursoDriverRepository, RecursoRepository}
+import portal.transaccional.autenticacion.service.drivers.autenticacion.{AutenticacionComercialRepository, AutenticacionDriverRepository, AutenticacionEmpresaDriverRepository}
+import portal.transaccional.autenticacion.service.drivers.autorizacion.{AutorizacionUsuarioDriverRepository, AutorizacionUsuarioEmpresarialAdminDriverRepository, AutorizacionUsuarioEmpresarialDriverRepository}
 import portal.transaccional.autenticacion.service.drivers.cliente.ClienteDriverCoreRepository
 import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionDriverRepository
 import portal.transaccional.autenticacion.service.drivers.empresa.EmpresaDriverRepository
@@ -34,6 +34,7 @@ import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioEm
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioDriverRepository
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.core.ClienteDAO
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.ldap.AlianzaLdapDAO
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal._
 
 /**
@@ -149,6 +150,8 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
     PreguntasDriverRepository(preguntaDAO)
   lazy val preguntasValidacionRepository: PreguntasAutovalidacionDriverRepository =
     PreguntasAutovalidacionDriverRepository(prguntasRepo, configuracionRepo)
+  lazy val autenticacionComercialRepository: AutenticacionComercialRepository =
+    AutenticacionComercialDriverRepository(alianzaLdapDAO)
 }
 
 private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
@@ -168,6 +171,7 @@ private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
   lazy val usuarioAdminDAO = UsuarioEmpresarialAdminDAO()(config)
   lazy val respuestaUsuarioAdminDAO = RespuestaUsuarioAdminDAO()(config)
   lazy val preguntaDAO = PreguntasDAO()(config)
+  lazy val alianzaLdapDAO = AlianzaLdapDAO()
 }
 
 /**

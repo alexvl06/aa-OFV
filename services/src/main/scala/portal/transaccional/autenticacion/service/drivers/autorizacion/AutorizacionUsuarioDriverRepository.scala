@@ -22,8 +22,7 @@ import scala.reflect.ClassTag
 /**
  * Created by seven4n on 2016
  */
-case class AutorizacionUsuarioDriverRepository(usuarioRepo : UsuarioRepository, recursoRepo: RecursoRepository, sessionActor: ActorRef)
-  (implicit val ex: ExecutionContext) extends AutorizacionUsuarioRepository {
+case class AutorizacionUsuarioDriverRepository(usuarioRepo: UsuarioRepository, recursoRepo: RecursoRepository, sessionActor: ActorRef)(implicit val ex: ExecutionContext) extends AutorizacionUsuarioRepository {
 
   implicit val timeout = Timeout(5.seconds)
 
@@ -39,7 +38,7 @@ case class AutorizacionUsuarioDriverRepository(usuarioRepo : UsuarioRepository, 
     } yield validarRecurso
   }
 
-  def invalidarToken (token : String): Future[Int] = {
+  def invalidarToken(token: String): Future[Int] = {
     for {
       x <- usuarioRepo.invalidarToken(token)
       _ <- sessionActor ? InvalidarSesion(token)
