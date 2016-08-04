@@ -12,12 +12,14 @@ sealed trait GenericUser
  * @param last_login_ip Admins last login ip
  * @param last_login_date Admins last login date
  */
-case class Admin( username: String,
+case class Admin(
+  username: String,
   name: String,
   email: String,
-  last_login_ip: Option[ String ],
-  last_login_date: Option[ DateTime ],
-  recover_date: Option[ DateTime ] ) extends GenericUser
+  last_login_ip: Option[String],
+  last_login_date: Option[DateTime],
+  recover_date: Option[DateTime]
+) extends GenericUser
 
 /**
  * Companion object for domain entity Admin
@@ -27,16 +29,16 @@ object Admin {
   import play.api.libs.json._
   import play.api.libs.functional.syntax._
 
-  implicit val adminWrites: Writes[ Admin ] = (
-    ( __ \ "username" ).write[ String ] and
-    ( __ \ "name" ).write[ String ] and
-    ( __ \ "email" ).write[ String ] and
-    ( __ \ "last_login_ip" ).write[ Option[ String ] ] and
-    ( __ \ "last_login_date" ).write[ Option[ DateTime ] ] and
-    ( __ \ "recover_date" ).write[ Option[ DateTime ] ]
-  )( unlift( Admin.unapply ) )
+  implicit val adminWrites: Writes[Admin] = (
+    (__ \ "username").write[String] and
+    (__ \ "name").write[String] and
+    (__ \ "email").write[String] and
+    (__ \ "last_login_ip").write[Option[String]] and
+    (__ \ "last_login_date").write[Option[DateTime]] and
+    (__ \ "recover_date").write[Option[DateTime]]
+  )(unlift(Admin.unapply))
 
-  def apply( username: String, name: String, email: String ): Admin = Admin( username, name, email, None, None, None )
+  def apply(username: String, name: String, email: String): Admin = Admin(username, name, email, None, None, None)
 
 }
 
@@ -52,16 +54,18 @@ object Admin {
  * @param last_login_ip User's last login ip
  * @param last_login_date user's last login date
  */
-case class User( sAMAccountName: String,
-  sAMAccountType: Option[ String ],
-  distinguishedName: Option[ String ],
-  sn: Option[ String ],
-  givenName: Option[ String ],
-  memberOf: Option[ String ],
-  userPrincipalName: Option[ String ],
-  idRole: Option[ Int ],
-  last_login_ip: Option[ String ],
-  last_login_date: Option[ DateTime ] ) extends GenericUser
+case class User(
+  sAMAccountName: String,
+  sAMAccountType: Option[String],
+  distinguishedName: Option[String],
+  sn: Option[String],
+  givenName: Option[String],
+  memberOf: Option[String],
+  userPrincipalName: Option[String],
+  idRole: Option[Int],
+  last_login_ip: Option[String],
+  last_login_date: Option[DateTime]
+) extends GenericUser
 
 /**
  * Companion object for domain entity User
@@ -71,19 +75,19 @@ object User {
   import play.api.libs.json._
   import play.api.libs.functional.syntax._
 
-  implicit val userWrites: Writes[ User ] = (
-    ( __ \ "sAMAccountName" ).write[ String ] and
-    ( __ \ "sAMAccountType" ).write[ Option[ String ] ] and
-    ( __ \ "distinguishedName" ).write[ Option[ String ] ] and
-    ( __ \ "sn" ).write[ Option[ String ] ] and
-    ( __ \ "givenName" ).write[ Option[ String ] ] and
-    ( __ \ "memberOf" ).write[ Option[ String ] ] and
-    ( __ \ "userPrincipalName" ).write[ Option[ String ] ] and
-    ( __ \ "idRole" ).write[ Option[ Int ] ] and
-    ( __ \ "last_login_ip" ).write[ Option[ String ] ] and
-    ( __ \ "last_login_date" ).write[ Option[ DateTime ] ]
-  )( unlift( User.unapply ) )
+  implicit val userWrites: Writes[User] = (
+    (__ \ "sAMAccountName").write[String] and
+    (__ \ "sAMAccountType").write[Option[String]] and
+    (__ \ "distinguishedName").write[Option[String]] and
+    (__ \ "sn").write[Option[String]] and
+    (__ \ "givenName").write[Option[String]] and
+    (__ \ "memberOf").write[Option[String]] and
+    (__ \ "userPrincipalName").write[Option[String]] and
+    (__ \ "idRole").write[Option[Int]] and
+    (__ \ "last_login_ip").write[Option[String]] and
+    (__ \ "last_login_date").write[Option[DateTime]]
+  )(unlift(User.unapply))
 
-  def apply( sAMAccountName: String ): User = User( sAMAccountName, None, None, None, None, None, None, None, None, None )
+  def apply(sAMAccountName: String): User = User(sAMAccountName, None, None, None, None, None, None, None, None, None)
 
 }

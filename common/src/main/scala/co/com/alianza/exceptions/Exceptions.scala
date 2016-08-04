@@ -62,4 +62,4 @@ case class NoAutorizado(codigo: String) extends ValidacionAutorizacion
 case class Autorizado(usuario: String) extends ValidacionAutorizacion
 case class Prohibido(codigo: String, usuario: String) extends ValidacionAutorizacion
 
-class ExpiredPasswordException( msg: String ) extends Exception( msg )
+class ExpiredPasswordException(msg: String) extends Exception(msg)

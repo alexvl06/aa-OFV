@@ -19,19 +19,19 @@ case class IpUsuarioDAO(implicit val dcConfig: DBConfig) extends TableQuery(new 
     run(this.filter(_.idUsuario === idUsuario).result)
   }
 
-  def getAll(): Future[Seq[IpsUsuario]] =  {
-      run(this.result)
+  def getAll(): Future[Seq[IpsUsuario]] = {
+    run(this.result)
   }
 
-  def getByUsuarioIp(idUsuario: Int, ip: String): Future[Option[IpsUsuario]] =  {
-      run(this.filter(x => x.idUsuario === idUsuario && x.ip === ip).result.headOption)
+  def getByUsuarioIp(idUsuario: Int, ip: String): Future[Option[IpsUsuario]] = {
+    run(this.filter(x => x.idUsuario === idUsuario && x.ip === ip).result.headOption)
   }
 
-  def create(ip: IpsUsuario): Future[String] =  {
-      run((this returning this.map(_.ip)) += ip)
+  def create(ip: IpsUsuario): Future[String] = {
+    run((this returning this.map(_.ip)) += ip)
   }
 
-  def delete(ipsUsuarioE: IpsUsuario): Future[Int] =  {
-      run(this.filter(x => x.idUsuario === ipsUsuarioE.idUsuario && x.ip === ipsUsuarioE.ip).delete)
+  def delete(ipsUsuarioE: IpsUsuario): Future[Int] = {
+    run(this.filter(x => x.idUsuario === ipsUsuarioE.idUsuario && x.ip === ipsUsuarioE.ip).delete)
   }
 }

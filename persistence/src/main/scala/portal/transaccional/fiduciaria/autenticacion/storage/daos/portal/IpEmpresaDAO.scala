@@ -18,5 +18,4 @@ case class IpEmpresaDAO()(implicit dcConfig: DBConfig) extends TableQuery(new Ip
 
   def create(ip: IpsEmpresa): Future[String] = run(this returning this.map(_.ip) += ip)
 
-
 }

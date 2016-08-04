@@ -3,20 +3,20 @@ package portal.transaccional.autenticacion.service.drivers.pregunta
 import akka.util.Timeout
 import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import co.com.alianza.exceptions.ValidacionException
-import co.com.alianza.infrastructure.dto.{Configuracion, Pregunta, Respuesta, RespuestaCompleta}
-import co.com.alianza.persistence.entities.{Configuraciones, PreguntaAutovalidacion}
+import co.com.alianza.infrastructure.dto.{ Configuracion, Pregunta, Respuesta, RespuestaCompleta }
+import co.com.alianza.persistence.entities.{ Configuraciones, PreguntaAutovalidacion }
 import enumerations.ConfiguracionEnum
-import portal.transaccional.autenticacion.service.drivers.configuracion.{ConfiguracionRepository, DataAccessTranslator => configuracionDTO}
-import portal.transaccional.autenticacion.service.drivers.pregunta.{DataAccessTranslator => preguntasAutovalidacionDTO}
-import portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.{ResponseObtenerPreguntas, ResponseObtenerPreguntasComprobar}
+import portal.transaccional.autenticacion.service.drivers.configuracion.{ ConfiguracionRepository, DataAccessTranslator => configuracionDTO }
+import portal.transaccional.autenticacion.service.drivers.pregunta.{ DataAccessTranslator => preguntasAutovalidacionDTO }
+import portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.{ ResponseObtenerPreguntas, ResponseObtenerPreguntasComprobar }
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.AlianzaDAOs
 
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.util._
 
 case class PreguntasAutovalidacionDriverRepository(
-  preguntasRepository: PreguntasRepository,
+    preguntasRepository: PreguntasRepository,
     configuracionRepository: ConfiguracionRepository, alianzaDao: AlianzaDAOs
 )(implicit val ex: ExecutionContext) extends PreguntasAutovalidacionRepository {
 
@@ -49,9 +49,9 @@ case class PreguntasAutovalidacionDriverRepository(
   }
 
   /**
-    * Obtener preguntas al azar del cliente
-    * de acuerdo a las parametrizaciones
-    */
+   * Obtener preguntas al azar del cliente
+   * de acuerdo a las parametrizaciones
+   */
   def obtenerPreguntasComprobar(idUsuario: Int, tipoCliente: TiposCliente): Future[ResponseObtenerPreguntasComprobar] = {
     val llaveNumeroPreguntas: String = ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS.name
 
@@ -107,20 +107,21 @@ case class PreguntasAutovalidacionDriverRepository(
       validar <- validarParametrizacion(respuestas.size, configuraciones.toList, llavePreguntasComprobar)
       validarReintentos <- validarParametrizacion(numeroIntentos, configuraciones.toList, llaveReintentos)
       respuestasCompletas <- alianzaDao.getIndividualClientQuestions(idUsuario)
-      respuesta <- validarRespuestasValidation(preguntasAutovalidacionDTO.toRespuestaCompletaList(respuestasCompletas),
-        respuestas, obtenerValorEntero(configuraciones.toList.map(conf => configuracionDTO.entityToDto(conf)), llavePreguntasCambio))
+      respuesta <- validarRespuestasValidation(
+        preguntasAutovalidacionDTO.toRespuestaCompletaList(respuestasCompletas),
+        respuestas, obtenerValorEntero(configuraciones.toList.map(conf => configuracionDTO.entityToDto(conf)), llavePreguntasCambio)
+      )
     } yield respuesta
-
 
     //resolveFutureValidation(future, (response: String) => response, errorValidacion, currentSender)
   }
 
   /**
-    * Validar respuestas y responder si no concuerdan
-    * @param response
-    * @param respuestas
-    * @return
-    */
+   * Validar respuestas y responder si no concuerdan
+   * @param response
+   * @param respuestas
+   * @return
+   */
   private def validarRespuestasValidation(response: List[RespuestaCompleta], respuestas: List[Respuesta], numeroPreguntasCambio: Int): Future[String] = Future {
     val respuestasGuardadas: List[Respuesta] = response.map(res => Respuesta(res.idPregunta, res.respuesta))
 
@@ -129,7 +130,6 @@ case class PreguntasAutovalidacionDriverRepository(
 
     println("respuestas")
     println(respuestas)
-
 
     //comprobar que las respuestas concuerden
     val existe: Boolean = respuestas.foldLeft(true)((existe, respuesta) => existe && respuestasGuardadas.contains(respuesta))

@@ -41,7 +41,7 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
         invalidarToken
       }
     } ~ path(validarTokenPath / Segment) {
-      token =>  validarToken(token)
+      token => validarToken(token)
     }
   }
 
@@ -53,7 +53,6 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
 
             val decryptedToken = AesUtil.desencriptarToken(token.token, "AutorizacionService.invalidarToken")
             val usuario = getTokenData(decryptedToken)
-
 
             val resultado = usuario.tipoCliente match {
               case `agente` => autorizacionAgenteRepo.invalidarToken(token.token)

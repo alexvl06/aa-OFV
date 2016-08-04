@@ -20,7 +20,7 @@ import co.com.alianza.persistence.config.pg.PGConfig
 import co.com.alianza.util.ConfigApp
 import com.typesafe.config.Config
 import portal.transaccional.autenticacion.service.drivers.Recurso.{ RecursoDriverRepository, RecursoRepository }
-import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionDriverRepository, AutenticacionEmpresaDriverRepository }
+import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionComercialDriverRepository, AutenticacionDriverRepository, AutenticacionEmpresaDriverRepository }
 import portal.transaccional.autenticacion.service.drivers.autorizacion.{ AutorizacionUsuarioDriverRepository, AutorizacionUsuarioEmpresarialAdminDriverRepository, AutorizacionUsuarioEmpresarialDriverRepository }
 import portal.transaccional.autenticacion.service.drivers.cliente.ClienteDriverCoreRepository
 import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionDriverRepository
@@ -69,16 +69,8 @@ trait CoreActors {
   val usuariosActor = system.actorSelection(usuariosActorSupervisor.path)
   val confrontaActorSupervisor = system.actorOf(Props[ConfrontaActorSupervisor], "confrontaActorSupervisor")
   val confrontaActor = system.actorSelection(confrontaActorSupervisor.path)
-
-  //val autenticacionActorSupervisor = system.actorOf(Props[AutenticacionActorSupervisor], "autenticacionActorSupervisor")
-  //val autenticacionActor = system.actorSelection(autenticacionActorSupervisor.path)
-  //val autenticacionUsuarioEmpresaActor = system.actorSelection(autenticacionActorSupervisor.path)
-  //val autorizacionActor = system.actorSelection(autenticacionActorSupervisor.path)
-  //val autorizacionUsuarioEmpresarialActor = system.actorSelection(autenticacionActorSupervisor.path)
-
   val consultaClienteActorSupervisor = system.actorOf(Props[ConsultaClienteActorSupervisor], "consultaClienteActorSupervisor")
   val consultaClienteActor = system.actorSelection(consultaClienteActorSupervisor.path)
-
   val contrasenasActorSupervisor = system.actorOf(Props[ContrasenasActorSupervisor], "contrasenasActorSupervisor")
   val contrasenasActor = system.actorSelection(contrasenasActorSupervisor.path)
   val contrasenasAgenteEmpresarialActorSupervisor = system.actorOf(
@@ -143,6 +135,8 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val autenticacionEmpresaRepo = AutenticacionEmpresaDriverRepository(usuarioAgenteRepo, usuarioAdminRepo, clienteRepo, empresaRepo, reglaContrasenaRepo,
     configuracionRepo, ipEmpresaRepo, sessionActor, respuestaUsuariAdminoRepo)
 
+  lazy val autenticacionComercialRepo = AutenticacionComercialDriverRepository()
+
   lazy val autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialDriverRepository = AutorizacionUsuarioEmpresarialDriverRepository(
     usuarioAgenteRepo, alianzaDAO, sessionActor: ActorRef, recursoRepo
   )
@@ -154,10 +148,8 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val preguntasValidacionRepository: PreguntasAutovalidacionDriverRepository =
     PreguntasAutovalidacionDriverRepository(prguntasRepo, configuracionRepo, alianzaDAO)
 
-  lazy val ipRepo = IpDriverRepository(usuarioRepo,usuarioAgenteRepo,empresaAdminDAO,ipEmpresaDAO ,usuarioAdminRepo, clienteRepo, ipUsuarioDAO)
-	 
-  lazy val autenticacionComercialRepository: AutenticacionComercialRepository =
-    AutenticacionComercialDriverRepository(alianzaLdapDAO)
+  lazy val ipRepo = IpDriverRepository(usuarioRepo, usuarioAgenteRepo, empresaAdminDAO, ipEmpresaDAO, usuarioAdminRepo, clienteRepo, ipUsuarioDAO)
+
 }
 
 private[app] sealed trait StoragePGAlianzaDB extends BootedCore {

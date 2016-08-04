@@ -12,7 +12,7 @@ import scala.concurrent.{ ExecutionContext, Future }
  * Created by hernando on 25/07/16.
  */
 case class RespuestaUsuarioDriverRepository(
-  respuestaDAO: RespuestaUsuarioDAOs,
+    respuestaDAO: RespuestaUsuarioDAOs,
     configuracionRepository: ConfiguracionRepository
 )(implicit val ex: ExecutionContext) extends RespuestaUsuarioRepository {
 

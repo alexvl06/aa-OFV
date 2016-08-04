@@ -6,12 +6,20 @@ import co.com.alianza.infrastructure.dto.Cliente
 import co.com.alianza.persistence.entities.Usuario
 import co.com.alianza.util.token.Token
 
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 
-case class AutenticacionComercialDriverRepository ()
-  extends AutenticacionComercialRepository {
+case class AutenticacionComercialDriverRepository()(implicit val ex: ExecutionContext)
+    extends AutenticacionComercialRepository {
 
-  def autenticar(tipoUsuario: Int, usuario: String, contrasena: String, ip: String ): Future[String] = {
+  /**
+   * Redirigir a la autenticacion correspondiente
+   * dependiendo del tipo de usuario
+   * @param tipoUsuario
+   * @param usuario
+   * @param contrasena
+   * @return
+   */
+  def autenticar(usuario: String, tipoUsuario: Int, contrasena: String): Future[String] = {
     autenticarFiduciaria()
   }
 
@@ -29,13 +37,13 @@ case class AutenticacionComercialDriverRepository ()
    * - asociar token
    * - crear session de usuario
    */
-  def autenticarFiduciaria() : Future[String] = {
-    for{
-      token <- Future.successful("")
-    }yield token
+  def autenticarFiduciaria(): Future[String] = {
+    for {
+      token <- Future.successful("ya me autentique !!!")
+    } yield token
   }
 
-  def autenticarAdministrador() : Future[String] = {
+  def autenticarAdministrador(): Future[String] = {
     Future.successful("")
   }
 
