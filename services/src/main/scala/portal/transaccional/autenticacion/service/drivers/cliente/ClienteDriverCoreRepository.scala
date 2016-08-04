@@ -14,6 +14,8 @@ import scala.concurrent.{ Future, ExecutionContext }
 case class ClienteDriverCoreRepository(clienteCoreRepo: ClienteDAOs)(implicit val ex: ExecutionContext) extends ClienteRepository {
 
   def getCliente(documento: String): Future[Cliente] = {
+
+    println("VALIDACION 2") ;
     for {
       clienteString <- clienteCoreRepo.consultaCliente(documento)
       clienteOption <- Future { DataAccessTranslator.translateCliente(clienteString) }
@@ -29,6 +31,7 @@ case class ClienteDriverCoreRepository(clienteCoreRepo: ClienteDAOs)(implicit va
   }
 
   def validarEstado(cliente: Cliente): Future[Boolean] = {
+    println("VALIDACION 3") ;
     if (cliente.wcli_estado != EstadosCliente.inactivo && cliente.wcli_estado != EstadosCliente.bloqueado &&
       cliente.wcli_estado != EstadosCliente.activo)
       Future.failed(ValidacionException("401.1", "Cliente inactivo core"))

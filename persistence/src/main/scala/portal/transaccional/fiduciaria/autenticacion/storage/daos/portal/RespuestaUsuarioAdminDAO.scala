@@ -19,7 +19,11 @@ case class RespuestaUsuarioAdminDAO()(implicit dcConfig: DBConfig) extends Table
     run(this.filter(_.idUsuario === idUsuario).result)
   }
 
-  override def delete(idUsuario: Int): Future[Int] = ???
+  def delete(idUsuario: Int): Future[Int] = {
+    run(this.filter(_.idUsuario === idUsuario).delete)
+  }
 
-  override def insert(respuestas: List[RespuestasAutovalidacionUsuario]): Future[Option[Int]] = ???
+  def insert(respuestas: List[RespuestasAutovalidacionUsuario]): Future[Option[Int]] = {
+    run(this ++= respuestas)
+  }
 }

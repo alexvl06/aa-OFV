@@ -11,4 +11,6 @@ trait IpEmpresaDAOs {
 
   def getById(idEmpresa: Int): Future[Seq[IpsEmpresa]]
 
+  def create(ip: IpsEmpresa): Future[String]
+
 }

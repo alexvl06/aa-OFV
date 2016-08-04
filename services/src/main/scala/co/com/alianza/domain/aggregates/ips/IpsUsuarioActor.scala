@@ -10,6 +10,7 @@ import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.domain.aggregates.autenticacion.{ AgregarIp, RemoverIp }
 import co.com.alianza.exceptions.{ BusinessLevel, PersistenceException }
 import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
+import co.com.alianza.infrastructure.dto.Empresa
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.persistence.entities.{ IpsEmpresa, IpsUsuario }
 import co.com.alianza.util.transformers.ValidationT
@@ -21,12 +22,14 @@ import scala.util.{ Failure, Success }
 import scalaz.std.AllInstances._
 import scalaz.{ Failure => zFailure, Success => zSuccess }
 
-class IpsUsuarioActorSupervisor extends Actor with ActorLogging {
+object IpsUsuarioActorSupervisor {
+  def props(sessionActor: ActorRef) = Props(new IpsUsuarioActorSupervisor(sessionActor))
+}
 
-  val ipsUsuarioActor = context.actorOf(
-    Props[IpsUsuarioActor].withRouter(RoundRobinPool(nrOfInstances = 2)),
-    "ipsUsuarioActor"
-  )
+
+class IpsUsuarioActorSupervisor(sessionActor : ActorRef) extends Actor with ActorLogging {
+
+  val ipsUsuarioActor = context.actorOf(IpsUsuarioActor.props(sessionActor).withRouter(RoundRobinPool(nrOfInstances = 2)), "ipsUsuarioActor")
 
   def receive = {
     case message: Any =>
@@ -42,10 +45,15 @@ class IpsUsuarioActorSupervisor extends Actor with ActorLogging {
 
 }
 
+
+object IpsUsuarioActor {
+  def props(sessionActor: ActorRef) = Props(new IpsUsuarioActor(sessionActor))
+}
+
 /**
  * Created by david on 16/06/14.
  */
-class IpsUsuarioActor extends Actor with ActorLogging {
+class IpsUsuarioActor(sessionActor : ActorRef) extends Actor with ActorLogging {
   import context.dispatcher
   implicit val config: Config = context.system.settings.config
   implicit val timeout = Timeout(120.seconds)
@@ -136,7 +144,7 @@ class IpsUsuarioActor extends Actor with ActorLogging {
   }
 
   private def agregarIpSesionEmpresa(empresaId: Int, ip: String) =
-    context.parent ? ObtenerEmpresaSesionActorId(empresaId) map {
+    sessionActor ? ObtenerEmpresaSesionActorId(empresaId) map {
       case Some(empresaSesionActor: ActorRef) =>
         empresaSesionActor ! AgregarIp(ip); zSuccess((): Unit)
       case None => zSuccess((): Unit)
@@ -144,7 +152,7 @@ class IpsUsuarioActor extends Actor with ActorLogging {
     }
 
   private def removerIpSesionEmpresa(empresaId: Int, ip: String) =
-    context.parent ? ObtenerEmpresaSesionActorId(empresaId) map {
+    sessionActor ? ObtenerEmpresaSesionActorId(empresaId) map {
       case Some(empresaSesionActor: ActorRef) =>
         empresaSesionActor ! RemoverIp(ip); zSuccess((): Unit)
       case None => zSuccess((): Unit)

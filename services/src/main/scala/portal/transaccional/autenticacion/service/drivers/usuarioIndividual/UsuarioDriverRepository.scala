@@ -19,11 +19,12 @@ import scala.concurrent.{ ExecutionContext, Future }
 case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: ExecutionContext) extends UsuarioRepository {
 
   def getByIdentificacion(numeroIdentificacion: String): Future[Usuario] = {
+    println("VALIDACION 1")
     usuarioDAO.getByIdentity(numeroIdentificacion) flatMap {
       (usuarioOption: Option[Usuario]) =>
         usuarioOption match {
           case Some(usuario: Usuario) => Future.successful(usuario)
-          case _ => Future.failed(ValidacionException("401.3", "Error usuario no existe"))
+          case ex : Any => println(ex) ; Future.failed(ValidacionException("401.3", "Error usuario no existe"))
         }
     }
   }
@@ -170,7 +171,10 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
    * @return
    */
   def invalidarToken(token: String): Future[Int] = {
-    usuarioDAO.deleteToken(token)
+    usuarioDAO.deleteToken(token) flatMap {
+      case r : Int => Future.successful(r)
+      case _ => Future.failed(ValidacionException("401.9", "No se pudo borrar el token"))
+    }
   }
 
 }

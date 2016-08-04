@@ -27,9 +27,9 @@ case class AutorizacionUsuarioDriverRepository(usuarioRepo: UsuarioRepository, r
   implicit val timeout = Timeout(5.seconds)
 
   def autorizarUrl(token: String, url: String): Future[ValidacionAutorizacion] = {
-    val encriptedToken = AesUtil.encriptarToken(token)
+    val encriptedToken = AesUtil.encriptarToken(token, "AutorizacionUsuarioDriverRepository.autorizarUrl")
     for {
-      validar <- validarToken(encriptedToken)
+      validar <- validarToken(token)
       validarSesion <- Future(actorResponse[SesionActorSupervisor.SesionUsuarioValidada](sessionActor, ValidarSesion(encriptedToken)))
       usuarioOption <- usuarioRepo.getByToken(encriptedToken)
       usuario <- validarUsario(usuarioOption)
@@ -41,7 +41,7 @@ case class AutorizacionUsuarioDriverRepository(usuarioRepo: UsuarioRepository, r
   def invalidarToken(token: String): Future[Int] = {
     for {
       x <- usuarioRepo.invalidarToken(token)
-      _ <- sessionActor ? InvalidarSesion(token)
+      n <- Future { sessionActor ? InvalidarSesion(token) }
     } yield x
   }
 
@@ -52,8 +52,7 @@ case class AutorizacionUsuarioDriverRepository(usuarioRepo: UsuarioRepository, r
     }
   }
 
-  def validarToken(encriptedToken: String): Future[Boolean] = {
-    val token = AesUtil.desencriptarToken(encriptedToken)
+  private def validarToken(token: String): Future[Boolean] = {
     Token.autorizarToken(token) match {
       case true => Future.successful(true)
       case _ => Future.failed(NoAutorizado("Token erróneo"))

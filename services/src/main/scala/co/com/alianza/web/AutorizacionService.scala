@@ -26,7 +26,7 @@ case class AutorizacionService(
             parameters('url, 'ipRemota) {
               (url, ipRemota) =>
                 val tipoCliente = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
-                var encryptedToken = AesUtil.encriptarToken(token)
+                var encryptedToken = AesUtil.encriptarToken(token, "AutorizacionService.validarToken")
                 if (tipoCliente == TiposCliente.agenteEmpresarial.toString)
                   requestExecute(AutorizarUsuarioEmpresarialMessage(encryptedToken, Some(url), ipRemota), autorizacionUsuarioEmpresarialActor)
                 else if (tipoCliente == TiposCliente.clienteAdministrador.toString)
