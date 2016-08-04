@@ -1,14 +1,14 @@
 package portal.transaccional.fiduciaria.autenticacion.storage.daos.ldap
 
 import java.util
-import javax.naming.directory.{ Attributes, SearchControls, SearchResult }
-import javax.naming.ldap.{ InitialLdapContext, LdapContext }
-import javax.naming.{ Context, NamingEnumeration }
+import javax.naming.directory.{Attributes, SearchControls, SearchResult}
+import javax.naming.ldap.{InitialLdapContext, LdapContext}
+import javax.naming.{Context, NamingEnumeration}
 
-import co.com.alianza.commons.enumerations.UserTypesEnumeration
-import co.com.alianza.persistence.entities.User
+import co.com.alianza.commons.enumerations.TiposCliente
+import co.com.alianza.persistence.dto.UsuarioLdapDTO
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 case class AlianzaLdapDAO() extends AlianzaLdapDAOs {
 
@@ -41,17 +41,17 @@ case class AlianzaLdapDAO() extends AlianzaLdapDAOs {
    * @param ctx LDAP context
    * @return A future with an user
    */
-  def getUserInfo(userType: Int, user: String, ctx: LdapContext)(implicit executionContext: ExecutionContext): Future[User] = Future {
+  def getUserInfo(userType: Int, user: String, ctx: LdapContext)(implicit executionContext: ExecutionContext): Future[Option[UsuarioLdapDTO]] = Future {
 
     // SEARCH FILTER
     val filter: String = s"(&(&(objectClass=person)(objectCategory=user))(sAMAccountName=$user))"
 
     // QUERY
-    val searchContext = if (userType == UserTypesEnumeration.fiduciaria.id) "DC=Alianza,DC=com,DC=co" else "DC=alianzavaloresint,DC=com"
+    val searchContext = if (userType == TiposCliente.comercialFiduciaria.id) "DC=Alianza,DC=com,DC=co" else "DC=alianzavaloresint,DC=com"
     val search: NamingEnumeration[SearchResult] = ctx.search(searchContext, filter, getSearchControls)
 
     // USER INSTANCE
-    val userInstance: User = search.hasMore match {
+    val userInstance: Option[UsuarioLdapDTO] = search.hasMore match {
       case true =>
 
         val attrs: Attributes = search.next().getAttributes
@@ -63,9 +63,9 @@ case class AlianzaLdapDAO() extends AlianzaLdapDAOs {
         val upn = attrs.get("userPrincipalName").get.toString
         val sat = attrs.get("sAMAccountType").get.toString
 
-        User(user, Some(sat), Some(dn), Some(sn), Some(gn), None, Some(upn), None, None, None)
+        Some(UsuarioLdapDTO(user, Some(sat), Some(dn), Some(sn), Some(gn), None, Some(upn), None, None, None))
 
-      case false => User(user)
+      case false => None
     }
 
     userInstance
