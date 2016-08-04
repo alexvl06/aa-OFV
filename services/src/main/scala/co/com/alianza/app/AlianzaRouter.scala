@@ -10,7 +10,7 @@ import spray.routing._
 import spray.util.LoggingContext
 import co.com.alianza.web._
 import co.com.alianza.webvalidarPinClienteAdmin.PinService
-import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionEmpresaRepository, AutenticacionRepository }
+import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionComercialRepository, AutenticacionEmpresaRepository, AutenticacionRepository }
 import portal.transaccional.autenticacion.service.drivers.ip.IpRepository
 import portal.transaccional.autenticacion.service.drivers.pregunta.PreguntasAutovalidacionRepository
 import portal.transaccional.autenticacion.service.drivers.respuesta.RespuestaUsuarioRepository
@@ -24,13 +24,14 @@ import portal.transaccional.autenticacion.service.web.ip.IpService
 
 case class AlianzaRouter(
   autenticacionRepo: AutenticacionRepository, autenticacionEmpresaRepositorio: AutenticacionEmpresaRepository,
-  usuarioRepositorio: UsuarioRepository, usuarioAgenteRepositorio: UsuarioEmpresarialRepository,
-  usuarioAdminRepositorio: UsuarioEmpresarialAdminRepository, autorizacionUsuarioRepo: AutorizacionUsuarioRepository,
-  kafkaActor: ActorSelection, preguntasAutovalidacionActor: ActorSelection, usuariosActor: ActorSelection, confrontaActor: ActorSelection,
-  actualizacionActor: ActorSelection, permisoTransaccionalActor: ActorSelection, agenteEmpresarialActor: ActorSelection, pinActor: ActorSelection,
-  pinUsuarioEmpresarialAdminActor: ActorSelection, pinUsuarioAgenteEmpresarialActor: ActorSelection, ipsUsuarioActor: ActorSelection,
-  horarioEmpresaActor: ActorSelection, contrasenasAgenteEmpresarialActor: ActorSelection, contrasenasClienteAdminActor: ActorSelection,
-  contrasenasActor: ActorSelection, autorizacionActorSupervisor: ActorRef, autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository,
+  autenticacionComercialRepositorio: AutenticacionComercialRepository, usuarioRepositorio: UsuarioRepository,
+  usuarioAgenteRepositorio: UsuarioEmpresarialRepository, usuarioAdminRepositorio: UsuarioEmpresarialAdminRepository,
+  autorizacionUsuarioRepo: AutorizacionUsuarioRepository, kafkaActor: ActorSelection, preguntasAutovalidacionActor: ActorSelection,
+  usuariosActor: ActorSelection, confrontaActor: ActorSelection, actualizacionActor: ActorSelection, permisoTransaccionalActor: ActorSelection,
+  agenteEmpresarialActor: ActorSelection, pinActor: ActorSelection, pinUsuarioEmpresarialAdminActor: ActorSelection,
+  pinUsuarioAgenteEmpresarialActor: ActorSelection, ipsUsuarioActor: ActorSelection, horarioEmpresaActor: ActorSelection,
+  contrasenasAgenteEmpresarialActor: ActorSelection, contrasenasClienteAdminActor: ActorSelection, contrasenasActor: ActorSelection,
+  autorizacionActorSupervisor: ActorRef, autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository,
   autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository, preguntasValidacionRepository: PreguntasAutovalidacionRepository,
   respuestaUsuarioRepository: RespuestaUsuarioRepository, respuestaUsuarioAdminRepository: RespuestaUsuarioRepository, ipRepo: IpRepository
 )(implicit val system: ActorSystem) extends HttpServiceActor
@@ -41,7 +42,7 @@ case class AlianzaRouter(
   val routes =
     AutorizacionService(usuarioRepositorio, usuarioAgenteRepositorio, usuarioAdminRepositorio, autorizacionUsuarioRepo, kafkaActor, autorizacionAgenteRepo,
       autorizacionAdminRepo).route ~
-      AutenticacionService(autenticacionRepo, autenticacionEmpresaRepositorio, kafkaActor).route ~
+      AutenticacionService(autenticacionRepo, autenticacionEmpresaRepositorio, autenticacionComercialRepositorio, kafkaActor).route ~
       new ConfrontaService(confrontaActor).route ~
       new EnumeracionService().route ~
       UsuarioService(kafkaActor, usuariosActor).route ~

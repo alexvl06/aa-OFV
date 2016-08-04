@@ -16,9 +16,9 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success }
 
 case class AutenticacionService(
-  autenticacionRepositorio: AutenticacionRepository,
+    autenticacionRepositorio: AutenticacionRepository,
     autenticacionEmpresaRepositorio: AutenticacionEmpresaRepository,
-    /*autenticacionComercialRepositorio: AutenticacionComercialRepository,*/
+    autenticacionComercialRepositorio: AutenticacionComercialRepository,
     kafkaActor: ActorSelection
 )(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
@@ -39,7 +39,7 @@ case class AutenticacionService(
       } ~
       pathPrefix(comercialPath / autenticar) {
         pathEndOrSingleSlash {
-          autenticarUsuarioEmpresarial
+          autenticarUsuarioComercial
         }
       }
   }
@@ -80,37 +80,18 @@ case class AutenticacionService(
     }
   }
 
- /* private def autenticarUsuarioComercial = {
+  private def autenticarUsuarioComercial = {
     post {
-      entity(as[AutenticarUsuarioComercialRequest]) { request =>
-        clientIP { ip =>
-          validate(TiposCliente.contains(request.tipoUsuario), "Invalid user type") {
-            requestUri { uri =>
-              val resultado: Future[String, Any] = if (request.tipoUsuario == TiposCliente.comercialAdmin.id)
-                autenticacionComercialRepositorio.authenticateAdmin(request.user, request.password, ip.value)
-              /*
-                  repository.authenticateAdmin( request.user, request.password, ip.value ).map {
-                    case scalaz.Success( response ) => StatusCodes.Created -> createBasicHalResource( uri.path.toString(), response )
-                    case scalaz.Failure( error )    => StatusCodes.Unauthorized -> createBasicHalErrResource( uri.path.toString(), error )
-                  }*/
-              else
-                autenticacionComercialRepositorio.authenticateLDAP(request.tipoUsuario, request.user, request.password, ip.value)
-              /*
-                  repository.authenticateLDAP( userType, request.user, request.password, ip.value ).map {
-                    case scalaz.Success( response ) => StatusCodes.Created -> createBasicHalResource( uri.path.toString(), response )
-                    case scalaz.Failure( error )    => StatusCodes.Unauthorized -> createBasicHalErrResource( uri.path.toString(), error )
-                  }
-                  */
-              onComplete(resultado) {
-                case Success(value) => complete(value.toString)
-                case Failure(ex) => execution(ex)
-              }
-            }
+      entity(as[AutenticarUsuarioComercialRequest]) {
+        request =>
+          val resultado: Future[String] = autenticacionComercialRepositorio.autenticar(request.usuario, request.tipoUsuario, request.contrasena)
+          onComplete(resultado) {
+            case Success(value) => complete(value.toString)
+            case Failure(ex) => execution(ex)
           }
-        }
       }
     }
-  }*/
+  }
 
   def execution(ex: Any): StandardRoute = {
     ex match {
