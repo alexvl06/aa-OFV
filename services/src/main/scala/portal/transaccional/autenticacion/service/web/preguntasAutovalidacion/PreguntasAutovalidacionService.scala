@@ -11,31 +11,35 @@ import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import spray.http.StatusCodes
 import spray.routing._
 
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
+import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{ Failure, Success }
 
 /**
-  * Created by s4n on 3/08/16.
-  */
-case class PreguntasAutovalidacionService(user: UsuarioAuth, preguntasValidacionRepository: PreguntasAutovalidacionRepository,
-                                          respuestaUsuarioRepository: RespuestaUsuarioRepository,
-                                          respuestaUsuarioAdminRepository: RespuestaUsuarioRepository)
-  (implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
+ * Created by s4n on 3/08/16.
+ */
+case class PreguntasAutovalidacionService(user: UsuarioAuth, preguntasAutoValidacionRepository: PreguntasAutovalidacionRepository,
+    respuestaUsuarioRepository: RespuestaUsuarioRepository,
+    respuestaUsuarioAdminRepository: RespuestaUsuarioRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   val preguntasAutovalidacionPath = "preguntasAutovalidacion"
+  val comprobarPath = "comprobar"
 
-  val route : Route = {
+  val route: Route = {
     path(preguntasAutovalidacionPath) {
       pathEndOrSingleSlash {
         obtenerPreguntasAutovalidacion() ~
-        guardarRespuestas(user)
+          guardarRespuestas(user)
+      }
+    } ~ path(preguntasAutovalidacionPath / comprobarPath) {
+      pathEndOrSingleSlash {
+        obtenerPreguntasComprobar()
       }
     }
   }
 
   private def obtenerPreguntasAutovalidacion() = {
     get {
-      val resultado: Future[Response] = preguntasValidacionRepository.obtenerPreguntas()
+      val resultado: Future[ResponseObtenerPreguntas] = preguntasAutoValidacionRepository.obtenerPreguntas()
       onComplete(resultado) {
         case Success(value) => complete(value)
         case Failure(ex) => execution(ex)
@@ -50,13 +54,24 @@ case class PreguntasAutovalidacionService(user: UsuarioAuth, preguntasValidacion
           val resultado: Future[Option[Int]] = user.tipoCliente match {
             case TiposCliente.clienteIndividual =>
               respuestaUsuarioRepository.guardarRespuestas(user.id, request.respuestas)
-            case TiposCliente.clienteAdministrador      =>
+            case TiposCliente.clienteAdministrador =>
               respuestaUsuarioAdminRepository.guardarRespuestas(user.id, request.respuestas)
           }
           onComplete(resultado) {
             case Success(value) => complete(value.toString)
             case Failure(ex) => execution(ex)
           }
+      }
+    }
+  }
+
+  private def obtenerPreguntasComprobar() = {
+    get {
+      val resultado: Future[ResponseObtenerPreguntasComprobar] =
+        preguntasAutoValidacionRepository.obtenerPreguntasComprobar(user.id, user.tipoCliente)
+      onComplete(resultado) {
+        case Success(value) => complete(value)
+        case Failure(ex) => execution(ex)
       }
     }
   }

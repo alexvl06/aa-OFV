@@ -27,9 +27,9 @@ import portal.transaccional.autenticacion.service.drivers.configuracion.Configur
 import portal.transaccional.autenticacion.service.drivers.empresa.EmpresaDriverRepository
 import portal.transaccional.autenticacion.service.drivers.ipempresa.IpEmpresaDriverRepository
 import portal.transaccional.autenticacion.service.drivers.ipusuario.IpUsuarioDriverRepository
-import portal.transaccional.autenticacion.service.drivers.pregunta.{PreguntasAutovalidacionDriverRepository, PreguntasDriverRepository}
+import portal.transaccional.autenticacion.service.drivers.pregunta.{ PreguntasAutovalidacionDriverRepository, PreguntasDriverRepository }
 import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaDriverRepository
-import portal.transaccional.autenticacion.service.drivers.respuesta.{RespuestaUsuarioAdminDriverRepository, RespuestaUsuarioDriverRepository}
+import portal.transaccional.autenticacion.service.drivers.respuesta.{ RespuestaUsuarioAdminDriverRepository, RespuestaUsuarioDriverRepository }
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioEmpresarialAdminDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioDriverRepository
@@ -148,7 +148,7 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val prguntasRepo: PreguntasDriverRepository =
     PreguntasDriverRepository(preguntaDAO)
   lazy val preguntasValidacionRepository: PreguntasAutovalidacionDriverRepository =
-    PreguntasAutovalidacionDriverRepository(prguntasRepo, configuracionRepo)
+    PreguntasAutovalidacionDriverRepository(prguntasRepo, configuracionRepo, alianzaDAO)
 }
 
 private[app] sealed trait StoragePGAlianzaDB extends BootedCore {

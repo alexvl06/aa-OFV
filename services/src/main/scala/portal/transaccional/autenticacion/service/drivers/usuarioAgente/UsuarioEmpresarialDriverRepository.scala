@@ -23,7 +23,7 @@ case class UsuarioEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs
     usuarioDAO.getByIdentityAndUser(identificacion, usuario)
   }
 
-  def invalidarToken (token : String ) = usuarioDAO.deleteToken(token)
+  def invalidarToken(token: String) = usuarioDAO.deleteToken(token)
 
   /**
    * Asociar el token al usuario

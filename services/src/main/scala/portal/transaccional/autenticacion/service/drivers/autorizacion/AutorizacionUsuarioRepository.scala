@@ -13,6 +13,6 @@ trait AutorizacionUsuarioRepository {
 
   def autorizarUrl(token: String, url: String): Future[ValidacionAutorizacion]
 
-  def invalidarToken (token : String): Future[Int]
+  def invalidarToken(token: String): Future[Int]
 
 }

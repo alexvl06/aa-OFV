@@ -22,4 +22,6 @@ trait AlianzaDAOs {
 
   def getByNitAndUserAdmin(nit: String, usuario: String): Future[Option[UsuarioEmpresarialAdmin]]
 
+  def getIndividualClientQuestions(idUsuario: Int): Future[Seq[PreguntaAutovalidacion]]
+
 }

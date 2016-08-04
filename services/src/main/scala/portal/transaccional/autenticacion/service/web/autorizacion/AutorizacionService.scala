@@ -60,7 +60,7 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
               case admin => usuarioAdminRepository.invalidarToken(token.token)
               case _ => usuarioRepository.invalidarToken(token.token)
               case `agente` => autorizacionAgenteRepo.invalidarToken(token.token)
-              case `admin` =>  autorizacionAdminRepo.invalidarToken(token.token)
+              case `admin` => autorizacionAdminRepo.invalidarToken(token.token)
               case _ => autorizacionRepository.invalidarToken(token.token)
             }
 
@@ -85,7 +85,7 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
 
           val resultado = usuario.tipoCliente match {
             case `agente` => autorizacionAgenteRepo.autorizar(token, url, ipRemota)
-            case `admin` =>  autorizacionAdminRepo.autorizar(token, url, ipRemota)
+            case `admin` => autorizacionAdminRepo.autorizar(token, url, ipRemota)
             case _ => autorizacionRepository.autorizarUrl(token, url)
           }
 
@@ -112,7 +112,7 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
     val nToken = Token.getToken(token).getJWTClaimsSet
 
     val tipoCliente = nToken.getCustomClaim("tipoCliente").toString
-    val nit = if (tipoCliente == individual ) ""  else nToken.getCustomClaim("nit").toString
+    val nit = if (tipoCliente == individual) "" else nToken.getCustomClaim("nit").toString
     val lastIp = nToken.getCustomClaim("ultimaIpIngreso").toString
     val user = nToken.getCustomClaim("nombreUsuario").toString
     val email = nToken.getCustomClaim("correo").toString

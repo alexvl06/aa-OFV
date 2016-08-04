@@ -6,14 +6,15 @@ import co.com.alianza.persistence.entities.RespuestasAutovalidacionUsuario
 import enumerations.ConfiguracionEnum
 import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionRepository
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.RespuestaUsuarioDAOs
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * Created by hernando on 25/07/16.
  */
-case class RespuestaUsuarioDriverRepository(respuestaDAO: RespuestaUsuarioDAOs,
-                                            configuracionRepository: ConfiguracionRepository)
-                                           (implicit val ex: ExecutionContext) extends RespuestaUsuarioRepository {
+case class RespuestaUsuarioDriverRepository(
+  respuestaDAO: RespuestaUsuarioDAOs,
+    configuracionRepository: ConfiguracionRepository
+)(implicit val ex: ExecutionContext) extends RespuestaUsuarioRepository {
 
   def getRespuestasById(idUsuario: Int): Future[Seq[RespuestasAutovalidacionUsuario]] = {
     respuestaDAO.getById(idUsuario)
@@ -25,18 +26,18 @@ case class RespuestaUsuarioDriverRepository(respuestaDAO: RespuestaUsuarioDAOs,
     for {
       configuracion <- configuracionRepository.getConfiguracion(llave)
       validar <- validarParametrizacion(respuestasPersistencia.size, configuracion.valor.toInt)
-      borrar  <- respuestaDAO.delete(idUsuario)
+      borrar <- respuestaDAO.delete(idUsuario)
       guardar <- respuestaDAO.insert(respuestasPersistencia)
-    } yield  guardar
+    } yield guardar
   }
 
   /**
-    * Validaciones correspondiente a que el numero de respuestas sea igual a
-    * el numero de preguntas parametrizadas por el administrador
-    * @param numeroRespuestas
-    * @param numeroRespuestasParametrizadas
-    * @return
-    */
+   * Validaciones correspondiente a que el numero de respuestas sea igual a
+   * el numero de preguntas parametrizadas por el administrador
+   * @param numeroRespuestas
+   * @param numeroRespuestasParametrizadas
+   * @return
+   */
   private def validarParametrizacion(numeroRespuestas: Int, numeroRespuestasParametrizadas: Int): Future[Boolean] = {
     val comparacion = numeroRespuestas == numeroRespuestasParametrizadas
     comparacion match {

@@ -1,15 +1,15 @@
 package co.com.alianza.app
 
-import akka.actor.{ActorLogging, ActorRef, ActorSelection, ActorSystem}
+import akka.actor.{ ActorLogging, ActorRef, ActorSelection, ActorSystem }
 import co.com.alianza.app.handler.CustomRejectionHandler
 import co.com.alianza.infrastructure.security.ServiceAuthorization
-import co.com.alianza.web.empresa.{AdministrarContrasenaEmpresaService, UsuarioEmpresaService}
-import portal.transaccional.autenticacion.service.drivers.autorizacion.{AutorizacionUsuarioEmpresarialAdminRepository, AutorizacionUsuarioEmpresarialRepository, AutorizacionUsuarioRepository}
+import co.com.alianza.web.empresa.{ AdministrarContrasenaEmpresaService, UsuarioEmpresaService }
+import portal.transaccional.autenticacion.service.drivers.autorizacion.{ AutorizacionUsuarioEmpresarialAdminRepository, AutorizacionUsuarioEmpresarialRepository, AutorizacionUsuarioRepository }
 import spray.routing._
 import spray.util.LoggingContext
 import co.com.alianza.web._
 import co.com.alianza.webvalidarPinClienteAdmin.PinService
-import portal.transaccional.autenticacion.service.drivers.autenticacion.{AutenticacionEmpresaRepository, AutenticacionRepository}
+import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionEmpresaRepository, AutenticacionRepository }
 import portal.transaccional.autenticacion.service.drivers.pregunta.PreguntasAutovalidacionRepository
 import portal.transaccional.autenticacion.service.drivers.respuesta.RespuestaUsuarioRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioEmpresarialAdminRepository
@@ -55,8 +55,10 @@ case class AlianzaRouter(
             new AdministrarContrasenaEmpresaService(kafkaActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).secureRouteEmpresa(user) ~
             UsuarioEmpresaService(kafkaActor, agenteEmpresarialActor).secureUserRouteEmpresa(user) ~
             PermisosTransaccionalesService(kafkaActor, permisoTransaccionalActor).route(user) ~
-            portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.PreguntasAutovalidacionService(user,
-              preguntasValidacionRepository,respuestaUsuarioRepository,respuestaUsuarioAdminRepository).route
+            portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.PreguntasAutovalidacionService(
+              user,
+              preguntasValidacionRepository, respuestaUsuarioRepository, respuestaUsuarioAdminRepository
+            ).route
       }
 
   def receive = runRoute(respondWithHeaders(listCrossHeaders) { routes })(
