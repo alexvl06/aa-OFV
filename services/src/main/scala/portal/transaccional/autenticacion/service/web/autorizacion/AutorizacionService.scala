@@ -47,19 +47,18 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
 
   private def invalidarToken = {
     entity(as[InvalidarTokenRequest]) {
-      token =>
+      tokenRequest =>
         delete {
           clientIP { ip =>
-
-            val decryptedToken = AesUtil.desencriptarToken(token.token, "AutorizacionService.invalidarToken")
-            val usuario = getTokenData(decryptedToken)
-
+            val encriptedToken: String = tokenRequest.token
+            val token: String = AesUtil.desencriptarToken(encriptedToken)
+            val usuario = getTokenData(token)
             val resultado = usuario.tipoCliente match {
-              case `agente` => autorizacionAgenteRepo.invalidarToken(decryptedToken)
-              case `admin` => autorizacionAdminRepo.invalidarToken(decryptedToken)
-              case _ => autorizacionRepository.invalidarToken(decryptedToken)
+              case `agente` => autorizacionAgenteRepo.invalidarToken(token, encriptedToken)
+              case `admin` => autorizacionAdminRepo.invalidarToken(token, encriptedToken)
+              case `individual` => autorizacionRepository.invalidarToken(token, encriptedToken)
+              case _ => Future.failed(NoAutorizado("Tipo usuario no existe"))
             }
-
             mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.cierreSesionIndex, ip.value,
               kafkaActor, usuario)) {
               onComplete(resultado) {
@@ -77,12 +76,13 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
       parameters('url, 'ipRemota) {
         (url, ipRemota) =>
           val usuario = getTokenData(token)
+          val encriptedToken = AesUtil.encriptarToken(token)
           val resultado = usuario.tipoCliente match {
-            case `agente` => autorizacionAgenteRepo.autorizar(token, url, ipRemota)
-            case `admin` => autorizacionAdminRepo.autorizar(token, url, ipRemota)
-            case _ => autorizacionRepository.autorizarUrl(token, url)
+            case `agente` => autorizacionAgenteRepo.autorizar(token, encriptedToken, url, ipRemota)
+            case `admin` => autorizacionAdminRepo.autorizar(token, encriptedToken, url, ipRemota)
+            case `individual` => autorizacionRepository.autorizar(token, encriptedToken, url)
+            case _ => Future.failed(NoAutorizado("Tipo usuario no existe"))
           }
-
           onComplete(resultado) {
             case Success(value) => execution(value)
             case Failure(ex) => execution(ex)

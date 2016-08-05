@@ -24,8 +24,7 @@ case class AutorizacionUsuarioDriverRepository(usuarioRepo: UsuarioRepository, r
 
   implicit val timeout = Timeout(5.seconds)
 
-  def autorizarUrl(token: String, url: String): Future[ValidacionAutorizacion] = {
-    val encriptedToken = AesUtil.encriptarToken(token, "AutorizacionUsuarioDriverRepository.autorizarUrl")
+  def autorizar(token: String, encriptedToken: String, url: String): Future[ValidacionAutorizacion] = {
     for {
       validar <- validarToken(token)
       validarSesion <- validarSesion(token)
@@ -36,19 +35,19 @@ case class AutorizacionUsuarioDriverRepository(usuarioRepo: UsuarioRepository, r
     } yield validarRecurso
   }
 
+  def invalidarToken(token: String, encriptedToken: String): Future[Int] = {
+    for {
+      x <- usuarioRepo.invalidarToken(encriptedToken)
+      n <- Future { sesionActor ? InvalidarSesion(token) }
+    } yield x
+  }
+
   private def validarSesion(token: String): Future[Boolean] = {
     val actor: Future[Any] = sesionActor ? ValidarSesion(token)
     actor flatMap {
       case true => Future.successful(true)
       case _ => Future.failed(ValidacionException("403.9", "Error sesión"))
     }
-  }
-
-  def invalidarToken(token: String): Future[Int] = {
-    for {
-      x <- usuarioRepo.invalidarToken(token)
-      n <- Future { sesionActor ? InvalidarSesion(token) }
-    } yield x
   }
 
   private def validarUsario(usuarioOption: Option[Usuario]): Future[Usuario] = {

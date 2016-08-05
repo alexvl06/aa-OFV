@@ -33,24 +33,23 @@ trait ServiceAuthorization {
 
   def authenticateUser: ContextAuthenticator[UsuarioAuth] = {
     ctx =>
-      val token = ctx.request.headers.find(header => header.name equals "token")
+      val tokenRequest = ctx.request.headers.find(header => header.name equals "token")
 
-      log.info(token.toString)
-      if (token.isEmpty) {
+      log.info(tokenRequest.toString)
+      if (tokenRequest.isEmpty) {
         Future(Left(AuthenticationFailedRejection(CredentialsMissing, List())))
       } else {
-        val encriptedToken: String = token.get.value
-        val decryptedToken = AesUtil.desencriptarToken(encriptedToken, "ServiceAuthorization.authenticateUser")
-
-        val tipoCliente: String = Token.getToken(decryptedToken).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
+        val encriptedToken: String = tokenRequest.get.value
+        val token = AesUtil.desencriptarToken(encriptedToken)
+        val tipoCliente: String = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
 
         val futuro =
           if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
-            autorizacionAgenteRepo.autorizar(decryptedToken, "", obtenerIp(ctx).get.value)
+            autorizacionAgenteRepo.autorizar(token, encriptedToken, "", obtenerIp(ctx).get.value)
           } else if (tipoCliente == TiposCliente.clienteAdministrador.toString) {
-            autorizacionAdminRepo.autorizar(decryptedToken, "", obtenerIp(ctx).get.value)
+            autorizacionAdminRepo.autorizar(token, encriptedToken, "", obtenerIp(ctx).get.value)
           } else {
-            autorizacionUsuarioRepo.autorizarUrl(decryptedToken, "")
+            autorizacionUsuarioRepo.autorizar(token, encriptedToken, "")
           }
 
         futuro.map {

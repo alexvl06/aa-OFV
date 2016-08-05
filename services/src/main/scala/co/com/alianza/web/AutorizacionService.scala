@@ -19,6 +19,8 @@ case class AutorizacionService(
     with AlianzaCommons {
 
   def route = {
+    /*
+    //TODO : BORRAR SERVICIO
     path("validarToken" / Segment) {
       token =>
         get {
@@ -26,7 +28,7 @@ case class AutorizacionService(
             parameters('url, 'ipRemota) {
               (url, ipRemota) =>
                 val tipoCliente = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
-                var encryptedToken = AesUtil.encriptarToken(token, "AutorizacionService.validarToken")
+                val encryptedToken = AesUtil.encriptarToken(token, "AutorizacionService.validarToken")
                 if (tipoCliente == TiposCliente.agenteEmpresarial.toString)
                   requestExecute(AutorizarUsuarioEmpresarialMessage(encryptedToken, Some(url), ipRemota), autorizacionUsuarioEmpresarialActor)
                 else if (tipoCliente == TiposCliente.clienteAdministrador.toString)
@@ -36,7 +38,7 @@ case class AutorizacionService(
             }
           }
         }
-    }
+    }*/
   }
 
 }

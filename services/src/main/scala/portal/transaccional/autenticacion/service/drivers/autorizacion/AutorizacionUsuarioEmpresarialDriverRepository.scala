@@ -3,15 +3,13 @@ package portal.transaccional.autenticacion.service.drivers.autorizacion
 import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
-import co.com.alianza.domain.aggregates.autenticacion.SesionActorSupervisor.SesionUsuarioValidada
 import co.com.alianza.domain.aggregates.autenticacion.{ ObtenerEmpresaActor, ObtenerIps }
 import co.com.alianza.exceptions.{ Autorizado, Prohibido, ValidacionAutorizacion, ValidacionException }
 import co.com.alianza.infrastructure.dto.UsuarioEmpresarial
 import co.com.alianza.infrastructure.messages.{ BuscarSesion, InvalidarSesion, ResponseMessage, ValidarSesion }
 import co.com.alianza.persistence.entities.RecursoPerfilAgente
 import co.com.alianza.util.json.JsonUtil
-import co.com.alianza.util.token.{ AesUtil, Token }
-import enumerations.CryptoAesParameters
+import co.com.alianza.util.token.{ Token }
 import enumerations.empresa.EstadosDeEmpresaEnum
 import portal.transaccional.autenticacion.service.drivers.Recurso.RecursoRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.{ DataAccessTranslator, UsuarioEmpresarialRepository }
@@ -29,8 +27,7 @@ case class AutorizacionUsuarioEmpresarialDriverRepository(agenteRepo: UsuarioEmp
 
   implicit val timeout = Timeout(5.seconds)
 
-  def autorizar(token: String, url: String, ip: String): Future[ValidacionAutorizacion] = {
-    val encriptedToken = AesUtil.encriptarToken(token, "AutorizacionUsuarioEmpresarialDriverRepository.autorizar")
+  def autorizar(token: String, encriptedToken: String, url: String, ip: String): Future[ValidacionAutorizacion] = {
     for {
       _ <- validarToken(token)
       _ <- validarSesion(token)
@@ -44,9 +41,9 @@ case class AutorizacionUsuarioEmpresarialDriverRepository(agenteRepo: UsuarioEmp
     } yield result
   }
 
-  def invalidarToken(token: String): Future[Int] = {
+  def invalidarToken(token: String, encriptedToken: String): Future[Int] = {
     for {
-      x <- agenteRepo.invalidarToken(token)
+      x <- agenteRepo.invalidarToken(encriptedToken)
       _ <- Future { sesionActor ? InvalidarSesion(token) }
     } yield x
   }

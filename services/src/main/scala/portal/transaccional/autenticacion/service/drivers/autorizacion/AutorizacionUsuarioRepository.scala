@@ -11,8 +11,8 @@ import scala.concurrent.Future
  */
 trait AutorizacionUsuarioRepository {
 
-  def autorizarUrl(token: String, url: String): Future[ValidacionAutorizacion]
+  def autorizar(token: String, encriptedToken: String, url: String): Future[ValidacionAutorizacion]
 
-  def invalidarToken(token: String): Future[Int]
+  def invalidarToken(token: String, encriptedToken: String): Future[Int]
 
 }

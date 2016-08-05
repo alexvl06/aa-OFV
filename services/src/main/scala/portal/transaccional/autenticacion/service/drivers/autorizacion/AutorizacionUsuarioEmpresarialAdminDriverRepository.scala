@@ -1,19 +1,19 @@
 package portal.transaccional.autenticacion.service.drivers.autorizacion
 
 import akka.actor.ActorRef
-import co.com.alianza.exceptions.{ Autorizado, Prohibido, ValidacionAutorizacion, ValidacionException }
-import co.com.alianza.infrastructure.messages.{ BuscarSesion, InvalidarSesion, ResponseMessage, ValidarSesion }
-import co.com.alianza.util.token.{ AesUtil, Token }
 import akka.pattern.ask
 import akka.util.Timeout
+import co.com.alianza.exceptions.{ Autorizado, Prohibido, ValidacionAutorizacion, ValidacionException }
 import co.com.alianza.infrastructure.dto.UsuarioEmpresarialAdmin
+import co.com.alianza.infrastructure.messages.{ BuscarSesion, InvalidarSesion, ResponseMessage, ValidarSesion }
 import co.com.alianza.persistence.entities.RecursoPerfilClienteAdmin
 import co.com.alianza.util.json.JsonUtil
+import co.com.alianza.util.token.Token
 import enumerations.empresa.EstadosDeEmpresaEnum
 import portal.transaccional.autenticacion.service.drivers.Recurso.RecursoRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.{ DataAccessTranslator, UsuarioEmpresarialAdminRepository }
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.AlianzaDAO
 import spray.http.StatusCodes._
-import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.{ DataAccessTranslator, UsuarioEmpresarialAdminRepository }
 
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
@@ -26,8 +26,7 @@ case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: Usuari
 
   implicit val timeout = Timeout(5.seconds)
 
-  def autorizar(token: String, url: String, ip: String): Future[ValidacionAutorizacion] = {
-    val encriptedToken = AesUtil.encriptarToken(token, "AutorizacionUsuarioEmpresarialAdminDriverRepository.autorizarUrl")
+  def autorizar(token: String, encriptedToken: String, url: String, ip: String): Future[ValidacionAutorizacion] = {
     for {
       _ <- validarToken(token)
       _ <- validarSesion(token)
@@ -39,9 +38,9 @@ case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: Usuari
     } yield result
   }
 
-  def invalidarToken(token: String): Future[Int] = {
+  def invalidarToken(token: String, encriptedToken: String): Future[Int] = {
     for {
-      x <- adminRepo.invalidarToken(token)
+      x <- adminRepo.invalidarToken(encriptedToken)
       _ <- Future { sesionActor ? InvalidarSesion(token) }
     } yield x
   }

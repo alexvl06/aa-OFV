@@ -12,7 +12,7 @@ import co.com.alianza.domain.aggregates.autenticacion.SesionActorSupervisor
 import co.com.alianza.infrastructure.dto.Cliente
 import co.com.alianza.infrastructure.messages.CrearSesionUsuario
 import co.com.alianza.persistence.entities.Usuario
-import co.com.alianza.util.token.Token
+import co.com.alianza.util.token.{ AesUtil, Token }
 import portal.transaccional.autenticacion.service.drivers.cliente.ClienteRepository
 import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionRepository
 import portal.transaccional.autenticacion.service.drivers.ipusuario.IpUsuarioRepository
@@ -66,7 +66,7 @@ case class AutenticacionDriverRepository(usuarioRepo: UsuarioRepository, cliente
       fechaUltimoIngreso <- usuarioRepo.actualizarFechaIngreso(numeroIdentificacion, new Timestamp((new Date).getTime))
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
       token <- generarToken(usuario, cliente, ip, inactividad.valor)
-      asociarToken <- usuarioRepo.actualizarToken(numeroIdentificacion, token)
+      asociarToken <- usuarioRepo.actualizarToken(numeroIdentificacion, AesUtil.encriptarToken(token))
       rsp <- actorResponse[SesionActorSupervisor.SesionUsuarioCreada](sessionActor, CrearSesionUsuario(token, inactividad.valor.toInt))
       respuestas <- respuestasRepo.getRespuestasById(usuario.id.get)
       ips <- ipRepo.getIpsUsuarioById(usuario.id.get)
