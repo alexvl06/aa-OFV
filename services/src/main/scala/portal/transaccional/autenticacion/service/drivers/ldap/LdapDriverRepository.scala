@@ -1,6 +1,6 @@
 package portal.transaccional.autenticacion.service.drivers.ldap
 
-import javax.naming.ldap.{LdapContext, InitialLdapContext}
+import javax.naming.ldap.{ LdapContext, InitialLdapContext }
 
 import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.persistence.dto.UsuarioLdapDTO
@@ -18,7 +18,7 @@ case class LdapDriverRepository(alianzaLdapDAO: AlianzaLdapDAOs)(implicit val ex
     val idRoleDefault: Option[Int] = Some(1)
     val userName = usuario.toLowerCase
     for {
-      context <-  obtenerContexto(usuario, tipoUsuario, password)// Throws naming exception
+      context <- obtenerContexto(usuario, tipoUsuario, password) // Throws naming exception
       usuarioOption <- alianzaLdapDAO.getUserInfo(tipoUsuario, userName, context)
       respuesta <- validarRespuestaLdap(usuarioOption)
     } yield respuesta
@@ -29,7 +29,7 @@ case class LdapDriverRepository(alianzaLdapDAO: AlianzaLdapDAOs)(implicit val ex
       alianzaLdapDAO.getLdapContext(usuario, password, tipoUsuario)
     }
     if (contextTry.isSuccess) Future.successful(contextTry.get)
-    else Future.failed(new ValidacionException("500", "error conexion ldap"))
+    else Future.failed(new ValidacionException("401.1", "Credenciales invalidas"))
   }
 
   private def validarRespuestaLdap(usuarioOption: Option[UsuarioLdapDTO]): Future[UsuarioLdapDTO] = {
