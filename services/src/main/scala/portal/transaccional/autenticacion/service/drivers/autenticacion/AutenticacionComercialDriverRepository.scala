@@ -23,10 +23,12 @@ case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository)(impl
    * @return
    */
   def autenticar(usuario: String, tipoUsuario: Int, contrasena: String): Future[String] = {
+    //TODO: agregar el match por tipo de usuario
     autenticarFiduciaria(usuario, tipoUsuario, contrasena)
   }
 
   def autenticarValores(): Future[String] = {
+    //TODO: Agregar las validaciones
     Future.successful("")
   }
 
@@ -49,6 +51,7 @@ case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository)(impl
   }
 
   def autenticarAdministrador(): Future[String] = {
+    //TODO: Agregar validaciones
     Future.successful("")
   }
 

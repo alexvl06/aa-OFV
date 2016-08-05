@@ -23,7 +23,7 @@ case class AlianzaLdapDAO() extends AlianzaLdapDAOs {
    * @return A future with LDAPContext
    *         Throws javax.naming.NamingException if authentication failed
    */
-  def getLdapContext(username: String, password: String, tipoUsuario: Int)(implicit executionContext: ExecutionContext): Future[LdapContext] = {
+  def getLdapContext(username: String, password: String, tipoUsuario: Int)(implicit executionContext: ExecutionContext): LdapContext = {
     implicit val conf: Config = ConfigApp.conf
     val organization: String = if (tipoUsuario == TiposCliente.comercialFiduciaria.id) "fiduciaria" else "valores"
     val host: String = conf.getString(s"ldap.$organization.host")
@@ -36,11 +36,7 @@ case class AlianzaLdapDAO() extends AlianzaLdapDAOs {
     environment.put(Context.SECURITY_PRINCIPAL, s"$username@$domain")
     environment.put(Context.SECURITY_CREDENTIALS, s"$password")
     // Context
-    val contextTry = Try {
-      new InitialLdapContext(environment, null)
-    }
-    if (contextTry.isFailure) Future.failed(new ValidacionException("500", "error conexion ldap"))
-    else Future.successful(contextTry.get)
+    new InitialLdapContext(environment, null)
   }
 
   /**

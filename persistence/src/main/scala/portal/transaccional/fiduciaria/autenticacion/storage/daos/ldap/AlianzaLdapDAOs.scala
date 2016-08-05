@@ -8,7 +8,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 
 trait AlianzaLdapDAOs {
 
-  def getLdapContext(username: String, password: String, tipoUsuario: Int)(implicit executionContext: ExecutionContext): Future[LdapContext]
+  def getLdapContext(username: String, password: String, tipoUsuario: Int)(implicit executionContext: ExecutionContext): LdapContext
 
   def getUserInfo(userType: Int, user: String, ctx: LdapContext)(implicit executionContext: ExecutionContext): Future[Option[UsuarioLdapDTO]]
 
