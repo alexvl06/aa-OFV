@@ -23,13 +23,9 @@ case class AlianzaLdapDAO() extends AlianzaLdapDAOs {
    */
   def getLdapContext(username: String, password: String, tipoUsuario: Int)(implicit executionContext: ExecutionContext): Future[LdapContext] = Future {
     implicit val conf: Config = ConfigApp.conf
-    println(tipoUsuario)
     val organization: String = if (tipoUsuario == TiposCliente.comercialFiduciaria.id) "fiduciaria" else "valores"
-    println(organization)
     val host: String =  conf.getString(s"ldap.$organization.host")
-    println(host)
     val domain: String = conf.getString(s"ldap.$organization.domain")
-    println(domain)
     // CONNECTION EN  ENVIRONMENT
     val environment = new util.Hashtable[String, String]()
     environment.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory")
@@ -52,7 +48,6 @@ case class AlianzaLdapDAO() extends AlianzaLdapDAOs {
     val filter: String = s"(&(&(objectClass=person)(objectCategory=user))(sAMAccountName=$user))"
     // QUERY
     val searchContext = if (userType == TiposCliente.comercialFiduciaria.id) "DC=Alianza,DC=com,DC=co" else "DC=alianzavaloresint,DC=com"
-    println(searchContext)
     val search: NamingEnumeration[SearchResult] = ctx.search(searchContext, filter, getSearchControls)
     // USER INSTANCE
     val userInstance: Option[UsuarioLdapDTO] = search.hasMore match {
