@@ -6,7 +6,7 @@ import CustomDriver.simple._
 /**
  * Created by s4n on 2016
  */
-case class UsuarioComercial(id: Int, usuario: String ,token: Option[String], ipUltimoIngreso: Option[String], fechaUltimoIngreso: Option[Timestamp])
+case class UsuarioComercial(id: Int, usuario: String, token: Option[String], ipUltimoIngreso: Option[String], fechaUltimoIngreso: Option[Timestamp])
 
 class UsuarioComercialTable(tag: Tag) extends Table[UsuarioComercial](tag, "USUARIO_COMERCIAL") {
   def id = column[Int]("ID", O.PrimaryKey, O.AutoInc)

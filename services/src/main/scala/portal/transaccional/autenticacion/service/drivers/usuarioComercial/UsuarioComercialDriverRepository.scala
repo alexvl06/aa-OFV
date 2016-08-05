@@ -17,7 +17,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * Created by hernando on 25/07/16.
  */
-class UsuarioComercialDriverRepository (usuarioDAO: UsuarioComercialDAOs)(implicit val ex: ExecutionContext) extends UsuarioComercialRepository {
+case class UsuarioComercialDriverRepository(usuarioDAO: UsuarioComercialDAOs)(implicit val ex: ExecutionContext) extends UsuarioComercialRepository {
 
   def getByUser(usuario: String): Future[UsuarioComercial] = {
     usuarioDAO.getByUser(usuario) flatMap {
@@ -92,7 +92,7 @@ class UsuarioComercialDriverRepository (usuarioDAO: UsuarioComercialDAOs)(implic
    * @param contrasenaValida Es la contraseña del usuario traida desde el LDAP , para verificar la coincidencia con la contraseña Ingresada
    * @return
    */
-  def validarContrasena(contrasenaIngresada: String, usuario: UsuarioComercial, contrasenaValida : String): Future[Boolean] = {
+  def validarContrasena(contrasenaIngresada: String, usuario: UsuarioComercial, contrasenaValida: String): Future[Boolean] = {
     val hash = Crypto.hashSha512(contrasenaIngresada.concat(AppendPasswordUser.appendUsuariosFiducia), usuario.id)
     if (hash.contentEquals(contrasenaValida)) {
       Future.successful(true)

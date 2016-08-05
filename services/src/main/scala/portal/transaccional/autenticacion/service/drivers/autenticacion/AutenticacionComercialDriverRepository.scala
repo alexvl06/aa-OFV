@@ -3,6 +3,7 @@ package portal.transaccional.autenticacion.service.drivers.autenticacion
 import java.util.Date
 
 import co.com.alianza.commons.enumerations.TiposCliente
+import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.infrastructure.dto.Cliente
 import co.com.alianza.persistence.dto.UsuarioLdapDTO
 import co.com.alianza.persistence.entities.{ Usuario, UsuarioComercial }
@@ -12,7 +13,7 @@ import portal.transaccional.autenticacion.service.drivers.usuarioComercial.Usuar
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository, usuarioComercialRepo: UsuarioComercialRepository)(implicit val ex: ExecutionContext) {
+case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository, usuarioComercialRepo: UsuarioComercialRepository)(implicit val ex: ExecutionContext) extends AutenticacionComercialRepository {
 
   /**
    * Redirigir a la autenticacion correspondiente
@@ -22,18 +23,12 @@ case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository, usua
    * @param contrasena
    * @return
    */
-  def autenticar(usuario: String, tipoUsuario: Int, contrasena: String): Future[String] = {
-    //TODO: agregar el match por tipo de usuario
-    autenticarFiduciaria(usuario, tipoUsuario, contrasena)
-  }
-
-  def autenticarValores(usuario: String, tipoUsuario: Int, password: String): Future[String] = {
-    for {
-      cliente <- ldapRepo.autenticarLdap(usuario, tipoUsuario, password)
-      usuario <- usuarioComercialRepo.getByUser(cliente.usuario)
-      token <- generarTokenComercial(cliente, "ip", "100")
-    } yield token
-
+  def autenticar(usuario: String, tipoUsuario: Int, contrasena: String, ip: String): Future[String] = {
+    val administrador = TiposCliente.comercialAdmin.id
+    tipoUsuario match {
+      case `administrador` => autenticarAdministrador()
+      case _ => autenticarComercial(usuario, tipoUsuario, contrasena, ip)
+    }
   }
 
   /**
@@ -46,17 +41,17 @@ case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository, usua
    * - asociar token
    * - crear session de usuario
    */
-  def autenticarFiduciaria(usuario: String, tipoUsuario: Int, password: String): Future[String] = {
+  def autenticarComercial(usuario: String, tipoUsuario: Int, password: String, ip: String): Future[String] = {
     for {
       cliente <- ldapRepo.autenticarLdap(usuario, tipoUsuario, password)
       usuario <- usuarioComercialRepo.getByUser(cliente.usuario)
-      token <- generarTokenComercial(cliente, "ip", "100")
+      token <- generarTokenComercial(cliente, tipoUsuario, ip, "100")
     } yield token
   }
 
   def autenticarAdministrador(): Future[String] = {
     //TODO: Agregar validaciones
-    Future.successful("")
+    Future.failed(ValidacionException("401.2", "Error login admin comercial no implementado"))
   }
 
   /**
@@ -66,8 +61,15 @@ case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository, usua
    * @param inactividad
    * @return
    */
-  private def generarTokenComercial(cliente: UsuarioLdapDTO, ip: String, inactividad: String): Future[String] = Future {
-    Token.generarToken(cliente.nombre, cliente.identificacion.get, "", ip, new Date(System.currentTimeMillis()), inactividad, TiposCliente.comercialFiduciaria)
+  private def generarTokenComercial(cliente: UsuarioLdapDTO, tipoUsuario: Int, ip: String, inactividad: String): Future[String] = Future {
+    val fiduciaria = TiposCliente.comercialFiduciaria.id
+    val tipoCliente = {
+      tipoUsuario match {
+        case `fiduciaria` => TiposCliente.comercialFiduciaria
+        case _ => TiposCliente.comercialValores
+      }
+    }
+    Token.generarToken(cliente.nombre, cliente.identificacion.get, "", ip, new Date(System.currentTimeMillis()), inactividad, tipoCliente)
   }
 
   /**

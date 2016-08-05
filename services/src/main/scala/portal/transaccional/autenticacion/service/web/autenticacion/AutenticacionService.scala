@@ -85,10 +85,14 @@ case class AutenticacionService(
     post {
       entity(as[AutenticarUsuarioComercialRequest]) {
         request =>
-          val resultado: Future[String] = autenticacionComercialRepositorio.autenticar(request.usuario, request.tipoUsuario, request.contrasena)
-          onComplete(resultado) {
-            case Success(token) => encriptarToken(token)
-            case Failure(ex) => execution(ex)
+          clientIP { ip =>
+            val resultado: Future[String] = autenticacionComercialRepositorio.autenticar(request.usuario, request.tipoUsuario, request.contrasena, ip.value)
+            onComplete(resultado) {
+              case Success(token) =>
+                println(token)
+                encriptarToken(token)
+              case Failure(ex) => execution(ex)
+            }
           }
       }
     }

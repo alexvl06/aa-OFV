@@ -23,7 +23,7 @@ trait UsuarioComercialRepository {
 
   def validarEstado(estado: Int): Future[Boolean]
 
-  def validarContrasena(contrasenaIngresada: String, usuario: UsuarioComercial, contrasenaValida : String): Future[Boolean]
+  def validarContrasena(contrasenaIngresada: String, usuario: UsuarioComercial, contrasenaValida: String): Future[Boolean]
 
   def invalidarToken(token: String): Future[Int]
 

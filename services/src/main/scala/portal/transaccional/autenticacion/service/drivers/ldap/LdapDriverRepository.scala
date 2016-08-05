@@ -36,7 +36,8 @@ case class LdapDriverRepository(alianzaLdapDAO: AlianzaLdapDAOs)(implicit val ex
 
   private def validarRespuestaLdap(usuarioOption: Option[UsuarioLdapDTO]): Future[UsuarioLdapDTO] = {
     usuarioOption match {
-      case Some(usuario) => println("USUARIO : ", usuario) ; Future.successful(usuario)
+      case Some(usuario) =>
+        println("USUARIO : ", usuario); Future.successful(usuario)
       case None => Future.failed(ValidacionException("401.2", "Error Cliente Alianza"))
     }
   }

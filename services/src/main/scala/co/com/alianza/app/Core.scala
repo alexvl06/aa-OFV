@@ -34,6 +34,7 @@ import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasena
 import portal.transaccional.autenticacion.service.drivers.respuesta.{ RespuestaUsuarioAdminDriverRepository, RespuestaUsuarioDriverRepository }
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioEmpresarialAdminDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialDriverRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioComercial.UsuarioComercialDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioDriverRepository
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.core.ClienteDAO
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.ldap.AlianzaLdapDAO
@@ -126,6 +127,7 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val configuracionRepo = ConfiguracionDriverRepository(configuracionDAO)
   lazy val reglaContrasenaRepo = ReglaContrasenaDriverRepository(reglaContrasenaDAO)
   lazy val usuarioAgenteRepo = UsuarioEmpresarialDriverRepository(usuarioAgenteDAO)
+  lazy val usuarioComercialRepo = UsuarioComercialDriverRepository(usuarioComercialDAO)
   lazy val respuestaUsuarioRepo = RespuestaUsuarioDriverRepository(respuestaUsuarioDAO, configuracionRepo)
   lazy val usuarioAdminRepo = UsuarioEmpresarialAdminDriverRepository(usuarioAdminDAO)
   lazy val respuestaUsuariAdminoRepo = RespuestaUsuarioAdminDriverRepository(respuestaUsuarioAdminDAO, configuracionRepo)
@@ -137,7 +139,7 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val autenticacionEmpresaRepo = AutenticacionEmpresaDriverRepository(usuarioAgenteRepo, usuarioAdminRepo, clienteRepo, empresaRepo, reglaContrasenaRepo,
     configuracionRepo, ipEmpresaRepo, sessionActor, respuestaUsuariAdminoRepo)
 
-  lazy val autenticacionComercialRepo = AutenticacionComercialDriverRepository(ldapRepo, )
+  lazy val autenticacionComercialRepo = AutenticacionComercialDriverRepository(ldapRepo, usuarioComercialRepo)
 
   lazy val autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialDriverRepository = AutorizacionUsuarioEmpresarialDriverRepository(
     usuarioAgenteRepo, alianzaDAO, sessionActor: ActorRef, recursoRepo
