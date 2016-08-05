@@ -3,6 +3,7 @@ package portal.transaccional.fiduciaria.autenticacion.storage.daos.portal
 import java.sql.Timestamp
 
 import co.com.alianza.persistence.entities.UsuarioComercialAdmin
+import enumerations.EstadosEmpresaEnum
 
 import scala.concurrent.Future
 
@@ -16,8 +17,6 @@ trait UsuarioComercialAdminDAOs {
   def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[UsuarioComercialAdmin]]
 
   def getByNit(nitEmpresa: String): Future[Boolean]
-
-  def updateIncorrectEntries(idUsuario: Int, numeroIntentos: Int): Future[Int]
 
   def updateLastIp(idUsuario: Int, ipActual: String): Future[Int]
 

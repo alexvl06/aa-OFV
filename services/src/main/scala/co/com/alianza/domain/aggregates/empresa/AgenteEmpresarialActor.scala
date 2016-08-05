@@ -90,9 +90,9 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with FutureResponse
       guardarPin <- ValidationT(toErrorValidation(DataAccessAdapter.crearPinEmpresaAgenteEmpresarial(DataAccessTranslator.translateEntityPinEmpresa(pinUsuario))))
       envioCorreo <- ValidationT(enviarCorreoPin(pinUsuario, confTiempo: Configuracion, plantilla, asunto, message.usuario, message.correo))
     } yield {
-      idAgente
+      envioCorreo
     }).run
-    resolveFutureValidation(future, (response: Int) => ResponseMessage(Created, response.toString), errorValidacion, currentSender)
+    resolveFutureValidation(future, (response: Int) => response.toJson, errorValidacion, currentSender)
   }
 
   /**

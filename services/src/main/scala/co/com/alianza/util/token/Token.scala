@@ -9,7 +9,7 @@ import com.nimbusds.jose._
 import com.nimbusds.jose.crypto.{ MACSigner, MACVerifier }
 import com.nimbusds.jose.util.Base64URL
 import com.nimbusds.jwt.{ JWTClaimsSet, SignedJWT }
-import enumerations.{ AppendPasswordUser, CryptoAesParameters }
+import enumerations.AppendPasswordUser
 import org.joda.time.DateTime
 
 import scala.collection.JavaConversions._
@@ -23,17 +23,14 @@ object Token {
   private val TIPO_IDENTIFICACION_DATA_NAME = "tipoIdentificacion"
   private val ULTIMA_IP_INGRESO_DATA_NAME = "ultimaIpIngreso"
   private val ULTIMA_FECHA_INGRESO_DATA_NAME = "ultimaFechaIngreso"
+  private val TIPO_CLIENTE = "tipoCliente"
+  private val EXPIRACION_INACTIVIDAD = "expiracionInactividad"
 
   def generarToken(nombreUsuarioLogueado: String, correoUsuarioLogueado: String, tipoIdentificacion: String,
     ultimaIpIngreso: String, ultimaFechaIngreso: Date, expiracionInactividad: String,
     tipoCliente: TiposCliente.TiposCliente = TiposCliente.clienteIndividual, nit: Option[String] = None): String = {
 
-    val claimsSet = new JWTClaimsSet()
-    claimsSet.setIssueTime(new Date())
-    claimsSet.setNotBeforeTime(new Date())
-    claimsSet.setExpirationTime(new DateTime().plus(1800000).toDate)
-    claimsSet.setIssuer(ISSUER)
-
+    val claimsSet: JWTClaimsSet = getClaimSet()
     val formater = new java.text.SimpleDateFormat("dd MMMM, yyyy 'a las' hh:mm a", new java.util.Locale("es", "ES"))
 
     val customDataBase = Map(
@@ -42,8 +39,8 @@ object Token {
       TIPO_IDENTIFICACION_DATA_NAME -> tipoIdentificacion,
       ULTIMA_IP_INGRESO_DATA_NAME -> ultimaIpIngreso,
       ULTIMA_FECHA_INGRESO_DATA_NAME -> formater.format(ultimaFechaIngreso),
-      "tipoCliente" -> tipoCliente.toString,
-      "expiracionInactividad" -> expiracionInactividad
+      TIPO_CLIENTE -> tipoCliente.toString,
+      EXPIRACION_INACTIVIDAD -> expiracionInactividad
     )
 
     val empresarialesData = nit match {
@@ -58,7 +55,7 @@ object Token {
     val signedJWT = new SignedJWT(new JWSHeader(JWSHeader.parse(Base64URL.encode(headersJWT))), claimsSet)
     val signer: MACSigner = new MACSigner(SIGNING_KEY)
     signedJWT.sign(signer)
-    AesUtil.encriptarToken(signedJWT.serialize(), "Token.generarToken")
+    signedJWT.serialize()
   }
 
   def generarTokenCaducidadContrasena(tipoUsuario: TiposCliente, idUsuario: Int) = {
@@ -85,18 +82,14 @@ object Token {
     SignedJWT.parse(token)
   }
 
-  private def getClaim(token: String, value: String): String = {
-    val elements: SignedJWT = Token.getToken(token)
-    val claimSet = elements.getJWTClaimsSet()
-    claimSet.getStringClaim(value)
-  }
-
   def autorizarToken(token: String): Boolean = {
     try {
       val signedJWT2 = SignedJWT.parse(token)
       validarToken(signedJWT2)
     } catch {
-      case ex: Exception => ex.printStackTrace(); false
+      case ex: Exception =>
+        ex.printStackTrace()
+        false
     }
   }
 
@@ -113,6 +106,21 @@ object Token {
     val expirationTime = signedJWT2.getJWTClaimsSet.getExpirationTime
     val now = new Date()
     expirationTime.after(now)
+  }
+
+  private def getClaimSet(): JWTClaimsSet = {
+    val claimsSet = new JWTClaimsSet()
+    claimsSet.setIssueTime(new Date())
+    claimsSet.setNotBeforeTime(new Date())
+    claimsSet.setExpirationTime(new DateTime().plus(1800000).toDate)
+    claimsSet.setIssuer(ISSUER)
+    claimsSet
+  }
+
+  private def getClaim(token: String, value: String): String = {
+    val elements: SignedJWT = Token.getToken(token)
+    val claimSet = elements.getJWTClaimsSet()
+    claimSet.getStringClaim(value)
   }
 
 }

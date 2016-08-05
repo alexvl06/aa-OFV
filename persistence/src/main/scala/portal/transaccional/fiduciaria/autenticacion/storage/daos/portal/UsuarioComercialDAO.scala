@@ -36,10 +36,6 @@ case class UsuarioComercialDAO()(implicit dcConfig: DBConfig) extends TableQuery
     run(this.filter(_.correo === correo).result.headOption)
   }
 
-  def getByPassword(pw_actual: String, idUsuario: Int): Future[Option[UsuarioComercial]] = {
-    run(this.filter(x => x.contrasena === pw_actual && x.id === idUsuario).result.headOption)
-  }
-
   def create(usuario: UsuarioComercial): Future[Int] = {
     run((this returning this.map(_.id)) += usuario)
   }
@@ -50,14 +46,6 @@ case class UsuarioComercialDAO()(implicit dcConfig: DBConfig) extends TableQuery
 
   def deleteToken(token: String): Future[Int] = {
     run(this.filter(_.token === token).map(_.token).update(Some(null)))
-  }
-
-  def updateIncorrectEntries(numeroIdentificacion: String, numeroIntentos: Int): Future[Int] = {
-    run(this.filter(_.identificacion === numeroIdentificacion).map(_.numeroIngresosErroneos).update(numeroIntentos))
-  }
-
-  def updateIncorrectEntries(idUsuario: Int, numeroIntentos: Int): Future[Int] = {
-    run(this.filter(_.id === idUsuario).map(_.numeroIngresosErroneos).update(numeroIntentos))
   }
 
   def updateLastIp(numeroIdentificacion: String, ipActual: String): Future[Int] = {
@@ -74,9 +62,5 @@ case class UsuarioComercialDAO()(implicit dcConfig: DBConfig) extends TableQuery
 
   def updateStateById(idUsuario: Int, estado: Int): Future[Int] = {
     run(this.filter(_.id === idUsuario).map(_.estado).update(estado))
-  }
-
-  def updatePassword(idUsuario: Int, password: String): Future[Int] = {
-    run(this.filter(_.id === idUsuario).map(_.contrasena).update(password))
   }
 }

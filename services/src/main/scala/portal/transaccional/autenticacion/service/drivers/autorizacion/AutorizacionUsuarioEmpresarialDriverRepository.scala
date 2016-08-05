@@ -33,8 +33,8 @@ case class AutorizacionUsuarioEmpresarialDriverRepository(agenteRepo: UsuarioEmp
     val encriptedToken = AesUtil.encriptarToken(token, "AutorizacionUsuarioEmpresarialDriverRepository.autorizar")
     for {
       _ <- validarToken(token)
-      _ <- Future { (sesionActor ? ValidarSesion(encriptedToken)).mapTo[SesionUsuarioValidada] }
-      sesion <- obtieneSesion(encriptedToken)
+      _ <- validarSesion(token)
+      sesion <- obtienerSesion(token)
       agenteEstado <- alianzaDAO.getByTokenAgente(encriptedToken)
       _ <- validarEstadoEmpresa(agenteEstado._2)
       ips <- obtenerIps(sesion)
@@ -58,12 +58,19 @@ case class AutorizacionUsuarioEmpresarialDriverRepository(agenteRepo: UsuarioEmp
     }
   }
 
-  private def obtieneSesion(token: String) = {
-    val actor: Future[Any] = sesionActor ? BuscarSesion(token)
+  private def validarSesion(encriptedToken: String): Future[Boolean] = {
+    val actor: Future[Any] = sesionActor ? ValidarSesion(encriptedToken)
+    actor flatMap {
+      case true => Future.successful(true)
+      case _ => Future.failed(ValidacionException("403.9", "Error sesión"))
+    }
+  }
+
+  private def obtienerSesion(encriptedToken: String) = {
+    val actor: Future[Any] = sesionActor ? BuscarSesion(encriptedToken)
     actor flatMap {
       case Some(sesionActor: ActorRef) => Future.successful(sesionActor)
-      case None => Future.failed(ValidacionException("403.9", "Error sesión"))
-      case _ => Future.failed(ValidacionException("403.9", "SE JODIO TODO"))
+      case _ => Future.failed(ValidacionException("403.9", "Error sesión"))
     }
   }
 
