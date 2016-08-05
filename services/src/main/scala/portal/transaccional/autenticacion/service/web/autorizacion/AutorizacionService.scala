@@ -55,9 +55,9 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
             val usuario = getTokenData(decryptedToken)
 
             val resultado = usuario.tipoCliente match {
-              case `agente` => autorizacionAgenteRepo.invalidarToken(token.token)
-              case `admin` => autorizacionAdminRepo.invalidarToken(token.token)
-              case _ => autorizacionRepository.invalidarToken(token.token)
+              case `agente` => autorizacionAgenteRepo.invalidarToken(decryptedToken)
+              case `admin` => autorizacionAdminRepo.invalidarToken(decryptedToken)
+              case _ => autorizacionRepository.invalidarToken(decryptedToken)
             }
 
             mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.cierreSesionIndex, ip.value,
@@ -76,9 +76,7 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
     get {
       parameters('url, 'ipRemota) {
         (url, ipRemota) =>
-
           val usuario = getTokenData(token)
-
           val resultado = usuario.tipoCliente match {
             case `agente` => autorizacionAgenteRepo.autorizar(token, url, ipRemota)
             case `admin` => autorizacionAdminRepo.autorizar(token, url, ipRemota)
@@ -98,13 +96,13 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
       case value: Autorizado => complete((StatusCodes.OK, value.usuario))
       case value: Prohibido => complete((StatusCodes.Forbidden, value.usuario))
       case ex: NoAutorizado => complete((StatusCodes.Unauthorized, ex))
+      case ex: ValidacionException => complete((StatusCodes.Unauthorized, "sdf"))
       case ex: PersistenceException => complete((StatusCodes.InternalServerError, "Error inesperado"))
-      case ex: Throwable => complete((StatusCodes.InternalServerError, "Error inesperado"))
+      case ex: Throwable => complete((StatusCodes.Unauthorized, "Error inesperado"))
     }
   }
 
   private def getTokenData(token: String): AuditityUser = {
-
     val nToken = Token.getToken(token).getJWTClaimsSet
     val tipoCliente = nToken.getCustomClaim("tipoCliente").toString
     val nit = if (tipoCliente == individual) "" else nToken.getCustomClaim("nit").toString
@@ -113,7 +111,6 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
     val email = nToken.getCustomClaim("correo").toString
     val lastEntry = nToken.getCustomClaim("ultimaFechaIngreso").toString
     val nitType = nToken.getCustomClaim("tipoIdentificacion").toString
-
     AuditityUser(email, nit, nitType, user, lastIp, lastEntry, tipoCliente)
   }
 

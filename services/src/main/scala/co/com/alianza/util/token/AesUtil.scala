@@ -10,16 +10,16 @@ object AesUtil {
   private val aes = new Aes(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
 
   def encriptarToken(token: String, nombreClase: String): String = {
-    println("1. TOKEN DESENCRIPTADO", token, nombreClase)
+    //println("1. TOKEN DESENCRIPTADO", token, nombreClase)
     val n = aes.encrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
-    println("2. TOKEN ENCRIPTADO", n)
+    //println("2. TOKEN ENCRIPTADO", n)
     n
   }
 
   def desencriptarToken(encriptedToken: String, nombreClase: String): String = {
-    println("3. TOKEN ENCRIPTADO", encriptedToken, nombreClase)
+    //println("3. TOKEN ENCRIPTADO", encriptedToken, nombreClase)
     val n = aes.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, encriptedToken)
-    println("4. TOKEN DESENCRIPTADO", n)
+    //println("4. TOKEN DESENCRIPTADO", n)
     n
   }
 
