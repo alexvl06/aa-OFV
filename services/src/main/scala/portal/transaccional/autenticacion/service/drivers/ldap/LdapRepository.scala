@@ -1,5 +1,7 @@
 package portal.transaccional.autenticacion.service.drivers.ldap
 
+import co.com.alianza.persistence.dto.UsuarioLdapDTO
+
 import scala.concurrent.Future
 
 /**
@@ -7,6 +9,6 @@ import scala.concurrent.Future
  */
 trait LdapRepository {
 
-  def autenticarLdap(usuario: String, tipoUsuario: Int, password: String): Future[Boolean]
+  def autenticarLdap(usuario: String, tipoUsuario: Int, password: String): Future[UsuarioLdapDTO]
 
 }

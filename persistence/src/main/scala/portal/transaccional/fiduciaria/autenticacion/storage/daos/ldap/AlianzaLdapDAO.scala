@@ -1,9 +1,9 @@
 package portal.transaccional.fiduciaria.autenticacion.storage.daos.ldap
 
 import java.util
-import javax.naming.directory.{Attributes, SearchControls, SearchResult}
-import javax.naming.ldap.{InitialLdapContext, LdapContext}
-import javax.naming.{Context, NamingEnumeration}
+import javax.naming.directory.{ Attributes, SearchControls, SearchResult }
+import javax.naming.ldap.{ InitialLdapContext, LdapContext }
+import javax.naming.{ Context, NamingEnumeration }
 
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.exceptions.ValidacionException
@@ -11,7 +11,7 @@ import co.com.alianza.persistence.dto.UsuarioLdapDTO
 import co.com.alianza.util.ConfigApp
 import com.typesafe.config.Config
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 
 case class AlianzaLdapDAO() extends AlianzaLdapDAOs {
@@ -26,7 +26,7 @@ case class AlianzaLdapDAO() extends AlianzaLdapDAOs {
   def getLdapContext(username: String, password: String, tipoUsuario: Int)(implicit executionContext: ExecutionContext): Future[LdapContext] = {
     implicit val conf: Config = ConfigApp.conf
     val organization: String = if (tipoUsuario == TiposCliente.comercialFiduciaria.id) "fiduciaria" else "valores"
-    val host: String =  conf.getString(s"ldap.$organization.host")
+    val host: String = conf.getString(s"ldap.$organization.host")
     val domain: String = conf.getString(s"ldap.$organization.domain")
     // CONNECTION EN  ENVIRONMENT
     val environment = new util.Hashtable[String, String]()
@@ -36,10 +36,10 @@ case class AlianzaLdapDAO() extends AlianzaLdapDAOs {
     environment.put(Context.SECURITY_PRINCIPAL, s"$username@$domain")
     environment.put(Context.SECURITY_CREDENTIALS, s"$password")
     // Context
-    val contextTry = Try{
+    val contextTry = Try {
       new InitialLdapContext(environment, null)
     }
-    if(contextTry.isFailure)Future.failed(new ValidacionException("500", "error conexion ldap"))
+    if (contextTry.isFailure) Future.failed(new ValidacionException("500", "error conexion ldap"))
     else Future.successful(contextTry.get)
   }
 
@@ -65,7 +65,7 @@ case class AlianzaLdapDAO() extends AlianzaLdapDAOs {
         //        val mof = attrs.get( "memberOf" ).get.toString
         val upn = attrs.get("userPrincipalName").get.toString
         val sat = attrs.get("sAMAccountType").get.toString
-        Some(UsuarioLdapDTO(user, Some(sat), Some(dn), Some(sn), Some(gn), None, Some(upn), None, None, None))
+        Some(UsuarioLdapDTO(user, Some(sat), Some(dn), Some(sn), Some(gn), None, upn, None, None, None))
 
       case false => None
     }

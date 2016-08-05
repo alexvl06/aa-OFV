@@ -120,8 +120,10 @@ class UsuariosActor extends Actor with ActorLogging {
       //Se obtiene el usuario dado el perfil que llegue de presentacion, en caso de perfil no correcto se devuelve excepcion
       val futureConsultaUsuarios: Future[Validation[PersistenceException, Option[Any]]] = message.perfilCliente match {
         case 1 => co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerUsuarioNumeroIdentificacion(message.identificacion)
-        case 2 => co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtieneUsuarioEmpresarialAdminPorNitYUsuario(message.identificacion,
-          message.usuarioClienteAdmin.get)
+        case 2 => co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtieneUsuarioEmpresarialAdminPorNitYUsuario(
+          message.identificacion,
+          message.usuarioClienteAdmin.get
+        )
         case _ => Future.successful(Validation.failure(PersistenceException(new Exception, BusinessLevel,
           "El perfil del usuario no es soportado por la aplicacion")))
       }
@@ -297,8 +299,10 @@ class UsuariosActor extends Actor with ActorLogging {
                   case zSuccess(intResult) =>
                     pin match {
                       case pinUsuarioDto @ PinUsuario(param1, param2, param3, param4, param5) =>
-                        new SmtpServiceClient()(context.system).send(buildMessage(pinUsuarioDto, responseConf.valor.toInt, UsuarioMessage(correoCliente,
-                          identificacion, tipoIdentificacion, null, false, None), template, asunto), (_, _) => Unit)
+                        new SmtpServiceClient()(context.system).send(buildMessage(pinUsuarioDto, responseConf.valor.toInt, UsuarioMessage(
+                          correoCliente,
+                          identificacion, tipoIdentificacion, null, false, None
+                        ), template, asunto), (_, _) => Unit)
                         currentSender ! ResponseMessage(Created)
 
                       case pinUsuarioEmpresarialAdminDto @ PinUsuarioEmpresarialAdmin(param1, param2, param3, param4, param5) =>

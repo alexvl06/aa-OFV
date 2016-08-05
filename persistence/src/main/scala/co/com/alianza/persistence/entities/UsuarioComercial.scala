@@ -19,6 +19,8 @@ class UsuarioComercialTable(tag: Tag) extends Table[UsuarioComercial](tag, "USUA
   def ipUltimoIngreso = column[Option[String]]("IP_ULTIMO_INGRESO")
   def fechaUltimoIngreso = column[Option[Timestamp]]("FECHA_ULTIMO_INGRESO")
 
-  def * = (id, correo, identificacion, tipoIdentificacion, estado, token, ipUltimoIngreso, fechaUltimoIngreso) <> (UsuarioComercial.tupled,
-    UsuarioComercial.unapply)
+  def * = (id, correo, identificacion, tipoIdentificacion, estado, token, ipUltimoIngreso, fechaUltimoIngreso) <> (
+    UsuarioComercial.tupled,
+    UsuarioComercial.unapply
+  )
 }
