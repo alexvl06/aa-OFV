@@ -2,26 +2,26 @@ package portal.transaccional.fiduciaria.autenticacion.storage.daos.portal
 
 import java.sql.Timestamp
 
-import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.persistence.config.DBConfig
-import co.com.alianza.persistence.entities.{ UsuarioEmpresarialAdmin, UsuarioEmpresarialAdminTable }
+import co.com.alianza.persistence.entities.{ UsuarioComercialAdmin, UsuarioComercialAdminTable }
 import enumerations.EstadosEmpresaEnum
 import slick.lifted.TableQuery
 
 import scala.concurrent.Future
-import scalaz.Validation
 
-case class UsuarioEmpresarialAdminDAO()(implicit dcConfig: DBConfig) extends TableQuery(new UsuarioEmpresarialAdminTable(_))
-    with UsuarioEmpresarialAdminDAOs {
+/**
+ * Created by s4n on 2016
+ */
+case class UsuarioComercialAdminDAO ()(implicit dcConfig: DBConfig)  extends TableQuery(new UsuarioComercialAdminTable(_)) with UsuarioComercialAdminDAOs{
 
   import dcConfig.db._
   import dcConfig.profile.api._
 
-  def getById(idUsuario: Int): Future[Option[UsuarioEmpresarialAdmin]] = {
+  def getById(idUsuario: Int): Future[Option[UsuarioComercialAdmin]] = {
     run(this.filter(_.id === idUsuario).result.headOption)
   }
 
-  def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[UsuarioEmpresarialAdmin]] = {
+  def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[UsuarioComercialAdmin]] = {
     run(this.filter(u => u.identificacion === identificacion && u.usuario === usuario).result.headOption)
   }
 
