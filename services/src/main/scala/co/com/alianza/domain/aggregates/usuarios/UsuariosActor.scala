@@ -199,7 +199,8 @@ class UsuariosActor extends Actor with ActorLogging {
                                     //El olvido de contrasena queda para usuarios en estado diferente a bloqueado por super admin
                                     // y pendiente activacion
                                     if (valueResponseUsuarioEmpresarial.estado != EstadosEmpresaEnum.bloqueadoPorAdmin.id &&
-                                      valueResponseUsuarioEmpresarial.estado != EstadosEmpresaEnum.pendienteActivacion.id) {
+                                      valueResponseUsuarioEmpresarial.estado != EstadosEmpresaEnum.pendienteActivacion.id &&
+                                      valueResponseUsuarioEmpresarial.estado != EstadosEmpresaEnum.pendienteReiniciarContrasena.id) {
                                       //Se cambia a estado reinicio de contraseña cuando el cliente hace click en el enlace del correo
                                       enviarCorreoDefinirContrasena(message.perfilCliente, message.identificacion, message.tipoIdentificacion, responseCliente.wcli_dir_correo, currentSender, Some(valueResponseUsuarioEmpresarial.id))
                                     } else
@@ -208,7 +209,8 @@ class UsuariosActor extends Actor with ActorLogging {
                             }
                           case valueResponse: Usuario =>
                             //El olvido de contrasena queda para usuarios en estado diferente a pendiente de activacion
-                            if (valueResponse.estado != EstadosUsuarioEnum.pendienteActivacion.id)
+                            if (valueResponse.estado != EstadosUsuarioEnum.pendienteActivacion.id &&
+                              valueResponse.estado != EstadosUsuarioEnum.pendienteReinicio.id)
                               enviarCorreoDefinirContrasena(message.perfilCliente, message.identificacion, message.tipoIdentificacion, responseCliente.wcli_dir_correo, currentSender, valueResponse.id)
                             else
                               currentSender ! ResponseMessage(Conflict, errorEstadoUsuarioNoPermitido)

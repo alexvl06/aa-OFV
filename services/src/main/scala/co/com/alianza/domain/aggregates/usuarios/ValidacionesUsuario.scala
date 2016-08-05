@@ -206,7 +206,7 @@ object ValidacionesUsuario {
   }
 
   def toErrorValidationCorreo[T](futuro: Future[Validation[ServiceException, T]]): Future[Validation[ErrorValidacion, T]] = {
-    futuro.map(_.leftMap(ps => ErrorCorreo("Error enviando correo")))
+    futuro.map(_.leftMap(ps => ErrorCorreo(errorEnviandoCorreo)))
   }
 
   private val errorUsuarioExiste = ErrorMessage("409.1", "Usuario ya existe", "Usuario ya existe").toJson
@@ -220,5 +220,6 @@ object ValidacionesUsuario {
   private val errorUsuarioNoExiste = ErrorMessage("409.9", "No existe el usuario", "No existe el usuario").toJson
   private val errorCorreoNoExiste = ErrorMessage("409.10", "No hay correo registrado", "No hay correo registrado en la base de datos de Alianza").toJson
   private val errorIpConfianza = ErrorMessage("409.11", "La Ip no es de confianza", "La Ip no es de confianza").toJson
+  protected val errorEnviandoCorreo = ErrorMessage("409.15", "Error Correo", "Error enviando correo").toJson
 
 }

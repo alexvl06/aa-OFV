@@ -32,16 +32,18 @@ class HorarioEmpresaRepository(implicit executionContext: ExecutionContext) exte
       resolveTry(resultTry, "Agregar Horario Empresa")
   }
 
-  //TODO : Revisar si funciona el insertOrUpdate sin la PK
+
   def agregarHorarioEmpresa(horario: HorarioEmpresa, existeHorario: Boolean): Future[Validation[PersistenceException, Boolean]] = loan {
     implicit session =>
+      val query = horarioEmpresa.filter(_.idEmpresa === horario.idEmpresa)
+      val query2 = if (existeHorario) query.update(horario) else horarioEmpresa returning horarioEmpresa.map(_.idEmpresa) += horario
+      val resultTry = session.database.run(query2)
 
-      val resultTry: Future[Boolean] = for {
-        update: Int <- session.database.run(horarioEmpresa.insertOrUpdate(horario))
-        result <- Future { update > 0 }
-      } yield result
-
-      resolveTry(resultTry, "Agregar Horario Empresa")
+      val resultado = resultTry flatMap {
+        case r : Int => Future.successful(existeHorario)
+        case err : Any => Future.failed(new Throwable( "No se pudo completar la peticion" ))
+      }
+      resolveTry(resultado, "Agregar Horario Empresa")
   }
 
 }

@@ -1,26 +1,22 @@
 package co.com.alianza.infrastructure.security
 
 import akka.actor._
-import akka.pattern.ask
 import akka.util.Timeout
 import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.exceptions.{ Autorizado, NoAutorizado, Prohibido }
+import co.com.alianza.exceptions.{ ValidacionException, Autorizado, NoAutorizado, Prohibido }
 import co.com.alianza.infrastructure.dto.Usuario
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
-import co.com.alianza.infrastructure.messages._
 import co.com.alianza.infrastructure.security.AuthenticationFailedRejection.{ CredentialsMissing, CredentialsRejected }
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.token.{ AesUtil, Token }
 import com.typesafe.config.Config
-import enumerations.CryptoAesParameters
-import oracle.net.aso.r
 import portal.transaccional.autenticacion.service.drivers.autorizacion.{ AutorizacionUsuarioEmpresarialAdminRepository, AutorizacionUsuarioEmpresarialRepository, AutorizacionUsuarioRepository }
 import spray.http.StatusCodes._
 import spray.routing.RequestContext
 import spray.routing.authentication.ContextAuthenticator
 
+import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.concurrent.{ Future, promise }
 
 trait ServiceAuthorization {
   self: ActorLogging =>
@@ -38,6 +34,7 @@ trait ServiceAuthorization {
   def authenticateUser: ContextAuthenticator[UsuarioAuth] = {
     ctx =>
       val token = ctx.request.headers.find(header => header.name equals "token")
+
       log.info(token.toString)
       if (token.isEmpty) {
         Future(Left(AuthenticationFailedRejection(CredentialsMissing, List())))
@@ -45,20 +42,20 @@ trait ServiceAuthorization {
         val encriptedToken: String = token.get.value
         val decryptedToken = AesUtil.desencriptarToken(encriptedToken, "ServiceAuthorization.authenticateUser")
 
-        val tipoCliente = Token.getToken(decryptedToken).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
+        val tipoCliente: String = Token.getToken(decryptedToken).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
 
         val futuro =
           if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
             autorizacionAgenteRepo.autorizar(decryptedToken, "", obtenerIp(ctx).get.value)
           } else if (tipoCliente == TiposCliente.clienteAdministrador.toString) {
             autorizacionAdminRepo.autorizar(decryptedToken, "", obtenerIp(ctx).get.value)
-            //TODO: poner para empresarial
-            //autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialAdminMessage(token.get.value, None)
           } else {
-            autorizacionUsuarioRepo.autorizarUrl(decryptedToken, "") // ? AutorizarUrl(token.get.value, "")
+            autorizacionUsuarioRepo.autorizarUrl(decryptedToken, "")
           }
 
         futuro.map {
+          case validacion: ValidacionException =>
+            Left(AuthenticationFailedRejection(CredentialsRejected, List(), Some(Unauthorized.intValue), Option(validacion.code)))
           case validacion: NoAutorizado =>
             Left(AuthenticationFailedRejection(CredentialsRejected, List(), Some(Unauthorized.intValue), None))
           case validacion: Autorizado =>
