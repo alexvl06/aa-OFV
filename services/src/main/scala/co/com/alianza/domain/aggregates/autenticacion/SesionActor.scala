@@ -86,7 +86,7 @@ case class SesionActorSupervisor() extends Actor with ActorLogging {
     val actorName = generarNombreSesionActor(message.token)
     val response = context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(actorName)
     response map {
-      case Some(sesionActor: ActorRef) => sesionActor ? ActualizarSesion() onComplete { case _ => currentSender ! true }
+      case Some(sesionActor: ActorRef) => (sesionActor ? ActualizarSesion()).onComplete(_ => currentSender ! true)
       case None => currentSender ! false
     }
   }
@@ -136,8 +136,8 @@ case class SesionActorSupervisor() extends Actor with ActorLogging {
 
 class SesionActor(expiracionSesion: Int, empresa: Option[Empresa]) extends Actor with ActorLogging {
 
-  implicit val _: ExecutionContext = context dispatcher
-  implicit val timeout: Timeout = 120 seconds
+  implicit val _: ExecutionContext = context.dispatcher
+  implicit val timeout: Timeout = 10.seconds
 
   private val cluster = Cluster.get(context.system)
 
