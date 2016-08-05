@@ -29,15 +29,13 @@ trait UsuarioComercialDAOs {
 
   def deleteToken(token: String): Future[Int]
 
-  def updateIncorrectEntries(numeroIdentificacion: String, numeroIntentos: Int)
+  def updateIncorrectEntries(idUsuario: Int, numeroIntentos: Int): Future[Int]
 
-  def updateIncorrectEntries(idUsuario: Int, numeroIntentos: Int)
+  def updateLastIp(numeroIdentificacion: String, ipActual: String): Future[Int]
 
-  def updateLastIp(numeroIdentificacion: String, ipActual: String)
+  def updateLastDate(numeroIdentificacion: String, fechaActual: Timestamp): Future[Int]
 
-  def updateLastDate(numeroIdentificacion: String, fechaActual: Timestamp)
-
-  def updateStateByIdentity(numeroIdentificacion: String, estado: Int)
+  def updateStateByIdentity(numeroIdentificacion: String, estado: Int): Future[Int]
 
   def updateStateById(idUsuario: Int, estado: Int): Future[Int]
 

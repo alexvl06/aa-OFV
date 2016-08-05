@@ -12,7 +12,7 @@ import scala.concurrent.Future
 /**
  * Created by s4n on 2016
  */
-case class UsuarioComercialAdminDAO ()(implicit dcConfig: DBConfig)  extends TableQuery(new UsuarioComercialAdminTable(_)) with UsuarioComercialAdminDAOs{
+case class UsuarioComercialAdminDAO()(implicit dcConfig: DBConfig) extends TableQuery(new UsuarioComercialAdminTable(_)) with UsuarioComercialAdminDAOs {
 
   import dcConfig.db._
   import dcConfig.profile.api._

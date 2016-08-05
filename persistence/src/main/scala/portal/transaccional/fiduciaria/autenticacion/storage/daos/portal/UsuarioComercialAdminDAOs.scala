@@ -31,5 +31,4 @@ trait UsuarioComercialAdminDAOs {
 
   def deleteToken(token: String): Future[Int]
 
-
 }

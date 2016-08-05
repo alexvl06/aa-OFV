@@ -27,5 +27,5 @@ class UsuarioComercialAdminTable(tag: Tag) extends Table[UsuarioComercialAdmin](
 
   // Every table needs a * projection with the same type as the table's type parameter
   def * = (id, correo, fechaActualizacion, usuario, identificacion, tipoIdentificacion, estado, contrasena, token,
-    numeroIngresosErroneos, ipUltimoIngreso, fechaUltimoIngreso) <> (UsuarioComercialAdmin.tupled, UsuarioEmpresarialAdmin.unapply)
+    numeroIngresosErroneos, ipUltimoIngreso, fechaUltimoIngreso) <> (UsuarioComercialAdmin.tupled, UsuarioComercialAdmin.unapply)
 }
