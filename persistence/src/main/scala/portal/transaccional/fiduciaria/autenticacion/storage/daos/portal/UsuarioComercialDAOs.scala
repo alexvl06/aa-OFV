@@ -21,15 +21,11 @@ trait UsuarioComercialDAOs {
 
   def getByEmail(correo: String): Future[Option[UsuarioComercial]]
 
-  def getByPassword(pw_actual: String, idUsuario: Int): Future[Option[UsuarioComercial]]
-
   def create(usuario: UsuarioComercial): Future[Int]
 
   def createToken(numeroIdentificacion: String, token: String): Future[Int]
 
   def deleteToken(token: String): Future[Int]
-
-  def updateIncorrectEntries(idUsuario: Int, numeroIntentos: Int): Future[Int]
 
   def updateLastIp(numeroIdentificacion: String, ipActual: String): Future[Int]
 
@@ -38,6 +34,4 @@ trait UsuarioComercialDAOs {
   def updateStateByIdentity(numeroIdentificacion: String, estado: Int): Future[Int]
 
   def updateStateById(idUsuario: Int, estado: Int): Future[Int]
-
-  def updatePassword(idUsuario: Int, password: String): Future[Int]
 }

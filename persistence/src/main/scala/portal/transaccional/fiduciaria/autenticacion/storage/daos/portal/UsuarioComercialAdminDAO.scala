@@ -31,10 +31,6 @@ case class UsuarioComercialAdminDAO()(implicit dcConfig: DBConfig) extends Table
     run(query)
   }
 
-  def updateIncorrectEntries(idUsuario: Int, numeroIntentos: Int): Future[Int] = {
-    run(this.filter(_.id === idUsuario).map(_.numeroIngresosErroneos).update(numeroIntentos))
-  }
-
   def updateLastIp(idUsuario: Int, ipActual: String): Future[Int] = {
     run(this.filter(_.id === idUsuario).map(_.ipUltimoIngreso).update(Some(ipActual)))
   }
@@ -48,8 +44,8 @@ case class UsuarioComercialAdminDAO()(implicit dcConfig: DBConfig) extends Table
   }
 
   def updatePassword(idUsuario: Int, password: String): Future[Int] = {
-    val query = this.filter(_.id === idUsuario).map(admin => (admin.contrasena, admin.numeroIngresosErroneos))
-    run(query.update((Some(password), 0)))
+    val query = this.filter(_.id === idUsuario).map(admin => admin.contrasena)
+    run(query.update(Some(password)))
   }
 
   def createToken(idUsuario: Int, token: String): Future[Int] = {
