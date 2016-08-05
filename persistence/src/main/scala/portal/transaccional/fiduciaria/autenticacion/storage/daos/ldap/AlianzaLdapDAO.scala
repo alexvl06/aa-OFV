@@ -28,6 +28,13 @@ case class AlianzaLdapDAO() extends AlianzaLdapDAOs {
     val organization: String = if (tipoUsuario == TiposCliente.comercialFiduciaria.id) "fiduciaria" else "valores"
     val host: String = conf.getString(s"ldap.$organization.host")
     val domain: String = conf.getString(s"ldap.$organization.domain")
+
+    println("configuraciones : ")
+    println("configuraciones : " + TiposCliente.comercialFiduciaria.id)
+    println("configuraciones : " + tipoUsuario)
+    println("host : " + host)
+    println("domain : " + domain)
+
     // CONNECTION EN  ENVIRONMENT
     val environment = new util.Hashtable[String, String]()
     environment.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory")

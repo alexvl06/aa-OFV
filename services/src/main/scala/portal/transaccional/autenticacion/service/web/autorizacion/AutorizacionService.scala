@@ -105,6 +105,7 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
   private def getTokenData(token: String): AuditityUser = {
     val nToken = Token.getToken(token).getJWTClaimsSet
     val tipoCliente = nToken.getCustomClaim("tipoCliente").toString
+    //TODO: el nit no lo pide si es tipo comercial
     val nit = if (tipoCliente == individual) "" else nToken.getCustomClaim("nit").toString
     val lastIp = nToken.getCustomClaim("ultimaIpIngreso").toString
     val user = nToken.getCustomClaim("nombreUsuario").toString
