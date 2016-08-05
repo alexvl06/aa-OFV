@@ -8,7 +8,7 @@ trait AutenticacionComercialRepository {
 
   def autenticarValores: Future[String]
 
-  def autenticarFiduciaria: Future[String]
+  def autenticarFiduciaria(usuario: String, tipoUsuario: Int, contrasena: String): Future[String]
 
   def autenticarAdministrador: Future[String]
 

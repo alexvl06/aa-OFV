@@ -5,10 +5,11 @@ import java.util.Date
 import co.com.alianza.infrastructure.dto.Cliente
 import co.com.alianza.persistence.entities.Usuario
 import co.com.alianza.util.token.Token
+import portal.transaccional.autenticacion.service.drivers.ldap.LdapRepository
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-case class AutenticacionComercialDriverRepository()(implicit val ex: ExecutionContext)
+case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository)(implicit val ex: ExecutionContext)
     extends AutenticacionComercialRepository {
 
   /**
@@ -20,7 +21,7 @@ case class AutenticacionComercialDriverRepository()(implicit val ex: ExecutionCo
    * @return
    */
   def autenticar(usuario: String, tipoUsuario: Int, contrasena: String): Future[String] = {
-    autenticarFiduciaria()
+    autenticarFiduciaria(usuario, tipoUsuario, contrasena)
   }
 
   def autenticarValores(): Future[String] = {
@@ -37,9 +38,10 @@ case class AutenticacionComercialDriverRepository()(implicit val ex: ExecutionCo
    * - asociar token
    * - crear session de usuario
    */
-  def autenticarFiduciaria(): Future[String] = {
+  def autenticarFiduciaria(usuario: String, tipoUsuario: Int, password: String): Future[String] = {
     for {
-      token <- Future.successful("ya me autentique !!!")
+      cliente <- ldapRepo.autenticarLdap(usuario, tipoUsuario, password)
+      token <- Future.successful("eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJ0aXBvQ2xpZW50ZSI6ImFnZW50ZUVtcHJlc2FyaWFsIiwibmJmIjoxNDQwNzg5NDMzLCJ0aXBvSWRlbnRpZmljYWNpb24iOiJKIiwidWx0aW1hRmVjaGFJbmdyZXNvIjoiMTAgYWdvc3RvLCAyMDE1IGEgbGFzIDA0OjA5IFBNIiwidWx0aW1hSXBJbmdyZXNvIjoiMTI3LjAuMC4xIiwiZXhwaXJhY2lvbkluYWN0aXZpZGFkIjoiOTk5IiwiY29ycmVvIjoiZmRAc2FkLmNvIiwibml0IjoiODkwMTE0Nzc4IiwiaXNzIjoiaHR0cDpcL1wvZmlkdWNpYXJpYS5hbGlhbnphLmNvbS5jbyIsIm5vbWJyZVVzdWFyaW8iOiJhcHJvYmFkb3IiLCJleHAiOjE0NDA3OTEyMzMsImlhdCI6MTQ0MDc4OTQzM30.LKlmlZynUL95PS9Z_DAg05-KMgDCdWczLR3bfiPbOMvbV0HQA6PR10buywhUgX5glddujHnQslQ_8_sHi1jq2w")
     } yield token
   }
 

@@ -28,6 +28,7 @@ import portal.transaccional.autenticacion.service.drivers.empresa.EmpresaDriverR
 import portal.transaccional.autenticacion.service.drivers.ip.IpDriverRepository
 import portal.transaccional.autenticacion.service.drivers.ipempresa.IpEmpresaDriverRepository
 import portal.transaccional.autenticacion.service.drivers.ipusuario.IpUsuarioDriverRepository
+import portal.transaccional.autenticacion.service.drivers.ldap.LdapDriverRepository
 import portal.transaccional.autenticacion.service.drivers.pregunta.{ PreguntasAutovalidacionDriverRepository, PreguntasDriverRepository }
 import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaDriverRepository
 import portal.transaccional.autenticacion.service.drivers.respuesta.{ RespuestaUsuarioAdminDriverRepository, RespuestaUsuarioDriverRepository }
@@ -115,6 +116,7 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
 
   val sessionActor: ActorRef
 
+  lazy val ldapRepo = LdapDriverRepository(alianzaLdapDAO)
   lazy val recursoRepo = RecursoDriverRepository(alianzaDAO)
   lazy val empresaRepo = EmpresaDriverRepository(empresaDAO)
   lazy val usuarioRepo = UsuarioDriverRepository(usuarioDAO)
@@ -135,7 +137,7 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val autenticacionEmpresaRepo = AutenticacionEmpresaDriverRepository(usuarioAgenteRepo, usuarioAdminRepo, clienteRepo, empresaRepo, reglaContrasenaRepo,
     configuracionRepo, ipEmpresaRepo, sessionActor, respuestaUsuariAdminoRepo)
 
-  lazy val autenticacionComercialRepo = AutenticacionComercialDriverRepository()
+  lazy val autenticacionComercialRepo = AutenticacionComercialDriverRepository(ldapRepo)
 
   lazy val autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialDriverRepository = AutorizacionUsuarioEmpresarialDriverRepository(
     usuarioAgenteRepo, alianzaDAO, sessionActor: ActorRef, recursoRepo
@@ -143,10 +145,10 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminDriverRepository =
     AutorizacionUsuarioEmpresarialAdminDriverRepository(usuarioAdminRepo, sessionActor: ActorRef, alianzaDAO, recursoRepo)
 
-  lazy val prguntasRepo: PreguntasDriverRepository =
+  lazy val preguntasRepo: PreguntasDriverRepository =
     PreguntasDriverRepository(preguntaDAO)
   lazy val preguntasValidacionRepository: PreguntasAutovalidacionDriverRepository =
-    PreguntasAutovalidacionDriverRepository(prguntasRepo, configuracionRepo, alianzaDAO)
+    PreguntasAutovalidacionDriverRepository(preguntasRepo, configuracionRepo, alianzaDAO)
 
   lazy val ipRepo = IpDriverRepository(usuarioRepo, usuarioAgenteRepo, empresaAdminDAO, ipEmpresaDAO, usuarioAdminRepo, clienteRepo, ipUsuarioDAO)
 

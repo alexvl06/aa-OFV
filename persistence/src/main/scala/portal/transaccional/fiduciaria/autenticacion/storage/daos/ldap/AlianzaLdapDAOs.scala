@@ -4,7 +4,7 @@ import javax.naming.ldap.LdapContext
 
 import co.com.alianza.persistence.dto.UsuarioLdapDTO
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 trait AlianzaLdapDAOs {
 

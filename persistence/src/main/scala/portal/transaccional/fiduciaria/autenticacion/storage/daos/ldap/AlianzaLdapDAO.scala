@@ -1,14 +1,14 @@
 package portal.transaccional.fiduciaria.autenticacion.storage.daos.ldap
 
 import java.util
-import javax.naming.directory.{Attributes, SearchControls, SearchResult}
-import javax.naming.ldap.{InitialLdapContext, LdapContext}
-import javax.naming.{Context, NamingEnumeration}
+import javax.naming.directory.{ Attributes, SearchControls, SearchResult }
+import javax.naming.ldap.{ InitialLdapContext, LdapContext }
+import javax.naming.{ Context, NamingEnumeration }
 
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.persistence.dto.UsuarioLdapDTO
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 case class AlianzaLdapDAO() extends AlianzaLdapDAOs {
 
@@ -21,7 +21,6 @@ case class AlianzaLdapDAO() extends AlianzaLdapDAOs {
    */
   def getLdapContext(host: String, domain: String,
     username: String, password: String)(implicit executionContext: ExecutionContext): Future[LdapContext] = Future {
-
     // CONNECTION EN  ENVIRONMENT
     val environment = new util.Hashtable[String, String]()
     environment.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory")
@@ -29,10 +28,8 @@ case class AlianzaLdapDAO() extends AlianzaLdapDAOs {
     environment.put(Context.SECURITY_AUTHENTICATION, "simple")
     environment.put(Context.SECURITY_PRINCIPAL, s"$username@$domain")
     environment.put(Context.SECURITY_CREDENTIALS, s"$password")
-
     // Context
     new InitialLdapContext(environment, null)
-
   }
 
   /**
@@ -42,34 +39,27 @@ case class AlianzaLdapDAO() extends AlianzaLdapDAOs {
    * @return A future with an user
    */
   def getUserInfo(userType: Int, user: String, ctx: LdapContext)(implicit executionContext: ExecutionContext): Future[Option[UsuarioLdapDTO]] = Future {
-
     // SEARCH FILTER
     val filter: String = s"(&(&(objectClass=person)(objectCategory=user))(sAMAccountName=$user))"
-
     // QUERY
-    val searchContext = if (userType == TiposCliente.comercialFiduciaria.id) "DC=Alianza,DC=com,DC=co" else "DC=alianzavaloresint,DC=com"
+    //TODO: val searchContext = if (userType == TiposCliente.comercialFiduciaria.id) "DC=Alianza,DC=com,DC=co" else "DC=alianzavaloresint,DC=com"
+    val searchContext = "DC=Alianza,DC=com,DC=co"
     val search: NamingEnumeration[SearchResult] = ctx.search(searchContext, filter, getSearchControls)
-
     // USER INSTANCE
     val userInstance: Option[UsuarioLdapDTO] = search.hasMore match {
       case true =>
-
         val attrs: Attributes = search.next().getAttributes
-
         val dn = attrs.get("distinguishedName").get.toString
         val sn = attrs.get("sn").get.toString
         val gn = attrs.get("givenname").get.toString
         //        val mof = attrs.get( "memberOf" ).get.toString
         val upn = attrs.get("userPrincipalName").get.toString
         val sat = attrs.get("sAMAccountType").get.toString
-
         Some(UsuarioLdapDTO(user, Some(sat), Some(dn), Some(sn), Some(gn), None, Some(upn), None, None, None))
 
       case false => None
     }
-
     userInstance
-
   }
 
   /**
@@ -77,7 +67,6 @@ case class AlianzaLdapDAO() extends AlianzaLdapDAOs {
    * @return A future with LDAP search controls
    */
   private def getSearchControls: SearchControls = {
-
     // SEARCH ATTRIBUTES
     val attrIDs: Array[String] = Array(
       "distinguishedName",
@@ -89,14 +78,11 @@ case class AlianzaLdapDAO() extends AlianzaLdapDAOs {
       "userPrincipalName",
       "sAMAccountType"
     )
-
     // SEARCH CONTROLS
     val sc = new SearchControls()
     sc.setSearchScope(SearchControls.SUBTREE_SCOPE)
     sc.setReturningAttributes(attrIDs)
-
     sc
-
   }
 
 }
