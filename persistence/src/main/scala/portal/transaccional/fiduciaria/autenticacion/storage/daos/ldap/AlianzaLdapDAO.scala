@@ -6,13 +6,11 @@ import javax.naming.ldap.{ InitialLdapContext, LdapContext }
 import javax.naming.{ Context, NamingEnumeration }
 
 import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.persistence.dto.UsuarioLdapDTO
 import co.com.alianza.util.ConfigApp
 import com.typesafe.config.Config
 
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.Try
 
 case class AlianzaLdapDAO() extends AlianzaLdapDAOs {
 

@@ -7,8 +7,8 @@ import org.joda.time.DateTime
  */
 case class UsuarioLdapDTO(
   usuario: String,
-  sAMAccountType: Option[String],
-  distinguishedName: Option[String],
+  identificacion: Option[String],
+  nombreCompleto: Option[String],
   sn: Option[String],
   givenName: Option[String],
   memberOf: Option[String],

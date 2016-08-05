@@ -12,6 +12,7 @@ case class UsuarioEmpresarial(id: Int, correo: String, fechaActualizacion: Times
 
 class UsuarioEmpresarialTable(tag: Tag) extends Table[UsuarioEmpresarial](tag, "USUARIO_EMPRESARIAL") {
   def id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
+
   def correo = column[String]("CORREO")
   def fechaActualizacion = column[Timestamp]("FECHA_ACTUALIZACION")
   def identificacion = column[String]("IDENTIFICACION")

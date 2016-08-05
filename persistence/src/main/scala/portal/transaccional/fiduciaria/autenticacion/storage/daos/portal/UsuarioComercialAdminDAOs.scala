@@ -14,15 +14,9 @@ trait UsuarioComercialAdminDAOs {
 
   def getById(idUsuario: Int): Future[Option[UsuarioComercialAdmin]]
 
-  def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[UsuarioComercialAdmin]]
-
-  def getByNit(nitEmpresa: String): Future[Boolean]
-
   def updateLastIp(idUsuario: Int, ipActual: String): Future[Int]
 
   def updateLastDate(idUsuario: Int, fechaActual: Timestamp): Future[Int]
-
-  def updateStateById(idUsuario: Int, estado: Int): Future[Int]
 
   def updatePassword(idUsuario: Int, password: String): Future[Int]
 

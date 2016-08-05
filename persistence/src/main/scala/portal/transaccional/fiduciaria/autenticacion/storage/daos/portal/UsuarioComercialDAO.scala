@@ -20,47 +20,32 @@ case class UsuarioComercialDAO()(implicit dcConfig: DBConfig) extends TableQuery
     run(this.result)
   }
 
-  def getByIdentity(numeroIdentificacion: String): Future[Option[UsuarioComercial]] = {
-    run(this.filter(_.identificacion === numeroIdentificacion).result.headOption)
-  }
-
-  def getById(idUsuario: Int): Future[Option[UsuarioComercial]] = {
-    run(this.filter(_.id === idUsuario).result.headOption)
+  def getByUser(usuario: String): Future[Option[UsuarioComercial]] = {
+    run(this.filter(_.usuario === usuario).result.headOption)
   }
 
   def getByToken(token: String): Future[Option[UsuarioComercial]] = {
     run(this.filter(_.token === token).result.headOption)
   }
 
-  def getByEmail(correo: String): Future[Option[UsuarioComercial]] = {
-    run(this.filter(_.correo === correo).result.headOption)
-  }
-
   def create(usuario: UsuarioComercial): Future[Int] = {
     run((this returning this.map(_.id)) += usuario)
   }
 
-  def createToken(numeroIdentificacion: String, token: String): Future[Int] = {
-    run(this.filter(_.identificacion === numeroIdentificacion).map(_.token).update(Some(token)))
+  def createToken(usuario: String, token: String): Future[Int] = {
+    run(this.filter(_.usuario === usuario).map(_.token).update(Some(token)))
   }
 
   def deleteToken(token: String): Future[Int] = {
     run(this.filter(_.token === token).map(_.token).update(Some(null)))
   }
 
-  def updateLastIp(numeroIdentificacion: String, ipActual: String): Future[Int] = {
-    run(this.filter(_.identificacion === numeroIdentificacion).map(_.ipUltimoIngreso).update(Some(ipActual)))
+  def updateLastIp(usuario: String, ipActual: String): Future[Int] = {
+    run(this.filter(_.usuario === usuario).map(_.ipUltimoIngreso).update(Some(ipActual)))
   }
 
-  def updateLastDate(numeroIdentificacion: String, fechaActual: Timestamp): Future[Int] = {
-    run(this.filter(_.identificacion === numeroIdentificacion).map(_.fechaUltimoIngreso).update(Some(fechaActual)))
+  def updateLastDate(usuario: String, fechaActual: Timestamp): Future[Int] = {
+    run(this.filter(_.usuario === usuario).map(_.fechaUltimoIngreso).update(Some(fechaActual)))
   }
 
-  def updateStateByIdentity(numeroIdentificacion: String, estado: Int): Future[Int] = {
-    run(this.filter(_.identificacion === numeroIdentificacion).map(_.estado).update(estado))
-  }
-
-  def updateStateById(idUsuario: Int, estado: Int): Future[Int] = {
-    run(this.filter(_.id === idUsuario).map(_.estado).update(estado))
-  }
 }

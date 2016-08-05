@@ -5,14 +5,14 @@ import java.util.Date
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.infrastructure.dto.Cliente
 import co.com.alianza.persistence.dto.UsuarioLdapDTO
-import co.com.alianza.persistence.entities.Usuario
+import co.com.alianza.persistence.entities.{ Usuario, UsuarioComercial }
 import co.com.alianza.util.token.Token
 import portal.transaccional.autenticacion.service.drivers.ldap.LdapRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioComercial.UsuarioComercialRepository
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository)(implicit val ex: ExecutionContext)
-    extends AutenticacionComercialRepository {
+case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository, usuarioComercialRepo: UsuarioComercialRepository)(implicit val ex: ExecutionContext) {
 
   /**
    * Redirigir a la autenticacion correspondiente
@@ -27,9 +27,13 @@ case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository)(impl
     autenticarFiduciaria(usuario, tipoUsuario, contrasena)
   }
 
-  def autenticarValores(): Future[String] = {
-    //TODO: Agregar las validaciones
-    Future.successful("")
+  def autenticarValores(usuario: String, tipoUsuario: Int, password: String): Future[String] = {
+    for {
+      cliente <- ldapRepo.autenticarLdap(usuario, tipoUsuario, password)
+      usuario <- usuarioComercialRepo.getByUser(cliente.usuario)
+      token <- generarTokenComercial(cliente, "ip", "100")
+    } yield token
+
   }
 
   /**
@@ -43,9 +47,9 @@ case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository)(impl
    * - crear session de usuario
    */
   def autenticarFiduciaria(usuario: String, tipoUsuario: Int, password: String): Future[String] = {
-    //TODO: Agregar validaciones
     for {
       cliente <- ldapRepo.autenticarLdap(usuario, tipoUsuario, password)
+      usuario <- usuarioComercialRepo.getByUser(cliente.usuario)
       token <- generarTokenComercial(cliente, "ip", "100")
     } yield token
   }
@@ -63,7 +67,7 @@ case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository)(impl
    * @return
    */
   private def generarTokenComercial(cliente: UsuarioLdapDTO, ip: String, inactividad: String): Future[String] = Future {
-    Token.generarToken(cliente.nombre, "correo", "tipo id", ip, new Date(System.currentTimeMillis()), inactividad, TiposCliente.comercialFiduciaria)
+    Token.generarToken(cliente.nombre, cliente.identificacion.get, "", ip, new Date(System.currentTimeMillis()), inactividad, TiposCliente.comercialFiduciaria)
   }
 
   /**

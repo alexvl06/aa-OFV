@@ -13,13 +13,9 @@ trait UsuarioComercialDAOs {
 
   def getAllUsers(): Future[Seq[UsuarioComercial]]
 
-  def getByIdentity(numeroIdentificacion: String): Future[Option[UsuarioComercial]]
-
-  def getById(idUsuario: Int): Future[Option[UsuarioComercial]]
+  def getByUser(usuario: String): Future[Option[UsuarioComercial]]
 
   def getByToken(token: String): Future[Option[UsuarioComercial]]
-
-  def getByEmail(correo: String): Future[Option[UsuarioComercial]]
 
   def create(usuario: UsuarioComercial): Future[Int]
 
@@ -31,7 +27,4 @@ trait UsuarioComercialDAOs {
 
   def updateLastDate(numeroIdentificacion: String, fechaActual: Timestamp): Future[Int]
 
-  def updateStateByIdentity(numeroIdentificacion: String, estado: Int): Future[Int]
-
-  def updateStateById(idUsuario: Int, estado: Int): Future[Int]
 }
