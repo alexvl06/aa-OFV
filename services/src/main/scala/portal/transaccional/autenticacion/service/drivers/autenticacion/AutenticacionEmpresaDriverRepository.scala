@@ -97,7 +97,7 @@ case class AutenticacionEmpresaDriverRepository(
       reintentosErroneos <- reglaRepo.getRegla(LlavesReglaContrasena.CANTIDAD_REINTENTOS_INGRESO_CONTRASENA.llave)
       validar <- usuarioRepo.validarUsuario(usuario, contrasena, reintentosErroneos.valor.toInt)
       cliente <- clienteCoreRepo.getCliente(usuario.identificacion)
-      estadoCore <- clienteCoreRepo.validarEstado(cliente) // DE AQUI SE SACA EL ESTADO
+      estadoCore <- clienteCoreRepo.validarEstado(cliente)
       reglaDias <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA.llave)
       caducidad <- usuarioRepo.validarCaducidadContrasena(TiposCliente.agenteEmpresarial, usuario, reglaDias.valor.toInt)
       actualizar <- usuarioRepo.actualizarInfoUsuario(usuario, ip)

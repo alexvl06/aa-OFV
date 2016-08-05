@@ -86,7 +86,7 @@ case class AutenticacionService(
         request =>
           val resultado: Future[String] = autenticacionComercialRepositorio.autenticar(request.usuario, request.tipoUsuario, request.contrasena)
           onComplete(resultado) {
-            case Success(value) => complete(value.toString)
+            case Success(value) => complete(value)
             case Failure(ex) => execution(ex)
           }
       }
