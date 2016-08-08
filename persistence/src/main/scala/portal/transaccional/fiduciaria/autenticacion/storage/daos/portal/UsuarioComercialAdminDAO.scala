@@ -21,6 +21,10 @@ case class UsuarioComercialAdminDAO()(implicit dcConfig: DBConfig) extends Table
     run(this.filter(_.id === idUsuario).result.headOption)
   }
 
+  def getByUser(usuario: String): Future[Option[UsuarioComercialAdmin]] = {
+    run(this.filter(_.usuario === usuario).result.headOption)
+  }
+
   def updateLastIp(idUsuario: Int, ipActual: String): Future[Int] = {
     run(this.filter(_.id === idUsuario).map(_.ipUltimoIngreso).update(Some(ipActual)))
   }

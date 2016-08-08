@@ -2,7 +2,7 @@ package portal.transaccional.autenticacion.service.drivers.usuarioComercialAdmin
 
 import java.sql.Timestamp
 
-import co.com.alianza.persistence.entities.{UsuarioComercialAdmin, UsuarioComercial}
+import co.com.alianza.persistence.entities.{ UsuarioComercialAdmin, UsuarioComercial }
 
 import scala.concurrent.Future
 
@@ -11,9 +11,7 @@ import scala.concurrent.Future
  */
 trait UsuarioComercialAdminRepository {
 
-  def getByUser(usuario: String): Future[UsuarioComercial]
-
-  def getByToken(token: String): Future[Option[UsuarioComercial]]
+  def obtenerUsuario(usuario: String): Future[UsuarioComercialAdmin]
 
   def actualizarToken(idUsuario: Int, token: String): Future[Int]
 

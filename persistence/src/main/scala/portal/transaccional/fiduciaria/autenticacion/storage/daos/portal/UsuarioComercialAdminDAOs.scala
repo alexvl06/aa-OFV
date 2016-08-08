@@ -14,6 +14,8 @@ trait UsuarioComercialAdminDAOs {
 
   def getById(idUsuario: Int): Future[Option[UsuarioComercialAdmin]]
 
+  def getByUser(usuario: String): Future[Option[UsuarioComercialAdmin]]
+
   def updateLastIp(idUsuario: Int, ipActual: String): Future[Int]
 
   def updateLastDate(idUsuario: Int, fechaActual: Timestamp): Future[Int]
