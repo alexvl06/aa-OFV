@@ -21,7 +21,8 @@ import scala.reflect.ClassTag
 /**
  * Created by seven4n on 2016
  */
-case class AutorizacionUsuarioDriverRepository(usuarioRepo: UsuarioRepository, recursoRepo: RecursoRepository, sesionRepo: SesionRepository)(implicit val ex: ExecutionContext) extends AutorizacionUsuarioRepository {
+case class AutorizacionUsuarioDriverRepository(usuarioRepo: UsuarioRepository, recursoRepo: RecursoRepository, sesionRepo: SesionRepository)(implicit val ex:
+ExecutionContext) extends AutorizacionUsuarioRepository {
 
   implicit val timeout = Timeout(5.seconds)
 
@@ -81,11 +82,6 @@ case class AutorizacionUsuarioDriverRepository(usuarioRepo: UsuarioRepository, r
         }
     }
   }
-
-  private def actorResponse[T: ClassTag](actor: ActorRef, msg: ValidarSesion): Future[T] = {
-    (actor ? msg).mapTo[T]
-  }
-
 }
 
 case class ForbiddenMessage(usuario: UsuarioDTO, filtro: Option[String])

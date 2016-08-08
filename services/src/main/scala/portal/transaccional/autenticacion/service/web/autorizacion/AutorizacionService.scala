@@ -8,7 +8,7 @@ import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.util.token.{ AesUtil, Token }
 import enumerations.CryptoAesParameters
-import portal.transaccional.autenticacion.service.drivers.autorizacion.{ AutorizacionUsuarioEmpresarialAdminRepository, AutorizacionUsuarioEmpresarialRepository, AutorizacionUsuarioRepository }
+import portal.transaccional.autenticacion.service.drivers.autorizacion._
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioEmpresarialAdminRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioRepository
@@ -21,11 +21,13 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success }
 
 /**
- * Created by jonathan on 27/07/16.
+ * Created by s4n 2016
  */
 case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgenteRepository: UsuarioEmpresarialRepository,
   usuarioAdminRepository: UsuarioEmpresarialAdminRepository, autorizacionRepository: AutorizacionUsuarioRepository, kafkaActor: ActorSelection,
-  autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository, autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters
+  autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository, autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository,
+  autorizacionComercialRepo : AutorizacionUsuarioComercialRepository, autorizacionComercialAdminRepo : AutorizacionUsuarioComercialAdminRepository)(implicit val
+ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters
     with CrossHeaders {
 
   val invalidarTokenPath = "invalidarToken"
@@ -34,6 +36,9 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
   val agente = TiposCliente.agenteEmpresarial.toString
   val admin = TiposCliente.clienteAdministrador.toString
   val individual = TiposCliente.clienteIndividual.toString
+  val comercialFiduciaria = TiposCliente.comercialFiduciaria.toString
+  val comercialValores = TiposCliente.comercialValores.toString
+  val comercialAdmin = TiposCliente.comercialAdmin.toString
 
   val route: Route = {
     path(invalidarTokenPath) {
@@ -53,10 +58,12 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
             val encriptedToken: String = tokenRequest.token
             val token: String = AesUtil.desencriptarToken(encriptedToken)
             val usuario = getTokenData(token)
-            val resultado = usuario.tipoCliente match {
+            val resultado: Future[Int] = usuario.tipoCliente match {
               case `agente` => autorizacionAgenteRepo.invalidarToken(token, encriptedToken)
               case `admin` => autorizacionAdminRepo.invalidarToken(token, encriptedToken)
               case `individual` => autorizacionRepository.invalidarToken(token, encriptedToken)
+              case `comercialFiduciaria` |`comercialValores` => autorizacionComercialRepo.invalidarToken(token, encriptedToken)
+              case `comercialAdmin` => autorizacionComercialAdminRepo.invalidarToken(token, encriptedToken)
               case _ => Future.failed(NoAutorizado("Tipo usuario no existe"))
             }
             mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.cierreSesionIndex, ip.value,

@@ -2,6 +2,7 @@ package co.com.alianza.app
 
 import akka.actor.{ ActorRef, Props }
 import akka.io.IO
+import portal.transaccional.autenticacion.service.drivers.autorizacion.AutorizacionUsuarioComercialRepository
 import spray.can.Http
 
 object Boot extends App with HostBinding with Core with BootedCore with CoreActors with Storage {
@@ -13,7 +14,7 @@ object Boot extends App with HostBinding with Core with BootedCore with CoreActo
     confrontaActor, actualizacionActor, permisoTransaccionalActor, agenteEmpresarialActor, pinActor, pinUsuarioEmpresarialAdminActor,
     pinUsuarioAgenteEmpresarialActor, ipsUsuarioActor, horarioEmpresaActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor,
     contrasenasActor, autorizacionActorSupervisor, autorizacionAgenteRepo, autorizacionAdminRepo, preguntasValidacionRepository,
-    respuestaUsuarioRepo, respuestaUsuariAdminoRepo, ipRepo)), name = "api-AlianzaRouter")
+    respuestaUsuarioRepo, respuestaUsuariAdminoRepo, ipRepo, autorizacionComercialRepo, autorizacionComercialAdminRepo )), name = "api-AlianzaRouter")
 
   IO(Http)(system) ! Http.Bind(rootService, interface = machineIp(), port = portNumber(args))
 }

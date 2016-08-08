@@ -55,7 +55,7 @@ case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository, usua
       usuario <- usuarioComercialRepo.getByUser(cliente.usuario)
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
       token <- generarTokenComercial(cliente, tipoUsuario, ip, inactividad.valor)
-      _ <- usuarioComercialRepo.actualizarToken(usuario.id, token)
+      _ <- usuarioComercialRepo.crearToken(usuario.id, token)
       sesion <- sesionRepo.crearSesion(token, inactividad.valor.toInt, None)
     } yield token
   }
@@ -78,7 +78,7 @@ case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository, usua
       usuario <- usuarioComercialAdminRepo.obtenerUsuario(usuario)
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
       token <- generarTokenAdminComercial(usuario, ip, inactividad.valor)
-      _ <- usuarioComercialRepo.actualizarToken(usuario.id, token)
+      _ <- usuarioComercialRepo.crearToken(usuario.id, token)
       sesion <- sesionRepo.crearSesion(token, inactividad.valor.toInt, None)
     } yield token
     Future.failed(ValidacionException("401.2", "Error login admin comercial no implementado"))

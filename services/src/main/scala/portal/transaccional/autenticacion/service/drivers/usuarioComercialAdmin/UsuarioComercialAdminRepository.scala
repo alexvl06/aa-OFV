@@ -13,7 +13,9 @@ trait UsuarioComercialAdminRepository {
 
   def obtenerUsuario(usuario: String): Future[UsuarioComercialAdmin]
 
-  def actualizarToken(idUsuario: Int, token: String): Future[Int]
+  def crearToken(idUsuario: Int, token: String): Future[Int]
+
+  def eliminarToken(token: String): Future[Int]
 
   def actualizarIp(idUsuario: Int, ip: String): Future[Int]
 
