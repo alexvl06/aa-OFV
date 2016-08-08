@@ -10,10 +10,8 @@ import co.com.alianza.infrastructure.messages.{ InvalidarSesion, ValidarSesion }
 import co.com.alianza.persistence.entities.{ RecursoPerfil, Usuario }
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.token.{ AesUtil, Token }
-import enumerations.CryptoAesParameters
 import portal.transaccional.autenticacion.service.drivers.Recurso.RecursoRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.{ DataAccessTranslator, UsuarioRepository }
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.UsuarioDAOs
 
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
@@ -22,7 +20,7 @@ import scala.reflect.ClassTag
 /**
  * Created by seven4n on 2016
  */
-case class AutorizacionUsuarioDriverRepository(usuarioRepo: UsuarioRepository, recursoRepo: RecursoRepository, sessionActor: ActorRef)(implicit val ex: ExecutionContext) extends AutorizacionUsuarioRepository {
+case class AutorizacionUsuarioDriverRepository(usuarioRepo: UsuarioRepository, recursoRepo: RecursoRepository, sesionActor: ActorRef)(implicit val ex: ExecutionContext) extends AutorizacionUsuarioRepository {
 
   implicit val timeout = Timeout(5.seconds)
 
@@ -30,7 +28,7 @@ case class AutorizacionUsuarioDriverRepository(usuarioRepo: UsuarioRepository, r
     val encriptedToken = AesUtil.encriptarToken(token, "AutorizacionUsuarioDriverRepository.autorizarUrl")
     for {
       validar <- validarToken(token)
-      validarSesion <- Future(actorResponse[SesionActorSupervisor.SesionUsuarioValidada](sessionActor, ValidarSesion(encriptedToken)))
+      validarSesion <- validarSesion(token)
       usuarioOption <- usuarioRepo.getByToken(encriptedToken)
       usuario <- validarUsario(usuarioOption)
       recursos <- recursoRepo.obtenerRecursos(usuario.id.get)
@@ -38,10 +36,18 @@ case class AutorizacionUsuarioDriverRepository(usuarioRepo: UsuarioRepository, r
     } yield validarRecurso
   }
 
+  private def validarSesion(token: String): Future[Boolean] = {
+    val actor: Future[Any] = sesionActor ? ValidarSesion(token)
+    actor flatMap {
+      case true => Future.successful(true)
+      case _ => Future.failed(ValidacionException("403.9", "Error sesión"))
+    }
+  }
+
   def invalidarToken(token: String): Future[Int] = {
     for {
       x <- usuarioRepo.invalidarToken(token)
-      n <- Future { sessionActor ? InvalidarSesion(token) }
+      n <- Future { sesionActor ? InvalidarSesion(token) }
     } yield x
   }
 

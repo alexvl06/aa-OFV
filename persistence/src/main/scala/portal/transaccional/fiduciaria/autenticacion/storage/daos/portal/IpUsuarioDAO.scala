@@ -28,7 +28,7 @@ case class IpUsuarioDAO(implicit val dcConfig: DBConfig) extends TableQuery(new 
     run(this.filter(x => x.idUsuario === idUsuario && x.ip === ip).result.headOption)
   }
 
-  def create(ip: IpsUsuario):Future[String] = {
+  def create(ip: IpsUsuario): Future[String] = {
     run((this returning this.map(_.ip)) += ip)
   }
 
