@@ -18,13 +18,13 @@ object DataBaseAccessPGAlianza {
 
   private def createDatasource(config: ConnectionConf): PGPoolingDataSource = {
 
-    val dataSource = new PGPoolingDataSource();
-    dataSource.setDataSourceName(config.dataSourceName);
-    dataSource.setServerName(config.serverName);
-    dataSource.setDatabaseName(config.dataBaseName);
-    dataSource.setUser(config.user);
-    dataSource.setPassword(config.pass);
-    dataSource.setMaxConnections(config.maxPoolSize);
+    val dataSource = new PGPoolingDataSource()
+    dataSource.setDataSourceName(config.dataSourceName)
+    dataSource.setServerName(config.serverName)
+    dataSource.setDatabaseName(config.dataBaseName)
+    dataSource.setUser(config.user)
+    dataSource.setPassword(config.pass)
+    dataSource.setMaxConnections(config.maxPoolSize)
     dataSource
   }
 }

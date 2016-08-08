@@ -47,10 +47,4 @@ case class IpService(user: UsuarioAuth, ipRepo: IpRepository)(implicit val ec: E
     }
   }
 
-  //    ~ path("actualizarInactividad") {
-  //      post {
-  //        complete { "ok" }
-  //      }
-  //    }
-  //  }
 }

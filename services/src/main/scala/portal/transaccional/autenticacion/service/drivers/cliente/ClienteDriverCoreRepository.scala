@@ -6,7 +6,7 @@ import co.com.alianza.infrastructure.dto.Cliente
 import enumerations.EstadosCliente
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.core.ClienteDAO
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ Future, ExecutionContext }
 
 /**
  * Created by S4N on 2016

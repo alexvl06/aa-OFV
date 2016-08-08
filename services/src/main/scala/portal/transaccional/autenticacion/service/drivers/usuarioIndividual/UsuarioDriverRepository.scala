@@ -23,7 +23,7 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
       (usuarioOption: Option[Usuario]) =>
         usuarioOption match {
           case Some(usuario: Usuario) => Future.successful(usuario)
-          case ex: Any => Future.failed(ValidacionException("401.3", "Error usuario no existe"))
+          case _ => Future.failed(ValidacionException("401.3", "Error usuario no existe"))
         }
     }
   }

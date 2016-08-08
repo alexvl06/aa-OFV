@@ -25,7 +25,9 @@ case class RecursoDriverRepository(generalDAO: AlianzaDAOs) extends RecursoRepos
   private def filtrarRecursos(recurso: RecursoPerfil, url: String): Boolean = {
     val indexSlash: Int = recurso.urlRecurso.lastIndexOf("/")
     val myUrl: String = if (recurso.urlRecurso.contains("/*") && url.size > recurso.urlRecurso.size)
-      url.substring(0, indexSlash) else url
+      url.substring(0, indexSlash)
+    else if (url.endsWith("/")) url.substring(0, url.lastIndexOf("/"))
+    else url
     val urlR: String = recurso.urlRecurso.substring(0, indexSlash)
     urlR.contains(myUrl) && urlR.equals(myUrl) && recurso.acceso
   }
@@ -43,7 +45,9 @@ case class RecursoDriverRepository(generalDAO: AlianzaDAOs) extends RecursoRepos
   private def filtrarRecursosAgente(recurso: RecursoPerfilAgente, url: String): Boolean = {
     val indexSlash: Int = recurso.urlRecurso.lastIndexOf("/")
     val myUrl: String = if (recurso.urlRecurso.contains("/*") && url.size > recurso.urlRecurso.size)
-      url.substring(0, indexSlash) else url
+      url.substring(0, indexSlash)
+    else if (url.endsWith("/")) url.substring(0, url.lastIndexOf("/"))
+    else url
     val urlR: String = recurso.urlRecurso.substring(0, indexSlash)
     urlR.contains(myUrl) && urlR.equals(myUrl) && recurso.acceso
   }
@@ -59,8 +63,13 @@ case class RecursoDriverRepository(generalDAO: AlianzaDAOs) extends RecursoRepos
    * @return
    */
   private def filtrarRecursosClienteAdmin(recurso: RecursoPerfilClienteAdmin, url: String): Boolean = {
-    val urlR = recurso.urlRecurso
-    urlR.contains(url) && urlR.substring(0, urlR.lastIndexOf("/")).equals(url) && recurso.acceso
+    val indexSlash: Int = recurso.urlRecurso.lastIndexOf("/")
+    val myUrl: String = if (recurso.urlRecurso.contains("/*") && url.size > recurso.urlRecurso.size)
+      url.substring(0, indexSlash)
+    else if (url.endsWith("/")) url.substring(0, url.lastIndexOf("/"))
+    else url
+    val urlR: String = recurso.urlRecurso.substring(0, indexSlash)
+    urlR.contains(myUrl) && urlR.equals(myUrl) && recurso.acceso
   }
 
 }
