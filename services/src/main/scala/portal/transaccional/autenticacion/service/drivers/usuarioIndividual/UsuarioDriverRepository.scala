@@ -19,12 +19,11 @@ import scala.concurrent.{ ExecutionContext, Future }
 case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: ExecutionContext) extends UsuarioRepository {
 
   def getByIdentificacion(numeroIdentificacion: String): Future[Usuario] = {
-    println("VALIDACION 1")
     usuarioDAO.getByIdentity(numeroIdentificacion) flatMap {
       (usuarioOption: Option[Usuario]) =>
         usuarioOption match {
           case Some(usuario: Usuario) => Future.successful(usuario)
-          case ex: Any => println(ex); Future.failed(ValidacionException("401.3", "Error usuario no existe"))
+          case _ => Future.failed(ValidacionException("401.3", "Error usuario no existe"))
         }
     }
   }

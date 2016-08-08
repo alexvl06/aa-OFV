@@ -3,9 +3,12 @@ package portal.transaccional.autenticacion.service.web.autorizacion
 import akka.actor.ActorSelection
 import co.com.alianza.app.CrossHeaders
 import co.com.alianza.commons.enumerations.TiposCliente
+import co.com.alianza.commons.enumerations.TiposCliente
+import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import co.com.alianza.exceptions._
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
+import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.token.{ AesUtil, Token }
 import enumerations.CryptoAesParameters
 import portal.transaccional.autenticacion.service.drivers.autorizacion._
@@ -36,6 +39,9 @@ ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters
   val agente = TiposCliente.agenteEmpresarial.toString
   val admin = TiposCliente.clienteAdministrador.toString
   val individual = TiposCliente.clienteIndividual.toString
+  val cmFiduciaria = TiposCliente.comercialFiduciaria.toString
+  val cmValores = TiposCliente.comercialValores.toString
+  val cmAdmin = TiposCliente.comercialAdmin.toString
   val comercialFiduciaria = TiposCliente.comercialFiduciaria.toString
   val comercialValores = TiposCliente.comercialValores.toString
   val comercialAdmin = TiposCliente.comercialAdmin.toString
@@ -88,6 +94,10 @@ ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters
             case `agente` => autorizacionAgenteRepo.autorizar(token, encriptedToken, url, ipRemota)
             case `admin` => autorizacionAdminRepo.autorizar(token, encriptedToken, url, ipRemota)
             case `individual` => autorizacionRepository.autorizar(token, encriptedToken, url)
+            //TODO: Agregar la autorizacion de url para los tipo comerciales
+            case `cmFiduciaria` => obtenerUsuarioComercialMock(TiposCliente.comercialFiduciaria, usuario.usuario)
+            case `cmValores` => obtenerUsuarioComercialMock(TiposCliente.comercialValores, usuario.usuario)
+            case `cmAdmin` => obtenerUsuarioComercialMock(TiposCliente.clienteAdministrador, usuario.usuario)
             case _ => Future.failed(NoAutorizado("Tipo usuario no existe"))
           }
           onComplete(resultado) {
@@ -96,6 +106,14 @@ ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters
           }
       }
     }
+  }
+
+  //TODO: Borrar este metodo cuando se realice la autorizacion de url para comerciales
+  private def obtenerUsuarioComercialMock(tipoCliente: TiposCliente, usuario: String): Future[Autorizado] = Future {
+    case class UsuarioLogged(id: Int, correo: String, identificacion: String, tipoIdentificacion: Int, tipoCliente: TiposCliente, usuario: String)
+    val usuarioL = UsuarioLogged(0, "", "", 0, tipoCliente, usuario)
+    val usuarioJson: String = JsonUtil.toJson(usuarioL)
+    Autorizado(usuarioJson)
   }
 
   def execution(ex: Any): StandardRoute = {

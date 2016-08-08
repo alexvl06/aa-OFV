@@ -6,7 +6,7 @@ import java.sql.{ CallableStatement, Connection, ResultSet }
 import co.com.alianza.exceptions._
 import oracle.net.ns.NetException
 import org.apache.commons.lang3.StringEscapeUtils
-import portal.transaccional.fiduciaria.autenticacion.storage.conn.oracle.DataBaseAccessOracleAlianza
+import portal.transaccional.fiduciaria.autenticacion.storage.conn.oracle.DataBaseAccesOracleAlianza
 import shapeless.syntax.typeable._
 import spray.json.{ JsArray, JsObject, JsString }
 
@@ -23,7 +23,7 @@ trait AlianzaStorageHelper {
 
   protected def transaction[R](f: Connection => R): Future[R] = {
     Future {
-      val connectionDataSource = DataBaseAccessOracleAlianza.ds
+      val connectionDataSource = DataBaseAccesOracleAlianza.ds
       val connection = connectionDataSource.getConnection
       val result = f(connection)
       connection.commit()
