@@ -8,6 +8,7 @@ import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 import co.com.alianza.exceptions._
 import oracle.net.ns.NetException
 import java.net.SocketTimeoutException
+import org.apache.commons.lang3.StringEscapeUtils
 
 import portal.transaccional.fiduciaria.autenticacion.storage.conn.oracle.DataBaseAccesOracleAlianza
 
@@ -81,7 +82,7 @@ class AlianzaCoreRepository(implicit val executionContex: ExecutionContext) {
         val numCol = r.getMetaData.getColumnCount
         while (r next ()) {
           for (a <- 1 to numCol) {
-            val x = if (r.getString(a) != null) r.getString(a).replaceAll("\"", "'") else ""
+            val x = formatField(r.getString(a))
             if (a == 1)
               record = record + "{\n"
             if (a == numCol)
@@ -125,6 +126,10 @@ class AlianzaCoreRepository(implicit val executionContex: ExecutionContext) {
         val msg = s"Error ejecutando prodecimiento $codeResponse - $detailResponse"
         throw PersistenceException(new Exception(codeResponse.toString), BusinessLevel, msg)
     }
+  }
+
+  private def formatField(value: String): String = {
+    if (value != null) StringEscapeUtils.escapeEcmaScript(value.replaceAll("""\r\n|\r|\n""", """<br>""").replaceAll("""\t""", "&#x9;").replaceAll("\'", "&#39;")) else ""
   }
 
 }

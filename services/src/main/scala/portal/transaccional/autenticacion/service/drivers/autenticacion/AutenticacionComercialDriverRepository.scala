@@ -81,7 +81,6 @@ case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository, usua
       _ <- usuarioComercialRepo.crearToken(usuario.id, AesUtil.encriptarToken(token))
       sesion <- sesionRepo.crearSesion(token, inactividad.valor.toInt, None)
     } yield token
-    Future.failed(ValidacionException("401.2", "Error login admin comercial no implementado"))
   }
 
   /**
