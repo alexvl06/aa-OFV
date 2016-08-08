@@ -15,7 +15,7 @@ trait UsuarioComercialRepository {
 
   def getByToken(token: String): Future[Option[UsuarioComercial]]
 
-  def actualizarToken(numeroIdentificacion: String, token: String): Future[Int]
+  def actualizarToken(idUsuario: Int, token: String): Future[Int]
 
   def actualizarIp(numeroIdentificacion: String, ip: String): Future[Int]
 

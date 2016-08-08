@@ -36,12 +36,12 @@ case class UsuarioComercialDriverRepository(usuarioDAO: UsuarioComercialDAOs)(im
   /**
    * Asociar el token al usuarioComercial
    *
-   * @param numeroIdentificacion
+   * @param idUsuario
    * @param token
    * @return
    */
-  def actualizarToken(numeroIdentificacion: String, token: String): Future[Int] = {
-    usuarioDAO.createToken(numeroIdentificacion, token)
+  def actualizarToken(idUsuario: Int, token: String): Future[Int] = {
+    usuarioDAO.createToken(idUsuario, token)
   }
 
   /**

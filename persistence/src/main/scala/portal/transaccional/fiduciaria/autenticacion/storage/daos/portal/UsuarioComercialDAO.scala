@@ -32,8 +32,8 @@ case class UsuarioComercialDAO()(implicit dcConfig: DBConfig) extends TableQuery
     run((this returning this.map(_.id)) += usuario)
   }
 
-  def createToken(usuario: String, token: String): Future[Int] = {
-    run(this.filter(_.usuario === usuario).map(_.token).update(Some(token)))
+  def createToken(idUsuario: Int, token: String): Future[Int] = {
+    run(this.filter(_.id === idUsuario).map(_.token).update(Some(token)))
   }
 
   def deleteToken(token: String): Future[Int] = {

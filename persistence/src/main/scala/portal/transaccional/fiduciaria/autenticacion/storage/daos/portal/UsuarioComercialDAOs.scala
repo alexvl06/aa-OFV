@@ -19,7 +19,7 @@ trait UsuarioComercialDAOs {
 
   def create(usuario: UsuarioComercial): Future[Int]
 
-  def createToken(numeroIdentificacion: String, token: String): Future[Int]
+  def createToken(idUsuario: Int, token: String): Future[Int]
 
   def deleteToken(token: String): Future[Int]
 

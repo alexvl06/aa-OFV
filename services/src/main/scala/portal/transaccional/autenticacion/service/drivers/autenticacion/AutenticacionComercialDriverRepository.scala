@@ -46,6 +46,7 @@ case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository, usua
       cliente <- ldapRepo.autenticarLdap(usuario, tipoUsuario, password)
       usuario <- usuarioComercialRepo.getByUser(cliente.usuario)
       token <- generarTokenComercial(cliente, tipoUsuario, ip, "100")
+      _ <- usuarioComercialRepo.actualizarToken(usuario.id, token)
     } yield token
   }
 
