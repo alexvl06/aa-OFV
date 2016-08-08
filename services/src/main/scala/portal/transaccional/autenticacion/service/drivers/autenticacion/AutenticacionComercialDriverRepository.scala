@@ -8,7 +8,7 @@ import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.infrastructure.dto.Cliente
 import co.com.alianza.persistence.dto.UsuarioLdapDTO
 import co.com.alianza.persistence.entities.{ UsuarioComercialAdmin, Usuario, UsuarioComercial }
-import co.com.alianza.util.token.Token
+import co.com.alianza.util.token.{AesUtil, Token}
 import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionRepository
 import portal.transaccional.autenticacion.service.drivers.ldap.LdapRepository
 import portal.transaccional.autenticacion.service.drivers.sesion.SesionRepository
@@ -55,7 +55,7 @@ case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository, usua
       usuario <- usuarioComercialRepo.getByUser(cliente.usuario)
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
       token <- generarTokenComercial(cliente, usuario, tipoUsuario, ip, inactividad.valor)
-      _ <- usuarioComercialRepo.actualizarToken(usuario.id, token)
+      _ <- usuarioComercialRepo.actualizarToken(usuario.id, AesUtil.encriptarToken(token))
       sesion <- sesionRepo.crearSesion(token, inactividad.valor.toInt, None)
     } yield token
   }
@@ -78,7 +78,7 @@ case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository, usua
       usuario <- usuarioComercialAdminRepo.obtenerUsuario(usuario)
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
       token <- generarTokenAdminComercial(usuario, ip, inactividad.valor)
-      _ <- usuarioComercialRepo.actualizarToken(usuario.id, token)
+      _ <- usuarioComercialRepo.actualizarToken(usuario.id, AesUtil.encriptarToken(token))
       sesion <- sesionRepo.crearSesion(token, inactividad.valor.toInt, None)
     } yield token
     Future.failed(ValidacionException("401.2", "Error login admin comercial no implementado"))
