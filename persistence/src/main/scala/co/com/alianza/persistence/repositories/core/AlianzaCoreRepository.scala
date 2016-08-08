@@ -82,7 +82,7 @@ class AlianzaCoreRepository(implicit val executionContex: ExecutionContext) {
         val numCol = r.getMetaData.getColumnCount
         while (r next ()) {
           for (a <- 1 to numCol) {
-            val x =  formatField(r.getString(a))
+            val x = formatField(r.getString(a))
             if (a == 1)
               record = record + "{\n"
             if (a == numCol)
