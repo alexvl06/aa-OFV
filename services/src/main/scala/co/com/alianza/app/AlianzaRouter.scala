@@ -47,7 +47,7 @@ case class AlianzaRouter(
       new EnumeracionService().route ~
       UsuarioService(kafkaActor, usuariosActor).route ~
       new ReglasContrasenasService(contrasenasActor).route ~
-      PinService(kafkaActor, pinActor, pinUsuarioAgenteEmpresarialActor, pinUsuarioEmpresarialAdminActor).route ~
+      PinService(kafkaActor, pinActor, pinUsuarioEmpresarialAdminActor, pinUsuarioAgenteEmpresarialActor).route ~
       new AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).insecureRoute ~
       authenticate(authenticateUser) {
         user =>
