@@ -11,13 +11,14 @@ import co.com.alianza.persistence.entities.{ UsuarioComercialAdmin, Usuario, Usu
 import co.com.alianza.util.token.Token
 import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionRepository
 import portal.transaccional.autenticacion.service.drivers.ldap.LdapRepository
+import portal.transaccional.autenticacion.service.drivers.sesion.SesionRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioComercial.UsuarioComercialRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioComercialAdmin.UsuarioComercialAdminRepository
 
 import scala.concurrent.{ ExecutionContext, Future }
 
 case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository, usuarioComercialRepo: UsuarioComercialRepository,
-    usuarioComercialAdminRepo: UsuarioComercialAdminRepository, configuracionRepo: ConfiguracionRepository)(implicit val ex: ExecutionContext) extends AutenticacionComercialRepository {
+    usuarioComercialAdminRepo: UsuarioComercialAdminRepository, configuracionRepo: ConfiguracionRepository, sesionRepo: SesionRepository)(implicit val ex: ExecutionContext) extends AutenticacionComercialRepository {
 
   /**
    * Redirigir a la autenticacion correspondiente
@@ -55,6 +56,7 @@ case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository, usua
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
       token <- generarTokenComercial(cliente, tipoUsuario, ip, inactividad.valor)
       _ <- usuarioComercialRepo.actualizarToken(usuario.id, token)
+      sesion <- sesionRepo.crearSesion(token, inactividad.valor.toInt, None)
     } yield token
   }
 
@@ -77,6 +79,7 @@ case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository, usua
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
       token <- generarTokenAdminComercial(usuario, ip, inactividad.valor)
       _ <- usuarioComercialRepo.actualizarToken(usuario.id, token)
+      sesion <- sesionRepo.crearSesion(token, inactividad.valor.toInt, None)
     } yield token
     Future.failed(ValidacionException("401.2", "Error login admin comercial no implementado"))
   }
