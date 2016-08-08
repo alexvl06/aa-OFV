@@ -55,7 +55,7 @@ case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository, usua
       usuario <- usuarioComercialRepo.getByUser(cliente.usuario)
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
       token <- generarTokenComercial(cliente, usuario, tipoUsuario, ip, inactividad.valor)
-      _ <- usuarioComercialRepo.crearToken(usuario.id, token)
+      _ <- usuarioComercialRepo.crearToken(usuario.id, AesUtil.encriptarToken(token))
       sesion <- sesionRepo.crearSesion(token, inactividad.valor.toInt, None)
     } yield token
   }

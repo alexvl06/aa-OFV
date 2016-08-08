@@ -29,8 +29,7 @@ import scala.util.{ Failure, Success }
 case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgenteRepository: UsuarioEmpresarialRepository,
   usuarioAdminRepository: UsuarioEmpresarialAdminRepository, autorizacionRepository: AutorizacionUsuarioRepository, kafkaActor: ActorSelection,
   autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository, autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository,
-  autorizacionComercialRepo : AutorizacionUsuarioComercialRepository, autorizacionComercialAdminRepo : AutorizacionUsuarioComercialAdminRepository)(implicit val
-ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters
+  autorizacionComercialRepo: AutorizacionUsuarioComercialRepository, autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters
     with CrossHeaders {
 
   val invalidarTokenPath = "invalidarToken"
@@ -65,7 +64,7 @@ ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters
               case `agente` => autorizacionAgenteRepo.invalidarToken(token, encriptedToken)
               case `admin` => autorizacionAdminRepo.invalidarToken(token, encriptedToken)
               case `individual` => autorizacionRepository.invalidarToken(token, encriptedToken)
-              case `comercialFiduciaria` |`comercialValores` => autorizacionComercialRepo.invalidarToken(token, encriptedToken)
+              case `comercialFiduciaria` | `comercialValores` => autorizacionComercialRepo.invalidarToken(token, encriptedToken)
               case `comercialAdmin` => autorizacionComercialAdminRepo.invalidarToken(token, encriptedToken)
               case _ => Future.failed(NoAutorizado("Tipo usuario no existe"))
             }
@@ -120,7 +119,9 @@ ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters
       case ex: NoAutorizado => complete((StatusCodes.Unauthorized, ex))
       case ex: ValidacionException => complete((StatusCodes.Unauthorized, "sdf"))
       case ex: PersistenceException => complete((StatusCodes.InternalServerError, "Error inesperado"))
-      case ex: Throwable => complete((StatusCodes.Unauthorized, "Error inesperado"))
+      case ex: Throwable =>
+        ex.printStackTrace()
+        complete((StatusCodes.Unauthorized, "Error inesperado"))
     }
   }
 
@@ -128,7 +129,7 @@ ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters
     val nToken = Token.getToken(token).getJWTClaimsSet
     val tipoCliente = nToken.getCustomClaim("tipoCliente").toString
     //TODO: el nit no lo pide si es tipo comercial
-    val nit = if (tipoCliente == individual) "" else nToken.getCustomClaim("nit").toString
+    val nit = if (tipoCliente == agente || tipoCliente == admin) nToken.getCustomClaim("nit").toString else ""
     val lastIp = nToken.getCustomClaim("ultimaIpIngreso").toString
     val user = nToken.getCustomClaim("nombreUsuario").toString
     val email = nToken.getCustomClaim("correo").toString

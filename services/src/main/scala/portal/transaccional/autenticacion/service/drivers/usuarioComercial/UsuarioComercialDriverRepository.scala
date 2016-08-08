@@ -59,7 +59,6 @@ case class UsuarioComercialDriverRepository(usuarioDAO: UsuarioComercialDAOs)(im
    */
   def actualizarIp(idUsuario: Int, ip: String): Future[Int] = usuarioDAO.updateLastIp(idUsuario, ip)
 
-
   /**
    * Actualizar fecha ingreso
    *
@@ -68,7 +67,6 @@ case class UsuarioComercialDriverRepository(usuarioDAO: UsuarioComercialDAOs)(im
    * @return
    */
   def actualizarFechaIngreso(idUsuario: Int, fechaActual: Timestamp): Future[Int] = usuarioDAO.updateLastDate(idUsuario, fechaActual)
-
 
   /////////////////////////////// validaciones //////////////////////////////////
 
@@ -79,7 +77,7 @@ case class UsuarioComercialDriverRepository(usuarioDAO: UsuarioComercialDAOs)(im
    * @return Future[Boolean]
    */
   def validarEstado(estado: Int): Future[Boolean] = {
-    if (estado == EstadosUsuarioEnum.bloqueContraseña.id){
+    if (estado == EstadosUsuarioEnum.bloqueContraseña.id) {
       Future.failed(ValidacionException("401.8", "Usuario Bloqueado"))
     } else if (estado == EstadosUsuarioEnum.pendienteActivacion.id) {
       Future.failed(ValidacionException("401.10", "Usuario Bloqueado"))
