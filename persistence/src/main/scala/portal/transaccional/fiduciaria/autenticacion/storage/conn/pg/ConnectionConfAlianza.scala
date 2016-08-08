@@ -17,7 +17,4 @@ case class ConnectionConfAlianza(config: Config) extends ConnectionConf {
   val pass = config.getString("db.alianza.pass")
   val maxPoolSize = config.getInt("db.alianza.maxPoolSize")
 
-  val connectionString = config.getString("db.alianza.core.connectionString")
-  val checkoutTimeout = config.getInt("db.alianza.core.checkoutTimeout")
-
 }

@@ -3,7 +3,7 @@ package portal.transaccional.fiduciaria.autenticacion.storage.daos.portal
 import java.sql.Timestamp
 
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.persistence.config.DBConfig
+import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
 import co.com.alianza.persistence.entities.{ UsuarioEmpresarialAdmin, UsuarioEmpresarialAdminTable }
 import enumerations.EstadosEmpresaEnum
 import slick.lifted.TableQuery
@@ -14,8 +14,8 @@ import scalaz.Validation
 case class UsuarioEmpresarialAdminDAO()(implicit dcConfig: DBConfig) extends TableQuery(new UsuarioEmpresarialAdminTable(_))
     with UsuarioEmpresarialAdminDAOs {
 
-  import dcConfig.db._
-  import dcConfig.profile.api._
+  import dcConfig.DB._
+  import dcConfig.driver.api._
 
   def getById(idUsuario: Int): Future[Option[UsuarioEmpresarialAdmin]] = {
     run(this.filter(_.id === idUsuario).result.headOption)

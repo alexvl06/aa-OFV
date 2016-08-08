@@ -9,10 +9,9 @@ import co.com.alianza.exceptions._
 import oracle.net.ns.NetException
 import java.net.SocketTimeoutException
 
-import portal.transaccional.fiduciaria.autenticacion.storage.conn.oracle.DataBaseAccessOracleAlianza
+import portal.transaccional.fiduciaria.autenticacion.storage.conn.oracle.DataBaseAccesOracleAlianza
 
 /**
- * Repositorio que obtiene la conexión del DataSource: [[portal.transaccional.fiduciaria.autenticacion.storage.conn.oracle.DataBaseAccessOracleAlianza.ds]]
  *
  * @author seven4n
  */
@@ -21,7 +20,7 @@ class AlianzaCoreRepository(implicit val executionContex: ExecutionContext) {
   def loan[R](f: Connection => Validation[PersistenceException, R]): Future[Validation[PersistenceException, R]] = {
     Future {
       Try {
-        val connectionDataSource = DataBaseAccessOracleAlianza.ds
+        val connectionDataSource = DataBaseAccesOracleAlianza.ds
         connectionDataSource.getConnection
       } match {
         case Success(connection) =>

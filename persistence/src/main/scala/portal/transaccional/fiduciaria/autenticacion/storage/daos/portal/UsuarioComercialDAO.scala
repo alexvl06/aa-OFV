@@ -2,8 +2,8 @@ package portal.transaccional.fiduciaria.autenticacion.storage.daos.portal
 
 import java.sql.Timestamp
 
-import co.com.alianza.persistence.config.DBConfig
 import co.com.alianza.persistence.entities.{ UsuarioComercial, UsuarioComercialTable }
+import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
 import slick.lifted.TableQuery
 
 import scala.concurrent.Future
@@ -13,8 +13,8 @@ import scala.concurrent.Future
  */
 case class UsuarioComercialDAO()(implicit dcConfig: DBConfig) extends TableQuery(new UsuarioComercialTable(_)) with UsuarioComercialDAOs {
 
-  import dcConfig.db._
-  import dcConfig.profile.api._
+  import dcConfig.DB._
+  import dcConfig.driver.api._
 
   def getAllUsers(): Future[Seq[UsuarioComercial]] = {
     run(this.result)

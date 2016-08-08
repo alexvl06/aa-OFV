@@ -17,6 +17,6 @@ trait IpUsuarioDAOs {
 
   def create(ip: IpsUsuario): Future[String]
 
-  def delete(ipsUsuarioE: IpsUsuario): Future[Int]
+  //def delete(ipsUsuarioE: IpsUsuario): Future[Int]
 
 }

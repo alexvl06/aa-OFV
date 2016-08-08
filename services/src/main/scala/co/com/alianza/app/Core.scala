@@ -14,9 +14,6 @@ import co.com.alianza.domain.aggregates.permisos.PermisoTransaccionalActorSuperv
 import co.com.alianza.domain.aggregates.pin.PinActorSupervisor
 import co.com.alianza.domain.aggregates.usuarios.UsuariosActorSupervisor
 import co.com.alianza.infrastructure.auditing.KafkaActorSupervisor
-import co.com.alianza.persistence.config.DBConfig
-import co.com.alianza.persistence.config.oracle.OracleConfig
-import co.com.alianza.persistence.config.pg.PGConfig
 import co.com.alianza.util.ConfigApp
 import com.typesafe.config.Config
 import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionComercialDriverRepository, AutenticacionDriverRepository, AutenticacionEmpresaDriverRepository }
@@ -38,6 +35,8 @@ import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioE
 import portal.transaccional.autenticacion.service.drivers.usuarioComercial.UsuarioComercialDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioComercialAdmin.{ UsuarioComercialAdminRepository, UsuarioComercialAdminDriverRepository }
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioDriverRepository
+import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
+import portal.transaccional.fiduciaria.autenticacion.storage.config.pg.{ OracleConfig, PGConfig }
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.core.ClienteDAO
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.ldap.AlianzaLdapDAO
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal._

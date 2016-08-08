@@ -7,8 +7,8 @@ import scala.concurrent.ExecutionContext
 
 object DataBaseExecutionContext {
 
-  private val numThreads = ConfigFactory.load().getInt("dbs.alianza.db.config.numThreads")
-  private val queueSize = ConfigFactory.load().getInt("dbs.alianza.db.config.queueSize")
+  private val numThreads = 9
+  private val queueSize = 1000
   implicit val executionContext: ExecutionContext = AsyncExecutor("DataAccessAdapter", numThreads, queueSize).executionContext
 
 }

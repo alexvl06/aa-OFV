@@ -8,7 +8,7 @@ import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.infrastructure.dto.Cliente
 import co.com.alianza.persistence.dto.UsuarioLdapDTO
 import co.com.alianza.persistence.entities.{ UsuarioComercialAdmin, Usuario, UsuarioComercial }
-import co.com.alianza.util.token.{AesUtil, Token}
+import co.com.alianza.util.token.{ AesUtil, Token }
 import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionRepository
 import portal.transaccional.autenticacion.service.drivers.ldap.LdapRepository
 import portal.transaccional.autenticacion.service.drivers.sesion.SesionRepository

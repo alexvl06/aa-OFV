@@ -1,4 +1,4 @@
-package co.com.alianza.persistence.config
+package portal.transaccional.fiduciaria.autenticacion.storage.config
 
 import slick.driver.JdbcProfile
 import slick.jdbc.JdbcBackend.DatabaseDef
@@ -8,7 +8,7 @@ import slick.jdbc.JdbcBackend.DatabaseDef
  */
 trait DBConfig {
 
-  implicit val profile: JdbcProfile
-  implicit val db: DatabaseDef
+  implicit val driver: JdbcProfile
+  implicit val DB: DatabaseDef
 
 }
