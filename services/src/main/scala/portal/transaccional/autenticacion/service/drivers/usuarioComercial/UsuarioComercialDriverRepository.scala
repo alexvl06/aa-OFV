@@ -47,23 +47,23 @@ case class UsuarioComercialDriverRepository(usuarioDAO: UsuarioComercialDAOs)(im
   /**
    * Actualizar ultima ip
    *
-   * @param numeroIdentificacion
+   * @param idUsuario
    * @param ip
    * @return
    */
-  def actualizarIp(numeroIdentificacion: String, ip: String): Future[Int] = {
-    usuarioDAO.updateLastIp(numeroIdentificacion, ip)
+  def actualizarIp(idUsuario: Int, ip: String): Future[Int] = {
+    usuarioDAO.updateLastIp(idUsuario, ip)
   }
 
   /**
    * Actualizar fecha ingreso
    *
-   * @param numeroIdentificacion
+   * @param idUsuario
    * @param fechaActual
    * @return
    */
-  def actualizarFechaIngreso(numeroIdentificacion: String, fechaActual: Timestamp): Future[Int] = {
-    usuarioDAO.updateLastDate(numeroIdentificacion, fechaActual)
+  def actualizarFechaIngreso(idUsuario: Int, fechaActual: Timestamp): Future[Int] = {
+    usuarioDAO.updateLastDate(idUsuario, fechaActual)
   }
 
   /////////////////////////////// validaciones //////////////////////////////////

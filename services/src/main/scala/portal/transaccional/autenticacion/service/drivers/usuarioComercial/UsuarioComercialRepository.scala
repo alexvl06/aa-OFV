@@ -17,9 +17,9 @@ trait UsuarioComercialRepository {
 
   def actualizarToken(idUsuario: Int, token: String): Future[Int]
 
-  def actualizarIp(numeroIdentificacion: String, ip: String): Future[Int]
+  def actualizarIp(idUsuario: Int, ip: String): Future[Int]
 
-  def actualizarFechaIngreso(numeroIdentificacion: String, fechaActual: Timestamp): Future[Int]
+  def actualizarFechaIngreso(idUsuario: Int, fechaActual: Timestamp): Future[Int]
 
   def validarEstado(estado: Int): Future[Boolean]
 

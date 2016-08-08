@@ -40,12 +40,12 @@ case class UsuarioComercialDAO()(implicit dcConfig: DBConfig) extends TableQuery
     run(this.filter(_.token === token).map(_.token).update(Some(null)))
   }
 
-  def updateLastIp(usuario: String, ipActual: String): Future[Int] = {
-    run(this.filter(_.usuario === usuario).map(_.ipUltimoIngreso).update(Some(ipActual)))
+  def updateLastIp(idUsuario: Int, ipActual: String): Future[Int] = {
+    run(this.filter(_.id === idUsuario).map(_.ipUltimoIngreso).update(Some(ipActual)))
   }
 
-  def updateLastDate(usuario: String, fechaActual: Timestamp): Future[Int] = {
-    run(this.filter(_.usuario === usuario).map(_.fechaUltimoIngreso).update(Some(fechaActual)))
+  def updateLastDate(idUsuario: Int, fechaActual: Timestamp): Future[Int] = {
+    run(this.filter(_.id === idUsuario).map(_.fechaUltimoIngreso).update(Some(fechaActual)))
   }
 
 }

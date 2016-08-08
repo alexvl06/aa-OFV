@@ -3,17 +3,22 @@ package portal.transaccional.autenticacion.service.drivers.autenticacion
 import java.util.Date
 
 import co.com.alianza.commons.enumerations.TiposCliente
+import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.infrastructure.dto.Cliente
 import co.com.alianza.persistence.dto.UsuarioLdapDTO
 import co.com.alianza.persistence.entities.{ Usuario, UsuarioComercial }
 import co.com.alianza.util.token.Token
+import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionRepository
 import portal.transaccional.autenticacion.service.drivers.ldap.LdapRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioComercial.UsuarioComercialRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioComercialAdmin.UsuarioComercialAdminRepository
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository, usuarioComercialRepo: UsuarioComercialRepository)(implicit val ex: ExecutionContext) extends AutenticacionComercialRepository {
+case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository, usuarioComercialRepo: UsuarioComercialRepository,
+  usuarioComercialAdminRepo: UsuarioComercialAdminRepository, configuracionRepo: ConfiguracionRepository)
+  (implicit val ex: ExecutionContext) extends AutenticacionComercialRepository {
 
   /**
    * Redirigir a la autenticacion correspondiente
@@ -33,25 +38,47 @@ case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository, usua
 
   /**
    * Flujo:
-   * - obtener usuario
-   * - validar contrasena
    * - obtener cliente ldap
-   * - validar caducidad
+   * - obtener usuario
+   * - TODO: validar caducidad
+   * - TODO: validar ingresos erróneos
+   * - obtener llave inactividad
    * - generar token
    * - asociar token
    * - crear session de usuario
    */
   def autenticarComercial(usuario: String, tipoUsuario: Int, password: String, ip: String): Future[String] = {
+    //TODO: actualizar usuario cuando se loguéa bien
+    //TODO: actualizar usuario cuando se loguéa mal
     for {
       cliente <- ldapRepo.autenticarLdap(usuario, tipoUsuario, password)
       usuario <- usuarioComercialRepo.getByUser(cliente.usuario)
-      token <- generarTokenComercial(cliente, tipoUsuario, ip, "100")
+      inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
+      token <- generarTokenComercial(cliente, tipoUsuario, ip, inactividad.valor)
       _ <- usuarioComercialRepo.actualizarToken(usuario.id, token)
     } yield token
   }
 
+  /**
+   * Flujo:
+   * - obtener usuario
+   * - validar contrasena
+   * - TODO: validar caducidad
+   * - TODO: validar ingresos erróneos
+   * - obtener llave inactividad
+   * - generar token
+   * - asociar token
+   * - crear session de usuario
+   */
   def autenticarAdministrador(): Future[String] = {
-    //TODO: Agregar validaciones
+    //TODO: actualizar usuario cuando se loguéa bien
+    //TODO: actualizar usuario cuando se loguéa mal
+    for {
+      usuario <- usuarioComercialRepo.getByUser(cliente.usuario)
+      inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
+      token <- generarTokenComercial(cliente, tipoUsuario, ip, inactividad.valor)
+      _ <- usuarioComercialRepo.actualizarToken(usuario.id, token)
+    } yield token
     Future.failed(ValidacionException("401.2", "Error login admin comercial no implementado"))
   }
 

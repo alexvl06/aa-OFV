@@ -23,8 +23,8 @@ trait UsuarioComercialDAOs {
 
   def deleteToken(token: String): Future[Int]
 
-  def updateLastIp(numeroIdentificacion: String, ipActual: String): Future[Int]
+  def updateLastIp(idUsuario: Int, ipActual: String): Future[Int]
 
-  def updateLastDate(numeroIdentificacion: String, fechaActual: Timestamp): Future[Int]
+  def updateLastDate(idUsuario: Int, fechaActual: Timestamp): Future[Int]
 
 }
