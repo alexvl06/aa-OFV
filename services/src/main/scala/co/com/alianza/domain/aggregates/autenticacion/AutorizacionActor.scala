@@ -1,57 +1,51 @@
 package co.com.alianza.domain.aggregates.autenticacion
 
-import java.util.Date
-
-import akka.actor.{ ActorLogging, Actor }
-import akka.actor.Props
+import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import akka.pattern.ask
 import akka.routing.RoundRobinPool
 import akka.util.Timeout
-
-import co.com.alianza.app.MainActors
-import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.domain.aggregates.autenticacion.errores.TokenInvalido
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.configuraciones.{ DataAccessAdapter => confDataAdapter }
-import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => usDataAdapter }
 import co.com.alianza.infrastructure.anticorruption.recursos.{ DataAccessAdapter => rDataAccessAdapter }
-import co.com.alianza.infrastructure.dto.{ Configuracion, RecursoUsuario, Usuario }
+import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => usDataAdapter }
+import co.com.alianza.infrastructure.dto.{ RecursoUsuario, Usuario }
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.util.FutureResponse
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.token.{ AesUtil, Token }
 import co.com.alianza.util.transformers.ValidationT
-import enumerations.CryptoAesParameters
-
 import spray.http.StatusCodes._
 
-import scala.concurrent.duration._
 import scala.concurrent.Future
-import scalaz.std.AllInstances._
-import scala.util.{ Success, Failure }
-import scalaz.Validation
-import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
+import scala.concurrent.duration._
+import scalaz.{ Failure => zFailure, Success => zSuccess }
 
-class AutorizacionActorSupervisor extends Actor with ActorLogging {
+object AutorizacionActorSupervisor {
 
-  import akka.actor.SupervisorStrategy._
+  def props(sesionActorSupervisor: ActorRef) = Props(AutorizacionActorSupervisor(sesionActorSupervisor))
+}
+
+case class AutorizacionActorSupervisor(sesionActorSupervisor: ActorRef) extends Actor with ActorLogging {
+
   import akka.actor.OneForOneStrategy
+  import akka.actor.SupervisorStrategy._
 
-  val autorizacionActor = context.actorOf(Props[AutorizacionActor].withRouter(RoundRobinPool(nrOfInstances = 1)), "autorizacionActor")
-  val autorizacionUsuarioEmpresarialActor = context.actorOf(Props[AutorizacionUsuarioEmpresarialActor].withRouter(RoundRobinPool(nrOfInstances = 1)), "autorizacionUsuarioEmpresarialActor")
+  val autorizacionActor = context.actorOf(AutorizacionActor.props(sesionActorSupervisor).withRouter(RoundRobinPool(nrOfInstances = 1)), "autorizacionActor")
+  val autorizacionUsuarioEmpresarialActor = context.actorOf(
+    Props[AutorizacionUsuarioEmpresarialActor].withRouter(RoundRobinPool(nrOfInstances = 1)),
+    "autorizacionUsuarioEmpresarialActor"
+  )
 
-  def receive = {
+  def receive: PartialFunction[Any, Unit] = {
 
     case m: AutorizarUsuarioEmpresarialMessage =>
-      autorizacionUsuarioEmpresarialActor forward m
-      log info (m toString)
+      autorizacionUsuarioEmpresarialActor forward m; log.info(m.toString)
 
     case m: AutorizarUsuarioEmpresarialAdminMessage =>
-      autorizacionUsuarioEmpresarialActor forward m
-      log info (m toString)
+      autorizacionUsuarioEmpresarialActor forward m; log.info(m.toString)
 
-    case message: Any =>
-      autorizacionActor forward message; log info (message toString)
+    case message: Any => autorizacionActor forward message; log.info(message.toString)
 
   }
 
@@ -64,19 +58,28 @@ class AutorizacionActorSupervisor extends Actor with ActorLogging {
 
 }
 
+object AutorizacionActor {
+
+  def props(sesionActorSupervisor: ActorRef) = Props(AutorizacionActor(sesionActorSupervisor))
+}
+
 /**
  * Realiza la validación de un token y si se está autorizado para acceder a la url
  * @author smontanez
  */
-class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
+case class AutorizacionActor(sesionActorSupervisor: ActorRef) extends Actor with ActorLogging with FutureResponse {
 
-  import scala.concurrent.ExecutionContext
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.errorValidacion
-  implicit val _: ExecutionContext = context.dispatcher
+  import context.dispatcher
+
+  import scalaz.Validation
+  import scalaz.std.AllInstances._
   implicit val timeout: Timeout = 10.seconds
 
   def receive = {
+
     case message: AutorizarUrl =>
+
       val currentSender = sender()
       val future = (for {
         usuarioOption <- ValidationT(validarToken(message.token))
@@ -86,35 +89,6 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
       }).run
       resolveFutureValidation(future, (x: ResponseMessage) => x, errorValidacion, currentSender)
 
-    case message: InvalidarToken =>
-      val currentSender = sender()
-      val futureInvalidarToken = usDataAdapter.invalidarTokenUsuario(message.token)
-      futureInvalidarToken onComplete {
-        case Failure(failure) => currentSender ! failure
-        case Success(value) =>
-          MainActors.sesionActorSupervisor ! InvalidarSesion(message.token)
-          currentSender ! ResponseMessage(OK, "El token ha sido removido")
-      }
-
-    case message: InvalidarTokenAgente =>
-      val currentSender = sender()
-      val futureInvalidarToken = usDataAdapter.invalidarTokenAgente(message.token)
-      futureInvalidarToken onComplete {
-        case Failure(failure) => currentSender ! failure
-        case Success(value) =>
-          MainActors.sesionActorSupervisor ! InvalidarSesion(message.token)
-          currentSender ! ResponseMessage(OK, "El token ha sido removido")
-      }
-
-    case message: InvalidarTokenClienteAdmin =>
-      val currentSender = sender()
-      val futureInvalidarToken = usDataAdapter.invalidarTokenClienteAdmin(message.token)
-      futureInvalidarToken onComplete {
-        case Failure(failure) => currentSender ! failure
-        case Success(value) =>
-          MainActors.sesionActorSupervisor ! InvalidarSesion(message.token)
-          currentSender ! ResponseMessage(OK, "El token ha sido removido")
-      }
   }
 
   /**
@@ -125,14 +99,13 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
    * @param token El token para realizar validación
    */
   private def validarToken(token: String): Future[Validation[PersistenceException, Option[Usuario]]] = {
-    var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
-    var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
+
+    var decryptedToken: String = AesUtil.desencriptarToken(token, "AutorizacionActor.validarToken")
+
     Token.autorizarToken(decryptedToken) match {
       case true =>
         usDataAdapter.obtenerUsuarioToken(token).flatMap { x =>
-          val y: Validation[PersistenceException, Future[Option[Usuario]]] = x.map { userOpt =>
-            guardaTokenCache(userOpt, token)
-          }
+          val y: Validation[PersistenceException, Future[Option[Usuario]]] = x.map { userOpt => guardaTokenCache(userOpt, token) }
           co.com.alianza.util.transformers.Validation.sequence(y)
         }
       case false =>
@@ -147,9 +120,9 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
    * @return
    */
   private def guardaTokenCache(usuarioOption: Option[Usuario], token: String): Future[Option[Usuario]] = {
-    val validacionSesion: Future[Boolean] = ask(MainActors.sesionActorSupervisor, ValidarSesion(token)).mapTo[Boolean]
+    val validacionSesion: Future[Boolean] = ask(sesionActorSupervisor, ValidarSesion(token)).mapTo[Boolean]
     validacionSesion.map {
-      case true => usuarioOption.map(usuario => usuario.copy(contrasena = None))
+      case true => usuarioOption.map(usuario => usuario)
       case false => None
     }
   }
@@ -197,16 +170,13 @@ class AutorizacionActor extends Actor with ActorLogging with FutureResponse {
     filtrarRecursos(recurso.urlRecurso, recurso.acceso, url)
 
   protected def filtrarRecursos(urlRecurso: String, acceso: Boolean, url: String) = {
-    //TODO: quitar esos "ifseses"
     if (urlRecurso.equals(url)) acceso
     else if (urlRecurso.endsWith("/*")) {
       val urlC = urlRecurso.substring(0, urlRecurso.lastIndexOf("*"))
       if (urlC.equals(url + "/")) acceso
       else {
         if (url.length >= urlC.length) {
-          //TODO: Whhhattt ??? if (url.endsWith("/")) "" else ""
-          val ends = if (url.endsWith("/")) "" else ""
-          val urlSuffix = url.substring(0, urlC.length) + ends
+          val urlSuffix = url.substring(0, urlC.length) + ""
           if (urlSuffix.equals(urlC)) acceso
           else false
         } else false

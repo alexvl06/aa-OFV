@@ -2,26 +2,46 @@ package co.com.alianza.domain.aggregates.autenticacion
 
 import java.security.MessageDigest
 
-import akka.actor._
+import akka.actor.{ Props, _ }
+import akka.cluster.Cluster
 import akka.pattern.ask
-import akka.cluster.{ Member, MemberStatus }
 import akka.util.Timeout
-
-import co.com.alianza.app.MainActors
-import co.com.alianza.infrastructure.dto.{ Empresa, HorarioEmpresa }
+import co.com.alianza.exceptions.ValidacionException
+import co.com.alianza.infrastructure.dto.Empresa
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.util.token.AesUtil
+import com.typesafe.config.Config
 import enumerations.CryptoAesParameters
 
-import scala.collection.immutable.SortedSet
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.concurrent.duration._
-import scala.concurrent.ExecutionContext
-import scala.util.{ Failure, Success }
+import scala.util.{ Failure, Success, Try }
+import scala.xml.dtd.ValidationException
 
-class SesionActorSupervisor extends Actor with ActorLogging {
+/**
+ * Define los mensajes generados por el actor que maneja las sessiones
+ */
+object SesionActorSupervisor {
 
-  implicit val _: ExecutionContext = context dispatcher
-  implicit val timeout: Timeout = 10 seconds
+  case class SesionUsuarioCreada()
+
+  case class SesionUsuarioNoCreada()
+
+  case class SesionUsuarioValidada()
+
+  case class SesionUsuarioNoValidada()
+
+}
+
+case class SesionActorSupervisor() extends Actor with ActorLogging {
+
+  import SesionActorSupervisor._
+  import context.dispatcher
+
+  implicit val conf: Config = context.system.settings.config
+  implicit val timeout: Timeout = 10.seconds
+
+  private val cluster = Cluster.get(context.system)
 
   def receive = {
 
@@ -30,7 +50,7 @@ class SesionActorSupervisor extends Actor with ActorLogging {
     //
 
     // When an user authenticates
-    case message: CrearSesionUsuario => crearSesion(message.token, message.tiempoExpiracion, message.empresa, message.horario)
+    case message: CrearSesionUsuario => crearSesion(message.token, message.tiempoExpiracion, message.empresa)
 
     // When a user logout
     case message: InvalidarSesion => invalidarSesion(message.token)
@@ -45,11 +65,11 @@ class SesionActorSupervisor extends Actor with ActorLogging {
     case message: DeleteSession =>
       context.actorSelection("akka://alianza-fid-auth-service/user/sesionActorSupervisor/" + message.actorName).resolveOne().onComplete {
         case Success(session) => session ! ExpirarSesion()
-        case Failure(ex) =>
+        case Failure(ex) => ValidacionException("410.10", "NO ELIMINO LA SESION")
       }
 
     case EncontrarActor(actorName) =>
-      val currentSender = sender
+      val currentSender = sender()
       context.actorSelection("akka://alianza-fid-auth-service/user/sesionActorSupervisor/" + actorName).resolveOne().onComplete {
         case Success(actor) => currentSender ! ActorEncontrado(actor)
         case Failure(ex) => currentSender ! ActorNoEncontrado
@@ -57,54 +77,60 @@ class SesionActorSupervisor extends Actor with ActorLogging {
 
     case BuscarSesion(token) => buscarSesion(token)
 
-    case CrearEmpresaActor(empresa, horario) =>
+    case CrearEmpresaActor(empresa) =>
       log info "Creando empresa Actor: " + s"empresa${empresa.id}"
-      sender ! context.actorOf(EmpresaActor.props(empresa, horario), s"empresa${empresa.id}")
+      sender ! context.actorOf(EmpresaActor.props(empresa), s"empresa${empresa.id}")
 
     case ObtenerEmpresaSesionActorId(empresaId) => obtenerEmpresaSesionActorId(empresaId)
   }
 
   private def validarSesion(message: ValidarSesion): Unit = {
-    var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT);
-    var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, message.token);
     val currentSender = sender()
+
+    val decryptedToken = AesUtil.desencriptarToken(message.token, "SesionActor.validarSesion")
     val actorName = generarNombreSesionActor(decryptedToken)
-    context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(actorName) map {
+    val response = context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(actorName)
+
+    response map {
       case Some(sesionActor: ActorRef) => sesionActor ? ActualizarSesion() onComplete { case _ => currentSender ! true }
       case None => currentSender ! false
     }
   }
 
-  private def buscarSesion(token: String) = {
-    var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT);
-    var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token);
-    val currentSender = sender()
-    val actorName = generarNombreSesionActor(decryptedToken)
-    context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(actorName) onComplete {
+  private def buscarSesion(token: String): Unit = {
+    var decryptedToken = AesUtil.desencriptarToken(token, "SesionActor.buscarSesion")
+    val currentSender: ActorRef = sender()
+    val actorName: String = generarNombreSesionActor(decryptedToken)
+    val future: Future[Any] = context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(actorName)
+    future.onComplete {
       case Failure(error) => log error ("Error al obtener la sesión", error)
       case Success(actor) => currentSender ! actor
     }
   }
 
   private def invalidarSesion(token: String): Unit = {
-    var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
-    var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
+    var decryptedToken = AesUtil.desencriptarToken(token, "SesionActor.invalidarSesion")
     val actorName = generarNombreSesionActor(decryptedToken)
-    ClusterUtil.obtenerNodos foreach { member =>
+    ClusterUtil.obtenerNodos(cluster) foreach { member =>
       context.actorSelection(RootActorPath(member.address) / "user" / "sesionActorSupervisor") ! DeleteSession(actorName)
     }
   }
 
-  private def crearSesion(token: String, expiration: Int, empresa: Option[Empresa], horario: Option[HorarioEmpresa]) = {
-    var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
-    var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token)
-    val name = generarNombreSesionActor(decryptedToken)
-    context.actorOf(SesionActor.props(expiration, empresa, horario), name)
-    log.info("Creando sesion de usuario. Tiempo de expiracion: " + expiration + " minutos.")
+  def crearSesion(token: String, expiration: Int, empresa: Option[Empresa]): Unit = {
+    var decryptedToken = AesUtil.desencriptarToken(token, "SesionActor.crearSesion")
+    val name: String = generarNombreSesionActor(decryptedToken)
+    Try {
+      context.actorOf(SesionActor.props(expiration, empresa), name)
+      log.info("Creando sesion de usuario. Tiempo de expiracion: " + expiration + " minutos.")
+      sender() ! SesionUsuarioCreada()
+    }.recover {
+      case e => e.printStackTrace(); sender() ! SesionUsuarioNoCreada()
+    }.get
   }
 
-  private def generarNombreSesionActor(token: String) =
-    MessageDigest.getInstance("MD5").digest(token.split("\\.")(2).getBytes).map { b => String.format("%02X", java.lang.Byte.valueOf(b)) }.mkString("") // Actor's name
+  private def generarNombreSesionActor(token: String): String = {
+    MessageDigest.getInstance("MD5").digest(token.split("\\.")(2).getBytes).map(b => String.format("%02X", java.lang.Byte.valueOf(b))).mkString("")
+  } // Actor's name
 
   private def obtenerEmpresaSesionActorId(empresaId: Int) = {
     val currentSender = sender()
@@ -117,10 +143,12 @@ class SesionActorSupervisor extends Actor with ActorLogging {
   }
 }
 
-class SesionActor(expiracionSesion: Int, empresa: Option[Empresa], horario: Option[HorarioEmpresa]) extends Actor with ActorLogging {
+class SesionActor(expiracionSesion: Int, empresa: Option[Empresa]) extends Actor with ActorLogging {
 
   implicit val _: ExecutionContext = context dispatcher
   implicit val timeout: Timeout = 120 seconds
+
+  private val cluster = Cluster.get(context.system)
 
   // System scheduler instance
   private val scheduler: Scheduler = context.system.scheduler
@@ -129,7 +157,9 @@ class SesionActor(expiracionSesion: Int, empresa: Option[Empresa], horario: Opti
   private var killTask: Cancellable = scheduler.scheduleOnce(expiracionSesion.minutes, self, ExpirarSesion())
 
   // PostStop function
-  override def postStop(): Unit = killTask.cancel()
+  override def postStop(): Unit = {
+    killTask.cancel()
+  }
 
   var empresaActor: Option[ActorRef] = None
 
@@ -146,8 +176,9 @@ class SesionActor(expiracionSesion: Int, empresa: Option[Empresa], horario: Opti
 
     case msg: ExpirarSesion =>
       log.info("Eliminando sesión de usuario: " + self.path.name)
-      if (empresaActor.isDefined)
+      if (empresaActor.isDefined) {
         empresaActor.get ! RemoverSesion(self)
+      }
       context.stop(self)
 
     case empresaActor: ActorRef =>
@@ -158,14 +189,16 @@ class SesionActor(expiracionSesion: Int, empresa: Option[Empresa], horario: Opti
 
   }
 
-  private def inicializaEmpresaActor() = if (empresa.isDefined) {
-    context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(s"empresa${empresa.get.id}") map {
-      case Some(empresaActor: ActorRef) => self ! empresaActor
-      case None =>
-        MainActors.sesionActorSupervisor ? CrearEmpresaActor(empresa.get, horario) map {
-          case empresaActor: ActorRef => self ! empresaActor
-          case None => log error s"Sesión empresa '${empresa.get.id}' no creada!!"
-        }
+  private def inicializaEmpresaActor() = {
+    if (empresa.isDefined) {
+      context.actorOf(Props(new BuscadorActorCluster("sesionActorSupervisor"))) ? BuscarActor(s"empresa${empresa.get.id}") map {
+        case Some(empresaActor: ActorRef) => self ! empresaActor
+        case None =>
+          context.parent ? CrearEmpresaActor(empresa.get) map {
+            case empresaActor: ActorRef => self ! empresaActor
+            case None => log error s"Sesión empresa '${empresa.get.id}' no creada!!"
+          }
+      }
     }
   }
 
@@ -173,8 +206,9 @@ class SesionActor(expiracionSesion: Int, empresa: Option[Empresa], horario: Opti
 
 object SesionActor {
 
-  def props(expirationTime: Int, empresa: Option[Empresa], horario: Option[HorarioEmpresa]) = {
-    Props(new SesionActor(expirationTime, empresa, horario))
+  def props(expirationTime: Int, empresa: Option[Empresa]): Props = {
+
+    Props(new SesionActor(expirationTime, empresa))
   }
 
 }
@@ -183,7 +217,7 @@ case class DeleteSession(actorName: String)
 
 case class ActualizarEmpresa(empresa: Empresa)
 
-case class CrearEmpresaActor(empresa: Empresa, horarioEmpresa: Option[HorarioEmpresa] = None)
+case class CrearEmpresaActor(empresa: Empresa)
 
 case object ObtenerEmpresaActor
 

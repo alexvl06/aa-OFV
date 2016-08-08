@@ -6,7 +6,7 @@ import akka.actor.{ Actor, ActorLogging, Props }
 import akka.routing.RoundRobinPool
 import co.com.alianza.exceptions.{ AlianzaException, TechnicalLevel }
 import co.com.alianza.infrastructure.auditing.AuditingMessages.AuditRequest
-//import co.com.alianza.util.json.JsonUtil
+import co.com.alianza.util.json.JsonUtil
 import com.typesafe.config.{ Config, ConfigFactory }
 import kafka.producer.{ KeyedMessage, ProducerConfig, Producer }
 
@@ -18,10 +18,8 @@ class KafkaActorSupervisor extends Actor with ActorLogging {
   val kafkaActor = context.actorOf(Props[KafkaActor].withRouter(RoundRobinPool(nrOfInstances = 10)), "kafkaActor")
 
   def receive = {
-
     case message: Any =>
       kafkaActor forward message
-
   }
 
   override val supervisorStrategy = OneForOneStrategy() {
@@ -44,7 +42,7 @@ class KafkaActor extends Actor with ActorLogging {
   def receive = {
 
     case message: AuditRequest =>
-    //sendToKafka(JsonUtil.toJson(message), message.kafkaTopic)
+      sendToKafka(JsonUtil.toJson(message), message.kafkaTopic)
 
     case any: Any =>
       val currentSender = sender()
@@ -71,7 +69,7 @@ class KafkaActor extends Actor with ActorLogging {
     val data = new KeyedMessage[String, String](topic, "key", "partKey", message)
 
     try {
-      producer.send(data)
+      //producer.send(data)
       println("Mensaje enviado exitosamente a los brokers de kafka")
     } catch {
       case e: Exception =>

@@ -3,11 +3,9 @@ package co.com.alianza.persistence.repositories
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.persistence.entities.CustomDriver.simple._
 import co.com.alianza.persistence.entities._
+import slick.lifted.TableQuery
 
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.slick.jdbc.JdbcBackend.Session
-import scala.slick.lifted.TableQuery
-import scala.util.Try
 import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 
 /**
@@ -19,7 +17,7 @@ class EmpresaUsuarioAdminRepository(implicit executionContext: ExecutionContext)
 
   def obtenerIdEmpresa(idUsuario: Int): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
-      val resultTry = Try { empresaUsuarioAdmin.filter(_.idUsuario === idUsuario).list.headOption.get.idEmpresa }
+      val resultTry = session.database.run(empresaUsuarioAdmin.filter(_.idUsuario === idUsuario).map(_.idEmpresa).result.head)
       resolveTry(resultTry, "Consulta id empresa por idUsuario empresarial admin")
   }
 

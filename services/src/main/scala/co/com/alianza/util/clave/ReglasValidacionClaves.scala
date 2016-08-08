@@ -14,7 +14,7 @@ import scalaz.Validation.FlatMap._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.app.MainActors
+
 import java.util.regex.Pattern
 
 abstract sealed class Regla(val name: String) {
@@ -149,7 +149,7 @@ case object UltimasContrasenas extends Regla("ULTIMAS_CONTRASENAS_NO_VALIDAS") {
       case Some(value) =>
         idUsuario match {
           case Some(valueIdUsuario) =>
-            val FuturoObtenerUltimasContrasenas: (Future[Validation[PersistenceException, List[Any]]]) = perfilUsuario match {
+            val FuturoObtenerUltimasContrasenas: (Future[Validation[PersistenceException, Seq[Any]]]) = perfilUsuario match {
               case PerfilesUsuario.clienteIndividual => DataAccessAdapterUltimaContrasena.obtenerUltimasContrasenas(value, idUsuario.get)
               case PerfilesUsuario.agenteEmpresarial => DataAccessAdapterUltimaContrasenaAgenteE.obtenerUltimasContrasenas(value, idUsuario.get)
               case PerfilesUsuario.clienteAdministrador => DataAccessAdapterUltimaContrasenaClienteAdmin.obtenerUltimasContrasenas(value, idUsuario.get)
@@ -162,7 +162,7 @@ case object UltimasContrasenas extends Regla("ULTIMAS_CONTRASENAS_NO_VALIDAS") {
                 }
             }
 
-            val extraccionFuturo = Await.result(UltimaContrasenaExiste, 8 seconds)
+            val extraccionFuturo = Await.result(UltimaContrasenaExiste, 8.seconds)
 
             extraccionFuturo match {
               case zSuccess(responseBol) =>
@@ -177,7 +177,7 @@ case object UltimasContrasenas extends Regla("ULTIMAS_CONTRASENAS_NO_VALIDAS") {
     }
   }
 
-  def contiene(idUsuario: Int, lista: List[Any], valorContrasenaNueva: String): Boolean = {
+  def contiene(idUsuario: Int, lista: Seq[Any], valorContrasenaNueva: String): Boolean = {
     val contrasenaNuevaConSalt: String = valorContrasenaNueva.concat(AppendPasswordUser.appendUsuariosFiducia)
     val contrasenaNuevaHash: String = Crypto.hashSha512(contrasenaNuevaConSalt, idUsuario)
 
@@ -185,7 +185,7 @@ case object UltimasContrasenas extends Regla("ULTIMAS_CONTRASENAS_NO_VALIDAS") {
       contrasena == contrasenaNuevaHash
     }
 
-    val listaResultadosComparacionContrasena: List[Boolean] = lista.map {
+    val listaResultadosComparacionContrasena: Seq[Boolean] = lista.map {
       case UltimaContrasena(param1, param2, param3, param4) => compare(param3, contrasenaNuevaHash)
       case UltimaContrasenaUsuarioAgenteEmpresarial(param1, param2, param3, param4) => compare(param3, contrasenaNuevaHash)
       case UltimaContrasenaUsuarioEmpresarialAdmin(param1, param2, param3, param4) => compare(param3, contrasenaNuevaHash)
@@ -196,8 +196,6 @@ case object UltimasContrasenas extends Regla("ULTIMAS_CONTRASENAS_NO_VALIDAS") {
 }
 
 object ValidarClave {
-
-  implicit val ec: ExecutionContext = MainActors.dataAccesEx
 
   def aplicarReglas(input: String, idUsuario: Option[Int], perfilUsuario: PerfilesUsuario.perfilUsuario, validaciones: Regla*): Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = {
     obtenerReglasToMap.map(_.flatMap {
@@ -212,7 +210,7 @@ object ValidarClave {
 
   private def obtenerReglasToMap: Future[Validation[PersistenceException, Map[String, String]]] = {
     val reglasFuture = DataAccessAdapter.consultarReglasContrasenas()
-    reglasFuture.map(_.flatMap(list => zSuccess(list.map(x => (x.llave, x.valor)) toMap)))
+    reglasFuture.map(_.flatMap(list => zSuccess(list.map(x => (x.llave, x.valor)).toMap)))
 
   }
 
@@ -220,7 +218,7 @@ object ValidarClave {
 
   def reglasGeneralesAutoregistro = List(MinCaracteres, MinCaracteresEspeciales, MinNumDigitos, MinMayusculas, MinMinusculas, CaracteresPermitidos)
 
-  //TODO:CambioContrasena Falta realizar la validacion de la fecha sumando los días establecidos en la DB
+  //TODO: CambioContrasena Falta realizar la validacion de la fecha sumando los días establecidos en la DB
   def reglasIngresoUsuario = List(IntentosIngresoContrasena, CambioContrasena)
 
 }

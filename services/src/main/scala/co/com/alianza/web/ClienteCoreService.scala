@@ -1,14 +1,17 @@
 package co.com.alianza.web
 
+import akka.actor.{ ActorSelection, ActorSystem }
 import spray.routing.Directives
 import co.com.alianza.app.AlianzaCommons
-import co.com.alianza.infrastructure.messages.{ ExisteClienteCoreMessagesJsonSupport, ExisteClienteCoreMessage }
+import co.com.alianza.infrastructure.messages.{ ExisteClienteCoreMessage, ExisteClienteCoreMessagesJsonSupport }
+
+import scala.concurrent.ExecutionContext
 
 /**
  *
  * @author smontanez
  */
-class ClienteCoreService extends Directives with AlianzaCommons {
+case class ClienteCoreService(consultaClienteActor: ActorSelection)(implicit val system: ActorSystem) extends Directives with AlianzaCommons {
 
   import ExisteClienteCoreMessagesJsonSupport._
 

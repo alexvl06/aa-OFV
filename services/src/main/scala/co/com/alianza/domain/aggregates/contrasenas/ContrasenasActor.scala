@@ -2,28 +2,29 @@ package co.com.alianza.domain.aggregates.contrasenas
 
 import java.sql.Timestamp
 
-import akka.actor.{ ActorRef, ActorLogging, Actor }
-import co.com.alianza.app.{ MainActors, AlianzaActors }
+import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, Props }
+
 import co.com.alianza.infrastructure.anticorruption.contrasenas.DataAccessAdapter
 import co.com.alianza.infrastructure.anticorruption.ultimasContrasenas.{ DataAccessAdapter => DataAccessAdapterUltimaContrasena }
 import co.com.alianza.infrastructure.messages._
-import co.com.alianza.persistence.entities.{ UltimaContrasena, ReglasContrasenas }
+import co.com.alianza.persistence.entities.{ ReglasContrasenas, UltimaContrasena }
 import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.token.Token
 import spray.http.StatusCodes._
 
 import scalaz.{ Failure => zFailure, Success => zSuccess }
 import scala.util.{ Failure => sFailure, Success => sSuccess }
-import scala.util.{ Success, Failure }
+import scala.util.{ Failure, Success }
 import co.com.alianza.util.transformers.ValidationT
 import co.com.alianza.domain.aggregates.usuarios.{ ErrorPersistence, ErrorValidacion, ValidacionesUsuario }
+
 import scala.concurrent.Future
 import scalaz.std.AllInstances._
 import co.com.alianza.infrastructure.dto.Usuario
 import co.com.alianza.util.FutureResponse
-import akka.actor.Props
 import akka.routing.RoundRobinPool
-import enumerations.{ PerfilesUsuario, AppendPasswordUser }
+import com.typesafe.config.Config
+import enumerations.{ AppendPasswordUser, PerfilesUsuario }
 
 class ContrasenasActorSupervisor extends Actor with ActorLogging {
 
@@ -52,7 +53,7 @@ class ContrasenasActorSupervisor extends Actor with ActorLogging {
  * Created by david on 16/06/14.
  */
 
-class ContrasenasActor extends Actor with ActorLogging with AlianzaActors {
+case class ContrasenasActor() extends Actor with ActorLogging {
 
   import scalaz._
   import scalaz.std.string._
@@ -72,7 +73,7 @@ class ContrasenasActor extends Actor with ActorLogging with AlianzaActors {
   import co.com.alianza.util.json.MarshallableImplicits._
   import ValidacionesUsuario._
 
-  implicit val ex: ExecutionContext = MainActors.dataAccesEx
+  import context.dispatcher
 
   def receive = {
     case message: InboxMessage => obtenerReglasContrasenas()
@@ -116,7 +117,7 @@ class ContrasenasActor extends Actor with ActorLogging with AlianzaActors {
 
   }
 
-  private def guardarUltimaContrasena(idUsuario: Int, uContrasena: String): Future[Validation[ErrorValidacion, Unit]] = {
+  private def guardarUltimaContrasena(idUsuario: Int, uContrasena: String): Future[Validation[ErrorValidacion, Int]] = {
     DataAccessAdapterUltimaContrasena.guardarUltimaContrasena(UltimaContrasena(None, idUsuario, uContrasena, new Timestamp(System.currentTimeMillis()))).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
   }
 
@@ -132,7 +133,7 @@ class ContrasenasActor extends Actor with ActorLogging with AlianzaActors {
       case sFailure(failure) => currentSender ! failure
       case sSuccess(value) =>
         value match {
-          case zSuccess(response: List[ReglasContrasenas]) =>
+          case zSuccess(response: Seq[ReglasContrasenas]) =>
             currentSender ! ResponseMessage(OK, response.toJson)
           case zFailure(error) => currentSender ! error
         }

@@ -3,27 +3,27 @@ package co.com.alianza.domain.aggregates.pin
 import java.security.MessageDigest
 import java.util.Date
 
-import co.com.alianza.app.MainActors
 import co.com.alianza.constants.TiposConfiguracion
-import co.com.alianza.domain.aggregates.usuarios.{ ErrorPersistence, ErrorValidacion, ErrorPin }
+import co.com.alianza.domain.aggregates.usuarios.{ ErrorPersistence, ErrorPin, ErrorValidacion }
 import co.com.alianza.exceptions.{ BusinessLevel, PersistenceException }
-import co.com.alianza.infrastructure.anticorruption.configuraciones.{ DataAccessTranslator => dataAccessTransConf, DataAccessAdapter => dataAccesAdaptarConf }
-import co.com.alianza.infrastructure.dto.{ PinUsuarioAgenteEmpresarial, Configuracion, PinUsuario, PinUsuarioEmpresarialAdmin }
+import co.com.alianza.infrastructure.anticorruption.configuraciones.{ DataAccessAdapter => dataAccesAdaptarConf, DataAccessTranslator => dataAccessTransConf }
+import co.com.alianza.infrastructure.dto.{ Configuracion, PinUsuario, PinUsuarioAgenteEmpresarial, PinUsuarioEmpresarialAdmin }
 import co.com.alianza.infrastructure.messages.{ ErrorMessage, ResponseMessage }
 import co.com.alianza.util.json.MarshallableImplicits._
 import spray.http.StatusCodes._
 
-import scala.util.{ Success, Failure }
+import scala.util.{ Failure, Success }
 import scalaz.{ Failure => zFailure, Success => zSuccess }
 import scala.concurrent.{ ExecutionContext, Future }
 import scalaz.Validation
 import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
 import enumerations.{ EstadosEmpresaEnum, EstadosUsuarioEnum }
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => uDataAccessAdapter }
+import co.com.alianza.persistence.util.DataBaseExecutionContext
 
 object PinUtil {
 
-  implicit val ex: ExecutionContext = MainActors.dataAccesEx
+  implicit val ec: ExecutionContext = DataBaseExecutionContext.executionContext
 
   def deserializarPin(pin: String, fechaExpiracion: Date): String = {
     val md = MessageDigest.getInstance("SHA-512")

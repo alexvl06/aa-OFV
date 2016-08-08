@@ -1,20 +1,24 @@
 package co.com.alianza.web
 
-import co.com.alianza.app.{ CrossHeaders, AlianzaCommons }
+import akka.actor.{ ActorSelection, ActorSystem }
+import co.com.alianza.app.{ AlianzaCommons, CrossHeaders }
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.infrastructure.messages.OlvidoContrasenaMessage
 import co.com.alianza.infrastructure.messages.UsuarioMessage
-import spray.routing.{ RequestContext, Directives }
+import spray.routing.{ Directives, RequestContext }
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.util.clave.Crypto
 import enumerations.AppendPasswordUser
+
+import scala.concurrent.ExecutionContext
 
 /**
  *
  * @author seven4n
  */
-class UsuarioService extends Directives with AlianzaCommons with CrossHeaders {
+case class UsuarioService(kafkaActor: ActorSelection, usuariosActor: ActorSelection)(implicit val system: ActorSystem) extends Directives with AlianzaCommons
+    with CrossHeaders {
 
   import UsuariosMessagesJsonSupport._
 

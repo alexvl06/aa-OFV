@@ -4,40 +4,21 @@ import java.sql.{ Date, Timestamp }
 
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente._
-import co.com.alianza.persistence.repositories._
-import scalaz.Validation
-import scala.concurrent.{ ExecutionContext, Future }
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.app.MainActors
-import scalaz.{ Failure => zFailure, Success => zSuccess }
-import co.com.alianza.infrastructure.dto._
-import co.com.alianza.persistence.entities.{
-  Usuario => eUsuario,
-  PinUsuario => ePinUsuario,
-  UsuarioEmpresarial => eUsuarioEmpresarial,
-  UsuarioEmpresarialAdmin => eUsuarioEmpresarialAdmin,
-  Empresa => eEmpresa,
-  HorarioEmpresa => eHorarioEmpresa,
-  _
-}
-import co.com.alianza.persistence.messages.AutenticacionRequest
-import enumerations.EstadosUsuarioEnum
-import co.com.alianza.persistence.entities
 import co.com.alianza.infrastructure.auditing.AuditingUser.AuditingUserData
-import co.com.alianza.persistence.repositories.{ IpsUsuarioRepository, UsuariosRepository }
-import scalaz.Validation
-import scala.concurrent.{ ExecutionContext, Future }
-import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.app.MainActors
-import scalaz.{ Failure => zFailure, Success => zSuccess }
-import co.com.alianza.infrastructure.dto.Usuario
-import co.com.alianza.persistence.entities.{ Usuario => eUsuario, PinUsuario => ePinUsuario, PerfilUsuario, IpsUsuario }
-import co.com.alianza.persistence.messages.AutenticacionRequest
+import co.com.alianza.infrastructure.dto.{ Usuario, _ }
+import co.com.alianza.persistence.entities
+import co.com.alianza.persistence.entities.{ IpsUsuario, PerfilUsuario, Empresa => eEmpresa, HorarioEmpresa => eHorarioEmpresa, PinUsuario => ePinUsuario, Usuario => eUsuario, UsuarioEmpresarial => eUsuarioEmpresarial, UsuarioEmpresarialAdmin => eUsuarioEmpresarialAdmin, _ }
+import co.com.alianza.persistence.repositories.{ IpsUsuarioRepository, UsuariosRepository, _ }
+import co.com.alianza.persistence.util.DataBaseExecutionContext
 import enumerations.EstadosUsuarioEnum
+
+import scala.concurrent.{ ExecutionContext, Future }
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 
 object DataAccessAdapter {
 
-  implicit val ec: ExecutionContext = MainActors.dataAccesEx
+  implicit val ec: ExecutionContext = DataBaseExecutionContext.executionContext
 
   def obtenerUsuarios(): Future[Validation[PersistenceException, List[Usuario]]] = {
     val repo = new UsuariosRepository()
@@ -235,16 +216,20 @@ object DataAccessAdapter {
     new DiaFestivoRepository().existeDiaFestivo(fecha)
   }
 
-  def agregarHorarioEmpresa(horarioEmpresa: eHorarioEmpresa): Future[Validation[PersistenceException, Boolean]] = {
-    new HorarioEmpresaRepository().agregarHorarioEmpresa(horarioEmpresa)
+  def existeHorarioEmpresa(idEmpresa: Int): Future[Validation[PersistenceException, Boolean]] = {
+    new HorarioEmpresaRepository().existeHorario(idEmpresa)
   }
 
-  def obtenerIpsUsuario(idUsuario: Int): Future[Validation[PersistenceException, Vector[IpsUsuario]]] = {
+  def agregarHorarioEmpresa(horarioEmpresa: eHorarioEmpresa, existeHorario: Boolean): Future[Validation[PersistenceException, Boolean]] = {
+    new HorarioEmpresaRepository().agregarHorarioEmpresa(horarioEmpresa, existeHorario: Boolean)
+  }
+
+  def obtenerIpsUsuario(idUsuario: Int): Future[Validation[PersistenceException, Seq[IpsUsuario]]] = {
     val repo = new IpsUsuarioRepository()
     repo.obtenerIpsUsuario(idUsuario)
   }
 
-  def obtenerIpsEmpresa(idEmpresa: Int): Future[Validation[PersistenceException, Vector[IpsEmpresa]]] = {
+  def obtenerIpsEmpresa(idEmpresa: Int): Future[Validation[PersistenceException, Seq[IpsEmpresa]]] = {
     new IpsEmpresaRepository().obtenerIpsEmpresa(idEmpresa)
   }
 
@@ -341,9 +326,9 @@ object DataAccessAdapter {
     }
   }
 
-  private def transformValidationList(origin: Validation[PersistenceException, List[eUsuario]]): Validation[PersistenceException, List[Usuario]] = {
+  private def transformValidationList(origin: Validation[PersistenceException, Seq[eUsuario]]): Validation[PersistenceException, List[Usuario]] = {
     origin match {
-      case zSuccess(response: List[eUsuario]) => zSuccess(DataAccessTranslator.translateUsuario(response))
+      case zSuccess(response: Seq[eUsuario]) => zSuccess(DataAccessTranslator.translateUsuario(response))
       case zFailure(error) => zFailure(error)
     }
   }

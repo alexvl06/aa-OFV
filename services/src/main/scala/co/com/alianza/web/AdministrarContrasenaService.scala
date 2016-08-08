@@ -1,8 +1,9 @@
 package co.com.alianza.web
 
+import akka.actor.{ ActorSelection, ActorSystem }
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.infrastructure.auditing.AuditingHelper
-import co.com.alianza.infrastructure.messages.empresa.{ CambiarContrasenaCaducadaClienteAdminMessage, CambiarContrasenaCaducadaAgenteEmpresarialMessage }
+import co.com.alianza.infrastructure.messages.empresa.{ CambiarContrasenaCaducadaAgenteEmpresarialMessage, CambiarContrasenaCaducadaClienteAdminMessage }
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.util.token.Token
 import co.com.alianza.exceptions.PersistenceException
@@ -10,16 +11,20 @@ import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.util.clave.Crypto
 import enumerations.AppendPasswordUser
-import spray.routing.{ RequestContext, Directives }
+import spray.routing.{ Directives, RequestContext }
 import co.com.alianza.app.AlianzaCommons
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
-import co.com.alianza.infrastructure.messages.{ CambiarContrasenaCaducadaMessage, AdministrarContrasenaMessagesJsonSupport, CambiarContrasenaMessage }
+import co.com.alianza.infrastructure.messages.{ AdministrarContrasenaMessagesJsonSupport, CambiarContrasenaCaducadaMessage, CambiarContrasenaMessage }
+
+import scala.concurrent.ExecutionContext
 
 /**
  * Created by seven4n on 01/09/14.
  */
-class AdministrarContrasenaService extends Directives with AlianzaCommons {
+case class AdministrarContrasenaService(kafkaActor: ActorSelection, contrasenasActor: ActorSelection, contrasenasAgenteEmpresarialActor: ActorSelection,
+    contrasenasClienteAdminActor: ActorSelection)(implicit val system: ActorSystem) extends Directives with AlianzaCommons {
 
+  import system.dispatcher
   import AdministrarContrasenaMessagesJsonSupport._
 
   def secureRoute(user: UsuarioAuth) =
@@ -37,7 +42,8 @@ class AdministrarContrasenaService extends Directives with AlianzaCommons {
                         val token = r.request.headers.find(header => header.name equals "token")
                         val usuario = DataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
 
-                        requestWithFutureAuditing[PersistenceException, CambiarContrasenaMessage](r, AuditingHelper.fiduciariaTopic, AuditingHelper.cambioContrasenaIndex, ip.value, kafkaActor, usuario, Some(data.copy(pw_actual = null, pw_nuevo = null)))
+                        requestWithFutureAuditing[PersistenceException, CambiarContrasenaMessage](r, AuditingHelper.fiduciariaTopic,
+                          AuditingHelper.cambioContrasenaIndex, ip.value, kafkaActor, usuario, Some(data.copy(pw_actual = null, pw_nuevo = null)))
                     } {
                       val dataComplete: CambiarContrasenaMessage = data.copy(idUsuario = Some(user.id))
                       requestExecute(dataComplete, contrasenasActor)

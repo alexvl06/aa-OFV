@@ -1,24 +1,25 @@
 package co.com.alianza.domain.aggregates.empresa
 
 import java.util.Calendar
-import akka.actor.{ Actor, ActorLogging, Props }
+
+import akka.actor.{ Actor, ActorLogging, ActorSystem, Props }
 import akka.routing.RoundRobinPool
-import co.com.alianza.app.{ AlianzaActors, MainActors }
-import co.com.alianza.domain.aggregates.usuarios.{ ErrorValidacion }
-import co.com.alianza.exceptions.{ PersistenceException }
-import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{ DataAccessTranslator }
-import co.com.alianza.infrastructure.dto.{ UsuarioEmpresarialEstado, Configuracion, PinEmpresa }
+
+import co.com.alianza.domain.aggregates.usuarios.ErrorValidacion
+import co.com.alianza.exceptions.PersistenceException
+import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.DataAccessTranslator
+import co.com.alianza.infrastructure.dto.{ Configuracion, PinEmpresa, UsuarioEmpresarialEstado }
 import co.com.alianza.infrastructure.messages.ResponseMessage
 import co.com.alianza.infrastructure.messages.empresa._
 import co.com.alianza.microservices.{ MailMessage, SmtpServiceClient }
-import co.com.alianza.persistence.entities.{ UsuarioEmpresarialEmpresa }
+import co.com.alianza.persistence.entities.UsuarioEmpresarialEmpresa
 import co.com.alianza.util.token.{ PinData, TokenPin }
 import co.com.alianza.util.transformers.ValidationT
 import com.typesafe.config.Config
-import enumerations.{ UsoPinEmpresaEnum, PerfilesAgente }
+import enumerations.{ PerfilesAgente, UsoPinEmpresaEnum }
+
 import scalaz.std.AllInstances._
 import scalaz.{ Success => zSuccess }
-
 import scala.concurrent.Future
 import scalaz.Validation
 import spray.http.StatusCodes._
@@ -49,9 +50,8 @@ class AgenteEmpresarialActorSupervisor extends Actor with ActorLogging with Futu
 
 }
 
-class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors with FutureResponse {
+class AgenteEmpresarialActor extends Actor with ActorLogging with FutureResponse {
 
-  import scala.concurrent.ExecutionContext
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.errorValidacion
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.toErrorValidation
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.toErrorValidationCorreo
@@ -61,9 +61,8 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
   import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial.validarUsuarioAgente
   import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial.validacionEstadoActualizacionAgenteEmpresarial
 
-  implicit val ex: ExecutionContext = MainActors.dataAccesEx
-  implicit val sys = context.system
-  implicit private val config: Config = MainActors.conf
+  import context.dispatcher
+  implicit val config: Config = context.system.settings.config
 
   def receive = {
 
@@ -151,7 +150,7 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors 
    */
   private def enviarCorreoPin(pin: PinEmpresa, confTiempo: Configuracion, plantilla: String, asunto: String, usuario: String, correo: String): Future[Validation[ErrorValidacion, Int]] = {
     val message = buildMessage(pin, confTiempo.valor.toInt, plantilla, asunto, usuario, correo)
-    toErrorValidationCorreo(new SmtpServiceClient().send(message, (_, _) => 1))
+    toErrorValidationCorreo(new SmtpServiceClient()(context.system).send(message, (_, _) => 1))
   }
 
   /**

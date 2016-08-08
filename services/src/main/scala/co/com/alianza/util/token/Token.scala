@@ -1,20 +1,18 @@
 package co.com.alianza.util.token
 
-import java.text.SimpleDateFormat
-
-import com.nimbusds.jose.util.Base64URL
-import org.joda.time.{ DateTime }
 import java.util.Date
-import enumerations.{ CryptoAesParameters, AppendPasswordUser }
-import com.nimbusds.jwt.JWTClaimsSet
+
+import co.com.alianza.commons.enumerations.TiposCliente
+import co.com.alianza.commons.enumerations.TiposCliente._
+import co.com.alianza.util.json.MarshallableImplicits._
 import com.nimbusds.jose._
 import com.nimbusds.jose.crypto.{ MACSigner, MACVerifier }
-import com.nimbusds.jwt.SignedJWT
-import co.com.alianza.commons.enumerations.TiposCliente._
-import co.com.alianza.commons.enumerations.TiposCliente
+import com.nimbusds.jose.util.Base64URL
+import com.nimbusds.jwt.{ JWTClaimsSet, SignedJWT }
+import enumerations.{ AppendPasswordUser, CryptoAesParameters }
+import org.joda.time.DateTime
 
-import collection.JavaConversions._
-import co.com.alianza.util.json.MarshallableImplicits._
+import scala.collection.JavaConversions._
 
 object Token {
 
@@ -60,11 +58,7 @@ object Token {
     val signedJWT = new SignedJWT(new JWSHeader(JWSHeader.parse(Base64URL.encode(headersJWT))), claimsSet)
     val signer: MACSigner = new MACSigner(SIGNING_KEY)
     signedJWT.sign(signer)
-
-    var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
-    var encryptedToken = util.encrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, signedJWT.serialize())
-
-    encryptedToken
+    AesUtil.encriptarToken(signedJWT.serialize(), "Token.generarToken")
   }
 
   def generarTokenCaducidadContrasena(tipoUsuario: TiposCliente, idUsuario: Int) = {
@@ -102,9 +96,7 @@ object Token {
       val signedJWT2 = SignedJWT.parse(token)
       validarToken(signedJWT2)
     } catch {
-      case ex: Exception =>
-        ex.printStackTrace()
-        false
+      case ex: Exception => ex.printStackTrace(); false
     }
   }
 

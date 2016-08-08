@@ -21,7 +21,7 @@ class ClienteRepository(implicit executionContext: ExecutionContext) extends Ali
       resolveTry(connection, operation, "Consulta Cliente por Número de Identificación")
   }
 
-  private def executeClienteSP(conn: Connection, numDocumento: String) = Try {
+  private def executeClienteSP(conn: Connection, numDocumento: String): Try[String] = Try {
     val callString = "{ call sf_qportal_web.Cliente(?,?,?,?) }"
     val callableStatement = conn prepareCall callString
     callableStatement registerOutParameter (1, OracleTypes.VARCHAR)

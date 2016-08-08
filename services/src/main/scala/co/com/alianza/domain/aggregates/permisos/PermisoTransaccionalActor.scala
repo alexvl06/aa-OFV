@@ -1,16 +1,14 @@
 package co.com.alianza.domain.aggregates.permisos
 
-import akka.actor.{ ActorLogging, Actor, ActorRef }
-import akka.actor.Props
+import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, OneForOneStrategy, Props }
 import akka.actor.SupervisorStrategy._
-import akka.actor.OneForOneStrategy
 import akka.util.Timeout
-import co.com.alianza.domain.aggregates.autenticacion.errores.{ ErrorPasswordInvalido, ErrorAutenticacion, ErrorClienteNoExisteCore, ErrorPersistencia }
+import co.com.alianza.domain.aggregates.autenticacion.errores.{ ErrorAutenticacion, ErrorClienteNoExisteCore, ErrorPasswordInvalido, ErrorPersistencia }
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.util.clave.ErrorUltimasContrasenas
 import enumerations.{ TipoIdentificacion, TiposIdentificacionCore }
 
-import scala.util.{ Success, Failure }
+import scala.util.{ Failure, Success }
 
 //import co.com.alianza.infrastructure.anticorruption.clientes.DataAccessAdapter
 import scala.concurrent.duration._
@@ -48,8 +46,9 @@ class PermisoTransaccionalActorSupervisor extends Actor with ActorLogging {
 
 class PermisoTransaccionalActor extends Actor with ActorLogging with FutureResponse {
 
-  implicit val _: ExecutionContext = context.dispatcher
-  implicit val timeout: Timeout = 120 seconds
+  import context.dispatcher
+
+  implicit val timeout: Timeout = 120.seconds
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.errorValidacion
 
   var numeroPermisos = 0
@@ -95,7 +94,7 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
         DataAccessAdapter consultaPermisosAgente idAgente,
         { (x: (List[co.com.alianza.infrastructure.dto.Permiso], List[co.com.alianza.infrastructure.dto.EncargoPermisos])) =>
           context stop self
-          PermisosRespuesta(x._1, x._2) toJson
+          PermisosRespuesta(x._1, x._2).toJson
         }, errorValidacion, currentSender
       )
 
@@ -107,7 +106,7 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
         val permisosFuture = DataAccessAdapter.consultaPermisosAgenteLogin(usuario.id)
         resolveFutureValidation(
           permisosFuture,
-          { (listaPermisos: List[Int]) =>
+          { (listaPermisos: Seq[Int]) =>
             context stop self
             PermisosLoginRespuesta(listaPermisos.contains(2), listaPermisos.contains(4), listaPermisos.contains(3),
               listaPermisos.contains(1), listaPermisos.contains(6), listaPermisos.contains(7), tienePermisosPagosMasivosFidCore).toJson
@@ -150,7 +149,7 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
 
     } yield cliente).run
     //TODO: Await ???
-    val extraccionFuturo = Await.result(cliente, 8 seconds)
+    val extraccionFuturo = Await.result(cliente, 8.seconds)
     extraccionFuturo match {
       case zSuccess(cliente) =>
         cliente.wcli_cias_pagos_masivos == PermisosFideicomisosCoreAlianza.`SI`.nombre

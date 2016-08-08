@@ -9,8 +9,8 @@ import co.com.alianza.persistence.entities.{ RecursoPerfil => eRecursoPerfil }
  */
 object DataAccessTranslator {
 
-  def translate(recursos: List[eRecursoPerfil]) = {
-    recursos map (recurso => RecursoUsuario(recurso.idPerfil, recurso.urlRecurso, recurso.acceso, recurso.filtro))
+  def translate(recursos: Seq[eRecursoPerfil]) = {
+    recursos.map(recurso => RecursoUsuario(recurso.idPerfil, recurso.urlRecurso, recurso.acceso, recurso.filtro)).toList
   }
 
 }

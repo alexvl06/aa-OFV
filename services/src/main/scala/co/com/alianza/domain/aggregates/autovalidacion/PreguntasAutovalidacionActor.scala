@@ -1,15 +1,14 @@
 package co.com.alianza.domain.aggregates.autovalidacion
 
-import akka.actor.{ Props, ActorLogging, Actor }
+import akka.actor.{ Actor, ActorLogging, ActorSystem, Props }
 import akka.routing.RoundRobinPool
-import co.com.alianza.app.{ AlianzaActors, MainActors }
+
 import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.domain.aggregates.usuarios.{ ErrorValidacion, ErrorAutovalidacion }
+import co.com.alianza.domain.aggregates.usuarios.{ ErrorAutovalidacion, ErrorValidacion }
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.autovalidacion.DataAccessAdapter
 import co.com.alianza.infrastructure.anticorruption.configuraciones.{ DataAccessAdapter => DataAdapterConfiguracion }
-
-import co.com.alianza.infrastructure.dto.{ Configuracion, RespuestaCompleta, Respuesta, Pregunta }
+import co.com.alianza.infrastructure.dto.{ Configuracion, Pregunta, Respuesta, RespuestaCompleta }
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.persistence.entities.RespuestasAutovalidacionUsuario
 import co.com.alianza.util.FutureResponse
@@ -21,7 +20,7 @@ import spray.http.StatusCodes._
 
 import scala.concurrent.Future
 import scala.util._
-import scalaz.{ Success => zSuccess, Failure => zFailure, Validation }
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 
 class PreguntasAutovalidacionSupervisor extends Actor with ActorLogging {
   import akka.actor.OneForOneStrategy
@@ -43,15 +42,15 @@ class PreguntasAutovalidacionSupervisor extends Actor with ActorLogging {
   }
 }
 
-class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaActors with FutureResponse {
+case class PreguntasAutovalidacionActor() extends Actor with ActorLogging with FutureResponse {
 
-  import scala.concurrent.ExecutionContext
   import scalaz.std.AllInstances._
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.errorValidacion
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.toErrorValidation
-  implicit val _: ExecutionContext = context.dispatcher
 
-  private val config: Config = MainActors.conf
+  import context.dispatcher
+
+  implicit val conf: Config = context.system.settings.config
 
   def receive = {
 
@@ -78,6 +77,7 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
       preguntas <- ValidationT(DataAccessAdapter.obtenerPreguntas())
       configuraciones <- ValidationT(DataAdapterConfiguracion.obtenerConfiguraciones())
     } yield (preguntas, configuraciones)).run
+
     resolveFutureValidation(future, (response: (List[Pregunta], List[Configuracion])) => {
       val numeroPreguntas = obtenerValorEntero(response._2, ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS.name)
       val numeroPreguntasLista = obtenerValorEntero(response._2, ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS_LISTA.name)
@@ -119,9 +119,7 @@ class PreguntasAutovalidacionActor extends Actor with ActorLogging with AlianzaA
     val comparacion = numeroRespuestas == numeroRespuestasParametrizadas
     comparacion match {
       case true => zSuccess(comparacion)
-      case false =>
-        //TODO: definir los codigos de error a enviar para este error y el comportamiento
-        zFailure(ErrorAutovalidacion("Error comprobacion parametrizacion campos"))
+      case false => zFailure(ErrorAutovalidacion("Error comprobacion parametrizacion campos"))
     }
   }
 

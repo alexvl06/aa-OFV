@@ -21,10 +21,10 @@ object MailMessageJsonSupport extends DefaultJsonProtocol with SprayJsonSupport 
  *
  * @author smontanez
  */
-class SmtpServiceClient(implicit execctx: ExecutionContext, conf: Config, system: ActorSystem) extends ServiceClient with Directives {
+class SmtpServiceClient(implicit val system: ActorSystem) extends ServiceClient with Directives {
   import MailMessageJsonSupport._
 
-  val context: ExecutionContext = execctx
+  import system.dispatcher
   import spray.client.pipelining._
   import spray.http._
   import spray.http.HttpHeaders._

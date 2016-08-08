@@ -1,28 +1,24 @@
 package co.com.alianza.infrastructure.anticorruption.contrasenas
 
-import co.com.alianza.app.MainActors
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.infrastructure.anticorruption.clientes.DataAccessTranslator
-import co.com.alianza.infrastructure.dto.Cliente
 import co.com.alianza.persistence.entities.ReglasContrasenas
-import co.com.alianza.persistence.messages.ConsultaClienteRequest
 import co.com.alianza.persistence.repositories.ReglasContrasenasRepository
-import co.com.alianza.persistence.repositories.core.ClienteRepository
-
-import scalaz.Validation
-import scala.concurrent.{ Future, ExecutionContext }
-import scalaz.{ Failure => zFailure, Success => zSuccess }
+import co.com.alianza.persistence.util.DataBaseExecutionContext
 import co.com.alianza.util.clave.Crypto
+
+import scala.concurrent.{ ExecutionContext, Future }
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 
 /**
  * Created by david on 16/06/14.
  */
 object DataAccessAdapter {
 
-  implicit val ec: ExecutionContext = MainActors.dataAccesEx
+  implicit val ec: ExecutionContext = DataBaseExecutionContext.executionContext
+
   val repo = new ReglasContrasenasRepository()
 
-  def consultarReglasContrasenas(): Future[Validation[PersistenceException, List[ReglasContrasenas]]] = {
+  def consultarReglasContrasenas(): Future[Validation[PersistenceException, Seq[ReglasContrasenas]]] = {
     repo.obtenerReglas()
   }
 

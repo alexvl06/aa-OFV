@@ -10,9 +10,9 @@ case class UsuarioEmpresarialAdminEmpresa(idEmpresa: Int, idUsuarioEmpresarialAd
 
 class UsuarioEmpresarialAdminEmpresaTable(tag: Tag) extends Table[UsuarioEmpresarialAdminEmpresa](tag, "USUARIO_EMPRESARIAL_ADMIN_EMPRESA") {
 
-  def idEmpresa: Column[Int] = column[Int]("ID_EMPRESA")
+  def idEmpresa = column[Int]("ID_EMPRESA")
 
-  def idUsuarioEmpresarialAdmin: Column[Int] = column[Int]("ID_USUARIO_EMPRESARIAL_ADMIN")
+  def idUsuarioEmpresarialAdmin = column[Int]("ID_USUARIO_EMPRESARIAL_ADMIN")
 
   /** Primary key of DocumentosSiniestroSiniestros (database name documentos_siniestro_siniestros_pkey) */
   val pk = primaryKey("PK_USUARIO_EMPRESARIAL_ADMIN_EMPRESA", (idEmpresa, idUsuarioEmpresarialAdmin))

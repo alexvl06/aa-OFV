@@ -1,52 +1,50 @@
 package co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin
 
+import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.auditing.AuditingUser.AuditingUserData
+import co.com.alianza.infrastructure.dto.UsuarioEmpresarialAdmin
+import co.com.alianza.persistence.entities.{ UsuarioEmpresarialAdmin => eUsuarioAdmin }
+import co.com.alianza.persistence.repositories.UsuarioEmpresarialAdminRepository
+import co.com.alianza.persistence.repositories.empresa.UsuariosEmpresaRepository
+import co.com.alianza.persistence.util.DataBaseExecutionContext
+import co.com.alianza.util.clave.Crypto
 
 import scala.concurrent.{ ExecutionContext, Future }
-import scalaz.{ Validation }
-import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.infrastructure.dto.{ UsuarioEmpresarialAdmin }
-import co.com.alianza.persistence.repositories.{ UsuarioEmpresarialAdminRepository }
-import co.com.alianza.app.MainActors
-import co.com.alianza.persistence.entities.{ UsuarioEmpresarialAdmin => eUsuarioAdmin }
-import co.com.alianza.persistence.repositories.empresa.UsuariosEmpresaRepository
-import scalaz.{ Failure => zFailure, Success => zSuccess }
-import co.com.alianza.util.clave.Crypto
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 
 /**
  * Created by josegarcia on 30/01/15.
  */
 object DataAccessAdapter {
 
-  implicit val ec: ExecutionContext = MainActors.dataAccesEx
+  implicit val ec: ExecutionContext = DataBaseExecutionContext.executionContext
+  val usuariosEmpresa = new UsuariosEmpresaRepository()
+  val usuarioEmpresarial = new UsuarioEmpresarialAdminRepository()
 
   def consultaContrasenaActual(pw_actual: String, idUsuario: Int): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = {
-    val repo = new UsuariosEmpresaRepository()
-    repo.consultaContrasenaActual(pw_actual, idUsuario) map {
+
+    usuariosEmpresa.consultaContrasenaActual(pw_actual, idUsuario) map {
       x => transformValidation(x)
     }
   }
 
   def actualizarContrasena(pw_nuevo: String, idUsuario: Int): Future[Validation[PersistenceException, Int]] = {
-    val repo = new UsuariosEmpresaRepository()
-    repo.actualizarContrasena(Crypto.hashSha512(pw_nuevo, idUsuario), idUsuario)
+    usuariosEmpresa.actualizarContrasena(Crypto.hashSha512(pw_nuevo, idUsuario), idUsuario)
   }
 
   def existeUsuarioEmpresarialAdminActivo(nitEmpresa: String): Future[Validation[PersistenceException, Boolean]] = {
-    new UsuarioEmpresarialAdminRepository().existeUsuarioEmpresarialAdminActivo(nitEmpresa)
+    usuarioEmpresarial.existeUsuarioEmpresarialAdminActivo(nitEmpresa)
   }
 
   def obtieneClientePorNitYUsuario(nit: String, usuario: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] =
-    new UsuariosEmpresaRepository().obtieneClientePorNitYUsuario(nit, usuario) map transformValidation
+    usuariosEmpresa.obtieneClientePorNitYUsuario(nit, usuario) map transformValidation
 
   def obtenerUsuarioEmpresarialAdminPorId(idUsuario: Int): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = {
-    val repo = new UsuarioEmpresarialAdminRepository()
-    repo.obtenerUsuarioEmpresarialAdminPorId(idUsuario) map transformValidation
+    usuarioEmpresarial.obtenerUsuarioEmpresarialAdminPorId(idUsuario) map transformValidation
   }
 
   def obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token: String): Future[Validation[PersistenceException, Option[AuditingUserData]]] = {
-    val repo = new UsuarioEmpresarialAdminRepository()
-    repo.obtenerUsuarioPorToken(token) map {
+    usuarioEmpresarial.obtenerUsuarioPorToken(token) map {
       x => transformValidationTuple(x)
     }
   }

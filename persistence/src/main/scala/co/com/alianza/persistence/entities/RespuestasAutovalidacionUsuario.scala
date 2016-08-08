@@ -15,7 +15,7 @@ class RespuestasAutovalidacionUsuarioTable(tag: Tag) extends Table[RespuestasAut
   def * = (idPregunta, idUsuario, respuesta) <> (RespuestasAutovalidacionUsuario.tupled, RespuestasAutovalidacionUsuario.unapply)
 }
 
-class RespuestasAutovalidacionClienteAdministradorTable(tag: Tag) extends Table[RespuestasAutovalidacionUsuario](tag, "RESPUESTAS_AUTOVALIDACION_USUARIO_EMPRESARIAL_ADMIN") {
+class RespuestasAutovalidacionUsuarioAdministradorTable(tag: Tag) extends Table[RespuestasAutovalidacionUsuario](tag, "RESPUESTAS_AUTOVALIDACION_USUARIO_EMPRESARIAL_ADMIN") {
   def idPregunta = column[Int]("ID_PREGUNTA")
   def idUsuario = column[Int]("ID_USUARIO")
   def respuesta = column[String]("RESPUESTA")

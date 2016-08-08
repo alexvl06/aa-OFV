@@ -1,10 +1,9 @@
 package co.com.alianza.domain.aggregates.actualizacion
 
-import akka.actor.{ Actor, ActorRef, ActorLogging, Props, OneForOneStrategy }
+import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, OneForOneStrategy, Props }
 import akka.actor.SupervisorStrategy._
 import akka.routing.RoundRobinPool
 import akka.pattern._
-import co.com.alianza.app.AlianzaActors
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.actualizacion.DataAccessAdapter
@@ -13,16 +12,18 @@ import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.infrastructure.messages.ActualizacionMessagesJsonSupport._
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.infrastructure.dto.{ DatosCliente, Usuario }
-import co.com.alianza.persistence.messages.{ DatosEmpresaRequest, ActualizacionRequest }
+import co.com.alianza.persistence.messages.{ ActualizacionRequest, DatosEmpresaRequest }
 import co.com.alianza.util.transformers.ValidationT
-import co.com.alianza.app.MainActors
+
 import co.com.alianza.exceptions.BusinessLevel
+import com.typesafe.config.Config
 import enumerations.TiposIdentificacionCore
 import org.joda.time.DateTime
 import spray.http.StatusCodes._
+
 import scala.util.{ Failure, Success }
 import scala.concurrent.Future
-import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 import scalaz.std.AllInstances._
 
 class ActualizacionActorSupervisor extends Actor with ActorLogging {
@@ -42,10 +43,13 @@ class ActualizacionActorSupervisor extends Actor with ActorLogging {
 
 }
 
-class ActualizacionActor extends Actor with ActorLogging with AlianzaActors {
-  import scala.concurrent.ExecutionContext
-  implicit val _: ExecutionContext = context.dispatcher
+class ActualizacionActor extends Actor with ActorLogging {
+
   import co.com.alianza.util.json.MarshallableImplicits._
+
+  import context.dispatcher
+
+  implicit val conf: Config = context.system.settings.config
 
   def receive = {
     case message: ObtenerPaises => obtenerPaises()

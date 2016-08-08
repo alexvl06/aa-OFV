@@ -8,7 +8,7 @@ import scalaz.Validation
 
 import co.com.alianza.persistence.entities._
 
-import scala.slick.lifted.TableQuery
+import slick.lifted.TableQuery
 import CustomDriver.simple._
 import co.com.alianza.persistence.entities.RecursoPerfil
 
@@ -29,15 +29,15 @@ class RecursosPerfilRepository(implicit executionContext: ExecutionContext) exte
    * @param idUsuario Id del usuario para obtener los recursos
    * @return
    */
-  def obtenerRecursos(idUsuario: Int): Future[Validation[PersistenceException, List[RecursoPerfil]]] = loan {
+  def obtenerRecursos(idUsuario: Int): Future[Validation[PersistenceException, Seq[RecursoPerfil]]] = loan {
     implicit session =>
 
       val usuariosRecursosJoin = for {
-        ((usu: UsuarioTable, per: PerfilUsuarioTable), rec: RecursoPerfilTable) <- usuarios innerJoin perfilesUsuario on (_.id === _.idUsuario) innerJoin recursos on (_._2.idPerfil === _.idPerfil)
+        ((usu: UsuarioTable, per: PerfilUsuarioTable), rec: RecursoPerfilTable) <- usuarios join perfilesUsuario on (_.id === _.idUsuario) join recursos on (_._2.idPerfil === _.idPerfil)
         if usu.id === idUsuario
       } yield rec
 
-      val resultTry = Try { usuariosRecursosJoin.list }
+      val resultTry = session.database.run(usuariosRecursosJoin.result)
       resolveTry(resultTry, "Consulta todos los Recursos por Listado de Id de Perfiles")
   }
 

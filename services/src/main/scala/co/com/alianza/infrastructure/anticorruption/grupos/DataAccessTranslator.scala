@@ -10,7 +10,7 @@ import co.com.alianza.util.json.MarshallableImplicits._
 object DataAccessTranslator {
   def translateCliente(clienteJson: String): Option[Cliente] = {
     val result = clienteJson.fromJson[Array[MiembroGrupo]]
-    if (result nonEmpty) Some(result(0).toCliente) else None
+    if (result.nonEmpty) Some(result(0).toCliente) else None
   }
 }
 

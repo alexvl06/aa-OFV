@@ -5,26 +5,25 @@ import co.com.alianza.persistence.entities.{ CustomDriver, PinUsuario, PinUsuari
 
 import scala.concurrent.{ Future, ExecutionContext }
 
-import scala.slick.lifted.TableQuery
-import scala.slick.jdbc.JdbcBackend.SessionDef
+import slick.lifted.TableQuery
 import CustomDriver.simple._
 
-import scala.util.Try
 import scalaz.Validation
 
+//Todo : Borrar ! ya esta en el refactor
 class PinRepository(implicit executionContext: ExecutionContext) extends AlianzaRepository {
 
   val pin = TableQuery[PinUsuarioTable]
 
   def obtenerPin(tokenHash: String): Future[Validation[PersistenceException, Option[PinUsuario]]] = loan {
     implicit session =>
-      val resultTry = Try { pin.filter(_.tokenHash === tokenHash).list.headOption }
+      val resultTry = session.database.run(pin.filter(_.tokenHash === tokenHash).result.headOption)
       resolveTry(resultTry, "Consulta un pin dado su hash")
   }
 
   def eliminarPin(tokenHash: String): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
-      val resultTry = Try { pin.filter(_.tokenHash === tokenHash).delete }
+      val resultTry = session.database.run(pin.filter(_.tokenHash === tokenHash).delete)
       resolveTry(resultTry, "Elimina un pin dado su hash")
   }
 

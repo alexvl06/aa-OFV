@@ -1,30 +1,34 @@
 package co.com.alianza.domain.aggregates.ips
 
-import akka.actor.{ Actor, ActorRef, ActorLogging, Props, OneForOneStrategy }
 import akka.actor.SupervisorStrategy._
-import akka.routing.RoundRobinPool
+import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, OneForOneStrategy, Props }
 import akka.pattern._
-import co.com.alianza.app.AlianzaActors
+import akka.routing.RoundRobinPool
+import akka.util.Timeout
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente._
-import co.com.alianza.exceptions.PersistenceException
+import co.com.alianza.domain.aggregates.autenticacion.{ AgregarIp, RemoverIp }
+import co.com.alianza.exceptions.{ BusinessLevel, PersistenceException }
 import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
+import co.com.alianza.infrastructure.dto.Empresa
 import co.com.alianza.infrastructure.messages._
-import co.com.alianza.persistence.entities.{ IpsEmpresa, Empresa, IpsUsuario }
+import co.com.alianza.persistence.entities.{ IpsEmpresa, IpsUsuario }
 import co.com.alianza.util.transformers.ValidationT
-import co.com.alianza.app.MainActors
-import co.com.alianza.domain.aggregates.autenticacion.{ RemoverIp, AgregarIp }
-import co.com.alianza.exceptions.BusinessLevel
+import com.typesafe.config.Config
 import spray.http.StatusCodes._
 
+import scala.concurrent.duration.DurationInt
 import scala.util.{ Failure, Success }
-import scala.concurrent.Future
-import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
 import scalaz.std.AllInstances._
+import scalaz.{ Failure => zFailure, Success => zSuccess }
 
-class IpsUsuarioActorSupervisor extends Actor with ActorLogging {
+object IpsUsuarioActorSupervisor {
+  def props(sessionActor: ActorRef) = Props(new IpsUsuarioActorSupervisor(sessionActor))
+}
 
-  val ipsUsuarioActor = context.actorOf(Props[IpsUsuarioActor].withRouter(RoundRobinPool(nrOfInstances = 2)), "ipsUsuarioActor")
+class IpsUsuarioActorSupervisor(sessionActor: ActorRef) extends Actor with ActorLogging {
+
+  val ipsUsuarioActor = context.actorOf(IpsUsuarioActor.props(sessionActor).withRouter(RoundRobinPool(nrOfInstances = 2)), "ipsUsuarioActor")
 
   def receive = {
     case message: Any =>
@@ -40,12 +44,17 @@ class IpsUsuarioActorSupervisor extends Actor with ActorLogging {
 
 }
 
+object IpsUsuarioActor {
+  def props(sessionActor: ActorRef) = Props(new IpsUsuarioActor(sessionActor))
+}
+
 /**
  * Created by david on 16/06/14.
  */
-class IpsUsuarioActor extends Actor with ActorLogging with AlianzaActors {
-  import scala.concurrent.ExecutionContext
-  implicit val _: ExecutionContext = context.dispatcher
+class IpsUsuarioActor(sessionActor: ActorRef) extends Actor with ActorLogging {
+  import context.dispatcher
+  implicit val config: Config = context.system.settings.config
+  implicit val timeout = Timeout(120.seconds)
   import co.com.alianza.util.json.MarshallableImplicits._
 
   def receive = {
@@ -67,7 +76,7 @@ class IpsUsuarioActor extends Actor with ActorLogging with AlianzaActors {
         (for {
           idEmpresa <- ValidationT(DataAccessAdapter.obtenerIdEmpresa(idUsuario, tipoCliente))
           vectorIpsEmpresa <- ValidationT(DataAccessAdapter.obtenerIpsEmpresa(idEmpresa))
-        } yield (vectorIpsEmpresa)).run
+        } yield vectorIpsEmpresa).run
       }
     }
     result onComplete {
@@ -75,9 +84,9 @@ class IpsUsuarioActor extends Actor with ActorLogging with AlianzaActors {
         currentSender ! failure
       case Success(value) =>
         value match {
-          case zSuccess(response: Vector[IpsUsuario]) =>
+          case zSuccess(response: Seq[IpsUsuario]) =>
             currentSender ! ResponseMessage(OK, response.toJson)
-          case zSuccess(response: Vector[IpsEmpresa]) =>
+          case zSuccess(response: Seq[IpsEmpresa]) =>
             currentSender ! ResponseMessage(OK, response.toJson)
           case zFailure(error) =>
             currentSender ! error
@@ -133,7 +142,7 @@ class IpsUsuarioActor extends Actor with ActorLogging with AlianzaActors {
   }
 
   private def agregarIpSesionEmpresa(empresaId: Int, ip: String) =
-    MainActors.sesionActorSupervisor ? ObtenerEmpresaSesionActorId(empresaId) map {
+    sessionActor ? ObtenerEmpresaSesionActorId(empresaId) map {
       case Some(empresaSesionActor: ActorRef) =>
         empresaSesionActor ! AgregarIp(ip); zSuccess((): Unit)
       case None => zSuccess((): Unit)
@@ -141,7 +150,7 @@ class IpsUsuarioActor extends Actor with ActorLogging with AlianzaActors {
     }
 
   private def removerIpSesionEmpresa(empresaId: Int, ip: String) =
-    MainActors.sesionActorSupervisor ? ObtenerEmpresaSesionActorId(empresaId) map {
+    sessionActor ? ObtenerEmpresaSesionActorId(empresaId) map {
       case Some(empresaSesionActor: ActorRef) =>
         empresaSesionActor ! RemoverIp(ip); zSuccess((): Unit)
       case None => zSuccess((): Unit)

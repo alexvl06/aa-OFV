@@ -1,21 +1,18 @@
 package co.com.alianza.infrastructure.anticorruption.configuraciones
 
-import java.sql.Timestamp
-
 import scalaz.Validation
 import scala.concurrent.{ ExecutionContext, Future }
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.app.MainActors
+
 import scalaz.{ Failure => zFailure, Success => zSuccess }
 import co.com.alianza.infrastructure.dto.Configuracion
 import co.com.alianza.persistence.entities.{ Configuraciones => eConfiguraciones }
 import co.com.alianza.persistence.repositories.ConfiguracionesRepository
-import com.typesafe.config.Config
+import co.com.alianza.persistence.util.DataBaseExecutionContext
 
 object DataAccessAdapter {
 
-  implicit val ec: ExecutionContext = MainActors.dataAccesEx
-  implicit val conf: Config = MainActors.conf
+  implicit val ec: ExecutionContext = DataBaseExecutionContext.executionContext
 
   def obtenerConfiguraciones(): Future[Validation[PersistenceException, List[Configuracion]]] = {
     val repo = new ConfiguracionesRepository()
@@ -31,9 +28,9 @@ object DataAccessAdapter {
     }
   }
 
-  private def transformValidationList(origin: Validation[PersistenceException, List[eConfiguraciones]]): Validation[PersistenceException, List[Configuracion]] = {
+  private def transformValidationList(origin: Validation[PersistenceException, Seq[eConfiguraciones]]): Validation[PersistenceException, List[Configuracion]] = {
     origin match {
-      case zSuccess(response: List[eConfiguraciones]) => zSuccess(DataAccessTranslator.translateConfiguracion(response))
+      case zSuccess(response: Seq[eConfiguraciones]) => zSuccess(DataAccessTranslator.translateConfiguracion(response))
       case zFailure(error) => zFailure(error)
     }
   }
