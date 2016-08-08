@@ -1,7 +1,7 @@
 package portal.transaccional.autenticacion.service.drivers.pregunta
 
-import co.com.alianza.infrastructure.dto.{Pregunta, RespuestaCompleta}
-import co.com.alianza.persistence.entities.{PreguntaAutovalidacion => ePregunta, RespuestasAutovalidacionUsuario => eRespuesta}
+import co.com.alianza.infrastructure.dto.{ Pregunta, RespuestaCompleta }
+import co.com.alianza.persistence.entities.{ PreguntaAutovalidacion => ePregunta, RespuestasAutovalidacionUsuario => eRespuesta }
 
 /**
  * Created by seven4n 2016

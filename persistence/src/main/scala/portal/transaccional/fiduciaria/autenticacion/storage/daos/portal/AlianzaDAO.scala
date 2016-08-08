@@ -1,7 +1,7 @@
 package portal.transaccional.fiduciaria.autenticacion.storage.daos.portal
 
-import co.com.alianza.persistence.config.DBConfig
 import co.com.alianza.persistence.entities._
+import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
 import slick.lifted.TableQuery
 
 import scala.concurrent.Future
@@ -24,8 +24,8 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
   val preguntasTable = TableQuery[PreguntasAutovalidacionTable]
   val respuestasUsuarioTable = TableQuery[RespuestasAutovalidacionUsuarioTable]
 
-  import dcConfig.db._
-  import dcConfig.profile.api._
+  import dcConfig.DB._
+  import dcConfig.driver.api._
 
   //  ------------------  Recurso ---------------------------
   /**

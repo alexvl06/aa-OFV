@@ -73,7 +73,7 @@ case class PreguntasAutovalidacionService(user: UsuarioAuth, preguntasAutoValida
         case Success(value) => complete(value)
         case Failure(ex) => execution(ex)
       }
-    }~ post {
+    } ~ post {
       entity(as[RespuestasComprobacionRequest]) {
         request =>
           clientIP {

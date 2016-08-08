@@ -1,5 +1,7 @@
 package portal.transaccional.fiduciaria.autenticacion.storage.conn
 
+import com.typesafe.config.Config
+
 /**
  * Datos basicos de conexion a base de datos
  *
@@ -7,13 +9,9 @@ package portal.transaccional.fiduciaria.autenticacion.storage.conn
  */
 trait ConnectionConf {
 
-  def connectionString: String
-
   def user: String
 
   def pass: String
-
-  def checkoutTimeout: Int
 
   def dataSourceName: String
 

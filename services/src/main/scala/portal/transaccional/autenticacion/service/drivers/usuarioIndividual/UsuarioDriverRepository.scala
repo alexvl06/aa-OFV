@@ -23,7 +23,7 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
       (usuarioOption: Option[Usuario]) =>
         usuarioOption match {
           case Some(usuario: Usuario) => Future.successful(usuario)
-          case ex : Any => Future.failed(ValidacionException("401.3", "Error usuario no existe"))
+          case ex: Any => Future.failed(ValidacionException("401.3", "Error usuario no existe"))
         }
     }
   }
@@ -171,7 +171,7 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
    */
   def invalidarToken(token: String): Future[Int] = {
     usuarioDAO.deleteToken(token) flatMap {
-      case r : Int => Future.successful(r)
+      case r: Int => Future.successful(r)
       case _ => Future.failed(ValidacionException("401.9", "No se pudo borrar el token"))
     }
   }

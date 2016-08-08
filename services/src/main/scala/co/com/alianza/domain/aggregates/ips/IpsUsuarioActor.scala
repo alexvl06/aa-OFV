@@ -26,8 +26,7 @@ object IpsUsuarioActorSupervisor {
   def props(sessionActor: ActorRef) = Props(new IpsUsuarioActorSupervisor(sessionActor))
 }
 
-
-class IpsUsuarioActorSupervisor(sessionActor : ActorRef) extends Actor with ActorLogging {
+class IpsUsuarioActorSupervisor(sessionActor: ActorRef) extends Actor with ActorLogging {
 
   val ipsUsuarioActor = context.actorOf(IpsUsuarioActor.props(sessionActor).withRouter(RoundRobinPool(nrOfInstances = 2)), "ipsUsuarioActor")
 
@@ -45,7 +44,6 @@ class IpsUsuarioActorSupervisor(sessionActor : ActorRef) extends Actor with Acto
 
 }
 
-
 object IpsUsuarioActor {
   def props(sessionActor: ActorRef) = Props(new IpsUsuarioActor(sessionActor))
 }
@@ -53,7 +51,7 @@ object IpsUsuarioActor {
 /**
  * Created by david on 16/06/14.
  */
-class IpsUsuarioActor(sessionActor : ActorRef) extends Actor with ActorLogging {
+class IpsUsuarioActor(sessionActor: ActorRef) extends Actor with ActorLogging {
   import context.dispatcher
   implicit val config: Config = context.system.settings.config
   implicit val timeout = Timeout(120.seconds)

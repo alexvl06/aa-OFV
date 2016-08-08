@@ -1,7 +1,7 @@
 package portal.transaccional.fiduciaria.autenticacion.storage.daos.core
 
-import co.com.alianza.persistence.config.DBConfig
 import oracle.jdbc.OracleTypes
+import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
 import portal.transaccional.fiduciaria.autenticacion.storage.helpers.AlianzaStorageHelper
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -9,7 +9,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * Created by alexandra on 25/07/16.
  */
-case class ClienteDAO()(implicit val ec: ExecutionContext, dcConfig: DBConfig) extends AlianzaStorageHelper with ClienteDAOs {
+case class ClienteDAO()(implicit val ec: ExecutionContext, dcConfig: DBConfig) extends AlianzaStorageHelper {
 
   def consultaCliente(numDocumento: String): Future[String] = transaction {
     connection =>

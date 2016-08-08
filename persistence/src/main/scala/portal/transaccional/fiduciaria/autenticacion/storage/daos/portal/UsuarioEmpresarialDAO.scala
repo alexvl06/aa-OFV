@@ -2,7 +2,7 @@ package portal.transaccional.fiduciaria.autenticacion.storage.daos.portal
 
 import java.sql.Timestamp
 
-import co.com.alianza.persistence.config.DBConfig
+import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
 import co.com.alianza.persistence.entities.{ UsuarioEmpresarial, UsuarioEmpresarialTable }
 import enumerations.EstadosEmpresaEnum
 import slick.lifted.TableQuery
@@ -14,8 +14,8 @@ import scala.concurrent.Future
  */
 case class UsuarioEmpresarialDAO(implicit dcConfig: DBConfig) extends TableQuery(new UsuarioEmpresarialTable(_)) with UsuarioEmpresarialDAOs {
 
-  import dcConfig.db._
-  import dcConfig.profile.api._
+  import dcConfig.DB._
+  import dcConfig.driver.api._
 
   def create(agenteEmpresarial: UsuarioEmpresarial): Future[Int] = {
     run((this returning this.map(_.id)) += agenteEmpresarial)

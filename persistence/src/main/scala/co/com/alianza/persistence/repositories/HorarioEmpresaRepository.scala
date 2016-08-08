@@ -32,7 +32,6 @@ class HorarioEmpresaRepository(implicit executionContext: ExecutionContext) exte
       resolveTry(resultTry, "Agregar Horario Empresa")
   }
 
-
   def agregarHorarioEmpresa(horario: HorarioEmpresa, existeHorario: Boolean): Future[Validation[PersistenceException, Boolean]] = loan {
     implicit session =>
       val query = horarioEmpresa.filter(_.idEmpresa === horario.idEmpresa)
@@ -40,8 +39,8 @@ class HorarioEmpresaRepository(implicit executionContext: ExecutionContext) exte
       val resultTry = session.database.run(query2)
 
       val resultado = resultTry flatMap {
-        case r : Int => Future.successful(existeHorario)
-        case err : Any => Future.failed(new Throwable( "No se pudo completar la peticion" ))
+        case r: Int => Future.successful(existeHorario)
+        case err: Any => Future.failed(new Throwable("No se pudo completar la peticion"))
       }
       resolveTry(resultado, "Agregar Horario Empresa")
   }

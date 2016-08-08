@@ -1,10 +1,9 @@
-package co.com.alianza.persistence.config.h2
+package portal.transaccional.fiduciaria.autenticacion.storage.config
 
-import co.com.alianza.persistence.config.DBConfig
-
-import scala.concurrent.ExecutionContext
 import slick.driver.{ H2Driver, JdbcProfile }
 import slick.jdbc.JdbcBackend.Database
+
+import scala.concurrent.ExecutionContext
 
 /**
  * Interface que implementa la configuracion de base de datos para H2

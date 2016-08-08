@@ -4,14 +4,14 @@ import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.infrastructure.anticorruption.clientes.DataAccessTranslator
 import co.com.alianza.infrastructure.dto.Cliente
 import enumerations.EstadosCliente
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.core.ClienteDAOs
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.core.ClienteDAO
 
-import scala.concurrent.{ Future, ExecutionContext }
+import scala.concurrent.{ ExecutionContext, Future }
 
 /**
- * Created by hernando on 25/07/16.
+ * Created by S4N on 2016
  */
-case class ClienteDriverCoreRepository(clienteCoreRepo: ClienteDAOs)(implicit val ex: ExecutionContext) extends ClienteRepository {
+case class ClienteDriverCoreRepository(clienteCoreRepo: ClienteDAO)(implicit val ex: ExecutionContext) extends ClienteRepository {
 
   def getCliente(documento: String): Future[Cliente] = {
     for {

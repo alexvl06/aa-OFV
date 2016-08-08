@@ -14,12 +14,9 @@ import co.com.alianza.domain.aggregates.permisos.PermisoTransaccionalActorSuperv
 import co.com.alianza.domain.aggregates.pin.PinActorSupervisor
 import co.com.alianza.domain.aggregates.usuarios.UsuariosActorSupervisor
 import co.com.alianza.infrastructure.auditing.KafkaActorSupervisor
-import co.com.alianza.persistence.config.DBConfig
-import co.com.alianza.persistence.config.oracle.OracleConfig
-import co.com.alianza.persistence.config.pg.PGConfig
 import co.com.alianza.util.ConfigApp
 import com.typesafe.config.Config
-import portal.transaccional.autenticacion.service.drivers.Recurso.{ RecursoDriverRepository, RecursoRepository }
+import portal.transaccional.autenticacion.service.drivers.Recurso.RecursoDriverRepository
 import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionDriverRepository, AutenticacionEmpresaDriverRepository }
 import portal.transaccional.autenticacion.service.drivers.autorizacion.{ AutorizacionUsuarioDriverRepository, AutorizacionUsuarioEmpresarialAdminDriverRepository, AutorizacionUsuarioEmpresarialDriverRepository }
 import portal.transaccional.autenticacion.service.drivers.cliente.ClienteDriverCoreRepository
@@ -34,6 +31,8 @@ import portal.transaccional.autenticacion.service.drivers.respuesta.{ RespuestaU
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioEmpresarialAdminDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioDriverRepository
+import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
+import portal.transaccional.fiduciaria.autenticacion.storage.config.pg.{ OracleConfig, PGConfig }
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.core.ClienteDAO
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal._
 
@@ -153,7 +152,7 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val preguntasValidacionRepository: PreguntasAutovalidacionDriverRepository =
     PreguntasAutovalidacionDriverRepository(prguntasRepo, configuracionRepo, alianzaDAO)
 
-  lazy val ipRepo = IpDriverRepository(usuarioRepo,usuarioAgenteRepo,empresaAdminDAO,ipEmpresaDAO ,usuarioAdminRepo, clienteRepo, ipUsuarioDAO)
+  lazy val ipRepo = IpDriverRepository(usuarioRepo, usuarioAgenteRepo, empresaAdminDAO, ipEmpresaDAO, usuarioAdminRepo, clienteRepo, ipUsuarioDAO)
 }
 
 private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
