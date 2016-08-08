@@ -11,7 +11,7 @@ import slick.lifted.TableQuery
 import scala.concurrent.Future
 import scalaz.Validation
 
-case class UsuarioEmpresarialAdminDAO(implicit dcConfig: DBConfig) extends TableQuery(new UsuarioEmpresarialAdminTable(_))
+case class UsuarioEmpresarialAdminDAO()(implicit dcConfig: DBConfig) extends TableQuery(new UsuarioEmpresarialAdminTable(_))
     with UsuarioEmpresarialAdminDAOs {
 
   import dcConfig.DB._

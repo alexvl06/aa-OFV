@@ -1,4 +1,4 @@
-package portal.transaccional.autenticacion.service.drivers.Recurso
+package portal.transaccional.autenticacion.service.drivers.recurso
 
 import co.com.alianza.persistence.entities.{ RecursoPerfil, RecursoPerfilAgente, RecursoPerfilClienteAdmin }
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ AlianzaDAO, AlianzaDAOs }

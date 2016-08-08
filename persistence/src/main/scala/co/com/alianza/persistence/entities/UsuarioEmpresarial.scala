@@ -4,15 +4,15 @@ import java.sql.Timestamp
 import CustomDriver.simple._
 
 /**
- * Created by manuel on 9/12/14.
+ * Created by s4n on 2014
  */
-case class UsuarioEmpresarial(id: Int, correo: String, fechaActualizacion: Timestamp, identificacion: String,
-  tipoIdentificacion: Int, usuario: String, estado: Int, contrasena: Option[String],
-  token: Option[String], numeroIngresosErroneos: Int, ipUltimoIngreso: Option[String],
+case class UsuarioEmpresarial(id: Int, correo: String, fechaActualizacion: Timestamp, identificacion: String, tipoIdentificacion: Int, usuario: String,
+  estado: Int, contrasena: Option[String], token: Option[String], numeroIngresosErroneos: Int, ipUltimoIngreso: Option[String],
   fechaUltimoIngreso: Option[Timestamp], nombreUsuario: String, cargo: String, descripcion: String)
 
 class UsuarioEmpresarialTable(tag: Tag) extends Table[UsuarioEmpresarial](tag, "USUARIO_EMPRESARIAL") {
   def id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
+
   def correo = column[String]("CORREO")
   def fechaActualizacion = column[Timestamp]("FECHA_ACTUALIZACION")
   def identificacion = column[String]("IDENTIFICACION")

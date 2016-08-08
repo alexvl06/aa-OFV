@@ -16,8 +16,7 @@ import co.com.alianza.domain.aggregates.usuarios.UsuariosActorSupervisor
 import co.com.alianza.infrastructure.auditing.KafkaActorSupervisor
 import co.com.alianza.util.ConfigApp
 import com.typesafe.config.Config
-import portal.transaccional.autenticacion.service.drivers.Recurso.RecursoDriverRepository
-import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionDriverRepository, AutenticacionEmpresaDriverRepository }
+import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionComercialDriverRepository, AutenticacionDriverRepository, AutenticacionEmpresaDriverRepository }
 import portal.transaccional.autenticacion.service.drivers.autorizacion.{ AutorizacionUsuarioDriverRepository, AutorizacionUsuarioEmpresarialAdminDriverRepository, AutorizacionUsuarioEmpresarialDriverRepository }
 import portal.transaccional.autenticacion.service.drivers.cliente.ClienteDriverCoreRepository
 import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionDriverRepository
@@ -25,15 +24,21 @@ import portal.transaccional.autenticacion.service.drivers.empresa.EmpresaDriverR
 import portal.transaccional.autenticacion.service.drivers.ip.IpDriverRepository
 import portal.transaccional.autenticacion.service.drivers.ipempresa.IpEmpresaDriverRepository
 import portal.transaccional.autenticacion.service.drivers.ipusuario.IpUsuarioDriverRepository
+import portal.transaccional.autenticacion.service.drivers.ldap.LdapDriverRepository
 import portal.transaccional.autenticacion.service.drivers.pregunta.{ PreguntasAutovalidacionDriverRepository, PreguntasDriverRepository }
+import portal.transaccional.autenticacion.service.drivers.recurso.RecursoDriverRepository
 import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaDriverRepository
 import portal.transaccional.autenticacion.service.drivers.respuesta.{ RespuestaUsuarioAdminDriverRepository, RespuestaUsuarioDriverRepository }
+import portal.transaccional.autenticacion.service.drivers.sesion.SesionDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioEmpresarialAdminDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialDriverRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioComercial.UsuarioComercialDriverRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioComercialAdmin.{ UsuarioComercialAdminRepository, UsuarioComercialAdminDriverRepository }
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioDriverRepository
 import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
 import portal.transaccional.fiduciaria.autenticacion.storage.config.pg.{ OracleConfig, PGConfig }
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.core.ClienteDAO
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.ldap.AlianzaLdapDAO
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal._
 
 /**
@@ -67,16 +72,8 @@ trait CoreActors {
   val usuariosActor = system.actorSelection(usuariosActorSupervisor.path)
   val confrontaActorSupervisor = system.actorOf(Props[ConfrontaActorSupervisor], "confrontaActorSupervisor")
   val confrontaActor = system.actorSelection(confrontaActorSupervisor.path)
-
-  //val autenticacionActorSupervisor = system.actorOf(Props[AutenticacionActorSupervisor], "autenticacionActorSupervisor")
-  //val autenticacionActor = system.actorSelection(autenticacionActorSupervisor.path)
-  //val autenticacionUsuarioEmpresaActor = system.actorSelection(autenticacionActorSupervisor.path)
-  //val autorizacionActor = system.actorSelection(autenticacionActorSupervisor.path)
-  //val autorizacionUsuarioEmpresarialActor = system.actorSelection(autenticacionActorSupervisor.path)
-
   val consultaClienteActorSupervisor = system.actorOf(Props[ConsultaClienteActorSupervisor], "consultaClienteActorSupervisor")
   val consultaClienteActor = system.actorSelection(consultaClienteActorSupervisor.path)
-
   val contrasenasActorSupervisor = system.actorOf(Props[ContrasenasActorSupervisor], "contrasenasActorSupervisor")
   val contrasenasActor = system.actorSelection(contrasenasActorSupervisor.path)
   val contrasenasAgenteEmpresarialActorSupervisor = system.actorOf(
@@ -121,6 +118,8 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
 
   val sessionActor: ActorRef
 
+  lazy val sesionRepo = SesionDriverRepository(sessionActor)
+  lazy val ldapRepo = LdapDriverRepository(alianzaLdapDAO)
   lazy val recursoRepo = RecursoDriverRepository(alianzaDAO)
   lazy val empresaRepo = EmpresaDriverRepository(empresaDAO)
   lazy val usuarioRepo = UsuarioDriverRepository(usuarioDAO)
@@ -130,29 +129,35 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val configuracionRepo = ConfiguracionDriverRepository(configuracionDAO)
   lazy val reglaContrasenaRepo = ReglaContrasenaDriverRepository(reglaContrasenaDAO)
   lazy val usuarioAgenteRepo = UsuarioEmpresarialDriverRepository(usuarioAgenteDAO)
+  lazy val usuarioComercialRepo = UsuarioComercialDriverRepository(usuarioComercialDAO)
+  lazy val usuarioComercialAdminRepo = UsuarioComercialAdminDriverRepository(usuarioComercialAdminDAO)
   lazy val respuestaUsuarioRepo = RespuestaUsuarioDriverRepository(respuestaUsuarioDAO, configuracionRepo)
   lazy val usuarioAdminRepo = UsuarioEmpresarialAdminDriverRepository(usuarioAdminDAO)
   lazy val respuestaUsuariAdminoRepo = RespuestaUsuarioAdminDriverRepository(respuestaUsuarioAdminDAO, configuracionRepo)
-  lazy val autorizacionUsuarioRepo = AutorizacionUsuarioDriverRepository(usuarioRepo, recursoRepo, sessionActor)
+  lazy val autorizacionUsuarioRepo = AutorizacionUsuarioDriverRepository(usuarioRepo, recursoRepo, sesionRepo)
 
   lazy val autenticacionRepo = AutenticacionDriverRepository(usuarioRepo, clienteRepo, configuracionRepo, reglaContrasenaRepo, ipUsuarioRepo,
-    respuestaUsuarioRepo, sessionActor)
+    respuestaUsuarioRepo, sesionRepo)
 
   lazy val autenticacionEmpresaRepo = AutenticacionEmpresaDriverRepository(usuarioAgenteRepo, usuarioAdminRepo, clienteRepo, empresaRepo, reglaContrasenaRepo,
-    configuracionRepo, ipEmpresaRepo, sessionActor, respuestaUsuariAdminoRepo)
+    configuracionRepo, ipEmpresaRepo, sesionRepo, respuestaUsuariAdminoRepo)
+
+  lazy val autenticacionComercialRepo = AutenticacionComercialDriverRepository(ldapRepo, usuarioComercialRepo,
+    usuarioComercialAdminRepo: UsuarioComercialAdminRepository, configuracionRepo, sesionRepo)
 
   lazy val autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialDriverRepository = AutorizacionUsuarioEmpresarialDriverRepository(
-    usuarioAgenteRepo, alianzaDAO, sessionActor: ActorRef, recursoRepo
+    usuarioAgenteRepo, alianzaDAO, sesionRepo, recursoRepo
   )
   lazy val autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminDriverRepository =
-    AutorizacionUsuarioEmpresarialAdminDriverRepository(usuarioAdminRepo, sessionActor: ActorRef, alianzaDAO, recursoRepo)
+    AutorizacionUsuarioEmpresarialAdminDriverRepository(usuarioAdminRepo, sesionRepo, alianzaDAO, recursoRepo)
 
-  lazy val prguntasRepo: PreguntasDriverRepository =
+  lazy val preguntasRepo: PreguntasDriverRepository =
     PreguntasDriverRepository(preguntaDAO)
   lazy val preguntasValidacionRepository: PreguntasAutovalidacionDriverRepository =
-    PreguntasAutovalidacionDriverRepository(prguntasRepo, configuracionRepo, alianzaDAO)
+    PreguntasAutovalidacionDriverRepository(preguntasRepo, configuracionRepo, alianzaDAO)
 
   lazy val ipRepo = IpDriverRepository(usuarioRepo, usuarioAgenteRepo, empresaAdminDAO, ipEmpresaDAO, usuarioAdminRepo, clienteRepo, ipUsuarioDAO)
+
 }
 
 private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
@@ -173,6 +178,9 @@ private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
   lazy val respuestaUsuarioAdminDAO = RespuestaUsuarioAdminDAO()(config)
   lazy val preguntaDAO = PreguntasDAO()(config)
   lazy val empresaAdminDAO = EmpresaAdminDAO()(config)
+  lazy val alianzaLdapDAO = AlianzaLdapDAO()
+  lazy val usuarioComercialDAO = UsuarioComercialDAO()(config)
+  lazy val usuarioComercialAdminDAO = UsuarioComercialAdminDAO()(config)
 }
 
 /**

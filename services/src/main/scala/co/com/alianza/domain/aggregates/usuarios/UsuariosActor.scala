@@ -120,8 +120,12 @@ class UsuariosActor extends Actor with ActorLogging {
       //Se obtiene el usuario dado el perfil que llegue de presentacion, en caso de perfil no correcto se devuelve excepcion
       val futureConsultaUsuarios: Future[Validation[PersistenceException, Option[Any]]] = message.perfilCliente match {
         case 1 => co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtenerUsuarioNumeroIdentificacion(message.identificacion)
-        case 2 => co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtieneUsuarioEmpresarialAdminPorNitYUsuario(message.identificacion, message.usuarioClienteAdmin.get)
-        case _ => Future.successful(Validation.failure(PersistenceException(new Exception, BusinessLevel, "El perfil del usuario no es soportado por la aplicacion")))
+        case 2 => co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter.obtieneUsuarioEmpresarialAdminPorNitYUsuario(
+          message.identificacion,
+          message.usuarioClienteAdmin.get
+        )
+        case _ => Future.successful(Validation.failure(PersistenceException(new Exception, BusinessLevel,
+          "El perfil del usuario no es soportado por la aplicacion")))
       }
       val validarClienteFuture = (for {
         cliente <- ValidationT(validaSolicitudCliente(message.identificacion, message.tipoIdentificacion))
@@ -145,13 +149,14 @@ class UsuariosActor extends Actor with ActorLogging {
         currentSender ! None
   }
 
-  private def resolveDesbloquearContrasenaFuture(futureCliente: Future[Validation[ErrorValidacion, (Option[Usuario], Cliente)]], currentSender: ActorRef, message: DesbloquearMessage) = {
+  private def resolveDesbloquearContrasenaFuture(futureCliente: Future[Validation[ErrorValidacion, (Option[Usuario], Cliente)]], currentSender: ActorRef,
+    message: DesbloquearMessage) = {
     futureCliente onComplete {
       case sFailure(failure) =>
         currentSender ! failure
       case sSuccess(value) =>
         value match {
-          case zSuccess(response: (Option[Usuario], Option[Cliente])) =>
+          case zSuccess(response: (Option[Usuario], Cliente)) =>
             val usuario: Usuario = response._1.get
             val cliente: Cliente = response._2
             enviarCorreoDefinirContrasena(1, usuario.identificacion, usuario.tipoIdentificacion, cliente.wcli_dir_correo, currentSender, usuario.id, true)
@@ -202,7 +207,8 @@ class UsuariosActor extends Actor with ActorLogging {
                                       valueResponseUsuarioEmpresarial.estado != EstadosEmpresaEnum.pendienteActivacion.id &&
                                       valueResponseUsuarioEmpresarial.estado != EstadosEmpresaEnum.pendienteReiniciarContrasena.id) {
                                       //Se cambia a estado reinicio de contraseña cuando el cliente hace click en el enlace del correo
-                                      enviarCorreoDefinirContrasena(message.perfilCliente, message.identificacion, message.tipoIdentificacion, responseCliente.wcli_dir_correo, currentSender, Some(valueResponseUsuarioEmpresarial.id))
+                                      enviarCorreoDefinirContrasena(message.perfilCliente, message.identificacion, message.tipoIdentificacion,
+                                        responseCliente.wcli_dir_correo, currentSender, Some(valueResponseUsuarioEmpresarial.id))
                                     } else
                                       currentSender ! ResponseMessage(Conflict, errorEstadoUsuarioNoPermitido)
                                 }
@@ -211,7 +217,8 @@ class UsuariosActor extends Actor with ActorLogging {
                             //El olvido de contrasena queda para usuarios en estado diferente a pendiente de activacion
                             if (valueResponse.estado != EstadosUsuarioEnum.pendienteActivacion.id &&
                               valueResponse.estado != EstadosUsuarioEnum.pendienteReinicio.id)
-                              enviarCorreoDefinirContrasena(message.perfilCliente, message.identificacion, message.tipoIdentificacion, responseCliente.wcli_dir_correo, currentSender, valueResponse.id)
+                              enviarCorreoDefinirContrasena(message.perfilCliente, message.identificacion, message.tipoIdentificacion,
+                                responseCliente.wcli_dir_correo, currentSender, valueResponse.id)
                             else
                               currentSender ! ResponseMessage(Conflict, errorEstadoUsuarioNoPermitido)
                           case _ => log.info("Error al obtener usuario para olvido de contrasena")
@@ -248,7 +255,9 @@ class UsuariosActor extends Actor with ActorLogging {
     )
   }
 
-  private def enviarCorreoDefinirContrasena(perfilCliente: Int, identificacion: String, tipoIdentificacion: Int, correoCliente: String, currentSender: ActorRef, idUsuario: Option[Int], desbloqueo: Boolean = false) = {
+  private def enviarCorreoDefinirContrasena(perfilCliente: Int, identificacion: String, tipoIdentificacion: Int, correoCliente: String, currentSender: ActorRef,
+    idUsuario: Option[Int], desbloqueo: Boolean = false) = {
+
     val validacionConsulta = validacionConsultaTiempoExpiracion()
 
     validacionConsulta onComplete {
@@ -272,9 +281,11 @@ class UsuariosActor extends Actor with ActorLogging {
                 val puPersistence: entities.PinUsuario = DataAccessTranslatorPin.translateEntityPinUsuario(pinUsuarioDto)
                 DataAccessAdapterUsuario.crearUsuarioPin(puPersistence)
               case pinUsuarioEmpresarialAdminDto @ PinUsuarioEmpresarialAdmin(param1, param2, param3, param4, param5) =>
-                val pueaPersistence: entities.PinUsuarioEmpresarialAdmin = DataAccessTranslatorPinClienteAdmin.translateEntityPinUsuario(pinUsuarioEmpresarialAdminDto)
+                val pueaPersistence: entities.PinUsuarioEmpresarialAdmin =
+                  DataAccessTranslatorPinClienteAdmin.translateEntityPinUsuario(pinUsuarioEmpresarialAdminDto)
                 DataAccessAdapterUsuario.crearUsuarioClienteAdministradorPin(pueaPersistence)
-              case _ => Future.successful(Validation.failure(PersistenceException(new Exception, BusinessLevel, "Error ... por verifique los datos y vuelva a intentarlo")))
+              case _ => Future.successful(Validation.failure(PersistenceException(new Exception, BusinessLevel,
+                "Error ... por verifique los datos y vuelva a intentarlo")))
             }
 
             val asunto: String = if (desbloqueo) "alianza.smtp.asunto.desbloquearUsuario" else "alianza.smtp.asunto.reiniciarContrasena"
@@ -288,11 +299,15 @@ class UsuariosActor extends Actor with ActorLogging {
                   case zSuccess(intResult) =>
                     pin match {
                       case pinUsuarioDto @ PinUsuario(param1, param2, param3, param4, param5) =>
-                        new SmtpServiceClient()(context.system).send(buildMessage(pinUsuarioDto, responseConf.valor.toInt, UsuarioMessage(correoCliente, identificacion, tipoIdentificacion, null, false, None), template, asunto), (_, _) => Unit)
+                        new SmtpServiceClient()(context.system).send(buildMessage(pinUsuarioDto, responseConf.valor.toInt, UsuarioMessage(
+                          correoCliente,
+                          identificacion, tipoIdentificacion, null, false, None
+                        ), template, asunto), (_, _) => Unit)
                         currentSender ! ResponseMessage(Created)
 
                       case pinUsuarioEmpresarialAdminDto @ PinUsuarioEmpresarialAdmin(param1, param2, param3, param4, param5) =>
-                        new SmtpServiceClient()(context.system).send(buildMessage(pinUsuarioEmpresarialAdminDto, responseConf.valor.toInt, UsuarioMessage(correoCliente, identificacion, tipoIdentificacion, null, false, None), template, asunto), (_, _) => Unit)
+                        new SmtpServiceClient()(context.system).send(buildMessage(pinUsuarioEmpresarialAdminDto, responseConf.valor.toInt,
+                          UsuarioMessage(correoCliente, identificacion, tipoIdentificacion, null, false, None), template, asunto), (_, _) => Unit)
                         currentSender ! ResponseMessage(Created)
                     }
                 }
@@ -308,7 +323,8 @@ class UsuariosActor extends Actor with ActorLogging {
 
   private def obtenerCuestionario(sender: ActorRef, message: UsuarioMessage) = {
     val currentSender = sender
-    val locator: ConfrontaUltraWebServiceServiceLocator = new ConfrontaUltraWebServiceServiceLocator(config.getString("confronta.service.obtenerCuestionario.location"))
+    val locator: ConfrontaUltraWebServiceServiceLocator =
+      new ConfrontaUltraWebServiceServiceLocator(config.getString("confronta.service.obtenerCuestionario.location"))
     val stub: ConfrontaUltraWSSoapBindingStub = locator.getConfrontaUltraWS.asInstanceOf[ConfrontaUltraWSSoapBindingStub]
     val parametros: ParametrosSeguridadULTRADTO = new ParametrosSeguridadULTRADTO
     val parametrosUltra: ParametrosULTRADTO = new ParametrosULTRADTO
@@ -357,7 +373,8 @@ class UsuariosActor extends Actor with ActorLogging {
   private def validaSolicitud(message: UsuarioMessage): Future[Validation[ErrorValidacion, Cliente]] = {
     val validacionClave: Future[Validation[ErrorValidacion, Unit.type]] = validacionReglasClaveAutoregistro(message)
     val consultaNumDocFuture = validacionConsultaNumDoc(message)
-    val consultaClienteFuture: Future[Validation[ErrorValidacion, Cliente]] = validacionConsultaCliente(message.identificacion, message.tipoIdentificacion, false)
+    val consultaClienteFuture: Future[Validation[ErrorValidacion, Cliente]] =
+      validacionConsultaCliente(message.identificacion, message.tipoIdentificacion, false)
     (for {
       resultValidacionClave <- ValidationT(validacionClave)
       resultConsultaNumDoc <- ValidationT(consultaNumDocFuture)
@@ -398,12 +415,15 @@ class UsuariosActor extends Actor with ActorLogging {
     //MailMessage(config.getString("alianza.smtp.from"), message.correo, List(), asunto, body, "")
   }
 
-  private val errorEstadoReinicioContrasena = ErrorMessage("409.8", "El usuario se encuentra en proceso de reinicio de contrasena", "El usuario se encuentra en proceso de reinicio de contrasena").toJson
-  private val errorEstadoUsuarioNoPermitido = ErrorMessage("409.9", "El estado del usuario no permite reiniciar la contrasena", "El estado del usuario no permite reiniciar la contrasena").toJson
+  private val errorEstadoReinicioContrasena =
+    ErrorMessage("409.8", "El usuario se encuentra en proceso de reinicio de contrasena", "El usuario se encuentra en proceso de reinicio de contrasena").toJson
+  private val errorEstadoUsuarioNoPermitido =
+    ErrorMessage("409.9", "El estado del usuario no permite reiniciar la contrasena", "El estado del usuario no permite reiniciar la contrasena").toJson
   private val errorUsuarioExiste = ErrorMessage("409.10", "Fecha de Expedición Invalida", "Fecha de Expedición Invalida").toJson
   private val errorEstadoEmpresa = ErrorMessage("409.11", "Estado no valido de la empresa", "Estado no valido de la empresa").toJson
   private val errorEmpresaNoExiste = ErrorMessage("409.12", "Empresa no existe para dicho NÚMERO", "Empresa no existe para dicho NÚMERO").toJson
-  private val errorUsuarioNoExistePerfilClienteNiEmpresaAdmin = ErrorMessage("409.13", "Usuario no existe para perfil cliente, cliente admin", "Usuario no existe para perfil cliente, cliente admin").toJson
+  private val errorUsuarioNoExistePerfilClienteNiEmpresaAdmin =
+    ErrorMessage("409.13", "Usuario no existe para perfil cliente, cliente admin", "Usuario no existe para perfil cliente, cliente admin").toJson
   private val errorUsuarioEmpresaAdminActivo = ErrorMessage("409.14", "Usuario admin ya existe", "Ya hay un cliente administrador para ese NIT.").toJson
 
 }

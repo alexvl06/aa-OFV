@@ -40,7 +40,7 @@ class HorarioEmpresaRepository(implicit executionContext: ExecutionContext) exte
 
       val resultado = resultTry flatMap {
         case r: Int => Future.successful(existeHorario)
-        case err: Any => Future.failed(new Throwable("No se pudo completar la peticion"))
+        case _ => Future.failed(new Throwable("No se pudo completar la peticion"))
       }
       resolveTry(resultado, "Agregar Horario Empresa")
   }

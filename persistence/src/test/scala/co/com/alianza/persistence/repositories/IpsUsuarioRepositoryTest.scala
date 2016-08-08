@@ -1,13 +1,12 @@
 package co.com.alianza.persistence.repositories
 
-import com.typesafe.config.{ ConfigFactory, Config }
+import co.com.alianza.persistence.entities.IpsUsuario
+import co.com.alianza.util.ConfigApp
+import com.typesafe.config.Config
 import org.scalatest.FunSuite
 
 import scala.concurrent.Await
-import scala.util.{ Failure, Success, Try }
-import scala.util.Random
-import co.com.alianza.persistence.entities.IpsUsuario
-import co.com.alianza.util.ConfigApp
+import scala.util.{Failure, Random, Success, Try}
 
 /**
  * Created by david on 12/06/14.
@@ -15,8 +14,8 @@ import co.com.alianza.util.ConfigApp
 class IpsUsuarioRepositoryTest extends FunSuite {
 
   implicit val conf: Config = ConfigApp.conf
-  import scala.concurrent.duration._
   import scala.concurrent.ExecutionContext.Implicits.global
+  import scala.concurrent.duration._
 
   test("IpsUsuarioRepository obtenerIpsUsuario") {
 
