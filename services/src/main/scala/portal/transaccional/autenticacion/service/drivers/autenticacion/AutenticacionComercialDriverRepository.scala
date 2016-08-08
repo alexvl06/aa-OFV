@@ -54,7 +54,7 @@ case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository, usua
       cliente <- ldapRepo.autenticarLdap(usuario, tipoUsuario, password)
       usuario <- usuarioComercialRepo.getByUser(cliente.usuario)
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
-      token <- generarTokenComercial(cliente, tipoUsuario, ip, inactividad.valor)
+      token <- generarTokenComercial(cliente, usuario, tipoUsuario, ip, inactividad.valor)
       _ <- usuarioComercialRepo.actualizarToken(usuario.id, token)
       sesion <- sesionRepo.crearSesion(token, inactividad.valor.toInt, None)
     } yield token
@@ -91,7 +91,7 @@ case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository, usua
    * @param inactividad
    * @return
    */
-  private def generarTokenComercial(cliente: UsuarioLdapDTO, tipoUsuario: Int, ip: String, inactividad: String): Future[String] = Future {
+  private def generarTokenComercial(cliente: UsuarioLdapDTO, usuario: UsuarioComercial, tipoUsuario: Int, ip: String, inactividad: String): Future[String] = Future {
     val fiduciaria = TiposCliente.comercialFiduciaria.id
     val tipoCliente = {
       tipoUsuario match {
@@ -99,7 +99,7 @@ case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository, usua
         case _ => TiposCliente.comercialValores
       }
     }
-    Token.generarToken(cliente.nombre, cliente.identificacion.get, "", ip, new Date(System.currentTimeMillis()), inactividad, tipoCliente)
+    Token.generarToken(usuario.usuario, cliente.identificacion.get, "", ip, new Date(System.currentTimeMillis()), inactividad, tipoCliente)
   }
 
   /**
