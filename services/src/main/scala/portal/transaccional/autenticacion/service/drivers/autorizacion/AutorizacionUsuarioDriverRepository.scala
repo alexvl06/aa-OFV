@@ -10,7 +10,8 @@ import co.com.alianza.infrastructure.messages.{ InvalidarSesion, ValidarSesion }
 import co.com.alianza.persistence.entities.{ RecursoPerfil, Usuario }
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.token.{ AesUtil, Token }
-import portal.transaccional.autenticacion.service.drivers.Recurso.RecursoRepository
+import portal.transaccional.autenticacion.service.drivers.recurso.RecursoRepository
+import portal.transaccional.autenticacion.service.drivers.sesion.{ SesionDriverRepository, SesionRepository }
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.{ DataAccessTranslator, UsuarioRepository }
 
 import scala.concurrent.duration._
@@ -20,14 +21,15 @@ import scala.reflect.ClassTag
 /**
  * Created by seven4n on 2016
  */
-case class AutorizacionUsuarioDriverRepository(usuarioRepo: UsuarioRepository, recursoRepo: RecursoRepository, sesionActor: ActorRef)(implicit val ex: ExecutionContext) extends AutorizacionUsuarioRepository {
+case class AutorizacionUsuarioDriverRepository(usuarioRepo: UsuarioRepository, recursoRepo: RecursoRepository, sesionRepo : SesionRepository)(implicit val
+  ex: ExecutionContext) extends AutorizacionUsuarioRepository {
 
   implicit val timeout = Timeout(5.seconds)
 
   def autorizar(token: String, encriptedToken: String, url: String): Future[ValidacionAutorizacion] = {
     for {
       validar <- validarToken(token)
-      validarSesion <- validarSesion(token)
+      validarSesion <- sesionRepo.validarSesion(token)
       usuarioOption <- usuarioRepo.getByToken(encriptedToken)
       usuario <- validarUsario(usuarioOption)
       recursos <- recursoRepo.obtenerRecursos(usuario.id.get)
@@ -38,17 +40,10 @@ case class AutorizacionUsuarioDriverRepository(usuarioRepo: UsuarioRepository, r
   def invalidarToken(token: String, encriptedToken: String): Future[Int] = {
     for {
       x <- usuarioRepo.invalidarToken(encriptedToken)
-      n <- Future { sesionActor ? InvalidarSesion(token) }
+      n <- sesionRepo.eliminarSesion(token)
     } yield x
   }
 
-  private def validarSesion(token: String): Future[Boolean] = {
-    val actor: Future[Any] = sesionActor ? ValidarSesion(token)
-    actor flatMap {
-      case true => Future.successful(true)
-      case _ => Future.failed(ValidacionException("403.9", "Error sesión"))
-    }
-  }
 
   private def validarUsario(usuarioOption: Option[Usuario]): Future[Usuario] = {
     usuarioOption match {
