@@ -71,11 +71,12 @@ case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository, usua
    * - asociar token
    * - crear session de usuario
    */
-  def autenticarAdministrador(usuario: String, password: String, ip: String): Future[String] = {
+  def autenticarAdministrador(usuario: String, contrasena: String, ip: String): Future[String] = {
     //TODO: actualizar usuario cuando se loguéa bien
     //TODO: actualizar usuario cuando se loguéa mal
     for {
       usuario <- usuarioComercialAdminRepo.obtenerUsuario(usuario)
+      _ <- usuarioComercialAdminRepo.validarContrasena(contrasena, usuario)
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
       token <- generarTokenAdminComercial(usuario, ip, inactividad.valor)
       _ <- usuarioComercialRepo.crearToken(usuario.id, AesUtil.encriptarToken(token))
