@@ -39,9 +39,6 @@ ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters
   val agente = TiposCliente.agenteEmpresarial.toString
   val admin = TiposCliente.clienteAdministrador.toString
   val individual = TiposCliente.clienteIndividual.toString
-  val cmFiduciaria = TiposCliente.comercialFiduciaria.toString
-  val cmValores = TiposCliente.comercialValores.toString
-  val cmAdmin = TiposCliente.comercialAdmin.toString
   val comercialFiduciaria = TiposCliente.comercialFiduciaria.toString
   val comercialValores = TiposCliente.comercialValores.toString
   val comercialAdmin = TiposCliente.comercialAdmin.toString
@@ -95,9 +92,9 @@ ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters
             case `admin` => autorizacionAdminRepo.autorizar(token, encriptedToken, url, ipRemota)
             case `individual` => autorizacionRepository.autorizar(token, encriptedToken, url)
             //TODO: Agregar la autorizacion de url para los tipo comerciales
-            case `cmFiduciaria` => obtenerUsuarioComercialMock(TiposCliente.comercialFiduciaria, usuario.usuario)
-            case `cmValores` => obtenerUsuarioComercialMock(TiposCliente.comercialValores, usuario.usuario)
-            case `cmAdmin` => obtenerUsuarioComercialMock(TiposCliente.clienteAdministrador, usuario.usuario)
+            case `comercialFiduciaria` => obtenerUsuarioComercialMock(TiposCliente.comercialFiduciaria, usuario.usuario)
+            case `comercialValores` => obtenerUsuarioComercialMock(TiposCliente.comercialValores, usuario.usuario)
+            case `comercialAdmin` => obtenerUsuarioComercialMock(TiposCliente.clienteAdministrador, usuario.usuario)
             case _ => Future.failed(NoAutorizado("Tipo usuario no existe"))
           }
           onComplete(resultado) {
