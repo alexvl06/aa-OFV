@@ -26,11 +26,11 @@ import scala.util.{ Failure, Success }
 /**
  * Created by s4n 2016
  */
-case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgenteRepository: UsuarioEmpresarialRepository,
-  usuarioAdminRepository: UsuarioEmpresarialAdminRepository, autorizacionRepository: AutorizacionUsuarioRepository, kafkaActor: ActorSelection,
-  autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository, autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository,
-  autorizacionComercialRepo: AutorizacionUsuarioComercialRepository, autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters
-    with CrossHeaders {
+case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgenteRepository: UsuarioEmpresarialRepository, usuarioAdminRepository:
+UsuarioEmpresarialAdminRepository, autorizacionRepository: AutorizacionUsuarioRepository, kafkaActor: ActorSelection, autorizacionAgenteRepo:
+AutorizacionUsuarioEmpresarialRepository, autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository, autorizacionComercialRepo:
+AutorizacionUsuarioComercialRepository, autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository)(implicit val
+ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   val invalidarTokenPath = "invalidarToken"
   val validarTokenPath = "validarToken"
