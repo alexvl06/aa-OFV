@@ -40,9 +40,15 @@ case class UsuarioComercialDriverRepository(usuarioDAO: UsuarioComercialDAOs)(im
    * @param token
    * @return
    */
-  def actualizarToken(idUsuario: Int, token: String): Future[Int] = {
-    usuarioDAO.createToken(idUsuario, token)
-  }
+  def crearToken(idUsuario: Int, token: String): Future[Int] = usuarioDAO.createToken(idUsuario, token)
+
+  /**
+   * Eiminar el token al usuarioComercial
+   *
+   * @param token
+   * @return
+   */
+  def eliminarToken(token: String): Future[Int] = usuarioDAO.deleteToken(token)
 
   /**
    * Actualizar ultima ip
@@ -51,9 +57,7 @@ case class UsuarioComercialDriverRepository(usuarioDAO: UsuarioComercialDAOs)(im
    * @param ip
    * @return
    */
-  def actualizarIp(idUsuario: Int, ip: String): Future[Int] = {
-    usuarioDAO.updateLastIp(idUsuario, ip)
-  }
+  def actualizarIp(idUsuario: Int, ip: String): Future[Int] = usuarioDAO.updateLastIp(idUsuario, ip)
 
   /**
    * Actualizar fecha ingreso
@@ -62,9 +66,7 @@ case class UsuarioComercialDriverRepository(usuarioDAO: UsuarioComercialDAOs)(im
    * @param fechaActual
    * @return
    */
-  def actualizarFechaIngreso(idUsuario: Int, fechaActual: Timestamp): Future[Int] = {
-    usuarioDAO.updateLastDate(idUsuario, fechaActual)
-  }
+  def actualizarFechaIngreso(idUsuario: Int, fechaActual: Timestamp): Future[Int] = usuarioDAO.updateLastDate(idUsuario, fechaActual)
 
   /////////////////////////////// validaciones //////////////////////////////////
 
@@ -75,13 +77,15 @@ case class UsuarioComercialDriverRepository(usuarioDAO: UsuarioComercialDAOs)(im
    * @return Future[Boolean]
    */
   def validarEstado(estado: Int): Future[Boolean] = {
-    if (estado == EstadosUsuarioEnum.bloqueContraseña.id)
+    if (estado == EstadosUsuarioEnum.bloqueContraseña.id) {
       Future.failed(ValidacionException("401.8", "Usuario Bloqueado"))
-    else if (estado == EstadosUsuarioEnum.pendienteActivacion.id)
+    } else if (estado == EstadosUsuarioEnum.pendienteActivacion.id) {
       Future.failed(ValidacionException("401.10", "Usuario Bloqueado"))
-    else if (estado == EstadosUsuarioEnum.pendienteReinicio.id)
+    } else if (estado == EstadosUsuarioEnum.pendienteReinicio.id) {
       Future.failed(ValidacionException("401.12", "Usuario Bloqueado"))
-    else Future.successful(true)
+    } else {
+      Future.successful(true)
+    }
   }
 
   /**

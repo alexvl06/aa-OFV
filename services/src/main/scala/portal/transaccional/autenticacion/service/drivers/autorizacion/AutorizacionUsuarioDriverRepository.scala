@@ -81,11 +81,6 @@ case class AutorizacionUsuarioDriverRepository(usuarioRepo: UsuarioRepository, r
         }
     }
   }
-
-  private def actorResponse[T: ClassTag](actor: ActorRef, msg: ValidarSesion): Future[T] = {
-    (actor ? msg).mapTo[T]
-  }
-
 }
 
 case class ForbiddenMessage(usuario: UsuarioDTO, filtro: Option[String])

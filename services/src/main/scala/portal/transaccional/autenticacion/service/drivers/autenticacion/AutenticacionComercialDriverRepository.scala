@@ -55,7 +55,7 @@ case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository, usua
       usuario <- usuarioComercialRepo.getByUser(cliente.usuario)
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
       token <- generarTokenComercial(cliente, usuario, tipoUsuario, ip, inactividad.valor)
-      _ <- usuarioComercialRepo.actualizarToken(usuario.id, AesUtil.encriptarToken(token))
+      _ <- usuarioComercialRepo.crearToken(usuario.id, AesUtil.encriptarToken(token))
       sesion <- sesionRepo.crearSesion(token, inactividad.valor.toInt, None)
     } yield token
   }
@@ -71,17 +71,17 @@ case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository, usua
    * - asociar token
    * - crear session de usuario
    */
-  def autenticarAdministrador(usuario: String, password: String, ip: String): Future[String] = {
+  def autenticarAdministrador(usuario: String, contrasena: String, ip: String): Future[String] = {
     //TODO: actualizar usuario cuando se loguéa bien
     //TODO: actualizar usuario cuando se loguéa mal
     for {
       usuario <- usuarioComercialAdminRepo.obtenerUsuario(usuario)
+      _ <- usuarioComercialAdminRepo.validarContrasena(contrasena, usuario)
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
       token <- generarTokenAdminComercial(usuario, ip, inactividad.valor)
-      _ <- usuarioComercialRepo.actualizarToken(usuario.id, AesUtil.encriptarToken(token))
+      _ <- usuarioComercialRepo.crearToken(usuario.id, AesUtil.encriptarToken(token))
       sesion <- sesionRepo.crearSesion(token, inactividad.valor.toInt, None)
     } yield token
-    Future.failed(ValidacionException("401.2", "Error login admin comercial no implementado"))
   }
 
   /**

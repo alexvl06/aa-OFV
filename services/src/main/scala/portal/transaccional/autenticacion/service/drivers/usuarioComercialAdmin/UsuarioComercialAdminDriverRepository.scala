@@ -26,17 +26,13 @@ case class UsuarioComercialAdminDriverRepository(usuarioDAO: UsuarioComercialAdm
     }
   }
 
-  def actualizarToken(idUsuario: Int, token: String): Future[Int] = {
-    usuarioDAO.createToken(idUsuario, token)
-  }
+  def crearToken(idUsuario: Int, token: String): Future[Int] = usuarioDAO.createToken(idUsuario, token)
 
-  def actualizarIp(idUsuario: Int, ip: String): Future[Int] = {
-    usuarioDAO.updateLastIp(idUsuario, ip)
-  }
+  def eliminarToken(token: String): Future[Int] = usuarioDAO.deleteToken(token)
 
-  def actualizarFechaIngreso(idUsuario: Int, fechaActual: Timestamp): Future[Int] = {
-    usuarioDAO.updateLastDate(idUsuario, fechaActual)
-  }
+  def actualizarIp(idUsuario: Int, ip: String): Future[Int] = usuarioDAO.updateLastIp(idUsuario, ip)
+
+  def actualizarFechaIngreso(idUsuario: Int, fechaActual: Timestamp): Future[Int] = usuarioDAO.updateLastDate(idUsuario, fechaActual)
 
   /**
    * Validar la contrasena
