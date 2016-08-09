@@ -22,7 +22,7 @@ case class SesionDriverRepository(sessionActor: ActorRef)(implicit val ex: Execu
     (sessionActor ? CrearSesionUsuario(token, inactividad, empresa)).mapTo[SesionUsuarioCreada]
   }
 
-  def eliminarSesion(token: String): Future[Any] = {
+  def eliminarSesion(token: String): Future[Future[Any]] = Future {
     sessionActor ? InvalidarSesion(token)
   }
 
