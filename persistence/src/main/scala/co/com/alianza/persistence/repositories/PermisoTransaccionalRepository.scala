@@ -26,10 +26,10 @@ class PermisoTransaccionalRepository(implicit executionContext: ExecutionContext
   val tablaPermisosAutorizadoresAdmins = TableQuery[PermisoAgenteAutorizadorAdminTable]
   val tablaAgentes = TableQuery[UsuarioEmpresarialTable]
 
-
-  type formatoPermisos =
-  (List[(PermisoAgente, Seq[(Option[PermisoAgenteAutorizador], Option[Boolean])])],
-    List[(String, List[(PermisoTransaccionalUsuarioEmpresarial, List[(Option[PermisoTransaccionalUsuarioEmpresarialAutorizador], Option[Boolean])])])])
+  type permisosEncargos = List[(PermisoAgente, Seq[(Option[PermisoAgenteAutorizador], Option[Boolean])])]
+  type permisosGenerales =
+  List[(String, List[(PermisoTransaccionalUsuarioEmpresarial, List[(Option[PermisoTransaccionalUsuarioEmpresarialAutorizador], Option[Boolean])])])]
+  type formatoPermisos = (permisosEncargos, permisosGenerales)
 
   /**
    * Crea, actualiza o borra un permiso general
@@ -150,12 +150,8 @@ class PermisoTransaccionalRepository(implicit executionContext: ExecutionContext
         permisos <- session.database.run(consultaPermisosEncargos(idAgente).result)
         permisosEncargos <- session.database.run(consultaPermisosGeneralesAgente(idAgente).result)
         permisosEspeciales <- estructurarPermisosEncargo (permisos)
-        permisosEspecialesEncargos <- {
-          println("Termino el" , permisos, permisosEncargos)
-          estructuraPermisosGenerales (permisosEncargos)
-        }
+        permisosEspecialesEncargos <- estructuraPermisosGenerales (permisosEncargos)
       } yield (permisosEspeciales,permisosEspecialesEncargos)
-
 
       resolveTry( j , "Consultar permiso transaccional de agente")
   }
@@ -171,7 +167,7 @@ class PermisoTransaccionalRepository(implicit executionContext: ExecutionContext
       .groupBy(permiso => permiso._1)
       .map{
         case (encargo, permisos) =>
-          (encargo, permisos.map{ case (permiso , autorizador, esAdmin) => (autorizador, Option(esAdmin))})
+          (encargo, permisos.map{ case (permiso , autorizador, esAdmin) => (autorizador, Option(esAdmin))}.toList)
       }.toList
   }
 
