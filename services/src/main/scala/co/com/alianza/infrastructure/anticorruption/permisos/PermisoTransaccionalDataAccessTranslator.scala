@@ -13,30 +13,33 @@ import co.com.alianza.persistence.entities.{
  */
 object PermisoTransaccionalDataAccessTranslator {
 
-  def aDTO(e: ePermisoTransaccionalUsuarioEmpresarial) =
-    PermisoTransaccionalUsuarioEmpresarial(e.idEncargo, e.idAgente, e.tipoTransaccion, e.tipoPermiso, e.montoMaximoTransaccion, e.montoMaximoDiario, e.minimoNumeroPersonas)
+  def aDTO(e: ePermisoTransaccionalUsuarioEmpresarial): PermisoTransaccionalUsuarioEmpresarial =
+    PermisoTransaccionalUsuarioEmpresarial(
+      e.idEncargo, e.idAgente, e.tipoTransaccion, e.tipoPermiso, e.montoMaximoTransaccion, e.montoMaximoDiario, e.minimoNumeroPersonas)
 
-  def aEntity(dto: PermisoTransaccionalUsuarioEmpresarial) =
-    ePermisoTransaccionalUsuarioEmpresarial(dto.idEncargo, dto.idAgente, dto.tipoTransaccion, dto.tipoPermiso, dto.montoMaximoTransaccion, dto.montoMaximoDiario, dto.minimoNumeroPersonas)
+  def aEntity(dto: PermisoTransaccionalUsuarioEmpresarial): ePermisoTransaccionalUsuarioEmpresarial =
+    ePermisoTransaccionalUsuarioEmpresarial(
+      dto.idEncargo, dto.idAgente, dto.tipoTransaccion, dto.tipoPermiso, dto.montoMaximoTransaccion, dto.montoMaximoDiario, dto.minimoNumeroPersonas)
 
-  def aEntity(dto: PermisoAgente) =
+  def aEntity(dto: PermisoAgente): ePermisoAgente =
     ePermisoAgente(dto.idAgente, dto.tipoTransaccion, dto.minimoNumeroPersonas, dto.tipoPermiso, dto.montoMaximoTransaccion, dto.montoMaximoDiario)
 
-  def aEncargoPermisosDTO(idEncargo: String, e: List[(ePermisoTransaccionalUsuarioEmpresarial, List[(Option[ePermisoTransaccionalUsuarioEmpresarialAutorizador], Option[Boolean])])]) =
-    EncargoPermisos(
-      wspf_plan = idEncargo,
-      permisos = e map aPermisoTransaccionalUsuarioEmpresarialAgentes
-    )
+  def aEncargoPermisosDTO(idEncargo: String,
+    e: List[(ePermisoTransaccionalUsuarioEmpresarial, List[(Option[ePermisoTransaccionalUsuarioEmpresarialAutorizador], Option[Boolean])])]): EncargoPermisos =
+    EncargoPermisos( wspf_plan = idEncargo, permisos = e map aPermisoTransaccionalUsuarioEmpresarialAgentes )
 
-  def aPermisoTransaccionalUsuarioEmpresarialAgentes(permiso: (ePermisoTransaccionalUsuarioEmpresarial, List[(Option[ePermisoTransaccionalUsuarioEmpresarialAutorizador], Option[Boolean])])) =
-    PermisoTransaccionalUsuarioEmpresarialAgentes(Some(aDTO(permiso._1)), if (permiso._2.isEmpty) None else Some(permiso._2.filter { _._1.isDefined }.map { o => aAgenteDTO(o._1.get, o._2) }))
+  def aPermisoTransaccionalUsuarioEmpresarialAgentes(permiso: (ePermisoTransaccionalUsuarioEmpresarial,
+    List[(Option[ePermisoTransaccionalUsuarioEmpresarialAutorizador], Option[Boolean])])): PermisoTransaccionalUsuarioEmpresarialAgentes = {
+    PermisoTransaccionalUsuarioEmpresarialAgentes(
+      Some(aDTO(permiso._1)),
+      if (permiso._2.isEmpty) None else Some(permiso._2.filter { _._1.isDefined }.map{ o => aAgenteDTO(o._1.get, o._2) }))
+  }
 
-  def aAgenteDTO(a: ePermisoTransaccionalUsuarioEmpresarialAutorizador, esAdmin: Option[Boolean]) = Autorizador(a.idAutorizador, esAdmin)
+  def aAgenteDTO(a: ePermisoTransaccionalUsuarioEmpresarialAutorizador, esAdmin: Option[Boolean]): Autorizador = Autorizador(a.idAutorizador, esAdmin)
 
-  def aPermisos(
-    permisos: List[(ePermisoAgente, List[(Option[ePermisoAgenteAutorizador], Option[Boolean])])], encargosPermisos: List[(String,
-    List[(ePermisoTransaccionalUsuarioEmpresarial, List[(Option[ePermisoTransaccionalUsuarioEmpresarialAutorizador], Option[Boolean])])])]) =
-    (
+  def aPermisos( permisos: List[(ePermisoAgente, List[(Option[ePermisoAgenteAutorizador], Option[Boolean])])], encargosPermisos: List[(String, List[(
+    ePermisoTransaccionalUsuarioEmpresarial, List[(Option[ePermisoTransaccionalUsuarioEmpresarialAutorizador], Option[Boolean])])])]):(List[Permiso],
+    List[EncargoPermisos]) = (
       permisos map { pa =>
         import pa._
         Permiso(
@@ -47,6 +50,6 @@ object PermisoTransaccionalDataAccessTranslator {
       encargosPermisos map { ep => aEncargoPermisosDTO(ep._1, ep._2) }
     )
 
-  def aAutorizadorDTO(paa: ePermisoAgenteAutorizador, esAdmin: Option[Boolean]) = Autorizador(paa.idAutorizador, esAdmin)
+  def aAutorizadorDTO(paa: ePermisoAgenteAutorizador, esAdmin: Option[Boolean]): Autorizador = Autorizador(paa.idAutorizador, esAdmin)
 
 }
