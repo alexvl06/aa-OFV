@@ -34,15 +34,14 @@ object PermisoTransaccionalDataAccessTranslator {
   def aAgenteDTO(a: ePermisoTransaccionalUsuarioEmpresarialAutorizador, esAdmin: Option[Boolean]) = Autorizador(a.idAutorizador, esAdmin)
 
   def aPermisos(
-    permisos: List[(ePermisoAgente, List[(Option[ePermisoAgenteAutorizador], Option[Boolean])])],
-    encargosPermisos: List[(String, List[(ePermisoTransaccionalUsuarioEmpresarial, List[(Option[ePermisoTransaccionalUsuarioEmpresarialAutorizador], Option[Boolean])])])]
-  ) =
+    permisos: List[(ePermisoAgente, List[(Option[ePermisoAgenteAutorizador], Option[Boolean])])], encargosPermisos: List[(String,
+    List[(ePermisoTransaccionalUsuarioEmpresarial, List[(Option[ePermisoTransaccionalUsuarioEmpresarialAutorizador], Option[Boolean])])])]) =
     (
       permisos map { pa =>
         import pa._
         Permiso(
           Some(PermisoAgente(_1.idAgente, _1.tipoTransaccion, _1.minimoNumeroPersonas, _1.tipoPermiso, _1.montoMaximoTransaccion, _1.montoMaximoDiario)),
-          if (_2.isEmpty) None else Some(_2.filter { _._1.isDefined }.map { o => aAutorizadorDTO(o._1.get, o._2) })
+          if (_2.isEmpty) None else Some(_2.filter { _._1.isDefined }.map{ o => aAutorizadorDTO(o._1.get, o._2) })
         )
       },
       encargosPermisos map { ep => aEncargoPermisosDTO(ep._1, ep._2) }
