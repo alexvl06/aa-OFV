@@ -300,9 +300,7 @@ object DataAccessAdapter {
 
   def obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token: String): Future[Validation[PersistenceException, Option[AuditingUserData]]] = {
     val repo = new UsuariosRepository()
-    repo.obtenerUsuarioToken(token) map {
-      x => transformValidationTuple(x)
-    }
+    repo.obtenerUsuarioToken(token).map (x => transformValidationTuple(x))
   }
 
   def crearUsuarioClienteAdministradorPin(pinUsuario: entities.PinUsuarioEmpresarialAdmin): Future[Validation[PersistenceException, Int]] = {
