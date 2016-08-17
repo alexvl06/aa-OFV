@@ -1,12 +1,13 @@
 package portal.transaccional.autenticacion.service.drivers.ldap
 
+import javax.naming.AuthenticationException
 import javax.naming.ldap.LdapContext
 
 import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.persistence.dto.UsuarioLdapDTO
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.ldap.AlianzaLdapDAOs
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 /**
@@ -21,8 +22,8 @@ case class LdapDriverRepository(alianzaLdapDAO: AlianzaLdapDAOs)(implicit val ex
       context <- obtenerContexto(usuario, tipoUsuario, password) // Throws naming exception
       usuarioOption <- alianzaLdapDAO.getUserInfo(tipoUsuario, userName, context)
       respuesta <- validarRespuestaLdap(usuarioOption)
+
     } yield respuesta
-    println(user)
     user
   }
 
@@ -31,7 +32,17 @@ case class LdapDriverRepository(alianzaLdapDAO: AlianzaLdapDAOs)(implicit val ex
       alianzaLdapDAO.getLdapContext(usuario, password, tipoUsuario)
     }
 
-    if (contextTry.isSuccess) Future.successful(contextTry.get) else Future.failed(new ValidacionException("401.1", "Credenciales invalidas"))
+    if (contextTry.isSuccess){
+      Future.successful(contextTry.get)
+    }else {
+      //TODO: Encontrar una mejor manera de manejar las excepciones
+      contextTry.failed.getClass.getSimpleName match {
+        case "AuthenticationException" =>  Future.failed(new ValidacionException("401.1", "Credenciales invalidas"))
+        case _ =>  Future.failed(new ValidacionException("401.1", "Excepcion no manejada"))
+      }
+
+
+    }
   }
 
   private def validarRespuestaLdap(usuarioOption: Option[UsuarioLdapDTO]): Future[UsuarioLdapDTO] = {
