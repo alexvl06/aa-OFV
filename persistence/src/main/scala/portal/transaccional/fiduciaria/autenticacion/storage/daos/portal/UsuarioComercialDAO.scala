@@ -59,7 +59,7 @@ case class UsuarioComercialDAO()(implicit dcConfig: DBConfig) extends TableQuery
       if (buscar.isEmpty) {
         run(this += UsuarioComercial(0, usuario, None, Some(ip), fechaActual))
       } else {
-        run(this.update(UsuarioComercial(buscar.get.id, usuario, None, Some(ip), fechaActual)))
+        run(this.filter(_.usuario === usuario).map(n => (n.fechaUltimoIngreso,n.ipUltimoIngreso)).update(fechaActual, Some(ip) ))
       }
     } yield agregarActualizar
 
