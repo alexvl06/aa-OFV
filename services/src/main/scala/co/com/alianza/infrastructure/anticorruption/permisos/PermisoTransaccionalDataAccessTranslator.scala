@@ -26,7 +26,7 @@ object PermisoTransaccionalDataAccessTranslator {
       dto.idEncargo, dto.idAgente, dto.tipoTransaccion, dto.tipoPermiso, dto.montoMaximoTransaccion, dto.montoMaximoDiario, dto.minimoNumeroPersonas
     )
 
-  def aEntity(dto: PermisoAgente): ePermisoAgente =
+  def aEntity(dto: PermisoAgente): ePermisoAgente = {
     ePermisoAgente(dto.idAgente, dto.tipoTransaccion, dto.minimoNumeroPersonas, dto.tipoPermiso, dto.montoMaximoTransaccion, dto.montoMaximoDiario)
   }
 

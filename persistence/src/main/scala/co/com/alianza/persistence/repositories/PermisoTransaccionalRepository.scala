@@ -37,8 +37,6 @@ class PermisoTransaccionalRepository(implicit executionContext: ExecutionContext
    */
   def guardarPermiso(permiso: PermisoAgente, estaSeleccionado: Boolean, idsAgentes: Option[List[Int]] = None, idClienteAdmin: Int): Future[Validation[PersistenceException, Int]] = loan {
 
-  def guardarPermiso(permiso: PermisoAgente, estaSeleccionado: Boolean, idsAgentes: Option[List[Int]] = None, idClienteAdmin: Int): Future[Validation[PersistenceException, Int]] = loan {
-
     implicit session =>
       val q = tablaPermisos
         .filter(p => p.idAgente === permiso.idAgente && p.tipoTransaccion === permiso.tipoTransaccion)
