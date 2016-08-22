@@ -21,9 +21,17 @@ case class ClienteDriverCoreRepository(clienteCoreRepo: ClienteDAO)(implicit val
       case _ => clienteCoreRepo.consultaCliente(documento)
     }
 
+    def translateUser(clienteString: String)= Future{
+      if(esGrupo){
+        DataAccessTranslator.translateGrupo(clienteString)
+      } else {
+        DataAccessTranslator.translateCliente(clienteString)
+      }
+    }
+
     for {
       clienteString <- consultaClienteCore
-      clienteOption <- Future { if (esGrupo) DataAccessTranslator.translateGrupo(clienteString) else DataAccessTranslator.translateCliente(clienteString) }
+      clienteOption <- translateUser(clienteString)
       cliente <- validarCliente(clienteOption)
     } yield cliente
   }
