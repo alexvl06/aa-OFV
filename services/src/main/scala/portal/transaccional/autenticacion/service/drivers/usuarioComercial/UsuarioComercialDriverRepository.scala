@@ -15,19 +15,25 @@ import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.Usuario
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
- * Created by hernando on 25/07/16.
+ * Created by hernando on 2016
  */
 case class UsuarioComercialDriverRepository(usuarioDAO: UsuarioComercialDAOs)(implicit val ex: ExecutionContext) extends UsuarioComercialRepository {
 
-  def getByUser(usuario: String): Future[UsuarioComercial] = {
-    usuarioDAO.getByUser(usuario) flatMap {
+  def getUser(usuario: String): Future[UsuarioComercial] = {
+    getByUser(usuario) flatMap {
       (usuarioOption: Option[UsuarioComercial]) =>
         usuarioOption match {
           case Some(usuario: UsuarioComercial) => Future.successful(usuario)
-          case ex: Any => println(ex); Future.failed(ValidacionException("401.3", "Error usuario no existe"))
+          case ex: Any => Future.failed(ValidacionException("401.3", "Error usuario no existe"))
         }
     }
   }
+
+  def getByUser(usuario: String): Future[Option[UsuarioComercial]] = {
+    usuarioDAO.getByUser(usuario)
+  }
+
+  def update(usuario: Option[UsuarioComercial], nombreUsuario: String, ip: String): Future[Int] = usuarioDAO.update(usuario, nombreUsuario, ip)
 
   //def getByUser(name : String) : Future [UsuarioComercial] = usuarioDAO.getById()
 
@@ -58,7 +64,6 @@ case class UsuarioComercialDriverRepository(usuarioDAO: UsuarioComercialDAOs)(im
    * @return
    */
   def actualizarIp(idUsuario: Int, ip: String): Future[Int] = usuarioDAO.updateLastIp(idUsuario, ip)
-
 
   /**
    * Actualizar fecha ingreso

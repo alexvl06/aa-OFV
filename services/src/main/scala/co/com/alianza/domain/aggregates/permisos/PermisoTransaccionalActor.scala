@@ -33,7 +33,7 @@ import scalaz.Validation.FlatMap._
  */
 class PermisoTransaccionalActorSupervisor extends Actor with ActorLogging {
 
-  def receive = { case message: MessageService => context actorOf (Props[PermisoTransaccionalActor]) forward message }
+  def receive = { case message: MessageService => context actorOf Props[PermisoTransaccionalActor] forward message }
 
   override val supervisorStrategy = OneForOneStrategy() {
     case exception: Exception =>
@@ -41,14 +41,13 @@ class PermisoTransaccionalActorSupervisor extends Actor with ActorLogging {
       log.error(exception, exception.getMessage)
       Restart
   }
-
 }
 
 class PermisoTransaccionalActor extends Actor with ActorLogging with FutureResponse {
 
   import context.dispatcher
 
-  implicit val timeout: Timeout = 120.seconds
+  implicit val timeout: Timeout = 15.seconds
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.errorValidacion
 
   var numeroPermisos = 0
@@ -57,25 +56,27 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
 
   def receive = {
     case GuardarPermisosAgenteMessage(idAgente, permisosGenerales, encargosPermisos, idClienteAdmin) =>
+
       val currentSender = sender
-      val permisosEncargos = encargosPermisos flatMap { e => e.permisos.map(p => p.copy(permiso = p.permiso.map { _.copy(idEncargo = e.wspf_plan, idAgente = idAgente) })) }
+      val permisosEncargos =
+        encargosPermisos.flatMap(e => e.permisos.map(p => p.copy(permiso = p.permiso.map { _.copy(idEncargo = e.wspf_plan, idAgente = idAgente) })))
       numeroPermisos = permisosGenerales.length + permisosEncargos.length
       if (numeroPermisos == 0) {
         self ! RestaVerificacionMessage(currentSender)
       } else {
-        permisosGenerales foreach { p => self ! ((p, idClienteAdmin, currentSender): (Permiso, Option[Int], ActorRef)) }
-        permisosEncargos foreach { p => self ! ((p, idClienteAdmin, currentSender): (PermisoTransaccionalUsuarioEmpresarialAgentes, Option[Int], ActorRef)) }
+        permisosGenerales.foreach(p => self ! ((p, idClienteAdmin, currentSender): (Permiso, Option[Int], ActorRef)))
+        permisosEncargos.foreach(p => self ! ((p, idClienteAdmin, currentSender): (PermisoTransaccionalUsuarioEmpresarialAgentes, Option[Int], ActorRef)))
       }
 
     case (permiso: Permiso, idClienteAdmin: Option[Int], currentSender: ActorRef) =>
       val future = (for {
-        result <- ValidationT(DataAccessAdapter guardaPermiso (permiso.permisoAgente.get, permiso.autorizadores.map(_.map(_.id)), idClienteAdmin.get))
+        result <- ValidationT(DataAccessAdapter.guardaPermiso(permiso.permisoAgente.get, permiso.autorizadores.map(_.map(_.id)), idClienteAdmin.get))
       } yield result).run
       resolveFutureValidation(future, (x: Int) => RestaVerificacionMessage(currentSender), errorValidacion, self)
 
     case (permisoAgentes: PermisoTransaccionalUsuarioEmpresarialAgentes, idClienteAdmin: Option[Int], currentSender: ActorRef) =>
       val future = (for {
-        result <- ValidationT(DataAccessAdapter guardaPermisoEncargo (permisoAgentes.permiso.get, permisoAgentes.agentes.map(_.map(_.id)), idClienteAdmin.get))
+        result <- ValidationT(DataAccessAdapter.guardaPermisoEncargo(permisoAgentes.permiso.get, permisoAgentes.agentes.map(_.map(_.id)), idClienteAdmin.get))
       } yield result).run
       resolveFutureValidation(future, (x: Int) => RestaVerificacionMessage(currentSender), errorValidacion, self)
 
@@ -151,8 +152,7 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
     //TODO: Await ???
     val extraccionFuturo = Await.result(cliente, 8.seconds)
     extraccionFuturo match {
-      case zSuccess(cliente) =>
-        cliente.wcli_cias_pagos_masivos == PermisosFideicomisosCoreAlianza.`SI`.nombre
+      case zSuccess(cliente) => cliente.wcli_cias_pagos_masivos == PermisosFideicomisosCoreAlianza.`SI`.nombre
       case zFailure(error) => false
     }
 

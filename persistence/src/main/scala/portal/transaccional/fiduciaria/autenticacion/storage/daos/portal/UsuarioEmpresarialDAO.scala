@@ -70,4 +70,5 @@ case class UsuarioEmpresarialDAO(implicit dcConfig: DBConfig) extends TableQuery
   def deleteToken(token: String): Future[Int] = {
     run(this.filter(_.token === token).map(_.token).update(Some(null)))
   }
+
 }

@@ -1,6 +1,7 @@
 package portal.transaccional.fiduciaria.autenticacion.storage.daos.portal
 
 import java.sql.Timestamp
+import java.util.Date
 
 import co.com.alianza.persistence.entities.{ UsuarioComercial, UsuarioComercialTable }
 import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
@@ -46,6 +47,18 @@ case class UsuarioComercialDAO()(implicit dcConfig: DBConfig) extends TableQuery
 
   def updateLastDate(idUsuario: Int, fechaActual: Timestamp): Future[Int] = {
     run(this.filter(_.id === idUsuario).map(_.fechaUltimoIngreso).update(Some(fechaActual)))
+  }
+
+  def update(usuario: Option[UsuarioComercial], nombreUsuario: String, ip: String): Future[Int] = {
+
+    val fechaActual = Option(new Timestamp((new Date).getTime))
+    val filtro = this.filter(_.usuario === nombreUsuario)
+
+    if (nombreUsuario.isEmpty) {
+      run(this += UsuarioComercial(0, nombreUsuario, None, Some(ip), fechaActual))
+    } else {
+      run(filtro.map(n => (n.fechaUltimoIngreso, n.ipUltimoIngreso)).update(fechaActual, Some(ip)))
+    }
   }
 
 }

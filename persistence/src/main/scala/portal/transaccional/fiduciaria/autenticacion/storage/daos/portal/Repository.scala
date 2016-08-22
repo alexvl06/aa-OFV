@@ -20,10 +20,8 @@ class Repository()(implicit context: ExecutionContext, dcConfig: DBConfig) {
   def tryDB[T](f: Session => Future[T]): Future[T] = {
     try {
       val session = DB.createSession()
-      println("ALCANZO A CREAR LA SESSION")
       val result: Future[T] = f(session)
       session.close()
-      println("ALCANZO A CERRAR LA SESSION")
       result
     } catch {
       case exception: Throwable => Future.failed(PersistenceException(exception, getLevelException(exception), exception.getMessage))
