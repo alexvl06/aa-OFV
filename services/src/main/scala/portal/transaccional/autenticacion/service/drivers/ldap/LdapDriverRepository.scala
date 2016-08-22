@@ -11,7 +11,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 
 /**
- * Created by dfbaratov on 4/08/16.
+ * Created by dfbaratov on 2016
  */
 case class LdapDriverRepository(alianzaLdapDAO: AlianzaLdapDAOs)(implicit val ex: ExecutionContext) extends LdapRepository {
 
@@ -46,8 +46,7 @@ case class LdapDriverRepository(alianzaLdapDAO: AlianzaLdapDAOs)(implicit val ex
 
   private def validarRespuestaLdap(usuarioOption: Option[UsuarioLdapDTO]): Future[UsuarioLdapDTO] = {
     usuarioOption match {
-      case Some(usuario) =>
-        println("USUARIO : ", usuario); Future.successful(usuario)
+      case Some(usuario) => Future.successful(usuario)
       case None => Future.failed(ValidacionException("401.2", "Error Cliente Alianza"))
     }
   }

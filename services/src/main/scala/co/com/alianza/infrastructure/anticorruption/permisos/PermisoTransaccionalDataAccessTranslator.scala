@@ -9,7 +9,7 @@ import co.com.alianza.persistence.entities.{
 }
 
 /**
- * Created by manuel on 8/01/15.
+ * Created by manuel on 2015
  */
 object PermisoTransaccionalDataAccessTranslator {
 
@@ -28,6 +28,7 @@ object PermisoTransaccionalDataAccessTranslator {
 
   def aEntity(dto: PermisoAgente): ePermisoAgente =
     ePermisoAgente(dto.idAgente, dto.tipoTransaccion, dto.minimoNumeroPersonas, dto.tipoPermiso, dto.montoMaximoTransaccion, dto.montoMaximoDiario)
+  }
 
   def aEncargoPermisosDTO(
     idEncargo: String,

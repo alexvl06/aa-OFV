@@ -6,7 +6,6 @@ import java.util.Date
 import co.com.alianza.persistence.entities.{ UsuarioComercial, UsuarioComercialTable }
 import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
 import slick.lifted.TableQuery
-import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.Future
 
@@ -50,18 +49,16 @@ case class UsuarioComercialDAO()(implicit dcConfig: DBConfig) extends TableQuery
     run(this.filter(_.id === idUsuario).map(_.fechaUltimoIngreso).update(Some(fechaActual)))
   }
 
-  def update(usuario: String, ip: String): Future[Int] = {
+  def update(usuario: Option[UsuarioComercial], nombreUsuario: String, ip: String): Future[Int] = {
 
     val fechaActual = Option(new Timestamp((new Date).getTime))
-    for {
-      buscar <- run(this.filter(_.usuario === usuario).result.headOption)
-      agregarActualizar <- if (buscar.isEmpty) {
-        run(this += UsuarioComercial(0, usuario, None, Some(ip), fechaActual))
-      } else {
-        run(this.filter(_.usuario === usuario).map(n => (n.fechaUltimoIngreso, n.ipUltimoIngreso)).update(fechaActual, Some(ip)))
-      }
-    } yield agregarActualizar
+    val filtro = this.filter(_.usuario === nombreUsuario)
 
+    if (nombreUsuario.isEmpty) {
+      run(this += UsuarioComercial(0, nombreUsuario, None, Some(ip), fechaActual))
+    } else {
+      run(filtro.map(n => (n.fechaUltimoIngreso, n.ipUltimoIngreso)).update(fechaActual, Some(ip)))
+    }
   }
 
 }
