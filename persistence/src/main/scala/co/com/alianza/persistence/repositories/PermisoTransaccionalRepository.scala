@@ -27,8 +27,7 @@ class PermisoTransaccionalRepository(implicit executionContext: ExecutionContext
   val tablaAgentes = TableQuery[UsuarioEmpresarialTable]
 
   type permisosEncargos = List[(PermisoAgente, Seq[(Option[PermisoAgenteAutorizador], Option[Boolean])])]
-  type permisosGenerales =
-  List[(String, List[(PermisoTransaccionalUsuarioEmpresarial, List[(Option[PermisoTransaccionalUsuarioEmpresarialAutorizador], Option[Boolean])])])]
+  type permisosGenerales = List[(String, List[(PermisoTransaccionalUsuarioEmpresarial, List[(Option[PermisoTransaccionalUsuarioEmpresarialAutorizador], Option[Boolean])])])]
   type formatoPermisos = (permisosEncargos, permisosGenerales)
 
   /**
@@ -40,8 +39,7 @@ class PermisoTransaccionalRepository(implicit executionContext: ExecutionContext
    * @return
    */
 
-  def guardarPermiso(permiso: PermisoAgente, estaSeleccionado: Boolean, idsAgentes: Option[List[Int]] = None, idClienteAdmin: Int):
-  Future[Validation[PersistenceException, Int]] = loan {
+  def guardarPermiso(permiso: PermisoAgente, estaSeleccionado: Boolean, idsAgentes: Option[List[Int]] = None, idClienteAdmin: Int): Future[Validation[PersistenceException, Int]] = loan {
 
     implicit session =>
       val q = tablaPermisos
@@ -109,36 +107,34 @@ class PermisoTransaccionalRepository(implicit executionContext: ExecutionContext
       resolveTry(resultTry, "Consultar permiso transaccional de agente para login")
   }
 
-  private def consultaPermisosEncargos (idAgente : Int) = {
+  private def consultaPermisosEncargos(idAgente: Int) = {
     val permisosAutorizador = for {
       permiso <- tablaPermisos.filter(_.idAgente === idAgente)
       autorizador <- tablaPermisosAutorizadores.filter(n => (permiso.tipoTransaccion === n.tipoTransaccion) && (permiso.idAgente === n.idAgente))
       agente <- tablaAgentes.filter(n => (n.id === autorizador.idAutorizador) && (n.id === 1))
-    } yield (permiso, autorizador.? , false)
-
+    } yield (permiso, autorizador.?, false)
 
     val permisosAutorizadorAdmin = for {
       permiso <- tablaPermisos.filter(_.idAgente === idAgente)
-      autorizador <- tablaPermisosAutorizadoresAdmins.filter( n => permiso.tipoTransaccion === n.tipoTransaccion && permiso.idAgente === n.idAgente)
-    } yield (permiso, autorizador.? , true)
+      autorizador <- tablaPermisosAutorizadoresAdmins.filter(n => permiso.tipoTransaccion === n.tipoTransaccion && permiso.idAgente === n.idAgente)
+    } yield (permiso, autorizador.?, true)
 
     permisosAutorizador ++ permisosAutorizadorAdmin
   }
 
-
-  private def consultaPermisosGeneralesAgente (idAgente : Int) = {
+  private def consultaPermisosGeneralesAgente(idAgente: Int) = {
     val permisosTransaccionalesAutorizadores = for {
       permiso <- tablaPermisosEncargos.filter(_.idAgente === idAgente)
       autorizador <- tablaPermisosEncargosAutorizadores
         .filter(a => permiso.idEncargo === a.idEncargo && permiso.tipoTransaccion === a.tipoTransaccion && permiso.idAgente === a.idAgente)
       agente <- tablaAgentes.filter(a => autorizador.idAutorizador === a.id && a.estado === 1)
-    } yield (permiso, autorizador.? , false)
+    } yield (permiso, autorizador.?, false)
 
     val permisosTransaccionalesAutorizadoresAdmin = for {
       permiso <- tablaPermisosEncargos.filter(_.idAgente === idAgente)
       autorizador <- tablaPermisosEncargosAutorizadoresAdmins
         .filter(a => permiso.idEncargo === a.idEncargo && permiso.tipoTransaccion === a.tipoTransaccion && permiso.idAgente === a.idAgente)
-    } yield (permiso, autorizador.? , true)
+    } yield (permiso, autorizador.?, true)
 
     permisosTransaccionalesAutorizadores ++ permisosTransaccionalesAutorizadoresAdmin
   }
@@ -149,11 +145,11 @@ class PermisoTransaccionalRepository(implicit executionContext: ExecutionContext
       val j = for {
         permisos <- session.database.run(consultaPermisosEncargos(idAgente).result)
         permisosEncargos <- session.database.run(consultaPermisosGeneralesAgente(idAgente).result)
-        permisosEspeciales <- estructurarPermisosEncargo (permisos)
-        permisosEspecialesEncargos <- estructuraPermisosGenerales (permisosEncargos)
-      } yield (permisosEspeciales,permisosEspecialesEncargos)
+        permisosEspeciales <- estructurarPermisosEncargo(permisos)
+        permisosEspecialesEncargos <- estructuraPermisosGenerales(permisosEncargos)
+      } yield (permisosEspeciales, permisosEspecialesEncargos)
 
-      resolveTry( j , "Consultar permiso transaccional de agente")
+      resolveTry(j, "Consultar permiso transaccional de agente")
   }
 
   /**
@@ -162,12 +158,12 @@ class PermisoTransaccionalRepository(implicit executionContext: ExecutionContext
    * @return lista de tuplas organizada por encargo, y con informacion (sí existe) de la persona que debe autorizar esa transacción, junto con un Boolean
    *         indicando si este autorizador es un admin o no
    */
-  private def estructurarPermisosEncargo (permisos : Seq[(PermisoAgente, Option[PermisoAgenteAutorizador], Boolean)]) = Future {
+  private def estructurarPermisosEncargo(permisos: Seq[(PermisoAgente, Option[PermisoAgenteAutorizador], Boolean)]) = Future {
     permisos
       .groupBy(permiso => permiso._1)
-      .map{
+      .map {
         case (encargo, permisos) =>
-          (encargo, permisos.map{ case (permiso , autorizador, esAdmin) => (autorizador, Option(esAdmin))}.toList)
+          (encargo, permisos.map { case (permiso, autorizador, esAdmin) => (autorizador, Option(esAdmin)) }.toList)
       }.toList
   }
 
@@ -177,16 +173,16 @@ class PermisoTransaccionalRepository(implicit executionContext: ExecutionContext
    * @return Lista de tuplas organizada por permisosTx, y con informacion (sí existe) de la persona que debe autorizar esa transacción, junto con un Boolean
    *         indicando si este autorizador es un admin o no.
    */
-  private def estructuraPermisosGenerales (permisosEncargos : Seq[(PermisoTransaccionalUsuarioEmpresarial,
-    Option[PermisoTransaccionalUsuarioEmpresarialAutorizador], Boolean)]) = Future {
+  private def estructuraPermisosGenerales(permisosEncargos: Seq[(PermisoTransaccionalUsuarioEmpresarial, Option[PermisoTransaccionalUsuarioEmpresarialAutorizador], Boolean)]) = Future {
     permisosEncargos
       .groupBy(_._1.idEncargo)
-      .map{
-        case (encargo, permisos) => (encargo, permisos.groupBy(_._1).map{
-          case (permisoTx, autorizadores) => (permisoTx, autorizadores.map{ case (permiso,autorizador,esAdmin) => (autorizador, Option(esAdmin))}.toList)}
-          .toList)}.toList
+      .map {
+        case (encargo, permisos) => (encargo, permisos.groupBy(_._1).map {
+          case (permisoTx, autorizadores) => (permisoTx, autorizadores.map { case (permiso, autorizador, esAdmin) => (autorizador, Option(esAdmin)) }.toList)
+        }
+          .toList)
+      }.toList
   }
-
 
   private def runInsertDelete(
     inserts: Seq[FixedSqlAction[Int, NoStream, Write]], deletes: Seq[FixedSqlAction[Int, NoStream, Write]]
@@ -226,8 +222,7 @@ class PermisoTransaccionalRepository(implicit executionContext: ExecutionContext
     runInsertDelete(inserts, deletes)
   }
 
-  private[this] def guardarAgentesPermiso(permiso: PermisoAgente, estaSeleccionado: Boolean, idsAgentes: Seq[Int], idClienteAdmin: Int)
-    (implicit session: Session) = {
+  private[this] def guardarAgentesPermiso(permiso: PermisoAgente, estaSeleccionado: Boolean, idsAgentes: Seq[Int], idClienteAdmin: Int)(implicit session: Session) = {
 
     if (idsAgentes.nonEmpty) {
       val ids = idsAgentes.filter { id => id != 0 && id != (-1) }

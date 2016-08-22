@@ -61,7 +61,6 @@ case class UsuarioComercialDriverRepository(usuarioDAO: UsuarioComercialDAOs)(im
    */
   def actualizarIp(idUsuario: Int, ip: String): Future[Int] = usuarioDAO.updateLastIp(idUsuario, ip)
 
-
   /**
    * Actualizar fecha ingreso
    *
@@ -120,6 +119,5 @@ case class UsuarioComercialDriverRepository(usuarioDAO: UsuarioComercialDAOs)(im
       case _ => Future.failed(ValidacionException("401.9", "No se pudo borrar el token"))
     }
   }
-
 
 }

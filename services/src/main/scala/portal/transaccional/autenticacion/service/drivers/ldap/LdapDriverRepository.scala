@@ -7,7 +7,7 @@ import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.persistence.dto.UsuarioLdapDTO
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.ldap.AlianzaLdapDAOs
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Try
 
 /**
@@ -32,15 +32,14 @@ case class LdapDriverRepository(alianzaLdapDAO: AlianzaLdapDAOs)(implicit val ex
       alianzaLdapDAO.getLdapContext(usuario, password, tipoUsuario)
     }
 
-    if (contextTry.isSuccess){
+    if (contextTry.isSuccess) {
       Future.successful(contextTry.get)
-    }else {
+    } else {
       //TODO: Encontrar una mejor manera de manejar las excepciones
       contextTry.failed.getClass.getSimpleName match {
-        case "AuthenticationException" =>  Future.failed(new ValidacionException("401.1", "Credenciales invalidas"))
-        case _ =>  Future.failed(new ValidacionException("401.1", "Excepcion no manejada"))
+        case "AuthenticationException" => Future.failed(new ValidacionException("401.1", "Credenciales invalidas"))
+        case _ => Future.failed(new ValidacionException("401.1", "Excepcion no manejada"))
       }
-
 
     }
   }

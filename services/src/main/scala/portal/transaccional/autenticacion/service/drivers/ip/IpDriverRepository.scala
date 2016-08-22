@@ -26,7 +26,7 @@ case class IpDriverRepository(usuarioRepo: UsuarioRepository, usuarioAgenteRepo:
   def agregarIpHabitualUsuario(idUsuario: String, clientIp: String): Future[String] = {
     for {
       usuario <- usuarioRepo.getByIdentificacion(idUsuario.toString)
-      cliente <- clienteCoreRepo.getCliente(idUsuario.toString)
+      cliente <- clienteCoreRepo.getCliente(idUsuario.toString, None)
       clienteValido <- clienteCoreRepo.validarEstado(cliente)
       relacionarIp <- asociarIpUsuario(usuario.id.get, clientIp)
     } yield relacionarIp
@@ -40,10 +40,10 @@ case class IpDriverRepository(usuarioRepo: UsuarioRepository, usuarioAgenteRepo:
    * 4) Se busca la empresa a la cual esta asociada el admin
    * 4) Se relaciona la ip con el id del admin
    */
-  def agregarIPHabitualUsuarioEmpresarialAdmin(idUsuario: Int, clientIp: String): Future[String] = {
+  def agregarIPHabitualUsuarioEmpresarialAdmin(idUsuario: Int, clientIp: String, tipoIdentificacion: Option[Int]): Future[String] = {
     for {
       usuarioAdmin <- usuarioAdminRepo.getById(idUsuario)
-      cliente <- clienteCoreRepo.getCliente(usuarioAdmin.identificacion)
+      cliente <- clienteCoreRepo.getCliente(usuarioAdmin.identificacion, tipoIdentificacion)
       estadoCore <- clienteCoreRepo.validarEstado(cliente)
       idEmpresa <- obtenerEmpresaIdUsuarioAdmin(idUsuario)
       relacionarIp <- asociarIpEmpresa(idEmpresa, clientIp)

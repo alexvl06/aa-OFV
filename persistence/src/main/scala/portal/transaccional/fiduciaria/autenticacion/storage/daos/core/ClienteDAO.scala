@@ -23,14 +23,14 @@ case class ClienteDAO()(implicit val ec: ExecutionContext, dcConfig: DBConfig) e
       buildResult(connection, callableStatement, 4).get
   }
 
-  def consultaGrupo(idGrupo: Int): Future[String] = transaction {
+  def consultaGrupo(idGrupo: String): Future[String] = transaction {
     connection =>
       connection.setAutoCommit(false)
       val callString = "{ call sf_qportal_web.validar_grupo_cliente(?,?,?,?) }"
       val callableStatement = connection prepareCall callString
       callableStatement registerOutParameter (1, OracleTypes.VARCHAR)
       callableStatement registerOutParameter (2, OracleTypes.VARCHAR)
-      callableStatement.setInt(3, idGrupo)
+      callableStatement.setString(3, idGrupo)
       callableStatement registerOutParameter (4, OracleTypes.CURSOR)
       buildResult(connection, callableStatement, 4).get
   }
