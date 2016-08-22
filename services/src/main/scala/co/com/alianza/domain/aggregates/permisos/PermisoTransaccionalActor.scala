@@ -106,6 +106,7 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
         DataAccessAdapter.consultaPermisosAgente(idAgente),
         { (x: (List[co.com.alianza.infrastructure.dto.Permiso], List[co.com.alianza.infrastructure.dto.EncargoPermisos])) =>
           context stop self
+          println("entro aqui tmb ", PermisosRespuesta(x._1, x._2).toJson)
           PermisosRespuesta(x._1, x._2).toJson
         }, errorValidacion, currentSender
       )

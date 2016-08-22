@@ -53,7 +53,7 @@ case class AutenticacionDriverRepository(usuarioRepo: UsuarioRepository, cliente
       estado <- usuarioRepo.validarEstado(usuario.estado)
       reintentosErroneos <- reglaRepo.getRegla(LlavesReglaContrasena.CANTIDAD_REINTENTOS_INGRESO_CONTRASENA.llave)
       contrasena <- usuarioRepo.validarContrasena(contrasena, usuario, reintentosErroneos.valor.toInt)
-      cliente <- clienteCoreRepo.getCliente(numeroIdentificacion)
+      cliente <- clienteCoreRepo.getCliente(numeroIdentificacion, Some(tipoIdentificacion))
       estadoCore <- clienteCoreRepo.validarEstado(cliente)
       reglaDias <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA.llave)
       validarCaducidad <- usuarioRepo.validarCaducidadContrasena(TiposCliente.clienteIndividual, usuario, reglaDias.valor.toInt)

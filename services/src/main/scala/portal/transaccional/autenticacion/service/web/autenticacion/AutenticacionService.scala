@@ -86,7 +86,7 @@ case class AutenticacionService(
       entity(as[AutenticarUsuarioComercialRequest]) {
         request =>
           clientIP { ip =>
-            val resultado: Future[String] = autenticacionComercialRepositorio.autenticar(request.usuario, request.tipoUsuario, request.contrasena, ip.value)
+            val resultado: Future[String] = autenticacionComercialRepositorio.autenticar(request.usuario.toLowerCase, request.tipoUsuario, request.contrasena, ip.value)
             onComplete(resultado) {
               case Success(token) => encriptarToken(token)
               case Failure(ex) => execution(ex)
@@ -103,8 +103,9 @@ case class AutenticacionService(
   def execution(ex: Any): StandardRoute = {
     ex match {
       case ex: ValidacionException => complete((StatusCodes.Unauthorized, ex))
-      case ex: PersistenceException => complete((StatusCodes.InternalServerError, "Error inesperado"))
-      case ex: Throwable => complete((StatusCodes.InternalServerError, "Error inesperado"))
+      case ex: PersistenceException =>
+        print(ex); complete((StatusCodes.InternalServerError, "Error inesperado"))
+      case ex: Throwable => print(ex); complete((StatusCodes.InternalServerError, "Error inesperado"))
     }
   }
 

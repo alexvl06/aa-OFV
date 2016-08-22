@@ -26,11 +26,7 @@ import scala.util.{ Failure, Success }
 /**
  * Created by s4n 2016
  */
-case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgenteRepository: UsuarioEmpresarialRepository, usuarioAdminRepository:
-UsuarioEmpresarialAdminRepository, autorizacionRepository: AutorizacionUsuarioRepository, kafkaActor: ActorSelection, autorizacionAgenteRepo:
-AutorizacionUsuarioEmpresarialRepository, autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository, autorizacionComercialRepo:
-AutorizacionUsuarioComercialRepository, autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository)(implicit val
-ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
+case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgenteRepository: UsuarioEmpresarialRepository, usuarioAdminRepository: UsuarioEmpresarialAdminRepository, autorizacionRepository: AutorizacionUsuarioRepository, kafkaActor: ActorSelection, autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository, autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository, autorizacionComercialRepo: AutorizacionUsuarioComercialRepository, autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   val invalidarTokenPath = "invalidarToken"
   val validarTokenPath = "validarToken"
@@ -90,7 +86,7 @@ ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with Cross
             case `agente` => autorizacionAgenteRepo.autorizar(token, encriptedToken, url, ipRemota)
             case `admin` => autorizacionAdminRepo.autorizar(token, encriptedToken, url, ipRemota)
             case `individual` => autorizacionRepository.autorizar(token, encriptedToken, url)
-            //TODO: Agregar la autorizacion de url para los tipo comerciales
+            //TODO: Agregar la autorizacion de url para los tipo comerciales (Pendiente HU) By : Hernando
             case `comercialFiduciaria` => obtenerUsuarioComercialMock(TiposCliente.comercialFiduciaria, usuario.usuario)
             case `comercialValores` => obtenerUsuarioComercialMock(TiposCliente.comercialValores, usuario.usuario)
             case `comercialAdmin` => obtenerUsuarioComercialMock(TiposCliente.clienteAdministrador, usuario.usuario)
@@ -104,7 +100,7 @@ ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with Cross
     }
   }
 
-  //TODO: Borrar este metodo cuando se realice la autorizacion de url para comerciales
+  //TODO: Borrar este metodo cuando se realice la autorizacion de url para comerciales (Pendiente HU) By : Henando
   private def obtenerUsuarioComercialMock(tipoCliente: TiposCliente, usuario: String): Future[Autorizado] = Future {
     case class UsuarioLogged(id: Int, correo: String, identificacion: String, tipoIdentificacion: Int, tipoCliente: TiposCliente, usuario: String)
     val usuarioL = UsuarioLogged(0, "", "", 0, tipoCliente, usuario)

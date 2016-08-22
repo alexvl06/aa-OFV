@@ -29,6 +29,8 @@ case class UsuarioComercialDriverRepository(usuarioDAO: UsuarioComercialDAOs)(im
     }
   }
 
+  def update(usuario: String, ip: String): Future[Int] = usuarioDAO.update(usuario, ip)
+
   //def getByUser(name : String) : Future [UsuarioComercial] = usuarioDAO.getById()
 
   def getByToken(token: String): Future[Option[UsuarioComercial]] = usuarioDAO.getByToken(token)

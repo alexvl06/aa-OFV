@@ -2,6 +2,7 @@ package portal.transaccional.autenticacion.service.drivers.ipusuario
 
 import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.persistence.entities.IpsUsuario
+import co.com.alianza.util.token.AesUtil
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.IpUsuarioDAOs
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -30,12 +31,13 @@ case class IpUsuarioDriverRepository(ipDAO: IpUsuarioDAOs)(implicit val ex: Exec
    */
   def validarControlIp(ip: String, ips: Seq[IpsUsuario], token: String, tieneRespuestas: Boolean): Future[String] = {
     val tieneIp = ips.exists(_.ip == ip)
+    val encryptedToken: String = AesUtil.encriptarToken(token)
     if (tieneRespuestas) {
-      if (tieneIp) Future.successful(token) else Future.failed(ValidacionException("401.4", token))
+      if (tieneIp) Future.successful(token) else Future.failed(ValidacionException("401.4", encryptedToken))
     } else if (tieneIp) {
-      Future.failed(ValidacionException("401.18", token))
+      Future.failed(ValidacionException("401.18", encryptedToken))
     } else {
-      Future.failed(ValidacionException("401.17", token))
+      Future.failed(ValidacionException("401.17", encryptedToken))
     }
   }
 

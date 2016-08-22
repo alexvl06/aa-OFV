@@ -29,4 +29,6 @@ trait UsuarioComercialRepository {
 
   def invalidarToken(token: String): Future[Int]
 
+  def update(usuario: String, ip: String): Future[Int]
+
 }

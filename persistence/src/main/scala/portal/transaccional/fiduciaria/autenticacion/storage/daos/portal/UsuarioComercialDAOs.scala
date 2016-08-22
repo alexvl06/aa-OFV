@@ -27,4 +27,6 @@ trait UsuarioComercialDAOs {
 
   def updateLastDate(idUsuario: Int, fechaActual: Timestamp): Future[Int]
 
+  def update(usuario: String, ip: String): Future[Int]
+
 }

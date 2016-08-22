@@ -9,7 +9,7 @@ import scala.concurrent.Future
  */
 trait ClienteRepository {
 
-  def getCliente(documento: String): Future[Cliente]
+  def getCliente(documento: String, tipoIdentificacion: Option[Int]): Future[Cliente]
 
   def validarEstado(cliente: Cliente): Future[Boolean]
 
