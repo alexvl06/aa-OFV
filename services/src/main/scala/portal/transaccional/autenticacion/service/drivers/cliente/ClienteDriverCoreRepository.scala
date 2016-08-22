@@ -21,8 +21,8 @@ case class ClienteDriverCoreRepository(clienteCoreRepo: ClienteDAO)(implicit val
       case _ => clienteCoreRepo.consultaCliente(documento)
     }
 
-    def translateUser(clienteString: String)= Future{
-      if(esGrupo){
+    def translateUser(clienteString: String) = Future {
+      if (esGrupo) {
         DataAccessTranslator.translateGrupo(clienteString)
       } else {
         DataAccessTranslator.translateCliente(clienteString)
