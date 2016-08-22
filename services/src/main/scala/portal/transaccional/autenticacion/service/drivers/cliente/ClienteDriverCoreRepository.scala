@@ -14,20 +14,16 @@ import scala.concurrent.{ ExecutionContext, Future }
 case class ClienteDriverCoreRepository(clienteCoreRepo: ClienteDAO)(implicit val ex: ExecutionContext) extends ClienteRepository {
 
   def getCliente(documento: String, tipoIdentificacion: Option[Int]): Future[Cliente] = {
-
-    val consultaClienteCore = tipoIdentificacion match {
-      case Some(value) =>
-        if (tipoIdentificacion == TipoIdentificacion.GRUPO.identificador) {
-          clienteCoreRepo.consultaGrupo(documento)
-        } else {
-          clienteCoreRepo.consultaCliente(documento)
-        }
-      case None => clienteCoreRepo.consultaCliente(documento)
+    val esGrupo: Boolean = tipoIdentificacion.getOrElse(0) == TipoIdentificacion.GRUPO.identificador
+    val consultaClienteCore = esGrupo match {
+      case true =>
+        clienteCoreRepo.consultaGrupo(documento)
+      case _ => clienteCoreRepo.consultaCliente(documento)
     }
 
     for {
       clienteString <- consultaClienteCore
-      clienteOption <- Future { DataAccessTranslator.translateCliente(clienteString) }
+      clienteOption <- Future { if (esGrupo) DataAccessTranslator.translateGrupo(clienteString) else DataAccessTranslator.translateCliente(clienteString) }
       cliente <- validarCliente(clienteOption)
     } yield cliente
   }

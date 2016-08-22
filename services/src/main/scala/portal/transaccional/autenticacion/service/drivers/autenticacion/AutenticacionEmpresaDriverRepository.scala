@@ -176,6 +176,7 @@ case class AutenticacionEmpresaDriverRepository(
   private def getTipoPersona(idTipoIdent: Int): String = {
     idTipoIdent match {
       case TipoIdentificacion.FID.identificador => "F"
+      case TipoIdentificacion.GRUPO.identificador => "G"
       case TipoIdentificacion.NIT.identificador => "J"
       case TipoIdentificacion.SOCIEDAD_EXTRANJERA.identificador => "S"
       case _ => "N"
