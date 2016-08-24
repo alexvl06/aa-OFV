@@ -33,7 +33,7 @@ import scalaz.Validation.FlatMap._
  */
 class PermisoTransaccionalActorSupervisor extends Actor with ActorLogging {
 
-  def receive = { case message: MessageService => context actorOf Props[PermisoTransaccionalActor] forward message }
+  def receive = { case message: MessageService => context actorOf (Props[PermisoTransaccionalActor]) forward message }
 
   override val supervisorStrategy = OneForOneStrategy() {
     case exception: Exception =>
@@ -41,13 +41,14 @@ class PermisoTransaccionalActorSupervisor extends Actor with ActorLogging {
       log.error(exception, exception.getMessage)
       Restart
   }
+
 }
 
 class PermisoTransaccionalActor extends Actor with ActorLogging with FutureResponse {
 
   import context.dispatcher
 
-  implicit val timeout: Timeout = 15.seconds
+  implicit val timeout: Timeout = 120.seconds
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.errorValidacion
 
   var numeroPermisos = 0
@@ -56,16 +57,17 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
 
   def receive = {
     case GuardarPermisosAgenteMessage(idAgente, permisosGenerales, encargosPermisos, idClienteAdmin) =>
-
       val currentSender = sender
+
       val permisosEncargos =
-        encargosPermisos.flatMap(e => e.permisos.map(p => p.copy(permiso = p.permiso.map { _.copy(idEncargo = e.wspf_plan, idAgente = idAgente) })))
+        encargosPermisos.flatMap(e => e.permisos.map(p => p.copy(permiso = p.permiso.map(_.copy(idEncargo = e.wspf_plan, idAgente = idAgente)))))
+
       numeroPermisos = permisosGenerales.length + permisosEncargos.length
       if (numeroPermisos == 0) {
         self ! RestaVerificacionMessage(currentSender)
       } else {
-        permisosGenerales.foreach(p => self ! ((p, idClienteAdmin, currentSender): (Permiso, Option[Int], ActorRef)))
-        permisosEncargos.foreach(p => self ! ((p, idClienteAdmin, currentSender): (PermisoTransaccionalUsuarioEmpresarialAgentes, Option[Int], ActorRef)))
+        permisosGenerales.foreach { p => self ! ((p, idClienteAdmin, currentSender): (Permiso, Option[Int], ActorRef)) }
+        permisosEncargos.foreach { p => self ! ((p, idClienteAdmin, currentSender): (PermisoTransaccionalUsuarioEmpresarialAgentes, Option[Int], ActorRef)) }
       }
 
     case (permiso: Permiso, idClienteAdmin: Option[Int], currentSender: ActorRef) =>
@@ -76,10 +78,11 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
 
     case (permisoAgentes: PermisoTransaccionalUsuarioEmpresarialAgentes, idClienteAdmin: Option[Int], currentSender: ActorRef) =>
       val future = (for {
-        result <- ValidationT(DataAccessAdapter.guardaPermisoEncargo(permisoAgentes.permiso.get, permisoAgentes.agentes.map(_.map(_.id)), idClienteAdmin.get))
+        result <- ValidationT(DataAccessAdapter guardaPermisoEncargo (permisoAgentes.permiso.get, permisoAgentes.agentes.map(_.map(_.id)), idClienteAdmin.get))
       } yield result).run
       resolveFutureValidation(future, (x: Int) => RestaVerificacionMessage(currentSender), errorValidacion, self)
 
+    //TODO : En serio muchachos esto se puede hacer mejor!  By : Alexa
     case RestaVerificacionMessage(currentSender) =>
       numeroPermisos -= 1
       if (numeroPermisos <= 0) {
@@ -92,7 +95,7 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
     case ConsultarPermisosAgenteMessage(idAgente) =>
       val currentSender = sender
       resolveFutureValidation(
-        DataAccessAdapter consultaPermisosAgente idAgente,
+        DataAccessAdapter.consultaPermisosAgente(idAgente),
         { (x: (List[co.com.alianza.infrastructure.dto.Permiso], List[co.com.alianza.infrastructure.dto.EncargoPermisos])) =>
           context stop self
           PermisosRespuesta(x._1, x._2).toJson
@@ -147,12 +150,12 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
     //Se consulta los permisos del core sobre el cliente fid
     val cliente: Future[Validation[ErrorAutenticacion, Cliente]] = (for {
       cliente <- ValidationT(obtenerClienteSP(numeroIdentificacion))
-
     } yield cliente).run
     //TODO: Await ???
     val extraccionFuturo = Await.result(cliente, 8.seconds)
     extraccionFuturo match {
-      case zSuccess(cliente) => cliente.wcli_cias_pagos_masivos == PermisosFideicomisosCoreAlianza.`SI`.nombre
+      case zSuccess(cliente) =>
+        cliente.wcli_cias_pagos_masivos == PermisosFideicomisosCoreAlianza.`SI`.nombre
       case zFailure(error) => false
     }
 
