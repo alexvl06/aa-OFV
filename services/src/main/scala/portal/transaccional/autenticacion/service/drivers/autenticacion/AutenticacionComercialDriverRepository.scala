@@ -51,8 +51,8 @@ case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository, usua
   def autenticarComercial(usuario: String, tipoUsuario: Int, password: String, ip: String): Future[String] = {
     for {
       cliente <- ldapRepo.autenticarLdap(usuario, tipoUsuario, password)
-      usuarioComercial <- usuarioComercialRepo.getByUser(cliente.usuario)
-      _ <- usuarioComercialRepo.update(usuario, ip)
+      usuarioComercial <- usuarioComercialRepo.getUser(cliente.usuario)
+      _ <- usuarioComercialRepo.update(Some(usuarioComercial), usuario, ip)
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
       token <- generarTokenComercial(cliente, usuarioComercial, tipoUsuario, ip, inactividad.valor)
       _ <- usuarioComercialRepo.crearToken(usuarioComercial.id, AesUtil.encriptarToken(token))
