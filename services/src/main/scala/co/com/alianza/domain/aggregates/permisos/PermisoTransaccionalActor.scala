@@ -61,10 +61,10 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
       val currentSender = sender
 
       val permisosEncargos =
-        encargosPermisos.flatMap(e => e.permisos.map(p => p.copy(permiso = p.permiso.map ( _.copy(idEncargo = e.wspf_plan, idAgente = idAgente)))))
+        encargosPermisos.flatMap(e => e.permisos.map(p => p.copy(permiso = p.permiso.map(_.copy(idEncargo = e.wspf_plan, idAgente = idAgente)))))
 
       numeroPermisos = permisosGenerales.length + permisosEncargos.length
-      println("SET DE NUMERO DE PERMISOS ENCONTRADOS" ,  permisosGenerales.length , permisosEncargos.length)
+      println("SET DE NUMERO DE PERMISOS ENCONTRADOS", permisosGenerales.length, permisosEncargos.length)
       if (numeroPermisos == 0) {
         println("1.1 NO TIENE PERMISOS")
         self ! RestaVerificacionMessage(currentSender)
@@ -90,9 +90,9 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
 
     //TODO : En serio muchachos esto se puede hacer mejor!  By : Alexa
     case RestaVerificacionMessage(currentSender) =>
-      println("UPDATE DE NUMERO DE PERMISOS ENCONTRADOS" , numeroPermisos)
+      println("UPDATE DE NUMERO DE PERMISOS ENCONTRADOS", numeroPermisos)
       numeroPermisos -= 1
-      println("UPDATE 2 DE NUMERO DE PERMISOS ENCONTRADOS" , numeroPermisos)
+      println("UPDATE 2 DE NUMERO DE PERMISOS ENCONTRADOS", numeroPermisos)
       if (numeroPermisos <= 0) {
         val future = (for {
           result <- ValidationT(Future.successful(Validation.success(ResponseMessage(OK, "Guardado de permisos correcto"))))
