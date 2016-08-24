@@ -65,7 +65,6 @@ case class UsuarioComercialDriverRepository(usuarioDAO: UsuarioComercialDAOs)(im
    */
   def actualizarIp(idUsuario: Int, ip: String): Future[Int] = usuarioDAO.updateLastIp(idUsuario, ip)
 
-
   /**
    * Actualizar fecha ingreso
    *

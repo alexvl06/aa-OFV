@@ -8,8 +8,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * Created by alexandra on 2016
  */
-case class AutorizacionUsuarioComercialAdminDriverRepository(sesionRepo: SesionRepository, usuarioRepo: UsuarioComercialAdminRepository)
-  (implicit val ex: ExecutionContext) extends AutorizacionUsuarioComercialAdminRepository {
+case class AutorizacionUsuarioComercialAdminDriverRepository(sesionRepo: SesionRepository, usuarioRepo: UsuarioComercialAdminRepository)(implicit val ex: ExecutionContext) extends AutorizacionUsuarioComercialAdminRepository {
 
   def invalidarToken(token: String, encriptedToken: String): Future[Int] = {
     for {

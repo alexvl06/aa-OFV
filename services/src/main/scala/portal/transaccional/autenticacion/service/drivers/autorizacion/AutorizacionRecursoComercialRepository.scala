@@ -5,10 +5,10 @@ import co.com.alianza.persistence.entities.RolComercial
 import scala.concurrent.Future
 
 /**
-  * Created by dfbaratov on 23/08/16.
-  */
+ * Created by dfbaratov on 23/08/16.
+ */
 trait AutorizacionRecursoComercialRepository {
 
-  def obtenerRolesPorRecurso(nombreRecurso: String) : Future[Seq[RolComercial]]
+  def obtenerRolesPorRecurso(nombreRecurso: String): Future[Seq[RolComercial]]
 
 }

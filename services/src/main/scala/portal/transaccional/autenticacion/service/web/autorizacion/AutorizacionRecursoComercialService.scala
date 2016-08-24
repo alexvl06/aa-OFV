@@ -6,14 +6,14 @@ import portal.transaccional.autenticacion.service.drivers.autorizacion.Autorizac
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import spray.http.StatusCodes
-import spray.routing.{Route, StandardRoute}
+import spray.routing.{ Route, StandardRoute }
 
 import scala.concurrent.ExecutionContext
-import scala.util.{Failure, Success}
+import scala.util.{ Failure, Success }
 
 /**
-  * Created by dfbaratov on 23/08/16.
-  */
+ * Created by dfbaratov on 23/08/16.
+ */
 case class AutorizacionRecursoComercialService(autorizacionRepository: AutorizacionRecursoComercialRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   override def route: Route = {
@@ -24,22 +24,20 @@ case class AutorizacionRecursoComercialService(autorizacionRepository: Autorizac
     }
   }
 
-
   private def roles = {
     get {
       //parameters('recurso) {
-        //(recurso) =>
-          val roles = autorizacionRepository.obtenerRolesPorRecurso("tributarios")
+      //(recurso) =>
+      val roles = autorizacionRepository.obtenerRolesPorRecurso("tributarios")
 
-          onComplete(roles) {
-            case Success(value) => complete(value)
-            case Failure(ex) => execution(ex)
-          }
+      onComplete(roles) {
+        case Success(value) => complete(value)
+        case Failure(ex) => execution(ex)
+      }
 
-    //  }
+      //  }
     }
   }
-
 
   def execution(ex: Any): StandardRoute = {
     ex match {
