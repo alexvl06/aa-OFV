@@ -100,7 +100,7 @@ case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository, usua
           case _ => TiposCliente.comercialValores
         }
       }
-      Token.generarToken(usuario.usuario, cliente.identificacion.get, "", usuario.ipUltimoIngreso.getOrElse(ip), usuario.fechaUltimoIngreso.getOrElse(
+      Token.generarToken(usuario.usuario, cliente.identificacion.get, "C", usuario.ipUltimoIngreso.getOrElse(ip), usuario.fechaUltimoIngreso.getOrElse(
         new Date(System.currentTimeMillis())
       ), inactividad, tipoCliente)
     }
@@ -113,7 +113,7 @@ case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository, usua
    * @return
    */
   private def generarTokenAdminComercial(usuario: UsuarioComercialAdmin, ip: String, inactividad: String): Future[String] = Future {
-    Token.generarToken(usuario.usuario, usuario.correo, "", usuario.ipUltimoIngreso.getOrElse(ip), usuario.fechaUltimoIngreso.getOrElse(
+    Token.generarToken(usuario.usuario, usuario.correo, "CA", usuario.ipUltimoIngreso.getOrElse(ip), usuario.fechaUltimoIngreso.getOrElse(
       new Date(System.currentTimeMillis())
     ), inactividad, TiposCliente.comercialAdmin)
   }

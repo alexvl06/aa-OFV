@@ -56,22 +56,22 @@ object PermisoTransaccionalDataAccessTranslator {
 
     (
       permisos.map(
-      pa =>
-        Permiso(
-          Some(
-            PermisoAgente(
-              pa._1.idAgente,
-              pa._1.tipoTransaccion,
-              pa._1.minimoNumeroPersonas,
-              pa._1.tipoPermiso,
-              pa._1.montoMaximoTransaccion,
-              pa._1.montoMaximoDiario
-            )
-          ),
-          ListarAutorizadores(pa._2)
-        )
-    ),
-      encargosPermisos.map(ep => aEncargoPermisosDTO(ep._1, ep._2))
+        pa =>
+          Permiso(
+            Some(
+              PermisoAgente(
+                pa._1.idAgente,
+                pa._1.tipoTransaccion,
+                pa._1.minimoNumeroPersonas,
+                pa._1.tipoPermiso,
+                pa._1.montoMaximoTransaccion,
+                pa._1.montoMaximoDiario
+              )
+            ),
+            ListarAutorizadores(pa._2)
+          )
+      ),
+        encargosPermisos.map(ep => aEncargoPermisosDTO(ep._1, ep._2))
     )
   }
 
