@@ -35,6 +35,7 @@ import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioE
 import portal.transaccional.autenticacion.service.drivers.usuarioComercial.UsuarioComercialDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioComercialAdmin.{ UsuarioComercialAdminDriverRepository, UsuarioComercialAdminRepository }
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioDriverRepository
+import portal.transaccional.autenticacion.service.drivers.rolRecursoComercial.RolRecursoComercialDriverRepository
 import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
 import portal.transaccional.fiduciaria.autenticacion.storage.config.pg.{ OracleConfig, PGConfig }
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.core.ClienteDAO
@@ -160,6 +161,10 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
 
   lazy val ipRepo = IpDriverRepository(usuarioRepo, usuarioAgenteRepo, empresaAdminDAO, ipEmpresaDAO, usuarioAdminRepo, clienteRepo, ipUsuarioDAO)
 
+  lazy val rolRecursoComercialRepo = RolRecursoComercialDriverRepository(rolRecursoComercialDAO)
+
+  lazy val autorizacionRecursoComercialRepository = AutorizacionRecursoComercialDriverRepository(rolRecursoComercialRepo)
+
 }
 
 private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
@@ -183,6 +188,7 @@ private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
   lazy val alianzaLdapDAO = AlianzaLdapDAO()
   lazy val usuarioComercialDAO = UsuarioComercialDAO()(config)
   lazy val usuarioComercialAdminDAO = UsuarioComercialAdminDAO()(config)
+  lazy val rolRecursoComercialDAO = RolRecursoComercialDAO()(config)
 }
 
 /**

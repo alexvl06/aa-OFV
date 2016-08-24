@@ -1,12 +1,13 @@
 package portal.transaccional.autenticacion.service.util.JsonFormatters
 
 import co.com.alianza.exceptions.ValidacionException
-import co.com.alianza.infrastructure.dto.{ Pregunta, Respuesta }
+import co.com.alianza.infrastructure.dto.{Pregunta, Respuesta}
+import co.com.alianza.persistence.entities.RolComercial
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
-import portal.transaccional.autenticacion.service.web.autenticacion.{ AutenticarUsuarioComercialRequest, AutenticarRequest, AutenticarUsuarioEmpresarialRequest }
+import portal.transaccional.autenticacion.service.web.autenticacion.{AutenticarRequest, AutenticarUsuarioComercialRequest, AutenticarUsuarioEmpresarialRequest}
 import portal.transaccional.autenticacion.service.web.autorizacion.InvalidarTokenRequest
 import portal.transaccional.autenticacion.service.web.ip.AgregarIpRequest
-import portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.{ GuardarRespuestasRequest, ResponseObtenerPreguntas, ResponseObtenerPreguntasComprobar, RespuestasComprobacionRequest }
+import portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.{GuardarRespuestasRequest, ResponseObtenerPreguntas, ResponseObtenerPreguntasComprobar, RespuestasComprobacionRequest}
 
 trait DomainJsonFormatters {
 
@@ -35,4 +36,7 @@ trait DomainJsonFormatters {
 
   //ip
   implicit val ipFormatter = jsonFormat2(AgregarIpRequest)
+
+  //recurso graficos comercial
+  implicit val rolesFormater = jsonFormat2(RolComercial)
 }

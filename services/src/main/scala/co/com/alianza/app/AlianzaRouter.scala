@@ -1,23 +1,23 @@
 package co.com.alianza.app
 
-import akka.actor.{ ActorLogging, ActorRef, ActorSelection, ActorSystem }
+import akka.actor.{ActorLogging, ActorRef, ActorSelection, ActorSystem}
 import co.com.alianza.app.handler.CustomRejectionHandler
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.infrastructure.security.ServiceAuthorization
-import co.com.alianza.web.empresa.{ AdministrarContrasenaEmpresaService, UsuarioEmpresaService }
+import co.com.alianza.web.empresa.{AdministrarContrasenaEmpresaService, UsuarioEmpresaService}
 import portal.transaccional.autenticacion.service.drivers.autorizacion._
 import spray.routing._
 import spray.util.LoggingContext
 import co.com.alianza.web._
 import co.com.alianza.webvalidarPinClienteAdmin.PinService
-import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionComercialRepository, AutenticacionEmpresaRepository, AutenticacionRepository }
+import portal.transaccional.autenticacion.service.drivers.autenticacion.{AutenticacionComercialRepository, AutenticacionEmpresaRepository, AutenticacionRepository}
 import portal.transaccional.autenticacion.service.drivers.ip.IpRepository
 import portal.transaccional.autenticacion.service.drivers.pregunta.PreguntasAutovalidacionRepository
 import portal.transaccional.autenticacion.service.drivers.respuesta.RespuestaUsuarioRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioEmpresarialAdminRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioRepository
-import portal.transaccional.autenticacion.service.web.autorizacion.AutorizacionService
+import portal.transaccional.autenticacion.service.web.autorizacion.{AutorizacionRecursoComercialService, AutorizacionService}
 import portal.transaccional.autenticacion.service.web.autenticacion.AutenticacionService
 import co.com.alianza.web.PreguntasAutovalidacionService
 import portal.transaccional.autenticacion.service.web.ip.IpService
@@ -34,8 +34,9 @@ case class AlianzaRouter(
     autorizacionActorSupervisor: ActorRef, autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository,
     autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository, preguntasValidacionRepository: PreguntasAutovalidacionRepository,
     respuestaUsuarioRepository: RespuestaUsuarioRepository, respuestaUsuarioAdminRepository: RespuestaUsuarioRepository, ipRepo: IpRepository,
-    autorizacionComercialRepo: AutorizacionUsuarioComercialRepository, autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository
-)(implicit val system: ActorSystem) extends HttpServiceActor with RouteConcatenation with CrossHeaders with ServiceAuthorization with ActorLogging {
+    autorizacionComercialRepo: AutorizacionUsuarioComercialRepository, autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository,
+    autorizacionRecursoComercialRepository: AutorizacionRecursoComercialRepository)
+    (implicit val system: ActorSystem) extends HttpServiceActor with RouteConcatenation with CrossHeaders with ServiceAuthorization with ActorLogging {
 
   import system.dispatcher
 
@@ -43,6 +44,7 @@ case class AlianzaRouter(
     AutorizacionService(usuarioRepositorio, usuarioAgenteRepositorio, usuarioAdminRepositorio, autorizacionUsuarioRepo, kafkaActor, autorizacionAgenteRepo,
       autorizacionAdminRepo, autorizacionComercialRepo, autorizacionComercialAdminRepo).route ~
       AutenticacionService(autenticacionRepo, autenticacionEmpresaRepositorio, autenticacionComercialRepositorio, kafkaActor).route ~
+      new AutorizacionRecursoComercialService(autorizacionRecursoComercialRepository).route ~
       new ConfrontaService(confrontaActor).route ~
       new EnumeracionService().route ~
       UsuarioService(kafkaActor, usuariosActor).route ~
