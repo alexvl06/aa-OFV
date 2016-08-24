@@ -57,32 +57,26 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
 
   def receive = {
     case GuardarPermisosAgenteMessage(idAgente, permisosGenerales, encargosPermisos, idClienteAdmin) =>
-      println("1. ENTRO AL ACTOR")
       val currentSender = sender
 
       val permisosEncargos =
         encargosPermisos.flatMap(e => e.permisos.map(p => p.copy(permiso = p.permiso.map(_.copy(idEncargo = e.wspf_plan, idAgente = idAgente)))))
 
       numeroPermisos = permisosGenerales.length + permisosEncargos.length
-      println("SET DE NUMERO DE PERMISOS ENCONTRADOS", permisosGenerales.length, permisosEncargos.length)
       if (numeroPermisos == 0) {
-        println("1.1 NO TIENE PERMISOS")
         self ! RestaVerificacionMessage(currentSender)
       } else {
-        println("1.1 SI TIENE PERMISOS")
         permisosGenerales.foreach { p => self ! ((p, idClienteAdmin, currentSender): (Permiso, Option[Int], ActorRef)) }
         permisosEncargos.foreach { p => self ! ((p, idClienteAdmin, currentSender): (PermisoTransaccionalUsuarioEmpresarialAgentes, Option[Int], ActorRef)) }
       }
 
     case (permiso: Permiso, idClienteAdmin: Option[Int], currentSender: ActorRef) =>
-      println("2.1 Entro a permisos GENERALES")
       val future = (for {
         result <- ValidationT(DataAccessAdapter.guardaPermiso(permiso.permisoAgente.get, permiso.autorizadores.map(_.map(_.id)), idClienteAdmin.get))
       } yield result).run
       resolveFutureValidation(future, (x: Int) => RestaVerificacionMessage(currentSender), errorValidacion, self)
 
     case (permisoAgentes: PermisoTransaccionalUsuarioEmpresarialAgentes, idClienteAdmin: Option[Int], currentSender: ActorRef) =>
-      println("2.1 Entro a permisos ENCARGOS")
       val future = (for {
         result <- ValidationT(DataAccessAdapter guardaPermisoEncargo (permisoAgentes.permiso.get, permisoAgentes.agentes.map(_.map(_.id)), idClienteAdmin.get))
       } yield result).run
@@ -90,9 +84,7 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
 
     //TODO : En serio muchachos esto se puede hacer mejor!  By : Alexa
     case RestaVerificacionMessage(currentSender) =>
-      println("UPDATE DE NUMERO DE PERMISOS ENCONTRADOS", numeroPermisos)
       numeroPermisos -= 1
-      println("UPDATE 2 DE NUMERO DE PERMISOS ENCONTRADOS", numeroPermisos)
       if (numeroPermisos <= 0) {
         val future = (for {
           result <- ValidationT(Future.successful(Validation.success(ResponseMessage(OK, "Guardado de permisos correcto"))))
@@ -106,7 +98,6 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
         DataAccessAdapter.consultaPermisosAgente(idAgente),
         { (x: (List[co.com.alianza.infrastructure.dto.Permiso], List[co.com.alianza.infrastructure.dto.EncargoPermisos])) =>
           context stop self
-          println("entro aqui tmb ", PermisosRespuesta(x._1, x._2).toJson)
           PermisosRespuesta(x._1, x._2).toJson
         }, errorValidacion, currentSender
       )

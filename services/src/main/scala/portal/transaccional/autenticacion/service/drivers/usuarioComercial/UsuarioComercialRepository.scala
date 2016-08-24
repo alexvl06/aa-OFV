@@ -7,11 +7,13 @@ import co.com.alianza.persistence.entities.UsuarioComercial
 import scala.concurrent.Future
 
 /**
- * Created by alexandra on 5/08/16.
+ * Created by alexandra on 2016
  */
 trait UsuarioComercialRepository {
 
-  def getByUser(usuario: String): Future[UsuarioComercial]
+  def getUser(usuario: String): Future[UsuarioComercial]
+
+  def getByUser(usuario: String): Future[Option[UsuarioComercial]]
 
   def getByToken(token: String): Future[Option[UsuarioComercial]]
 
@@ -29,6 +31,6 @@ trait UsuarioComercialRepository {
 
   def invalidarToken(token: String): Future[Int]
 
-  def update(usuario: String, ip: String): Future[Int]
+  def update(usuario: Option[UsuarioComercial], nombreUsuario: String, ip: String): Future[Int]
 
 }
