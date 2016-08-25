@@ -21,16 +21,17 @@ trait UsuarioComercialRepository {
 
   def eliminarToken(token: String): Future[Int]
 
-  def actualizarIp(idUsuario: Int, ip: String): Future[Int]
-
-  def actualizarFechaIngreso(idUsuario: Int, fechaActual: Timestamp): Future[Int]
-
   def validarEstado(estado: Int): Future[Boolean]
 
   def validarContrasena(contrasenaIngresada: String, usuario: UsuarioComercial, contrasenaValida: String): Future[Boolean]
 
   def invalidarToken(token: String): Future[Int]
 
-  def update(usuario: Option[UsuarioComercial], nombreUsuario: String, ip: String): Future[Int]
+  def updateIpFecha(nombreUsuario: String, ip: String): Future[Int]
+
+  def existeUsuario(nombreUsuario: String): Future[Boolean]
+
+  def crearUsuario(nombreUsuario: String, ip: String): Future[Int]
+
 
 }

@@ -33,7 +33,7 @@ case class UsuarioComercialDriverRepository(usuarioDAO: UsuarioComercialDAOs)(im
     usuarioDAO.getByUser(usuario)
   }
 
-  def update(usuario: Option[UsuarioComercial], nombreUsuario: String, ip: String): Future[Int] = usuarioDAO.update(usuario, nombreUsuario, ip)
+  def updateIpFecha(nombreUsuario: String, ip: String): Future[Int] = usuarioDAO.updateIpFecha(nombreUsuario, ip)
 
   //def getByUser(name : String) : Future [UsuarioComercial] = usuarioDAO.getById()
 
@@ -55,24 +55,6 @@ case class UsuarioComercialDriverRepository(usuarioDAO: UsuarioComercialDAOs)(im
    * @return
    */
   def eliminarToken(token: String): Future[Int] = usuarioDAO.deleteToken(token)
-
-  /**
-   * Actualizar ultima ip
-   *
-   * @param idUsuario
-   * @param ip
-   * @return
-   */
-  def actualizarIp(idUsuario: Int, ip: String): Future[Int] = usuarioDAO.updateLastIp(idUsuario, ip)
-
-  /**
-   * Actualizar fecha ingreso
-   *
-   * @param idUsuario
-   * @param fechaActual
-   * @return
-   */
-  def actualizarFechaIngreso(idUsuario: Int, fechaActual: Timestamp): Future[Int] = usuarioDAO.updateLastDate(idUsuario, fechaActual)
 
   /////////////////////////////// validaciones //////////////////////////////////
 
@@ -124,4 +106,7 @@ case class UsuarioComercialDriverRepository(usuarioDAO: UsuarioComercialDAOs)(im
     }
   }
 
+  def existeUsuario(nombreUsuario: String): Future[Boolean] =  usuarioDAO.existeUsuario(nombreUsuario)
+
+  def crearUsuario(nombreUsuario: String, ip: String): Future[Int] = usuarioDAO.create(nombreUsuario, ip)
 }

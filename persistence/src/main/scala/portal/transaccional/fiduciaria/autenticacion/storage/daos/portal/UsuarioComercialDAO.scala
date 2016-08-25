@@ -29,8 +29,9 @@ case class UsuarioComercialDAO()(implicit dcConfig: DBConfig) extends TableQuery
     run(this.filter(_.token === token).result.headOption)
   }
 
-  def create(usuario: UsuarioComercial): Future[Int] = {
-    run((this returning this.map(_.id)) += usuario)
+  def create(nombreUsuario: String, ip: String): Future[Int] = {
+    val fechaActual = Option(new Timestamp((new Date).getTime))
+    run(this += UsuarioComercial(0, nombreUsuario, None, Some(ip), fechaActual))
   }
 
   def createToken(idUsuario: Int, token: String): Future[Int] = {
@@ -41,24 +42,14 @@ case class UsuarioComercialDAO()(implicit dcConfig: DBConfig) extends TableQuery
     run(this.filter(_.token === token).map(_.token).update(Some(null)))
   }
 
-  def updateLastIp(idUsuario: Int, ipActual: String): Future[Int] = {
-    run(this.filter(_.id === idUsuario).map(_.ipUltimoIngreso).update(Some(ipActual)))
-  }
-
-  def updateLastDate(idUsuario: Int, fechaActual: Timestamp): Future[Int] = {
-    run(this.filter(_.id === idUsuario).map(_.fechaUltimoIngreso).update(Some(fechaActual)))
-  }
-
-  def update(usuario: Option[UsuarioComercial], nombreUsuario: String, ip: String): Future[Int] = {
-
+  def updateIpFecha(nombreUsuario: String, ip: String): Future[Int] = {
     val fechaActual = Option(new Timestamp((new Date).getTime))
     val filtro = this.filter(_.usuario === nombreUsuario)
+    run(filtro.map(n => (n.fechaUltimoIngreso, n.ipUltimoIngreso)).update(fechaActual, Some(ip)))
+  }
 
-    if (nombreUsuario.isEmpty) {
-      run(this += UsuarioComercial(0, nombreUsuario, None, Some(ip), fechaActual))
-    } else {
-      run(filtro.map(n => (n.fechaUltimoIngreso, n.ipUltimoIngreso)).update(fechaActual, Some(ip)))
-    }
+  def existeUsuario(nombreUsuario: String): Future[Boolean] = {
+      run(this.filter(_.usuario === nombreUsuario).exists.result)
   }
 
 }

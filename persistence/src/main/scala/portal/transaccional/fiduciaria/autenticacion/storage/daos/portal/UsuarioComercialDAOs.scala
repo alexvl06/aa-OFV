@@ -17,16 +17,14 @@ trait UsuarioComercialDAOs {
 
   def getByToken(token: String): Future[Option[UsuarioComercial]]
 
-  def create(usuario: UsuarioComercial): Future[Int]
+  def create(nombreUsuario: String, ip: String): Future[Int]
 
   def createToken(idUsuario: Int, token: String): Future[Int]
 
   def deleteToken(token: String): Future[Int]
 
-  def updateLastIp(idUsuario: Int, ipActual: String): Future[Int]
+  def updateIpFecha(nombreUsuario: String, ip: String): Future[Int]
 
-  def updateLastDate(idUsuario: Int, fechaActual: Timestamp): Future[Int]
-
-  def update(usuario: Option[UsuarioComercial], nombreUsuario: String, ip: String): Future[Int]
+  def existeUsuario(nombreUsuario: String): Future[Boolean]
 
 }
