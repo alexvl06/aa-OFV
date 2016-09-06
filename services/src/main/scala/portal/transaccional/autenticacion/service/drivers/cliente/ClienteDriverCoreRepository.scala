@@ -16,8 +16,7 @@ case class ClienteDriverCoreRepository(clienteCoreRepo: ClienteDAO)(implicit val
   def getCliente(documento: String, tipoIdentificacion: Option[Int]): Future[Cliente] = {
     val esGrupo: Boolean = tipoIdentificacion.getOrElse(0) == TipoIdentificacion.GRUPO.identificador
     val consultaClienteCore = esGrupo match {
-      case true =>
-        clienteCoreRepo.consultaGrupo(documento)
+      case true => clienteCoreRepo.consultaGrupo(documento)
       case _ => clienteCoreRepo.consultaCliente(documento)
     }
 
@@ -44,10 +43,13 @@ case class ClienteDriverCoreRepository(clienteCoreRepo: ClienteDAO)(implicit val
   }
 
   def validarEstado(cliente: Cliente): Future[Boolean] = {
-    if (cliente.wcli_estado != EstadosCliente.inactivo && cliente.wcli_estado != EstadosCliente.bloqueado &&
-      cliente.wcli_estado != EstadosCliente.activo)
+    if (cliente.wcli_estado != EstadosCliente.inactivo && cliente.wcli_estado != EstadosCliente.bloqueado && cliente.wcli_estado != EstadosCliente.activo) {
       Future.failed(ValidacionException("401.1", "Cliente inactivo core"))
-    else Future.successful(true)
+    } else {
+      Future.successful(true)
+    }
   }
+
+  def validarFidInmobiliarios(numDocumento : String): Future[Boolean] = clienteCoreRepo.consultarFideicomisosInmobiliarios(numDocumento)
 
 }

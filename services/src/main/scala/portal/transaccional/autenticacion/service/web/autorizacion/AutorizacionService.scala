@@ -37,6 +37,7 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
   val comercialFiduciaria = TiposCliente.comercialFiduciaria.toString
   val comercialValores = TiposCliente.comercialValores.toString
   val comercialAdmin = TiposCliente.comercialAdmin.toString
+  val adminInmobiliaria = TiposCliente.clienteAdminInmobiliario.toString
 
   val route: Route = {
     path(invalidarTokenPath) {
@@ -58,17 +59,17 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
             val usuario = getTokenData(token)
             val resultado: Future[Int] = usuario.tipoCliente match {
               case `agente` => autorizacionAgenteRepo.invalidarToken(token, encriptedToken)
-              case `admin` => autorizacionAdminRepo.invalidarToken(token, encriptedToken)
+              case `admin` | `adminInmobiliaria` => autorizacionAdminRepo.invalidarToken(token, encriptedToken)
               case `individual` => autorizacionRepository.invalidarToken(token, encriptedToken)
               case `comercialFiduciaria` | `comercialValores` => autorizacionComercialRepo.invalidarToken(token, encriptedToken)
               case `comercialAdmin` => autorizacionComercialAdminRepo.invalidarToken(token, encriptedToken)
-              case _ => Future.failed(NoAutorizado("Tipo usuario no existe"))
+              case _ => Future.failed(NoAutorizado("Tipo usuario no existe -4 "))
             }
             mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.cierreSesionIndex, ip.value,
               kafkaActor, usuario)) {
               onComplete(resultado) {
                 case Success(value) => complete(value.toString)
-                case Failure(ex) => execution(ex)
+                case Failure(ex) => println(ex); execution(ex)
               }
             }
           }
@@ -84,13 +85,13 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
           val encriptedToken = AesUtil.encriptarToken(token)
           val resultado = usuario.tipoCliente match {
             case `agente` => autorizacionAgenteRepo.autorizar(token, encriptedToken, url, ipRemota)
-            case `admin` => autorizacionAdminRepo.autorizar(token, encriptedToken, url, ipRemota)
+            case `admin` | `adminInmobiliaria` => autorizacionAdminRepo.autorizar(token, encriptedToken, url, ipRemota)
             case `individual` => autorizacionRepository.autorizar(token, encriptedToken, url)
             //TODO: Agregar la autorizacion de url para los tipo comerciales (Pendiente HU) By : Hernando
             case `comercialFiduciaria` => obtenerUsuarioComercialMock(TiposCliente.comercialFiduciaria, usuario.usuario)
             case `comercialValores` => obtenerUsuarioComercialMock(TiposCliente.comercialValores, usuario.usuario)
             case `comercialAdmin` => obtenerUsuarioComercialMock(TiposCliente.clienteAdministrador, usuario.usuario)
-            case _ => Future.failed(NoAutorizado("Tipo usuario no existe"))
+            case _ => Future.failed(NoAutorizado("Tipo usuario no existe -3"))
           }
           onComplete(resultado) {
             case Success(value) => execution(value)
@@ -112,7 +113,7 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
     ex match {
       case value: Autorizado => complete((StatusCodes.OK, value.usuario))
       case value: Prohibido => complete((StatusCodes.Forbidden, value.usuario))
-      case ex: NoAutorizado => complete((StatusCodes.Unauthorized, ex))
+      case ex: NoAutorizado => complete((StatusCodes.Unauthorized, "1234"))
       case ex: ValidacionException => complete((StatusCodes.Unauthorized, "sdf"))
       case ex: PersistenceException => complete((StatusCodes.InternalServerError, "Error inesperado"))
       case ex: Throwable =>
@@ -125,7 +126,7 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
     val nToken = Token.getToken(token).getJWTClaimsSet
     val tipoCliente = nToken.getCustomClaim("tipoCliente").toString
     //TODO: el nit no lo pide si es tipo comercial
-    val nit = if (tipoCliente == agente || tipoCliente == admin) nToken.getCustomClaim("nit").toString else ""
+    val nit = if (tipoCliente == agente || tipoCliente == admin || tipoCliente == adminInmobiliaria) nToken.getCustomClaim("nit").toString else ""
     val lastIp = nToken.getCustomClaim("ultimaIpIngreso").toString
     val user = nToken.getCustomClaim("nombreUsuario").toString
     val email = nToken.getCustomClaim("correo").toString

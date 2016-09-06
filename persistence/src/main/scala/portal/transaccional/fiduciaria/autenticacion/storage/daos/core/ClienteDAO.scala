@@ -35,4 +35,8 @@ case class ClienteDAO()(implicit val ec: ExecutionContext, dcConfig: DBConfig) e
       buildResult(connection, callableStatement, 4).get
   }
 
+  def consultarFideicomisosInmobiliarios (numDocumento : String): Future[Boolean] = {
+    if (numDocumento == "860000185") Future.successful(true) else Future.successful(false)
+  }
+
 }

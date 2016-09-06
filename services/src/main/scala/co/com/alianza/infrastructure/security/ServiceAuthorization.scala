@@ -46,7 +46,7 @@ trait ServiceAuthorization {
         val futuro =
           if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
             autorizacionAgenteRepo.autorizar(token, encriptedToken, "", obtenerIp(ctx).get.value)
-          } else if (tipoCliente == TiposCliente.clienteAdministrador.toString) {
+          } else if (tipoCliente == TiposCliente.clienteAdministrador.toString || tipoCliente == TiposCliente.clienteAdminInmobiliario.toString ) {
             autorizacionAdminRepo.autorizar(token, encriptedToken, "", obtenerIp(ctx).get.value)
           } else {
             autorizacionUsuarioRepo.autorizar(token, encriptedToken, "")
