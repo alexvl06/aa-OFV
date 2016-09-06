@@ -47,13 +47,6 @@ case class RecursoGraficoComercialService(recursoComercialRepository: RecursoCom
         case Success(value) => complete(value)
         case Failure(ex) => execution(ex)
       }
-    } ~
-    post {
-      val recursos = recursoComercialRepository.obtenerTodosConRoles()
-      onComplete(recursos) {
-        case Success(value) => complete(value)
-        case Failure(ex) => execution(ex)
-      }
     }
   }
 

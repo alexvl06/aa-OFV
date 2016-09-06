@@ -3,6 +3,7 @@ package portal.transaccional.autenticacion.service.util.JsonFormatters
 import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.infrastructure.dto.{Pregunta, Respuesta}
 import co.com.alianza.persistence.entities.{RecursoComercial, RolComercial}
+import portal.transaccional.autenticacion.service.dto.{PermisoRecursoDTO, RecursoDTO}
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import portal.transaccional.autenticacion.service.web.autenticacion.{AutenticarRequest, AutenticarUsuarioComercialRequest, AutenticarUsuarioEmpresarialRequest}
 import portal.transaccional.autenticacion.service.web.autorizacion.InvalidarTokenRequest
@@ -40,4 +41,7 @@ trait DomainJsonFormatters {
   //recurso graficos comercial
   implicit val rolesFormater = jsonFormat2(RolComercial)
   implicit val recursosFormater = jsonFormat3(RecursoComercial)
+  implicit val recursoDtoFormater = jsonFormat2(RecursoDTO)
+  implicit val permisoDtoFormater = jsonFormat1(PermisoRecursoDTO)
+
 }
