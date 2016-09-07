@@ -16,12 +16,11 @@ import spray.routing._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success }
 
-case class AutenticacionService(
-    autenticacionRepositorio: AutenticacionRepository,
-    autenticacionEmpresaRepositorio: AutenticacionEmpresaRepository,
-    autenticacionComercialRepositorio: AutenticacionComercialRepository,
-    kafkaActor: ActorSelection
-)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
+case class AutenticacionService(  autenticacionRepositorio: AutenticacionRepository,
+                                  autenticacionEmpresaRepositorio: AutenticacionEmpresaRepository,
+                                  autenticacionComercialRepositorio: AutenticacionComercialRepository,
+                                  kafkaActor: ActorSelection)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters
+                                  with CrossHeaders {
 
   val autenticar = "autenticar"
   val autenticarUsuarioEmpresa = "autenticarUsuarioEmpresa"
