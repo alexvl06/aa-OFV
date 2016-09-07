@@ -19,6 +19,7 @@ import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioE
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioRepository
 import portal.transaccional.autenticacion.service.web.autorizacion.{ AutorizacionRecursoComercialService, AutorizacionService }
 import portal.transaccional.autenticacion.service.web.autenticacion.AutenticacionService
+import portal.transaccional.autenticacion.service.web.sesion.SesionService
 import co.com.alianza.web.PreguntasAutovalidacionService
 import portal.transaccional.autenticacion.service.web.ip.IpService
 
@@ -55,6 +56,7 @@ case class AlianzaRouter(
         user =>
           IpsUsuariosService(kafkaActor, ipsUsuarioActor).route(user) ~
             IpService(user, ipRepo).route ~
+            SesionService().route ~
             ActualizacionService(actualizacionActor, kafkaActor).route(user) ~
             HorarioEmpresaService(kafkaActor, horarioEmpresaActor).route(user) ~
             new AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).secureRoute(user) ~
