@@ -106,7 +106,7 @@ case class UsuarioComercialDriverRepository(usuarioDAO: UsuarioComercialDAOs)(im
     }
   }
 
-  def existeUsuario(nombreUsuario: String): Future[Boolean] =  usuarioDAO.existeUsuario(nombreUsuario)
+  def existeUsuario(nombreUsuario: String): Future[Boolean] = usuarioDAO.existeUsuario(nombreUsuario)
 
   def crearUsuario(nombreUsuario: String, ip: String): Future[Int] = usuarioDAO.create(nombreUsuario, ip)
 }

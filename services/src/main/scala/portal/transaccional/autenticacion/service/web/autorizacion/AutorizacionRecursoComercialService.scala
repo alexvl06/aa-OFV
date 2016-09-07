@@ -17,15 +17,15 @@ import scala.util.{ Failure, Success }
 case class AutorizacionRecursoComercialService(autorizacionRepository: AutorizacionRecursoComercialRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   override def route: Route = {
-    pathPrefix("recursoComercial"/Segment) {
+    pathPrefix("recursoComercial" / Segment) {
       recurso =>
-      pathEndOrSingleSlash {
-        roles(recurso)
-      }
+        pathEndOrSingleSlash {
+          roles(recurso)
+        }
     }
   }
 
-  private def roles(recurso:String) = {
+  private def roles(recurso: String) = {
     get {
       val roles = autorizacionRepository.obtenerRolesPorRecurso(recurso)
       onComplete(roles) {

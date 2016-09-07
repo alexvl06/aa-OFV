@@ -52,9 +52,9 @@ case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository, usua
     for {
       cliente <- ldapRepo.autenticarLdap(usuario, tipoUsuario, password)
       existe <- usuarioComercialRepo.existeUsuario(usuario)
-      _ <- if(!existe)  usuarioComercialRepo.crearUsuario(usuario, ip) else Future(true)
+      _ <- if (!existe) usuarioComercialRepo.crearUsuario(usuario, ip) else Future(true)
       usuarioComercial <- usuarioComercialRepo.getUser(cliente.usuario)
-      _ <- usuarioComercialRepo.updateIpFecha( usuario, ip)
+      _ <- usuarioComercialRepo.updateIpFecha(usuario, ip)
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
       token <- generarTokenComercial(cliente, usuarioComercial, tipoUsuario, ip, inactividad.valor)
       _ <- usuarioComercialRepo.crearToken(usuarioComercial.id, AesUtil.encriptarToken(token))
@@ -77,10 +77,10 @@ case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository, usua
     for {
       usuario <- usuarioComercialAdminRepo.obtenerUsuario(usuario)
       _ <- usuarioComercialAdminRepo.validarContrasena(contrasena, usuario)
-      inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
-      token <- generarTokenAdminComercial(usuario, ip, inactividad.valor)
+      inactividad <- Future(30000) //maximo numero que soporta el front end
+      token <- generarTokenAdminComercial(usuario, ip, inactividad.toString)
       _ <- usuarioComercialAdminRepo.crearToken(usuario.id, AesUtil.encriptarToken(token))
-      sesion <- sesionRepo.crearSesion(token, inactividad.valor.toInt, None)
+      sesion <- sesionRepo.crearSesion(token, inactividad, None)
       actualizarIP <- usuarioComercialAdminRepo.actualizarIp(usuario.id, ip)
       actualizarFechaUltimoIngreso <- usuarioComercialAdminRepo.actualizarFechaIngreso(usuario.id, new Timestamp((new Date).getTime))
     } yield token
@@ -93,19 +93,18 @@ case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository, usua
    * @param inactividad
    * @return
    */
-  private def generarTokenComercial(cliente: UsuarioLdapDTO, usuario: UsuarioComercial, tipoUsuario: Int, ip: String, inactividad: String): Future[String] =
-    Future {
-      val fiduciaria = TiposCliente.comercialFiduciaria.id
-      val tipoCliente = {
-        tipoUsuario match {
-          case `fiduciaria` => TiposCliente.comercialFiduciaria
-          case _ => TiposCliente.comercialValores
-        }
+  private def generarTokenComercial(cliente: UsuarioLdapDTO, usuario: UsuarioComercial, tipoUsuario: Int, ip: String, inactividad: String): Future[String] = {
+    val fiduciaria = TiposCliente.comercialFiduciaria.id
+    val tipoCliente = {
+      tipoUsuario match {
+        case `fiduciaria` => TiposCliente.comercialFiduciaria
+        case _ => TiposCliente.comercialValores
       }
-      Token.generarToken(usuario.usuario, cliente.identificacion.get, "C", usuario.ipUltimoIngreso.getOrElse(ip), usuario.fechaUltimoIngreso.getOrElse(
-        new Date(System.currentTimeMillis())
-      ), inactividad, tipoCliente)
     }
+    val token = Token.generarToken(usuario.usuario, cliente.identificacion.get, "C", usuario.ipUltimoIngreso.getOrElse(ip),
+      usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())), inactividad, tipoCliente)
+    Future.successful(token)
+  }
 
   /**
    * Generar token
