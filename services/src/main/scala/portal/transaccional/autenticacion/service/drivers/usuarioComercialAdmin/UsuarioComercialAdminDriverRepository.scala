@@ -6,12 +6,13 @@ import java.util.Date
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.exceptions.ValidacionException
+import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.persistence.entities.UsuarioComercialAdmin
 import co.com.alianza.util.clave.Crypto
 import enumerations.AppendPasswordUser
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.UsuarioComercialAdminDAOs
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * Created by alexandra on 5/08/16.
@@ -39,7 +40,8 @@ case class UsuarioComercialAdminDriverRepository(usuarioDAO: UsuarioComercialAdm
 
   /**
    * Validar la contrasena
-   * @param contrasena
+    *
+    * @param contrasena
    * @param usuario
    * @return
    */
@@ -63,6 +65,10 @@ case class UsuarioComercialAdminDriverRepository(usuarioDAO: UsuarioComercialAdm
       crearUsuario <- usuarioDAO.create(UsuarioComercialAdmin(0, correo, usuario, None, None, None, None, fechaActual, Some(nombre)))
       crearContrasena <- crearContrasena(contrasena, crearUsuario)
     } yield crearUsuario
+  }
+
+  def actualizarContrasena(usuario: UsuarioAuth, contrasena: String): Future[Int] = {
+    crearContrasena(contrasena, usuario.id)
   }
 
   private def crearContrasena(contrasena: String, id: Int) = {
@@ -91,4 +97,6 @@ case class UsuarioComercialAdminDriverRepository(usuarioDAO: UsuarioComercialAdm
       case _ => Future.failed(ValidacionException("401.8", "Error tipo cliente no valido"))
     }
   }
+
+
 }
