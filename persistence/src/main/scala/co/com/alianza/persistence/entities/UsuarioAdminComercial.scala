@@ -7,7 +7,7 @@ import CustomDriver.simple._
  * Created by s4n on 2016
  */
 case class UsuarioComercialAdmin(id: Int, correo: String, usuario: String, contrasena: Option[String], token: Option[String], ipUltimoIngreso: Option[String],
-  fechaUltimoIngreso: Option[Timestamp], fechaActualizacion: Timestamp)
+  fechaUltimoIngreso: Option[Timestamp], fechaActualizacion: Timestamp, name: Option[String])
 
 class UsuarioComercialAdminTable(tag: Tag) extends Table[UsuarioComercialAdmin](tag, "USUARIO_COMERCIAL_ADMIN") {
   def id = column[Int]("ID", O.PrimaryKey, O.AutoInc) // This is the primary key column
@@ -21,7 +21,7 @@ class UsuarioComercialAdminTable(tag: Tag) extends Table[UsuarioComercialAdmin](
   def fechaActualizacion = column[Timestamp]("FECHA_ACTUALIZACION")
 
   // Every table needs a * projection with the same type as the table's type parameter
-  def * = (id, correo, usuario, contrasena, token, ipUltimoIngreso, fechaUltimoIngreso, fechaActualizacion) <> (
+  def * = (id, correo, usuario, contrasena, token, ipUltimoIngreso, fechaUltimoIngreso, fechaActualizacion, name) <> (
     UsuarioComercialAdmin.tupled, UsuarioComercialAdmin.unapply
   )
 }

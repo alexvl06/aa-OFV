@@ -7,10 +7,10 @@ import portal.transaccional.autenticacion.service.dto.PermisoRecursoDTO
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import spray.http.StatusCodes
-import spray.routing.{Route, StandardRoute}
+import spray.routing.{ Route, StandardRoute }
 
 import scala.concurrent.ExecutionContext
-import scala.util.{Failure, Success}
+import scala.util.{ Failure, Success }
 
 /**
  * Created by dfbaratov on 23/08/16.
@@ -18,13 +18,13 @@ import scala.util.{Failure, Success}
 case class AutorizacionRecursoComercialService(autorizacionRepository: AutorizacionRecursoComercialRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   override def route: Route = {
-    pathPrefix("recursoComercial"/Segment) {
+    pathPrefix("recursoComercial" / Segment) {
       recurso =>
         pathEndOrSingleSlash {
           roles(recurso)
         }
     } ~
-    pathPrefix("recursoComercial"){
+      pathPrefix("recursoComercial") {
         pathPrefix("admin") {
           pathPrefix("recursos") {
             actualizarRecurso()
@@ -45,13 +45,13 @@ case class AutorizacionRecursoComercialService(autorizacionRepository: Autorizac
 
   private def actualizarRecurso() = {
     post {
-      entity(as[PermisoRecursoDTO]){
+      entity(as[PermisoRecursoDTO]) {
         permisoRecurso =>
-        val respuesta = autorizacionRepository.actualizarRecursos(permisoRecurso)
-        onComplete(respuesta) {
-          case Success(value) => complete(StatusCodes.OK)
-          case Failure(ex) => execution(ex)
-        }
+          val respuesta = autorizacionRepository.actualizarRecursos(permisoRecurso)
+          onComplete(respuesta) {
+            case Success(value) => complete(StatusCodes.OK)
+            case Failure(ex) => execution(ex)
+          }
       }
 
     }
