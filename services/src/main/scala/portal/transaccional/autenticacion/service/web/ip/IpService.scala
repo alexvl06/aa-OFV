@@ -37,7 +37,6 @@ case class IpService(user: UsuarioAuth, ipRepo: IpRepository)(implicit val ec: E
               case TiposCliente.clienteIndividual => ipRepo.agregarIpHabitualUsuario(user.identificacionUsuario, ip.value)
               case _ => ipRepo.agregarIPHabitualUsuarioEmpresarialAdmin(user.id, ip.value, Some(user.tipoIdentificacion))
             }
-
             onComplete(resultado) {
               case Success(value) => complete("Registro de IP Exitoso")
               case Failure(ex) => complete((StatusCodes.Unauthorized, "El usuario no esta autorizado para registrar ip"))

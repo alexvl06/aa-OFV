@@ -27,15 +27,15 @@ import scala.util.{ Failure, Success }
  * Created by s4n 2016
  */
 case class AutorizacionService(
-  usuarioRepository: UsuarioRepository,
-  usuarioAgenteRepository: UsuarioEmpresarialRepository,
-  usuarioAdminRepository: UsuarioEmpresarialAdminRepository,
-  autorizacionRepository: AutorizacionUsuarioRepository,
-  kafkaActor: ActorSelection,
-  autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository,
-  autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository,
-  autorizacionComercialRepo: AutorizacionUsuarioComercialRepository,
-  autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository
+    usuarioRepository: UsuarioRepository,
+    usuarioAgenteRepository: UsuarioEmpresarialRepository,
+    usuarioAdminRepository: UsuarioEmpresarialAdminRepository,
+    autorizacionRepository: AutorizacionUsuarioRepository,
+    kafkaActor: ActorSelection,
+    autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository,
+    autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository,
+    autorizacionComercialRepo: AutorizacionUsuarioComercialRepository,
+    autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository
 )(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   val invalidarTokenPath = "invalidarToken"
@@ -102,8 +102,6 @@ case class AutorizacionService(
             case `comercialAdmin` => obtenerUsuarioComercialMock(TiposCliente.clienteAdministrador, usuario.usuario)
             case _ => Future.failed(NoAutorizado("Tipo usuario no existe"))
           }
-          println(usuario.tipoCliente)
-          println(resultado)
           onComplete(resultado) {
             case Success(value) => execution(value)
             case Failure(ex) => execution(ex)

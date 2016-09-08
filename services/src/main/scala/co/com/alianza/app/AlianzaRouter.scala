@@ -22,8 +22,10 @@ import portal.transaccional.autenticacion.service.web.autenticacion.Autenticacio
 import portal.transaccional.autenticacion.service.web.sesion.SesionService
 import co.com.alianza.web.PreguntasAutovalidacionService
 import portal.transaccional.autenticacion.service.drivers.rolRecursoComercial.{ RecursoComercialRepository, RolComercialRepository }
+import portal.transaccional.autenticacion.service.drivers.usuarioComercialAdmin.UsuarioComercialAdminRepository
 import portal.transaccional.autenticacion.service.web.ip.IpService
 import portal.transaccional.autenticacion.service.web.recursoComercial.RecursoGraficoComercialService
+import portal.transaccional.autenticacion.service.web.comercial.ComercialService
 
 case class AlianzaRouter(
     autenticacionRepo: AutenticacionRepository, autenticacionEmpresaRepositorio: AutenticacionEmpresaRepository,
@@ -38,7 +40,8 @@ case class AlianzaRouter(
     autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository, preguntasValidacionRepository: PreguntasAutovalidacionRepository,
     respuestaUsuarioRepository: RespuestaUsuarioRepository, respuestaUsuarioAdminRepository: RespuestaUsuarioRepository, ipRepo: IpRepository,
     autorizacionComercialRepo: AutorizacionUsuarioComercialRepository, autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository,
-    autorizacionRecursoComercialRepository: AutorizacionRecursoComercialRepository, recursoComercialRepository: RecursoComercialRepository, rolComercialRepository: RolComercialRepository
+    autorizacionRecursoComercialRepository: AutorizacionRecursoComercialRepository, recursoComercialRepository: RecursoComercialRepository,
+    rolComercialRepository: RolComercialRepository, usuarioComercialAdminRepo: UsuarioComercialAdminRepository
 )(implicit val system: ActorSystem) extends HttpServiceActor with RouteConcatenation with CrossHeaders with ServiceAuthorization with ActorLogging {
 
   import system.dispatcher
@@ -60,6 +63,7 @@ case class AlianzaRouter(
           IpsUsuariosService(kafkaActor, ipsUsuarioActor).route(user) ~
             IpService(user, ipRepo).route ~
             SesionService().route ~
+            ComercialService(user, usuarioComercialAdminRepo).route ~
             ActualizacionService(actualizacionActor, kafkaActor).route(user) ~
             HorarioEmpresaService(kafkaActor, horarioEmpresaActor).route(user) ~
             new AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).secureRoute(user) ~
