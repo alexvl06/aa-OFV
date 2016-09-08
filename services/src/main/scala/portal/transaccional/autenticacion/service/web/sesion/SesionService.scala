@@ -11,7 +11,7 @@ import scala.concurrent.ExecutionContext
 /**
  * Created by alexandra on 2016
  */
-case class SesionService ()(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
+case class SesionService()(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   val actualizarSesion = "actualizarSesion"
 
@@ -31,6 +31,4 @@ case class SesionService ()(implicit val ec: ExecutionContext) extends CommonRES
   }
 
 }
-
-
 

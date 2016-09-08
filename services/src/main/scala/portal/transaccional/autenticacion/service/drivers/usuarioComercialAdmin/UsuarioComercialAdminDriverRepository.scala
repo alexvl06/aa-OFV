@@ -55,7 +55,7 @@ case class UsuarioComercialAdminDriverRepository(usuarioDAO: UsuarioComercialAdm
   def crearUsuario(tipoCliente: TiposCliente, contrasena: String, usuario: String, nombre: String, correo: String): Future[Int] = {
     val fechaActual = new Timestamp((new Date).getTime)
     for {
-      //validarPeticion <- validarTipoCliente(tipoCliente)
+      validarPeticion <- validarTipoCliente(tipoCliente)
       obtenerUsuario <- usuarioDAO.getByUser(usuario)
       validar <- validarUsuario(obtenerUsuario)
       obtenerCorreo <- usuarioDAO.getByEmail(correo)
