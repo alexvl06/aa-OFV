@@ -3,6 +3,7 @@ package portal.transaccional.autenticacion.service.web.autorizacion
 import co.com.alianza.app.CrossHeaders
 import co.com.alianza.exceptions._
 import portal.transaccional.autenticacion.service.drivers.autorizacion.AutorizacionRecursoComercialRepository
+import portal.transaccional.autenticacion.service.dto.PermisoRecursoDTO
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import spray.http.StatusCodes
@@ -17,21 +18,42 @@ import scala.util.{ Failure, Success }
 case class AutorizacionRecursoComercialService(autorizacionRepository: AutorizacionRecursoComercialRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   override def route: Route = {
-    pathPrefix("recursoComercial"/Segment) {
+    pathPrefix("recursoComercial" / Segment) {
       recurso =>
-      pathEndOrSingleSlash {
-        roles(recurso)
+        pathEndOrSingleSlash {
+          roles(recurso)
+        }
+    } ~
+      pathPrefix("recursoComercial") {
+        pathPrefix("admin") {
+          pathPrefix("recursos") {
+            actualizarRecurso()
+          }
+        }
       }
-    }
   }
 
-  private def roles(recurso:String) = {
+  private def roles(recurso: String) = {
     get {
       val roles = autorizacionRepository.obtenerRolesPorRecurso(recurso)
       onComplete(roles) {
         case Success(value) => complete(value)
         case Failure(ex) => execution(ex)
       }
+    }
+  }
+
+  private def actualizarRecurso() = {
+    post {
+      entity(as[PermisoRecursoDTO]) {
+        permisoRecurso =>
+          val respuesta = autorizacionRepository.actualizarRecursos(permisoRecurso)
+          onComplete(respuesta) {
+            case Success(value) => complete(StatusCodes.OK)
+            case Failure(ex) => execution(ex)
+          }
+      }
+
     }
   }
 

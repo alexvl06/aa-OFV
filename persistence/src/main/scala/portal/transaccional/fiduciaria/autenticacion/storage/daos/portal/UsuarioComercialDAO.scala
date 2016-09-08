@@ -49,7 +49,7 @@ case class UsuarioComercialDAO()(implicit dcConfig: DBConfig) extends TableQuery
   }
 
   def existeUsuario(nombreUsuario: String): Future[Boolean] = {
-      run(this.filter(_.usuario === nombreUsuario).exists.result)
+    run(this.filter(_.usuario === nombreUsuario).exists.result)
   }
 
 }

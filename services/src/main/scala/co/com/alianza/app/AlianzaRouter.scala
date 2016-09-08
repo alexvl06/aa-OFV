@@ -19,8 +19,13 @@ import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioE
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioRepository
 import portal.transaccional.autenticacion.service.web.autorizacion.{ AutorizacionRecursoComercialService, AutorizacionService }
 import portal.transaccional.autenticacion.service.web.autenticacion.AutenticacionService
+import portal.transaccional.autenticacion.service.web.sesion.SesionService
 import co.com.alianza.web.PreguntasAutovalidacionService
+import portal.transaccional.autenticacion.service.drivers.rolRecursoComercial.{ RecursoComercialRepository, RolComercialRepository }
+import portal.transaccional.autenticacion.service.drivers.usuarioComercialAdmin.UsuarioComercialAdminRepository
 import portal.transaccional.autenticacion.service.web.ip.IpService
+import portal.transaccional.autenticacion.service.web.recursoComercial.RecursoGraficoComercialService
+import portal.transaccional.autenticacion.service.web.comercial.ComercialService
 
 case class AlianzaRouter(
     autenticacionRepo: AutenticacionRepository, autenticacionEmpresaRepositorio: AutenticacionEmpresaRepository,
@@ -35,7 +40,8 @@ case class AlianzaRouter(
     autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository, preguntasValidacionRepository: PreguntasAutovalidacionRepository,
     respuestaUsuarioRepository: RespuestaUsuarioRepository, respuestaUsuarioAdminRepository: RespuestaUsuarioRepository, ipRepo: IpRepository,
     autorizacionComercialRepo: AutorizacionUsuarioComercialRepository, autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository,
-    autorizacionRecursoComercialRepository: AutorizacionRecursoComercialRepository
+    autorizacionRecursoComercialRepository: AutorizacionRecursoComercialRepository, recursoComercialRepository: RecursoComercialRepository,
+    rolComercialRepository: RolComercialRepository, usuarioComercialAdminRepo: UsuarioComercialAdminRepository
 )(implicit val system: ActorSystem) extends HttpServiceActor with RouteConcatenation with CrossHeaders with ServiceAuthorization with ActorLogging {
 
   import system.dispatcher
@@ -44,7 +50,8 @@ case class AlianzaRouter(
     AutorizacionService(usuarioRepositorio, usuarioAgenteRepositorio, usuarioAdminRepositorio, autorizacionUsuarioRepo, kafkaActor, autorizacionAgenteRepo,
       autorizacionAdminRepo, autorizacionComercialRepo, autorizacionComercialAdminRepo).route ~
       AutenticacionService(autenticacionRepo, autenticacionEmpresaRepositorio, autenticacionComercialRepositorio, kafkaActor).route ~
-      new AutorizacionRecursoComercialService(autorizacionRecursoComercialRepository).route ~
+      RecursoGraficoComercialService(recursoComercialRepository, rolComercialRepository).route ~
+      AutorizacionRecursoComercialService(autorizacionRecursoComercialRepository).route ~
       new ConfrontaService(confrontaActor).route ~
       new EnumeracionService().route ~
       UsuarioService(kafkaActor, usuariosActor).route ~
@@ -55,6 +62,8 @@ case class AlianzaRouter(
         user =>
           IpsUsuariosService(kafkaActor, ipsUsuarioActor).route(user) ~
             IpService(user, ipRepo).route ~
+            SesionService().route ~
+            ComercialService(user, usuarioComercialAdminRepo).route ~
             ActualizacionService(actualizacionActor, kafkaActor).route(user) ~
             HorarioEmpresaService(kafkaActor, horarioEmpresaActor).route(user) ~
             new AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).secureRoute(user) ~
