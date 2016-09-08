@@ -16,6 +16,8 @@ trait UsuarioComercialAdminDAOs {
 
   def getByUser(usuario: String): Future[Option[UsuarioComercialAdmin]]
 
+  def getByEmail(email: String): Future[Option[UsuarioComercialAdmin]]
+
   def updateLastIp(idUsuario: Int, ipActual: String): Future[Int]
 
   def updateLastDate(idUsuario: Int, fechaActual: Timestamp): Future[Int]
@@ -25,5 +27,7 @@ trait UsuarioComercialAdminDAOs {
   def createToken(idUsuario: Int, token: String): Future[Int]
 
   def deleteToken(token: String): Future[Int]
+
+  def create(usuarioComercialAdmin: UsuarioComercialAdmin): Future[Int]
 
 }

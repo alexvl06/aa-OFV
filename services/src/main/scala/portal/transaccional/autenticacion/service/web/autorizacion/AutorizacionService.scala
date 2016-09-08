@@ -92,8 +92,6 @@ case class AutorizacionService(usuarioRepository: UsuarioRepository, usuarioAgen
             case `comercialAdmin` => obtenerUsuarioComercialMock(TiposCliente.clienteAdministrador, usuario.usuario)
             case _ => Future.failed(NoAutorizado("Tipo usuario no existe"))
           }
-          println(usuario.tipoCliente)
-          println(resultado)
           onComplete(resultado) {
             case Success(value) => execution(value)
             case Failure(ex) => execution(ex)

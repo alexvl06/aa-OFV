@@ -33,5 +33,4 @@ trait UsuarioComercialRepository {
 
   def crearUsuario(nombreUsuario: String, ip: String): Future[Int]
 
-
 }
