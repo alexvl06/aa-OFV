@@ -47,6 +47,20 @@ case class ComercialService(user: UsuarioAuth, comercialRepo: UsuarioComercialAd
     }
   }
 
+  private def actualizarContrasena() = {
+    post {
+      entity(as[String]) {
+        contrasena =>
+          val resultado = comercialRepo.actualizarContrasena(user, contrasena)
+          onComplete(resultado) {
+            case Success(value) =>
+              complete(value.toString)
+            case Failure(ex) => execution(ex)
+          }
+      }
+    }
+  }
+
   def execution(ex: Any): StandardRoute = {
     ex match {
       case ex: ValidacionException => complete((StatusCodes.Conflict, ex))
