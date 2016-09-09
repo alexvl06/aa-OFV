@@ -111,6 +111,7 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
         resolveFutureValidation(
           permisosFuture,
           { (listaPermisos: Seq[Int]) =>
+            println("ESTA ES LA LISTA DE PERMISOS",listaPermisos)
             context stop self
             PermisosLoginRespuesta(listaPermisos.contains(2), listaPermisos.contains(4), listaPermisos.contains(3),
               listaPermisos.contains(1), listaPermisos.contains(6), listaPermisos.contains(7), tienePermisosPagosMasivosFidCore).toJson
@@ -148,7 +149,8 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
 
   private def verificarPermisosCore(numeroIdentificacion: String): Boolean = {
     //Se consulta los permisos del core sobre el cliente fid
-    val cliente: Future[Validation[ErrorAutenticacion, Cliente]] = (for {
+    val cliente: Future[Validation[ErrorAutenticacion, Cliente]] = (
+      for {
       cliente <- ValidationT(obtenerClienteSP(numeroIdentificacion))
     } yield cliente).run
     //TODO: Await ???
