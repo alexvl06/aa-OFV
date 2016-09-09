@@ -69,8 +69,11 @@ case class UsuarioComercialAdminDriverRepository(usuarioDAO: UsuarioComercialAdm
     } yield crearUsuario
   }
 
-  def actualizarContrasena(usuario: UsuarioAuth, contrasena: String): Future[Int] = {
-    crearContrasena(contrasena, usuario.id)
+  def actualizarContrasena(usuario: UsuarioAuth, contrasenaActual: String, contrasenaNueva:String): Future[Int] = {
+    for {
+       validar <- validarContraseñaActual(usuario, contrasenaActual)
+       crear <- crearContrasena(contrasenaNueva, usuario.id)
+    } yield crear
   }
 
   private def crearContrasena(contrasena: String, id: Int) = {
@@ -98,6 +101,15 @@ case class UsuarioComercialAdminDriverRepository(usuarioDAO: UsuarioComercialAdm
       case TiposCliente.comercialAdmin => Future.successful(true)
       case _ => Future.failed(ValidacionException("401.8", "Error tipo cliente no valido"))
     }
+  }
+
+  private def validarContraseñaActual(usuario: UsuarioAuth, contrasenaActual: String): Future[Boolean] = {
+    println(usuario)
+    val resultadoFuturo = for {
+      obtenerUsuario <- usuarioDAO.getById(usuario.id)
+      resultado <- validarContrasena(contrasenaActual,obtenerUsuario.get)
+    } yield resultado
+    resultadoFuturo
   }
 
 

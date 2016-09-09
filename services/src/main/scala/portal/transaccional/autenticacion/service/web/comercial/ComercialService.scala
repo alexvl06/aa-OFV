@@ -24,9 +24,10 @@ case class ComercialService(user: UsuarioAuth, comercialRepo: UsuarioComercialAd
         pathEndOrSingleSlash {
           crearAdministrador()
         }
-      } ~ path("contrasena") {
+      } ~
+      path("contrasena") {
         pathEndOrSingleSlash {
-          crearAdministrador()
+          actualizarContrasena()
         }
       }
     }
@@ -48,10 +49,10 @@ case class ComercialService(user: UsuarioAuth, comercialRepo: UsuarioComercialAd
   }
 
   private def actualizarContrasena() = {
-    post {
-      entity(as[String]) {
-        contrasena =>
-          val resultado = comercialRepo.actualizarContrasena(user, contrasena)
+    put {
+      entity(as[ActualizarContrasenaRequest]) {
+        request =>
+          val resultado = comercialRepo.actualizarContrasena(user, request.contrasenaActual, request.contrasenaNueva)
           onComplete(resultado) {
             case Success(value) =>
               complete(value.toString)

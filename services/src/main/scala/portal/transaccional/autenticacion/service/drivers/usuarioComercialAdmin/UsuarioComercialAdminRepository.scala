@@ -29,6 +29,6 @@ trait UsuarioComercialAdminRepository {
 
   def crearUsuario(tipoCliente: TiposCliente, contrasena: String, usuario: String, nombre: String, correo: String): Future[Int]
 
-  def actualizarContrasena(usuario: UsuarioAuth, contrasena: String): Future[Int]
+  def actualizarContrasena(usuario: UsuarioAuth, contrasenaActual: String, contrasenaNueva:String): Future[Int]
 
 }
