@@ -17,16 +17,19 @@ import scala.util.{ Failure, Success }
 
 case class RecursoGraficoComercialService(recursoComercialRepository: RecursoComercialRepository, rolComercialRepository: RolComercialRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
-  override def route: Route = {
-    pathPrefix("recursoComercial") {
-      pathPrefix("admin") {
-        pathPrefix("roles") {
+  val recursoComercialPath = "recursoComercial"
+  val adminPath = "admin"
+  val rolesPath = "roles"
+  val recursosPath = "recursos"
+
+  val route: Route = {
+    pathPrefix(recursoComercialPath / adminPath) {
+        path(rolesPath) {
           roles()
         } ~
-          pathPrefix("recursos") {
-            recursos()
-          }
-      }
+        path(recursosPath) {
+          recursos()
+        }
     }
   }
 

@@ -192,9 +192,9 @@ private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
   lazy val alianzaLdapDAO = AlianzaLdapDAO()
   lazy val usuarioComercialDAO = UsuarioComercialDAO()(config)
   lazy val usuarioComercialAdminDAO = UsuarioComercialAdminDAO()(config)
-  lazy val rolRecursoComercialDAO = RolRecursoComercialDAO()(config)
-  lazy val recursoComercialDAO = RecursoComercialDAO()(config)
-  lazy val rolComercialDAO = RolComercialDAO()(config)
+  lazy val rolRecursoComercialDAO = RolRecursoComercialDAO()(ex, config)
+  lazy val recursoComercialDAO = RecursoComercialDAO()(ex, config)
+  lazy val rolComercialDAO = RolComercialDAO()(ex, config)
 }
 
 /**

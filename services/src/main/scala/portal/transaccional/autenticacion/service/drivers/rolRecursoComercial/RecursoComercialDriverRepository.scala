@@ -16,9 +16,7 @@ case class RecursoComercialDriverRepository(recursoComercialDAO: RecursoComercia
       persistenceRecursos <- recursoComercialDAO.getAll()
       listaRolesF = persistenceRecursos.map(recurso => rolRecursoComercialDAO.obtenerRolesPorRecurso(recurso.nombre))
       listaRoles <- Future.sequence(listaRolesF)
-
       listaRecursosRoles = persistenceRecursos zip listaRoles
-      //listaResources = listaRecursosRoles.map( tupla => resourceFromPersistenceToDomain( tupla._1, tupla._2 ) )
     } yield listaRecursosRoles
   }
 
