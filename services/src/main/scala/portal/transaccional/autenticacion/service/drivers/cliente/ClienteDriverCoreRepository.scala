@@ -50,6 +50,6 @@ case class ClienteDriverCoreRepository(clienteCoreRepo: ClienteDAO)(implicit val
     }
   }
 
-  def validarFidInmobiliarios(numDocumento : String): Future[Boolean] = clienteCoreRepo.consultarFideicomisosInmobiliarios(numDocumento)
+  def validarFidInmobiliarios(numDocumento: String): Future[Boolean] = clienteCoreRepo.consultarFideicomisosInmobiliarios(numDocumento)
 
 }

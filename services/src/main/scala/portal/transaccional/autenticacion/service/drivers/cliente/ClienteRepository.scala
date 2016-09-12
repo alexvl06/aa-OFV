@@ -13,6 +13,6 @@ trait ClienteRepository {
 
   def validarEstado(cliente: Cliente): Future[Boolean]
 
-  def validarFidInmobiliarios(numDocumento : String): Future[Boolean]
+  def validarFidInmobiliarios(numDocumento: String): Future[Boolean]
 
 }

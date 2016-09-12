@@ -5,7 +5,7 @@ package co.com.alianza.commons.enumerations
  */
 object TipoPermisoInmobiliario extends Enumeration {
 
-    type TipoPermisoInmobiliario = Value
+  type TipoPermisoInmobiliario = Value
 
-    val estadoCartera, movimientosCaja, relacionUnidades, reporteConsolidado, movimientosPorEncargo, planPagos = Value
+  val estadoCartera, movimientosCaja, relacionUnidades, reporteConsolidado, movimientosPorEncargo, planPagos = Value
 }

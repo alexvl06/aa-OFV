@@ -1,6 +1,6 @@
 package portal.transaccional.autenticacion.service.drivers.rolRecursoComercial
 
-import co.com.alianza.persistence.entities.{RolComercial, RolRecursoComercial}
+import co.com.alianza.persistence.entities.{ RolComercial, RolRecursoComercial }
 
 import scala.concurrent.Future
 
@@ -11,6 +11,6 @@ trait RolRecursoComercialRepository {
 
   def obtenerRolesPorRecurso(nombreRecurso: String): Future[Seq[RolComercial]]
 
-  def actualizarPermisos( permisos: Seq[ RolRecursoComercial ] ) :Future[Option[Int]]
+  def actualizarPermisos(permisos: Seq[RolRecursoComercial]): Future[Option[Int]]
 
 }

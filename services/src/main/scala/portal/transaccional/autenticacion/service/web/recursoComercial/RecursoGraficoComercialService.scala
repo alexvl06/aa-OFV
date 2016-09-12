@@ -2,14 +2,14 @@ package portal.transaccional.autenticacion.service.web.recursoComercial
 
 import co.com.alianza.app.CrossHeaders
 import co.com.alianza.exceptions._
-import portal.transaccional.autenticacion.service.drivers.rolRecursoComercial.{RecursoComercialRepository, RolComercialRepository}
+import portal.transaccional.autenticacion.service.drivers.rolRecursoComercial.{ RecursoComercialRepository, RolComercialRepository }
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import spray.http.StatusCodes
-import spray.routing.{Route, StandardRoute}
+import spray.routing.{ Route, StandardRoute }
 
 import scala.concurrent.ExecutionContext
-import scala.util.{Failure, Success}
+import scala.util.{ Failure, Success }
 
 /**
  * Created by dfbaratov on 23/08/16.
@@ -20,12 +20,12 @@ case class RecursoGraficoComercialService(recursoComercialRepository: RecursoCom
   override def route: Route = {
     pathPrefix("recursoComercial") {
       pathPrefix("admin") {
-        pathPrefix("roles"){
-            roles()
+        pathPrefix("roles") {
+          roles()
         } ~
-        pathPrefix("recursos"){
-          recursos()
-        }
+          pathPrefix("recursos") {
+            recursos()
+          }
       }
     }
   }

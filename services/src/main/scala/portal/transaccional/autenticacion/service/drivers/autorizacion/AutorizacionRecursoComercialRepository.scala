@@ -12,6 +12,6 @@ trait AutorizacionRecursoComercialRepository {
 
   def obtenerRolesPorRecurso(nombreRecurso: String): Future[Seq[RolComercial]]
 
-  def actualizarRecursos(permisos: PermisoRecursoDTO) :Future[Option[Int]]
+  def actualizarRecursos(permisos: PermisoRecursoDTO): Future[Option[Int]]
 
 }

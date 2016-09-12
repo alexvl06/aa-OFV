@@ -27,27 +27,26 @@ case class RolRecursoComercialDAO()(implicit dcConfig: DBConfig) extends TableQu
   }
 
   /**
-    * Inserts a new instance of RolRecurso
-    *
-    * @param rolRecurso
-    * @return
-    */
-  def insertar( rolRecurso: RolRecursoComercial): Future[Int] = {
+   * Inserts a new instance of RolRecurso
+   *
+   * @param rolRecurso
+   * @return
+   */
+  def insertar(rolRecurso: RolRecursoComercial): Future[Int] = {
     val query = rolesRecurso += rolRecurso
-    run( query )
+    run(query)
   }
 
   /**
-    * Updates the permissions of a determined rol over a resource
-    *
-    * @param permisos
-    * @return
-    */
-  def actualizarPermisos( permisos: Seq[ RolRecursoComercial]): Future[Option[Int]] = {
+   * Updates the permissions of a determined rol over a resource
+   *
+   * @param permisos
+   * @return
+   */
+  def actualizarPermisos(permisos: Seq[RolRecursoComercial]): Future[Option[Int]] = {
     val queryDelete = rolesRecurso.delete
     val queryInsert = rolesRecurso ++= permisos
-    run ( queryDelete andThen queryInsert )
+    run(queryDelete andThen queryInsert)
   }
-
 
 }

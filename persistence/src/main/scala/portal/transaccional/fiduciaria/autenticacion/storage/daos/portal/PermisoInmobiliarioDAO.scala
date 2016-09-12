@@ -1,39 +1,53 @@
 package portal.transaccional.fiduciaria.autenticacion.storage.daos.portal
 
-import co.com.alianza.persistence.entities.{ PermisoInmobiliario, PermisoInmobiliarioTable }
+import co.com.alianza.persistence.entities.{ PermisoAgenteInmobiliario, PermisoInmobiliarioTable }
 import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
 import slick.lifted.TableQuery
 
-import scala.annotation.tailrec
 import scala.concurrent.Future
 
 /**
  * Created by alexandra on 2016
  */
-case class PermisoInmobiliarioDAO () (implicit dcConfig: DBConfig) extends TableQuery(new PermisoInmobiliarioTable(_)) with PermisoInmobiliarioDAOs {
+case class PermisoInmobiliarioDAO()(implicit dcConfig: DBConfig) extends TableQuery(new PermisoInmobiliarioTable(_)) with PermisoInmobiliarioDAOs {
 
   import dcConfig.DB._
   import dcConfig.driver.api._
 
-  def create(permisos: Seq[PermisoInmobiliario]): Future[Option[Int]] = {
+  def create(permisos: Seq[PermisoAgenteInmobiliario]): Future[Option[Int]] = {
     run((this ++= permisos).transactionally)
   }
 
-  def update(permisos: Seq[PermisoInmobiliario]): Future[Unit] = {
-    val query = DBIO.seq(permisos.map( p => this.filter(_ == p).update(p)): _*).transactionally
+  def updateByPerson(permisos: Seq[PermisoAgenteInmobiliario], idAgente : Int): Future[Option[Int]] = {
+    val deleteQuery = this.filter(_.idAgente === idAgente).delete
+    val createQuery = this ++= permisos
+    run(deleteQuery.andThen(createQuery).transactionally)
+  }
+
+  private def find2 (permiso : PermisoAgenteInmobiliario): dcConfig.driver.api.Query[PermisoInmobiliarioTable, PermisoAgenteInmobiliario, Seq] = {
+    this.filter(p => p.proyecto === permiso.proyecto && p.idAgente === permiso.idAgente && p.fideicomiso === permiso.fideicomiso &&
+                     p.tipoPermiso === permiso.tipoPermiso)
+  }
+
+  def delete(permisos: Seq[PermisoAgenteInmobiliario]): Future[Unit] = {
+    val queryDelete = permisos.map(p => find2(p).delete)
+    val query = DBIO.seq(queryDelete: _*).transactionally
     run(query)
   }
 
-  def delete(permisos: Seq[PermisoInmobiliario]): Future[Unit] = {
-    val query = DBIO.seq(permisos.map( p => this.filter(_ == p).delete): _*).transactionally
-    run(query)
+  def findByIdAgente(idAgente: Int): Future[Seq[PermisoAgenteInmobiliario]] = {
+    run(this.filter(_.idAgente === idAgente).result)
   }
 
-  def findByIdAgente(idAgente : Int): Future[Seq[PermisoInmobiliario]] = {
-    run(this.filter(_.idAgente == idAgente ).result)
+  def findByProyecto(proyecto: Int): Future[Seq[PermisoAgenteInmobiliario]] = {
+    run(this.filter(_.proyecto === proyecto).result)
   }
 
-  def findByProyecto(proyecto : Int): Future[Seq[PermisoInmobiliario]] = {
-    run(this.filter(_.proyecto == proyecto).result)
+  def findByFid(fid: Int): Future[Seq[PermisoAgenteInmobiliario]] = {
+    run(this.filter(_.fideicomiso === fid).result)
+  }
+
+  def findBy3(proyecto: Int, idAgente: Int, fid: Int): Future[Seq[PermisoAgenteInmobiliario]] = {
+    run(this.filter(p => p.proyecto === proyecto && p.idAgente === idAgente && p.fideicomiso === fid).result)
   }
 }
