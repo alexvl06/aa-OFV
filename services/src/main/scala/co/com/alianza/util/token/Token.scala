@@ -82,10 +82,10 @@ object Token {
     SignedJWT.parse(token)
   }
 
-  def autorizarToken(token: String): Boolean = {
+  def autorizarToken(token: String, validarExpiracionToken: Boolean = true): Boolean = {
     try {
       val signedJWT2 = SignedJWT.parse(token)
-      validarToken(signedJWT2)
+      validarToken(signedJWT2, validarExpiracionToken)
     } catch {
       case ex: Exception =>
         ex.printStackTrace()
@@ -93,12 +93,12 @@ object Token {
     }
   }
 
-  private def validarToken(signedJWT2: SignedJWT): Boolean = {
+  private def validarToken(signedJWT2: SignedJWT, validarExpiracionToken: Boolean): Boolean = {
     val verifier = new MACVerifier(SIGNING_KEY)
     val verify = signedJWT2.verify(verifier)
     verify match {
       case false => false
-      case true => validarExpiracion(signedJWT2)
+      case true => !validarExpiracionToken || validarExpiracion(signedJWT2)
     }
   }
 

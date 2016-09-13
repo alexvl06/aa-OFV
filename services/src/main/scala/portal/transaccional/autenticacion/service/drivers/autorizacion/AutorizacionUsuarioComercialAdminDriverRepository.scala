@@ -38,7 +38,7 @@ case class AutorizacionUsuarioComercialAdminDriverRepository(usuarioRepo: Usuari
   }
 
   private def validarToken(token: String): Future[Boolean] = {
-    Token.autorizarToken(token) match {
+    Token.autorizarToken(token, false) match {
       case true => Future.successful(true)
       case _ => Future.failed(NoAutorizado("Token erróneo"))
     }
