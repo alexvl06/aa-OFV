@@ -6,6 +6,7 @@ import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
 import co.com.alianza.commons.enumerations.TiposCliente
+import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import co.com.alianza.constants.{ LlavesReglaContrasena, TiposConfiguracion }
 import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.infrastructure.messages.CrearSesionUsuario
@@ -27,9 +28,9 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scala.reflect.ClassTag
 
 case class AutenticacionEmpresaDriverRepository(
-    usuarioRepo: UsuarioEmpresarialRepository, usuarioAdminRepo: UsuarioEmpresarialAdminRepository, clienteCoreRepo: ClienteRepository,
-    empresaRepo: EmpresaRepository, reglaRepo: ReglaContrasenaRepository, configuracionRepo: ConfiguracionRepository, ipRepo: IpEmpresaRepository,
-    sesionRepo: SesionRepository, respuestasRepo: RespuestaUsuarioRepository
+  usuarioRepo: UsuarioEmpresarialRepository, usuarioAdminRepo: UsuarioEmpresarialAdminRepository, clienteCoreRepo: ClienteRepository,
+  empresaRepo: EmpresaRepository, reglaRepo: ReglaContrasenaRepository, configuracionRepo: ConfiguracionRepository, ipRepo: IpEmpresaRepository,
+  sesionRepo: SesionRepository, respuestasRepo: RespuestaUsuarioRepository
 )(implicit val ex: ExecutionContext) extends AutenticacionEmpresaRepository {
 
   implicit val timeout = Timeout(10.seconds)
@@ -137,7 +138,8 @@ case class AutenticacionEmpresaDriverRepository(
       caducidad <- usuarioAdminRepo.validarCaducidadContrasena(TiposCliente.agenteEmpresarial, usuario, reglaDias.valor.toInt)
       actualizar <- usuarioAdminRepo.actualizarInfoUsuario(usuario, ip)
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
-      token <- generarTokenAdmin(usuario, ip, inactividad.valor)
+      //token <- generarToken(usuario, ip, inactividad.valor, cliente.wcli_constructor)
+      token <- generarToken(usuario, ip, inactividad.valor, "S")
       sesion <- sesionRepo.crearSesion(token, inactividad.valor.toInt, Option(EmpresaDTO.entityToDto(empresa)))
       asociarToken <- usuarioAdminRepo.actualizarToken(usuario.id, AesUtil.encriptarToken(token))
       respuestas <- respuestasRepo.getRespuestasById(usuario.id)
@@ -167,23 +169,19 @@ case class AutenticacionEmpresaDriverRepository(
       inactividad, TiposCliente.agenteEmpresarial, Some(usuario.identificacion))
   }
 
-  private def generarTokenAdmin(usuario: UsuarioEmpresarialAdmin, ip: String, inactividad: String): Future[String] = {
+  private def generarTokenAdmin(usuario: UsuarioEmpresarialAdmin, ip: String, inactividad: String, tiposCliente: TiposCliente): Future[String] = {
+    Future {Token.generarToken(usuario.usuario, usuario.correo, getTipoPersona(usuario.tipoIdentificacion),
+      usuario.ipUltimoIngreso.get, usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())),
+      inactividad, tiposCliente, Some(usuario.identificacion))}
+  }
 
-    //    Future {Token.generarToken(usuario.usuario, usuario.correo, getTipoPersona(usuario.tipoIdentificacion),
-    //      usuario.ipUltimoIngreso.get, usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())),
-    //      inactividad, TiposCliente.clienteAdministrador, Some(usuario.identificacion))}
-    clienteCoreRepo.validarFidInmobiliarios(usuario.identificacion).map {
-      case true =>
-        Token.generarToken(usuario.usuario, usuario.correo, getTipoPersona(usuario.tipoIdentificacion),
-          usuario.ipUltimoIngreso.get, usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())),
-          inactividad, TiposCliente.clienteAdminInmobiliario, Some(usuario.identificacion))
-
-      case false =>
-        val n = Token.generarToken(usuario.usuario, usuario.correo, getTipoPersona(usuario.tipoIdentificacion),
-          usuario.ipUltimoIngreso.get, usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())),
-          inactividad, TiposCliente.clienteAdministrador, Some(usuario.identificacion))
-        println(n)
-        n
+  private def generarToken(usuario : UsuarioEmpresarialAdmin, ip : String, inactividad: String, esConstructor : String) = {
+    if(esConstructor == "S" && usuario.identificacion == "860000185") {
+      println("ENTRO POR AQUI")
+      generarTokenAdmin(usuario, ip, inactividad, TiposCliente.clienteAdminInmobiliario)
+    } else {
+      println("NO ENTRO POR AQUI")
+      generarTokenAdmin(usuario, ip, inactividad, TiposCliente.clienteAdministrador)
     }
   }
 

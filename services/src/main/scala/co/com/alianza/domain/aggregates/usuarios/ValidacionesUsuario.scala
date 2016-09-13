@@ -125,8 +125,7 @@ object ValidacionesUsuario {
         (x: Option[Cliente]) =>
           x match {
             case None => zFailure(ErrorClienteNoExiste(errorClienteNoExiste))
-            case Some(cliente) =>
-              validacionConsultaCliente(cliente, tipoIdentificacion, validarCorreo)
+            case Some(cliente) => validacionConsultaCliente(cliente, tipoIdentificacion, validarCorreo)
           }
       })
     } else {
