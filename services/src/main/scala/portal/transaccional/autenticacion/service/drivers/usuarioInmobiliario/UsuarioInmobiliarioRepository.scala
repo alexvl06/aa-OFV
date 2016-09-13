@@ -16,6 +16,10 @@ trait UsuarioInmobiliarioRepository {
 
   def findByProyect(proyecto : Int): Future[Seq[PermisoAgenteInmobiliario]]
 
-  def update(proyectos: Seq[Int], agentesInmob: Seq[Int], permisos: Seq[TipoPermisoInmobiliario], fid: Int): Future[Option[Int]]
+  def updateByPerson(proyectos: Seq[Int], agentesInmob: Seq[Int], permisos: Seq[TipoPermisoInmobiliario], fid: Int): Future[Option[Int]]
+
+  def updateByProject(proyecto: Int, agentesInmob: Seq[Int], permisos: Seq[TipoPermisoInmobiliario], fid: Int): Future[Option[Int]]
+
+  def updateByFid(proyecto: Int, agentesInmob: Seq[(Int,Seq[TipoPermisoInmobiliario])], fid: Int): Future[Option[Int]]
 
 }

@@ -16,12 +16,27 @@ import scala.util.{ Failure, Success }
 case class AgenteInmobiliarioService(agenteRepo: UsuarioInmobiliarioRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with
   DomainJsonFormatters with CrossHeaders {
 
-  val permisos = "/agente_inmobiliario/permisos"
+  val permisos = "agenteInmobiliario"
+  val actualizarPath = "updateByPerson"
+  val actualizarPath2 = "updateByProject"
+  val actualizarPath3 = "updateByFid"
 
   val route: Route = {
     pathPrefix(permisos) {
       pathEndOrSingleSlash {
         consultar ~ crear
+      } ~ pathPrefix(actualizarPath) {
+        pathEndOrSingleSlash {
+          actualizarByPerson
+        }
+      } ~ pathPrefix(actualizarPath2) {
+        pathEndOrSingleSlash {
+          actualizarByProject
+        }
+      } ~ pathPrefix(actualizarPath3) {
+        pathEndOrSingleSlash {
+          actualizarByFid
+        }
       }
     }
   }
@@ -40,30 +55,55 @@ case class AgenteInmobiliarioService(agenteRepo: UsuarioInmobiliarioRepository)(
 
   private def consultar = {
     get {
-      path("proyectos") {
-        parameters('proyecto.as[Int]) {
-          (proyecto) =>
-            val resultado = agenteRepo.findByProyect(proyecto)
-            onComplete(resultado) {
-              case Success(permisos) => complete(permisos)
-              case Failure(ex) => complete((StatusCodes.InternalServerError, "Error inesperado"))
-            }
-        }
+      parameters('proyecto.as[Int]) {
+        (proyecto) =>
+          val resultado = agenteRepo.findByProyect(proyecto)
+          onComplete(resultado) {
+            case Success(permisos) => complete(permisos)
+            case Failure(ex) => println(ex); complete((StatusCodes.InternalServerError, s"Error inesperado $ex"))
+          }
       }
     }
   }
 
   private def eliminar = ???
 
-  private def actualizar = {
+  private def actualizarByPerson = {
     post {
       entity(as[EdicionPermisoRequest]) { r =>
-        val resultado = agenteRepo.update(r.proyectos, r.agentesInmobiliarios, r.permisos, r.fideicomiso)
+        val resultado = agenteRepo.updateByPerson(r.proyectos, r.agentesInmobiliarios, r.permisos, r.fideicomiso)
         onComplete(resultado) {
           case Success(value) => complete("Actualizacion exitosa de permisos")
-          case Failure(ex) => complete((StatusCodes.InternalServerError, "Error inesperado"))
+          case Failure(ex) => println(ex);complete((StatusCodes.InternalServerError, "Error en la actualizacion"))
         }
       }
     }
   }
+
+  private def actualizarByProject = {
+    post {
+      entity(as[EdicionPermisoRequest]) { r =>
+        val resultado = agenteRepo.updateByProject(r.proyectos.head, r.agentesInmobiliarios, r.permisos, r.fideicomiso)
+        onComplete(resultado) {
+          case Success(value) => complete("Actualizacion exitosa de permisos")
+          case Failure(ex) => println(ex.printStackTrace);complete((StatusCodes.InternalServerError, "Error en la actualizacion"))
+        }
+      }
+    }
+  }
+
+  private def actualizarByFid = {
+    post {
+      entity(as[EdicionFidPermisoRequest]) { r =>
+        val resultado = agenteRepo.updateByFid(r.proyectos.head, r.agentesInmobiliarios, r.fideicomiso)
+        onComplete(resultado) {
+          case Success(value) => complete("Actualizacion exitosa de permisos")
+          case Failure(ex) => println(ex.printStackTrace);complete((StatusCodes.InternalServerError, "Error en la actualizacion"))
+        }
+      }
+    }
+  }
+
+
+
 }

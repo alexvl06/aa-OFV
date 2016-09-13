@@ -177,10 +177,8 @@ case class AutenticacionEmpresaDriverRepository(
 
   private def generarToken(usuario : UsuarioEmpresarialAdmin, ip : String, inactividad: String, esConstructor : String) = {
     if(esConstructor == "S" && usuario.identificacion == "860000185") {
-      println("ENTRO POR AQUI")
       generarTokenAdmin(usuario, ip, inactividad, TiposCliente.clienteAdminInmobiliario)
     } else {
-      println("NO ENTRO POR AQUI")
       generarTokenAdmin(usuario, ip, inactividad, TiposCliente.clienteAdministrador)
     }
   }

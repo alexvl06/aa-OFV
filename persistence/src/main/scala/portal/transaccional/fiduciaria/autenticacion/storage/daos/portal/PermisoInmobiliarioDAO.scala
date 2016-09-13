@@ -24,6 +24,12 @@ case class PermisoInmobiliarioDAO()(implicit dcConfig: DBConfig) extends TableQu
     run(deleteQuery.andThen(createQuery).transactionally)
   }
 
+  def updateByProject(pEliminados : Seq[PermisoAgenteInmobiliario], pAgregados: Seq[PermisoAgenteInmobiliario]): Future[Option[Int]] = {
+    val borrar = DBIO.sequence(pEliminados.map(p => find2(p).delete))
+    val crear = this ++= pAgregados
+    run(borrar.andThen(crear).transactionally)
+  }
+
   private def find2 (permiso : PermisoAgenteInmobiliario): dcConfig.driver.api.Query[PermisoInmobiliarioTable, PermisoAgenteInmobiliario, Seq] = {
     this.filter(p => p.proyecto === permiso.proyecto && p.idAgente === permiso.idAgente && p.fideicomiso === permiso.fideicomiso &&
                      p.tipoPermiso === permiso.tipoPermiso)

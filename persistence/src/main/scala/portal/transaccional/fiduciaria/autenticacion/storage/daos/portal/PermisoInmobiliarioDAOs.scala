@@ -13,6 +13,8 @@ trait PermisoInmobiliarioDAOs {
 
   def updateByPerson(permisos: Seq[PermisoAgenteInmobiliario], idAgente : Int): Future[Option[Int]]
 
+  def updateByProject(pEliminados : Seq[PermisoAgenteInmobiliario], pAgregados: Seq[PermisoAgenteInmobiliario]): Future[Option[Int]]
+
   def delete(permisos: Seq[PermisoAgenteInmobiliario]): Future[Unit]
 
   def findByIdAgente(idAgente: Int): Future[Seq[PermisoAgenteInmobiliario]]

@@ -18,6 +18,11 @@ case class UsuarioInmobiliarioDriverRepository(permisoDAO: PermisoInmobiliarioDA
           .map(permiso => PermisoAgenteInmobiliario(agente, proyecto, fid, permiso.id))))
   }
 
+  private def creacionPermisoFid(proyectos: Seq[Int], agentesInmob: Seq[(Int, Seq[TipoPermisoInmobiliario])], fid: Int): Seq[PermisoAgenteInmobiliario] = {
+    proyectos.flatMap(proyecto => agentesInmob.flatMap{
+      case (agente,permiso) => permiso.map(permiso => PermisoAgenteInmobiliario(agente, proyecto, fid, permiso.id))})
+  }
+
   /**
    *
    * @param proyectos Lista de identificacion de los proyectos a los cuales se les asignan @permisos
@@ -39,9 +44,26 @@ case class UsuarioInmobiliarioDriverRepository(permisoDAO: PermisoInmobiliarioDA
     permisoDAO.findByProyecto(proyecto)
   }
 
-  def update(proyectos: Seq[Int], agentesInmob: Seq[Int], permisos: Seq[TipoPermisoInmobiliario], fid: Int): Future[Option[Int]] = {
+  def updateByPerson(proyectos: Seq[Int], agentesInmob: Seq[Int], permisos: Seq[TipoPermisoInmobiliario], fid: Int): Future[Option[Int]] = {
     val permisosInmobiliarios = creacionPermiso(proyectos, agentesInmob, permisos, fid)
     permisoDAO.updateByPerson(permisosInmobiliarios, agentesInmob.head)
+  }
+
+  def updateByProject(proyecto: Int, agentesInmob: Seq[Int], permisos: Seq[TipoPermisoInmobiliario], fid: Int): Future[Option[Int]] = {
+    val permisosInmobiliarios = creacionPermiso(Seq(proyecto), agentesInmob, permisos, fid)
+    for {
+      permisosViejos <- permisoDAO.findByProyecto(proyecto)
+      permisosActrualizados <- permisoDAO.updateByProject(permisosViejos.diff(permisosInmobiliarios),permisosInmobiliarios.diff(permisosViejos))
+    } yield permisosActrualizados
+  }
+
+  def updateByFid(proyecto: Int, agentesInmob: Seq[(Int,Seq[TipoPermisoInmobiliario])], fid: Int): Future[Option[Int]] = {
+    val permisosInmobiliarios = creacionPermisoFid(Seq(proyecto), agentesInmob, fid)
+    println("------------->",permisosInmobiliarios)
+    for {
+      permisosViejos <- permisoDAO.findByFid(fid)
+      permisosActrualizados <- permisoDAO.updateByProject(permisosViejos.diff(permisosInmobiliarios),permisosInmobiliarios.diff(permisosViejos))
+    } yield permisosActrualizados
   }
 
 }
