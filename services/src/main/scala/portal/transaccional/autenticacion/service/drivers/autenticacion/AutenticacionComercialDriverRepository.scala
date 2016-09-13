@@ -80,7 +80,6 @@ case class AutenticacionComercialDriverRepository(ldapRepo: LdapRepository, usua
       inactividad <- Future(30000) //maximo numero que soporta el front end
       token <- generarTokenAdminComercial(usuario, ip, inactividad.toString)
       _ <- usuarioComercialAdminRepo.crearToken(usuario.id, AesUtil.encriptarToken(token))
-      sesion <- sesionRepo.crearSesion(token, inactividad, None)
       actualizarIP <- usuarioComercialAdminRepo.actualizarIp(usuario.id, ip)
       actualizarFechaUltimoIngreso <- usuarioComercialAdminRepo.actualizarFechaIngreso(usuario.id, new Timestamp((new Date).getTime))
     } yield token

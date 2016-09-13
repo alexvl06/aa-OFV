@@ -12,7 +12,7 @@ import co.com.alianza.util.clave.Crypto
 import enumerations.AppendPasswordUser
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.UsuarioComercialAdminDAOs
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * Created by alexandra on 5/08/16.
@@ -42,8 +42,8 @@ case class UsuarioComercialAdminDriverRepository(usuarioDAO: UsuarioComercialAdm
 
   /**
    * Validar la contrasena
-    *
-    * @param contrasena
+   *
+   * @param contrasena
    * @param usuario
    * @return
    */
@@ -69,10 +69,10 @@ case class UsuarioComercialAdminDriverRepository(usuarioDAO: UsuarioComercialAdm
     } yield crearUsuario
   }
 
-  def actualizarContrasena(usuario: UsuarioAuth, contrasenaActual: String, contrasenaNueva:String): Future[Int] = {
+  def actualizarContrasena(usuario: UsuarioAuth, contrasenaActual: String, contrasenaNueva: String): Future[Int] = {
     for {
-       validar <- validarContraseñaActual(usuario, contrasenaActual)
-       crear <- crearContrasena(contrasenaNueva, usuario.id)
+      validar <- validarContraseñaActual(usuario, contrasenaActual)
+      crear <- crearContrasena(contrasenaNueva, usuario.id)
     } yield crear
   }
 
@@ -107,10 +107,9 @@ case class UsuarioComercialAdminDriverRepository(usuarioDAO: UsuarioComercialAdm
     println(usuario)
     val resultadoFuturo = for {
       obtenerUsuario <- usuarioDAO.getById(usuario.id)
-      resultado <- validarContrasena(contrasenaActual,obtenerUsuario.get)
+      resultado <- validarContrasena(contrasenaActual, obtenerUsuario.get)
     } yield resultado
     resultadoFuturo
   }
-
 
 }

@@ -25,11 +25,11 @@ case class ComercialService(user: UsuarioAuth, comercialRepo: UsuarioComercialAd
           crearAdministrador()
         }
       } ~
-      path("contrasena") {
-        pathEndOrSingleSlash {
-          actualizarContrasena()
+        path("contrasena") {
+          pathEndOrSingleSlash {
+            actualizarContrasena()
+          }
         }
-      }
     }
   }
 

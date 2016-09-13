@@ -24,9 +24,9 @@ case class RecursoGraficoComercialService(recursoComercialRepository: RecursoCom
 
   val route: Route = {
     pathPrefix(recursoComercialPath / adminPath) {
-        path(rolesPath) {
-          roles()
-        } ~
+      path(rolesPath) {
+        roles()
+      } ~
         path(recursosPath) {
           recursos()
         }

@@ -5,7 +5,7 @@ import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
 import portal.transaccional.fiduciaria.autenticacion.storage.helpers.AlianzaStorageHelper
 import slick.lifted.TableQuery
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * Created by dfbaratov on 23/08/16.

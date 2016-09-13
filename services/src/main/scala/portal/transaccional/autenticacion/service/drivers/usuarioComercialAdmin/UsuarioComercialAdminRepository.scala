@@ -4,7 +4,7 @@ import java.sql.Timestamp
 
 import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
-import co.com.alianza.persistence.entities.{UsuarioComercial, UsuarioComercialAdmin}
+import co.com.alianza.persistence.entities.{ UsuarioComercial, UsuarioComercialAdmin }
 
 import scala.concurrent.Future
 
@@ -29,6 +29,6 @@ trait UsuarioComercialAdminRepository {
 
   def crearUsuario(tipoCliente: TiposCliente, contrasena: String, usuario: String, nombre: String, correo: String): Future[Int]
 
-  def actualizarContrasena(usuario: UsuarioAuth, contrasenaActual: String, contrasenaNueva:String): Future[Int]
+  def actualizarContrasena(usuario: UsuarioAuth, contrasenaActual: String, contrasenaNueva: String): Future[Int]
 
 }

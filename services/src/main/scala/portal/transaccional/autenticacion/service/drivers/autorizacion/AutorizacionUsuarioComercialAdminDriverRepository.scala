@@ -12,19 +12,17 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * Created by alexandra on 2016
  */
-case class AutorizacionUsuarioComercialAdminDriverRepository(sesionRepo: SesionRepository, usuarioRepo: UsuarioComercialAdminRepository)(implicit val ex: ExecutionContext) extends AutorizacionUsuarioComercialAdminRepository {
+case class AutorizacionUsuarioComercialAdminDriverRepository(usuarioRepo: UsuarioComercialAdminRepository)(implicit val ex: ExecutionContext) extends AutorizacionUsuarioComercialAdminRepository {
 
   def invalidarToken(token: String, encriptedToken: String): Future[Int] = {
     for {
       x <- usuarioRepo.eliminarToken(encriptedToken)
-      _ <- sesionRepo.eliminarSesion(token)
     } yield x
   }
 
   def autorizar(token: String, encriptedToken: String, url: String): Future[ValidacionAutorizacion] = {
     for {
       validar <- validarToken(token)
-      validarSesion <- sesionRepo.validarSesion(token)
       usuarioOption <- usuarioRepo.getByToken(encriptedToken)
       usuario <- validarUsario(usuarioOption)
     } yield usuario
