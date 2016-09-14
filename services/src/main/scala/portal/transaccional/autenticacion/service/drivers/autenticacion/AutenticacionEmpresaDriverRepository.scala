@@ -28,9 +28,9 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scala.reflect.ClassTag
 
 case class AutenticacionEmpresaDriverRepository(
-  usuarioRepo: UsuarioEmpresarialRepository, usuarioAdminRepo: UsuarioEmpresarialAdminRepository, clienteCoreRepo: ClienteRepository,
-  empresaRepo: EmpresaRepository, reglaRepo: ReglaContrasenaRepository, configuracionRepo: ConfiguracionRepository, ipRepo: IpEmpresaRepository,
-  sesionRepo: SesionRepository, respuestasRepo: RespuestaUsuarioRepository
+    usuarioRepo: UsuarioEmpresarialRepository, usuarioAdminRepo: UsuarioEmpresarialAdminRepository, clienteCoreRepo: ClienteRepository,
+    empresaRepo: EmpresaRepository, reglaRepo: ReglaContrasenaRepository, configuracionRepo: ConfiguracionRepository, ipRepo: IpEmpresaRepository,
+    sesionRepo: SesionRepository, respuestasRepo: RespuestaUsuarioRepository
 )(implicit val ex: ExecutionContext) extends AutenticacionEmpresaRepository {
 
   implicit val timeout = Timeout(10.seconds)
@@ -170,13 +170,15 @@ case class AutenticacionEmpresaDriverRepository(
   }
 
   private def generarTokenAdmin(usuario: UsuarioEmpresarialAdmin, ip: String, inactividad: String, tiposCliente: TiposCliente): Future[String] = {
-    Future {Token.generarToken(usuario.usuario, usuario.correo, getTipoPersona(usuario.tipoIdentificacion),
-      usuario.ipUltimoIngreso.get, usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())),
-      inactividad, tiposCliente, Some(usuario.identificacion))}
+    Future {
+      Token.generarToken(usuario.usuario, usuario.correo, getTipoPersona(usuario.tipoIdentificacion),
+        usuario.ipUltimoIngreso.get, usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())),
+        inactividad, tiposCliente, Some(usuario.identificacion))
+    }
   }
 
-  private def generarToken(usuario : UsuarioEmpresarialAdmin, ip : String, inactividad: String, esConstructor : String) = {
-    if(esConstructor == "S" && usuario.identificacion == "860000185") {
+  private def generarToken(usuario: UsuarioEmpresarialAdmin, ip: String, inactividad: String, esConstructor: String) = {
+    if (esConstructor == "S" && usuario.identificacion == "860000185") {
       generarTokenAdmin(usuario, ip, inactividad, TiposCliente.clienteAdminInmobiliario)
     } else {
       generarTokenAdmin(usuario, ip, inactividad, TiposCliente.clienteAdministrador)

@@ -19,8 +19,9 @@ case class UsuarioInmobiliarioDriverRepository(permisoDAO: PermisoInmobiliarioDA
   }
 
   private def creacionPermisoFid(proyectos: Seq[Int], agentesInmob: Seq[(Int, Seq[TipoPermisoInmobiliario])], fid: Int): Seq[PermisoAgenteInmobiliario] = {
-    proyectos.flatMap(proyecto => agentesInmob.flatMap{
-      case (agente,permiso) => permiso.map(permiso => PermisoAgenteInmobiliario(agente, proyecto, fid, permiso.id))})
+    proyectos.flatMap(proyecto => agentesInmob.flatMap {
+      case (agente, permiso) => permiso.map(permiso => PermisoAgenteInmobiliario(agente, proyecto, fid, permiso.id))
+    })
   }
 
   /**
@@ -40,29 +41,23 @@ case class UsuarioInmobiliarioDriverRepository(permisoDAO: PermisoInmobiliarioDA
     permisoDAO.delete(permisosInmobiliarios)
   }
 
-  def findByProyect(proyecto : Int): Future[Seq[PermisoAgenteInmobiliario]] = {
+  def findByProyect(proyecto: Int): Future[Seq[PermisoAgenteInmobiliario]] = {
     permisoDAO.findByProyecto(proyecto)
-  }
-
-  def updateByPerson(proyectos: Seq[Int], agentesInmob: Seq[Int], permisos: Seq[TipoPermisoInmobiliario], fid: Int): Future[Option[Int]] = {
-    val permisosInmobiliarios = creacionPermiso(proyectos, agentesInmob, permisos, fid)
-    permisoDAO.updateByPerson(permisosInmobiliarios, agentesInmob.head)
   }
 
   def updateByProject(proyecto: Int, agentesInmob: Seq[Int], permisos: Seq[TipoPermisoInmobiliario], fid: Int): Future[Option[Int]] = {
     val permisosInmobiliarios = creacionPermiso(Seq(proyecto), agentesInmob, permisos, fid)
     for {
       permisosViejos <- permisoDAO.findByProyecto(proyecto)
-      permisosActrualizados <- permisoDAO.updateByProject(permisosViejos.diff(permisosInmobiliarios),permisosInmobiliarios.diff(permisosViejos))
+      permisosActrualizados <- permisoDAO.updateByProject(permisosViejos.diff(permisosInmobiliarios), permisosInmobiliarios.diff(permisosViejos))
     } yield permisosActrualizados
   }
 
-  def updateByFid(proyecto: Int, agentesInmob: Seq[(Int,Seq[TipoPermisoInmobiliario])], fid: Int): Future[Option[Int]] = {
+  def updateByFid(proyecto: Int, agentesInmob: Seq[(Int, Seq[TipoPermisoInmobiliario])], fid: Int): Future[Option[Int]] = {
     val permisosInmobiliarios = creacionPermisoFid(Seq(proyecto), agentesInmob, fid)
-    println("------------->",permisosInmobiliarios)
     for {
       permisosViejos <- permisoDAO.findByFid(fid)
-      permisosActrualizados <- permisoDAO.updateByProject(permisosViejos.diff(permisosInmobiliarios),permisosInmobiliarios.diff(permisosViejos))
+      permisosActrualizados <- permisoDAO.updateByProject(permisosViejos.diff(permisosInmobiliarios), permisosInmobiliarios.diff(permisosViejos))
     } yield permisosActrualizados
   }
 

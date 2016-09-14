@@ -13,23 +13,17 @@ import scala.util.{ Failure, Success }
 /**
  * Created by alexandra on 2016
  */
-case class AgenteInmobiliarioService(agenteRepo: UsuarioInmobiliarioRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with
-  DomainJsonFormatters with CrossHeaders {
+case class AgenteInmobiliarioService(agenteRepo: UsuarioInmobiliarioRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   val permisos = "agenteInmobiliario"
-  val actualizarPath = "updateByPerson"
-  val actualizarPath2 = "updateByProject"
+  val updateByProject = "updateByProject"
   val actualizarPath3 = "updateByFid"
 
   val route: Route = {
     pathPrefix(permisos) {
       pathEndOrSingleSlash {
         consultar ~ crear
-      } ~ pathPrefix(actualizarPath) {
-        pathEndOrSingleSlash {
-          actualizarByPerson
-        }
-      } ~ pathPrefix(actualizarPath2) {
+      } ~ pathPrefix(updateByProject) {
         pathEndOrSingleSlash {
           actualizarByProject
         }
@@ -66,27 +60,13 @@ case class AgenteInmobiliarioService(agenteRepo: UsuarioInmobiliarioRepository)(
     }
   }
 
-  private def eliminar = ???
-
-  private def actualizarByPerson = {
-    post {
-      entity(as[EdicionPermisoRequest]) { r =>
-        val resultado = agenteRepo.updateByPerson(r.proyectos, r.agentesInmobiliarios, r.permisos, r.fideicomiso)
-        onComplete(resultado) {
-          case Success(value) => complete("Actualizacion exitosa de permisos")
-          case Failure(ex) => println(ex);complete((StatusCodes.InternalServerError, "Error en la actualizacion"))
-        }
-      }
-    }
-  }
-
   private def actualizarByProject = {
     post {
       entity(as[EdicionPermisoRequest]) { r =>
         val resultado = agenteRepo.updateByProject(r.proyectos.head, r.agentesInmobiliarios, r.permisos, r.fideicomiso)
         onComplete(resultado) {
           case Success(value) => complete("Actualizacion exitosa de permisos")
-          case Failure(ex) => println(ex.printStackTrace);complete((StatusCodes.InternalServerError, "Error en la actualizacion"))
+          case Failure(ex) => println(ex.printStackTrace); complete((StatusCodes.InternalServerError, "Error en la actualizacion"))
         }
       }
     }
@@ -98,12 +78,10 @@ case class AgenteInmobiliarioService(agenteRepo: UsuarioInmobiliarioRepository)(
         val resultado = agenteRepo.updateByFid(r.proyectos.head, r.agentesInmobiliarios, r.fideicomiso)
         onComplete(resultado) {
           case Success(value) => complete("Actualizacion exitosa de permisos")
-          case Failure(ex) => println(ex.printStackTrace);complete((StatusCodes.InternalServerError, "Error en la actualizacion"))
+          case Failure(ex) => println(ex.printStackTrace); complete((StatusCodes.InternalServerError, "Error en la actualizacion"))
         }
       }
     }
   }
-
-
 
 }

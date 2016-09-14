@@ -18,25 +18,19 @@ case class PermisoInmobiliarioDAO()(implicit dcConfig: DBConfig) extends TableQu
     run((this ++= permisos).transactionally)
   }
 
-  def updateByPerson(permisos: Seq[PermisoAgenteInmobiliario], idAgente : Int): Future[Option[Int]] = {
-    val deleteQuery = this.filter(_.idAgente === idAgente).delete
-    val createQuery = this ++= permisos
-    run(deleteQuery.andThen(createQuery).transactionally)
-  }
-
-  def updateByProject(pEliminados : Seq[PermisoAgenteInmobiliario], pAgregados: Seq[PermisoAgenteInmobiliario]): Future[Option[Int]] = {
-    val borrar = DBIO.sequence(pEliminados.map(p => find2(p).delete))
+  def updateByProject(pEliminados: Seq[PermisoAgenteInmobiliario], pAgregados: Seq[PermisoAgenteInmobiliario]): Future[Option[Int]] = {
+    val borrar = DBIO.sequence(pEliminados.map(p => findByAll(p).delete))
     val crear = this ++= pAgregados
     run(borrar.andThen(crear).transactionally)
   }
 
-  private def find2 (permiso : PermisoAgenteInmobiliario): dcConfig.driver.api.Query[PermisoInmobiliarioTable, PermisoAgenteInmobiliario, Seq] = {
+  private def findByAll(permiso: PermisoAgenteInmobiliario): dcConfig.driver.api.Query[PermisoInmobiliarioTable, PermisoAgenteInmobiliario, Seq] = {
     this.filter(p => p.proyecto === permiso.proyecto && p.idAgente === permiso.idAgente && p.fideicomiso === permiso.fideicomiso &&
-                     p.tipoPermiso === permiso.tipoPermiso)
+      p.tipoPermiso === permiso.tipoPermiso)
   }
 
   def delete(permisos: Seq[PermisoAgenteInmobiliario]): Future[Unit] = {
-    val queryDelete = permisos.map(p => find2(p).delete)
+    val queryDelete = permisos.map(p => findByAll(p).delete)
     val query = DBIO.seq(queryDelete: _*).transactionally
     run(query)
   }

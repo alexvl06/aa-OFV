@@ -54,7 +54,6 @@ trait DomainJsonFormatters {
   implicit val permisoAgenteInmob = jsonFormat4(PermisoAgenteInmobiliario)
   implicit val permisosFidRequest = jsonFormat3(EdicionFidPermisoRequest)
 
-
   // ----- MAPEO DE ENUM!
   private def jsonEnum[T <: Enumeration](enu: T) = new JsonFormat[T#Value] {
     def write(obj: T#Value) = JsString(obj.toString)
