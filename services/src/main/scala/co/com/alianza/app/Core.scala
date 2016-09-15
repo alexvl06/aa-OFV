@@ -25,6 +25,7 @@ import portal.transaccional.autenticacion.service.drivers.ip.IpDriverRepository
 import portal.transaccional.autenticacion.service.drivers.ipempresa.IpEmpresaDriverRepository
 import portal.transaccional.autenticacion.service.drivers.ipusuario.IpUsuarioDriverRepository
 import portal.transaccional.autenticacion.service.drivers.ldap.LdapDriverRepository
+import portal.transaccional.autenticacion.service.drivers.permisoAgenteInmobiliario.PermisoAgenteInmobiliarioDriverRepository
 import portal.transaccional.autenticacion.service.drivers.pregunta.{ PreguntasAutovalidacionDriverRepository, PreguntasDriverRepository }
 import portal.transaccional.autenticacion.service.drivers.recurso.RecursoDriverRepository
 import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaDriverRepository
@@ -159,7 +160,8 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val autorizacionRecursoComercialRepository = AutorizacionRecursoComercialDriverRepository(rolRecursoComercialRepo)
   lazy val recursoComercialRepository = RecursoComercialDriverRepository(recursoComercialDAO, rolRecursoComercialDAO)
   lazy val rolComercialRepository = RolComercialDriverRepository(rolComercialDAO)
-  lazy val agenteInmobRepo = UsuarioInmobiliarioDriverRepository(permisoInmobDAO)
+  lazy val agenteInmobRepo = UsuarioInmobiliarioDriverRepository()
+  lazy val permisoAgenteInmob = PermisoAgenteInmobiliarioDriverRepository(permisoInmobDAO)
 
 }
 
