@@ -3,7 +3,7 @@ package portal.transaccional.autenticacion.service.drivers.usuarioAgente
 import java.sql.Timestamp
 
 import co.com.alianza.commons.enumerations.TiposCliente._
-import co.com.alianza.persistence.entities.UsuarioEmpresarial
+import co.com.alianza.persistence.entities.Agente
 
 import scala.concurrent.Future
 
@@ -12,7 +12,7 @@ import scala.concurrent.Future
  */
 trait UsuarioEmpresarialRepository {
 
-  def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[UsuarioEmpresarial]]
+  def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[Agente]]
 
   def actualizarToken(idUsuario: Int, token: String): Future[Int]
 
@@ -22,15 +22,15 @@ trait UsuarioEmpresarialRepository {
 
   def actualizarFechaIngreso(idUsuario: Int, fechaActual: Timestamp): Future[Int]
 
-  def actualizarInfoUsuario(usuario: UsuarioEmpresarial, ip: String): Future[Int]
+  def actualizarInfoUsuario(usuario: Agente, ip: String): Future[Int]
 
-  def validarUsuario(usuario: UsuarioEmpresarial, contrasena: String, reintentosErroneos: Int): Future[Boolean]
+  def validarUsuario(usuario: Agente, contrasena: String, reintentosErroneos: Int): Future[Boolean]
 
-  def validarEstado(usuario: UsuarioEmpresarial): Future[Boolean]
+  def validarEstado(usuario: Agente): Future[Boolean]
 
-  def validarContrasena(contrasena: String, usuario: UsuarioEmpresarial, reintentosErroneos: Int): Future[Boolean]
+  def validarContrasena(contrasena: String, usuario: Agente, reintentosErroneos: Int): Future[Boolean]
 
-  def validarCaducidadContrasena(tipoCliente: TiposCliente, usuario: UsuarioEmpresarial, dias: Int): Future[Boolean]
+  def validarCaducidadContrasena(tipoCliente: TiposCliente, usuario: Agente, dias: Int): Future[Boolean]
 
   def invalidarToken(token: String): Future[Int]
 

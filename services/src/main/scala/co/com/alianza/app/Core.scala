@@ -132,6 +132,7 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val configuracionRepo = ConfiguracionDriverRepository(configuracionDAO)
   lazy val reglaContrasenaRepo = ReglaContrasenaDriverRepository(reglaContrasenaDAO)
   lazy val usuarioAgenteRepo = UsuarioEmpresarialDriverRepository(usuarioAgenteDAO)
+  lazy val usuarioAgenteInmobRepo = UsuarioEmpresarialDriverRepository(usuarioAgenteInmob)
   lazy val usuarioComercialRepo = UsuarioComercialDriverRepository(usuarioComercialDAO)
   lazy val usuarioComercialAdminRepo = UsuarioComercialAdminDriverRepository(usuarioComercialAdminDAO)
   lazy val respuestaUsuarioRepo = RespuestaUsuarioDriverRepository(respuestaUsuarioDAO, configuracionRepo)
@@ -143,7 +144,7 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val autenticacionRepo = AutenticacionDriverRepository(usuarioRepo, clienteRepo, configuracionRepo, reglaContrasenaRepo, ipUsuarioRepo,
     respuestaUsuarioRepo, sesionRepo)
   lazy val autenticacionEmpresaRepo = AutenticacionEmpresaDriverRepository(usuarioAgenteRepo, usuarioAdminRepo, clienteRepo, empresaRepo, reglaContrasenaRepo,
-    configuracionRepo, ipEmpresaRepo, sesionRepo, respuestaUsuariAdminoRepo)
+    configuracionRepo, ipEmpresaRepo, sesionRepo, respuestaUsuariAdminoRepo, usuarioAgenteInmobRepo)
   lazy val autenticacionComercialRepo = AutenticacionComercialDriverRepository(ldapRepo, usuarioComercialRepo,
     usuarioComercialAdminRepo: UsuarioComercialAdminRepository, configuracionRepo, sesionRepo)
   lazy val autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialDriverRepository = AutorizacionUsuarioEmpresarialDriverRepository(
@@ -177,6 +178,7 @@ private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
   lazy val usuarioAgenteDAO = UsuarioEmpresarialDAO()(config)
   lazy val respuestaUsuarioDAO = RespuestaUsuarioDAO()(config)
   lazy val usuarioAdminDAO = UsuarioEmpresarialAdminDAO()(config)
+  lazy val usuarioAgenteInmob = UsuarioAgenteInmobDAO()(config)
   lazy val respuestaUsuarioAdminDAO = RespuestaUsuarioAdminDAO()(config)
   lazy val preguntaDAO = PreguntasDAO()(config)
   lazy val empresaAdminDAO = EmpresaAdminDAO()(config)
