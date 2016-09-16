@@ -21,10 +21,22 @@ case class AutorizacionUsuarioComercialDriverRepository(sesionRepo: SesionReposi
     } yield x
   }
 
+  def invalidarTokenSAC(token: String, encriptedToken: String): Future[Int] = {
+    usuarioRepo.eliminarToken(encriptedToken)
+  }
+
   def autorizar(token: String, encriptedToken: String, url: String): Future[ValidacionAutorizacion] = {
     for {
       validar <- validarToken(token)
       validarSesion <- sesionRepo.validarSesion(token)
+      usuarioOption <- usuarioRepo.getByToken(encriptedToken)
+      usuario <- validarUsario(usuarioOption)
+    } yield usuario
+  }
+
+  def autorizarSAC(token: String, encriptedToken: String, url: String): Future[ValidacionAutorizacion] = {
+    for {
+      validar <- validarToken(token, false)
       usuarioOption <- usuarioRepo.getByToken(encriptedToken)
       usuario <- validarUsario(usuarioOption)
     } yield usuario
@@ -39,8 +51,8 @@ case class AutorizacionUsuarioComercialDriverRepository(sesionRepo: SesionReposi
     }
   }
 
-  private def validarToken(token: String): Future[Boolean] = {
-    Token.autorizarToken(token) match {
+  private def validarToken(token: String, validarExpiracionToken: Boolean = true): Future[Boolean] = {
+    Token.autorizarToken(token, validarExpiracionToken) match {
       case true => Future.successful(true)
       case _ => Future.failed(NoAutorizado("Token erróneo"))
     }

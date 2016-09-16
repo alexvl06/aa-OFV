@@ -41,12 +41,14 @@ case class AutorizacionService(
   val invalidarTokenPath = "invalidarToken"
   val validarTokenPath = "validarToken"
 
+  //tipos clientes
   val agente = TiposCliente.agenteEmpresarial.toString
+  val comercialSAC = TiposCliente.comercialSAC.toString
   val admin = TiposCliente.clienteAdministrador.toString
   val individual = TiposCliente.clienteIndividual.toString
-  val comercialFiduciaria = TiposCliente.comercialFiduciaria.toString
-  val comercialValores = TiposCliente.comercialValores.toString
   val comercialAdmin = TiposCliente.comercialAdmin.toString
+  val comercialValores = TiposCliente.comercialValores.toString
+  val comercialFiduciaria = TiposCliente.comercialFiduciaria.toString
 
   val route: Route = {
     path(invalidarTokenPath) {
@@ -67,11 +69,12 @@ case class AutorizacionService(
             val token: String = AesUtil.desencriptarToken(encriptedToken)
             val usuario = getTokenData(token)
             val resultado: Future[Int] = usuario.tipoCliente match {
-              case `agente` => autorizacionAgenteRepo.invalidarToken(token, encriptedToken)
               case `admin` => autorizacionAdminRepo.invalidarToken(token, encriptedToken)
+              case `agente` => autorizacionAgenteRepo.invalidarToken(token, encriptedToken)
               case `individual` => autorizacionRepository.invalidarToken(token, encriptedToken)
-              case `comercialFiduciaria` | `comercialValores` => autorizacionComercialRepo.invalidarToken(token, encriptedToken)
+              case `comercialSAC` => autorizacionComercialRepo.invalidarTokenSAC(token, encriptedToken)
               case `comercialAdmin` => autorizacionComercialAdminRepo.invalidarToken(token, encriptedToken)
+              case `comercialFiduciaria` | `comercialValores` => autorizacionComercialRepo.invalidarToken(token, encriptedToken)
               case _ => Future.failed(NoAutorizado("Tipo usuario no existe"))
             }
             mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.cierreSesionIndex, ip.value,
