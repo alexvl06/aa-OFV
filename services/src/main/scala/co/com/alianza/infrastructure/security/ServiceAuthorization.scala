@@ -56,6 +56,8 @@ trait ServiceAuthorization {
             autorizacionComercialRepo.autorizar(token, encriptedToken, "")
           } else if (tipoCliente == TiposCliente.comercialValores.toString) {
             autorizacionComercialRepo.autorizar(token, encriptedToken, "")
+          } else if (tipoCliente == TiposCliente.comercialSAC.toString) {
+            autorizacionComercialRepo.autorizarSAC(token, encriptedToken, "")
           } else if (tipoCliente == TiposCliente.comercialAdmin.toString) {
             autorizacionComercialAdminRepo.autorizar(token, encriptedToken, "")
           } else {
@@ -77,6 +79,7 @@ trait ServiceAuthorization {
         Left(AuthenticationFailedRejection(CredentialsRejected, List(), Some(Unauthorized.intValue), Option(validacion.code)))
 
       case validacion: NoAutorizado =>
+        validacion.printStackTrace()
         Left(AuthenticationFailedRejection(CredentialsRejected, List(), Some(Unauthorized.intValue), None))
 
       case validacion: AutorizadoComercial =>

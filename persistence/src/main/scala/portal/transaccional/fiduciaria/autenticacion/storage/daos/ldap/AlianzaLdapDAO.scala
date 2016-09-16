@@ -1,7 +1,7 @@
 package portal.transaccional.fiduciaria.autenticacion.storage.daos.ldap
 
 import java.util
-import javax.naming.directory.{ Attributes, SearchControls, SearchResult }
+import javax.naming.directory.{ Attribute, Attributes, SearchControls, SearchResult }
 import javax.naming.ldap.{ InitialLdapContext, LdapContext }
 import javax.naming.{ Context, NamingEnumeration }
 
@@ -55,20 +55,9 @@ case class AlianzaLdapDAO() extends AlianzaLdapDAOs {
     val userInstance: Option[UsuarioLdapDTO] = search.hasMore match {
       case true =>
         val attrs: Attributes = search.next().getAttributes
-
-        println("atributos del ldap")
-        println("atributos del ldap")
-        println("atributos del ldap")
-        println("atributos del ldap")
-        println(attrs)
-
-        val dn = attrs.get("distinguishedName").get.toString
-        val sn = attrs.get("sn").get.toString
-        val gn = attrs.get("givenname").get.toString
-        val upn = attrs.get("userPrincipalName").get.toString
-        val sat = attrs.get("sAMAccountType").get.toString
-        Option(UsuarioLdapDTO(user, Option(sat), Option(dn), Option(sn), Option(gn), upn))
-
+        val esSAC: Boolean = getAtributeSAC(attrs, "postOfficeBox")
+        val identificacion: Option[String] = getAtributes(attrs, "sAMAccountType")
+        Option(UsuarioLdapDTO(user, identificacion, esSAC))
       case false => None
     }
     userInstance
@@ -81,10 +70,7 @@ case class AlianzaLdapDAO() extends AlianzaLdapDAOs {
   private def getSearchControls: SearchControls = {
     // SEARCH ATTRIBUTES
     val attrIDs: Array[String] = Array(
-      "distinguishedName",
-      "sn",
-      "givenname",
-      "userPrincipalName",
+      "postOfficeBox",
       "sAMAccountType"
     )
     // SEARCH CONTROLS
@@ -92,6 +78,19 @@ case class AlianzaLdapDAO() extends AlianzaLdapDAOs {
     sc.setSearchScope(SearchControls.SUBTREE_SCOPE)
     sc.setReturningAttributes(attrIDs)
     sc
+  }
+
+  private def getAtributes(attrs: Attributes, name: String): Option[String] = {
+    val att: Option[Attribute] = Option(attrs.get(name))
+    att match {
+      case Some(value) => Option(value.get.toString)
+      case _ => None
+    }
+  }
+
+  private def getAtributeSAC(attrs: Attributes, name: String): Boolean = {
+    val sac: Option[String] = getAtributes(attrs, name)
+    sac.getOrElse("").equals("SAC")
   }
 
 }

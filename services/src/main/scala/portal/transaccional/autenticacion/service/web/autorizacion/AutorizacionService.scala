@@ -27,11 +27,11 @@ import scala.util.{ Failure, Success }
  * Created by s4n 2016
  */
 case class AutorizacionService(
+    kafkaActor: ActorSelection,
     usuarioRepository: UsuarioRepository,
     usuarioAgenteRepository: UsuarioEmpresarialRepository,
     usuarioAdminRepository: UsuarioEmpresarialAdminRepository,
     autorizacionRepository: AutorizacionUsuarioRepository,
-    kafkaActor: ActorSelection,
     autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository,
     autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository,
     autorizacionComercialRepo: AutorizacionUsuarioComercialRepository,
@@ -99,10 +99,10 @@ case class AutorizacionService(
             case `agente` => autorizacionAgenteRepo.autorizar(token, encriptedToken, url, ipRemota)
             case `admin` => autorizacionAdminRepo.autorizar(token, encriptedToken, url, ipRemota)
             case `individual` => autorizacionRepository.autorizar(token, encriptedToken, url)
-            //TODO: Agregar la autorizacion de url para los tipo comerciales (Pendiente HU) By : Hernando
-            case `comercialFiduciaria` => obtenerUsuarioComercialMock(TiposCliente.comercialFiduciaria, usuario.usuario)
-            case `comercialValores` => obtenerUsuarioComercialMock(TiposCliente.comercialValores, usuario.usuario)
-            case `comercialAdmin` => obtenerUsuarioComercialMock(TiposCliente.clienteAdministrador, usuario.usuario)
+            case `comercialSAC` => autorizacionComercialRepo.autorizarSAC(token, encriptedToken, url)
+            case `comercialFiduciaria` => autorizacionComercialRepo.autorizar(token, encriptedToken, url)
+            case `comercialValores` => autorizacionComercialRepo.autorizar(token, encriptedToken, url)
+            case `comercialAdmin` => autorizacionComercialAdminRepo.autorizar(token, encriptedToken, url)
             case _ => Future.failed(NoAutorizado("Tipo usuario no existe"))
           }
           onComplete(resultado) {
@@ -113,17 +113,11 @@ case class AutorizacionService(
     }
   }
 
-  //TODO: Borrar este metodo cuando se realice la autorizacion de url para comerciales (Pendiente HU) By : Henando
-  private def obtenerUsuarioComercialMock(tipoCliente: TiposCliente, usuario: String): Future[Autorizado] = Future {
-    case class UsuarioLogged(id: Int, correo: String, identificacion: String, tipoIdentificacion: Int, tipoCliente: TiposCliente, usuario: String)
-    val usuarioL = UsuarioLogged(0, "", "", 0, tipoCliente, usuario)
-    val usuarioJson: String = JsonUtil.toJson(usuarioL)
-    Autorizado(usuarioJson)
-  }
-
   def execution(ex: Any): StandardRoute = {
     ex match {
       case value: Autorizado => complete((StatusCodes.OK, value.usuario))
+      case value: AutorizadoComercial => complete((StatusCodes.OK, value.usuario))
+      case value: AutorizadoComercialAdmin => complete((StatusCodes.OK, value.usuario))
       case value: Prohibido => complete((StatusCodes.Forbidden, value.usuario))
       case ex: NoAutorizado => complete((StatusCodes.Unauthorized, ex))
       case ex: ValidacionException => complete((StatusCodes.Unauthorized, "sdf"))

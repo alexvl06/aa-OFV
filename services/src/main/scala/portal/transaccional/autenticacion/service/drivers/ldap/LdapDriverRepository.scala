@@ -27,9 +27,12 @@ case class LdapDriverRepository(alianzaLdapDAO: AlianzaLdapDAOs)(implicit val ex
     user
   }
 
-  //TODO: Realizar la validacion del campo 'sac'
   def validarSACLdap(usuario: UsuarioLdapDTO, esSAC: Boolean = false): Future[Boolean] = {
-    Future(true)
+    esSAC match {
+      case true if usuario.esSAC => Future.successful(true)
+      case false if !usuario.esSAC => Future.successful(true)
+      case _ => Future.failed(new ValidacionException("401.1", "Credenciales invalidas"))
+    }
   }
 
   private def obtenerContexto(usuario: String, tipoCliente: TiposCliente, password: String): Future[LdapContext] = {
