@@ -21,3 +21,8 @@ case class Usuario(
   tipoCliente: TiposCliente
 )
 
+case class UsuarioComercialDTO(
+  tipoCliente: TiposCliente,
+  id: Int,
+  usuario: String
+)

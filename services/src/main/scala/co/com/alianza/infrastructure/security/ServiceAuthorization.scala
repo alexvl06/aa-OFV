@@ -53,9 +53,9 @@ trait ServiceAuthorization {
           } else if (tipoCliente == TiposCliente.clienteIndividual.toString) {
             autorizacionUsuarioRepo.autorizar(token, encriptedToken, "")
           } else if (tipoCliente == TiposCliente.comercialFiduciaria.toString) {
-            autorizacionComercialRepo.autorizar(token, encriptedToken, "")
+            autorizacionComercialRepo.autorizarFiduciaria(token, encriptedToken, "")
           } else if (tipoCliente == TiposCliente.comercialValores.toString) {
-            autorizacionComercialRepo.autorizar(token, encriptedToken, "")
+            autorizacionComercialRepo.autorizarValores(token, encriptedToken, "")
           } else if (tipoCliente == TiposCliente.comercialSAC.toString) {
             autorizacionComercialRepo.autorizarSAC(token, encriptedToken, "")
           } else if (tipoCliente == TiposCliente.comercialAdmin.toString) {

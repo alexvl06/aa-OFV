@@ -13,7 +13,9 @@ trait AutorizacionUsuarioComercialRepository {
 
   def invalidarTokenSAC(token: String, encriptedToken: String): Future[Int]
 
-  def autorizar(token: String, encriptedToken: String, url: String): Future[ValidacionAutorizacion]
+  def autorizarFiduciaria(token: String, encriptedToken: String, url: String): Future[ValidacionAutorizacion]
+
+  def autorizarValores(token: String, encriptedToken: String, url: String): Future[ValidacionAutorizacion]
 
   def autorizarSAC(token: String, encriptedToken: String, url: String): Future[ValidacionAutorizacion]
 

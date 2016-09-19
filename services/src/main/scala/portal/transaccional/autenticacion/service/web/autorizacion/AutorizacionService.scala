@@ -100,8 +100,8 @@ case class AutorizacionService(
             case `admin` => autorizacionAdminRepo.autorizar(token, encriptedToken, url, ipRemota)
             case `individual` => autorizacionRepository.autorizar(token, encriptedToken, url)
             case `comercialSAC` => autorizacionComercialRepo.autorizarSAC(token, encriptedToken, url)
-            case `comercialFiduciaria` => autorizacionComercialRepo.autorizar(token, encriptedToken, url)
-            case `comercialValores` => autorizacionComercialRepo.autorizar(token, encriptedToken, url)
+            case `comercialFiduciaria` => autorizacionComercialRepo.autorizarFiduciaria(token, encriptedToken, url)
+            case `comercialValores` => autorizacionComercialRepo.autorizarValores(token, encriptedToken, url)
             case `comercialAdmin` => autorizacionComercialAdminRepo.autorizar(token, encriptedToken, url)
             case _ => Future.failed(NoAutorizado("Tipo usuario no existe"))
           }
