@@ -5,21 +5,23 @@ import java.util.Date
 
 import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.exceptions.ValidacionException
-import co.com.alianza.persistence.entities.{ Agente, UsuarioEmpresarial }
+import co.com.alianza.persistence.entities._
 import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.token.Token
 import enumerations.{ AppendPasswordUser, EstadosEmpresaEnum, EstadosUsuarioEnum }
 import org.joda.time.DateTime
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.UsuarioEmpresarialDAOs
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.UsuarioAgenteDAOs
 
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * Created by s4n in 2016
  */
-case class UsuarioEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs)(implicit val ex: ExecutionContext) extends UsuarioEmpresarialRepository {
+abstract class UsuarioEmpresarialRepositoryG [T <: UsuarioAgenteTable[E] ,E <: UsuarioAgente ](usuarioDAO : UsuarioAgenteDAOs[E]) extends UsuarioEmpresarialRepository {
 
-  def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[Agente]] = {
+  implicit val ex : ExecutionContext
+
+  def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[Any]] = {
     usuarioDAO.getByIdentityAndUser(identificacion, usuario)
   }
 
@@ -61,7 +63,7 @@ case class UsuarioEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs
     usuarioDAO.updateLastEntryDate(idUsuario, fechaActual)
   }
 
-  def actualizarInfoUsuario(usuario: Agente, ip: String): Future[Int] = {
+  def actualizarInfoUsuario(usuario: UsuarioAgente, ip: String): Future[Int] = {
     for {
       intentos <- usuarioDAO.updateIncorrectEntries(usuario.id, 0)
       ip <- usuarioDAO.updateLastIp(usuario.id, ip)
@@ -77,7 +79,7 @@ case class UsuarioEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs
    * @param contrasena
    * @return
    */
-  def validarUsuario(usuario: Agente, contrasena: String, reintentosErroneos: Int): Future[Boolean] = {
+  def validarUsuario(usuario: UsuarioAgente, contrasena: String, reintentosErroneos: Int): Future[Boolean] = {
     for {
       estado <- validarEstado(usuario)
       contrasena <- validarContrasena(contrasena, usuario, reintentosErroneos)
@@ -89,7 +91,7 @@ case class UsuarioEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs
    * @param usuario
    * @return
    */
-  def validarEstado(usuario: Agente): Future[Boolean] = {
+  def validarEstado(usuario: UsuarioAgente): Future[Boolean] = {
     val estado = usuario.estado
     if (estado == EstadosEmpresaEnum.bloqueContraseña.id) {
       Future.failed(ValidacionException("401.8", "Usuario Bloqueado"))
@@ -110,7 +112,7 @@ case class UsuarioEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs
    * @param usuario
    * @return
    */
-  def validarContrasena(contrasena: String, usuario: Agente, reintentosErroneos: Int): Future[Boolean] = {
+  def validarContrasena(contrasena: String, usuario: UsuarioAgente, reintentosErroneos: Int): Future[Boolean] = {
     val hash = Crypto.hashSha512(contrasena.concat(AppendPasswordUser.appendUsuariosFiducia), usuario.id)
     if (hash.contentEquals(usuario.contrasena.get)) {
       Future.successful(true)
@@ -149,7 +151,7 @@ case class UsuarioEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs
    * @param dias
    * @return
    */
-  def validarCaducidadContrasena(tipoCliente: TiposCliente, usuario: Agente, dias: Int): Future[Boolean] = {
+  def validarCaducidadContrasena(tipoCliente: TiposCliente, usuario: UsuarioAgente, dias: Int): Future[Boolean] = {
     if (new DateTime().isAfter(new DateTime(usuario.fechaActualizacion.getTime).plusDays(dias))) {
       val token: String = Token.generarTokenCaducidadContrasena(tipoCliente, usuario.id)
       Future.failed(ValidacionException("401.9", token))
@@ -158,3 +160,9 @@ case class UsuarioEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs
     }
   }
 }
+
+case class UsuarioEmpresarialDriverRepository (usuarioDAO : UsuarioAgenteDAOs[UsuarioEmpresarial,UsuarioEmpresarialTable])(implicit val ex : ExecutionContext)
+  extends UsuarioEmpresarialRepositoryG with UsuarioEmpresarialRepository
+
+case class UsuarioAgenteInmobDriverRepository (usuarioDAO: UsuarioAgenteDAOs[UsuarioAgenteInmobiliarioTable,UsuarioAgenteInmobiliario])(implicit val ex :
+ExecutionContext) extends UsuarioEmpresarialRepositoryG with UsuarioEmpresarialRepository

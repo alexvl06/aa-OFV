@@ -4,47 +4,31 @@ import java.sql.Timestamp
 import CustomDriver.simple._
 
 /**
- * Created by alexandra on 2016
+ * Created by alexandra in 2016
  */
-
-abstract class Agente {
-  def id: Int
-  def identificacion : String
-  def usuario: String
-  def correo:String
-  def estado: Int
-  def contrasena: Option[String]
-  def token: Option[String]
-  def fechaActualizacion: Timestamp
-  def numeroIngresosErroneos: Int
-  def ipUltimoIngreso: Option[String]
-  def fechaUltimoIngreso: Option[Timestamp]
-  def tipoIdentificacion: Int
-  def descripcion: String
-}
-
 case class UsuarioAgenteInmobiliario (id: Int, identificacion: String, tipoIdentificacion:Int, usuario: String, correo: String, estado: Int,
   contrasena: Option[String], token: Option[String], fechaActualizacion: Timestamp, numeroIngresosErroneos : Int , ipUltimoIngreso : Option[String],
-  descripcion: String, fechaUltimoIngreso: Option[Timestamp]) extends Agente
+  descripcion: String, fechaUltimoIngreso: Option[Timestamp]) extends UsuarioAgente
 
 
-class UsuarioAgenteInmobiliarioTable (tag :Tag) extends Table[UsuarioAgenteInmobiliario](tag, "USUARIO_AGENTE_INMOBILIARIO") {
+class UsuarioAgenteInmobiliarioTable (tag :Tag) extends UsuarioAgenteTable[UsuarioAgenteInmobiliario](tag, Some("agenteInmobilairio"),
+  "USUARIO_AGENTE_INMOBILIARIO") {
 
-  def id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
-  def identificacion = column[String]("NIT_EMPRESA")
-  def tipoIdentificacion = column[Int]("TIPO_IDENTIFICACION")
-  def usuario = column[String]("USUARIO")
-  def correo = column[String]("CORREO")
-  def estado = column[Int]("ESTADO")
-  def contrasena = column[Option[String]]("CONTRASENA")
-  def token = column[Option[String]]("TOKEN")
-  def fechaActualizacion = column[Timestamp]("FECHA_ACTUALIZACION")
-  def numeroIngresosErroneos = column[Int]("NUMERO_INGRESOS_ERRONEOS")
-  def ipUltimoIngreso = column[Option[String]]("IP_ULTIMO_INGRESO")
-  def descripcion = column[String]("DESCRIPCION")
-  def fechaUltimoIngreso = column[Option[Timestamp]]("FECHA_ULTIMO_INGRESO")
+  override val id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
+  override val identificacion = column[String]("NIT_EMPRESA")
+  override val tipoIdentificacion = column[Int]("TIPO_IDENTIFICACION")
+  override val usuario = column[String]("USUARIO")
+  override val correo = column[String]("CORREO")
+  override val estado = column[Int]("ESTADO")
+  override val contrasena = column[Option[String]]("CONTRASENA")
+  override val token = column[Option[String]]("TOKEN")
+  override val fechaActualizacion = column[Timestamp]("FECHA_ACTUALIZACION")
+  override val numeroIngresosErroneos = column[Int]("NUMERO_INGRESOS_ERRONEOS")
+  override val ipUltimoIngreso = column[Option[String]]("IP_ULTIMO_INGRESO")
+  override val descripcion = column[String]("DESCRIPCION")
+  override val fechaUltimoIngreso = column[Option[Timestamp]]("FECHA_ULTIMO_INGRESO")
 
-  def * = (id, identificacion, tipoIdentificacion, usuario, correo, estado,  contrasena, token, fechaActualizacion,numeroIngresosErroneos, ipUltimoIngreso, descripcion,
-    fechaUltimoIngreso) <> (UsuarioAgenteInmobiliario.tupled, UsuarioAgenteInmobiliario.unapply)
+  def * = (id, identificacion, tipoIdentificacion, usuario, correo, estado,  contrasena, token, fechaActualizacion,numeroIngresosErroneos, ipUltimoIngreso,
+    descripcion, fechaUltimoIngreso) <> (UsuarioAgenteInmobiliario.tupled, UsuarioAgenteInmobiliario.unapply)
 }
 

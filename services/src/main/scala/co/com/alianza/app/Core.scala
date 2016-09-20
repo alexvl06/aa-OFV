@@ -30,20 +30,19 @@ import portal.transaccional.autenticacion.service.drivers.pregunta.{ PreguntasAu
 import portal.transaccional.autenticacion.service.drivers.recurso.RecursoDriverRepository
 import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaDriverRepository
 import portal.transaccional.autenticacion.service.drivers.respuesta.{ RespuestaUsuarioAdminDriverRepository, RespuestaUsuarioDriverRepository }
+import portal.transaccional.autenticacion.service.drivers.rolRecursoComercial.{ RecursoComercialDriverRepository, RolComercialDriverRepository, RolRecursoComercialDriverRepository }
 import portal.transaccional.autenticacion.service.drivers.sesion.SesionDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioEmpresarialAdminDriverRepository
-import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialDriverRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioAgente.{ UsuarioAgenteInmobDriverRepository, UsuarioEmpresarialDriverRepository }
 import portal.transaccional.autenticacion.service.drivers.usuarioComercial.UsuarioComercialDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioComercialAdmin.{ UsuarioComercialAdminDriverRepository, UsuarioComercialAdminRepository }
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioDriverRepository
-import portal.transaccional.autenticacion.service.drivers.rolRecursoComercial.{ RecursoComercialDriverRepository, RolComercialDriverRepository, RolRecursoComercialDriverRepository }
-import portal.transaccional.autenticacion.service.drivers.usuarioInmobiliario.{ UsuarioInmobiliarioDriverRepository, UsuarioInmobiliarioRepository }
-import portal.transaccional.autenticacion.service.web.permisoInmobiliario.AgenteInmobiliarioService
+import portal.transaccional.autenticacion.service.drivers.usuarioInmobiliario.UsuarioInmobiliarioDriverRepository
 import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
 import portal.transaccional.fiduciaria.autenticacion.storage.config.pg.{ OracleConfig, PGConfig }
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.core.ClienteDAO
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.ldap.AlianzaLdapDAO
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ PermisoInmobiliarioDAOs, _ }
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal._
 
 /**
  * Method override for the unique ActorSystem instance
@@ -133,7 +132,7 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val configuracionRepo = ConfiguracionDriverRepository(configuracionDAO)
   lazy val reglaContrasenaRepo = ReglaContrasenaDriverRepository(reglaContrasenaDAO)
   lazy val usuarioAgenteRepo = UsuarioEmpresarialDriverRepository(usuarioAgenteDAO)
-  lazy val usuarioAgenteInmobRepo = UsuarioEmpresarialDriverRepository(usuarioAgenteInmob)
+  lazy val usuarioAgenteInmobRepo = UsuarioAgenteInmobDriverRepository(usuarioAgenteInmob)
   lazy val usuarioComercialRepo = UsuarioComercialDriverRepository(usuarioComercialDAO)
   lazy val usuarioComercialAdminRepo = UsuarioComercialAdminDriverRepository(usuarioComercialAdminDAO)
   lazy val respuestaUsuarioRepo = RespuestaUsuarioDriverRepository(respuestaUsuarioDAO, configuracionRepo)
@@ -193,7 +192,4 @@ private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
   lazy val permisoInmobDAO = PermisoInmobiliarioDAO()(config)
 }
 
-/**
- *
- */
 object MainActors extends BootedCore with CoreActors

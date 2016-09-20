@@ -2,7 +2,6 @@ package portal.transaccional.autenticacion.service.web.permisoInmobiliario
 
 import co.com.alianza.app.CrossHeaders
 import portal.transaccional.autenticacion.service.drivers.permisoAgenteInmobiliario.PermisoAgenteInmobiliarioRepository
-import portal.transaccional.autenticacion.service.drivers.usuarioInmobiliario.UsuarioInmobiliarioRepository
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import spray.http.StatusCodes
@@ -12,9 +11,10 @@ import scala.concurrent.ExecutionContext
 import scala.util.{ Failure, Success }
 
 /**
- * Created by alexandra on 2016
+ * Created by alexandra in 2016
  */
-case class AgenteInmobiliarioService(agenteRepo: PermisoAgenteInmobiliarioRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
+case class AgenteInmobiliarioService(agenteRepo: PermisoAgenteInmobiliarioRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with
+  DomainJsonFormatters with CrossHeaders {
 
   val permisos = "agenteInmobiliario"
   val updateByProject = "updateByProject"

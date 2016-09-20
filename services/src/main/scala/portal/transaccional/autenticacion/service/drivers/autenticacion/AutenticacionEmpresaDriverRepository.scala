@@ -62,7 +62,7 @@ case class AutenticacionEmpresaDriverRepository(
    * @return Future[Boolean]
    * Success => True
    */
-  private def autenticar(agente: Option[Agente], admin: Option[UsuarioEmpresarialAdmin], agenteInmob : Option[Agente],
+  private def autenticar(agente: Option[UsuarioAgente], admin: Option[UsuarioEmpresarialAdmin], agenteInmob : Option[UsuarioAgente],
     contrasena: String, ip: String): Future[String] = {
     if (agente.isDefined) {
       autenticarAgente(agente.get, contrasena, ip)
@@ -94,7 +94,7 @@ case class AutenticacionEmpresaDriverRepository(
    * - asociar token
    * - crear session de usuario
    */
-  private def autenticarAgente(usuario: Agente, contrasena: String, ip: String): Future[String] = {
+  private def autenticarAgente(usuario: UsuarioAgente, contrasena: String, ip: String): Future[String] = {
     for {
       empresa <- obtenerEmpresaValida(usuario.identificacion)
       reintentosErroneos <- reglaRepo.getRegla(LlavesReglaContrasena.CANTIDAD_REINTENTOS_INGRESO_CONTRASENA.llave)
@@ -132,7 +132,7 @@ case class AutenticacionEmpresaDriverRepository(
    * - asociar token
    * - crear session de usuario
    */
-  private def autenticarAgenteInmob(usuario: Agente, contrasena: String, ip: String): Future[String] = {
+  private def autenticarAgenteInmob(usuario: UsuarioAgente, contrasena: String, ip: String): Future[String] = {
     for {
       empresa <- obtenerEmpresaValida(usuario.identificacion)                                                         //OK
       reintentosErroneos <- reglaRepo.getRegla(LlavesReglaContrasena.CANTIDAD_REINTENTOS_INGRESO_CONTRASENA.llave)    //ok
@@ -205,13 +205,13 @@ case class AutenticacionEmpresaDriverRepository(
     } yield empresa.get
   }
 
-  private def generarTokenAgente(usuario: Agente, ip: String, inactividad: String): Future[String] = Future {
+  private def generarTokenAgente(usuario: UsuarioAgente, ip: String, inactividad: String): Future[String] = Future {
     Token.generarToken(usuario.usuario, usuario.correo, getTipoPersona(usuario.tipoIdentificacion),
       usuario.ipUltimoIngreso.getOrElse(ip), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())),
       inactividad, tipoAgente(usuario), Some(usuario.identificacion))
   }
 
-  private def tipoAgente(u : Agente) ={
+  private def tipoAgente(u : UsuarioAgente) ={
     u match {
       case usuario : UsuarioEmpresarial => TiposCliente.agenteEmpresarial
       case usuario : UsuarioAgenteInmobiliario => TiposCliente.agenteInmobiliario
