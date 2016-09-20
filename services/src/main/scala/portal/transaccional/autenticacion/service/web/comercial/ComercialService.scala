@@ -3,6 +3,7 @@ package portal.transaccional.autenticacion.service.web.comercial
 import co.com.alianza.app.CrossHeaders
 import co.com.alianza.exceptions.{ PersistenceException, ValidacionException }
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
+import co.com.alianza.persistence.entities.Empresa
 import portal.transaccional.autenticacion.service.drivers.usuarioComercialAdmin.UsuarioComercialAdminRepository
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
@@ -17,6 +18,7 @@ case class ComercialService(user: UsuarioAuth, comercialRepo: UsuarioComercialAd
 
   val comercialPath = "comercial"
   val administradorPath = "administrador"
+  val servicioAlClientePath = "servicioAlCliente"
 
   val route: Route = {
     pathPrefix(comercialPath / administradorPath) {
@@ -30,6 +32,12 @@ case class ComercialService(user: UsuarioAuth, comercialRepo: UsuarioComercialAd
             actualizarContrasena()
           }
         }
+    } ~ pathPrefix(comercialPath / servicioAlClientePath) {
+      path("validarEmpresa") {
+        pathEndOrSingleSlash {
+          validarEmpresa()
+        }
+      }
     }
   }
 
@@ -56,6 +64,20 @@ case class ComercialService(user: UsuarioAuth, comercialRepo: UsuarioComercialAd
           onComplete(resultado) {
             case Success(value) =>
               complete(value.toString)
+            case Failure(ex) => execution(ex)
+          }
+      }
+    }
+  }
+
+  private def validarEmpresa() = {
+    post {
+      entity(as[ValidarEmpresaRequest]) {
+        request =>
+          val resultado: Future[Empresa] = comercialRepo.validarEmpresa(request.identificacion)
+          onComplete(resultado) {
+            case Success(value) =>
+              complete(value)
             case Failure(ex) => execution(ex)
           }
       }
