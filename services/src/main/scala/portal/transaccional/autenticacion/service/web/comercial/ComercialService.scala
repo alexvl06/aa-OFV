@@ -3,7 +3,6 @@ package portal.transaccional.autenticacion.service.web.comercial
 import co.com.alianza.app.CrossHeaders
 import co.com.alianza.exceptions.{ PersistenceException, ValidacionException }
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
-import co.com.alianza.persistence.entities.Empresa
 import portal.transaccional.autenticacion.service.drivers.usuarioComercialAdmin.UsuarioComercialAdminRepository
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
@@ -74,10 +73,10 @@ case class ComercialService(user: UsuarioAuth, comercialRepo: UsuarioComercialAd
     post {
       entity(as[ValidarEmpresaRequest]) {
         request =>
-          val resultado: Future[Empresa] = comercialRepo.validarEmpresa(request.identificacion)
+          val resultado: Future[Boolean] = comercialRepo.validarEmpresa(request.identificacion)
           onComplete(resultado) {
             case Success(value) =>
-              complete(value)
+              complete(value.toString())
             case Failure(ex) => execution(ex)
           }
       }

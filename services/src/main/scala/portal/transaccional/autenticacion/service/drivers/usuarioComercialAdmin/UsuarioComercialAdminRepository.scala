@@ -31,6 +31,6 @@ trait UsuarioComercialAdminRepository {
 
   def actualizarContrasena(usuario: UsuarioAuth, contrasenaActual: String, contrasenaNueva: String): Future[Int]
 
-  def validarEmpresa(identificacion: String): Future[Empresa]
+  def validarEmpresa(identificacion: String): Future[Boolean]
 
 }

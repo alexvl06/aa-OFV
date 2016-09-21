@@ -109,11 +109,11 @@ case class UsuarioComercialAdminDriverRepository(usuarioDAO: UsuarioComercialAdm
     resultadoFuturo
   }
 
-  def validarEmpresa(identificacion: String): Future[Empresa] = {
+  def validarEmpresa(identificacion: String): Future[Boolean] = {
     for {
       empresa <- empresaRepo.getByIdentity(identificacion)
       validar <- empresaRepo.validarEmpresa(empresa)
-    } yield empresa.get
+    } yield validar
   }
 
 }
