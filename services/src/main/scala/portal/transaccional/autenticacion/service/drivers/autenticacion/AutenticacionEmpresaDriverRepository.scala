@@ -180,8 +180,7 @@ case class AutenticacionEmpresaDriverRepository(
       caducidad <- usuarioAdminRepo.validarCaducidadContrasena(TiposCliente.agenteEmpresarial, usuario, reglaDias.valor.toInt)
       actualizar <- usuarioAdminRepo.actualizarInfoUsuario(usuario, ip)
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
-      //token <- generarToken(usuario, ip, inactividad.valor, cliente.wcli_constructor)
-      token <- generarToken(usuario, ip, inactividad.valor, "S")
+      token <- generarToken(usuario, ip, inactividad.valor, cliente.wcli_constructor)
       sesion <- sesionRepo.crearSesion(token, inactividad.valor.toInt, Option(EmpresaDTO.entityToDto(empresa)))
       asociarToken <- usuarioAdminRepo.actualizarToken(usuario.id, AesUtil.encriptarToken(token))
       respuestas <- respuestasRepo.getRespuestasById(usuario.id)
@@ -227,7 +226,7 @@ case class AutenticacionEmpresaDriverRepository(
   }
 
   private def generarToken(usuario: UsuarioEmpresarialAdmin, ip: String, inactividad: String, esConstructor: String) = {
-    if (esConstructor == "S" && usuario.identificacion == "860000185") {
+    if (esConstructor == "S") {
       generarTokenAdmin(usuario, ip, inactividad, TiposCliente.clienteAdminInmobiliario)
     } else {
       generarTokenAdmin(usuario, ip, inactividad, TiposCliente.clienteAdministrador)

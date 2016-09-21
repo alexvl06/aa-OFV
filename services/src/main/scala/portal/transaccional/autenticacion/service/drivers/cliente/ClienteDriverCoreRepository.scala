@@ -14,6 +14,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 case class ClienteDriverCoreRepository(clienteCoreRepo: ClienteDAO)(implicit val ex: ExecutionContext) extends ClienteRepository {
 
   def getCliente(documento: String, tipoIdentificacion: Option[Int]): Future[Cliente] = {
+
     val esGrupo: Boolean = tipoIdentificacion.getOrElse(0) == TipoIdentificacion.GRUPO.identificador
     val consultaClienteCore = esGrupo match {
       case true => clienteCoreRepo.consultaGrupo(documento)
