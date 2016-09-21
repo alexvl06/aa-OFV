@@ -10,18 +10,18 @@ import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.token.Token
 import enumerations.{ AppendPasswordUser, EstadosEmpresaEnum, EstadosUsuarioEnum }
 import org.joda.time.DateTime
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.UsuarioAgenteDAOs
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ UsuarioAgenteDAOs, UsuarioAgenteInmobDAO, UsuarioEmpresarialDAO }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * Created by s4n in 2016
  */
-abstract class UsuarioEmpresarialRepositoryG [T <: UsuarioAgenteTable[E] ,E <: UsuarioAgente ](usuarioDAO : UsuarioAgenteDAOs[E]) extends UsuarioEmpresarialRepository {
+abstract class UsuarioEmpresarialRepositoryG [T <: UsuarioAgenteTable[E] ,E <: UsuarioAgente](usuarioDAO : UsuarioAgenteDAOs[T,E]) extends UsuarioEmpresarialRepository[E] {
 
   implicit val ex : ExecutionContext
 
-  def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[Any]] = {
+  def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[E]] = {
     usuarioDAO.getByIdentityAndUser(identificacion, usuario)
   }
 
@@ -161,8 +161,10 @@ abstract class UsuarioEmpresarialRepositoryG [T <: UsuarioAgenteTable[E] ,E <: U
   }
 }
 
-case class UsuarioEmpresarialDriverRepository (usuarioDAO : UsuarioAgenteDAOs[UsuarioEmpresarial,UsuarioEmpresarialTable])(implicit val ex : ExecutionContext)
-  extends UsuarioEmpresarialRepositoryG with UsuarioEmpresarialRepository
+case class UsuarioEmpresarialDriverRepository (usuarioDAO : UsuarioEmpresarialDAO)(implicit val ex : ExecutionContext)
+  extends UsuarioEmpresarialRepositoryG[UsuarioEmpresarialTable,UsuarioEmpresarial](usuarioDAO)
+    with UsuarioEmpresarialRepository[UsuarioEmpresarial]
 
-case class UsuarioAgenteInmobDriverRepository (usuarioDAO: UsuarioAgenteDAOs[UsuarioAgenteInmobiliarioTable,UsuarioAgenteInmobiliario])(implicit val ex :
-ExecutionContext) extends UsuarioEmpresarialRepositoryG with UsuarioEmpresarialRepository
+case class UsuarioAgenteInmobDriverRepository (usuarioDAO: UsuarioAgenteInmobDAO)(implicit val ex :
+ExecutionContext) extends UsuarioEmpresarialRepositoryG[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario](usuarioDAO) with
+  UsuarioEmpresarialRepository[UsuarioAgenteInmobiliario]

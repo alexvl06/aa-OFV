@@ -10,7 +10,7 @@ case class UsuarioEmpresarial(id: Int, correo: String, fechaActualizacion: Times
   estado: Int, contrasena: Option[String], token: Option[String], numeroIngresosErroneos: Int, ipUltimoIngreso: Option[String],
   fechaUltimoIngreso: Option[Timestamp], nombreUsuario: String, cargo: String, descripcion: String) extends UsuarioAgente
 
-class UsuarioEmpresarialTable(tag: Tag) extends UsuarioAgenteTable[UsuarioEmpresarial](tag, Some("agenteEmpresarial"),"USUARIO_EMPRESARIAL") {
+class UsuarioEmpresarialTable(tag: Tag) extends UsuarioAgenteTable[UsuarioEmpresarial](tag, "USUARIO_EMPRESARIAL") {
   
   override val id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
   override val correo = column[String]("CORREO")

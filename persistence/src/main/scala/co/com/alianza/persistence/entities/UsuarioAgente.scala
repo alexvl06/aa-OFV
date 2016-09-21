@@ -23,8 +23,8 @@ trait UsuarioAgente {
   val descripcion: String
 }
 
-abstract class UsuarioAgenteTable[E: ClassTag](tag: Tag, schemaName: Option[String], tableName: String)
-  extends Table[E](tag, schemaName, tableName) {
+abstract class UsuarioAgenteTable[E: ClassTag](tag: Tag, tableName: String)
+  extends Table[E](tag, tableName) {
 
   val classOfEntity = classTag[E].runtimeClass
 

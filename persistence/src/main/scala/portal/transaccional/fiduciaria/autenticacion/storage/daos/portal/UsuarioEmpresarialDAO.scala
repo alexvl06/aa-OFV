@@ -26,7 +26,5 @@ case class UsuarioEmpresarialDAO(implicit dcConfig: DBConfig) extends UsuarioAge
     val query = n.filter(_.id === id).map(a => (a.correo, a.usuario, a.nombreUsuario, a.cargo, a.descripcion))
     run(query.update(correo, usuario, nombreUsuario, cargo, descripcion))
   }
-
-
 }
 

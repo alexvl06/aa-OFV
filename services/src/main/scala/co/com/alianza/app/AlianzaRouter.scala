@@ -4,6 +4,7 @@ import akka.actor.{ ActorLogging, ActorRef, ActorSelection, ActorSystem }
 import co.com.alianza.app.handler.CustomRejectionHandler
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.infrastructure.security.ServiceAuthorization
+import co.com.alianza.persistence.entities.UsuarioEmpresarial
 import co.com.alianza.web.empresa.{ AdministrarContrasenaEmpresaService, UsuarioEmpresaService }
 import portal.transaccional.autenticacion.service.drivers.autorizacion._
 import spray.routing._
@@ -31,7 +32,7 @@ import portal.transaccional.autenticacion.service.web.recursoComercial.RecursoGr
 case class AlianzaRouter(
     autenticacionRepo: AutenticacionRepository, autenticacionEmpresaRepositorio: AutenticacionEmpresaRepository,
     autenticacionComercialRepositorio: AutenticacionComercialRepository, usuarioRepositorio: UsuarioRepository,
-    usuarioAgenteRepositorio: UsuarioEmpresarialRepository, usuarioAdminRepositorio: UsuarioEmpresarialAdminRepository,
+    usuarioAgenteRepositorio: UsuarioEmpresarialRepository[UsuarioEmpresarial], usuarioAdminRepositorio: UsuarioEmpresarialAdminRepository,
     autorizacionUsuarioRepo: AutorizacionUsuarioRepository, kafkaActor: ActorSelection, preguntasAutovalidacionActor: ActorSelection,
     usuariosActor: ActorSelection, confrontaActor: ActorSelection, actualizacionActor: ActorSelection, permisoTransaccionalActor: ActorSelection,
     agenteEmpresarialActor: ActorSelection, pinActor: ActorSelection, pinUsuarioEmpresarialAdminActor: ActorSelection,
@@ -53,12 +54,12 @@ case class AlianzaRouter(
       AutenticacionService(autenticacionRepo, autenticacionEmpresaRepositorio, autenticacionComercialRepositorio, kafkaActor).route ~
       RecursoGraficoComercialService(recursoComercialRepository, rolComercialRepository).route ~
       AutorizacionRecursoComercialService(autorizacionRecursoComercialRepository).route ~
-      new ConfrontaService(confrontaActor).route ~
+      ConfrontaService(confrontaActor).route ~
       new EnumeracionService().route ~
       UsuarioService(kafkaActor, usuariosActor).route ~
-      new ReglasContrasenasService(contrasenasActor).route ~
+      ReglasContrasenasService(contrasenasActor).route ~
       PinService(kafkaActor, pinActor, pinUsuarioEmpresarialAdminActor, pinUsuarioAgenteEmpresarialActor).route ~
-      new AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).insecureRoute ~
+      AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).insecureRoute ~
       authenticate(authenticateUser) {
         user =>
           IpsUsuariosService(kafkaActor, ipsUsuarioActor).route(user) ~

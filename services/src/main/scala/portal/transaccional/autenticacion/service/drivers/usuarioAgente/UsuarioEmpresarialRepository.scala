@@ -8,7 +8,7 @@ import co.com.alianza.persistence.entities.UsuarioAgente
 import scala.concurrent.Future
 
 /**
- * Created by hernando on 26/07/16.
+ * Created by hernando on 2016
  */
 trait UsuarioEmpresarialRepository[ E <: UsuarioAgente] {
 

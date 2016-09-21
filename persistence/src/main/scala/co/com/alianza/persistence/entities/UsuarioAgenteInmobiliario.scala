@@ -11,8 +11,7 @@ case class UsuarioAgenteInmobiliario (id: Int, identificacion: String, tipoIdent
   descripcion: String, fechaUltimoIngreso: Option[Timestamp]) extends UsuarioAgente
 
 
-class UsuarioAgenteInmobiliarioTable (tag :Tag) extends UsuarioAgenteTable[UsuarioAgenteInmobiliario](tag, Some("agenteInmobilairio"),
-  "USUARIO_AGENTE_INMOBILIARIO") {
+class UsuarioAgenteInmobiliarioTable (tag :Tag) extends UsuarioAgenteTable[UsuarioAgenteInmobiliario](tag, "USUARIO_AGENTE_INMOBILIARIO") {
 
   override val id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
   override val identificacion = column[String]("NIT_EMPRESA")
