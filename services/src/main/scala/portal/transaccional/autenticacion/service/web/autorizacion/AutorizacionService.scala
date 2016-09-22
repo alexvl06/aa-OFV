@@ -3,7 +3,6 @@ package portal.transaccional.autenticacion.service.web.autorizacion
 import akka.actor.ActorSelection
 import co.com.alianza.app.CrossHeaders
 import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import co.com.alianza.exceptions._
 import co.com.alianza.infrastructure.auditing.AuditingHelper
@@ -11,7 +10,6 @@ import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.persistence.entities.UsuarioEmpresarial
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.token.{ AesUtil, Token }
-import enumerations.CryptoAesParameters
 import portal.transaccional.autenticacion.service.drivers.autorizacion._
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioEmpresarialAdminRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialRepository

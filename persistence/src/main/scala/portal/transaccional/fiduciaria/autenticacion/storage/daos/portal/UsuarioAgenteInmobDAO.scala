@@ -8,4 +8,7 @@ import slick.lifted.TableQuery
  * Created by s4n on 2016
  */
 case class UsuarioAgenteInmobDAO(implicit dcConfig: DBConfig) extends UsuarioAgenteDAO[UsuarioAgenteInmobiliarioTable,UsuarioAgenteInmobiliario](
-  TableQuery[UsuarioAgenteInmobiliarioTable])
+  TableQuery[UsuarioAgenteInmobiliarioTable]) {
+
+
+}

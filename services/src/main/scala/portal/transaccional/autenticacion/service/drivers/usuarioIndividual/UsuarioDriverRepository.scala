@@ -109,6 +109,7 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
       //1. actualizar ingresos erroneos
       //2. bloquear usuario si es necesario
       val reintentos: Int = usuario.numeroIngresosErroneos + 1
+      println("2 ENTRO POR AQUI!!!", usuario.id, usuario.contrasena)
       for {
         actualizarIngresos <- actualizarIngresosErroneosUsuario(usuario.id.get, reintentos)
         bloquear <- validarBloqueoUsuario(usuario.id.get, reintentos, reintentosErroneos)

@@ -20,7 +20,7 @@ case class PermisoInmobiliarioDAO()(implicit dcConfig: DBConfig) extends TableQu
 
   def updateByProject(pEliminados: Seq[PermisoAgenteInmobiliario], pAgregados: Seq[PermisoAgenteInmobiliario]): Future[Option[Int]] = {
     val borrar = DBIO.sequence(pEliminados.map(p => findByAll(p).delete))
-    val crear = this ++= pAgregados
+    val crear = DBIO.failed(new Exception)
     run(borrar.andThen(crear).transactionally)
   }
 
