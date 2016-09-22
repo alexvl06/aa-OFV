@@ -68,8 +68,15 @@ case class HorarioEmpresaService(kafkaActor: ActorSelection, horarioEmpresaActor
           respondWithMediaType(mediaType) {
             requestExecute(new ValidarHorarioEmpresaMessage(user.identificacionUsuario, user.tipoCliente), horarioEmpresaActor)
           }
-
+        } ~ post {
+          entity(as[ValidarHorarioSACRequest]) {
+            request =>
+              respondWithMediaType(mediaType) {
+                requestExecute(new ValidarHorarioEmpresaMessage(request.idUsuarioRecurso, user.tipoCliente), horarioEmpresaActor)
+              }
+          }
         }
+
       }
   }
 
