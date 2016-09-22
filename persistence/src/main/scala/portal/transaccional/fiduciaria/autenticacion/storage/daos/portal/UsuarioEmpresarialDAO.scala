@@ -24,7 +24,7 @@ case class UsuarioEmpresarialDAO(implicit dcConfig: DBConfig) extends UsuarioAge
 
   override def update(id: Int, usuario: String, correo: String, nombreUsuario: String, cargo: String, descripcion: String): Future[Int] = {
     val query = n.filter(_.id === id).map(a => (a.correo, a.usuario, a.nombreUsuario, a.cargo, a.descripcion))
-    run(query.update(correo, usuario, nombreUsuario, cargo, descripcion))
+    run(query.update(correo, usuario, nombreUsuario, cargo, Some(descripcion)))
   }
 }
 

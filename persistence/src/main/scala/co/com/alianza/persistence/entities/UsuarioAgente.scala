@@ -20,7 +20,7 @@ trait UsuarioAgente {
   val ipUltimoIngreso: Option[String]
   val fechaUltimoIngreso: Option[Timestamp]
   val tipoIdentificacion: Int
-  val descripcion: String
+  val descripcion: Option[String]
 }
 
 abstract class UsuarioAgenteTable[E: ClassTag](tag: Tag, tableName: String)
@@ -39,7 +39,7 @@ abstract class UsuarioAgenteTable[E: ClassTag](tag: Tag, tableName: String)
   val fechaActualizacion = column[Timestamp]("FECHA_ACTUALIZACION")
   val numeroIngresosErroneos = column[Int]("NUMERO_INGRESOS_ERRONEOS")
   val ipUltimoIngreso = column[Option[String]]("IP_ULTIMO_INGRESO")
-  val descripcion = column[String]("DESCRIPCION")
+  val descripcion = column[Option[String]]("DESCRIPCION")
   val fechaUltimoIngreso = column[Option[Timestamp]]("FECHA_ULTIMO_INGRESO")
 }
 

@@ -212,10 +212,10 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
    * @param descripcion
    * @return
    */
-  def actualizarAgente(id: Int, usuario: String, correo: String, nombreUsuario: String, cargo: String, descripcion: String): Future[Validation[PersistenceException, Int]] = loan {
+  def actualizarAgente(id: Int, usuario: String, correo: String, nombreUsuario: String, cargo: String, descripcion: Option[String]): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
-      val query = usuariosEmpresariales.filter(_.id === id).map(a => (a.correo, a.usuario, a.nombreUsuario, a.cargo, a.descripcion))
-      val resultTry = session.database.run(query.update(correo, usuario, nombreUsuario, cargo, descripcion))
+      val query = usuariosEmpresariales.filter(_.id === id).map(a => (a.correo, a.usuario, a.nombreUsuario, a.cargo))
+      val resultTry = session.database.run(query.update(correo, usuario, nombreUsuario, cargo))
       resolveTry(resultTry, "Actualizar usuario empresarial agente")
   }
 

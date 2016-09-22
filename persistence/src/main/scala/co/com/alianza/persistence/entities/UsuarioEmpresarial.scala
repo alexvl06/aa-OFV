@@ -8,7 +8,7 @@ import CustomDriver.simple._
  */
 case class UsuarioEmpresarial(id: Int, correo: String, fechaActualizacion: Timestamp, identificacion: String, tipoIdentificacion: Int, usuario: String,
   estado: Int, contrasena: Option[String], token: Option[String], numeroIngresosErroneos: Int, ipUltimoIngreso: Option[String],
-  fechaUltimoIngreso: Option[Timestamp], nombreUsuario: String, cargo: String, descripcion: String) extends UsuarioAgente
+  fechaUltimoIngreso: Option[Timestamp], nombreUsuario: String, cargo: String, descripcion: Option[String]) extends UsuarioAgente
 
 class UsuarioEmpresarialTable(tag: Tag) extends UsuarioAgenteTable[UsuarioEmpresarial](tag, "USUARIO_EMPRESARIAL") {
   
@@ -26,7 +26,7 @@ class UsuarioEmpresarialTable(tag: Tag) extends UsuarioAgenteTable[UsuarioEmpres
   override val fechaUltimoIngreso = column[Option[Timestamp]]("FECHA_ULTIMO_INGRESO")
   val nombreUsuario = column[String]("NOMBRE")
   val cargo = column[String]("CARGO")
-  override val descripcion = column[String]("DESCRIPCION")
+  override val descripcion = column[Option[String]]("DESCRIPCION")
 
   def * = (id, correo, fechaActualizacion, identificacion, tipoIdentificacion, usuario, estado, contrasena, token, numeroIngresosErroneos, ipUltimoIngreso,
     fechaUltimoIngreso, nombreUsuario, cargo, descripcion) <> (UsuarioEmpresarial.tupled, UsuarioEmpresarial.unapply)

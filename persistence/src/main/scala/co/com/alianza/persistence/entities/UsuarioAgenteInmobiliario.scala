@@ -8,7 +8,7 @@ import CustomDriver.simple._
  */
 case class UsuarioAgenteInmobiliario (id: Int, identificacion: String, tipoIdentificacion:Int, usuario: String, correo: String, estado: Int,
   contrasena: Option[String], token: Option[String], fechaActualizacion: Timestamp, numeroIngresosErroneos : Int , ipUltimoIngreso : Option[String],
-  nombre : String, cargo : String, descripcion: String, fechaUltimoIngreso: Option[Timestamp]) extends UsuarioAgente
+  nombre : Option[String], cargo : Option[String], descripcion: Option[String], fechaUltimoIngreso: Option[Timestamp]) extends UsuarioAgente
 
 
 class UsuarioAgenteInmobiliarioTable (tag :Tag) extends UsuarioAgenteTable[UsuarioAgenteInmobiliario](tag, "USUARIO_AGENTE_INMOBILIARIO") {
@@ -24,9 +24,9 @@ class UsuarioAgenteInmobiliarioTable (tag :Tag) extends UsuarioAgenteTable[Usuar
   override val fechaActualizacion = column[Timestamp]("FECHA_ACTUALIZACION")
   override val numeroIngresosErroneos = column[Int]("NUMERO_INGRESOS_ERRONEOS")
   override val ipUltimoIngreso = column[Option[String]]("IP_ULTIMO_INGRESO")
-  val nombre = column[String]("NOMBRE")
-  val cargo = column[String]("CARGO")
-  override val descripcion = column[String]("DESCRIPCION")
+  val nombre = column[Option[String]]("NOMBRE")
+  val cargo = column[Option[String]]("CARGO")
+  override val descripcion = column[Option[String]]("DESCRIPCION")
   override val fechaUltimoIngreso = column[Option[Timestamp]]("FECHA_ULTIMO_INGRESO")
 
   def * = (id, identificacion, tipoIdentificacion, usuario, correo, estado,  contrasena, token, fechaActualizacion,numeroIngresosErroneos, ipUltimoIngreso,
