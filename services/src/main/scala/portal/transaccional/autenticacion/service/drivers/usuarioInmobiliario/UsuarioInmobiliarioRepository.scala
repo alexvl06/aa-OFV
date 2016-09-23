@@ -17,7 +17,8 @@ trait UsuarioInmobiliarioRepository {
     * @param nombre             Nombre completo del agente - Opcional
     * @param cargo              Cargo del agente en la empresa - Opcional
     * @param descripcion        Descripción del agente - Opcional
-    * @return Un futuro con el identificador del agente agregado
+    * @return Un futuro con el identificador del agente agregado.
+    *         Si el agente ya existe, el identificador que devuleve corresponde a cero (0)
     */
   def createAgenteInmobiliario(tipoIdentificacion: Int, identificacion: String,
                                correo: String, usuario: String,

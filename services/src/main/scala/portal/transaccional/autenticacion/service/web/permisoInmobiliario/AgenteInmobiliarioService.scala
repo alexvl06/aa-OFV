@@ -34,21 +34,7 @@ case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
 
   val route: Route = {
     pathPrefix(agentesPath) {
-      post {
-        entity(as[CrearAgenteInmobiliarioRequest]) { r =>
-            val idAgente: Future[Int] = usuariosRepo.createAgenteInmobiliario(
-              usuarioAuth.tipoIdentificacion, usuarioAuth.identificacionUsuario,
-              r.usuario, r.correo,
-              r.nombre, r.cargo, r.descripcion
-            )
-          onComplete(idAgente) {
-            case Success(id) => complete(StatusCodes.Created)
-            case Failure(exception) =>
-              exception.printStackTrace()
-              complete((StatusCodes.InternalServerError, "Error inesperado"))
-          }
-        }
-      }
+      createAgenteInmobiliario
     }
     //    pathPrefix(permisos) {
     //      pathEndOrSingleSlash {
@@ -63,6 +49,25 @@ case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
     //        }
     //      }
     //    }
+  }
+
+  private def createAgenteInmobiliario: Route = {
+    post {
+      entity(as[CrearAgenteInmobiliarioRequest]) { r =>
+        val idAgente: Future[Int] = usuariosRepo.createAgenteInmobiliario(
+          usuarioAuth.tipoIdentificacion, usuarioAuth.identificacionUsuario,
+          r.usuario, r.correo,
+          r.nombre, r.cargo, r.descripcion
+        )
+        onComplete(idAgente) {
+          case Success(id) => id match {
+            case 0 => complete(StatusCodes.Conflict)
+            case _ => complete(StatusCodes.Created)
+          }
+          case Failure(exception) => complete(StatusCodes.InternalServerError)
+        }
+      }
+    }
   }
 
   private def crear = {

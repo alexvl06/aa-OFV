@@ -19,12 +19,16 @@ case class UsuarioInmobiliarioDriverRepository(usuariosDao: UsuarioAgenteInmobDA
   override def createAgenteInmobiliario(tipoIdentificacion: Int, identificacion: String,
                                         correo: String, usuario: String,
                                         nombre: Option[String], cargo: Option[String], descripcion: Option[String]): Future[Int] = {
-    val agente = UsuarioAgenteInmobiliario(
-      0, identificacion, tipoIdentificacion,
-      usuario, correo, EstadosUsuarioEnum.pendienteActivacion.id,
-      None, None, new Timestamp(System.currentTimeMillis()),
-      0, None, nombre, cargo, descripcion, None
-    )
-    usuariosDao.create(agente)
+    usuariosDao.exists(0, identificacion, usuario).flatMap({
+      case true => Future.successful(0)
+      case false =>
+        val agente = UsuarioAgenteInmobiliario(
+          0, identificacion, tipoIdentificacion,
+          usuario, correo, EstadosUsuarioEnum.pendienteActivacion.id,
+          None, None, new Timestamp(System.currentTimeMillis()),
+          0, None, nombre, cargo, descripcion, None
+        )
+        usuariosDao.create(agente)
+    })
   }
 }
