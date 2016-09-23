@@ -1,10 +1,9 @@
 package portal.transaccional.autenticacion.service.drivers.autorizacion
 
-import co.com.alianza.exceptions.{ AutorizadoComercialAdmin, Autorizado, NoAutorizado, ValidacionAutorizacion }
+import co.com.alianza.exceptions.{ AutorizadoComercialAdmin, NoAutorizado, ValidacionAutorizacion }
 import co.com.alianza.persistence.entities.UsuarioComercialAdmin
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.token.Token
-import portal.transaccional.autenticacion.service.drivers.sesion.SesionRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioComercialAdmin.UsuarioComercialAdminRepository
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -33,7 +32,7 @@ case class AutorizacionUsuarioComercialAdminDriverRepository(usuarioRepo: Usuari
       case Some(usuario: UsuarioComercialAdmin) =>
         val usuarioJson: String = JsonUtil.toJson(usuario)
         Future.successful(AutorizadoComercialAdmin(usuarioJson))
-      case _ => Future.failed(NoAutorizado("usuario no existe"))
+      case _ => Future.failed(NoAutorizado("Usuario no encontrado"))
     }
   }
 

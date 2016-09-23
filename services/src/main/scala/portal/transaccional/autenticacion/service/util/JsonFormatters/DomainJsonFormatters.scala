@@ -1,6 +1,6 @@
 package portal.transaccional.autenticacion.service.util.JsonFormatters
 
-import co.com.alianza.exceptions.ValidacionException
+import co.com.alianza.exceptions.{ NoAutorizado, ValidacionException }
 import co.com.alianza.infrastructure.dto.{ Pregunta, Respuesta }
 import co.com.alianza.persistence.entities.{ Empresa, RecursoComercial, RolComercial }
 import portal.transaccional.autenticacion.service.dto.{ PermisoRecursoDTO, RecursoDTO }
@@ -25,6 +25,7 @@ trait DomainJsonFormatters {
 
   //validacion
   implicit val validacionExceptionFormatter = jsonFormat2(ValidacionException)
+  implicit val noAutorizadoExceptionFormatter = jsonFormat1(NoAutorizado)
 
   //preguntasAutovalidacion
   implicit val preguntaFormatter = jsonFormat2(Pregunta)

@@ -2,8 +2,7 @@ package portal.transaccional.autenticacion.service.drivers.autorizacion
 
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
-import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
-import co.com.alianza.exceptions.{ AutorizadoComercial, Autorizado, NoAutorizado, ValidacionAutorizacion }
+import co.com.alianza.exceptions.{ AutorizadoComercial, NoAutorizado, ValidacionAutorizacion }
 import co.com.alianza.infrastructure.dto.UsuarioComercialDTO
 import co.com.alianza.persistence.entities.UsuarioComercial
 import co.com.alianza.util.json.JsonUtil
@@ -61,7 +60,7 @@ case class AutorizacionUsuarioComercialDriverRepository(sesionRepo: SesionReposi
         val usuarioDTO: UsuarioComercialDTO = UsuarioComercialDTO(tipoCliente, usuario.id, usuario.usuario)
         val usuarioJson: String = JsonUtil.toJson(usuarioDTO)
         Future.successful(AutorizadoComercial(usuarioJson))
-      case _ => Future.failed(NoAutorizado("usuario no existe"))
+      case _ => Future.failed(NoAutorizado("usuario no encontrado"))
     }
   }
 
