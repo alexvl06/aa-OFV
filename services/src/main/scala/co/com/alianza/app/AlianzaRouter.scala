@@ -49,6 +49,7 @@ case class AlianzaRouter(
   import system.dispatcher
 
   val routes =
+//    AgenteInmobiliarioService(permisoAgenteInmob).route ~
     AutorizacionService(usuarioRepositorio, usuarioAgenteRepositorio, usuarioAdminRepositorio, autorizacionUsuarioRepo, kafkaActor, autorizacionAgenteRepo,
       autorizacionAdminRepo, autorizacionComercialRepo, autorizacionComercialAdminRepo).route ~
       AutenticacionService(autenticacionRepo, autenticacionEmpresaRepositorio, autenticacionComercialRepositorio, kafkaActor).route ~
@@ -65,7 +66,7 @@ case class AlianzaRouter(
           IpsUsuariosService(kafkaActor, ipsUsuarioActor).route(user) ~
             IpService(user, ipRepo).route ~
             SesionService().route ~
-            AgenteInmobiliarioService(permisoAgenteInmob).route ~
+            AgenteInmobiliarioService(user, usInmobiliarioRepo, permisoAgenteInmob).route ~
             ActualizacionService(actualizacionActor, kafkaActor).route(user) ~
             HorarioEmpresaService(kafkaActor, horarioEmpresaActor).route(user) ~
             new AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).secureRoute(user) ~

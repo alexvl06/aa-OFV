@@ -1,8 +1,13 @@
 package portal.transaccional.fiduciaria.autenticacion.storage.daos.portal
 
+import co.com.alianza.persistence.entities.UsuarioAgenteInmobiliario
+
+import scala.concurrent.Future
+
 /**
- * Created by s4n in 2016
- */
+  * Define las operaciones de base de datos de los agentes inmobiliarios
+  */
 trait UsuarioAgenteInmobDAOs {
 
+  def create(usuarioInmob: UsuarioAgenteInmobiliario): Future[Int]
 }
