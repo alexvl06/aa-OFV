@@ -1,15 +1,17 @@
 package co.com.alianza.web
 
-import akka.actor.{ ActorSelection, ActorSystem }
+import akka.actor.{ActorSelection, ActorSystem}
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
-import spray.routing.{ Directives, RequestContext }
-import co.com.alianza.app.{ AlianzaCommons, CrossHeaders }
+import spray.routing.{Directives, RequestContext}
+import co.com.alianza.app.{AlianzaCommons, CrossHeaders}
+import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
+import spray.http.StatusCodes
 
 import scala.concurrent.ExecutionContext
 
@@ -28,6 +30,9 @@ case class PermisosTransaccionalesService(kafkaActor: ActorSelection, permisoTra
   def route(user: UsuarioAuth) = pathPrefix(rutaPermisosTx) {
     respondWithMediaType(mediaType) {
       post {
+        if(user.tipoCliente.eq(TiposCliente.comercialSAC))
+          complete((StatusCodes.Unauthorized, "Tipo usuario SAC no esta autorizado para realizar esta acción"))
+        else
         entity(as[GuardarPermisosAgenteMessage]) {
           permisosMessage =>
             clientIP {
