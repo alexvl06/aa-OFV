@@ -95,8 +95,8 @@ case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
     get {
       pathEndOrSingleSlash {
         parameters('nombre.as[Option[String]], 'usuario.as[Option[String]],
-          'correo.as[Option[String]], 'pagina.as[Option[Int]], 'itemsPorPagina.as[Option[Int]]) {
-          (nombreOpt, usuarioOpt, correoOpt, paginaOpt, itemsPorPaginaOpt) => {
+          'correo.as[Option[String]], 'estado.as[Option[Int]], 'pagina.as[Option[Int]], 'itemsPorPagina.as[Option[Int]]) {
+          (nombreOpt, usuarioOpt, correoOpt, estadoOpt, paginaOpt, itemsPorPaginaOpt) => {
             val agentesF: Future[ConsultarAgenteInmobiliarioListResponse] = usuariosRepo.getAgenteInmobiliarioList(
               usuarioAuth.identificacionUsuario, nombreOpt,
               usuarioOpt, correoOpt, paginaOpt, itemsPorPaginaOpt

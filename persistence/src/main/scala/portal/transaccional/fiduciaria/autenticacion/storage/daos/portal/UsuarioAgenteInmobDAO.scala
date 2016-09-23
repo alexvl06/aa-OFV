@@ -31,7 +31,7 @@ case class UsuarioAgenteInmobDAO(implicit dcConfig: DBConfig) extends UsuarioAge
   }
 
   override def getAll(identificacion: String, nombre: Option[String],
-                      usuario: Option[String], correo: Option[String], pagina: Option[Int],
+                      usuario: Option[String], correo: Option[String], estado: Option[Int], pagina: Option[Int],
                       itemsPorPagina: Option[Int])(implicit ec: ExecutionContext): Future[(Int, Int, Int, Int, Seq[UsuarioAgenteInmobiliario])] = {
 
     val basequery: Query[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario, Seq] = MaybeFilter(table)
@@ -39,6 +39,7 @@ case class UsuarioAgenteInmobDAO(implicit dcConfig: DBConfig) extends UsuarioAge
       .filter(nombre)(n => agente => agente.nombre like s"%$n%")
       .filter(usuario)(u => agente => agente.usuario like s"%$u%")
       .filter(correo)(c => agente => agente.correo like s"%$c%")
+      .filter(estado)(e => agente => agente.estado === e)
       .query
 
     run(

@@ -45,8 +45,8 @@ case class UsuarioInmobiliarioDriverRepository(usuariosDao: UsuarioAgenteInmobDA
     )))
   }
 
-  override def getAgenteInmobiliarioList(identificacion: String,
-                                         nombre: Option[String], usuario: Option[String], correo: Option[String],
+  override def getAgenteInmobiliarioList(identificacion: String, nombre: Option[String], usuario: Option[String],
+                                         correo: Option[String], estado: Option[Int],
                                          pagina: Option[Int], itemsPorPagina: Option[Int]): Future[ConsultarAgenteInmobiliarioListResponse] = {
     usuariosDao
       .getAll(identificacion, nombre, usuario, correo, pagina, itemsPorPagina)
