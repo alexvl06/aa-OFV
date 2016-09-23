@@ -3,9 +3,7 @@ package portal.transaccional.fiduciaria.autenticacion.storage.daos.portal
 import co.com.alianza.persistence.entities.{UsuarioAgenteInmobiliario, UsuarioAgenteInmobiliarioTable}
 import co.com.alianza.persistence.util.SlickExtensions
 import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
-import slick.dbio.Effect.Read
 import slick.lifted.TableQuery
-import slick.profile.FixedSqlStreamingAction
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -36,9 +34,12 @@ case class UsuarioAgenteInmobDAO(implicit dcConfig: DBConfig) extends UsuarioAge
                       usuario: Option[String], correo: Option[String], pagina: Option[Int],
                       itemsPorPagina: Option[Int])(implicit ec: ExecutionContext): Future[(Int, Int, Int, Int, Seq[UsuarioAgenteInmobiliario])] = {
 
-    val basequery: Query[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario, Seq] = table.filter(agente =>
-      agente.identificacion === identificacion && ((agente.nombre like nombre) && (agente.correo like correo) && (agente.usuario like usuario))
-    )
+    val basequery: Query[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario, Seq] = MaybeFilter(table)
+      .filter(Some(identificacion))(id => agente => agente.identificacion === id)
+      .filter(nombre)(n => agente => agente.nombre like s"%$n%")
+      .filter(usuario)(u => agente => agente.usuario like s"%$u%")
+      .filter(correo)(c => agente => agente.correo like s"%$c%")
+      .query
 
     run(
       for {
