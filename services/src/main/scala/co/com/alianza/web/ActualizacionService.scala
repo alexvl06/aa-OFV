@@ -1,9 +1,10 @@
 package co.com.alianza.web
 
-import akka.actor.{ ActorSelection, ActorSystem }
-import co.com.alianza.app.{ AlianzaCommons, CrossHeaders }
+import akka.actor.{ActorSelection, ActorSystem}
+import co.com.alianza.app.{AlianzaCommons, CrossHeaders}
+import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.domain.aggregates.actualizacion.ActualizacionActor
-import co.com.alianza.infrastructure.auditing.{ AuditingHelper, KafkaActor }
+import co.com.alianza.infrastructure.auditing.{AuditingHelper, KafkaActor}
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.infrastructure.dto.DatosCliente
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
@@ -11,7 +12,7 @@ import co.com.alianza.infrastructure.messages._
 import co.com.alianza.util.clave.Crypto
 import enumerations.AppendPasswordUser
 import spray.http.StatusCodes
-import spray.routing.{ Directives, RequestContext }
+import spray.routing.{Directives, RequestContext}
 
 import scala.concurrent.ExecutionContext
 
@@ -35,6 +36,9 @@ case class ActualizacionService(actualizacionActor: ActorSelection, kafkaActor: 
 
   def route(user: UsuarioAuth) = {
     pathPrefix(actualizacion) {
+      if(user.tipoCliente.eq(TiposCliente.comercialSAC))
+        complete((StatusCodes.Unauthorized, "Tipo usuario SAC no esta autorizado para realizar esta acción"))
+      else
       get {
         respondWithMediaType(mediaType) {
           pathPrefix(paises) {
