@@ -13,8 +13,8 @@ import spray.json._
 object HorarioEmpresaJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
 
   implicit val DiaFestivoMessageFormat = jsonFormat1(DiaFestivoMessage)
-
   implicit val AgregarHorarioEmpresaMessageFormat = jsonFormat6(AgregarHorarioEmpresaMessage)
+  implicit val ValidarHorarioSACFormat = jsonFormat1(ValidarHorarioSACRequest)
 
 }
 
@@ -26,3 +26,5 @@ case class AgregarHorarioEmpresaMessage(diaHabil: Boolean, sabado: Boolean, hora
   idUsuario: Option[Int], tipoCliente: Option[Int]) extends MessageService
 
 case class ValidarHorarioEmpresaMessage(identificacionUsuario: String, tipoCliente: TiposCliente) extends MessageService
+
+case class ValidarHorarioSACRequest(idUsuarioRecurso: String) extends MessageService

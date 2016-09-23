@@ -2,7 +2,6 @@ package co.com.alianza.app
 
 import akka.actor.{ ActorLogging, ActorRef, ActorSelection, ActorSystem }
 import co.com.alianza.app.handler.CustomRejectionHandler
-import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.infrastructure.security.ServiceAuthorization
 import co.com.alianza.web.empresa.{ AdministrarContrasenaEmpresaService, UsuarioEmpresaService }
 import portal.transaccional.autenticacion.service.drivers.autorizacion._
@@ -47,7 +46,7 @@ case class AlianzaRouter(
   import system.dispatcher
 
   val routes =
-    AutorizacionService(usuarioRepositorio, usuarioAgenteRepositorio, usuarioAdminRepositorio, autorizacionUsuarioRepo, kafkaActor, autorizacionAgenteRepo,
+    AutorizacionService(kafkaActor, usuarioRepositorio, usuarioAgenteRepositorio, usuarioAdminRepositorio, autorizacionUsuarioRepo, autorizacionAgenteRepo,
       autorizacionAdminRepo, autorizacionComercialRepo, autorizacionComercialAdminRepo).route ~
       AutenticacionService(autenticacionRepo, autenticacionEmpresaRepositorio, autenticacionComercialRepositorio, kafkaActor).route ~
       new ConfrontaService(confrontaActor).route ~

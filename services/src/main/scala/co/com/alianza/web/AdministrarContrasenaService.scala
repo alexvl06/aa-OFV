@@ -1,9 +1,9 @@
 package co.com.alianza.web
 
-import akka.actor.{ ActorSelection, ActorSystem }
+import akka.actor.{ActorSelection, ActorSystem}
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.infrastructure.auditing.AuditingHelper
-import co.com.alianza.infrastructure.messages.empresa.{ CambiarContrasenaCaducadaAgenteEmpresarialMessage, CambiarContrasenaCaducadaClienteAdminMessage }
+import co.com.alianza.infrastructure.messages.empresa.{CambiarContrasenaCaducadaAgenteEmpresarialMessage, CambiarContrasenaCaducadaClienteAdminMessage}
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.util.token.Token
 import co.com.alianza.exceptions.PersistenceException
@@ -11,10 +11,11 @@ import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.util.clave.Crypto
 import enumerations.AppendPasswordUser
-import spray.routing.{ Directives, RequestContext }
+import spray.routing.{Directives, RequestContext}
 import co.com.alianza.app.AlianzaCommons
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
-import co.com.alianza.infrastructure.messages.{ AdministrarContrasenaMessagesJsonSupport, CambiarContrasenaCaducadaMessage, CambiarContrasenaMessage }
+import co.com.alianza.infrastructure.messages.{AdministrarContrasenaMessagesJsonSupport, CambiarContrasenaCaducadaMessage, CambiarContrasenaMessage}
+import spray.http.StatusCodes
 
 import scala.concurrent.ExecutionContext
 
@@ -29,6 +30,9 @@ case class AdministrarContrasenaService(kafkaActor: ActorSelection, contrasenasA
 
   def secureRoute(user: UsuarioAuth) =
     pathPrefix("actualizarContrasena") {
+      if(user.tipoCliente.eq(TiposCliente.comercialSAC))
+        complete((StatusCodes.Unauthorized, "Tipo usuario SAC no esta autorizado para realizar esta acción"))
+      else
       respondWithMediaType(mediaType) {
         pathEndOrSingleSlash {
           put {

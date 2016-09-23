@@ -1,8 +1,8 @@
 package portal.transaccional.autenticacion.service.drivers.ldap
 
-import javax.naming.AuthenticationException
 import javax.naming.ldap.LdapContext
 
+import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.persistence.dto.UsuarioLdapDTO
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.ldap.AlianzaLdapDAOs
@@ -15,32 +15,36 @@ import scala.util.Try
  */
 case class LdapDriverRepository(alianzaLdapDAO: AlianzaLdapDAOs)(implicit val ex: ExecutionContext) extends LdapRepository {
 
-  def autenticarLdap(usuario: String, tipoUsuario: Int, password: String): Future[UsuarioLdapDTO] = {
+  def autenticarLdap(usuario: String, tipoCliente: TiposCliente, password: String): Future[UsuarioLdapDTO] = {
     val idRoleDefault: Option[Int] = Some(1)
     val userName = usuario.toLowerCase
     val user = for {
-      context <- obtenerContexto(usuario, tipoUsuario, password) // Throws naming exception
-      usuarioOption <- alianzaLdapDAO.getUserInfo(tipoUsuario, userName, context)
+      context <- obtenerContexto(usuario, tipoCliente, password) // Throws naming exception
+      usuarioOption <- alianzaLdapDAO.getUserInfo(tipoCliente, userName, context)
       respuesta <- validarRespuestaLdap(usuarioOption)
 
     } yield respuesta
     user
   }
 
-  private def obtenerContexto(usuario: String, tipoUsuario: Int, password: String): Future[LdapContext] = {
+  def validarSACLdap(usuario: UsuarioLdapDTO, esSAC: Boolean = false): Future[Boolean] = {
+    esSAC match {
+      case true if usuario.esSAC => Future.successful(true)
+      case false if !usuario.esSAC => Future.successful(true)
+      case _ => Future.failed(new ValidacionException("401.1", "Credenciales invalidas"))
+    }
+  }
+
+  private def obtenerContexto(usuario: String, tipoCliente: TiposCliente, password: String): Future[LdapContext] = {
     val contextTry = Try {
-      alianzaLdapDAO.getLdapContext(usuario, password, tipoUsuario)
+      alianzaLdapDAO.getLdapContext(usuario, password, tipoCliente)
     }
 
     if (contextTry.isSuccess) {
       Future.successful(contextTry.get)
     } else {
       //TODO: Encontrar una mejor manera de manejar las excepciones
-      contextTry.failed.getClass.getSimpleName match {
-        case "AuthenticationException" => Future.failed(new ValidacionException("401.1", "Credenciales invalidas"))
-        case _ => Future.failed(new ValidacionException("401.1", "Excepcion no manejada"))
-      }
-
+      Future.failed(new ValidacionException("401.1", "Credenciales invalidas"))
     }
   }
 

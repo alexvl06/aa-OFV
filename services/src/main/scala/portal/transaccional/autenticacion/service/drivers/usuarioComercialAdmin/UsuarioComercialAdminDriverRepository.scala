@@ -7,17 +7,15 @@ import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
-import co.com.alianza.persistence.entities.UsuarioComercialAdmin
+import co.com.alianza.persistence.entities.{ Empresa, UsuarioComercialAdmin }
 import co.com.alianza.util.clave.Crypto
 import enumerations.AppendPasswordUser
+import portal.transaccional.autenticacion.service.drivers.empresa.EmpresaRepository
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.UsuarioComercialAdminDAOs
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-/**
- * Created by alexandra on 5/08/16.
- */
-case class UsuarioComercialAdminDriverRepository(usuarioDAO: UsuarioComercialAdminDAOs)(implicit val ex: ExecutionContext)
+case class UsuarioComercialAdminDriverRepository(usuarioDAO: UsuarioComercialAdminDAOs, empresaRepo: EmpresaRepository)(implicit val ex: ExecutionContext)
     extends UsuarioComercialAdminRepository {
 
   def obtenerUsuario(usuario: String): Future[UsuarioComercialAdmin] = {
@@ -104,12 +102,18 @@ case class UsuarioComercialAdminDriverRepository(usuarioDAO: UsuarioComercialAdm
   }
 
   private def validarContraseñaActual(usuario: UsuarioAuth, contrasenaActual: String): Future[Boolean] = {
-    println(usuario)
     val resultadoFuturo = for {
       obtenerUsuario <- usuarioDAO.getById(usuario.id)
       resultado <- validarContrasena(contrasenaActual, obtenerUsuario.get)
     } yield resultado
     resultadoFuturo
+  }
+
+  def validarEmpresa(identificacion: String): Future[Boolean] = {
+    for {
+      empresa <- empresaRepo.getByIdentity(identificacion)
+      validar <- empresaRepo.validarEmpresa(empresa)
+    } yield validar
   }
 
 }

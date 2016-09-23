@@ -1,13 +1,13 @@
 package portal.transaccional.autenticacion.service.util.JsonFormatters
 
-import co.com.alianza.exceptions.ValidacionException
+import co.com.alianza.exceptions.{ NoAutorizado, ValidacionException }
 import co.com.alianza.infrastructure.dto.{ Pregunta, Respuesta }
-import co.com.alianza.persistence.entities.{ RecursoComercial, RolComercial }
+import co.com.alianza.persistence.entities.{ Empresa, RecursoComercial, RolComercial }
 import portal.transaccional.autenticacion.service.dto.{ PermisoRecursoDTO, RecursoDTO }
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import portal.transaccional.autenticacion.service.web.autenticacion.{ AutenticarRequest, AutenticarUsuarioComercialRequest, AutenticarUsuarioEmpresarialRequest }
 import portal.transaccional.autenticacion.service.web.autorizacion.InvalidarTokenRequest
-import portal.transaccional.autenticacion.service.web.comercial.{ ActualizarContrasenaRequest, CrearAdministradorRequest }
+import portal.transaccional.autenticacion.service.web.comercial.{ ActualizarContrasenaRequest, CrearAdministradorRequest, ValidarEmpresaRequest }
 import portal.transaccional.autenticacion.service.web.ip.AgregarIpRequest
 import portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.{ GuardarRespuestasRequest, ResponseObtenerPreguntas, ResponseObtenerPreguntasComprobar, RespuestasComprobacionRequest }
 
@@ -25,6 +25,7 @@ trait DomainJsonFormatters {
 
   //validacion
   implicit val validacionExceptionFormatter = jsonFormat2(ValidacionException)
+  implicit val noAutorizadoExceptionFormatter = jsonFormat1(NoAutorizado)
 
   //preguntasAutovalidacion
   implicit val preguntaFormatter = jsonFormat2(Pregunta)
@@ -48,5 +49,7 @@ trait DomainJsonFormatters {
   //comercial
   implicit val crearAdministradorRequestFormater = jsonFormat4(CrearAdministradorRequest)
   implicit val ActualizarContrasenaRequestFormater = jsonFormat2(ActualizarContrasenaRequest)
+  implicit val validarEmpresaRequestFormater = jsonFormat1(ValidarEmpresaRequest)
+  implicit val EmpresaFormater = jsonFormat3(Empresa)
 
 }

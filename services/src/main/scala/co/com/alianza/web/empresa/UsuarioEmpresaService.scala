@@ -1,17 +1,19 @@
 package co.com.alianza.web.empresa
 
-import akka.actor.{ ActorSelection, ActorSystem }
+import akka.actor.{ActorSelection, ActorSystem}
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.infrastructure.messages.GuardarPermisosAgenteMessage
-import co.com.alianza.infrastructure.messages.empresa.{ CrearAgenteEMessageJsonSupport, CrearAgenteMessage }
-import spray.routing.{ Directives, RequestContext }
-import co.com.alianza.app.{ AlianzaCommons, CrossHeaders }
+import co.com.alianza.infrastructure.messages.empresa.{CrearAgenteEMessageJsonSupport, CrearAgenteMessage}
+import spray.routing.{Directives, RequestContext}
+import co.com.alianza.app.{AlianzaCommons, CrossHeaders}
+import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.infrastructure.messages.empresa._
-import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{ DataAccessAdapter => DataAccessAdapterClienteAdmin }
+import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{DataAccessAdapter => DataAccessAdapterClienteAdmin}
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
+import spray.http.StatusCodes
 
 import scala.concurrent.ExecutionContext
 
@@ -26,6 +28,9 @@ case class UsuarioEmpresaService(kafkaActor: ActorSelection, agenteEmpresarialAc
   def secureUserRouteEmpresa(user: UsuarioAuth) = {
     pathPrefix("empresa") {
       path("consultarUsuarios") {
+        if(user.tipoCliente.eq(TiposCliente.comercialSAC))
+          complete((StatusCodes.Unauthorized, "Tipo usuario SAC no esta autorizado para realizar esta acción"))
+        else
         respondWithMediaType(mediaType) {
           get {
             parameters('correo.?, 'usuario.?, 'nombre.?, 'estado.?) { (correo, usuario, nombre, estado) =>
@@ -47,6 +52,9 @@ case class UsuarioEmpresaService(kafkaActor: ActorSelection, agenteEmpresarialAc
         }
       } ~
         path("usuarioAgenteEmpresarial") {
+          if(user.tipoCliente.eq(TiposCliente.comercialSAC))
+            complete((StatusCodes.Unauthorized, "Tipo usuario SAC no esta autorizado para realizar esta acción"))
+          else
           respondWithMediaType(mediaType) {
             pathEndOrSingleSlash {
               clientIP {

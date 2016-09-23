@@ -17,6 +17,7 @@ case class ComercialService(user: UsuarioAuth, comercialRepo: UsuarioComercialAd
 
   val comercialPath = "comercial"
   val administradorPath = "administrador"
+  val servicioAlClientePath = "servicioAlCliente"
 
   val route: Route = {
     pathPrefix(comercialPath / administradorPath) {
@@ -30,6 +31,12 @@ case class ComercialService(user: UsuarioAuth, comercialRepo: UsuarioComercialAd
             actualizarContrasena()
           }
         }
+    } ~ pathPrefix(comercialPath / servicioAlClientePath) {
+      path("validarEmpresa") {
+        pathEndOrSingleSlash {
+          validarEmpresa()
+        }
+      }
     }
   }
 
@@ -56,6 +63,20 @@ case class ComercialService(user: UsuarioAuth, comercialRepo: UsuarioComercialAd
           onComplete(resultado) {
             case Success(value) =>
               complete(value.toString)
+            case Failure(ex) => execution(ex)
+          }
+      }
+    }
+  }
+
+  private def validarEmpresa() = {
+    post {
+      entity(as[ValidarEmpresaRequest]) {
+        request =>
+          val resultado: Future[Boolean] = comercialRepo.validarEmpresa(request.identificacion)
+          onComplete(resultado) {
+            case Success(value) =>
+              complete(value.toString())
             case Failure(ex) => execution(ex)
           }
       }

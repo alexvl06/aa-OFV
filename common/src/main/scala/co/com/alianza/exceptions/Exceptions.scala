@@ -58,7 +58,7 @@ object AlianzaException {
  * Validaciones autorizacion token
  */
 abstract class ValidacionAutorizacion() extends NoStackTrace
-case class NoAutorizado(codigo: String) extends ValidacionAutorizacion
+case class NoAutorizado(code: String) extends ValidacionAutorizacion
 case class Autorizado(usuario: String) extends ValidacionAutorizacion
 case class AutorizadoComercial(usuario: String) extends ValidacionAutorizacion
 case class AutorizadoComercialAdmin(usuario: String) extends ValidacionAutorizacion

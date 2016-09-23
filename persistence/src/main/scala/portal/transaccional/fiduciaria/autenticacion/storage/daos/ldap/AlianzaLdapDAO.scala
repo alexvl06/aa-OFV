@@ -1,11 +1,12 @@
 package portal.transaccional.fiduciaria.autenticacion.storage.daos.ldap
 
 import java.util
-import javax.naming.directory.{ Attributes, SearchControls, SearchResult }
+import javax.naming.directory.{ Attribute, Attributes, SearchControls, SearchResult }
 import javax.naming.ldap.{ InitialLdapContext, LdapContext }
 import javax.naming.{ Context, NamingEnumeration }
 
 import co.com.alianza.commons.enumerations.TiposCliente
+import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.persistence.dto.UsuarioLdapDTO
 import co.com.alianza.util.ConfigApp
 import com.typesafe.config.Config
@@ -21,9 +22,9 @@ case class AlianzaLdapDAO() extends AlianzaLdapDAOs {
    * @return A future with LDAPContext
    *         Throws javax.naming.NamingException if authentication failed
    */
-  def getLdapContext(username: String, password: String, tipoUsuario: Int)(implicit executionContext: ExecutionContext): LdapContext = {
+  def getLdapContext(username: String, password: String, tipoCliente: TiposCliente)(implicit executionContext: ExecutionContext): LdapContext = {
     implicit val conf: Config = ConfigApp.conf
-    val organization: String = if (tipoUsuario == TiposCliente.comercialFiduciaria.id) "fiduciaria" else "valores"
+    val organization: String = if (tipoCliente.id == TiposCliente.comercialValores.id) "valores" else "fiduciaria"
     val host: String = conf.getString(s"ldap.$organization.host")
     val domain: String = conf.getString(s"ldap.$organization.domain")
     // CONNECTION EN  ENVIRONMENT
@@ -43,24 +44,20 @@ case class AlianzaLdapDAO() extends AlianzaLdapDAOs {
    * @param ctx LDAP context
    * @return A future with an user
    */
-  def getUserInfo(userType: Int, user: String, ctx: LdapContext)(implicit executionContext: ExecutionContext): Future[Option[UsuarioLdapDTO]] = Future {
+  def getUserInfo(tipoCliente: TiposCliente, user: String, ctx: LdapContext)(implicit executionContext: ExecutionContext): Future[Option[UsuarioLdapDTO]] = Future {
     // SEARCH FILTER
     val filter: String = s"(&(&(objectClass=person)(objectCategory=user))(sAMAccountName=$user))"
     // QUERY
-    val searchContext = if (userType == TiposCliente.comercialFiduciaria.id) "DC=Alianza,DC=com,DC=co" else "DC=alianzavaloresint,DC=com"
+    val searchContext: String = if (tipoCliente == TiposCliente.comercialValores.id) "DC=alianzavaloresint,DC=com" else "DC=Alianza,DC=com,DC=co"
+    //En caso que sea necesario obtener mas datos, es necesario agregarlo en el metodo 'getSearchControls'
     val search: NamingEnumeration[SearchResult] = ctx.search(searchContext, filter, getSearchControls)
     // USER INSTANCE
     val userInstance: Option[UsuarioLdapDTO] = search.hasMore match {
       case true =>
         val attrs: Attributes = search.next().getAttributes
-        val dn = attrs.get("distinguishedName").get.toString
-        val sn = attrs.get("sn").get.toString
-        val gn = attrs.get("givenname").get.toString
-        //        val mof = attrs.get( "memberOf" ).get.toString
-        val upn = attrs.get("userPrincipalName").get.toString
-        val sat = attrs.get("sAMAccountType").get.toString
-        Some(UsuarioLdapDTO(user, Some(sat), Some(dn), Some(sn), Some(gn), None, upn, None, None, None))
-
+        val esSAC: Boolean = getAtributeSAC(attrs, "postOfficeBox")
+        val identificacion: Option[String] = getAtributes(attrs, "sAMAccountType")
+        Option(UsuarioLdapDTO(user, identificacion, esSAC))
       case false => None
     }
     userInstance
@@ -73,13 +70,7 @@ case class AlianzaLdapDAO() extends AlianzaLdapDAOs {
   private def getSearchControls: SearchControls = {
     // SEARCH ATTRIBUTES
     val attrIDs: Array[String] = Array(
-      "distinguishedName",
-      "sn",
-      "givenname",
-      "mail",
-      "member",
-      //      "memberOf",
-      "userPrincipalName",
+      "postOfficeBox",
       "sAMAccountType"
     )
     // SEARCH CONTROLS
@@ -87,6 +78,19 @@ case class AlianzaLdapDAO() extends AlianzaLdapDAOs {
     sc.setSearchScope(SearchControls.SUBTREE_SCOPE)
     sc.setReturningAttributes(attrIDs)
     sc
+  }
+
+  private def getAtributes(attrs: Attributes, name: String): Option[String] = {
+    val att: Option[Attribute] = Option(attrs.get(name))
+    att match {
+      case Some(value) => Option(value.get.toString)
+      case _ => None
+    }
+  }
+
+  private def getAtributeSAC(attrs: Attributes, name: String): Boolean = {
+    val sac: Option[String] = getAtributes(attrs, name)
+    sac.getOrElse("").equals("SAC")
   }
 
 }

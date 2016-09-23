@@ -6,3 +6,5 @@ package portal.transaccional.autenticacion.service.web.comercial
 case class CrearAdministradorRequest(contrasena: String, usuario: String, nombre: String, correo: String)
 
 case class ActualizarContrasenaRequest(contrasenaActual: String, contrasenaNueva: String)
+
+case class ValidarEmpresaRequest(identificacion: String)

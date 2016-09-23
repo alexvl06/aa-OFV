@@ -1,12 +1,14 @@
 package co.com.alianza.web
 
-import akka.actor.{ ActorSelection, ActorSystem }
-import co.com.alianza.app.{ AlianzaCommons, CrossHeaders }
+import akka.actor.{ActorSelection, ActorSystem}
+import co.com.alianza.app.{AlianzaCommons, CrossHeaders}
+import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.infrastructure.messages._
-import spray.routing.{ Directives, RequestContext }
+import spray.http.StatusCodes
+import spray.routing.{Directives, RequestContext}
 
 import scala.concurrent.ExecutionContext
 
@@ -21,6 +23,9 @@ case class PreguntasAutovalidacionService(kafkaActor: ActorSelection, preguntasA
 
   def route(user: UsuarioAuth) = {
     pathPrefix("preguntasAutovalidacion") {
+      if(user.tipoCliente.eq(TiposCliente.comercialSAC))
+        complete((StatusCodes.Unauthorized, "Tipo usuario SAC no esta autorizado para gestionar las ip's"))
+      else
       get {
         respondWithMediaType(mediaType) {
           pathPrefix("comprobar") {
