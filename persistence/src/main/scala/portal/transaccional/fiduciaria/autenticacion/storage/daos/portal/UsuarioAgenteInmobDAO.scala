@@ -4,7 +4,7 @@ import co.com.alianza.persistence.entities.{UsuarioAgenteInmobiliario, UsuarioAg
 import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
 import slick.lifted.TableQuery
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 /**
   * Implementación del DAOde agentes inmobiliarios
@@ -17,11 +17,15 @@ case class UsuarioAgenteInmobDAO(implicit dcConfig: DBConfig) extends UsuarioAge
   import dcConfig.DB._
   import dcConfig.driver.api._
 
+  override def create(usuarioInmob: UsuarioAgenteInmobiliario): Future[Int] = {
+    run((table returning table.map(_.id)) += usuarioInmob)
+  }
+
   override def exists(id: Int, identificacion: String, usuario: String): Future[Boolean] = {
     isExists(id, identificacion, usuario)
   }
 
-  override def create(usuarioInmob: UsuarioAgenteInmobiliario): Future[Int] = {
-    run((table returning table.map(_.id)) += usuarioInmob)
+  override def get(identificacion: String, usuario: String): Future[Option[UsuarioAgenteInmobiliario]] = {
+    getByIdentityAndUser(identificacion, usuario)
   }
 }

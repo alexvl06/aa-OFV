@@ -10,7 +10,7 @@ import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import portal.transaccional.autenticacion.service.web.autenticacion.{AutenticarRequest, AutenticarUsuarioComercialRequest, AutenticarUsuarioEmpresarialRequest}
 import portal.transaccional.autenticacion.service.web.autorizacion.InvalidarTokenRequest
 import portal.transaccional.autenticacion.service.web.ip.AgregarIpRequest
-import portal.transaccional.autenticacion.service.web.permisoInmobiliario.{CrearAgenteInmobiliarioRequest, EdicionFidPermisoRequest, EdicionPermisoRequest}
+import portal.transaccional.autenticacion.service.web.permisoInmobiliario.{ConsultarAgenteInmobiliarioResponse, CrearAgenteInmobiliarioRequest, EdicionFidPermisoRequest, EdicionPermisoRequest}
 import portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.{GuardarRespuestasRequest, ResponseObtenerPreguntas, ResponseObtenerPreguntasComprobar, RespuestasComprobacionRequest}
 import spray.json.{DeserializationException, JsString, JsValue, JsonFormat}
 
@@ -54,6 +54,7 @@ trait DomainJsonFormatters {
   implicit val permisoAgenteInmob = jsonFormat4(PermisoAgenteInmobiliario)
   implicit val permisosFidRequest = jsonFormat3(EdicionFidPermisoRequest)
   implicit val crearAgenteInmobRequest = jsonFormat5(CrearAgenteInmobiliarioRequest)
+  implicit val consultarAgenteInmobResponse = jsonFormat6(ConsultarAgenteInmobiliarioResponse)
 
   // ----- MAPEO DE ENUM!
   private def jsonEnum[T <: Enumeration](enu: T) = new JsonFormat[T#Value] {

@@ -4,6 +4,7 @@ import java.sql.Timestamp
 
 import co.com.alianza.persistence.entities.UsuarioAgenteInmobiliario
 import enumerations.EstadosUsuarioEnum
+import portal.transaccional.autenticacion.service.web.permisoInmobiliario.ConsultarAgenteInmobiliarioResponse
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.UsuarioAgenteInmobDAOs
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -30,5 +31,17 @@ case class UsuarioInmobiliarioDriverRepository(usuariosDao: UsuarioAgenteInmobDA
         )
         usuariosDao.create(agente)
     })
+  }
+
+  override def getAgenteInmobiliario(identificacion: String,
+                                     usuario: String): Future[Option[ConsultarAgenteInmobiliarioResponse]] = {
+    usuariosDao.get(identificacion, usuario).map(_.map(agente => ConsultarAgenteInmobiliarioResponse(
+      agente.id,
+      agente.correo,
+      agente.usuario,
+      agente.nombre,
+      agente.cargo,
+      agente.descripcion
+    )))
   }
 }

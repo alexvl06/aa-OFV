@@ -1,5 +1,7 @@
 package portal.transaccional.autenticacion.service.drivers.usuarioInmobiliario
 
+import portal.transaccional.autenticacion.service.web.permisoInmobiliario.ConsultarAgenteInmobiliarioResponse
+
 import scala.concurrent.Future
 
 /**
@@ -23,4 +25,14 @@ trait UsuarioInmobiliarioRepository {
   def createAgenteInmobiliario(tipoIdentificacion: Int, identificacion: String,
                                correo: String, usuario: String,
                                nombre: Option[String], cargo: Option[String], descripcion: Option[String]): Future[Int]
+
+  /**
+    * Obtiene un agente inmobiliario dado su usuario
+    *
+    * @param identificacion Identificación del agente
+    * @param usuario        Nombre de usuario del agente
+    * @return Un futuro con el agente a buscar embebido en un option
+    */
+  def getAgenteInmobiliario(identificacion: String,
+                            usuario: String): Future[Option[ConsultarAgenteInmobiliarioResponse]]
 }

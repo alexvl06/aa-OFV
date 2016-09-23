@@ -18,8 +18,8 @@ import scala.util.{Failure, Success}
   * <ul>
   * <li>GET /agentes-inmobiliarios -> Lista todos los agentes inmobiliarios</li>
   * <li>POST / agentes-inmobiliarios -> Crea un agente inmobiliario</li>
-  * <li>GET /agentes-inmobiliarios/{id-agente} -> Lista el detalle de un agente inmobiliario</li>
-  * <li>PUT /agentes-inmobiliarios/{id-agente} -> Edita el detalle un agente inmobiliario</li>
+  * <li>GET /agentes-inmobiliarios/{usuario-agente} -> Lista el detalle de un agente inmobiliario</li>
+  * <li>PUT /agentes-inmobiliarios/{usuario-agente} -> Edita el detalle un agente inmobiliario</li>
   * </ul>
   */
 case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
@@ -34,7 +34,7 @@ case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
 
   val route: Route = {
     pathPrefix(agentesPath) {
-      createAgenteInmobiliario
+      createAgenteInmobiliario ~ getAgenteInmobiliario
     }
     //    pathPrefix(permisos) {
     //      pathEndOrSingleSlash {
@@ -56,13 +56,30 @@ case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
       entity(as[CrearAgenteInmobiliarioRequest]) { r =>
         val idAgente: Future[Int] = usuariosRepo.createAgenteInmobiliario(
           usuarioAuth.tipoIdentificacion, usuarioAuth.identificacionUsuario,
-          r.usuario, r.correo,
+          r.correo, r.usuario,
           r.nombre, r.cargo, r.descripcion
         )
         onComplete(idAgente) {
           case Success(id) => id match {
             case 0 => complete(StatusCodes.Conflict)
             case _ => complete(StatusCodes.Created)
+          }
+          case Failure(exception) => complete(StatusCodes.InternalServerError)
+        }
+      }
+    }
+  }
+
+  private def getAgenteInmobiliario: Route = {
+    get {
+      path(Segment) { usuarioAgente =>
+        val agenteF: Future[Option[ConsultarAgenteInmobiliarioResponse]] = usuariosRepo.getAgenteInmobiliario(
+          usuarioAuth.identificacionUsuario, usuarioAgente
+        )
+        onComplete(agenteF) {
+          case Success(agente) => agente match {
+            case Some(a) => complete(StatusCodes.OK -> a)
+            case _ => complete(StatusCodes.NotFound)
           }
           case Failure(exception) => complete(StatusCodes.InternalServerError)
         }
