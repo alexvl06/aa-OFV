@@ -120,11 +120,9 @@ case class AutorizacionService(
       case value: AutorizadoComercialAdmin => complete((StatusCodes.OK, value.usuario))
       case value: Prohibido => complete((StatusCodes.Forbidden, value.usuario))
       case ex: NoAutorizado => complete((StatusCodes.Unauthorized, ex))
-      case ex: ValidacionException => complete((StatusCodes.Unauthorized, "sdf"))
+      case ex: ValidacionException => complete((StatusCodes.Unauthorized, ex))
       case ex: PersistenceException => complete((StatusCodes.InternalServerError, "Error inesperado"))
-      case ex: Throwable =>
-        ex.printStackTrace()
-        complete((StatusCodes.Unauthorized, "Error inesperado"))
+      case ex: Throwable => complete((StatusCodes.Unauthorized, "Error inesperado"))
     }
   }
 
