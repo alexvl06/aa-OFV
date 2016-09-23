@@ -34,7 +34,7 @@ case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
 
   val route: Route = {
     pathPrefix(agentesPath) {
-      createAgenteInmobiliario ~ getAgenteInmobiliario
+      getAgenteInmobiliarioList ~ createAgenteInmobiliario ~ getAgenteInmobiliario
     }
     //    pathPrefix(permisos) {
     //      pathEndOrSingleSlash {
@@ -53,18 +53,20 @@ case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
 
   private def createAgenteInmobiliario: Route = {
     post {
-      entity(as[CrearAgenteInmobiliarioRequest]) { r =>
-        val idAgente: Future[Int] = usuariosRepo.createAgenteInmobiliario(
-          usuarioAuth.tipoIdentificacion, usuarioAuth.identificacionUsuario,
-          r.correo, r.usuario,
-          r.nombre, r.cargo, r.descripcion
-        )
-        onComplete(idAgente) {
-          case Success(id) => id match {
-            case 0 => complete(StatusCodes.Conflict)
-            case _ => complete(StatusCodes.Created)
+      pathEndOrSingleSlash {
+        entity(as[CrearAgenteInmobiliarioRequest]) { r =>
+          val idAgente: Future[Int] = usuariosRepo.createAgenteInmobiliario(
+            usuarioAuth.tipoIdentificacion, usuarioAuth.identificacionUsuario,
+            r.correo, r.usuario,
+            r.nombre, r.cargo, r.descripcion
+          )
+          onComplete(idAgente) {
+            case Success(id) => id match {
+              case 0 => complete(StatusCodes.Conflict)
+              case _ => complete(StatusCodes.Created)
+            }
+            case Failure(exception) => complete(StatusCodes.InternalServerError)
           }
-          case Failure(exception) => complete(StatusCodes.InternalServerError)
         }
       }
     }
@@ -72,16 +74,38 @@ case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
 
   private def getAgenteInmobiliario: Route = {
     get {
-      path(Segment) { usuarioAgente =>
-        val agenteF: Future[Option[ConsultarAgenteInmobiliarioResponse]] = usuariosRepo.getAgenteInmobiliario(
-          usuarioAuth.identificacionUsuario, usuarioAgente
-        )
-        onComplete(agenteF) {
-          case Success(agente) => agente match {
-            case Some(a) => complete(StatusCodes.OK -> a)
-            case _ => complete(StatusCodes.NotFound)
+      pathPrefix(Segment) { usuarioAgente =>
+        pathEndOrSingleSlash {
+          val agenteF: Future[Option[ConsultarAgenteInmobiliarioResponse]] = usuariosRepo.getAgenteInmobiliario(
+            usuarioAuth.identificacionUsuario, usuarioAgente
+          )
+          onComplete(agenteF) {
+            case Success(agente) => agente match {
+              case Some(a) => complete(StatusCodes.OK -> a)
+              case _ => complete(StatusCodes.NotFound)
+            }
+            case Failure(exception) => complete(StatusCodes.InternalServerError)
           }
-          case Failure(exception) => complete(StatusCodes.InternalServerError)
+        }
+      }
+    }
+  }
+
+  private def getAgenteInmobiliarioList: Route = {
+    get {
+      pathEndOrSingleSlash {
+        parameters('nombre.as[Option[String]], 'usuario.as[Option[String]],
+          'correo.as[Option[String]], 'pagina.as[Option[Int]], 'itemsPorPagina.as[Option[Int]]) {
+          (nombreOpt, usuarioOpt, correoOpt, paginaOpt, itemsPorPaginaOpt) => {
+            val agentesF: Future[ConsultarAgenteInmobiliarioListResponse] = usuariosRepo.getAgenteInmobiliarioList(
+              usuarioAuth.identificacionUsuario, nombreOpt,
+              usuarioOpt, correoOpt, paginaOpt, itemsPorPaginaOpt
+            )
+            onComplete(agentesF) {
+              case Success(agentes) => complete(StatusCodes.OK -> agentes)
+              case Failure(exception) => complete(StatusCodes.InternalServerError)
+            }
+          }
         }
       }
     }

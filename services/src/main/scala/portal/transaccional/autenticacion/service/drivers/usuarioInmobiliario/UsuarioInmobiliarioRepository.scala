@@ -1,6 +1,6 @@
 package portal.transaccional.autenticacion.service.drivers.usuarioInmobiliario
 
-import portal.transaccional.autenticacion.service.web.permisoInmobiliario.ConsultarAgenteInmobiliarioResponse
+import portal.transaccional.autenticacion.service.web.permisoInmobiliario.{ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse}
 
 import scala.concurrent.Future
 
@@ -35,4 +35,18 @@ trait UsuarioInmobiliarioRepository {
     */
   def getAgenteInmobiliario(identificacion: String,
                             usuario: String): Future[Option[ConsultarAgenteInmobiliarioResponse]]
+
+  /**
+    * Obtiene la lista de agentes inmobiliarios de la empresa
+    *
+    * @param identificacion Identificación de la empresa
+    * @param nombre         Filtro - Nombre del agente inmobiliario - Opcional
+    * @param usuario        Filtro - Nombre de usuario del agente inmobiliario - Opcional
+    * @param correo         Filtro - Correo del agente inmobiliario - Opcional
+    * @param pagina         Paginación - Número de página - Opcional
+    * @param itemsPorPagina Paginación - Número de agentes por página - Opcional
+    * @return La lista de agentes inmobiliarios (entidad de servicio)
+    */
+  def getAgenteInmobiliarioList(identificacion: String, nombre: Option[String], usuario: Option[String],
+                                correo: Option[String], pagina: Option[Int], itemsPorPagina: Option[Int]): Future[ConsultarAgenteInmobiliarioListResponse]
 }
