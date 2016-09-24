@@ -49,7 +49,7 @@ case class UsuarioInmobiliarioDriverRepository(usuariosDao: UsuarioAgenteInmobDA
                                          correo: Option[String], estado: Option[Int],
                                          pagina: Option[Int], itemsPorPagina: Option[Int]): Future[ConsultarAgenteInmobiliarioListResponse] = {
     usuariosDao
-      .getAll(identificacion, nombre, usuario, correo, pagina, itemsPorPagina)
+      .getAll(identificacion, nombre, usuario, correo, estado, pagina, itemsPorPagina)
       .map(res => {
         val agentes: Seq[ConsultarAgenteInmobiliarioResponse] = res._5.map(agente => ConsultarAgenteInmobiliarioResponse(
           agente.id, agente.correo, agente.usuario,

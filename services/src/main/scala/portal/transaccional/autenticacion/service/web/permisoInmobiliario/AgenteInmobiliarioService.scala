@@ -99,7 +99,7 @@ case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
           (nombreOpt, usuarioOpt, correoOpt, estadoOpt, paginaOpt, itemsPorPaginaOpt) => {
             val agentesF: Future[ConsultarAgenteInmobiliarioListResponse] = usuariosRepo.getAgenteInmobiliarioList(
               usuarioAuth.identificacionUsuario, nombreOpt,
-              usuarioOpt, correoOpt, paginaOpt, itemsPorPaginaOpt
+              usuarioOpt, correoOpt, estadoOpt, paginaOpt, itemsPorPaginaOpt
             )
             onComplete(agentesF) {
               case Success(agentes) => complete(StatusCodes.OK -> agentes)
