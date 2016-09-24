@@ -2,11 +2,12 @@ package portal.transaccional.autenticacion.service.web.permisoInmobiliario
 
 import co.com.alianza.app.CrossHeaders
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
+import co.com.alianza.util.json.HalPaginationUtils
 import portal.transaccional.autenticacion.service.drivers.permisoAgenteInmobiliario.PermisoAgenteInmobiliarioRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioInmobiliario.UsuarioInmobiliarioRepository
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
-import spray.http.StatusCodes
+import spray.http.{StatusCodes, Uri}
 import spray.routing.Route
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -25,7 +26,7 @@ import scala.util.{Failure, Success}
 case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
                                      usuariosRepo: UsuarioInmobiliarioRepository,
                                      permisosRepo: PermisoAgenteInmobiliarioRepository)(implicit val ec: ExecutionContext)
-  extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
+  extends CommonRESTFul with DomainJsonFormatters with CrossHeaders with HalPaginationUtils {
 
   val agentesPath: String = "agentes-inmobiliarios"
   val permisos = "permisos"
@@ -94,16 +95,23 @@ case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
   private def getAgenteInmobiliarioList: Route = {
     get {
       pathEndOrSingleSlash {
-        parameters('nombre.as[Option[String]], 'usuario.as[Option[String]],
-          'correo.as[Option[String]], 'estado.as[Option[Int]], 'pagina.as[Option[Int]], 'itemsPorPagina.as[Option[Int]]) {
-          (nombreOpt, usuarioOpt, correoOpt, estadoOpt, paginaOpt, itemsPorPaginaOpt) => {
-            val agentesF: Future[ConsultarAgenteInmobiliarioListResponse] = usuariosRepo.getAgenteInmobiliarioList(
-              usuarioAuth.identificacionUsuario, nombreOpt,
-              usuarioOpt, correoOpt, estadoOpt, paginaOpt, itemsPorPaginaOpt
-            )
-            onComplete(agentesF) {
-              case Success(agentes) => complete(StatusCodes.OK -> agentes)
-              case Failure(exception) => complete(StatusCodes.InternalServerError)
+        requestUri { uri =>
+          parameters('nombre.as[Option[String]], 'usuario.as[Option[String]],
+            'correo.as[Option[String]], 'estado.as[Option[Int]], 'pagina.as[Option[Int]], 'itemsPorPagina.as[Option[Int]]) {
+            (nombreOpt, usuarioOpt, correoOpt, estadoOpt, paginaOpt, itemsPorPaginaOpt) => {
+              val agentesF: Future[ConsultarAgenteInmobiliarioListResponse] = usuariosRepo.getAgenteInmobiliarioList(
+                usuarioAuth.identificacionUsuario, nombreOpt,
+                usuarioOpt, correoOpt, estadoOpt, paginaOpt, itemsPorPaginaOpt
+              )
+              onComplete(agentesF) {
+                case Success(agentes) =>
+                  val links = getHalLinks(
+                    agentes._metadata.totalItems, agentes._metadata.itemsPorPagina,
+                    agentes._metadata.pagina, uri.toRelative, uri.toRelative.query.toMap
+                  )
+                  complete(StatusCodes.OK -> agentes.copy(_metadata = agentes._metadata.copy(links = Some(links))))
+                case Failure(exception) => complete(StatusCodes.InternalServerError)
+              }
             }
           }
         }

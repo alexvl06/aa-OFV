@@ -9,9 +9,10 @@ case class ConsultarAgenteInmobiliarioResponse(id: Int,
                                                descripcion: Option[String])
 
 case class ConsultarAgenteInmobiliarioListResponse(_metadata: PaginacionMetadata,
-                                                    agentes: Seq[ConsultarAgenteInmobiliarioResponse])
+                                                   agentes: Seq[ConsultarAgenteInmobiliarioResponse])
 
 case class PaginacionMetadata(pagina: Int,
                               itemsPorPagina: Int,
                               totalPagina: Int,
-                              totalItems: Int)
+                              totalItems: Int,
+                              links: Option[Map[String, String]] = None)

@@ -54,7 +54,7 @@ trait DomainJsonFormatters {
   implicit val permisosFidRequestFormatter = jsonFormat3(EdicionFidPermisoRequest)
   implicit val crearAgenteInmobRequestFormatter = jsonFormat5(CrearAgenteInmobiliarioRequest)
   implicit val consultarAgenteInmobResponseFormatter = jsonFormat7(ConsultarAgenteInmobiliarioResponse)
-  implicit val paginationMetadataResponseFormatter = jsonFormat4(PaginacionMetadata)
+  implicit val paginationMetadataResponseFormatter = jsonFormat5(PaginacionMetadata)
   implicit val consultarAgenteInmobiliarioListResponseFormatter = jsonFormat2(ConsultarAgenteInmobiliarioListResponse)
 
   // ----- MAPEO DE ENUM!
