@@ -13,6 +13,6 @@ case class ConsultarAgenteInmobiliarioListResponse(_metadata: PaginacionMetadata
 
 case class PaginacionMetadata(pagina: Int,
                               itemsPorPagina: Int,
-                              totalPagina: Int,
+                              totalItemsPagina: Int,
                               totalItems: Int,
                               links: Option[Map[String, String]] = None)
