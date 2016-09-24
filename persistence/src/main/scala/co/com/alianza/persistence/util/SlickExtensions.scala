@@ -44,7 +44,7 @@ trait SlickExtensions {
     def paginate(pageNumberOp: Option[Int], pageSizeOp: Option[Int]): Query[E, U, C] = {
       (for {
         pageNumber <- pageNumberOp
-        pageSize <- pageNumberOp
+        pageSize <- pageSizeOp
       } yield q.drop((pageNumber - 1) * pageSize).take(pageSize)) getOrElse {
         q.take(defaultPageSize)
       }
