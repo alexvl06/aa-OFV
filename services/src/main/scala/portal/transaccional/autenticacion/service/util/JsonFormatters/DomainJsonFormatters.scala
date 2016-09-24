@@ -53,7 +53,7 @@ trait DomainJsonFormatters {
   implicit val permisoAgenteInmobFormatter = jsonFormat4(PermisoAgenteInmobiliario)
   implicit val permisosFidRequestFormatter = jsonFormat3(EdicionFidPermisoRequest)
   implicit val crearAgenteInmobRequestFormatter = jsonFormat5(CrearAgenteInmobiliarioRequest)
-  implicit val consultarAgenteInmobResponseFormatter = jsonFormat6(ConsultarAgenteInmobiliarioResponse)
+  implicit val consultarAgenteInmobResponseFormatter = jsonFormat7(ConsultarAgenteInmobiliarioResponse)
   implicit val paginationMetadataResponseFormatter = jsonFormat4(PaginacionMetadata)
   implicit val consultarAgenteInmobiliarioListResponseFormatter = jsonFormat2(ConsultarAgenteInmobiliarioListResponse)
 
