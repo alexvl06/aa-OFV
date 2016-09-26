@@ -21,6 +21,7 @@ import scala.util.{Failure, Success}
   * <li>POST / agentes-inmobiliarios -> Crea un agente inmobiliario</li>
   * <li>GET /agentes-inmobiliarios/{usuario-agente} -> Lista el detalle de un agente inmobiliario</li>
   * <li>PUT /agentes-inmobiliarios/{usuario-agente} -> Edita el detalle un agente inmobiliario</li>
+  * <li>PUT /agentes-inmobiliarios/{usuario-agente}/estado -> Activa o desactiva un agente inmobiliario</li>
   * </ul>
   */
 case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,

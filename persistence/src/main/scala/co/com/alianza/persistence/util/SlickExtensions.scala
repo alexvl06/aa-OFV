@@ -42,12 +42,8 @@ trait SlickExtensions {
       *         It will return page 1 with defaultSize(200) query otherwise.
       */
     def paginate(pageNumberOp: Option[Int], pageSizeOp: Option[Int]): Query[E, U, C] = {
-      (for {
-        pageNumber <- pageNumberOp
-        pageSize <- pageSizeOp
-      } yield q.drop((pageNumber - 1) * pageSize).take(pageSize)) getOrElse {
-        q.take(defaultPageSize)
-      }
+      val (pageNumber: Int, pageSize: Int) = (pageNumberOp.getOrElse(defaultPage), pageSizeOp.getOrElse(defaultPageSize))
+      q.drop((pageNumber - 1) * pageSize).take(pageSize)
     }
 
   }
