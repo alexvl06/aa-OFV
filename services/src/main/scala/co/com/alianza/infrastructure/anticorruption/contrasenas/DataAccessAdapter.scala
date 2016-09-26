@@ -1,7 +1,7 @@
 package co.com.alianza.infrastructure.anticorruption.contrasenas
 
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.persistence.entities.ReglasContrasenas
+import co.com.alianza.persistence.entities.ReglaContrasena
 import co.com.alianza.persistence.repositories.ReglasContrasenasRepository
 import co.com.alianza.persistence.util.DataBaseExecutionContext
 import co.com.alianza.util.clave.Crypto
@@ -18,11 +18,11 @@ object DataAccessAdapter {
 
   val repo = new ReglasContrasenasRepository()
 
-  def consultarReglasContrasenas(): Future[Validation[PersistenceException, Seq[ReglasContrasenas]]] = {
+  def consultarReglasContrasenas(): Future[Validation[PersistenceException, Seq[ReglaContrasena]]] = {
     repo.obtenerReglas()
   }
 
-  def obtenerRegla(llave: String): Future[Validation[PersistenceException, Option[ReglasContrasenas]]] = {
+  def obtenerRegla(llave: String): Future[Validation[PersistenceException, Option[ReglaContrasena]]] = {
     repo.obtenerRegla(llave)
   }
 

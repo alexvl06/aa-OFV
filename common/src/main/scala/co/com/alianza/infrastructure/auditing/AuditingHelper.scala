@@ -74,7 +74,8 @@ trait AuditingHelper {
     }
   }
 
-  def requestWithFutureAuditing[E, T](ctx: RequestContext, kafkaTopic: String, elasticIndex: String, ip: String, kafkaActor: ActorSelection, futureAuditParameters: Future[Validation[E, Option[AuditingUserData]]], extraParameters: Option[T] = None)(implicit executionContext: ExecutionContext): RequestContext = {
+  def requestWithFutureAuditing[E, T](ctx: RequestContext, kafkaTopic: String, elasticIndex: String, ip: String, kafkaActor: ActorSelection,
+    futureAuditParameters: Future[Validation[E, Option[AuditingUserData]]], extraParameters: Option[T] = None)(implicit executionContext: ExecutionContext): RequestContext = {
     ctx.withRouteResponseMapped {
       case response: HttpResponse =>
         futureAuditParameters onComplete {

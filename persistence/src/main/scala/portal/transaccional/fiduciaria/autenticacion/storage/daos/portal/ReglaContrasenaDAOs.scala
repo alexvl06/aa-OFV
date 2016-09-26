@@ -1,6 +1,6 @@
 package portal.transaccional.fiduciaria.autenticacion.storage.daos.portal
 
-import co.com.alianza.persistence.entities.ReglasContrasenas
+import co.com.alianza.persistence.entities.ReglaContrasena
 
 import scala.concurrent.Future
 
@@ -9,8 +9,8 @@ import scala.concurrent.Future
  */
 trait ReglaContrasenaDAOs {
 
-  def getAll(): Future[Seq[ReglasContrasenas]]
+  def getAll(): Future[Seq[ReglaContrasena]]
 
-  def getByKey(llave: String): Future[ReglasContrasenas]
+  def getByKey(llave: String): Future[ReglaContrasena]
 
 }

@@ -5,6 +5,8 @@ import co.com.alianza.app.handler.CustomRejectionHandler
 import co.com.alianza.infrastructure.security.ServiceAuthorization
 import co.com.alianza.web.empresa.{ AdministrarContrasenaEmpresaService, UsuarioEmpresaService }
 import portal.transaccional.autenticacion.service.drivers.autorizacion._
+import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaRepository
+import portal.transaccional.autenticacion.service.web.reglaContrasena.ReglaContrasenaService
 import spray.routing._
 import spray.util.LoggingContext
 import co.com.alianza.web._
@@ -27,21 +29,22 @@ import portal.transaccional.autenticacion.service.web.recursoComercial.RecursoGr
 import portal.transaccional.autenticacion.service.web.comercial.ComercialService
 
 case class AlianzaRouter(
-    autenticacionRepo: AutenticacionRepository, autenticacionEmpresaRepositorio: AutenticacionEmpresaRepository,
-    autenticacionComercialRepositorio: AutenticacionComercialRepository, usuarioRepositorio: UsuarioRepository,
-    usuarioAgenteRepositorio: UsuarioEmpresarialRepository, usuarioAdminRepositorio: UsuarioEmpresarialAdminRepository,
-    autorizacionUsuarioRepo: AutorizacionUsuarioRepository, kafkaActor: ActorSelection, preguntasAutovalidacionActor: ActorSelection,
-    usuariosActor: ActorSelection, confrontaActor: ActorSelection, actualizacionActor: ActorSelection, permisoTransaccionalActor: ActorSelection,
-    agenteEmpresarialActor: ActorSelection, pinActor: ActorSelection, pinUsuarioEmpresarialAdminActor: ActorSelection,
-    pinUsuarioAgenteEmpresarialActor: ActorSelection, ipsUsuarioActor: ActorSelection, horarioEmpresaActor: ActorSelection,
-    contrasenasAgenteEmpresarialActor: ActorSelection, contrasenasClienteAdminActor: ActorSelection, contrasenasActor: ActorSelection,
-    autorizacionActorSupervisor: ActorRef, autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository,
-    autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository, preguntasValidacionRepository: PreguntasAutovalidacionRepository,
-    respuestaUsuarioRepository: RespuestaUsuarioRepository, respuestaUsuarioAdminRepository: RespuestaUsuarioRepository, ipRepo: IpRepository,
-    autorizacionComercialRepo: AutorizacionUsuarioComercialRepository, autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository,
-    autorizacionRecursoComercialRepository: AutorizacionRecursoComercialRepository, recursoComercialRepository: RecursoComercialRepository,
-    rolComercialRepository: RolComercialRepository, usuarioComercialAdminRepo: UsuarioComercialAdminRepository
-)(implicit val system: ActorSystem) extends HttpServiceActor with RouteConcatenation with CrossHeaders with ServiceAuthorization with ActorLogging {
+  autenticacionRepo: AutenticacionRepository, autenticacionEmpresaRepositorio: AutenticacionEmpresaRepository,
+  autenticacionComercialRepositorio: AutenticacionComercialRepository, usuarioRepositorio: UsuarioRepository,
+  usuarioAgenteRepositorio: UsuarioEmpresarialRepository, usuarioAdminRepositorio: UsuarioEmpresarialAdminRepository,
+  autorizacionUsuarioRepo: AutorizacionUsuarioRepository, kafkaActor: ActorSelection, preguntasAutovalidacionActor: ActorSelection,
+  usuariosActor: ActorSelection, confrontaActor: ActorSelection, actualizacionActor: ActorSelection, permisoTransaccionalActor: ActorSelection,
+  agenteEmpresarialActor: ActorSelection, pinActor: ActorSelection, pinUsuarioEmpresarialAdminActor: ActorSelection,
+  pinUsuarioAgenteEmpresarialActor: ActorSelection, ipsUsuarioActor: ActorSelection, horarioEmpresaActor: ActorSelection,
+  contrasenasAgenteEmpresarialActor: ActorSelection, contrasenasClienteAdminActor: ActorSelection, contrasenasActor: ActorSelection,
+  autorizacionActorSupervisor: ActorRef, autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository,
+  autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository, preguntasValidacionRepository: PreguntasAutovalidacionRepository,
+  respuestaUsuarioRepository: RespuestaUsuarioRepository, respuestaUsuarioAdminRepository: RespuestaUsuarioRepository, ipRepo: IpRepository,
+  autorizacionComercialRepo: AutorizacionUsuarioComercialRepository, autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository,
+  autorizacionRecursoComercialRepository: AutorizacionRecursoComercialRepository, recursoComercialRepository: RecursoComercialRepository,
+  rolComercialRepository: RolComercialRepository, usuarioComercialAdminRepo: UsuarioComercialAdminRepository, reglaRepo: ReglaContrasenaRepository
+)(implicit val system: ActorSystem) extends HttpServiceActor with RouteConcatenation with CrossHeaders with ServiceAuthorization
+    with ActorLogging {
 
   import system.dispatcher
 
@@ -52,7 +55,7 @@ case class AlianzaRouter(
       new ConfrontaService(confrontaActor).route ~
       new EnumeracionService().route ~
       UsuarioService(kafkaActor, usuariosActor).route ~
-      new ReglasContrasenasService(contrasenasActor).route ~
+      ReglaContrasenaService(reglaRepo).route ~
       PinService(kafkaActor, pinActor, pinUsuarioEmpresarialAdminActor, pinUsuarioAgenteEmpresarialActor).route ~
       new AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).insecureRoute ~
       authenticate(authenticateUser) {
