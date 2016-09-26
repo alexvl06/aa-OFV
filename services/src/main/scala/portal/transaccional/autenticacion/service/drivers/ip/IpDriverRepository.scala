@@ -1,7 +1,7 @@
 package portal.transaccional.autenticacion.service.drivers.ip
 
 import co.com.alianza.exceptions.ValidacionException
-import co.com.alianza.persistence.entities.{ IpsEmpresa, IpsUsuario }
+import co.com.alianza.persistence.entities.{ IpsEmpresa, IpsUsuario, UsuarioEmpresarial }
 import portal.transaccional.autenticacion.service.drivers.cliente.ClienteRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioEmpresarialAdminRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.{ UsuarioEmpresarialDriverRepository, UsuarioEmpresarialRepository }
@@ -13,7 +13,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * Created by s4n on 2016
  */
-case class IpDriverRepository(usuarioRepo: UsuarioRepository, usuarioAgenteRepo: UsuarioEmpresarialDriverRepository, empresaDAO: EmpresaAdminDAOs,
+case class IpDriverRepository(usuarioRepo: UsuarioRepository, usuarioAgenteRepo: UsuarioEmpresarialRepository[UsuarioEmpresarial], empresaDAO: EmpresaAdminDAOs,
     ipEmpresaDAO: IpEmpresaDAOs, usuarioAdminRepo: UsuarioEmpresarialAdminRepository, clienteCoreRepo: ClienteRepository, ipDAO: IpUsuarioDAOs)(implicit val ex: ExecutionContext) extends IpRepository {
 
   /**

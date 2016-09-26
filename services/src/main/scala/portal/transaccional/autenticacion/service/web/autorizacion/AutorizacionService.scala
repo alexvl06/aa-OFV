@@ -7,7 +7,7 @@ import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import co.com.alianza.exceptions._
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
-import co.com.alianza.persistence.entities.UsuarioEmpresarial
+import co.com.alianza.persistence.entities.{ UsuarioAgenteInmobiliario, UsuarioEmpresarial }
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.token.{ AesUtil, Token }
 import portal.transaccional.autenticacion.service.drivers.autorizacion._
@@ -26,16 +26,16 @@ import scala.util.{ Failure, Success }
  * Created by s4n 2016
  */
 case class AutorizacionService(
-  usuarioRepository: UsuarioRepository,
-  usuarioAgenteRepository: UsuarioEmpresarialRepository[UsuarioEmpresarial],
-  usuarioAdminRepository: UsuarioEmpresarialAdminRepository,
-  autorizacionRepository: AutorizacionUsuarioRepository,
-  kafkaActor: ActorSelection,
-  autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository,
-  autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository,
-  autorizacionComercialRepo: AutorizacionUsuarioComercialRepository,
-  autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository
-)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
+                                usuarioRepository: UsuarioRepository,
+                                usuarioAgenteRepository: UsuarioEmpresarialRepository[UsuarioEmpresarial],
+                                usuarioAdminRepository: UsuarioEmpresarialAdminRepository,
+                                autorizacionRepository: AutorizacionUsuarioRepository,
+                                kafkaActor: ActorSelection,
+                                autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository,
+                                autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository,
+                                autorizacionComercialRepo: AutorizacionUsuarioComercialRepository,
+                                autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository
+                              )(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   val invalidarTokenPath = "invalidarToken"
   val validarTokenPath = "validarToken"
@@ -47,6 +47,7 @@ case class AutorizacionService(
   val comercialValores = TiposCliente.comercialValores.toString
   val comercialAdmin = TiposCliente.comercialAdmin.toString
   val adminInmobiliaria = TiposCliente.clienteAdminInmobiliario.toString
+  val agenteInmobiliario = TiposCliente.agenteInmobiliario.toString
 
   val route: Route = {
     path(invalidarTokenPath) {
@@ -68,6 +69,7 @@ case class AutorizacionService(
             val usuario = getTokenData(token)
             val resultado: Future[Int] = usuario.tipoCliente match {
               case `agente` => autorizacionAgenteRepo.invalidarToken(token, encriptedToken)
+              case `agenteInmobiliario` => usuarioAgenteInmobiliarioRepo.invalidarToken(token, encriptedToken)
               case `admin` | `adminInmobiliaria` => autorizacionAdminRepo.invalidarToken(token, encriptedToken)
               case `individual` => autorizacionRepository.invalidarToken(token, encriptedToken)
               case `comercialFiduciaria` | `comercialValores` => autorizacionComercialRepo.invalidarToken(token, encriptedToken)
