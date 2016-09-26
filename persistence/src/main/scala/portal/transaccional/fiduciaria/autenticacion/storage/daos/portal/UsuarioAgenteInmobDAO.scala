@@ -52,4 +52,14 @@ case class UsuarioAgenteInmobDAO(implicit dcConfig: DBConfig) extends UsuarioAge
     )
   }
 
+  override def update(identificacion: String, usuario: String,
+                      correo: String, nombre: Option[String],
+                      cargo: Option[String], descripcion: Option[String]): Future[Int] = {
+    run(
+      table
+        .filter(agente => agente.identificacion === identificacion && agente.usuario === usuario)
+        .map(agente => (agente.correo, agente.nombre, agente.cargo, agente.descripcion))
+        .update((correo, nombre, cargo, descripcion))
+    )
+  }
 }

@@ -62,4 +62,10 @@ case class UsuarioInmobiliarioDriverRepository(usuariosDao: UsuarioAgenteInmobDA
         )
       })
   }
+
+  def updateAgenteInmobiliario(identificacion: String, usuario: String,
+                               correo: String, nombre: Option[String],
+                               cargo: Option[String], descripcion: Option[String]): Future[Int] = {
+    usuariosDao.update(identificacion, usuario, correo, nombre, cargo, descripcion)
+  }
 }

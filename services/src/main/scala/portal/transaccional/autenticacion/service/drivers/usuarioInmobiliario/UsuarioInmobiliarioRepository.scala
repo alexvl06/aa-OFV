@@ -51,4 +51,19 @@ trait UsuarioInmobiliarioRepository {
   def getAgenteInmobiliarioList(identificacion: String, nombre: Option[String], usuario: Option[String],
                                 correo: Option[String], estado: Option[Int],
                                 pagina: Option[Int], itemsPorPagina: Option[Int]): Future[ConsultarAgenteInmobiliarioListResponse]
+
+  /**
+    * Actualiza la información de un agente inmobiliario
+    *
+    * @param identificacion Identificación de la empresa
+    * @param usuario        Nombre de usuario a actualizar
+    * @param correo         Correo actualizado del agente
+    * @param nombre         Nombre actualizado del agente
+    * @param cargo          Cargo actualizado del agente
+    * @param descripcion    Descripción actualizada del agente
+    * @return Un futuro con la cantidad de filas actualizadas (0 si falla, 1 si se actualiza correctamente)
+    */
+  def updateAgenteInmobiliario(identificacion: String, usuario: String,
+                               correo: String, nombre: Option[String],
+                               cargo: Option[String], descripcion: Option[String]): Future[Int]
 }
