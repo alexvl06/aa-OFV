@@ -137,6 +137,8 @@ class HorarioEmpresaActor extends Actor
 
     message.tipoCliente match {
       case TiposCliente.clienteIndividual => currentSender ! ResponseMessage(OK, true.toJson)
+      //TODO: MAPEAR LOS TIPOS DE USUARIO
+      case TiposCliente.comercialSAC => currentSender ! ResponseMessage(OK, true.toJson)
       case _ =>
         val result = {
           (for {
