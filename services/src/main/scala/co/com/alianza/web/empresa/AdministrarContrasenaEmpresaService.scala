@@ -125,6 +125,4 @@ case class AdministrarContrasenaEmpresaService(kafkaActor: ActorSelection, contr
         }
       }
     }
-  }
-
 }

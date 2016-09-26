@@ -82,6 +82,4 @@ case class ActualizacionService(actualizacionActor: ActorSelection, kafkaActor: 
         }
       }
     }
-  }
-
 }

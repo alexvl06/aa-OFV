@@ -58,7 +58,6 @@ case class AdministrarContrasenaService(kafkaActor: ActorSelection, contrasenasA
           }
         }
       }
-    }
 
   def insecureRoute = {
     pathPrefix("actualizarContrasenaCaducada") {
