@@ -160,11 +160,3 @@ abstract class UsuarioEmpresarialRepositoryG [T <: UsuarioAgenteTable[E] ,E <: U
     }
   }
 }
-
-case class UsuarioEmpresarialDriverRepository (usuarioDAO : UsuarioEmpresarialDAO)(implicit val ex : ExecutionContext)
-  extends UsuarioEmpresarialRepositoryG[UsuarioEmpresarialTable,UsuarioEmpresarial](usuarioDAO)
-    with UsuarioEmpresarialRepository[UsuarioEmpresarial]
-
-case class UsuarioAgenteInmobDriverRepository (usuarioDAO: UsuarioAgenteInmobDAO)(implicit val ex :
-ExecutionContext) extends UsuarioEmpresarialRepositoryG[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario](usuarioDAO) with
-  UsuarioEmpresarialRepository[UsuarioAgenteInmobiliario]

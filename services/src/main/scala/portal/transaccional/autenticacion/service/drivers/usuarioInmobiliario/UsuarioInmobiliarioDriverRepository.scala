@@ -2,24 +2,32 @@ package portal.transaccional.autenticacion.service.drivers.usuarioInmobiliario
 
 import java.sql.Timestamp
 
-import co.com.alianza.persistence.entities.UsuarioAgenteInmobiliario
+import co.com.alianza.exceptions.{ ValidacionException, ValidacionExceptionPasswordRules }
+import co.com.alianza.infrastructure.messages.ErrorMessage
+import co.com.alianza.persistence.entities.{ UsuarioAgenteInmobiliario, UsuarioAgenteInmobiliarioTable }
 import enumerations.EstadosUsuarioEnum
-import portal.transaccional.autenticacion.service.web.permisoInmobiliario.{ConsultarAgenteInmobiliarioResponse, ConsultarAgenteInmobiliarioListResponse, PaginacionMetadata}
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.UsuarioAgenteInmobDAOs
+import portal.transaccional.autenticacion.service.drivers.usuarioAgente.{ UsuarioEmpresarialRepository, UsuarioEmpresarialRepositoryG }
+import portal.transaccional.autenticacion.service.web.permisoInmobiliario.{ ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse, PaginacionMetadata }
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ UsuarioAgenteInmobDAO, UsuarioAgenteInmobDAOs }
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 /**
   * Implementación del repositorio de agentes inmobiliarios
   *
   * @param ex Contexto de ejecución
   */
+
+case class UsuarioAgenteInmobDriverRepository (usuarioDAO: UsuarioAgenteInmobDAO)(implicit val ex : ExecutionContext) extends
+  UsuarioEmpresarialRepositoryG[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario](usuarioDAO) with
+  UsuarioEmpresarialRepository[UsuarioAgenteInmobiliario]
+
 case class UsuarioInmobiliarioDriverRepository(usuariosDao: UsuarioAgenteInmobDAOs)
                                               (implicit val ex: ExecutionContext) extends UsuarioInmobiliarioRepository {
 
-  override def createAgenteInmobiliario(tipoIdentificacion: Int, identificacion: String,
-                                        correo: String, usuario: String,
+  override def createAgenteInmobiliario(tipoIdentificacion: Int, identificacion: String, correo: String, usuario: String,
                                         nombre: Option[String], cargo: Option[String], descripcion: Option[String]): Future[Int] = {
+
     usuariosDao.exists(0, identificacion, usuario).flatMap({
       case true => Future.successful(0)
       case false =>
@@ -62,4 +70,13 @@ case class UsuarioInmobiliarioDriverRepository(usuariosDao: UsuarioAgenteInmobDA
         )
       })
   }
+
+  override def getContrasena(contrasena: String, idUsuario : Int): Future[UsuarioAgenteInmobiliario] = {
+    usuariosDao.getContrasena(contrasena, idUsuario).flatMap{
+      case Some(agente) => Future.successful(agente)
+      case None => Future.failed(ValidacionExceptionPasswordRules("409.7", "No existe la contrasena actual", "", "", ""))
+    }
+  }
+
+  def updateContrasena(contrasena: String, idUsuario : Int): Future[Int] = usuariosDao.updateContrasena(contrasena, idUsuario)
 }

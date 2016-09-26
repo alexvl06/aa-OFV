@@ -114,7 +114,8 @@ class ContrasenasClienteAdminActor extends Actor with ActorLogging {
           val us_tipo = claim.getCustomClaim("us_tipo").toString
           val passwordActualAppend = message.pw_actual.concat(AppendPasswordUser.appendUsuariosFiducia)
           val passwordNewAppend = message.pw_nuevo.concat(AppendPasswordUser.appendUsuariosFiducia)
-          val CambiarContrasenaFuture = (for {
+          val CambiarContrasenaFuture = (
+            for {
             usuarioContrasenaActual <- ValidationT(validacionConsultaContrasenaActualClienteAdmin(passwordActualAppend, us_id))
             idValReglasContra <- ValidationT(validacionReglasClave(message.pw_nuevo, us_id, PerfilesUsuario.clienteAdministrador))
             idUsuario <- ValidationT(actualizarContrasena(passwordNewAppend, usuarioContrasenaActual))

@@ -7,13 +7,14 @@ import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import co.com.alianza.exceptions._
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
-import co.com.alianza.persistence.entities.{ UsuarioAgenteInmobiliario, UsuarioEmpresarial }
+import co.com.alianza.persistence.entities.UsuarioEmpresarial
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.token.{ AesUtil, Token }
 import portal.transaccional.autenticacion.service.drivers.autorizacion._
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioEmpresarialAdminRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioRepository
+import portal.transaccional.autenticacion.service.drivers.util.SesionAgenteUtilRepository
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import spray.http.StatusCodes
@@ -34,7 +35,9 @@ case class AutorizacionService(
                                 autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository,
                                 autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository,
                                 autorizacionComercialRepo: AutorizacionUsuarioComercialRepository,
-                                autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository
+                                autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository,
+                                sesionUtilAgenteEmpresarial : SesionAgenteUtilRepository,
+                                sesionUtilAgenteInmobiliario : SesionAgenteUtilRepository
                               )(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   val invalidarTokenPath = "invalidarToken"
@@ -68,8 +71,8 @@ case class AutorizacionService(
             val token: String = AesUtil.desencriptarToken(encriptedToken)
             val usuario = getTokenData(token)
             val resultado: Future[Int] = usuario.tipoCliente match {
-              case `agente` => autorizacionAgenteRepo.invalidarToken(token, encriptedToken)
-              case `agenteInmobiliario` => usuarioAgenteInmobiliarioRepo.invalidarToken(token, encriptedToken)
+              case `agente` => sesionUtilAgenteEmpresarial.invalidarToken(token, encriptedToken)
+              case `agenteInmobiliario` => sesionUtilAgenteInmobiliario.invalidarToken(token, encriptedToken)
               case `admin` | `adminInmobiliaria` => autorizacionAdminRepo.invalidarToken(token, encriptedToken)
               case `individual` => autorizacionRepository.invalidarToken(token, encriptedToken)
               case `comercialFiduciaria` | `comercialValores` => autorizacionComercialRepo.invalidarToken(token, encriptedToken)
@@ -138,7 +141,7 @@ case class AutorizacionService(
     val nToken = Token.getToken(token).getJWTClaimsSet
     val tipoCliente = nToken.getCustomClaim("tipoCliente").toString
     //TODO: el nit no lo pide si es tipo comercial
-    val nit = if (tipoCliente == agente || tipoCliente == admin || tipoCliente == adminInmobiliaria) nToken.getCustomClaim("nit").toString else ""
+    val nit = if (tipoCliente == agente || tipoCliente == admin || tipoCliente == adminInmobiliaria || tipoCliente == agenteInmobiliario) nToken.getCustomClaim("nit").toString else ""
     val lastIp = nToken.getCustomClaim("ultimaIpIngreso").toString
     val user = nToken.getCustomClaim("nombreUsuario").toString
     val email = nToken.getCustomClaim("correo").toString

@@ -11,7 +11,7 @@ import co.com.alianza.util.json.JsonUtil
 import portal.transaccional.autenticacion.service.drivers.recurso.RecursoRepository
 import portal.transaccional.autenticacion.service.drivers.sesion.SesionDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.{ DataAccessTranslator, UsuarioEmpresarialRepository }
-import portal.transaccional.autenticacion.service.drivers.util.SesionAgenteUtilRepository
+import portal.transaccional.autenticacion.service.drivers.util.{ SesionAgenteUtilDriverRepository, SesionAgenteUtilRepository }
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.AlianzaDAO
 
 import scala.concurrent.duration._
@@ -20,8 +20,9 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * Created by s4n on 2016
  */
-case class AutorizacionUsuarioEmpresarialDriverRepository(agenteRepo: UsuarioEmpresarialRepository[UsuarioEmpresarialE], alianzaDAO: AlianzaDAO, sesionRepo: SesionDriverRepository,
-    recursoRepo: RecursoRepository, sesionUtilRepo : SesionAgenteUtilRepository)(implicit val ex: ExecutionContext) extends AutorizacionUsuarioEmpresarialRepository {
+case class AutorizacionUsuarioEmpresarialDriverRepository(agenteRepo: UsuarioEmpresarialRepository[UsuarioEmpresarialE], alianzaDAO: AlianzaDAO,
+  sesionRepo: SesionDriverRepository, recursoRepo: RecursoRepository, sesionUtilRepo : SesionAgenteUtilRepository)(implicit val ex: ExecutionContext)
+  extends AutorizacionUsuarioEmpresarialRepository {
 
   implicit val timeout = Timeout(5.seconds)
 

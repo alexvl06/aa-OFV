@@ -1,11 +1,13 @@
 package portal.transaccional.fiduciaria.autenticacion.storage.daos.portal
 
-import co.com.alianza.persistence.entities.{UsuarioAgenteInmobiliario, UsuarioAgenteInmobiliarioTable}
+import java.sql.Timestamp
+
+import co.com.alianza.persistence.entities.{ UsuarioAgenteInmobiliario, UsuarioAgenteInmobiliarioTable }
 import co.com.alianza.persistence.util.SlickExtensions
 import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
 import slick.lifted.TableQuery
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 /**
   * Implementación del DAOde agentes inmobiliarios
@@ -50,6 +52,15 @@ case class UsuarioAgenteInmobDAO(implicit dcConfig: DBConfig) extends UsuarioAge
         (pagina.getOrElse(defaultPage), itemsPorPagina.getOrElse(defaultPageSize), agentes.length, totalAgentes, agentes)
       }
     )
+  }
+
+  def getContrasena(contrasena: String , idUsuario : Int ): Future[Option[UsuarioAgenteInmobiliario]] = {
+    run(table.filter(_.id === idUsuario).filter(_.contrasena === contrasena).result.headOption)
+  }
+
+  def updateContrasena(contrasena: String , idUsuario : Int ): Future[Int] = {
+    val query = table.filter(_.id === idUsuario).map(a => (a.contrasena, a.fechaActualizacion))
+    run(query.update(Option(contrasena), new Timestamp(new org.joda.time.DateTime().withYear(2015).getMillis)))
   }
 
 }

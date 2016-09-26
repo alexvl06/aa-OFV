@@ -9,12 +9,13 @@ import portal.transaccional.autenticacion.service.drivers.sesion.SesionDriverRep
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialRepository
 import spray.http.StatusCodes._
 
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * Created by alexandra on 2016
  */
-case class SesionAgenteUtilDriverRepository[E <: UsuarioAgente](agenteRepo : UsuarioEmpresarialRepository[E] , sesionRepo: SesionDriverRepository) extends SesionAgenteUtilRepository {
+case class SesionAgenteUtilDriverRepository[E <: UsuarioAgente](agenteRepo : UsuarioEmpresarialRepository[E] , sesionRepo: SesionDriverRepository)
+  (implicit val ex: ExecutionContext)  extends SesionAgenteUtilRepository {
 
   def invalidarToken(token: String, encriptedToken: String): Future[Int] = {
     for {

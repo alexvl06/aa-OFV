@@ -197,7 +197,8 @@ case object UltimasContrasenas extends Regla("ULTIMAS_CONTRASENAS_NO_VALIDAS") {
 
 object ValidarClave {
 
-  def aplicarReglas(input: String, idUsuario: Option[Int], perfilUsuario: PerfilesUsuario.perfilUsuario, validaciones: Regla*): Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = {
+  def aplicarReglas(input: String, idUsuario: Option[Int], perfilUsuario: PerfilesUsuario.perfilUsuario, validaciones: Regla*):
+  Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = {
     obtenerReglasToMap.map(_.flatMap {
       f =>
         zSuccess(
@@ -211,7 +212,6 @@ object ValidarClave {
   private def obtenerReglasToMap: Future[Validation[PersistenceException, Map[String, String]]] = {
     val reglasFuture = DataAccessAdapter.consultarReglasContrasenas()
     reglasFuture.map(_.flatMap(list => zSuccess(list.map(x => (x.llave, x.valor)).toMap)))
-
   }
 
   def reglasGenerales = List(MinCaracteres, MinCaracteresEspeciales, MinNumDigitos, MinMayusculas, MinMinusculas, CaracteresPermitidos, UltimasContrasenas)

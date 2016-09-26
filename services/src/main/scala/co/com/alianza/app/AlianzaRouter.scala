@@ -22,9 +22,11 @@ import portal.transaccional.autenticacion.service.web.autorizacion.{ Autorizacio
 import portal.transaccional.autenticacion.service.web.autenticacion.AutenticacionService
 import portal.transaccional.autenticacion.service.web.sesion.SesionService
 import co.com.alianza.web.PreguntasAutovalidacionService
+import portal.transaccional.autenticacion.service.drivers.contrasenaAgenteInmobiliario.ContrasenaAgenteInmobiliarioRepository
 import portal.transaccional.autenticacion.service.drivers.permisoAgenteInmobiliario.PermisoAgenteInmobiliarioRepository
 import portal.transaccional.autenticacion.service.drivers.rolRecursoComercial.{ RecursoComercialRepository, RolComercialRepository }
 import portal.transaccional.autenticacion.service.drivers.usuarioInmobiliario.UsuarioInmobiliarioRepository
+import portal.transaccional.autenticacion.service.drivers.util.SesionAgenteUtilRepository
 import portal.transaccional.autenticacion.service.web.ip.IpService
 import portal.transaccional.autenticacion.service.web.permisoInmobiliario.AgenteInmobiliarioService
 import portal.transaccional.autenticacion.service.web.recursoComercial.RecursoGraficoComercialService
@@ -43,7 +45,9 @@ case class AlianzaRouter(
     respuestaUsuarioRepository: RespuestaUsuarioRepository, respuestaUsuarioAdminRepository: RespuestaUsuarioRepository, ipRepo: IpRepository,
     autorizacionComercialRepo: AutorizacionUsuarioComercialRepository, autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository,
     autorizacionRecursoComercialRepository: AutorizacionRecursoComercialRepository, recursoComercialRepository: RecursoComercialRepository,
-    rolComercialRepository: RolComercialRepository, usInmobiliarioRepo: UsuarioInmobiliarioRepository, permisoAgenteInmob : PermisoAgenteInmobiliarioRepository
+    rolComercialRepository: RolComercialRepository, usInmobiliarioRepo: UsuarioInmobiliarioRepository, permisoAgenteInmob : PermisoAgenteInmobiliarioRepository,
+    sesionUtilAgenteEmpresarial : SesionAgenteUtilRepository, sesionUtilAgenteInmobiliario : SesionAgenteUtilRepository,
+    agenteInmobContrasenaRepo : ContrasenaAgenteInmobiliarioRepository
 )(implicit val system: ActorSystem) extends HttpServiceActor with RouteConcatenation with CrossHeaders with ServiceAuthorization with ActorLogging {
 
   import system.dispatcher
@@ -51,7 +55,7 @@ case class AlianzaRouter(
   val routes =
 //    AgenteInmobiliarioService(permisoAgenteInmob).route ~
     AutorizacionService(usuarioRepositorio, usuarioAgenteRepositorio, usuarioAdminRepositorio, autorizacionUsuarioRepo, kafkaActor, autorizacionAgenteRepo,
-      autorizacionAdminRepo, autorizacionComercialRepo, autorizacionComercialAdminRepo).route ~
+      autorizacionAdminRepo, autorizacionComercialRepo, autorizacionComercialAdminRepo, sesionUtilAgenteEmpresarial, sesionUtilAgenteInmobiliario).route ~
       AutenticacionService(autenticacionRepo, autenticacionEmpresaRepositorio, autenticacionComercialRepositorio, kafkaActor).route ~
       RecursoGraficoComercialService(recursoComercialRepository, rolComercialRepository).route ~
       AutorizacionRecursoComercialService(autorizacionRecursoComercialRepository).route ~
@@ -60,7 +64,7 @@ case class AlianzaRouter(
       UsuarioService(kafkaActor, usuariosActor).route ~
       ReglasContrasenasService(contrasenasActor).route ~
       PinService(kafkaActor, pinActor, pinUsuarioEmpresarialAdminActor, pinUsuarioAgenteEmpresarialActor).route ~
-      AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).insecureRoute ~
+      AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor, agenteInmobContrasenaRepo).insecureRoute ~
       authenticate(authenticateUser) {
         user =>
           IpsUsuariosService(kafkaActor, ipsUsuarioActor).route(user) ~
@@ -69,7 +73,7 @@ case class AlianzaRouter(
             AgenteInmobiliarioService(user, usInmobiliarioRepo, permisoAgenteInmob).route ~
             ActualizacionService(actualizacionActor, kafkaActor).route(user) ~
             HorarioEmpresaService(kafkaActor, horarioEmpresaActor).route(user) ~
-            new AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).secureRoute(user) ~
+            new AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor,agenteInmobContrasenaRepo).secureRoute(user) ~
             // TODO Cambiar al authenticate de cliente empresarial
             new AdministrarContrasenaEmpresaService(kafkaActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).secureRouteEmpresa(user) ~
             UsuarioEmpresaService(kafkaActor, agenteEmpresarialActor).secureUserRouteEmpresa(user) ~

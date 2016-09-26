@@ -140,7 +140,7 @@ case class AutenticacionEmpresaDriverRepository(
       cliente <- clienteCoreRepo.getCliente(usuario.identificacion, Some(usuario.tipoIdentificacion))                 //ok
       estadoCore <- clienteCoreRepo.validarEstado(cliente)                                                            //ok
       reglaDias <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA.llave)                                        //ok
-      caducidad <- usuarioRepo.validarCaducidadContrasena(TiposCliente.agenteEmpresarial, usuario, reglaDias.valor.toInt)
+      caducidad <- usuarioRepo.validarCaducidadContrasena(TiposCliente.agenteInmobiliario, usuario, reglaDias.valor.toInt)
       actualizar <- usuarioAgenteInmobRepo.actualizarInfoUsuario(usuario, ip)
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)                   //ok
       token <- generarTokenAgente(usuario, ip, inactividad.valor)                                                     //ok
@@ -177,7 +177,7 @@ case class AutenticacionEmpresaDriverRepository(
       cliente <- clienteCoreRepo.getCliente(usuario.identificacion, Some(usuario.tipoIdentificacion))
       estadoCore <- clienteCoreRepo.validarEstado(cliente)
       reglaDias <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA.llave)
-      caducidad <- usuarioAdminRepo.validarCaducidadContrasena(TiposCliente.agenteEmpresarial, usuario, reglaDias.valor.toInt)
+      caducidad <- usuarioAdminRepo.validarCaducidadContrasena(TiposCliente.clienteAdministrador, usuario, reglaDias.valor.toInt)
       actualizar <- usuarioAdminRepo.actualizarInfoUsuario(usuario, ip)
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
       token <- generarToken(usuario, ip, inactividad.valor, cliente.wcli_constructor)

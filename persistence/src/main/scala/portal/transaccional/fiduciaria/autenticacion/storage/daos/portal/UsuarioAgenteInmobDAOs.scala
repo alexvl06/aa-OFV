@@ -52,4 +52,25 @@ trait UsuarioAgenteInmobDAOs {
   def getAll(identificacion: String, nombre: Option[String],
              usuario: Option[String], correo: Option[String], estado: Option[Int], pagina: Option[Int],
              itemsPorPagina: Option[Int])(implicit ec: ExecutionContext): Future[(Int, Int, Int, Int, Seq[UsuarioAgenteInmobiliario])]
+
+
+  /**
+   * Obtiene un agente inmobiliario dado su id, y su contraseña
+   *
+   * @param idUsuario  Id en base de datos del agente
+   * @param contrasena Contraseña actual del agente
+   * @return Un futuro con el agente a buscar embebido en un option
+   */
+  def getContrasena(contrasena: String , idUsuario : Int ): Future[Option[UsuarioAgenteInmobiliario]]
+
+  /**
+   * Actualiza un agente inmobiliario dado su id, y su nueva contraseña
+   *
+   * @param idUsuario  Id en base de datos del agente
+   * @param contrasena Contraseña nueva del agente
+   * @return Un futuro con un entero, si es 0 no actualizo, 2 actualizo el registro.
+   */
+  def updateContrasena(contrasena: String , idUsuario : Int ): Future[Int]
+
+
 }

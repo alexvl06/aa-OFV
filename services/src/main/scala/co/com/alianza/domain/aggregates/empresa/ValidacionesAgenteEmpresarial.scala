@@ -14,10 +14,11 @@ import co.com.alianza.infrastructure.anticorruption.configuraciones.{ DataAccess
 import scala.concurrent.{ ExecutionContext, Future }
 import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 import co.com.alianza.util.clave.{ Crypto, ErrorValidacionClave, ValidarClave }
-import co.com.alianza.exceptions.PersistenceException
+import co.com.alianza.exceptions.{ PersistenceException, ValidacionException }
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => UsDataAdapter }
 import co.com.alianza.persistence.util.DataBaseExecutionContext
 
+import scala.util.{ Failure, Success }
 import scalaz.Validation.FlatMap._
 
 /**
@@ -90,7 +91,7 @@ object ValidacionesAgenteEmpresarial {
   }
 
   def validacionReglasClave(contrasena: String, idUsuario: Int, perfilUsuario: PerfilesUsuario.perfilUsuario): Future[Validation[ErrorValidacion, Unit.type]] = {
-    val usuarioFuture: Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = ValidarClave.aplicarReglas(contrasena, Some(idUsuario), perfilUsuario, ValidarClave.reglasGenerales: _*)
+    val usuarioFuture = ValidarClave.aplicarReglas(contrasena, Some(idUsuario), perfilUsuario, ValidarClave.reglasGenerales: _*)
     usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message, pe)).flatMap {
       (x: List[ErrorValidacionClave]) =>
         x match {
@@ -100,7 +101,6 @@ object ValidacionesAgenteEmpresarial {
             zFailure(ErrorFormatoClave(errorClave(errores)))
         }
     })
-
   }
 
   def validacionObtenerAgenteEmpId(idUsuario: Int): Future[Validation[ErrorValidacion, UsuarioEmpresarial]] = {
@@ -139,15 +139,15 @@ object ValidacionesAgenteEmpresarial {
    * Valida si el cliente ya se encuentra registrado un cliente administrador con el mismo usuario
    */
   def validarUsuarioClienteAdmin(nit: String, usuario: String): Future[Validation[ErrorValidacion, Boolean]] =
-    CliAdmDataAccessAdapter obtieneClientePorNitYUsuario (nit, usuario) map {
-      _ leftMap { e => ErrorPersistence(e.message, e) } flatMap {
-        u: Option[UsuarioEmpresarialAdmin] =>
-          u match {
-            case None => zSuccess(true)
-            case Some(_) => zFailure(ErrorUsuarioClienteAdmin(errorUsuarioClienteAdmin))
-          }
-      }
+  CliAdmDataAccessAdapter obtieneClientePorNitYUsuario (nit, usuario) map {
+    _ leftMap { e => ErrorPersistence(e.message, e) } flatMap {
+      u: Option[UsuarioEmpresarialAdmin] =>
+        u match {
+          case None => zSuccess(true)
+          case Some(_) => zFailure(ErrorUsuarioClienteAdmin(errorUsuarioClienteAdmin))
+        }
     }
+  }
 
   /**
    * Validar usuario
@@ -156,15 +156,15 @@ object ValidacionesAgenteEmpresarial {
    * @return
    */
   def validarUsuarioAgente(idUsuario: Int, nit: String, usuario: String): Future[Validation[ErrorValidacion, Boolean]] =
-    DataAccessAdapterUsuarioAE existeUsuarioEmpresarialPorUsuario (idUsuario: Int, nit, usuario) map {
-      _ leftMap { e => ErrorPersistence(e.message, e) } flatMap {
-        existe: Boolean =>
-          existe match {
-            case false => zSuccess(true)
-            case true => zFailure(ErrorUsuarioClienteAdmin(errorUsuarioClienteAdmin))
-          }
-      }
+  DataAccessAdapterUsuarioAE existeUsuarioEmpresarialPorUsuario (idUsuario: Int, nit, usuario) map {
+    _ leftMap { e => ErrorPersistence(e.message, e) } flatMap {
+      existe: Boolean =>
+        existe match {
+          case false => zSuccess(true)
+          case true => zFailure(ErrorUsuarioClienteAdmin(errorUsuarioClienteAdmin))
+        }
     }
+  }
 
   def validacionEstadoActualizacionAgenteEmpresarial(idAgenteEmpresarial: Int): Future[Validation[ErrorValidacion, Boolean]] = {
     val usuarioAgenteEmpresarialFuture = DataAccessAdapterUsuarioAE.obtenerUsuarioEmpresarialPorId(idAgenteEmpresarial)
