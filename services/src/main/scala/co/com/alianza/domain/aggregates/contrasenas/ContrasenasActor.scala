@@ -7,7 +7,7 @@ import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, Props }
 import co.com.alianza.infrastructure.anticorruption.contrasenas.DataAccessAdapter
 import co.com.alianza.infrastructure.anticorruption.ultimasContrasenas.{ DataAccessAdapter => DataAccessAdapterUltimaContrasena }
 import co.com.alianza.infrastructure.messages._
-import co.com.alianza.persistence.entities.{ ReglasContrasenas, UltimaContrasena }
+import co.com.alianza.persistence.entities.{ ReglaContrasena, UltimaContrasena }
 import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.token.Token
 import spray.http.StatusCodes._
@@ -76,8 +76,8 @@ case class ContrasenasActor() extends Actor with ActorLogging {
   import context.dispatcher
 
   def receive = {
-    case message: InboxMessage => obtenerReglasContrasenas()
 
+    //TODO: Verificar si el metodo CambiarContrasenaMessage se está utilizando
     case message: CambiarContrasenaMessage =>
       val currentSender = sender()
       val passwordActualAppend = message.pw_actual.concat(AppendPasswordUser.appendUsuariosFiducia)
@@ -93,6 +93,7 @@ case class ContrasenasActor() extends Actor with ActorLogging {
 
       resolveCambiarContrasenaFuture(CambiarContrasenaFuture, currentSender)
 
+    //TODO: Verificar si el metodo CambiarContrasenaCaducadaMessage se está utilizando
     case message: CambiarContrasenaCaducadaMessage =>
       val currentSender = sender()
       val tk_validation = Token.autorizarToken(message.token)
@@ -123,21 +124,6 @@ case class ContrasenasActor() extends Actor with ActorLogging {
 
   private def actualizarContrasena(pw_nuevo: String, usuario: Option[Usuario]): Future[Validation[ErrorValidacion, Int]] = {
     DataAccessAdapter.actualizarContrasena(pw_nuevo, usuario.get.id.get).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
-  }
-
-  def obtenerReglasContrasenas() = {
-    val currentSender = sender()
-    val result = DataAccessAdapter.consultarReglasContrasenas()
-
-    result onComplete {
-      case sFailure(failure) => currentSender ! failure
-      case sSuccess(value) =>
-        value match {
-          case zSuccess(response: Seq[ReglasContrasenas]) =>
-            currentSender ! ResponseMessage(OK, response.toJson)
-          case zFailure(error) => currentSender ! error
-        }
-    }
   }
 
   private def resolveCambiarContrasenaFuture(CambiarContrasenaFuture: Future[Validation[ErrorValidacion, Int]], currentSender: ActorRef) = {

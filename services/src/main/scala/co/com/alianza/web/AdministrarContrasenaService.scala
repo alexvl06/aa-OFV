@@ -1,9 +1,9 @@
 package co.com.alianza.web
 
-import akka.actor.{ActorSelection, ActorSystem}
+import akka.actor.{ ActorSelection, ActorSystem }
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.infrastructure.auditing.AuditingHelper
-import co.com.alianza.infrastructure.messages.empresa.{CambiarContrasenaCaducadaAgenteEmpresarialMessage, CambiarContrasenaCaducadaClienteAdminMessage}
+import co.com.alianza.infrastructure.messages.empresa.{ CambiarContrasenaCaducadaAgenteEmpresarialMessage, CambiarContrasenaCaducadaClienteAdminMessage }
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.util.token.Token
 import co.com.alianza.exceptions.PersistenceException
@@ -11,10 +11,10 @@ import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.util.clave.Crypto
 import enumerations.AppendPasswordUser
-import spray.routing.{Directives, RequestContext}
+import spray.routing.{ Directives, RequestContext }
 import co.com.alianza.app.AlianzaCommons
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
-import co.com.alianza.infrastructure.messages.{AdministrarContrasenaMessagesJsonSupport, CambiarContrasenaCaducadaMessage, CambiarContrasenaMessage}
+import co.com.alianza.infrastructure.messages.{ AdministrarContrasenaMessagesJsonSupport, CambiarContrasenaCaducadaMessage, CambiarContrasenaMessage }
 import spray.http.StatusCodes
 
 import scala.concurrent.ExecutionContext
@@ -33,26 +33,27 @@ case class AdministrarContrasenaService(kafkaActor: ActorSelection, contrasenasA
       if(user.tipoCliente.eq(TiposCliente.comercialSAC))
         complete((StatusCodes.Unauthorized, "Tipo usuario SAC no está autorizado para realizar esta acción"))
       else
-      respondWithMediaType(mediaType) {
-        pathEndOrSingleSlash {
-          put {
-            clientIP {
-              ip =>
-                //Cambiar contrasena de la cuenta alianza valores
-                entity(as[CambiarContrasenaMessage]) {
-                  data =>
-                    mapRequestContext {
-                      r: RequestContext =>
-                        val token = r.request.headers.find(header => header.name equals "token")
-                        val usuario = DataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
+        respondWithMediaType(mediaType) {
+          pathEndOrSingleSlash {
+            put {
+              clientIP {
+                ip =>
+                  //Cambiar contrasena de la cuenta alianza valores
+                  entity(as[CambiarContrasenaMessage]) {
+                    data =>
+                      mapRequestContext {
+                        r: RequestContext =>
+                          val token = r.request.headers.find(header => header.name equals "token")
+                          val usuario = DataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
 
-                        requestWithFutureAuditing[PersistenceException, CambiarContrasenaMessage](r, AuditingHelper.fiduciariaTopic,
-                          AuditingHelper.cambioContrasenaIndex, ip.value, kafkaActor, usuario, Some(data.copy(pw_actual = null, pw_nuevo = null)))
-                    } {
-                      val dataComplete: CambiarContrasenaMessage = data.copy(idUsuario = Some(user.id))
-                      requestExecute(dataComplete, contrasenasActor)
-                    }
-                }
+                          requestWithFutureAuditing[PersistenceException, CambiarContrasenaMessage](r, AuditingHelper.fiduciariaTopic,
+                            AuditingHelper.cambioContrasenaIndex, ip.value, kafkaActor, usuario, Some(data.copy(pw_actual = null, pw_nuevo = null)))
+                      } {
+                        val dataComplete: CambiarContrasenaMessage = data.copy(idUsuario = Some(user.id))
+                        requestExecute(dataComplete, contrasenasActor)
+                      }
+                  }
+              }
             }
           }
         }

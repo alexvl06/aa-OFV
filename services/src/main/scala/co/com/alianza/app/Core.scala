@@ -69,6 +69,7 @@ trait BootedCore extends Core {
  */
 trait CoreActors {
   this: Core with BootedCore =>
+  //TODO: verificar que usuarios ya no se están utilizando y eliminarlos
   val usuariosActorSupervisor = system.actorOf(Props[UsuariosActorSupervisor], "UsuariosActorSupervisor")
   val usuariosActor = system.actorSelection(usuariosActorSupervisor.path)
   val confrontaActorSupervisor = system.actorOf(Props[ConfrontaActorSupervisor], "confrontaActorSupervisor")

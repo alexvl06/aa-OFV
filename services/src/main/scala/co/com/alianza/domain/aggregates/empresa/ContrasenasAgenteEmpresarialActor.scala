@@ -29,7 +29,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scalaz.Validation
 import spray.http.StatusCodes._
 import co.com.alianza.util.clave.Crypto
-import co.com.alianza.persistence.entities.{ Empresa, ReglasContrasenas, UltimaContrasenaUsuarioAgenteEmpresarial }
+import co.com.alianza.persistence.entities.{ Empresa, ReglaContrasena, UltimaContrasenaUsuarioAgenteEmpresarial }
 import java.sql.Timestamp
 import java.util.Date
 
@@ -198,14 +198,14 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging {
     DataAccessAdapter.cambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial, estado).map(_.leftMap(pe => ErrorPersistenceEmpresa(pe.message, pe)))
   }
 
-  private def diasCaducidadContrasena(): Future[Validation[ErrorValidacionEmpresa, Option[ReglasContrasenas]]] = {
+  private def diasCaducidadContrasena(): Future[Validation[ErrorValidacionEmpresa, Option[ReglaContrasena]]] = {
     co.com.alianza.infrastructure.anticorruption.contrasenas.DataAccessAdapter.obtenerRegla("DIAS_VALIDA").map(_.leftMap(pe => ErrorPersistenceEmpresa(pe.message, pe)))
   }
 
-  private def BloquearDesbloquearAgenteEmpresarial(idUsuarioAgenteEmpresarial: (Int, Int), diasCaducidad: Option[ReglasContrasenas]): Future[Validation[ErrorValidacionEmpresa, Int]] = {
+  private def BloquearDesbloquearAgenteEmpresarial(idUsuarioAgenteEmpresarial: (Int, Int), diasCaducidad: Option[ReglaContrasena]): Future[Validation[ErrorValidacionEmpresa, Int]] = {
     val fechaCaducada = Calendar.getInstance()
     fechaCaducada.setTime(new Date())
-    fechaCaducada.add(Calendar.DAY_OF_YEAR, (diasCaducidad.getOrElse(ReglasContrasenas("", "0")).valor.toInt * -1))
+    fechaCaducada.add(Calendar.DAY_OF_YEAR, (diasCaducidad.getOrElse(ReglaContrasena("", "0")).valor.toInt * -1))
     val timestamp = new Timestamp(fechaCaducada.getTimeInMillis)
     val estadoNuevo = if (idUsuarioAgenteEmpresarial._2 == EstadosEmpresaEnum.bloqueContraseña.id || idUsuarioAgenteEmpresarial._2 == EstadosEmpresaEnum.activo.id || idUsuarioAgenteEmpresarial._2 == EstadosEmpresaEnum.pendienteActivacion.id || idUsuarioAgenteEmpresarial._2 == EstadosEmpresaEnum.pendienteReiniciarContrasena.id) { EstadosEmpresaEnum.bloqueadoPorAdmin } else { EstadosEmpresaEnum.pendienteReiniciarContrasena }
     DataAccessAdapter.cambiarBloqueoDesbloqueoAgenteEmpresarial(idUsuarioAgenteEmpresarial._1, estadoNuevo, timestamp).map(_.leftMap(pe => ErrorPersistenceEmpresa(pe.message, pe)))

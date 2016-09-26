@@ -21,16 +21,16 @@ import CustomDriver.simple._
  */
 class ReglasContrasenasRepository(implicit executionContext: ExecutionContext) extends AlianzaRepository {
 
-  val reglasContrasenas = TableQuery[ReglasContrasenasTable]
+  val reglasContrasenas = TableQuery[ReglaContrasenaTable]
   val usuarios = TableQuery[UsuarioTable]
 
-  def obtenerReglas(): Future[Validation[PersistenceException, Seq[ReglasContrasenas]]] = loan {
+  def obtenerReglas(): Future[Validation[PersistenceException, Seq[ReglaContrasena]]] = loan {
     session =>
       val resultTry = session.database.run(reglasContrasenas.result)
       resolveTry(resultTry, "Consulta todas las reglas contraseñas")
   }
 
-  def obtenerRegla(llave: String): Future[Validation[PersistenceException, Option[ReglasContrasenas]]] = loan {
+  def obtenerRegla(llave: String): Future[Validation[PersistenceException, Option[ReglaContrasena]]] = loan {
     session =>
       val resultTry = session.database.run(reglasContrasenas.withFilter(x => x.llave.like(llave)).result.headOption)
       resolveTry(resultTry, "Consulta la regla contraseña solicitada")

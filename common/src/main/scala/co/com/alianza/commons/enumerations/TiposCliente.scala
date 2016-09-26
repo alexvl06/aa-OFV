@@ -16,4 +16,19 @@ object TiposCliente extends Enumeration {
     this.values.filter(tipo => tipo.toString.equals(tipoCliente)).head
   }
 
+  private val tiposIdIndividual: List[Int] = List(
+    1, // CedulaCiudadania
+    2, // CedulaExtranjeria
+    5, // TarjetaIdentidad
+    8
+  ) // RegistroCivil
+
+  def tipoClientePorTipoIdentificacion(tipoIdentificacion: Int): TiposCliente = {
+    if (tiposIdIndividual.contains(tipoIdentificacion)) {
+      clienteIndividual
+    } else {
+      clienteAdministrador
+    }
+  }
+
 }
