@@ -1,10 +1,10 @@
 package co.com.alianza.web
 
-import akka.actor.{ActorSelection, ActorSystem}
-import co.com.alianza.app.{AlianzaCommons, CrossHeaders}
+import akka.actor.{ ActorSelection, ActorSystem }
+import co.com.alianza.app.{ AlianzaCommons, CrossHeaders }
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.domain.aggregates.actualizacion.ActualizacionActor
-import co.com.alianza.infrastructure.auditing.{AuditingHelper, KafkaActor}
+import co.com.alianza.infrastructure.auditing.{ AuditingHelper, KafkaActor }
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.infrastructure.dto.DatosCliente
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
@@ -12,7 +12,7 @@ import co.com.alianza.infrastructure.messages._
 import co.com.alianza.util.clave.Crypto
 import enumerations.AppendPasswordUser
 import spray.http.StatusCodes
-import spray.routing.{Directives, RequestContext}
+import spray.routing.{ Directives, RequestContext }
 
 import scala.concurrent.ExecutionContext
 
@@ -36,50 +36,50 @@ case class ActualizacionService(actualizacionActor: ActorSelection, kafkaActor: 
 
   def route(user: UsuarioAuth) = {
     pathPrefix(actualizacion) {
-      if(user.tipoCliente.eq(TiposCliente.comercialSAC))
+      if (user.tipoCliente.eq(TiposCliente.comercialSAC))
         complete((StatusCodes.Unauthorized, "Tipo usuario SAC no esta autorizado para realizar esta acción"))
       else
-      get {
-        respondWithMediaType(mediaType) {
-          pathPrefix(paises) {
-            requestExecute(new ObtenerPaises, actualizacionActor)
-          } ~
-            pathPrefix(ciudades / IntNumber) {
-              (pais: Int) =>
-                requestExecute(new ObtenerCiudades(pais), actualizacionActor)
+        get {
+          respondWithMediaType(mediaType) {
+            pathPrefix(paises) {
+              requestExecute(new ObtenerPaises, actualizacionActor)
             } ~
-            pathPrefix(tiposCorreo) {
-              requestExecute(new ObtenerTiposCorreo, actualizacionActor)
-            } ~
-            pathPrefix(envioCorrespondencia) {
-              requestExecute(new ObtenerEnvioCorrespondencia, actualizacionActor)
-            } ~
-            pathPrefix(ocupaciones) {
-              requestExecute(new ObtenerOcupaciones, actualizacionActor)
-            } ~
-            pathPrefix(actividadesEconomicas) {
-              requestExecute(new ObtenerActividadesEconomicas, actualizacionActor)
-            } ~
-            pathPrefix(datos) {
-              requestExecute(new ObtenerDatos(user), actualizacionActor)
-            } ~
-            pathPrefix(comprobar) {
-              requestExecute(new ComprobarDatos(user), actualizacionActor)
-            }
-        }
-      } ~ put {
-        clientIP {
-          ip =>
-            entity(as[ActualizacionMessage]) {
-              actualizacion =>
-                mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.actualizacionDatosUsuarioIndex, ip.value, kafkaActor, actualizacion)) {
-                  respondWithMediaType(mediaType) {
-                    requestExecute(actualizacion.copy(idUsuario = Some(user.id), tipoCliente = Some(user.tipoCliente.toString)), actualizacionActor)
+              pathPrefix(ciudades / IntNumber) {
+                (pais: Int) =>
+                  requestExecute(new ObtenerCiudades(pais), actualizacionActor)
+              } ~
+              pathPrefix(tiposCorreo) {
+                requestExecute(new ObtenerTiposCorreo, actualizacionActor)
+              } ~
+              pathPrefix(envioCorrespondencia) {
+                requestExecute(new ObtenerEnvioCorrespondencia, actualizacionActor)
+              } ~
+              pathPrefix(ocupaciones) {
+                requestExecute(new ObtenerOcupaciones, actualizacionActor)
+              } ~
+              pathPrefix(actividadesEconomicas) {
+                requestExecute(new ObtenerActividadesEconomicas, actualizacionActor)
+              } ~
+              pathPrefix(datos) {
+                requestExecute(new ObtenerDatos(user), actualizacionActor)
+              } ~
+              pathPrefix(comprobar) {
+                requestExecute(new ComprobarDatos(user), actualizacionActor)
+              }
+          }
+        } ~ put {
+          clientIP {
+            ip =>
+              entity(as[ActualizacionMessage]) {
+                actualizacion =>
+                  mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.actualizacionDatosUsuarioIndex, ip.value, kafkaActor, actualizacion)) {
+                    respondWithMediaType(mediaType) {
+                      requestExecute(actualizacion.copy(idUsuario = Some(user.id), tipoCliente = Some(user.tipoCliente.toString)), actualizacionActor)
+                    }
                   }
-                }
-            }
+              }
+          }
         }
-      }
     }
   }
 
