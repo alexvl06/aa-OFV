@@ -1,17 +1,19 @@
 package co.com.alianza.web.empresa
 
-import akka.actor.{ ActorSelection, ActorSystem }
+import akka.actor.{ActorSelection, ActorSystem}
 import co.com.alianza.app.AlianzaCommons
+import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{ DataAccessAdapter => DataAccessAdapterAgenteEmpresarial }
-import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{ DataAccessAdapter => DataAccessAdapterClienteAdmin }
+import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{DataAccessAdapter => DataAccessAdapterAgenteEmpresarial}
+import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{DataAccessAdapter => DataAccessAdapterClienteAdmin}
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.infrastructure.messages.empresa._
 import co.com.alianza.util.clave.Crypto
 import enumerations.AppendPasswordUser
-import spray.routing.{ Directives, RequestContext }
+import spray.http.StatusCodes
+import spray.routing.{Directives, RequestContext}
 
 import scala.concurrent.ExecutionContext
 
@@ -26,6 +28,9 @@ case class AdministrarContrasenaEmpresaService(kafkaActor: ActorSelection, contr
 
   def secureRouteEmpresa(user: UsuarioAuth) = {
     pathPrefix("empresa") {
+      if(user.tipoCliente.eq(TiposCliente.comercialSAC))
+        complete((StatusCodes.Unauthorized, "Tipo usuario SAC no esta autorizado para realizar esta acción"))
+      else
       path("reiniciarContrasena") {
         respondWithMediaType(mediaType) {
           pathEndOrSingleSlash {

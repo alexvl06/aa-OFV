@@ -1,23 +1,21 @@
 package co.com.alianza.web
 
-import akka.actor.{ ActorLogging, ActorSelection, ActorSystem }
-import co.com.alianza.app.{ AlianzaCommons, CrossHeaders }
+import akka.actor.{ActorSelection, ActorSystem}
+import co.com.alianza.app.{AlianzaCommons, CrossHeaders}
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
-import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{ DataAccessAdapter => DataAccessAdapterAgenteEmpresarial }
-import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{ DataAccessAdapter => DataAccessAdapterClienteAdmin }
+import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{DataAccessAdapter => DataAccessAdapterAgenteEmpresarial}
+import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{DataAccessAdapter => DataAccessAdapterClienteAdmin}
 import co.com.alianza.infrastructure.auditing.AuditingHelper
-import co.com.alianza.infrastructure.dto.security.UsuarioAuth
-import co.com.alianza.infrastructure.messages._
-import co.com.alianza.util.token.AesUtil
-import enumerations.CryptoAesParameters
-import spray.routing.RequestContext
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.infrastructure.auditing.AuditingUser.AuditingUserData
-import spray.routing.Directives
+import co.com.alianza.infrastructure.dto.security.UsuarioAuth
+import co.com.alianza.infrastructure.messages._
+import spray.http.StatusCodes
+import spray.routing.{Directives, RequestContext}
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.Future
 import scalaz.Validation
 
 /**
@@ -26,13 +24,16 @@ import scalaz.Validation
 case class IpsUsuariosService(kafkaActor: ActorSelection, ipsUsuarioActor: ActorSelection)(implicit val system: ActorSystem) extends Directives
     with AlianzaCommons with CrossHeaders {
 
-  import system.dispatcher
   import IpsUsuarioMessagesJsonSupport._
+  import system.dispatcher
 
   val ipsUsuarios = "ipsUsuarios"
 
   def route(user: UsuarioAuth) = {
     path(ipsUsuarios) {
+      if(user.tipoCliente.eq(TiposCliente.comercialSAC))
+        complete((StatusCodes.Unauthorized, "Tipo usuario SAC no esta autorizado para gestionar las ip's"))
+      else
       get {
         respondWithMediaType(mediaType) {
           clientIP { ip =>
@@ -55,7 +56,6 @@ case class IpsUsuariosService(kafkaActor: ActorSelection, ipsUsuarioActor: Actor
                   mapRequestContext {
                     r: RequestContext =>
                       val usuario = obtenerUsuario(r, user)
-
                       requestWithFutureAuditing[PersistenceException, AgregarIpsUsuarioMessage](r, AuditingHelper.fiduciariaTopic,
                         AuditingHelper.usuarioAgregarIpIndex, ip.value, kafkaActor, usuario, Some(agregarIpsUsuarioMessage))
                   } {
