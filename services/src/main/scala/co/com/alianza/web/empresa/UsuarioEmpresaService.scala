@@ -29,7 +29,7 @@ case class UsuarioEmpresaService(kafkaActor: ActorSelection, agenteEmpresarialAc
     pathPrefix("empresa") {
       path("consultarUsuarios") {
         if(user.tipoCliente.eq(TiposCliente.comercialSAC))
-          complete((StatusCodes.Unauthorized, "Tipo usuario SAC no esta autorizado para realizar esta acción"))
+          complete((StatusCodes.Unauthorized, "Tipo usuario SAC no está autorizado para realizar esta acción"))
         else
         respondWithMediaType(mediaType) {
           get {
@@ -53,7 +53,7 @@ case class UsuarioEmpresaService(kafkaActor: ActorSelection, agenteEmpresarialAc
       } ~
         path("usuarioAgenteEmpresarial") {
           if(user.tipoCliente.eq(TiposCliente.comercialSAC))
-            complete((StatusCodes.Unauthorized, "Tipo usuario SAC no esta autorizado para realizar esta acción"))
+            complete((StatusCodes.Unauthorized, "Tipo usuario SAC no está autorizado para realizar esta acción"))
           else
           respondWithMediaType(mediaType) {
             pathEndOrSingleSlash {
