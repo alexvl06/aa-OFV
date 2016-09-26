@@ -1,18 +1,17 @@
 package portal.transaccional.autenticacion.service.util.JsonFormatters
 
 import co.com.alianza.commons.enumerations.TipoPermisoInmobiliario
-import co.com.alianza.commons.enumerations.TipoPermisoInmobiliario._
 import co.com.alianza.exceptions.ValidacionException
-import co.com.alianza.infrastructure.dto.{ Pregunta, Respuesta }
-import co.com.alianza.persistence.entities.{ PermisoAgenteInmobiliario, RecursoComercial, RolComercial }
-import portal.transaccional.autenticacion.service.dto.{ PermisoRecursoDTO, RecursoDTO }
+import co.com.alianza.infrastructure.dto.{Pregunta, Respuesta}
+import co.com.alianza.persistence.entities.{PermisoAgenteInmobiliario, RecursoComercial, RolComercial}
+import portal.transaccional.autenticacion.service.dto.{PermisoRecursoDTO, RecursoDTO}
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
-import portal.transaccional.autenticacion.service.web.autenticacion.{ AutenticarRequest, AutenticarUsuarioComercialRequest, AutenticarUsuarioEmpresarialRequest }
+import portal.transaccional.autenticacion.service.web.autenticacion.{AutenticarRequest, AutenticarUsuarioComercialRequest, AutenticarUsuarioEmpresarialRequest}
 import portal.transaccional.autenticacion.service.web.autorizacion.InvalidarTokenRequest
 import portal.transaccional.autenticacion.service.web.ip.AgregarIpRequest
-import portal.transaccional.autenticacion.service.web.permisoInmobiliario.{ EdicionFidPermisoRequest, EdicionPermisoRequest }
-import portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.{ GuardarRespuestasRequest, ResponseObtenerPreguntas, ResponseObtenerPreguntasComprobar, RespuestasComprobacionRequest }
-import spray.json.{ DeserializationException, JsString, JsValue, JsonFormat }
+import portal.transaccional.autenticacion.service.web.permisoInmobiliario._
+import portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.{GuardarRespuestasRequest, ResponseObtenerPreguntas, ResponseObtenerPreguntasComprobar, RespuestasComprobacionRequest}
+import spray.json.{DeserializationException, JsString, JsValue, JsonFormat}
 
 trait DomainJsonFormatters {
 
@@ -49,10 +48,14 @@ trait DomainJsonFormatters {
   implicit val permisoDtoFormater = jsonFormat1(PermisoRecursoDTO)
 
   //permisosInmbiliarios
-  implicit val tipoPermisosInmob = jsonEnum(TipoPermisoInmobiliario)
-  implicit val edicionPermisos = jsonFormat4(EdicionPermisoRequest)
-  implicit val permisoAgenteInmob = jsonFormat4(PermisoAgenteInmobiliario)
-  implicit val permisosFidRequest = jsonFormat3(EdicionFidPermisoRequest)
+  implicit val tipoPermisosInmobFormatter = jsonEnum(TipoPermisoInmobiliario)
+  implicit val edicionPermisosFormatter = jsonFormat4(EdicionPermisoRequest)
+  implicit val permisoAgenteInmobFormatter = jsonFormat4(PermisoAgenteInmobiliario)
+  implicit val permisosFidRequestFormatter = jsonFormat3(EdicionFidPermisoRequest)
+  implicit val crearAgenteInmobRequestFormatter = jsonFormat5(CrearAgenteInmobiliarioRequest)
+  implicit val consultarAgenteInmobResponseFormatter = jsonFormat7(ConsultarAgenteInmobiliarioResponse)
+  implicit val paginationMetadataResponseFormatter = jsonFormat5(PaginacionMetadata)
+  implicit val consultarAgenteInmobiliarioListResponseFormatter = jsonFormat2(ConsultarAgenteInmobiliarioListResponse)
 
   // ----- MAPEO DE ENUM!
   private def jsonEnum[T <: Enumeration](enu: T) = new JsonFormat[T#Value] {
