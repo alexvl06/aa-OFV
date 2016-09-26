@@ -72,7 +72,7 @@ trait UsuarioInmobiliarioRepository {
     *
     * @param identificacion Identificación de la empresa
     * @param usuario        Nombre de usuario del agente a actualizar
-    * @return Un futuro con la cantidad de filas actualizadas (0 si falla, 1 si se actualiza correctamente)
+    * @return Un futuro con el estado del agente modificado
     */
-  def activateOrDeactivateAgenteInmobiliario(identificacion: String, usuario: String): Future[Int]
+  def activateOrDeactivateAgenteInmobiliario(identificacion: String, usuario: String): Future[Option[ConsultarAgenteInmobiliarioResponse]]
 }

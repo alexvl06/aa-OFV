@@ -4,6 +4,7 @@ import java.sql.Timestamp
 
 import co.com.alianza.persistence.entities.UsuarioAgenteInmobiliario
 import enumerations.EstadosUsuarioEnum
+import enumerations.EstadosUsuarioEnum.estadoUsuario
 import portal.transaccional.autenticacion.service.web.agenteInmobiliario.{ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse, PaginacionMetadata}
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.UsuarioAgenteInmobDAOs
 
@@ -69,17 +70,25 @@ case class UsuarioInmobiliarioDriverRepository(usuariosDao: UsuarioAgenteInmobDA
     usuariosDao.update(identificacion, usuario, correo, nombre, cargo, descripcion)
   }
 
-  override def activateOrDeactivateAgenteInmobiliario(identificacion: String, usuario: String): Future[Int] = {
+  override def activateOrDeactivateAgenteInmobiliario(identificacion: String, usuario: String): Future[Option[ConsultarAgenteInmobiliarioResponse]] = {
     usuariosDao.get(identificacion, usuario).flatMap {
-      case None => Future.successful(0)
+      case None => Future.successful(Option.empty)
       case Some(agente) =>
-        if (agente.estado == EstadosUsuarioEnum.activo.id) {
-          usuariosDao.updateState(identificacion, usuario, EstadosUsuarioEnum.pendienteActivacion) // deactivate
+        (if (agente.estado == EstadosUsuarioEnum.activo.id) {
+          Option.apply(EstadosUsuarioEnum.pendienteActivacion)
         } else if (agente.estado == EstadosUsuarioEnum.pendienteActivacion.id) {
-          usuariosDao.updateState(identificacion, usuario, EstadosUsuarioEnum.activo) // activate
+          Option.apply(EstadosUsuarioEnum.activo)
         } else {
-          Future.successful(0)
-        }
+          Option.empty
+        }).map { estado =>
+          usuariosDao.updateState(identificacion, usuario, estado).map {
+            case x if x == 0 => Option.empty
+            case _ => Option.apply(ConsultarAgenteInmobiliarioResponse(
+              agente.id, agente.correo, agente.usuario, estado.id,
+              agente.nombre, agente.cargo, agente.descripcion
+            ))
+          }
+        }.getOrElse(Future.successful(Option.empty))
     }
   }
 }

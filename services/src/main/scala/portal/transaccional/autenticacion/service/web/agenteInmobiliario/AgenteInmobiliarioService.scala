@@ -143,13 +143,13 @@ case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
 
   private def activateOrDeactivateAgenteInmobiliario(usuarioAgente: String): Route = {
     put {
-      val numModificadas: Future[Int] = usuariosRepo.activateOrDeactivateAgenteInmobiliario(
+      val agenteF: Future[Option[ConsultarAgenteInmobiliarioResponse]] = usuariosRepo.activateOrDeactivateAgenteInmobiliario(
         usuarioAuth.identificacionUsuario, usuarioAgente
       )
-      onComplete(numModificadas) {
-        case Success(num) => num match {
-          case 0 => complete(StatusCodes.NotFound)
-          case _ => complete(StatusCodes.OK)
+      onComplete(agenteF) {
+        case Success(agenteOp) => agenteOp match {
+          case Some(agente) => complete(StatusCodes.OK -> agente)
+          case None => complete(StatusCodes.NotFound)
         }
         case Failure(exception) => complete(StatusCodes.InternalServerError)
       }
