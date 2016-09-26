@@ -1,4 +1,4 @@
-package portal.transaccional.autenticacion.service.web.permisoInmobiliario
+package portal.transaccional.autenticacion.service.web.agenteInmobiliario
 
 import co.com.alianza.app.CrossHeaders
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth

@@ -1,4 +1,4 @@
-package portal.transaccional.autenticacion.service.web.permisoInmobiliario
+package portal.transaccional.autenticacion.service.web.agenteInmobiliario
 
 case class ConsultarAgenteInmobiliarioResponse(id: Int,
                                                correo: String,

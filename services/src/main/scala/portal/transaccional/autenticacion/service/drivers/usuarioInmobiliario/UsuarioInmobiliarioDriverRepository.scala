@@ -4,7 +4,7 @@ import java.sql.Timestamp
 
 import co.com.alianza.persistence.entities.UsuarioAgenteInmobiliario
 import enumerations.EstadosUsuarioEnum
-import portal.transaccional.autenticacion.service.web.permisoInmobiliario.{ConsultarAgenteInmobiliarioResponse, ConsultarAgenteInmobiliarioListResponse, PaginacionMetadata}
+import portal.transaccional.autenticacion.service.web.agenteInmobiliario.{ConsultarAgenteInmobiliarioResponse, ConsultarAgenteInmobiliarioListResponse, PaginacionMetadata}
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.UsuarioAgenteInmobDAOs
 
 import scala.concurrent.{ExecutionContext, Future}

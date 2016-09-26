@@ -1,6 +1,6 @@
 package portal.transaccional.autenticacion.service.drivers.usuarioInmobiliario
 
-import portal.transaccional.autenticacion.service.web.permisoInmobiliario.{ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse}
+import portal.transaccional.autenticacion.service.web.agenteInmobiliario.{ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse}
 
 import scala.concurrent.Future
 

@@ -26,7 +26,7 @@ import portal.transaccional.autenticacion.service.drivers.permisoAgenteInmobilia
 import portal.transaccional.autenticacion.service.drivers.rolRecursoComercial.{ RecursoComercialRepository, RolComercialRepository }
 import portal.transaccional.autenticacion.service.drivers.usuarioInmobiliario.UsuarioInmobiliarioRepository
 import portal.transaccional.autenticacion.service.web.ip.IpService
-import portal.transaccional.autenticacion.service.web.permisoInmobiliario.AgenteInmobiliarioService
+import portal.transaccional.autenticacion.service.web.agenteInmobiliario.AgenteInmobiliarioService
 import portal.transaccional.autenticacion.service.web.recursoComercial.RecursoGraficoComercialService
 
 case class AlianzaRouter(
