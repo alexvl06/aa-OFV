@@ -29,6 +29,7 @@ case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
   extends CommonRESTFul with DomainJsonFormatters with CrossHeaders with HalPaginationUtils {
 
   val agentesPath: String = "agentes-inmobiliarios"
+  val estadoPath: String = "estado"
   val permisosPath = "permisos"
   val updateByProject = "updateByProject"
   val actualizarPath3 = "updateByFid"
@@ -40,6 +41,10 @@ case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
       } ~ pathPrefix(Segment) { usuarioAgente =>
         pathEndOrSingleSlash {
           getAgenteInmobiliario(usuarioAgente) ~ updateAgenteInmobiliario(usuarioAgente)
+        }
+      } ~ pathPrefix(Segment / estadoPath) { usuarioAgente =>
+        pathEndOrSingleSlash {
+          activateOrDeactivateAgenteInmobiliario(usuarioAgente)
         }
       }
     }
@@ -117,7 +122,7 @@ case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
     }
   }
 
-  def updateAgenteInmobiliario(usuarioAgente: String): Route = {
+  private def updateAgenteInmobiliario(usuarioAgente: String): Route = {
     put {
       entity(as[CrearAgenteInmobiliarioRequest]) { r =>
         val numModificadas: Future[Int] = usuariosRepo.updateAgenteInmobiliario(
@@ -131,6 +136,21 @@ case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
           }
           case Failure(exception) => complete(StatusCodes.InternalServerError)
         }
+      }
+    }
+  }
+
+  private def activateOrDeactivateAgenteInmobiliario(usuarioAgente: String): Route = {
+    put {
+      val numModificadas: Future[Int] = usuariosRepo.activateOrDeactivateAgenteInmobiliario(
+        usuarioAuth.identificacionUsuario, usuarioAgente
+      )
+      onComplete(numModificadas) {
+        case Success(num) => num match {
+          case 0 => complete(StatusCodes.NotFound)
+          case _ => complete(StatusCodes.OK)
+        }
+        case Failure(exception) => complete(StatusCodes.InternalServerError)
       }
     }
   }

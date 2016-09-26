@@ -1,6 +1,7 @@
 package portal.transaccional.fiduciaria.autenticacion.storage.daos.portal
 
 import co.com.alianza.persistence.entities.UsuarioAgenteInmobiliario
+import enumerations.EstadosUsuarioEnum.estadoUsuario
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -67,4 +68,14 @@ trait UsuarioAgenteInmobDAOs {
   def update(identificacion: String, usuario: String,
              correo: String, nombre: Option[String],
              cargo: Option[String], descripcion: Option[String]): Future[Int]
+
+  /**
+    * Actualiza el estado de un agente inmobiliario
+    *
+    * @param identificacion Identificación de la empresa
+    * @param usuario        Nombre de usuario del agente a actualizar
+    * @param estado         Estado del agente a actualizar
+    * @return Un futuro con la cantidad de filas actualizadas (0 si falla, 1 si se actualiza correctamente)
+    */
+  def updateState(identificacion: String, usuario: String, estado: estadoUsuario): Future[Int]
 }

@@ -2,6 +2,7 @@ package portal.transaccional.fiduciaria.autenticacion.storage.daos.portal
 
 import co.com.alianza.persistence.entities.{UsuarioAgenteInmobiliario, UsuarioAgenteInmobiliarioTable}
 import co.com.alianza.persistence.util.SlickExtensions
+import enumerations.EstadosUsuarioEnum._
 import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
 import slick.lifted.TableQuery
 
@@ -60,6 +61,15 @@ case class UsuarioAgenteInmobDAO(implicit dcConfig: DBConfig) extends UsuarioAge
         .filter(agente => agente.identificacion === identificacion && agente.usuario === usuario)
         .map(agente => (agente.correo, agente.nombre, agente.cargo, agente.descripcion))
         .update((correo, nombre, cargo, descripcion))
+    )
+  }
+
+  override def updateState(identificacion: String, usuario: String, estado: estadoUsuario): Future[Int] = {
+    run(
+      table
+        .filter(agente => agente.identificacion === identificacion && agente.usuario === usuario)
+        .map(_.estado)
+        .update(estado.id)
     )
   }
 }

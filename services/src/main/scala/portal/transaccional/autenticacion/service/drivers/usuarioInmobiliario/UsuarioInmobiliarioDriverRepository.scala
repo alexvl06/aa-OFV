@@ -4,7 +4,7 @@ import java.sql.Timestamp
 
 import co.com.alianza.persistence.entities.UsuarioAgenteInmobiliario
 import enumerations.EstadosUsuarioEnum
-import portal.transaccional.autenticacion.service.web.agenteInmobiliario.{ConsultarAgenteInmobiliarioResponse, ConsultarAgenteInmobiliarioListResponse, PaginacionMetadata}
+import portal.transaccional.autenticacion.service.web.agenteInmobiliario.{ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse, PaginacionMetadata}
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.UsuarioAgenteInmobDAOs
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -63,9 +63,23 @@ case class UsuarioInmobiliarioDriverRepository(usuariosDao: UsuarioAgenteInmobDA
       })
   }
 
-  def updateAgenteInmobiliario(identificacion: String, usuario: String,
-                               correo: String, nombre: Option[String],
-                               cargo: Option[String], descripcion: Option[String]): Future[Int] = {
+  override def updateAgenteInmobiliario(identificacion: String, usuario: String,
+                                        correo: String, nombre: Option[String],
+                                        cargo: Option[String], descripcion: Option[String]): Future[Int] = {
     usuariosDao.update(identificacion, usuario, correo, nombre, cargo, descripcion)
+  }
+
+  override def activateOrDeactivateAgenteInmobiliario(identificacion: String, usuario: String): Future[Int] = {
+    usuariosDao.get(identificacion, usuario).flatMap {
+      case None => Future.successful(0)
+      case Some(agente) =>
+        if (agente.estado == EstadosUsuarioEnum.activo.id) {
+          usuariosDao.updateState(identificacion, usuario, EstadosUsuarioEnum.pendienteActivacion) // deactivate
+        } else if (agente.estado == EstadosUsuarioEnum.pendienteActivacion.id) {
+          usuariosDao.updateState(identificacion, usuario, EstadosUsuarioEnum.activo) // activate
+        } else {
+          Future.successful(0)
+        }
+    }
   }
 }
