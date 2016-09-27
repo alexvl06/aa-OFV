@@ -60,7 +60,7 @@ case class UsuarioAgenteInmobDAO(implicit dcConfig: DBConfig) extends UsuarioAge
 
   def updateContrasena(contrasena: String , idUsuario : Int ): Future[Int] = {
     val query = table.filter(_.id === idUsuario).map(a => (a.contrasena, a.fechaActualizacion))
-    run(query.update(Option(contrasena), new Timestamp(new org.joda.time.DateTime().withYear(2015).getMillis)))
+    run(query.update(Option(contrasena), new Timestamp(new org.joda.time.DateTime().getMillis)))
   }
 
 }

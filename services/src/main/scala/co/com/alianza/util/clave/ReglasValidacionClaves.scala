@@ -157,9 +157,7 @@ case object UltimasContrasenas extends Regla("ULTIMAS_CONTRASENAS_NO_VALIDAS") {
 
             val UltimaContrasenaExiste: Future[Validation[PersistenceException, Boolean]] = FuturoObtenerUltimasContrasenas.map {
               validationInterior =>
-                validationInterior.map {
-                  listaUltimasContrasenas => contiene(idUsuario.get, listaUltimasContrasenas, valorContrasenaNueva)
-                }
+                validationInterior.map { listaUltimasContrasenas => contiene(idUsuario.get, listaUltimasContrasenas, valorContrasenaNueva) }
             }
 
             val extraccionFuturo = Await.result(UltimaContrasenaExiste, 8.seconds)

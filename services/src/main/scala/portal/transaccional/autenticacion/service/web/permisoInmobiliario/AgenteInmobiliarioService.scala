@@ -138,7 +138,7 @@ case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
           val resultado = permisosRepo.findByProyect(proyecto)
           onComplete(resultado) {
             case Success(permisos) => complete(permisos)
-            case Failure(ex) => println(ex); complete((StatusCodes.InternalServerError, s"Error inesperado $ex"))
+            case Failure(ex) => complete((StatusCodes.InternalServerError, s"Error inesperado $ex"))
           }
       }
     }
@@ -150,7 +150,7 @@ case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
         val resultado = permisosRepo.updateByProject(r.proyectos.head, r.agentesInmobiliarios, r.permisos, r.fideicomiso)
         onComplete(resultado) {
           case Success(value) => complete("Actualizacion exitosa de permisos")
-          case Failure(ex) => println(ex.printStackTrace); complete((StatusCodes.InternalServerError, "Error en la actualizacion"))
+          case Failure(ex) => complete((StatusCodes.InternalServerError, "Error en la actualizacion"))
         }
       }
     }
@@ -162,7 +162,7 @@ case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
         val resultado = permisosRepo.updateByFid(r.proyectos.head, r.agentesInmobiliarios, r.fideicomiso)
         onComplete(resultado) {
           case Success(value) => complete("Actualizacion exitosa de permisos")
-          case Failure(ex) => println(ex.printStackTrace); complete((StatusCodes.InternalServerError, "Error en la actualizacion"))
+          case Failure(ex) => complete((StatusCodes.InternalServerError, "Error en la actualizacion"))
         }
       }
     }
