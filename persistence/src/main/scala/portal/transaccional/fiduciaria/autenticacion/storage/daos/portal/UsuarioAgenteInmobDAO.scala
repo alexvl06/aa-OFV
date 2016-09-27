@@ -4,6 +4,7 @@ import java.sql.Timestamp
 
 import co.com.alianza.persistence.entities.{ UsuarioAgenteInmobiliario, UsuarioAgenteInmobiliarioTable }
 import co.com.alianza.persistence.util.SlickExtensions
+import enumerations.EstadosUsuarioEnum._
 import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
 import slick.lifted.TableQuery
 
@@ -51,6 +52,26 @@ case class UsuarioAgenteInmobDAO(implicit dcConfig: DBConfig) extends UsuarioAge
       } yield {
         (pagina.getOrElse(defaultPage), itemsPorPagina.getOrElse(defaultPageSize), agentes.length, totalAgentes, agentes)
       }
+    )
+  }
+
+  override def update(identificacion: String, usuario: String,
+    correo: String, nombre: Option[String],
+    cargo: Option[String], descripcion: Option[String]): Future[Int] = {
+    run(
+      table
+        .filter(agente => agente.identificacion === identificacion && agente.usuario === usuario)
+        .map(agente => (agente.correo, agente.nombre, agente.cargo, agente.descripcion))
+        .update((correo, nombre, cargo, descripcion))
+    )
+  }
+
+  override def updateState(identificacion: String, usuario: String, estado: estadoUsuario): Future[Int] = {
+    run(
+      table
+        .filter(agente => agente.identificacion === identificacion && agente.usuario === usuario)
+        .map(_.estado)
+        .update(estado.id)
     )
   }
 

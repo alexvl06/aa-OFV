@@ -2,6 +2,7 @@ package portal.transaccional.autenticacion.service.drivers.usuarioInmobiliario
 
 import co.com.alianza.persistence.entities.UsuarioAgenteInmobiliario
 import portal.transaccional.autenticacion.service.web.permisoInmobiliario.{ ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse }
+import portal.transaccional.autenticacion.service.web.agenteInmobiliario.{ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse}
 
 import scala.concurrent.Future
 
@@ -53,6 +54,29 @@ trait UsuarioInmobiliarioRepository {
                                 correo: Option[String], estado: Option[Int],
                                 pagina: Option[Int], itemsPorPagina: Option[Int]): Future[ConsultarAgenteInmobiliarioListResponse]
 
+  /**
+    * Actualiza la información de un agente inmobiliario
+    *
+    * @param identificacion Identificación de la empresa
+    * @param usuario        Nombre de usuario a actualizar
+    * @param correo         Correo actualizado del agente
+    * @param nombre         Nombre actualizado del agente
+    * @param cargo          Cargo actualizado del agente
+    * @param descripcion    Descripción actualizada del agente
+    * @return Un futuro con la cantidad de filas actualizadas (0 si falla, 1 si se actualiza correctamente)
+    */
+  def updateAgenteInmobiliario(identificacion: String, usuario: String,
+                               correo: String, nombre: Option[String],
+                               cargo: Option[String], descripcion: Option[String]): Future[Int]
+
+  /**
+    * Activa o desactiva a un agente inmobiliario
+    *
+    * @param identificacion Identificación de la empresa
+    * @param usuario        Nombre de usuario del agente a actualizar
+    * @return Un futuro con el estado del agente modificado
+    */
+  def activateOrDeactivateAgenteInmobiliario(identificacion: String, usuario: String): Future[Option[ConsultarAgenteInmobiliarioResponse]]
 
   /**
    * Obtiene un agente inmobiliario dado su id, y su contraseña

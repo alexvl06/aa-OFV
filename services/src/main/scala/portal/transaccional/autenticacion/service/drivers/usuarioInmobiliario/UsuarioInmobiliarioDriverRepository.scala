@@ -6,6 +6,9 @@ import co.com.alianza.exceptions.{ ValidacionException, ValidacionExceptionPassw
 import co.com.alianza.infrastructure.messages.ErrorMessage
 import co.com.alianza.persistence.entities.{ UsuarioAgenteInmobiliario, UsuarioAgenteInmobiliarioTable }
 import enumerations.EstadosUsuarioEnum
+import enumerations.EstadosUsuarioEnum.estadoUsuario
+import portal.transaccional.autenticacion.service.web.agenteInmobiliario.{ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse, PaginacionMetadata}
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.UsuarioAgenteInmobDAOs
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.{ UsuarioEmpresarialRepository, UsuarioEmpresarialRepositoryG }
 import portal.transaccional.autenticacion.service.web.permisoInmobiliario.{ ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse, PaginacionMetadata }
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ UsuarioAgenteInmobDAO, UsuarioAgenteInmobDAOs }
@@ -25,9 +28,9 @@ case class UsuarioAgenteInmobDriverRepository (usuarioDAO: UsuarioAgenteInmobDAO
 case class UsuarioInmobiliarioDriverRepository(usuariosDao: UsuarioAgenteInmobDAOs)
                                               (implicit val ex: ExecutionContext) extends UsuarioInmobiliarioRepository {
 
-  override def createAgenteInmobiliario(tipoIdentificacion: Int, identificacion: String, correo: String, usuario: String,
+  override def createAgenteInmobiliario(tipoIdentificacion: Int, identificacion: String,
+                                        correo: String, usuario: String,
                                         nombre: Option[String], cargo: Option[String], descripcion: Option[String]): Future[Int] = {
-
     usuariosDao.exists(0, identificacion, usuario).flatMap({
       case true => Future.successful(0)
       case false =>
@@ -69,6 +72,34 @@ case class UsuarioInmobiliarioDriverRepository(usuariosDao: UsuarioAgenteInmobDA
           agentes
         )
       })
+  }
+
+  override def updateAgenteInmobiliario(identificacion: String, usuario: String,
+    correo: String, nombre: Option[String],
+    cargo: Option[String], descripcion: Option[String]): Future[Int] = {
+    usuariosDao.update(identificacion, usuario, correo, nombre, cargo, descripcion)
+  }
+
+  override def activateOrDeactivateAgenteInmobiliario(identificacion: String, usuario: String): Future[Option[ConsultarAgenteInmobiliarioResponse]] = {
+    usuariosDao.get(identificacion, usuario).flatMap {
+      case None => Future.successful(Option.empty)
+      case Some(agente) =>
+        (if (agente.estado == EstadosUsuarioEnum.activo.id) {
+          Option.apply(EstadosUsuarioEnum.pendienteActivacion)
+        } else if (agente.estado == EstadosUsuarioEnum.pendienteActivacion.id) {
+          Option.apply(EstadosUsuarioEnum.activo)
+        } else {
+          Option.empty
+        }).map { estado =>
+          usuariosDao.updateState(identificacion, usuario, estado).map {
+            case x if x == 0 => Option.empty
+            case _ => Option.apply(ConsultarAgenteInmobiliarioResponse(
+              agente.id, agente.correo, agente.usuario, estado.id,
+              agente.nombre, agente.cargo, agente.descripcion
+            ))
+          }
+        }.getOrElse(Future.successful(Option.empty))
+    }
   }
 
   override def getContrasena(contrasena: String, idUsuario : Int): Future[UsuarioAgenteInmobiliario] = {
