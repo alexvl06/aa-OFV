@@ -4,7 +4,7 @@ import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.persistence.entities.{ IpsEmpresa, IpsUsuario, UsuarioEmpresarial }
 import portal.transaccional.autenticacion.service.drivers.cliente.ClienteRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioEmpresarialAdminRepository
-import portal.transaccional.autenticacion.service.drivers.usuarioAgente.{ UsuarioEmpresarialDriverRepository, UsuarioEmpresarialRepository }
+import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioRepository
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ EmpresaAdminDAOs, IpEmpresaDAOs, IpUsuarioDAOs }
 

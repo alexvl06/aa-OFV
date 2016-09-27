@@ -2,15 +2,11 @@ package portal.transaccional.autenticacion.service.drivers.usuarioInmobiliario
 
 import java.sql.Timestamp
 
-import co.com.alianza.exceptions.{ ValidacionException, ValidacionExceptionPasswordRules }
-import co.com.alianza.infrastructure.messages.ErrorMessage
+import co.com.alianza.exceptions.ValidacionExceptionPasswordRules
 import co.com.alianza.persistence.entities.{ UsuarioAgenteInmobiliario, UsuarioAgenteInmobiliarioTable }
 import enumerations.EstadosUsuarioEnum
-import enumerations.EstadosUsuarioEnum.estadoUsuario
-import portal.transaccional.autenticacion.service.web.agenteInmobiliario.{ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse, PaginacionMetadata}
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.UsuarioAgenteInmobDAOs
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.{ UsuarioEmpresarialRepository, UsuarioEmpresarialRepositoryG }
-import portal.transaccional.autenticacion.service.web.permisoInmobiliario.{ ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse, PaginacionMetadata }
+import portal.transaccional.autenticacion.service.web.agenteInmobiliario.{ ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse, PaginacionMetadata }
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ UsuarioAgenteInmobDAO, UsuarioAgenteInmobDAOs }
 
 import scala.concurrent.{ ExecutionContext, Future }
