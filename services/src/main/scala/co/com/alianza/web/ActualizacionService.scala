@@ -36,7 +36,7 @@ case class ActualizacionService(actualizacionActor: ActorSelection, kafkaActor: 
 
   def route(user: UsuarioAuth) = {
     pathPrefix(actualizacion) {
-      if(user.tipoCliente.eq(TiposCliente.comercialSAC))
+      if (user.tipoCliente.eq(TiposCliente.comercialSAC))
         complete((StatusCodes.Unauthorized, "Tipo usuario SAC no está autorizado para realizar esta acción"))
       else
         get {
@@ -80,6 +80,6 @@ case class ActualizacionService(actualizacionActor: ActorSelection, kafkaActor: 
               }
           }
         }
-      }
     }
+  }
 }

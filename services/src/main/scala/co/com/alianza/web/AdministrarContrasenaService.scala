@@ -30,7 +30,7 @@ case class AdministrarContrasenaService(kafkaActor: ActorSelection, contrasenasA
 
   def secureRoute(user: UsuarioAuth) =
     pathPrefix("actualizarContrasena") {
-      if(user.tipoCliente.eq(TiposCliente.comercialSAC))
+      if (user.tipoCliente.eq(TiposCliente.comercialSAC))
         complete((StatusCodes.Unauthorized, "Tipo usuario SAC no está autorizado para realizar esta acción"))
       else
         respondWithMediaType(mediaType) {
@@ -57,7 +57,7 @@ case class AdministrarContrasenaService(kafkaActor: ActorSelection, contrasenasA
             }
           }
         }
-      }
+    }
 
   def insecureRoute = {
     pathPrefix("actualizarContrasenaCaducada") {

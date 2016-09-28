@@ -28,7 +28,7 @@ case class UsuarioEmpresaService(kafkaActor: ActorSelection, agenteEmpresarialAc
   def secureUserRouteEmpresa(user: UsuarioAuth) = {
     pathPrefix("empresa") {
       path("consultarUsuarios") {
-        if(user.tipoCliente.eq(TiposCliente.comercialSAC))
+        if (user.tipoCliente.eq(TiposCliente.comercialSAC))
           complete((StatusCodes.Unauthorized, "Tipo usuario SAC no está autorizado para realizar esta acción"))
         else
           respondWithMediaType(mediaType) {

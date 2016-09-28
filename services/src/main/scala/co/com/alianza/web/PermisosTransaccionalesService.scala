@@ -30,7 +30,7 @@ case class PermisosTransaccionalesService(kafkaActor: ActorSelection, permisoTra
   def route(user: UsuarioAuth) = pathPrefix(rutaPermisosTx) {
     respondWithMediaType(mediaType) {
       post {
-        if(user.tipoCliente.eq(TiposCliente.comercialSAC))
+        if (user.tipoCliente.eq(TiposCliente.comercialSAC))
           complete((StatusCodes.Unauthorized, "Tipo usuario SAC no está autorizado para realizar esta acción"))
         else
           entity(as[GuardarPermisosAgenteMessage]) {

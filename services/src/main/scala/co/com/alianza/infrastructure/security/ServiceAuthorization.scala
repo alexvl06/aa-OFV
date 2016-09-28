@@ -74,13 +74,20 @@ trait ServiceAuthorization {
   }
 
   private def resolverValidacion(respuesta: Any, tipoCliente: String): Either[AuthenticationFailedRejection, UsuarioAuth] with Product with Serializable = {
+
     respuesta match {
+
       case validacion: ValidacionException =>
         Left(AuthenticationFailedRejection(CredentialsRejected, List(), Some(Unauthorized.intValue), Option(validacion.code)))
 
       case validacion: NoAutorizado =>
         validacion.printStackTrace()
         Left(AuthenticationFailedRejection(CredentialsRejected, List(), Some(Unauthorized.intValue), None))
+
+      case validacion: Autorizado =>
+        val tipo = TiposCliente.getTipoCliente(tipoCliente)
+        val user = JsonUtil.fromJson[Usuario](validacion.usuario)
+        Right(UsuarioAuth(user.id.get, tipo, "", 0))
 
       case validacion: AutorizadoComercial =>
         val tipo = TiposCliente.getTipoCliente(tipoCliente)

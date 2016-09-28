@@ -23,7 +23,7 @@ case class PreguntasAutovalidacionService(kafkaActor: ActorSelection, preguntasA
 
   def route(user: UsuarioAuth) = {
     pathPrefix("preguntasAutovalidacion") {
-      if(user.tipoCliente.eq(TiposCliente.comercialSAC))
+      if (user.tipoCliente.eq(TiposCliente.comercialSAC))
         complete((StatusCodes.Unauthorized, "Tipo usuario SAC no está autorizado para realizar esta acción"))
       else
         get {
