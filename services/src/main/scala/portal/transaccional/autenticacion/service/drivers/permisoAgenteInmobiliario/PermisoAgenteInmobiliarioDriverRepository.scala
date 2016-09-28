@@ -1,70 +1,23 @@
 package portal.transaccional.autenticacion.service.drivers.permisoAgenteInmobiliario
 
-import co.com.alianza.commons.enumerations.TipoPermisoInmobiliario._
 import co.com.alianza.persistence.entities.PermisoAgenteInmobiliario
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{AlianzaDAO, PermisoInmobiliarioDAOs}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-/**
- * Created by s4n in 2016
- */
 case class PermisoAgenteInmobiliarioDriverRepository(alianzaDao: AlianzaDAO,
-                                                     permisoDAO: PermisoInmobiliarioDAOs)(implicit val ex: ExecutionContext) extends PermisoAgenteInmobiliarioRepository {
-
-
-  private def creacionPermiso(proyectos: Seq[Int], agentesInmob: Seq[Int], permisos: Seq[TipoPermisoInmobiliario], fid: Int): Seq[PermisoAgenteInmobiliario] = {
-    proyectos
-      .flatMap(proyecto => agentesInmob
-        .flatMap(agente => permisos
-          .map(permiso => PermisoAgenteInmobiliario(agente, proyecto, fid, permiso.id))))
-  }
-
-  private def creacionPermisoFid(proyectos: Seq[Int], agentesInmob: Seq[(Int, Seq[TipoPermisoInmobiliario])], fid: Int): Seq[PermisoAgenteInmobiliario] = {
-    proyectos.flatMap(proyecto => agentesInmob.flatMap {
-      case (agente, permiso) => permiso.map(permiso => PermisoAgenteInmobiliario(agente, proyecto, fid, permiso.id))
-    })
-  }
+                                                     permisosDAO: PermisoInmobiliarioDAOs)(implicit val ex: ExecutionContext) extends PermisoAgenteInmobiliarioRepository {
 
   def getPermisosProyecto(identificacion: String, fideicomiso: Int, proyecto: Int): Future[Seq[PermisoAgenteInmobiliario]] = {
     alianzaDao.getPermisosProyectoInmobiliario(identificacion, fideicomiso, proyecto)
   }
 
-  /**
-   *
-   * @param proyectos Lista de identificacion de los proyectos a los cuales se les asignan @permisos
-   * @param agentesInmob Lista de Ids de los agentes inmobiliarios (Salas de  ventas) a los cuales se les asignan los permisos
-   * @param permisos Lista de permisos de tipo [[co.com.alianza.commons.enumerations.TipoPermisoInmobiliario]], que se otorgaran a los agentesInmob
-   * @param fid Numero de fideicomiso a la cual pertenecen los proyectos
-   */
-  def create(proyectos: Seq[Int], agentesInmob: Seq[Int], permisos: Seq[TipoPermisoInmobiliario], fid: Int): Future[Option[Int]] = {
-    val permisosInmobiliarios = creacionPermiso(proyectos, agentesInmob, permisos, fid)
-    permisoDAO.create(permisosInmobiliarios)
-  }
-
-  def delete(proyectos: Seq[Int], agentesInmob: Seq[Int], permisos: Seq[TipoPermisoInmobiliario], fid: Int): Future[Unit] = {
-    val permisosInmobiliarios = creacionPermiso(proyectos, agentesInmob, permisos, fid)
-    permisoDAO.delete(permisosInmobiliarios)
-  }
-
-  def findByProyect(proyecto: Int): Future[Seq[PermisoAgenteInmobiliario]] = {
-    permisoDAO.findByProyecto(proyecto)
-  }
-
-  def updateByProject(proyecto: Int, agentesInmob: Seq[Int], permisos: Seq[TipoPermisoInmobiliario], fid: Int): Future[Option[Int]] = {
-    val permisosInmobiliarios = creacionPermiso(Seq(proyecto), agentesInmob, permisos, fid)
+  def updatePermisosProyecto(identificacion: String, fideicomiso: Int, proyecto: Int, permisos: Seq[PermisoAgenteInmobiliario]): Future[Option[Int]] = {
     for {
-      permisosViejos <- permisoDAO.findByProyecto(proyecto)
-      permisosActrualizados <- permisoDAO.updateByProject(permisosViejos.diff(permisosInmobiliarios), permisosInmobiliarios.diff(permisosViejos))
-    } yield permisosActrualizados
+      permisosActuales <- alianzaDao.getPermisosProyectoInmobiliario(identificacion, fideicomiso, proyecto)
+      eliminados: Seq[PermisoAgenteInmobiliario] = permisosActuales.diff(permisos)
+      agregados: Seq[PermisoAgenteInmobiliario] = permisos.diff(permisosActuales)
+      actualizar <- permisosDAO.update(eliminados, agregados)
+    } yield actualizar
   }
-
-  def updateByFid(proyecto: Int, agentesInmob: Seq[(Int, Seq[TipoPermisoInmobiliario])], fid: Int): Future[Option[Int]] = {
-    val permisosInmobiliarios = creacionPermisoFid(Seq(proyecto), agentesInmob, fid)
-    for {
-      permisosViejos <- permisoDAO.findByFid(fid)
-      permisosActrualizados <- permisoDAO.updateByProject(permisosViejos.diff(permisosInmobiliarios), permisosInmobiliarios.diff(permisosViejos))
-    } yield permisosActrualizados
-  }
-
 }

@@ -18,8 +18,10 @@ import scala.util.{Failure, Success}
   * Expone los servicios rest relacionados con agentes inmobiliarios <br/>
   * Services: <br/>
   * <ul>
+  * <li>GET /fideicomisos/{fid-id}/proyectos/{proyecto-id}/permisos -> Lista los permisos de los agentes de un proyecto asociado a un fideicomiso</li>
+  * <li>PUT /fideicomisos/{fid-id}/proyectos/{proyecto-id}/permisos -> Actualiza los permisos de los agentes de un proyecto asociado a un fideicomiso</li>
   * <li>GET /agentes-inmobiliarios -> Lista todos los agentes inmobiliarios</li>
-  * <li>POST / agentes-inmobiliarios -> Crea un agente inmobiliario</li>
+  * <li>POST /agentes-inmobiliarios -> Crea un agente inmobiliario</li>
   * <li>GET /agentes-inmobiliarios/{usuario-agente} -> Lista el detalle de un agente inmobiliario</li>
   * <li>PUT /agentes-inmobiliarios/{usuario-agente} -> Edita el detalle un agente inmobiliario</li>
   * <li>PUT /agentes-inmobiliarios/{usuario-agente}/estado -> Activa o desactiva un agente inmobiliario</li>
@@ -41,7 +43,7 @@ case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
   val route: Route = {
     pathPrefix(fideicomisosPath / IntNumber / proyectosPath / IntNumber / permisosPath) { (fideicomiso, proyecto) =>
       pathEndOrSingleSlash {
-        getPermisosProyecto(fideicomiso, proyecto)
+        getPermisosProyecto(fideicomiso, proyecto) ~ updatePermisosProyecto(fideicomiso, proyecto)
       }
     } ~
       pathPrefix(agentesPath) {
@@ -57,19 +59,6 @@ case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
           }
         }
       }
-    //    pathPrefix(permisos) {
-    //      pathEndOrSingleSlash {
-    //        consultar ~ crear
-    //      } ~ pathPrefix(updateByProject) {
-    //        pathEndOrSingleSlash {
-    //          actualizarByProject
-    //        }
-    //      } ~ pathPrefix(actualizarPath3) {
-    //        pathEndOrSingleSlash {
-    //          actualizarByFid
-    //        }
-    //      }
-    //    }
   }
 
   private def createAgenteInmobiliario: Route = {
@@ -164,19 +153,7 @@ case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
     }
   }
 
-  private def crear = {
-    post {
-      entity(as[EdicionPermisoRequest]) { r =>
-        val resultado = permisosRepo.create(r.proyectos, r.agentesInmobiliarios, r.permisos, r.fideicomiso)
-        onComplete(resultado) {
-          case Success(value) => complete("Registro exitoso de permisos")
-          case Failure(ex) => complete((StatusCodes.InternalServerError, "Error inesperado"))
-        }
-      }
-    }
-  }
-
-  private def getPermisosProyecto(fideicomiso: Int, proyecto: Int) = {
+  private def getPermisosProyecto(fideicomiso: Int, proyecto: Int): Route = {
     get {
       val permisosF: Future[Seq[PermisoAgenteInmobiliario]] = permisosRepo.getPermisosProyecto(
         usuarioAuth.identificacionUsuario, fideicomiso, proyecto
@@ -188,25 +165,15 @@ case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
     }
   }
 
-  private def actualizarByProject = {
-    post {
-      entity(as[EdicionPermisoRequest]) { r =>
-        val resultado = permisosRepo.updateByProject(r.proyectos.head, r.agentesInmobiliarios, r.permisos, r.fideicomiso)
-        onComplete(resultado) {
-          case Success(value) => complete("Actualizacion exitosa de permisos")
-          case Failure(ex) => complete((StatusCodes.InternalServerError, "Error en la actualizacion"))
-        }
-      }
-    }
-  }
-
-  private def actualizarByFid = {
-    post {
-      entity(as[EdicionFidPermisoRequest]) { r =>
-        val resultado = permisosRepo.updateByFid(r.proyectos.head, r.agentesInmobiliarios, r.fideicomiso)
-        onComplete(resultado) {
-          case Success(value) => complete("Actualizacion exitosa de permisos")
-          case Failure(ex) => complete((StatusCodes.InternalServerError, "Error en la actualizacion"))
+  private def updatePermisosProyecto(fideicomiso: Int, proyecto: Int): Route = {
+    put {
+      entity(as[Seq[PermisoAgenteInmobiliario]]) { permisos =>
+        val updateF: Future[Option[Int]] = permisosRepo.updatePermisosProyecto(
+          usuarioAuth.identificacionUsuario, fideicomiso, proyecto, permisos
+        )
+        onComplete(updateF) {
+          case Success(update) => complete(StatusCodes.OK)
+          case Failure(exception) => complete(StatusCodes.InternalServerError)
         }
       }
     }
