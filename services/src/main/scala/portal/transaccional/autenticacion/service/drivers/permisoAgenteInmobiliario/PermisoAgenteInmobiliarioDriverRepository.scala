@@ -2,14 +2,15 @@ package portal.transaccional.autenticacion.service.drivers.permisoAgenteInmobili
 
 import co.com.alianza.commons.enumerations.TipoPermisoInmobiliario._
 import co.com.alianza.persistence.entities.PermisoAgenteInmobiliario
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.PermisoInmobiliarioDAOs
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{AlianzaDAO, PermisoInmobiliarioDAOs}
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * Created by s4n in 2016
  */
-case class PermisoAgenteInmobiliarioDriverRepository (permisoDAO: PermisoInmobiliarioDAOs) (implicit val ex: ExecutionContext) extends PermisoAgenteInmobiliarioRepository {
+case class PermisoAgenteInmobiliarioDriverRepository(alianzaDao: AlianzaDAO,
+                                                     permisoDAO: PermisoInmobiliarioDAOs)(implicit val ex: ExecutionContext) extends PermisoAgenteInmobiliarioRepository {
 
 
   private def creacionPermiso(proyectos: Seq[Int], agentesInmob: Seq[Int], permisos: Seq[TipoPermisoInmobiliario], fid: Int): Seq[PermisoAgenteInmobiliario] = {
