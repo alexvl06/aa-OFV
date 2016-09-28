@@ -23,6 +23,8 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
   val recursosPerfilesAdmin = TableQuery[RecursoPerfilClienteAdminTable]
   val preguntasTable = TableQuery[PreguntasAutovalidacionTable]
   val respuestasUsuarioTable = TableQuery[RespuestasAutovalidacionUsuarioTable]
+  val usuariosAgentesInmobiliarios = TableQuery[UsuarioAgenteInmobiliarioTable]
+  val permisosInmobiliarios = TableQuery[PermisoInmobiliarioTable]
 
   import dcConfig.DB._
   import dcConfig.driver.api._
@@ -164,6 +166,16 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
       (pregunta, respuesta) <- preguntasTable join respuestasUsuarioTable on (_.id === _.idPregunta)
       if respuesta.idUsuario === idUsuario
     } yield (pregunta, respuesta)
+    run(query.result)
+  }
+
+  //  ------------------  Agente inmobiliario ---------------------------
+
+  def getPermisosProyectoInmobiliario(nit: String, idFideicomiso: Int, idProyecto: Int): Future[Seq[PermisoAgenteInmobiliario]] = {
+    val query = for {
+      (agentes, permisos) <- usuariosAgentesInmobiliarios join permisosInmobiliarios on (_.id === _.idAgente)
+      if agentes.identificacion === nit && permisos.fideicomiso === idFideicomiso && permisos.proyecto === idProyecto
+    } yield permisos
     run(query.result)
   }
 }
