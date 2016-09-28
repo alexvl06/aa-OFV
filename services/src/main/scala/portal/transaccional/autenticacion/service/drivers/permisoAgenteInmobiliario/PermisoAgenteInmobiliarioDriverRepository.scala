@@ -26,6 +26,10 @@ case class PermisoAgenteInmobiliarioDriverRepository(alianzaDao: AlianzaDAO,
     })
   }
 
+  def getPermisosProyecto(identificacion: String, fideicomiso: Int, proyecto: Int): Future[Seq[PermisoAgenteInmobiliario]] = {
+    alianzaDao.getPermisosProyectoInmobiliario(identificacion, fideicomiso, proyecto)
+  }
+
   /**
    *
    * @param proyectos Lista de identificacion de los proyectos a los cuales se les asignan @permisos

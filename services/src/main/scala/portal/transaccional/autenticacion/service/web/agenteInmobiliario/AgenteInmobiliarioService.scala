@@ -2,6 +2,7 @@ package portal.transaccional.autenticacion.service.web.agenteInmobiliario
 
 import co.com.alianza.app.CrossHeaders
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
+import co.com.alianza.persistence.entities.PermisoAgenteInmobiliario
 import co.com.alianza.util.json.HalPaginationUtils
 import portal.transaccional.autenticacion.service.drivers.permisoAgenteInmobiliario.PermisoAgenteInmobiliarioRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioInmobiliario.UsuarioInmobiliarioRepository
@@ -30,25 +31,32 @@ case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
   extends CommonRESTFul with DomainJsonFormatters with CrossHeaders with HalPaginationUtils {
 
   val agentesPath: String = "agentes-inmobiliarios"
-  val estadoPath: String = "estado"
-  val permisosPath = "permisos"
-  val updateByProject = "updateByProject"
   val actualizarPath3 = "updateByFid"
+  val estadoPath: String = "estado"
+  val fideicomisosPath: String = "fideicomisos"
+  val permisosPath = "permisos"
+  val proyectosPath: String = "proyectos"
+  val updateByProject = "updateByProject"
 
   val route: Route = {
-    pathPrefix(agentesPath) {
+    pathPrefix(fideicomisosPath / IntNumber / proyectosPath / IntNumber / permisosPath) { (fideicomiso, proyecto) =>
       pathEndOrSingleSlash {
-        getAgenteInmobiliarioList ~ createAgenteInmobiliario
-      } ~ pathPrefix(Segment) { usuarioAgente =>
+        getPermisosProyecto(fideicomiso, proyecto)
+      }
+    } ~
+      pathPrefix(agentesPath) {
         pathEndOrSingleSlash {
-          getAgenteInmobiliario(usuarioAgente) ~ updateAgenteInmobiliario(usuarioAgente)
-        }
-      } ~ pathPrefix(Segment / estadoPath) { usuarioAgente =>
-        pathEndOrSingleSlash {
-          activateOrDeactivateAgenteInmobiliario(usuarioAgente)
+          getAgenteInmobiliarioList ~ createAgenteInmobiliario
+        } ~ pathPrefix(Segment) { usuarioAgente =>
+          pathEndOrSingleSlash {
+            getAgenteInmobiliario(usuarioAgente) ~ updateAgenteInmobiliario(usuarioAgente)
+          }
+        } ~ pathPrefix(Segment / estadoPath) { usuarioAgente =>
+          pathEndOrSingleSlash {
+            activateOrDeactivateAgenteInmobiliario(usuarioAgente)
+          }
         }
       }
-    }
     //    pathPrefix(permisos) {
     //      pathEndOrSingleSlash {
     //        consultar ~ crear
@@ -168,15 +176,14 @@ case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
     }
   }
 
-  private def consultar = {
+  private def getPermisosProyecto(fideicomiso: Int, proyecto: Int) = {
     get {
-      parameters('proyecto.as[Int]) {
-        (proyecto) =>
-          val resultado = permisosRepo.findByProyect(proyecto)
-          onComplete(resultado) {
-            case Success(permisos) => complete(permisos)
-            case Failure(ex) => complete((StatusCodes.InternalServerError, s"Error inesperado $ex"))
-          }
+      val permisosF: Future[Seq[PermisoAgenteInmobiliario]] = permisosRepo.getPermisosProyecto(
+        usuarioAuth.identificacionUsuario, fideicomiso, proyecto
+      )
+      onComplete(permisosF) {
+        case Success(permisos) => complete(StatusCodes.OK -> permisos)
+        case Failure(exception) => complete(StatusCodes.InternalServerError)
       }
     }
   }
