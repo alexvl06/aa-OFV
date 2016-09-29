@@ -1,14 +1,16 @@
 package co.com.alianza.web
 
-import akka.actor.{ ActorSelection, ActorSystem }
-import co.com.alianza.app.{ AlianzaCommons, CrossHeaders }
+import akka.actor.{ActorSelection, ActorSystem}
+import co.com.alianza.app.{AlianzaCommons, CrossHeaders}
+import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.DataAccessAdapter
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.infrastructure.messages.empresa._
-import spray.routing.{ Directives, RequestContext }
+import spray.http.StatusCodes
+import spray.routing.{Directives, RequestContext}
 
 import scala.concurrent.ExecutionContext
 
@@ -32,6 +34,9 @@ case class HorarioEmpresaService(kafkaActor: ActorSelection, horarioEmpresaActor
         }
       } ~
         put {
+          if (user.tipoCliente.eq(TiposCliente.comercialSAC))
+            complete((StatusCodes.Unauthorized, "Tipo usuario SAC no está autorizado para realizar esta acción"))
+          else
           entity(as[AgregarHorarioEmpresaMessage]) {
             agregarHorarioEmpresaMessage =>
               respondWithMediaType(mediaType) {
