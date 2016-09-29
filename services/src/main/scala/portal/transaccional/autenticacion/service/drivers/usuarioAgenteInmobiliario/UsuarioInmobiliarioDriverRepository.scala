@@ -1,4 +1,4 @@
-package portal.transaccional.autenticacion.service.drivers.usuarioInmobiliario
+package portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario
 
 import java.sql.Timestamp
 

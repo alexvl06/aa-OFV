@@ -1,6 +1,7 @@
 package portal.transaccional.autenticacion.service.drivers.permisoAgenteInmobiliario
 
-import co.com.alianza.persistence.entities.PermisoAgenteInmobiliario
+import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
+import co.com.alianza.persistence.entities.{ PermisoAgenteInmobiliario, RecursoAgenteInmobiliario }
 
 import scala.concurrent.Future
 
@@ -25,4 +26,6 @@ trait PermisoAgenteInmobiliarioRepository {
     * @param permisos       Lista de permisos del proyecto
     */
   def updatePermisosProyecto(identificacion: String, fideicomiso: Int, proyecto: Int, permisos: Seq[PermisoAgenteInmobiliario]): Future[Option[Int]]
+
+  def getRecurso(idUser: Int, tiposCliente: TiposCliente): Future[Seq[RecursoAgenteInmobiliario]]
 }

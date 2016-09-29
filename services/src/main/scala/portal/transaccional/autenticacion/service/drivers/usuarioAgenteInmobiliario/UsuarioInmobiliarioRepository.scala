@@ -1,4 +1,4 @@
-package portal.transaccional.autenticacion.service.drivers.usuarioInmobiliario
+package portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario
 
 import co.com.alianza.persistence.entities.UsuarioAgenteInmobiliario
 import portal.transaccional.autenticacion.service.web.agenteInmobiliario.{ ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse }

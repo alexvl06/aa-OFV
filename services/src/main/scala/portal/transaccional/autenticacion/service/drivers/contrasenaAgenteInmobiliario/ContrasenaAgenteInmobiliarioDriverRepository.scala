@@ -11,7 +11,7 @@ import co.com.alianza.util.token.Token
 import enumerations.{ AppendPasswordUser, PerfilesUsuario }
 import org.joda.time.DateTime
 import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaRepository
-import portal.transaccional.autenticacion.service.drivers.usuarioInmobiliario.UsuarioInmobiliarioRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.UsuarioInmobiliarioRepository
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.UltimaContraseñaAgenteInmobiliarioDAOs
 
 import scala.concurrent.Future

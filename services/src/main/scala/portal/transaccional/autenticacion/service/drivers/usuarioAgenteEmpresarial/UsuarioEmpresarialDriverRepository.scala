@@ -1,4 +1,4 @@
-package portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario
+package portal.transaccional.autenticacion.service.drivers.usuarioAgenteEmpresarial
 
 import co.com.alianza.persistence.entities.{ UsuarioEmpresarial, UsuarioEmpresarialTable }
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.{ UsuarioEmpresarialRepository, UsuarioEmpresarialRepositoryG }

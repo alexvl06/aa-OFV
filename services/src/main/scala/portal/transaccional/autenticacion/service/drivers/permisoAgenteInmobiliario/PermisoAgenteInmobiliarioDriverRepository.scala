@@ -1,12 +1,14 @@
 package portal.transaccional.autenticacion.service.drivers.permisoAgenteInmobiliario
 
-import co.com.alianza.persistence.entities.PermisoAgenteInmobiliario
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{AlianzaDAO, PermisoInmobiliarioDAOs}
+import co.com.alianza.commons.enumerations.TiposCliente
+import co.com.alianza.commons.enumerations.TiposCliente._
+import co.com.alianza.persistence.entities.{ PermisoAgenteInmobiliario, RecursoAgenteInmobiliario }
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ AlianzaDAO, PermisoInmobiliarioDAOs, RecursoInmobiliarioDAOs }
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
-case class PermisoAgenteInmobiliarioDriverRepository(alianzaDao: AlianzaDAO,
-                                                     permisosDAO: PermisoInmobiliarioDAOs)(implicit val ex: ExecutionContext) extends PermisoAgenteInmobiliarioRepository {
+case class PermisoAgenteInmobiliarioDriverRepository(alianzaDao: AlianzaDAO, permisosDAO: PermisoInmobiliarioDAOs, recursoDao : RecursoInmobiliarioDAOs)
+  (implicit val ex: ExecutionContext) extends PermisoAgenteInmobiliarioRepository {
 
   def getPermisosProyecto(identificacion: String, fideicomiso: Int, proyecto: Int): Future[Seq[PermisoAgenteInmobiliario]] = {
     alianzaDao.getPermisosProyectoInmobiliario(identificacion, fideicomiso, proyecto)
@@ -20,4 +22,12 @@ case class PermisoAgenteInmobiliarioDriverRepository(alianzaDao: AlianzaDAO,
       actualizar <- permisosDAO.update(eliminados, agregados)
     } yield actualizar
   }
+
+  def getRecurso(idUser: Int, tiposCliente: TiposCliente): Future[Seq[RecursoAgenteInmobiliario]] = {
+    tiposCliente match {
+      case TiposCliente.agenteInmobiliario => alianzaDao.getRecursosAgenteInmobiliario(idUser)
+      case TiposCliente.clienteAdminInmobiliario => recursoDao.getAll()
+    }
+  }
+
 }

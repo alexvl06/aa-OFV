@@ -1,18 +1,19 @@
 package portal.transaccional.autenticacion.service.web.agenteInmobiliario
 
 import co.com.alianza.app.CrossHeaders
+import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.persistence.entities.PermisoAgenteInmobiliario
 import co.com.alianza.util.json.HalPaginationUtils
 import portal.transaccional.autenticacion.service.drivers.permisoAgenteInmobiliario.PermisoAgenteInmobiliarioRepository
-import portal.transaccional.autenticacion.service.drivers.usuarioInmobiliario.UsuarioInmobiliarioRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.UsuarioInmobiliarioRepository
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import spray.http.StatusCodes
 import spray.routing.Route
 
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
+import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{ Failure, Success }
 
 /**
   * Expone los servicios rest relacionados con agentes inmobiliarios <br/>
@@ -39,6 +40,7 @@ case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
   val permisosPath = "permisos"
   val proyectosPath: String = "proyectos"
   val updateByProject = "updateByProject"
+  val recursosPath = "recursos"
 
   val route: Route = {
     pathPrefix(fideicomisosPath / IntNumber / proyectosPath / IntNumber / permisosPath) { (fideicomiso, proyecto) =>
@@ -56,6 +58,10 @@ case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
         } ~ pathPrefix(Segment / estadoPath) { usuarioAgente =>
           pathEndOrSingleSlash {
             activateOrDeactivateAgenteInmobiliario(usuarioAgente)
+          }
+        }  ~ pathPrefix(recursosPath) {
+          pathEndOrSingleSlash {
+            getRecursos
           }
         }
       }
@@ -178,4 +184,17 @@ case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
       }
     }
   }
+
+  private def getRecursos: Route = {
+    get {
+      val a: TiposCliente = usuarioAuth.tipoCliente
+      val recursosF = permisosRepo.getRecurso(usuarioAuth.id, usuarioAuth.tipoCliente)
+      println("ENTRO A RECURSOS!! ")
+      onComplete(recursosF) {
+        case Success(recursos) => complete((StatusCodes.OK, recursos))
+        case Failure(exception) => complete(StatusCodes.InternalServerError)
+      }
+    }
+  }
+
 }
