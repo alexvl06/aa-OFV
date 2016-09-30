@@ -33,6 +33,10 @@ case class UsuarioAgenteInmobDAO(implicit dcConfig: DBConfig) extends UsuarioAge
     getByIdentityAndUser(identificacion, usuario)
   }
 
+  override def getAll(identificacion: String): Future[Seq[UsuarioAgenteInmobiliario]] = {
+    run(table.filter(_.identificacion === identificacion).result)
+  }
+
   override def getAll(identificacion: String, nombre: Option[String],
                       usuario: Option[String], correo: Option[String], estado: Option[Int], pagina: Option[Int],
                       itemsPorPagina: Option[Int])(implicit ec: ExecutionContext): Future[(Int, Int, Int, Int, Seq[UsuarioAgenteInmobiliario])] = {

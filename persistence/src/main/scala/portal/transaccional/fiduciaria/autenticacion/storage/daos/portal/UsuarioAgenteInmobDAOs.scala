@@ -38,7 +38,15 @@ trait UsuarioAgenteInmobDAOs {
   def get(identificacion: String, usuario: String): Future[Option[UsuarioAgenteInmobiliario]]
 
   /**
-    * Obtiene la lista de agentes inmobiliarios de la empresa
+    * Obtiene la lista sin paginar y sin filtros de agentes inmobiliarios de la empresa
+    *
+    * @param identificacion Identificación de la empresa
+    * @return Un futuro con todos los agentes inmobiliarios de la empresa
+    */
+  def getAll(identificacion: String): Future[Seq[UsuarioAgenteInmobiliario]]
+
+  /**
+    * Obtiene la lista paginada de agentes inmobiliarios de la empresa
     *
     * @param identificacion Identificación de la empresa
     * @param nombre         Filtro - Nombre del agente inmobiliario - Opcional
@@ -55,47 +63,47 @@ trait UsuarioAgenteInmobDAOs {
              itemsPorPagina: Option[Int])(implicit ec: ExecutionContext): Future[(Int, Int, Int, Int, Seq[UsuarioAgenteInmobiliario])]
 
   /**
-   * Actualiza la información de un agente inmobiliario
-   *
-   * @param identificacion Identificación de la empresa
-   * @param usuario        Nombre de usuario a actualizar
-   * @param correo         Correo actualizado del agente
-   * @param nombre         Nombre actualizado del agente
-   * @param cargo          Cargo actualizado del agente
-   * @param descripcion    Descripción actualizada del agente
-   * @return Un futuro con la cantidad de filas actualizadas (0 si falla, 1 si se actualiza correctamente)
-   */
+    * Actualiza la información de un agente inmobiliario
+    *
+    * @param identificacion Identificación de la empresa
+    * @param usuario        Nombre de usuario a actualizar
+    * @param correo         Correo actualizado del agente
+    * @param nombre         Nombre actualizado del agente
+    * @param cargo          Cargo actualizado del agente
+    * @param descripcion    Descripción actualizada del agente
+    * @return Un futuro con la cantidad de filas actualizadas (0 si falla, 1 si se actualiza correctamente)
+    */
   def update(identificacion: String, usuario: String,
-    correo: String, nombre: Option[String],
-    cargo: Option[String], descripcion: Option[String]): Future[Int]
+             correo: String, nombre: Option[String],
+             cargo: Option[String], descripcion: Option[String]): Future[Int]
 
   /**
-   * Actualiza el estado de un agente inmobiliario
-   *
-   * @param identificacion Identificación de la empresa
-   * @param usuario        Nombre de usuario del agente a actualizar
-   * @param estado         Estado del agente a actualizar
-   * @return Un futuro con la cantidad de filas actualizadas (0 si falla, 1 si se actualiza correctamente)
-   */
+    * Actualiza el estado de un agente inmobiliario
+    *
+    * @param identificacion Identificación de la empresa
+    * @param usuario        Nombre de usuario del agente a actualizar
+    * @param estado         Estado del agente a actualizar
+    * @return Un futuro con la cantidad de filas actualizadas (0 si falla, 1 si se actualiza correctamente)
+    */
   def updateState(identificacion: String, usuario: String, estado: estadoUsuario): Future[Int]
 
   /**
-   * Obtiene un agente inmobiliario dado su id, y su contraseña
-   *
-   * @param idUsuario  Id en base de datos del agente
-   * @param contrasena Contraseña actual del agente
-   * @return Un futuro con el agente a buscar embebido en un option
-   */
-  def getContrasena(contrasena: String , idUsuario : Int ): Future[Option[UsuarioAgenteInmobiliario]]
+    * Obtiene un agente inmobiliario dado su id, y su contraseña
+    *
+    * @param idUsuario  Id en base de datos del agente
+    * @param contrasena Contraseña actual del agente
+    * @return Un futuro con el agente a buscar embebido en un option
+    */
+  def getContrasena(contrasena: String, idUsuario: Int): Future[Option[UsuarioAgenteInmobiliario]]
 
   /**
-   * Actualiza un agente inmobiliario dado su id, y su nueva contraseña
-   *
-   * @param idUsuario  Id en base de datos del agente
-   * @param contrasena Contraseña nueva del agente
-   * @return Un futuro con un entero, si es 0 no actualizo, 2 actualizo el registro.
-   */
-  def updateContrasena(contrasena: String , idUsuario : Int ): Future[Int]
+    * Actualiza un agente inmobiliario dado su id, y su nueva contraseña
+    *
+    * @param idUsuario  Id en base de datos del agente
+    * @param contrasena Contraseña nueva del agente
+    * @return Un futuro con un entero, si es 0 no actualizo, 2 actualizo el registro.
+    */
+  def updateContrasena(contrasena: String, idUsuario: Int): Future[Int]
 
 
 }
