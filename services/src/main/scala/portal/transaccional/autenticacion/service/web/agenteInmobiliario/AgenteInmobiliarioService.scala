@@ -55,11 +55,11 @@ case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
       pathEndOrSingleSlash {
         getRecursos
       }
-    } ~ pathPrefix(Segment) { usuarioAgente =>
+    } ~ pathPrefix(agentesPath / Segment) { usuarioAgente =>
       pathEndOrSingleSlash {
         getAgenteInmobiliario(usuarioAgente) ~ updateAgenteInmobiliario(usuarioAgente)
       }
-    } ~ pathPrefix(Segment / estadoPath) { usuarioAgente =>
+    } ~ pathPrefix(agentesPath / Segment / estadoPath) { usuarioAgente =>
       pathEndOrSingleSlash {
         activateOrDeactivateAgenteInmobiliario(usuarioAgente)
       }
