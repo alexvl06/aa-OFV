@@ -1,15 +1,19 @@
 package co.com.alianza.infrastructure.security
 
+import java.util.Date
+
 import akka.actor._
 import akka.util.Timeout
 import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.exceptions.{ ValidacionException, Autorizado, NoAutorizado, Prohibido }
+import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
+import co.com.alianza.exceptions.{ Autorizado, NoAutorizado, Prohibido, ValidacionException }
 import co.com.alianza.infrastructure.dto.Usuario
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.infrastructure.security.AuthenticationFailedRejection.{ CredentialsMissing, CredentialsRejected }
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.token.{ AesUtil, Token }
 import com.typesafe.config.Config
+import org.joda.time.DateTime
 import portal.transaccional.autenticacion.service.drivers.autorizacion.{ AutorizacionUsuarioEmpresarialAdminRepository, AutorizacionUsuarioEmpresarialRepository, AutorizacionUsuarioRepository }
 import spray.http.StatusCodes._
 import spray.routing.RequestContext
@@ -43,16 +47,9 @@ trait ServiceAuthorization {
         val token = AesUtil.desencriptarToken(encriptedToken)
         val tipoCliente: String = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
 
-        val futuro =
-          if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
-            autorizacionAgenteRepo.autorizar(token, encriptedToken, "", obtenerIp(ctx).get.value)
-          } else if (tipoCliente == TiposCliente.clienteAdministrador.toString || tipoCliente == TiposCliente.clienteAdminInmobiliario.toString) {
-            autorizacionAdminRepo.autorizar(token, encriptedToken, "", obtenerIp(ctx).get.value)
-          } else {
-            autorizacionUsuarioRepo.autorizar(token, encriptedToken, "")
-          }
+        val autorizarF = autorizar(tipoCliente, token, encriptedToken)(ctx)
 
-        futuro.map {
+        autorizarF.map {
           case validacion: ValidacionException =>
             Left(AuthenticationFailedRejection(CredentialsRejected, List(), Some(Unauthorized.intValue), Option(validacion.code)))
           case validacion: NoAutorizado =>
@@ -68,6 +65,43 @@ trait ServiceAuthorization {
         }
       }
   }
+
+  private def autorizar (tipoCliente: String, token : String, encriptedToken : String )(implicit ctx : RequestContext) = {
+    if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
+      autorizacionAgenteRepo.autorizar(token, encriptedToken, "", obtenerIp(ctx).get.value)
+    } else if (tipoCliente == TiposCliente.clienteAdministrador.toString || tipoCliente == TiposCliente.clienteAdminInmobiliario.toString) {
+      autorizacionAdminRepo.autorizar(token, encriptedToken, "", obtenerIp(ctx).get.value)
+    } else if (tipoCliente == TiposCliente.agenteInmobiliario.toString){
+      autorizarMock(token)
+    } else {
+      autorizacionUsuarioRepo.autorizar(token, encriptedToken, "")
+    }
+  }
+
+  private def autorizarMock (token : String) = {
+
+    val tipoCliente = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
+    val tipoIdentificacion = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoIdentificacion").toString
+    val correo = Token.getToken(token).getJWTClaimsSet.getCustomClaim("correo").toString
+    val ultimaIpIngreso = Token.getToken(token).getJWTClaimsSet.getCustomClaim("ultimaIpIngreso").toString
+
+
+    Future{ Autorizado(
+      JsonUtil.toJson(Usuario(
+        Option(1): Option[Int],
+        correo : String,
+        new Date() : Date,
+        "1234": String,
+        1 : Int,
+        1 : Int,
+        0 : Int,
+        Option(ultimaIpIngreso) : Option[String],
+        None : Option[Date],
+        TiposCliente.agenteInmobiliario : TiposCliente
+      ))
+    )}
+  }
+
 
   private def obtenerIp(ctx: RequestContext) = ctx.request.headers.find {
     header =>

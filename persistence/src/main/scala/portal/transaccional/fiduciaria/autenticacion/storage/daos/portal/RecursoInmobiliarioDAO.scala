@@ -15,6 +15,7 @@ case class RecursoInmobiliarioDAO()(implicit dcConfig: DBConfig) extends TableQu
   import dcConfig.driver.api._
 
   def getAll(): Future[Seq[RecursoAgenteInmobiliario]] = {
+    println("Admin")
     run(this.result)
   }
 

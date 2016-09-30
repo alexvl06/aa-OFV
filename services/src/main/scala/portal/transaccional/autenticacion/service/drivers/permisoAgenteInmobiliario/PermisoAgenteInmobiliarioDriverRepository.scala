@@ -26,7 +26,7 @@ case class PermisoAgenteInmobiliarioDriverRepository(alianzaDao: AlianzaDAO, per
   def getRecurso(idUser: Int, tiposCliente: TiposCliente): Future[Seq[RecursoAgenteInmobiliario]] = {
     tiposCliente match {
       case TiposCliente.agenteInmobiliario => alianzaDao.getRecursosAgenteInmobiliario(idUser)
-      case TiposCliente.clienteAdminInmobiliario => recursoDao.getAll()
+      case _ => recursoDao.getAll()
     }
   }
 

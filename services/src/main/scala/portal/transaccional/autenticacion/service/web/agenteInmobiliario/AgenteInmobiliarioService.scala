@@ -16,21 +16,21 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success }
 
 /**
-  * Expone los servicios rest relacionados con agentes inmobiliarios <br/>
-  * Services: <br/>
-  * <ul>
-  * <li>GET /fideicomisos/{fid-id}/proyectos/{proyecto-id}/permisos -> Lista los permisos de los agentes de un proyecto asociado a un fideicomiso</li>
-  * <li>PUT /fideicomisos/{fid-id}/proyectos/{proyecto-id}/permisos -> Actualiza los permisos de los agentes de un proyecto asociado a un fideicomiso</li>
-  * <li>GET /agentes-inmobiliarios -> Lista todos los agentes inmobiliarios</li>
-  * <li>POST /agentes-inmobiliarios -> Crea un agente inmobiliario</li>
-  * <li>GET /agentes-inmobiliarios/{usuario-agente} -> Lista el detalle de un agente inmobiliario</li>
-  * <li>PUT /agentes-inmobiliarios/{usuario-agente} -> Edita el detalle un agente inmobiliario</li>
-  * <li>PUT /agentes-inmobiliarios/{usuario-agente}/estado -> Activa o desactiva un agente inmobiliario</li>
-  * </ul>
-  */
+ * Expone los servicios rest relacionados con agentes inmobiliarios <br/>
+ * Services: <br/>
+ * <ul>
+ * <li>GET /fideicomisos/{fid-id}/proyectos/{proyecto-id}/permisos -> Lista los permisos de los agentes de un proyecto asociado a un fideicomiso</li>
+ * <li>PUT /fideicomisos/{fid-id}/proyectos/{proyecto-id}/permisos -> Actualiza los permisos de los agentes de un proyecto asociado a un fideicomiso</li>
+ * <li>GET /agentes-inmobiliarios -> Lista todos los agentes inmobiliarios</li>
+ * <li>POST /agentes-inmobiliarios -> Crea un agente inmobiliario</li>
+ * <li>GET /agentes-inmobiliarios/{usuario-agente} -> Lista el detalle de un agente inmobiliario</li>
+ * <li>PUT /agentes-inmobiliarios/{usuario-agente} -> Edita el detalle un agente inmobiliario</li>
+ * <li>PUT /agentes-inmobiliarios/{usuario-agente}/estado -> Activa o desactiva un agente inmobiliario</li>
+ * </ul>
+ */
 case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
-                                     usuariosRepo: UsuarioInmobiliarioRepository,
-                                     permisosRepo: PermisoAgenteInmobiliarioRepository)(implicit val ec: ExecutionContext)
+  usuariosRepo: UsuarioInmobiliarioRepository,
+  permisosRepo: PermisoAgenteInmobiliarioRepository)(implicit val ec: ExecutionContext)
   extends CommonRESTFul with DomainJsonFormatters with CrossHeaders with HalPaginationUtils {
 
   val agentesPath: String = "agentes-inmobiliarios"
@@ -47,24 +47,23 @@ case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
       pathEndOrSingleSlash {
         getPermisosProyecto(fideicomiso, proyecto) ~ updatePermisosProyecto(fideicomiso, proyecto)
       }
-    } ~
-      pathPrefix(agentesPath) {
-        pathEndOrSingleSlash {
-          getAgenteInmobiliarioList ~ createAgenteInmobiliario
-        } ~ pathPrefix(Segment) { usuarioAgente =>
-          pathEndOrSingleSlash {
-            getAgenteInmobiliario(usuarioAgente) ~ updateAgenteInmobiliario(usuarioAgente)
-          }
-        } ~ pathPrefix(Segment / estadoPath) { usuarioAgente =>
-          pathEndOrSingleSlash {
-            activateOrDeactivateAgenteInmobiliario(usuarioAgente)
-          }
-        }  ~ pathPrefix(recursosPath) {
-          pathEndOrSingleSlash {
-            getRecursos
-          }
-        }
+    } ~ pathPrefix(agentesPath) {
+      pathEndOrSingleSlash {
+        getAgenteInmobiliarioList ~ createAgenteInmobiliario
       }
+    } ~ pathPrefix(agentesPath / recursosPath) {
+      pathEndOrSingleSlash {
+        getRecursos
+      }
+    } ~ pathPrefix(Segment) { usuarioAgente =>
+      pathEndOrSingleSlash {
+        getAgenteInmobiliario(usuarioAgente) ~ updateAgenteInmobiliario(usuarioAgente)
+      }
+    } ~ pathPrefix(Segment / estadoPath) { usuarioAgente =>
+      pathEndOrSingleSlash {
+        activateOrDeactivateAgenteInmobiliario(usuarioAgente)
+      }
+    }
   }
 
   private def createAgenteInmobiliario: Route = {
@@ -180,6 +179,7 @@ case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
         onComplete(updateF) {
           case Success(update) => complete(StatusCodes.OK)
           case Failure(exception) => complete(StatusCodes.InternalServerError)
+          case _  => println(updateF)  ; complete(StatusCodes.InternalServerError)
         }
       }
     }
@@ -187,12 +187,11 @@ case class AgenteInmobiliarioService(usuarioAuth: UsuarioAuth,
 
   private def getRecursos: Route = {
     get {
-      val a: TiposCliente = usuarioAuth.tipoCliente
       val recursosF = permisosRepo.getRecurso(usuarioAuth.id, usuarioAuth.tipoCliente)
-      println("ENTRO A RECURSOS!! ")
+      println("ENTRO A RECURSOS!! ", usuarioAuth.tipoCliente, recursosF)
       onComplete(recursosF) {
-        case Success(recursos) => complete((StatusCodes.OK, recursos))
-        case Failure(exception) => complete(StatusCodes.InternalServerError)
+        case Success(recursos) => println(recursos);complete((StatusCodes.OK, recursos))
+        case Failure(exception) => println(exception);complete((StatusCodes.Conflict, "hubo un error"))
       }
     }
   }

@@ -182,10 +182,9 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
 
   def getRecursosAgenteInmobiliario(usuarioId: Int): Future[Seq[RecursoAgenteInmobiliario]] = {
     val query = for {
-      a <- usuariosAgentesInmobiliarios if a.id === usuarioId
-      c <- permisosInmobiliarios if a.id === a.id
+      c <- permisosInmobiliarios if c.idAgente === usuarioId
       s <- recursosInmobiliarios if c.tipoPermiso === s.id
     } yield s
-    run(query.result)
+    run(query.distinctOn(_.titulo).result)
   }
 }

@@ -58,7 +58,7 @@ object Token {
     signedJWT.serialize()
   }
 
-  def generarTokenCaducidadContrasena(tipoUsuario: TiposCliente, idUsuario: Int) = {
+  def generarTokenCaducidadContrasena(tipoUsuario: TiposCliente, idUsuario: Int): String = {
     val claimsSet = new JWTClaimsSet()
     claimsSet.setIssueTime(new Date())
     claimsSet.setNotBeforeTime(new Date())
