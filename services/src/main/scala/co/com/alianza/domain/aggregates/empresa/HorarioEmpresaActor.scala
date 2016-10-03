@@ -56,7 +56,7 @@ class HorarioEmpresaActor extends Actor
     case message: ObtenerHorarioEmpresaMessage => obtenerHorarioEmpresa(message)
     case message: AgregarHorarioEmpresaMessage => agregarHorarioEmpresa(message)
     case message: DiaFestivoMessage => esDiaFestivo(message)
-    case message: ValidarHorarioEmpresaMessage => validarHorario(message)
+    case message: ValidarHorarioEmpresaMessage => validarHorarioTipoCliente(message)
   }
 
   implicit def obtenerEnumTipoCliente(tipoCliente: Option[Int]) = {
@@ -132,33 +132,38 @@ class HorarioEmpresaActor extends Actor
     }
   }
 
-  def validarHorario(message: ValidarHorarioEmpresaMessage) = {
+  def validarHorarioTipoCliente(message: ValidarHorarioEmpresaMessage) = {
     val currentSender = sender()
-
-    message.tipoCliente match {
+    message.user.tipoCliente match {
       case TiposCliente.clienteIndividual => currentSender ! ResponseMessage(OK, true.toJson)
-      //TODO: MAPEAR LOS TIPOS DE USUARIO PARA LOS SAC
-      case TiposCliente.comercialSAC => currentSender ! ResponseMessage(OK, true.toJson)
-      //TODO: QUITAR EL DEL ADMIN
-      case TiposCliente.clienteAdministrador => currentSender ! ResponseMessage(OK, true.toJson)
-      case _ =>
-        val result = {
-          (for {
-            empresa <- ValidationT(obtenerEmpresaPorNit(message.identificacionUsuario))
-            horario <- ValidationT(obtenerHorarioEmpresa(empresa.id))
-            horarioValido <- ValidationT(validarHorarioEmpresa(horario))
-          } yield (horarioValido)).run
+      case TiposCliente.comercialSAC =>
+        val tipoId: Int = message.tipoIdentificacion.getOrElse(0)
+        val tipoCliente = TiposCliente.tipoClientePorTipoIdentificacion(tipoId)
+        tipoCliente match {
+          case TiposCliente.clienteIndividual => currentSender ! ResponseMessage(OK, true.toJson)
+          case _ => validarHorario(message.idUsuarioRecurso.get, currentSender)
         }
-        result onComplete {
-          case Failure(failure) =>
-            currentSender ! failure
-          case Success(value) =>
-            value match {
-              case zSuccess(response: Boolean) =>
-                currentSender ! ResponseMessage(OK, response.toJson)
-              case zFailure(error) =>
-                currentSender ! error
-            }
+      case _ => validarHorario(message.user.identificacionUsuario, currentSender)
+    }
+  }
+
+  def validarHorario(identificacionEmpresa: String, currentSender: ActorRef) = {
+    val result = {
+      (for {
+        empresa <- ValidationT(obtenerEmpresaPorNit(identificacionEmpresa))
+        horario <- ValidationT(obtenerHorarioEmpresa(empresa.id))
+        horarioValido <- ValidationT(validarHorarioEmpresa(horario))
+      } yield (horarioValido)).run
+    }
+    result onComplete {
+      case Failure(failure) =>
+        currentSender ! failure
+      case Success(value) =>
+        value match {
+          case zSuccess(response: Boolean) =>
+            currentSender ! ResponseMessage(OK, response.toJson)
+          case zFailure(error) =>
+            currentSender ! error
         }
     }
   }

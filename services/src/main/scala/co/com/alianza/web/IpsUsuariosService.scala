@@ -32,7 +32,7 @@ case class IpsUsuariosService(kafkaActor: ActorSelection, ipsUsuarioActor: Actor
   def route(user: UsuarioAuth) = {
     path(ipsUsuarios) {
       if (user.tipoCliente.eq(TiposCliente.comercialSAC))
-        complete((StatusCodes.Unauthorized, "Tipo usuario SAC no esta autorizado para gestionar las ip's"))
+        complete((StatusCodes.Unauthorized, "Tipo usuario SAC no está autorizado para gestionar las ip's"))
       else
         get {
           respondWithMediaType(mediaType) {

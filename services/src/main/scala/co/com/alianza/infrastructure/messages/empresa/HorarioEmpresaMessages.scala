@@ -1,10 +1,9 @@
 package co.com.alianza.infrastructure.messages.empresa
 
 import co.com.alianza.commons.enumerations.TiposCliente._
+import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.infrastructure.messages.MessageService
-import co.com.alianza.persistence.entities.HorarioEmpresa
 import spray.httpx.SprayJsonSupport
-import java.sql.{ Date, Time }
 import spray.json._
 
 /**
@@ -14,7 +13,6 @@ object HorarioEmpresaJsonSupport extends DefaultJsonProtocol with SprayJsonSuppo
 
   implicit val DiaFestivoMessageFormat = jsonFormat1(DiaFestivoMessage)
   implicit val AgregarHorarioEmpresaMessageFormat = jsonFormat6(AgregarHorarioEmpresaMessage)
-  implicit val ValidarHorarioSACFormat = jsonFormat1(ValidarHorarioSACRequest)
 
 }
 
@@ -25,6 +23,4 @@ case class ObtenerHorarioEmpresaMessage(idUsuario: Int, tipoCliente: TiposClient
 case class AgregarHorarioEmpresaMessage(diaHabil: Boolean, sabado: Boolean, horaInicio: String, horaFin: String,
   idUsuario: Option[Int], tipoCliente: Option[Int]) extends MessageService
 
-case class ValidarHorarioEmpresaMessage(identificacionUsuario: String, tipoCliente: TiposCliente) extends MessageService
-
-case class ValidarHorarioSACRequest(idUsuarioRecurso: String) extends MessageService
+case class ValidarHorarioEmpresaMessage(user: UsuarioAuth, idUsuarioRecurso: Option[String], tipoIdentificacion: Option[Int]) extends MessageService

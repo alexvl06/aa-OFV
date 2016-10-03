@@ -31,7 +31,7 @@ case class PermisosTransaccionalesService(kafkaActor: ActorSelection, permisoTra
     respondWithMediaType(mediaType) {
       post {
         if (user.tipoCliente.eq(TiposCliente.comercialSAC))
-          complete((StatusCodes.Unauthorized, "Tipo usuario SAC no esta autorizado para realizar esta acción"))
+          complete((StatusCodes.Unauthorized, "Tipo usuario SAC no está autorizado para realizar esta acción"))
         else
           entity(as[GuardarPermisosAgenteMessage]) {
             permisosMessage =>
