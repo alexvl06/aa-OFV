@@ -30,7 +30,8 @@ case class UsuarioService(kafkaActor: ActorSelection, usuariosActor: ActorSelect
             usuario =>
               respondWithMediaType(mediaType) {
                 clientIP { ip =>
-                  mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.autoRegistroIndex, ip.value, kafkaActor, usuario.copy(contrasena = null))) {
+                  mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic,
+                    AuditingHelper.autoRegistroIndex, ip.value, kafkaActor, usuario.copy(contrasena = null))) {
                     val nuevoUsuario: UsuarioMessage = usuario.copy(clientIp = Some(ip.value))
                     requestExecute(nuevoUsuario, usuariosActor)
                   }
@@ -53,7 +54,8 @@ case class UsuarioService(kafkaActor: ActorSelection, usuariosActor: ActorSelect
           clientIP { ip =>
             entity(as[OlvidoContrasenaMessage]) {
               olvidarContrasena =>
-                mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.olvidoContrasenaIndex, ip.value, kafkaActor, olvidarContrasena)) {
+                mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic,
+                  AuditingHelper.olvidoContrasenaIndex, ip.value, kafkaActor, olvidarContrasena)) {
                   requestExecute(olvidarContrasena, usuariosActor)
                 }
             }

@@ -19,10 +19,9 @@ case class LdapDriverRepository(alianzaLdapDAO: AlianzaLdapDAOs)(implicit val ex
     val idRoleDefault: Option[Int] = Some(1)
     val userName = usuario.toLowerCase
     val user = for {
-      context <- obtenerContexto(usuario, tipoCliente, password) // Throws naming exception
+      context <- obtenerContexto(usuario, tipoCliente, password)
       usuarioOption <- alianzaLdapDAO.getUserInfo(tipoCliente, userName, context)
       respuesta <- validarRespuestaLdap(usuarioOption)
-
     } yield respuesta
     user
   }

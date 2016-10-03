@@ -49,8 +49,8 @@ case class AlianzaRouter(
   import system.dispatcher
 
   val routes =
-    AutorizacionService(kafkaActor, usuarioRepositorio, usuarioAgenteRepositorio, usuarioAdminRepositorio, autorizacionUsuarioRepo, autorizacionAgenteRepo,
-      autorizacionAdminRepo, autorizacionComercialRepo, autorizacionComercialAdminRepo).route ~
+    AutorizacionService(kafkaActor, usuarioRepositorio, usuarioAgenteRepositorio, usuarioAdminRepositorio, autorizacionUsuarioRepo,
+      autorizacionAgenteRepo, autorizacionAdminRepo, autorizacionComercialRepo, autorizacionComercialAdminRepo).route ~
       AutenticacionService(autenticacionRepo, autenticacionEmpresaRepositorio, autenticacionComercialRepositorio, kafkaActor).route ~
       new ConfrontaService(confrontaActor).route ~
       new EnumeracionService().route ~
