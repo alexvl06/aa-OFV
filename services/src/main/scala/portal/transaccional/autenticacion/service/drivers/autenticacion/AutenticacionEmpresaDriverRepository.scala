@@ -30,7 +30,7 @@ import scala.reflect.ClassTag
 case class AutenticacionEmpresaDriverRepository(
     usuarioRepo: UsuarioEmpresarialRepository[UsuarioEmpresarial], usuarioAdminRepo: UsuarioEmpresarialAdminRepository, clienteCoreRepo: ClienteRepository,
     empresaRepo: EmpresaRepository, reglaRepo: ReglaContrasenaRepository, configuracionRepo: ConfiguracionRepository, ipRepo: IpEmpresaRepository,
-    sesionRepo: SesionRepository, respuestasRepo: RespuestaUsuarioRepository, usuarioAgenteInmobRepo : UsuarioEmpresarialRepository[UsuarioAgenteInmobiliario]
+    sesionRepo: SesionRepository, respuestasRepo: RespuestaUsuarioRepository, usuarioAgenteInmobRepo: UsuarioEmpresarialRepository[UsuarioAgenteInmobiliario]
 )(implicit val ex: ExecutionContext) extends AutenticacionEmpresaRepository {
 
   implicit val timeout = Timeout(5.seconds)
@@ -49,7 +49,7 @@ case class AutenticacionEmpresaDriverRepository(
     for {
       esAgente <- usuarioRepo.getByIdentityAndUser(identificacion, usuario)
       esAdmin <- usuarioAdminRepo.getByIdentityAndUser(identificacion, usuario)
-      esAgenteInmob <- usuarioAgenteInmobRepo.getByIdentityAndUser(identificacion,usuario)
+      esAgenteInmob <- usuarioAgenteInmobRepo.getByIdentityAndUser(identificacion, usuario)
       autenticacion <- autenticar(esAgente, esAdmin, esAgenteInmob, contrasena, ip)
     } yield autenticacion
   }
@@ -62,15 +62,15 @@ case class AutenticacionEmpresaDriverRepository(
    * @return Future[Boolean]
    * Success => True
    */
-  private def autenticar(agente: Option[UsuarioAgente], admin: Option[UsuarioEmpresarialAdmin], agenteInmob : Option[UsuarioAgente],
+  private def autenticar(agente: Option[UsuarioAgente], admin: Option[UsuarioEmpresarialAdmin], agenteInmob: Option[UsuarioAgente],
     contrasena: String, ip: String): Future[String] = {
     if (agente.isDefined) {
       autenticarAgente(agente.get, contrasena, ip)
     } else if (admin.isDefined) {
       autenticarAdministrador(admin.get, contrasena, ip)
-    } else if (agenteInmob.isDefined){
+    } else if (agenteInmob.isDefined) {
       autenticarAgenteInmob(agenteInmob.get, contrasena, ip)
-    }else {
+    } else {
       Future.failed(ValidacionException("401.3", "Error Credenciales"))
     }
   }
@@ -134,16 +134,16 @@ case class AutenticacionEmpresaDriverRepository(
    */
   private def autenticarAgenteInmob(usuario: UsuarioAgente, contrasena: String, ip: String): Future[String] = {
     for {
-      empresa <- obtenerEmpresaValida(usuario.identificacion)                                                         //OK
-      reintentosErroneos <- reglaRepo.getRegla(LlavesReglaContrasena.CANTIDAD_REINTENTOS_INGRESO_CONTRASENA.llave)    //ok
+      empresa <- obtenerEmpresaValida(usuario.identificacion) //OK
+      reintentosErroneos <- reglaRepo.getRegla(LlavesReglaContrasena.CANTIDAD_REINTENTOS_INGRESO_CONTRASENA.llave) //ok
       validar <- usuarioAgenteInmobRepo.validarUsuario(usuario, contrasena, reintentosErroneos.valor.toInt)
-      cliente <- clienteCoreRepo.getCliente(usuario.identificacion, Some(usuario.tipoIdentificacion))                 //ok
-      estadoCore <- clienteCoreRepo.validarEstado(cliente)                                                            //ok
-      reglaDias <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA.llave)                                        //ok
+      cliente <- clienteCoreRepo.getCliente(usuario.identificacion, Some(usuario.tipoIdentificacion)) //ok
+      estadoCore <- clienteCoreRepo.validarEstado(cliente) //ok
+      reglaDias <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA.llave) //ok
       caducidad <- usuarioRepo.validarCaducidadContrasena(TiposCliente.agenteInmobiliario, usuario, reglaDias.valor.toInt)
       actualizar <- usuarioAgenteInmobRepo.actualizarInfoUsuario(usuario, ip)
-      inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)                   //ok
-      token <- generarTokenAgente(usuario, ip, inactividad.valor)                                                     //ok
+      inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave) //ok
+      token <- generarTokenAgente(usuario, ip, inactividad.valor) //ok
       //ips <- ipRepo.getIpsByEmpresaId(empresa.id)
       //validacionIps <- ipRepo.validarControlIpAgente(ip, ips, token)
       asociarToken <- usuarioAgenteInmobRepo.actualizarToken(usuario.id, AesUtil.encriptarToken(token))
@@ -180,8 +180,7 @@ case class AutenticacionEmpresaDriverRepository(
       caducidad <- usuarioAdminRepo.validarCaducidadContrasena(TiposCliente.clienteAdministrador, usuario, reglaDias.valor.toInt)
       actualizar <- usuarioAdminRepo.actualizarInfoUsuario(usuario, ip)
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
-      //token <- generarToken(usuario, ip, inactividad.valor, cliente.wcli_constructor)
-      token <- generarToken(usuario, ip, inactividad.valor, "S")
+      token <- generarToken(usuario, ip, inactividad.valor, cliente.wcli_constructor)
       sesion <- sesionRepo.crearSesion(token, inactividad.valor.toInt, Option(EmpresaDTO.entityToDto(empresa)))
       asociarToken <- usuarioAdminRepo.actualizarToken(usuario.id, AesUtil.encriptarToken(token))
       respuestas <- respuestasRepo.getRespuestasById(usuario.id)
@@ -211,10 +210,10 @@ case class AutenticacionEmpresaDriverRepository(
       inactividad, tipoAgente(usuario), Some(usuario.identificacion))
   }
 
-  private def tipoAgente(u : UsuarioAgente) ={
+  private def tipoAgente(u: UsuarioAgente) = {
     u match {
-      case usuario : UsuarioEmpresarial => TiposCliente.agenteEmpresarial
-      case usuario : UsuarioAgenteInmobiliario => TiposCliente.agenteInmobiliario
+      case usuario: UsuarioEmpresarial => TiposCliente.agenteEmpresarial
+      case usuario: UsuarioAgenteInmobiliario => TiposCliente.agenteInmobiliario
     }
   }
 
@@ -227,7 +226,7 @@ case class AutenticacionEmpresaDriverRepository(
   }
 
   private def generarToken(usuario: UsuarioEmpresarialAdmin, ip: String, inactividad: String, esConstructor: String) = {
-    if (esConstructor == "S" && usuario.identificacion == "890911431") {
+    if (esConstructor == "S") {
       generarTokenAdmin(usuario, ip, inactividad, TiposCliente.clienteAdminInmobiliario)
     } else {
       generarTokenAdmin(usuario, ip, inactividad, TiposCliente.clienteAdministrador)
