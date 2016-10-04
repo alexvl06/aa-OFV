@@ -2,10 +2,14 @@ package portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobili
 
 import java.sql.Timestamp
 
+import akka.actor.ActorSystem
 import co.com.alianza.constants.TiposConfiguracion
+import co.com.alianza.domain.aggregates.empresa.MailMessageEmpresa
 import co.com.alianza.exceptions.ValidacionExceptionPasswordRules
+import co.com.alianza.microservices.{MailMessage, SmtpServiceClient}
 import co.com.alianza.persistence.entities.{Configuraciones, PinAgenteInmobiliario, UsuarioAgenteInmobiliario, UsuarioAgenteInmobiliarioTable}
 import co.com.alianza.util.token.{PinData, TokenPin}
+import com.typesafe.config.Config
 import enumerations.{EstadosUsuarioEnum, UsoPinEmpresaEnum}
 import org.joda.time.DateTime
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.{UsuarioEmpresarialRepository, UsuarioEmpresarialRepositoryG}
@@ -27,7 +31,7 @@ case class UsuarioAgenteInmobDriverRepository(usuarioDAO: UsuarioAgenteInmobDAO)
 case class UsuarioInmobiliarioDriverRepository(configDao: ConfiguracionDAOs,
                                                pinDao: PinAgenteInmobiliarioDAOs,
                                                usuariosDao: UsuarioAgenteInmobDAOs)
-                                              (implicit val ex: ExecutionContext) extends UsuarioInmobiliarioRepository {
+                                              (implicit val ex: ExecutionContext, system: ActorSystem, config: Config) extends UsuarioInmobiliarioRepository {
 
   override def createAgenteInmobiliario(tipoIdentificacion: Int, identificacion: String,
                                         correo: String, usuario: String,
@@ -42,9 +46,13 @@ case class UsuarioInmobiliarioDriverRepository(configDao: ConfiguracionDAOs,
         for {
           idAgente <- usuariosDao.create(agente)
           configExpiracion <- configDao.getByKey(TiposConfiguracion.EXPIRACION_PIN.llave)
-          pinAgente: PinAgenteInmobiliario = getPinAgente(configExpiracion, idAgente)
+          pinAgente: PinAgenteInmobiliario = generarPinAgente(configExpiracion, idAgente)
           idPin <- pinDao.create(pinAgente)
-        } yield idAgente
+          correoActivacion: MailMessage = generarCorreoActivacion(pinAgente.tokenHash, configExpiracion.valor.toInt, identificacion, usuario)
+        } yield {
+          enviarEmail(correoActivacion) // se ejecuta de manera asincrona dado que no interesa el resultado del envío
+          idAgente
+        }
     })
   }
 
@@ -115,9 +123,23 @@ case class UsuarioInmobiliarioDriverRepository(configDao: ConfiguracionDAOs,
 
   def updateContrasena(contrasena: String, idUsuario: Int): Future[Int] = usuariosDao.updateContrasena(contrasena, idUsuario)
 
-  def getPinAgente(configExpiracion: Configuraciones, idUsuario: Int): PinAgenteInmobiliario = {
+  def generarPinAgente(configExpiracion: Configuraciones, idUsuario: Int): PinAgenteInmobiliario = {
     val fechaExpiracion: DateTime = new DateTime().plusHours(configExpiracion.valor.toInt)
     val (pin: PinData, usoPin: Int) = (TokenPin.obtenerToken(fechaExpiracion.toDate), UsoPinEmpresaEnum.creacionAgenteInmobiliario.id)
     PinAgenteInmobiliario(None, idUsuario, pin.token, fechaExpiracion, pin.tokenHash.getOrElse(""), usoPin)
+  }
+
+  def generarCorreoActivacion(pin: String, caducidad: Int, identificacion: String, usuario: String): MailMessage = {
+    val remitente: String = config.getString("alianza.smtp.from")
+    val destinatario: String = "rodrigocifuentes@seven4n.com"
+    val asunto: String = config.getString("alianza.smtp.asunto.creacionAgenteInmobiliario")
+    val cuerpo: String = new MailMessageEmpresa("alianza.smtp.templatepin.creacionAgenteInmobiliario")
+      .getMessagePinCreacionAgenteInmobiliario(pin, caducidad, identificacion, usuario)
+    MailMessage(remitente, destinatario, Nil, asunto, cuerpo, "")
+  }
+
+  def enviarEmail(correoActivacion: MailMessage): Unit = {
+    new SmtpServiceClient().send(correoActivacion, (_, _) => 1)
+    ()
   }
 }
