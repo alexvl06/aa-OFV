@@ -3,17 +3,12 @@ package portal.transaccional.autenticacion.service.drivers.permisoAgenteInmobili
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.persistence.entities.{ PermisoAgenteInmobiliario, RecursoAgenteInmobiliario }
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ AlianzaDAO, PermisoInmobiliarioDAOs, RecursoInmobiliarioDAOs }
-
-import co.com.alianza.persistence.entities.PermisoAgenteInmobiliario
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{AlianzaDAO, PermisoInmobiliarioDAOs, UsuarioAgenteInmobDAOs}
-
-
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ AlianzaDAO, PermisoInmobiliarioDAOs, RecursoInmobiliarioDAOs, UsuarioAgenteInmobDAOs }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
 case class PermisoAgenteInmobiliarioDriverRepository(alianzaDao: AlianzaDAO, usuariosDao: UsuarioAgenteInmobDAOs,
-                                                     permisosDAO: PermisoInmobiliarioDAOs, recursoDao : RecursoInmobiliarioDAOs)(implicit val ex: ExecutionContext) extends PermisoAgenteInmobiliarioRepository {
+    permisosDAO: PermisoInmobiliarioDAOs, recursoDao: RecursoInmobiliarioDAOs)(implicit val ex: ExecutionContext) extends PermisoAgenteInmobiliarioRepository {
 
   def getPermisosProyecto(identificacion: String, fideicomiso: Int, proyecto: Int): Future[Seq[PermisoAgenteInmobiliario]] = {
     alianzaDao.getPermisosProyectoInmobiliario(identificacion, fideicomiso, proyecto)

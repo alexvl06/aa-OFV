@@ -11,12 +11,13 @@ import slick.lifted.TableQuery
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
-  * Implementación del DAOde agentes inmobiliarios
-  *
-  * @param dcConfig Configuración de la base de datos
-  */
+ * Implementación del DAOde agentes inmobiliarios
+ *
+ * @param dcConfig Configuración de la base de datos
+ */
 case class UsuarioAgenteInmobDAO(implicit dcConfig: DBConfig) extends UsuarioAgenteDAO[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario](
-  TableQuery[UsuarioAgenteInmobiliarioTable]) with UsuarioAgenteInmobDAOs with SlickExtensions {
+  TableQuery[UsuarioAgenteInmobiliarioTable]
+) with UsuarioAgenteInmobDAOs with SlickExtensions {
 
   import dcConfig.DB._
   import dcConfig.driver.api._
@@ -38,8 +39,8 @@ case class UsuarioAgenteInmobDAO(implicit dcConfig: DBConfig) extends UsuarioAge
   }
 
   override def getAll(identificacion: String, nombre: Option[String],
-                      usuario: Option[String], correo: Option[String], estado: Option[Int], pagina: Option[Int],
-                      itemsPorPagina: Option[Int])(implicit ec: ExecutionContext): Future[(Int, Int, Int, Int, Seq[UsuarioAgenteInmobiliario])] = {
+    usuario: Option[String], correo: Option[String], estado: Option[Int], pagina: Option[Int],
+    itemsPorPagina: Option[Int])(implicit ec: ExecutionContext): Future[(Int, Int, Int, Int, Seq[UsuarioAgenteInmobiliario])] = {
 
     val basequery: Query[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario, Seq] = MaybeFilter(table)
       .filter(Some(identificacion))(id => agente => agente.identificacion === id)
@@ -79,11 +80,11 @@ case class UsuarioAgenteInmobDAO(implicit dcConfig: DBConfig) extends UsuarioAge
     )
   }
 
-  def getContrasena(contrasena: String , idUsuario : Int ): Future[Option[UsuarioAgenteInmobiliario]] = {
+  def getContrasena(contrasena: String, idUsuario: Int): Future[Option[UsuarioAgenteInmobiliario]] = {
     run(table.filter(_.id === idUsuario).filter(_.contrasena === contrasena).result.headOption)
   }
 
-  def updateContrasena(contrasena: String , idUsuario : Int ): Future[Int] = {
+  def updateContrasena(contrasena: String, idUsuario: Int): Future[Int] = {
     val query = table.filter(_.id === idUsuario).map(a => (a.contrasena, a.fechaActualizacion))
     run(query.update(Option(contrasena), new Timestamp(new org.joda.time.DateTime().getMillis)))
   }

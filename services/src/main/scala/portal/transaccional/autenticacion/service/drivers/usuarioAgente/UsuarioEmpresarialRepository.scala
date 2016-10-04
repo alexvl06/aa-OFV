@@ -10,7 +10,7 @@ import scala.concurrent.Future
 /**
  * Created by hernando on 2016
  */
-trait UsuarioEmpresarialRepository[ E <: UsuarioAgente] {
+trait UsuarioEmpresarialRepository[E <: UsuarioAgente] {
 
   def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[UsuarioAgente]]
 

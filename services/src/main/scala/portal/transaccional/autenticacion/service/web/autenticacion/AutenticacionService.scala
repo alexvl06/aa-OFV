@@ -104,7 +104,8 @@ case class AutenticacionService(
   def execution(ex: Any): StandardRoute = {
     ex match {
       case ex: ValidacionException => complete((StatusCodes.Unauthorized, ex))
-      case ex: PersistenceException => print(ex); complete((StatusCodes.InternalServerError, "Error inesperado"))
+      case ex: PersistenceException =>
+        print(ex); complete((StatusCodes.InternalServerError, "Error inesperado"))
       case ex: Throwable => print(ex.printStackTrace); complete((StatusCodes.InternalServerError, "Error inesperado"))
     }
   }

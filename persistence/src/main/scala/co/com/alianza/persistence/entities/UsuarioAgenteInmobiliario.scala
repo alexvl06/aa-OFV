@@ -6,12 +6,11 @@ import CustomDriver.simple._
 /**
  * Created by alexandra in 2016
  */
-case class UsuarioAgenteInmobiliario (id: Int, identificacion: String, tipoIdentificacion:Int, usuario: String, correo: String, estado: Int,
-  contrasena: Option[String], token: Option[String], fechaActualizacion: Timestamp, numeroIngresosErroneos : Int , ipUltimoIngreso : Option[String],
-  nombre : Option[String], cargo : Option[String], descripcion: Option[String], fechaUltimoIngreso: Option[Timestamp]) extends UsuarioAgente
+case class UsuarioAgenteInmobiliario(id: Int, identificacion: String, tipoIdentificacion: Int, usuario: String, correo: String, estado: Int,
+  contrasena: Option[String], token: Option[String], fechaActualizacion: Timestamp, numeroIngresosErroneos: Int, ipUltimoIngreso: Option[String],
+  nombre: Option[String], cargo: Option[String], descripcion: Option[String], fechaUltimoIngreso: Option[Timestamp]) extends UsuarioAgente
 
-
-class UsuarioAgenteInmobiliarioTable (tag :Tag) extends UsuarioAgenteTable[UsuarioAgenteInmobiliario](tag, "USUARIO_AGENTE_INMOBILIARIO") {
+class UsuarioAgenteInmobiliarioTable(tag: Tag) extends UsuarioAgenteTable[UsuarioAgenteInmobiliario](tag, "USUARIO_AGENTE_INMOBILIARIO") {
 
   override val id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
   override val identificacion = column[String]("NIT_EMPRESA")
@@ -29,7 +28,7 @@ class UsuarioAgenteInmobiliarioTable (tag :Tag) extends UsuarioAgenteTable[Usuar
   override val descripcion = column[Option[String]]("DESCRIPCION")
   override val fechaUltimoIngreso = column[Option[Timestamp]]("FECHA_ULTIMO_INGRESO")
 
-  def * = (id, identificacion, tipoIdentificacion, usuario, correo, estado,  contrasena, token, fechaActualizacion,numeroIngresosErroneos, ipUltimoIngreso,
-    nombre, cargo,descripcion, fechaUltimoIngreso) <> (UsuarioAgenteInmobiliario.tupled, UsuarioAgenteInmobiliario.unapply)
+  def * = (id, identificacion, tipoIdentificacion, usuario, correo, estado, contrasena, token, fechaActualizacion, numeroIngresosErroneos, ipUltimoIngreso,
+    nombre, cargo, descripcion, fechaUltimoIngreso) <> (UsuarioAgenteInmobiliario.tupled, UsuarioAgenteInmobiliario.unapply)
 }
 

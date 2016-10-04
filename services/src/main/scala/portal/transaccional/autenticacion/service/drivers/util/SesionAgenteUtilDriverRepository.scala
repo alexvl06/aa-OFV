@@ -14,8 +14,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * Created by alexandra on 2016
  */
-case class SesionAgenteUtilDriverRepository[E <: UsuarioAgente](agenteRepo : UsuarioEmpresarialRepository[E] , sesionRepo: SesionDriverRepository)
-  (implicit val ex: ExecutionContext)  extends SesionAgenteUtilRepository {
+case class SesionAgenteUtilDriverRepository[E <: UsuarioAgente](agenteRepo: UsuarioEmpresarialRepository[E], sesionRepo: SesionDriverRepository)(implicit val ex: ExecutionContext) extends SesionAgenteUtilRepository {
 
   def invalidarToken(token: String, encriptedToken: String): Future[Int] = {
     for {

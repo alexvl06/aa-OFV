@@ -27,18 +27,18 @@ import scala.util.{ Failure, Success }
  * Created by s4n 2016
  */
 case class AutorizacionService(
-                                usuarioRepository: UsuarioRepository,
-                                usuarioAgenteRepository: UsuarioEmpresarialRepository[UsuarioEmpresarial],
-                                usuarioAdminRepository: UsuarioEmpresarialAdminRepository,
-                                autorizacionRepository: AutorizacionUsuarioRepository,
-                                kafkaActor: ActorSelection,
-                                autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository,
-                                autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository,
-                                autorizacionComercialRepo: AutorizacionUsuarioComercialRepository,
-                                autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository,
-                                sesionUtilAgenteEmpresarial : SesionAgenteUtilRepository,
-                                sesionUtilAgenteInmobiliario : SesionAgenteUtilRepository
-                              )(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
+    usuarioRepository: UsuarioRepository,
+    usuarioAgenteRepository: UsuarioEmpresarialRepository[UsuarioEmpresarial],
+    usuarioAdminRepository: UsuarioEmpresarialAdminRepository,
+    autorizacionRepository: AutorizacionUsuarioRepository,
+    kafkaActor: ActorSelection,
+    autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository,
+    autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository,
+    autorizacionComercialRepo: AutorizacionUsuarioComercialRepository,
+    autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository,
+    sesionUtilAgenteEmpresarial: SesionAgenteUtilRepository,
+    sesionUtilAgenteInmobiliario: SesionAgenteUtilRepository
+)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   val invalidarTokenPath = "invalidarToken"
   val validarTokenPath = "validarToken"

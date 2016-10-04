@@ -17,9 +17,9 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * Created by s4n in 2016
  */
-abstract class UsuarioEmpresarialRepositoryG [T <: UsuarioAgenteTable[E] ,E <: UsuarioAgente](usuarioDAO : UsuarioAgenteDAOs[T,E]) extends UsuarioEmpresarialRepository[E] {
+abstract class UsuarioEmpresarialRepositoryG[T <: UsuarioAgenteTable[E], E <: UsuarioAgente](usuarioDAO: UsuarioAgenteDAOs[T, E]) extends UsuarioEmpresarialRepository[E] {
 
-  implicit val ex : ExecutionContext
+  implicit val ex: ExecutionContext
 
   def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[E]] = {
     usuarioDAO.getByIdentityAndUser(identificacion, usuario)

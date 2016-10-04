@@ -6,7 +6,4 @@ import co.com.alianza.persistence.entities.{ UsuarioEmpresarial, UsuarioEmpresar
  */
 trait UsuarioEmpresarialDAOs {
 
-
-
-
 }

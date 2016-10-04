@@ -9,6 +9,6 @@ import scala.concurrent.ExecutionContext
 /**
  * Created by alexandra on 2016
  */
-case class UsuarioEmpresarialDriverRepository (usuarioDAO : UsuarioEmpresarialDAO)(implicit val ex : ExecutionContext)
-  extends UsuarioEmpresarialRepositoryG[UsuarioEmpresarialTable,UsuarioEmpresarial](usuarioDAO)
-    with UsuarioEmpresarialRepository[UsuarioEmpresarial]
+case class UsuarioEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresarialDAO)(implicit val ex: ExecutionContext)
+  extends UsuarioEmpresarialRepositoryG[UsuarioEmpresarialTable, UsuarioEmpresarial](usuarioDAO)
+  with UsuarioEmpresarialRepository[UsuarioEmpresarial]

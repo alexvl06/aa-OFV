@@ -5,11 +5,13 @@ import scala.util.matching.Regex
 
 case class ConsultarPermisoRequest(idAgente: String)
 
-case class CrearAgenteInmobiliarioRequest(correo: String,
-                                          usuario: String,
-                                          nombre: Option[String],
-                                          cargo: Option[String],
-                                          descripcion: Option[String]) {
+case class CrearAgenteInmobiliarioRequest(
+  correo: String,
+    usuario: String,
+    nombre: Option[String],
+    cargo: Option[String],
+    descripcion: Option[String]
+) {
   require(!correo.isEmpty, "Field correo cannot be empty")
   require(isValidEmail(correo), "Field email is not a valid email address")
   require(!usuario.isEmpty, "Field usuario cannot be empty")
@@ -25,11 +27,15 @@ case class CrearAgenteInmobiliarioRequest(correo: String,
   }
 }
 
-case class EdicionPermisoRequest(fideicomiso: Int,
-                                 agentesInmobiliarios: Seq[Int],
-                                 permisos: Seq[TipoPermisoInmobiliario],
-                                 proyectos: Seq[Int])
+case class EdicionPermisoRequest(
+  fideicomiso: Int,
+  agentesInmobiliarios: Seq[Int],
+  permisos: Seq[TipoPermisoInmobiliario],
+  proyectos: Seq[Int]
+)
 
-case class EdicionFidPermisoRequest(fideicomiso: Int,
-                                    agentesInmobiliarios: Seq[(Int, Seq[TipoPermisoInmobiliario])],
-                                    proyectos: Seq[Int])
+case class EdicionFidPermisoRequest(
+  fideicomiso: Int,
+  agentesInmobiliarios: Seq[(Int, Seq[TipoPermisoInmobiliario])],
+  proyectos: Seq[Int]
+)

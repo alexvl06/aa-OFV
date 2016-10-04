@@ -66,42 +66,42 @@ trait ServiceAuthorization {
       }
   }
 
-  private def autorizar (tipoCliente: String, token : String, encriptedToken : String )(implicit ctx : RequestContext) = {
+  private def autorizar(tipoCliente: String, token: String, encriptedToken: String)(implicit ctx: RequestContext) = {
     if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
       autorizacionAgenteRepo.autorizar(token, encriptedToken, "", obtenerIp(ctx).get.value)
     } else if (tipoCliente == TiposCliente.clienteAdministrador.toString || tipoCliente == TiposCliente.clienteAdminInmobiliario.toString) {
       autorizacionAdminRepo.autorizar(token, encriptedToken, "", obtenerIp(ctx).get.value)
-    } else if (tipoCliente == TiposCliente.agenteInmobiliario.toString){
+    } else if (tipoCliente == TiposCliente.agenteInmobiliario.toString) {
       autorizarMock(token)
     } else {
       autorizacionUsuarioRepo.autorizar(token, encriptedToken, "")
     }
   }
 
-  private def autorizarMock (token : String) = {
+  private def autorizarMock(token: String) = {
 
     val tipoCliente = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
     val tipoIdentificacion = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoIdentificacion").toString
     val correo = Token.getToken(token).getJWTClaimsSet.getCustomClaim("correo").toString
     val ultimaIpIngreso = Token.getToken(token).getJWTClaimsSet.getCustomClaim("ultimaIpIngreso").toString
 
-
-    Future{ Autorizado(
-      JsonUtil.toJson(Usuario(
-        Option(1): Option[Int],
-        correo : String,
-        new Date() : Date,
-        "1234": String,
-        1 : Int,
-        1 : Int,
-        0 : Int,
-        Option(ultimaIpIngreso) : Option[String],
-        None : Option[Date],
-        TiposCliente.agenteInmobiliario : TiposCliente
-      ))
-    )}
+    Future {
+      Autorizado(
+        JsonUtil.toJson(Usuario(
+          Option(1): Option[Int],
+          correo: String,
+          new Date(): Date,
+          "1234": String,
+          1: Int,
+          1: Int,
+          0: Int,
+          Option(ultimaIpIngreso): Option[String],
+          None: Option[Date],
+          TiposCliente.agenteInmobiliario: TiposCliente
+        ))
+      )
+    }
   }
-
 
   private def obtenerIp(ctx: RequestContext) = ctx.request.headers.find {
     header =>

@@ -116,13 +116,14 @@ class ContrasenasClienteAdminActor extends Actor with ActorLogging {
           val passwordNewAppend = message.pw_nuevo.concat(AppendPasswordUser.appendUsuariosFiducia)
           val CambiarContrasenaFuture = (
             for {
-            usuarioContrasenaActual <- ValidationT(validacionConsultaContrasenaActualClienteAdmin(passwordActualAppend, us_id))
-            idValReglasContra <- ValidationT(validacionReglasClave(message.pw_nuevo, us_id, PerfilesUsuario.clienteAdministrador))
-            idUsuario <- ValidationT(actualizarContrasena(passwordNewAppend, usuarioContrasenaActual))
-            resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(us_id, Crypto.hashSha512(passwordNewAppend, message.idUsuario.get)))
-          } yield {
-            idUsuario
-          }).run
+              usuarioContrasenaActual <- ValidationT(validacionConsultaContrasenaActualClienteAdmin(passwordActualAppend, us_id))
+              idValReglasContra <- ValidationT(validacionReglasClave(message.pw_nuevo, us_id, PerfilesUsuario.clienteAdministrador))
+              idUsuario <- ValidationT(actualizarContrasena(passwordNewAppend, usuarioContrasenaActual))
+              resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(us_id, Crypto.hashSha512(passwordNewAppend, message.idUsuario.get)))
+            } yield {
+              idUsuario
+            }
+          ).run
 
           resolveCambiarContrasenaFuture(CambiarContrasenaFuture, currentSender)
 

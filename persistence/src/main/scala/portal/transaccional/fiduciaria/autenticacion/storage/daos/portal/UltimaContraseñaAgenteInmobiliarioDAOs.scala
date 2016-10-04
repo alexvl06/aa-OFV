@@ -9,8 +9,8 @@ import scala.concurrent.Future
  */
 trait UltimaContraseñaAgenteInmobiliarioDAOs {
 
-  def create(oldPass :  UltimaContrasenaAgenteInmobiliario): Future[Int]
+  def create(oldPass: UltimaContrasenaAgenteInmobiliario): Future[Int]
 
-  def findById(passwordValid : Int, idUser : Int): Future[Seq[UltimaContrasenaAgenteInmobiliario]]
+  def findById(passwordValid: Int, idUser: Int): Future[Seq[UltimaContrasenaAgenteInmobiliario]]
 
 }

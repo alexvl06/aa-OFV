@@ -45,15 +45,15 @@ case class AlianzaRouter(
     respuestaUsuarioRepository: RespuestaUsuarioRepository, respuestaUsuarioAdminRepository: RespuestaUsuarioRepository, ipRepo: IpRepository,
     autorizacionComercialRepo: AutorizacionUsuarioComercialRepository, autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository,
     autorizacionRecursoComercialRepository: AutorizacionRecursoComercialRepository, recursoComercialRepository: RecursoComercialRepository,
-    rolComercialRepository: RolComercialRepository, usInmobiliarioRepo: UsuarioInmobiliarioRepository, permisoAgenteInmob : PermisoAgenteInmobiliarioRepository,
-    sesionUtilAgenteEmpresarial : SesionAgenteUtilRepository, sesionUtilAgenteInmobiliario : SesionAgenteUtilRepository,
-    agenteInmobContrasenaRepo : ContrasenaAgenteInmobiliarioRepository
+    rolComercialRepository: RolComercialRepository, usInmobiliarioRepo: UsuarioInmobiliarioRepository, permisoAgenteInmob: PermisoAgenteInmobiliarioRepository,
+    sesionUtilAgenteEmpresarial: SesionAgenteUtilRepository, sesionUtilAgenteInmobiliario: SesionAgenteUtilRepository,
+    agenteInmobContrasenaRepo: ContrasenaAgenteInmobiliarioRepository
 )(implicit val system: ActorSystem) extends HttpServiceActor with RouteConcatenation with CrossHeaders with ServiceAuthorization with ActorLogging {
 
   import system.dispatcher
 
   val routes =
-//    AgenteInmobiliarioService(permisoAgenteInmob).route ~
+    //    AgenteInmobiliarioService(permisoAgenteInmob).route ~
     AutorizacionService(usuarioRepositorio, usuarioAgenteRepositorio, usuarioAdminRepositorio, autorizacionUsuarioRepo, kafkaActor, autorizacionAgenteRepo,
       autorizacionAdminRepo, autorizacionComercialRepo, autorizacionComercialAdminRepo, sesionUtilAgenteEmpresarial, sesionUtilAgenteInmobiliario).route ~
       AutenticacionService(autenticacionRepo, autenticacionEmpresaRepositorio, autenticacionComercialRepositorio, kafkaActor).route ~
@@ -73,7 +73,7 @@ case class AlianzaRouter(
             AgenteInmobiliarioService(user, usInmobiliarioRepo, permisoAgenteInmob).route ~
             ActualizacionService(actualizacionActor, kafkaActor).route(user) ~
             HorarioEmpresaService(kafkaActor, horarioEmpresaActor).route(user) ~
-            new AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor,agenteInmobContrasenaRepo).secureRoute(user) ~
+            new AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor, agenteInmobContrasenaRepo).secureRoute(user) ~
             // TODO Cambiar al authenticate de cliente empresarial
             new AdministrarContrasenaEmpresaService(kafkaActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).secureRouteEmpresa(user) ~
             UsuarioEmpresaService(kafkaActor, agenteEmpresarialActor).secureUserRouteEmpresa(user) ~

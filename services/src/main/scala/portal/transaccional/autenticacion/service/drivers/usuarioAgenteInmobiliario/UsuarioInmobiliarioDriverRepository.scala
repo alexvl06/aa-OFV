@@ -6,17 +6,17 @@ import akka.actor.ActorSystem
 import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.domain.aggregates.empresa.MailMessageEmpresa
 import co.com.alianza.exceptions.ValidacionExceptionPasswordRules
-import co.com.alianza.microservices.{MailMessage, SmtpServiceClient}
-import co.com.alianza.persistence.entities.{Configuraciones, PinAgenteInmobiliario, UsuarioAgenteInmobiliario, UsuarioAgenteInmobiliarioTable}
-import co.com.alianza.util.token.{PinData, TokenPin}
+import co.com.alianza.microservices.{ MailMessage, SmtpServiceClient }
+import co.com.alianza.persistence.entities.{ Configuraciones, PinAgenteInmobiliario, UsuarioAgenteInmobiliario, UsuarioAgenteInmobiliarioTable }
+import co.com.alianza.util.token.{ PinData, TokenPin }
 import com.typesafe.config.Config
-import enumerations.{EstadosUsuarioEnum, UsoPinEmpresaEnum}
+import enumerations.{ EstadosUsuarioEnum, EstadosUsuarioEnumInmobiliario, UsoPinEmpresaEnum }
 import org.joda.time.DateTime
-import portal.transaccional.autenticacion.service.drivers.usuarioAgente.{UsuarioEmpresarialRepository, UsuarioEmpresarialRepositoryG}
-import portal.transaccional.autenticacion.service.web.agenteInmobiliario.{ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse, PaginacionMetadata}
+import portal.transaccional.autenticacion.service.drivers.usuarioAgente.{ UsuarioEmpresarialRepository, UsuarioEmpresarialRepositoryG }
+import portal.transaccional.autenticacion.service.web.agenteInmobiliario.{ ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse, PaginacionMetadata }
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 /**
   * Implementación del repositorio de agentes inmobiliarios
@@ -99,10 +99,10 @@ case class UsuarioInmobiliarioDriverRepository(configDao: ConfiguracionDAOs,
     usuariosDao.get(identificacion, usuario).flatMap {
       case None => Future.successful(Option.empty)
       case Some(agente) =>
-        (if (agente.estado == EstadosUsuarioEnum.activo.id) {
-          Option.apply(EstadosUsuarioEnum.pendienteActivacion)
-        } else if (agente.estado == EstadosUsuarioEnum.pendienteActivacion.id) {
-          Option.apply(EstadosUsuarioEnum.activo)
+        (if (agente.estado == EstadosUsuarioEnumInmobiliario.activo.id) {
+          Option.apply(EstadosUsuarioEnumInmobiliario.inactivo)
+        } else if (agente.estado == EstadosUsuarioEnumInmobiliario.inactivo.id) {
+          Option.apply(EstadosUsuarioEnumInmobiliario.activo)
         } else {
           Option.empty
         }).map { estado =>

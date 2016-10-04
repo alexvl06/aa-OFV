@@ -13,8 +13,7 @@ import scala.reflect.{ ClassTag, _ }
 /**
  * Created by s4n in 2016
  */
-abstract class UsuarioAgenteDAO[T <: UsuarioAgenteTable[E], E <: UsuarioAgente : ClassTag](clazz: TableQuery[T])(implicit dcConfig: DBConfig) extends
-  UsuarioAgenteDAOs[T,E] {
+abstract class UsuarioAgenteDAO[T <: UsuarioAgenteTable[E], E <: UsuarioAgente: ClassTag](clazz: TableQuery[T])(implicit dcConfig: DBConfig) extends UsuarioAgenteDAOs[T, E] {
 
   val table: TableQuery[T] = clazz
   //lazy val clazzEntity = classTag[E].runtimeClass
@@ -24,7 +23,7 @@ abstract class UsuarioAgenteDAO[T <: UsuarioAgenteTable[E], E <: UsuarioAgente :
 
   def update(id: Int, usuario: String, correo: String, nombreUsuario: String, cargo: String, descripcion: String): Future[Int] = {
     val query = table.filter(_.id === id).map(a => (a.correo, a.usuario, a.descripcion))
-    run(query.update(correo,nombreUsuario,Option(descripcion)))
+    run(query.update(correo, nombreUsuario, Option(descripcion)))
   }
 
   def updateStateByTime(idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa, timestamp: Timestamp): Future[Int] = {

@@ -5,7 +5,7 @@ import spray.http.Uri
 trait HalPaginationUtils {
 
   def getHalLinks(totalItems: Int, itemsPerPage: Int, pageNumber: Int,
-                  relativeUri: Uri, queryParamsMap: Map[String, String]): Map[String, String] = {
+    relativeUri: Uri, queryParamsMap: Map[String, String]): Map[String, String] = {
     if (totalItems == 0) {
       Map("self" -> s"$relativeUri")
     } else {
@@ -47,12 +47,12 @@ trait HalPaginationUtils {
   }
 
   private def buildPageLink(page: Int, pageName: String,
-                            relativeUri: Uri, queryParamsMap: Map[String, String]): (String, String) = {
+    relativeUri: Uri, queryParamsMap: Map[String, String]): (String, String) = {
     pageName -> s"${relativeUri.withQuery(queryParamsMap + ("pagina" -> s"$page"))}"
   }
 
   private def buildPageLink(page: Option[Int], pageName: String,
-                            relativeUri: Uri, queryParamsMap: Map[String, String]): Seq[(String, String)] = {
+    relativeUri: Uri, queryParamsMap: Map[String, String]): Seq[(String, String)] = {
     page.map(p => {
       (pageName -> s"${relativeUri.withQuery(queryParamsMap + ("pagina" -> s"$p"))}") :: Nil
     }).getOrElse(Nil)

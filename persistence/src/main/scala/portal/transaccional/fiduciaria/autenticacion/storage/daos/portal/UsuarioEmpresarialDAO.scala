@@ -9,11 +9,11 @@ import scala.concurrent.Future
 /**
  * Created by s4n on 2016
  */
-case class UsuarioEmpresarialDAO(implicit dcConfig: DBConfig) extends UsuarioAgenteDAO[UsuarioEmpresarialTable,UsuarioEmpresarial](
-  TableQuery[UsuarioEmpresarialTable]) with UsuarioEmpresarialDAOs {
+case class UsuarioEmpresarialDAO(implicit dcConfig: DBConfig) extends UsuarioAgenteDAO[UsuarioEmpresarialTable, UsuarioEmpresarial](
+  TableQuery[UsuarioEmpresarialTable]
+) with UsuarioEmpresarialDAOs {
 
   val n = TableQuery[UsuarioEmpresarialTable]
-
 
   import dcConfig.DB._
   import dcConfig.driver.api._

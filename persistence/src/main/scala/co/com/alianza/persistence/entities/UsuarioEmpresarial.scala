@@ -11,7 +11,7 @@ case class UsuarioEmpresarial(id: Int, correo: String, fechaActualizacion: Times
   fechaUltimoIngreso: Option[Timestamp], nombreUsuario: String, cargo: String, descripcion: Option[String]) extends UsuarioAgente
 
 class UsuarioEmpresarialTable(tag: Tag) extends UsuarioAgenteTable[UsuarioEmpresarial](tag, "USUARIO_EMPRESARIAL") {
-  
+
   override val id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
   override val correo = column[String]("CORREO")
   override val fechaActualizacion = column[Timestamp]("FECHA_ACTUALIZACION")
