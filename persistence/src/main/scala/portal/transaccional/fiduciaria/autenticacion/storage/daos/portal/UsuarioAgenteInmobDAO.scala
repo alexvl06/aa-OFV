@@ -4,7 +4,7 @@ import java.sql.Timestamp
 
 import co.com.alianza.persistence.entities.{ UsuarioAgenteInmobiliario, UsuarioAgenteInmobiliarioTable }
 import co.com.alianza.persistence.util.SlickExtensions
-import enumerations.EstadosUsuarioEnum._
+import enumerations.EstadosUsuarioEnumInmobiliario.estadoUsuarioInmobiliario
 import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
 import slick.lifted.TableQuery
 
@@ -71,7 +71,7 @@ case class UsuarioAgenteInmobDAO(implicit dcConfig: DBConfig) extends UsuarioAge
     )
   }
 
-  override def updateState(identificacion: String, usuario: String, estado: estadoUsuario): Future[Int] = {
+  override def updateState(identificacion: String, usuario: String, estado: estadoUsuarioInmobiliario): Future[Int] = {
     run(
       table
         .filter(agente => agente.identificacion === identificacion && agente.usuario === usuario)
