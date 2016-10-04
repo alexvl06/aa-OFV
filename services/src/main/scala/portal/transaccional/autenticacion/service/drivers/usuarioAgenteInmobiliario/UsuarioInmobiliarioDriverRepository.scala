@@ -2,14 +2,17 @@ package portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobili
 
 import java.sql.Timestamp
 
+import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.exceptions.ValidacionExceptionPasswordRules
-import co.com.alianza.persistence.entities.{ UsuarioAgenteInmobiliario, UsuarioAgenteInmobiliarioTable }
-import enumerations.EstadosUsuarioEnum
-import portal.transaccional.autenticacion.service.drivers.usuarioAgente.{ UsuarioEmpresarialRepository, UsuarioEmpresarialRepositoryG }
-import portal.transaccional.autenticacion.service.web.agenteInmobiliario.{ ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse, PaginacionMetadata }
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ UsuarioAgenteInmobDAO, UsuarioAgenteInmobDAOs }
+import co.com.alianza.persistence.entities.{Configuraciones, PinAgenteInmobiliario, UsuarioAgenteInmobiliario, UsuarioAgenteInmobiliarioTable}
+import co.com.alianza.util.token.{PinData, TokenPin}
+import enumerations.{EstadosUsuarioEnum, UsoPinEmpresaEnum}
+import org.joda.time.DateTime
+import portal.transaccional.autenticacion.service.drivers.usuarioAgente.{UsuarioEmpresarialRepository, UsuarioEmpresarialRepositoryG}
+import portal.transaccional.autenticacion.service.web.agenteInmobiliario.{ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse, PaginacionMetadata}
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal._
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * Implementación del repositorio de agentes inmobiliarios
@@ -17,11 +20,13 @@ import scala.concurrent.{ ExecutionContext, Future }
   * @param ex Contexto de ejecución
   */
 
-case class UsuarioAgenteInmobDriverRepository (usuarioDAO: UsuarioAgenteInmobDAO)(implicit val ex : ExecutionContext) extends
+case class UsuarioAgenteInmobDriverRepository(usuarioDAO: UsuarioAgenteInmobDAO)(implicit val ex: ExecutionContext) extends
   UsuarioEmpresarialRepositoryG[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario](usuarioDAO) with
   UsuarioEmpresarialRepository[UsuarioAgenteInmobiliario]
 
-case class UsuarioInmobiliarioDriverRepository(usuariosDao: UsuarioAgenteInmobDAOs)
+case class UsuarioInmobiliarioDriverRepository(configDao: ConfiguracionDAOs,
+                                               pinDao: PinAgenteInmobiliarioDAOs,
+                                               usuariosDao: UsuarioAgenteInmobDAOs)
                                               (implicit val ex: ExecutionContext) extends UsuarioInmobiliarioRepository {
 
   override def createAgenteInmobiliario(tipoIdentificacion: Int, identificacion: String,
@@ -31,12 +36,15 @@ case class UsuarioInmobiliarioDriverRepository(usuariosDao: UsuarioAgenteInmobDA
       case true => Future.successful(0)
       case false =>
         val agente = UsuarioAgenteInmobiliario(
-          0, identificacion, tipoIdentificacion,
-          usuario, correo, EstadosUsuarioEnum.pendienteActivacion.id,
-          None, None, new Timestamp(System.currentTimeMillis()),
-          0, None, nombre, cargo, descripcion, None
+          0, identificacion, tipoIdentificacion, usuario, correo, EstadosUsuarioEnum.pendienteActivacion.id,
+          None, None, new Timestamp(System.currentTimeMillis()), 0, None, nombre, cargo, descripcion, None
         )
-        usuariosDao.create(agente)
+        for {
+          idAgente <- usuariosDao.create(agente)
+          configExpiracion <- configDao.getByKey(TiposConfiguracion.EXPIRACION_PIN.llave)
+          pinAgente: PinAgenteInmobiliario = getPinAgente(configExpiracion, idAgente)
+          idPin <- pinDao.create(pinAgente)
+        } yield idAgente
     })
   }
 
@@ -71,8 +79,8 @@ case class UsuarioInmobiliarioDriverRepository(usuariosDao: UsuarioAgenteInmobDA
   }
 
   override def updateAgenteInmobiliario(identificacion: String, usuario: String,
-    correo: String, nombre: Option[String],
-    cargo: Option[String], descripcion: Option[String]): Future[Int] = {
+                                        correo: String, nombre: Option[String],
+                                        cargo: Option[String], descripcion: Option[String]): Future[Int] = {
     usuariosDao.update(identificacion, usuario, correo, nombre, cargo, descripcion)
   }
 
@@ -98,12 +106,18 @@ case class UsuarioInmobiliarioDriverRepository(usuariosDao: UsuarioAgenteInmobDA
     }
   }
 
-  override def getContrasena(contrasena: String, idUsuario : Int): Future[UsuarioAgenteInmobiliario] = {
-    usuariosDao.getContrasena(contrasena, idUsuario).flatMap{
+  override def getContrasena(contrasena: String, idUsuario: Int): Future[UsuarioAgenteInmobiliario] = {
+    usuariosDao.getContrasena(contrasena, idUsuario).flatMap {
       case Some(agente) => Future.successful(agente)
       case None => Future.failed(ValidacionExceptionPasswordRules("409.7", "No existe la contrasena actual", "", "", ""))
     }
   }
 
-  def updateContrasena(contrasena: String, idUsuario : Int): Future[Int] = usuariosDao.updateContrasena(contrasena, idUsuario)
+  def updateContrasena(contrasena: String, idUsuario: Int): Future[Int] = usuariosDao.updateContrasena(contrasena, idUsuario)
+
+  def getPinAgente(configExpiracion: Configuraciones, idUsuario: Int): PinAgenteInmobiliario = {
+    val fechaExpiracion: DateTime = new DateTime().plusHours(configExpiracion.valor.toInt)
+    val (pin: PinData, usoPin: Int) = (TokenPin.obtenerToken(fechaExpiracion.toDate), UsoPinEmpresaEnum.creacionAgenteInmobiliario.id)
+    PinAgenteInmobiliario(None, idUsuario, pin.token, fechaExpiracion, pin.tokenHash.getOrElse(""), usoPin)
+  }
 }

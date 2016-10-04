@@ -9,5 +9,6 @@ object UsoPinEmpresaEnum extends Enumeration(0) {
 
   val usoReinicioContrasena = Value("reinicio de contrasena") //Valor id = 0
   val creacionAgenteEmpresarial = Value("creación agente empresarial") //Valor id = 1
+  val creacionAgenteInmobiliario = Value("creación agente inmobiliario") //Valor id = 2
 
 }

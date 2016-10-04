@@ -12,7 +12,7 @@ import scala.concurrent.Future
   *
   * @param dcConfig Configuración de la base de datos
   */
-class PinAgenteInmobiliarioDAO(implicit val dcConfig: DBConfig)
+case class PinAgenteInmobiliarioDAO(implicit val dcConfig: DBConfig)
   extends TableQuery(new PinAgenteInmobiliarioTable(_)) with PinAgenteInmobiliarioDAOs {
 
   import dcConfig.DB._
