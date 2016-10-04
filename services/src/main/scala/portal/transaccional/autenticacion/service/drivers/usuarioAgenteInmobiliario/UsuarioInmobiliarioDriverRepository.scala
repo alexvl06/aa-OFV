@@ -48,9 +48,12 @@ case class UsuarioInmobiliarioDriverRepository(configDao: ConfiguracionDAOs,
           configExpiracion <- configDao.getByKey(TiposConfiguracion.EXPIRACION_PIN.llave)
           pinAgente: PinAgenteInmobiliario = generarPinAgente(configExpiracion, idAgente)
           idPin <- pinDao.create(pinAgente)
-          correoActivacion: MailMessage = generarCorreoActivacion(pinAgente.tokenHash, configExpiracion.valor.toInt, identificacion, usuario)
+          correoActivacion: MailMessage = generarCorreoActivacion(pinAgente.tokenHash, configExpiracion.valor.toInt, identificacion, usuario, correo)
         } yield {
-          enviarEmail(correoActivacion) // se ejecuta de manera asincrona dado que no interesa el resultado del envío
+          // el envío del correo se ejecuta de forma asíncrona dado que no interesa el éxito de la operación,
+          // es decir, si el envío falla, no se debería responder con error la creación del agente inmobiliario
+          enviarEmail(correoActivacion)
+          // se retorna el id del agente generado
           idAgente
         }
     })
@@ -129,13 +132,12 @@ case class UsuarioInmobiliarioDriverRepository(configDao: ConfiguracionDAOs,
     PinAgenteInmobiliario(None, idUsuario, pin.token, fechaExpiracion, pin.tokenHash.getOrElse(""), usoPin)
   }
 
-  def generarCorreoActivacion(pin: String, caducidad: Int, identificacion: String, usuario: String): MailMessage = {
+  def generarCorreoActivacion(pin: String, caducidad: Int, identificacion: String, usuario: String, correo: String): MailMessage = {
     val remitente: String = config.getString("alianza.smtp.from")
-    val destinatario: String = "rodrigocifuentes@seven4n.com"
     val asunto: String = config.getString("alianza.smtp.asunto.creacionAgenteInmobiliario")
     val cuerpo: String = new MailMessageEmpresa("alianza.smtp.templatepin.creacionAgenteInmobiliario")
       .getMessagePinCreacionAgenteInmobiliario(pin, caducidad, identificacion, usuario)
-    MailMessage(remitente, destinatario, Nil, asunto, cuerpo, "")
+    MailMessage(remitente, correo, Nil, asunto, cuerpo, "")
   }
 
   def enviarEmail(correoActivacion: MailMessage): Unit = {
