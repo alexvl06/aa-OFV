@@ -3,14 +3,12 @@ package co.com.alianza.domain.aggregates.empresa
 import java.sql.{ Date, Time }
 
 import akka.actor.SupervisorStrategy._
-import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, OneForOneStrategy, Props }
-import akka.pattern._
+import akka.actor.{ Actor, ActorLogging, ActorRef, OneForOneStrategy, Props }
 import akka.routing.RoundRobinPool
-import akka.util.Timeout
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.domain.aggregates.autenticacion.errores.{ ErrorAutenticacion, ErrorCredencialesInvalidas, ErrorPersistencia }
 import co.com.alianza.domain.aggregates.autenticacion.{ ValidacionesAutenticacionUsuarioEmpresarial }
-import co.com.alianza.exceptions.{ BusinessLevel, PersistenceException }
+import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
 import co.com.alianza.infrastructure.dto.{ Empresa, HorarioEmpresa => HorarioEmpresaDTO }
 import co.com.alianza.infrastructure.messages._
@@ -20,7 +18,6 @@ import co.com.alianza.util.transformers.ValidationT
 import spray.http.StatusCodes._
 
 import scala.concurrent.Future
-import scala.concurrent.duration.DurationInt
 import scala.util.{ Failure, Success }
 import scalaz.Validation.FlatMap._
 import scalaz.std.AllInstances._
@@ -143,11 +140,14 @@ class HorarioEmpresaActor extends Actor
           case TiposCliente.clienteIndividual => currentSender ! ResponseMessage(OK, true.toJson)
           case _ => validarHorario(message.idUsuarioRecurso.get, currentSender)
         }
-      case _ => validarHorario(message.user.identificacionUsuario, currentSender)
+      case _ => validarHorario(message.user.identificacion, currentSender)
     }
   }
 
   def validarHorario(identificacionEmpresa: String, currentSender: ActorRef) = {
+
+    println("identificacion del horario => " + identificacionEmpresa)
+
     val result = {
       (for {
         empresa <- ValidationT(obtenerEmpresaPorNit(identificacionEmpresa))

@@ -1,7 +1,7 @@
 package co.com.alianza.web
 
-import akka.actor.{ActorSelection, ActorSystem}
-import co.com.alianza.app.{AlianzaCommons, CrossHeaders}
+import akka.actor.{ ActorSelection, ActorSystem }
+import co.com.alianza.app.{ AlianzaCommons, CrossHeaders }
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.DataAccessAdapter
@@ -10,7 +10,7 @@ import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.infrastructure.messages.empresa._
 import spray.http.StatusCodes
-import spray.routing.{Directives, RequestContext}
+import spray.routing.{ Directives, RequestContext }
 
 import scala.concurrent.ExecutionContext
 
@@ -37,25 +37,25 @@ case class HorarioEmpresaService(kafkaActor: ActorSelection, horarioEmpresaActor
           if (user.tipoCliente.eq(TiposCliente.comercialSAC))
             complete((StatusCodes.Unauthorized, "Tipo usuario SAC no está autorizado para realizar esta acción"))
           else
-          entity(as[AgregarHorarioEmpresaMessage]) {
-            agregarHorarioEmpresaMessage =>
-              respondWithMediaType(mediaType) {
-                clientIP {
-                  ip =>
-                    mapRequestContext {
-                      r: RequestContext =>
-                        val token = r.request.headers.find(header => header.name equals "token")
-                        val usuario = DataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
+            entity(as[AgregarHorarioEmpresaMessage]) {
+              agregarHorarioEmpresaMessage =>
+                respondWithMediaType(mediaType) {
+                  clientIP {
+                    ip =>
+                      mapRequestContext {
+                        r: RequestContext =>
+                          val token = r.request.headers.find(header => header.name equals "token")
+                          val usuario = DataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
 
-                        requestWithFutureAuditing[PersistenceException, AgregarHorarioEmpresaMessage](r, AuditingHelper.fiduciariaTopic,
-                          AuditingHelper.cambioHorarioIndex, ip.value, kafkaActor, usuario, Some(agregarHorarioEmpresaMessage))
-                    } {
-                      requestExecute(agregarHorarioEmpresaMessage.copy(idUsuario = Some(user.id), tipoCliente = Some(user.tipoCliente.id)), horarioEmpresaActor)
-                    }
+                          requestWithFutureAuditing[PersistenceException, AgregarHorarioEmpresaMessage](r, AuditingHelper.fiduciariaTopic,
+                            AuditingHelper.cambioHorarioIndex, ip.value, kafkaActor, usuario, Some(agregarHorarioEmpresaMessage))
+                      } {
+                        requestExecute(agregarHorarioEmpresaMessage.copy(idUsuario = Some(user.id), tipoCliente = Some(user.tipoCliente.id)), horarioEmpresaActor)
+                      }
+                  }
+
                 }
-
-              }
-          }
+            }
         }
     } ~
       path(diaFestivo) {
@@ -73,6 +73,7 @@ case class HorarioEmpresaService(kafkaActor: ActorSelection, horarioEmpresaActor
           parameters('idUsuarioRecurso.as[Option[String]], 'tipoIdentificacion.as[Option[Int]]) {
             (idUsuarioRecurso, tipoIdentificacion) =>
               respondWithMediaType(mediaType) {
+                println("llego a validar horario")
                 requestExecute(ValidarHorarioEmpresaMessage(user, idUsuarioRecurso, tipoIdentificacion), horarioEmpresaActor)
               }
           }

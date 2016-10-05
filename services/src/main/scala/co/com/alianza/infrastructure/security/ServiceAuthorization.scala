@@ -77,17 +77,9 @@ trait ServiceAuthorization {
 
     respuesta match {
 
-      case validacion: ValidacionException =>
-        Left(AuthenticationFailedRejection(CredentialsRejected, List(), Some(Unauthorized.intValue), Option(validacion.code)))
-
-      case validacion: NoAutorizado =>
-        validacion.printStackTrace()
-        Left(AuthenticationFailedRejection(CredentialsRejected, List(), Some(Unauthorized.intValue), None))
-
       case validacion: Autorizado =>
-        val tipo = TiposCliente.getTipoCliente(tipoCliente)
-        val user = JsonUtil.fromJson[Usuario](validacion.usuario)
-        Right(UsuarioAuth(user.id.get, tipo, "", 0))
+        val usuarioAuth: UsuarioAuth = JsonUtil.fromJson[UsuarioAuth](validacion.usuario)
+        Right(usuarioAuth)
 
       case validacion: AutorizadoComercial =>
         val tipo = TiposCliente.getTipoCliente(tipoCliente)
@@ -99,9 +91,17 @@ trait ServiceAuthorization {
         val user = JsonUtil.fromJson[UsuarioComercialAdmin](validacion.usuario)
         Right(UsuarioAuth(user.id, tipo, "", 0))
 
+      case validacion: ValidacionException =>
+        validacion.printStackTrace()
+        Left(AuthenticationFailedRejection(CredentialsRejected, List(), Some(Unauthorized.intValue), Option(validacion.code)))
+
+      case validacion: NoAutorizado =>
+        validacion.printStackTrace()
+        Left(AuthenticationFailedRejection(CredentialsRejected, List(), Some(Unauthorized.intValue), None))
+
       case validacion: Prohibido =>
-        val user = JsonUtil.fromJson[UsuarioForbidden](validacion.usuario)
-        Right(UsuarioAuth(user.usuario.id.get, user.usuario.tipoCliente, user.usuario.identificacion, user.usuario.tipoIdentificacion))
+        validacion.printStackTrace()
+        Left(AuthenticationFailedRejection(CredentialsRejected, List(), Some(Unauthorized.intValue), None))
 
       case _ =>
         Left(AuthenticationFailedRejection(CredentialsRejected, List()))
