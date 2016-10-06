@@ -64,8 +64,12 @@ case class AutorizacionUsuarioDriverRepository(usuarioRepo: UsuarioRepository, r
    * @return
    */
   private def resolveMessageRecursos(usuario: Usuario, recursos: Seq[RecursoPerfil], url: String): Future[ValidacionAutorizacion] = Future {
+    //si la url es "", viene desde el mismo componente, por lo tanto no hay que hacer filtro alguno
+    val recursosFiltro: Seq[RecursoPerfil] = {
+      if (url.nonEmpty) recursoRepo.filtrarRecursos(recursos, url)
+      else Seq(RecursoPerfil(0, url, false, None))
+    }
     val usuarioDTO: UsuarioDTO = DataAccessTranslator.entityToDto(usuario)
-    val recursosFiltro = recursoRepo.filtrarRecursos(recursos, url)
     recursosFiltro.nonEmpty match {
       case false =>
         val usuarioForbidden: ForbiddenMessage = ForbiddenMessage(usuarioDTO, None)

@@ -71,7 +71,11 @@ case class AutorizacionUsuarioEmpresarialDriverRepository(agenteRepo: UsuarioEmp
    * @return
    */
   private def resolveMessageRecursos(agenteDTO: UsuarioEmpresarial, recursos: Seq[RecursoPerfilAgente], url: String): Future[ValidacionAutorizacion] = Future {
-    val recursosFiltro = recursoRepo.filtrarRecursosAgente(recursos, url)
+    //si la url es "", viene desde el mismo componente, por lo tanto no hay que hacer filtro alguno
+    val recursosFiltro: Seq[RecursoPerfilAgente] = {
+      if (url.nonEmpty) recursoRepo.filtrarRecursosAgente(recursos, url)
+      else Seq(RecursoPerfilAgente(0, url, false, None))
+    }
     recursosFiltro.nonEmpty match {
       case false =>
         val usuarioForbidden: ForbiddenMessageAgente = ForbiddenMessageAgente(agenteDTO, None)
