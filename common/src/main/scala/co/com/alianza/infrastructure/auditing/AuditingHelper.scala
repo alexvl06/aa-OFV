@@ -112,4 +112,24 @@ trait AuditingHelper {
 
   }
 
+  def requestAuditing[E, T](ctx: RequestContext, kafkaTopic: String, elasticIndex: String, ip: String,
+    kafkaActor: ActorSelection, user: Option[AuditingUserData],
+    extraParameters: Option[T] = None)(implicit executionContext: ExecutionContext): RequestContext = {
+    ctx.withRouteResponseMapped {
+      case response: HttpResponse =>
+        val httpReq: HttpRequest = ctx.request
+        val elasticDocumentType: String = httpReq.uri.toRelative.toString().split("/")(1)
+        val request = AudRequest(httpReq.method.toString(), httpReq.uri.toRelative.toString(), extraParameters.getOrElse(""), ip, user)
+        val responseAud: AudResponse = AudResponse(response.status.intValue.toString, response.status.reason, response.entity.data.asString)
+        val auditingMsg: AuditRequest = AuditRequest(request, responseAud, kafkaTopic, elasticIndex, elasticDocumentType)
+        kafkaActor ! auditingMsg
+        response
+      case a => a
+    }
+  }
+
+  def getAuditingUser(tipoIdentificacion: Int, identificacion: String, usuario: Option[String]): Option[AuditingUserData] = {
+    Option(AuditingUserData(tipoIdentificacion, identificacion, usuario))
+  }
+
 }

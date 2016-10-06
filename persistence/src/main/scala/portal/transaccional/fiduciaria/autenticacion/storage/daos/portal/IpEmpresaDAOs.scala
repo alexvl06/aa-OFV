@@ -13,4 +13,6 @@ trait IpEmpresaDAOs {
 
   def create(ip: IpsEmpresa): Future[String]
 
+  def delete(ip: IpsEmpresa): Future[Int]
+
 }

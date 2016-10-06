@@ -35,4 +35,5 @@ case class IpUsuarioDAO(implicit val dcConfig: DBConfig) extends TableQuery(new 
   def delete(ipsUsuarioE: IpsUsuario): Future[Int] = {
     run(this.filter(x => x.idUsuario === ipsUsuarioE.idUsuario && x.ip === ipsUsuarioE.ip).delete)
   }
+
 }

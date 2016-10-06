@@ -39,7 +39,7 @@ case class IpsUsuariosService(kafkaActor: ActorSelection, ipsUsuarioActor: Actor
             clientIP { ip =>
               mapRequestContext {
                 r: RequestContext =>
-                  val usuario = obtenerUsuario(r, user)
+                  val usuario: Future[Validation[PersistenceException, Option[AuditingUserData]]] = obtenerUsuario(r, user)
                   requestWithFutureAuditing[PersistenceException, Any](r, AuditingHelper.fiduciariaTopic, AuditingHelper.usuarioConsultarIpIndex,
                     ip.value, kafkaActor, usuario, None)
               } {

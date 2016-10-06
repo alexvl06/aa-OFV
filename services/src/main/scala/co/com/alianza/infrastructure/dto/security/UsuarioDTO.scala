@@ -7,5 +7,5 @@ import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
  *
  * @param id El id del usuario autenticado
  */
-case class UsuarioAuth(id: Int, tipoCliente: TiposCliente, identificacion: String, tipoIdentificacion: Int)
+case class UsuarioAuth(id: Int, tipoCliente: TiposCliente, identificacion: String, tipoIdentificacion: Int, usuario: Option[String])
 
