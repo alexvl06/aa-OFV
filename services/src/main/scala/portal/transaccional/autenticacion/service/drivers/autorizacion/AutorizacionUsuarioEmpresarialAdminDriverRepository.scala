@@ -66,17 +66,24 @@ case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: Usuari
    * @return
    */
   private def resolveMessageRecursos(adminDTO: UsuarioEmpresarialAdmin, recursos: Seq[RecursoPerfilClienteAdmin], url: String): Future[ValidacionAutorizacion] = Future {
+
+    println("ruta => ", url)
+
     val recursosFiltro = recursoRepo.filtrarRecursosClienteAdmin(recursos, url)
     recursosFiltro.nonEmpty match {
       case false =>
+        println("false")
         val usuarioForbidden: ForbiddenMessageAdmin = ForbiddenMessageAdmin(adminDTO, None)
         Prohibido("403.1", JsonUtil.toJson(usuarioForbidden))
       case true =>
+        println("true")
         recursos.head.filtro match {
           case filtro @ Some(_) =>
+            println("prohibido")
             val usuarioForbidden: ForbiddenMessageAdmin = ForbiddenMessageAdmin(adminDTO, filtro)
             Prohibido("403.2", JsonUtil.toJson(usuarioForbidden))
           case None =>
+            println("ok")
             val usuarioJson: String = JsonUtil.toJson(adminDTO)
             Autorizado(usuarioJson)
         }
