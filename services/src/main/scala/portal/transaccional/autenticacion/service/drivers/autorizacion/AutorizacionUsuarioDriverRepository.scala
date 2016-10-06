@@ -75,7 +75,7 @@ case class AutorizacionUsuarioDriverRepository(usuarioRepo: UsuarioRepository, r
         val usuarioForbidden: ForbiddenMessage = ForbiddenMessage(usuarioDTO, None)
         Prohibido("403.1", JsonUtil.toJson(usuarioForbidden))
       case true =>
-        recursos.head.filtro match {
+        recursosFiltro.head.filtro match {
           case filtro @ Some(_) =>
             val usuarioForbidden: ForbiddenMessage = ForbiddenMessage(usuarioDTO, filtro)
             Prohibido("403.2", JsonUtil.toJson(usuarioForbidden))
