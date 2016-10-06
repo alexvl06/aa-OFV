@@ -101,7 +101,7 @@ trait ServiceAuthorization {
 
       case validacion: Prohibido =>
         validacion.printStackTrace()
-        Left(AuthenticationFailedRejection(CredentialsRejected, List(), Some(Unauthorized.intValue), None))
+        Left(AuthenticationFailedRejection(CredentialsRejected, List(), Some(Forbidden.intValue), None))
 
       case _ =>
         Left(AuthenticationFailedRejection(CredentialsRejected, List()))
