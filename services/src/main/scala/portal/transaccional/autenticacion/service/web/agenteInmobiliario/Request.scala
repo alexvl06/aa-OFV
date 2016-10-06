@@ -39,3 +39,5 @@ case class EdicionFidPermisoRequest(
   agentesInmobiliarios: Seq[(Int, Seq[TipoPermisoInmobiliario])],
   proyectos: Seq[Int]
 )
+
+case class EdicionContrasena(pasOld : String, pasNew : String)

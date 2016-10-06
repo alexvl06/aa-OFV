@@ -2,15 +2,17 @@ package portal.transaccional.autenticacion.service.web.agenteInmobiliario
 
 import co.com.alianza.app.CrossHeaders
 import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
+import co.com.alianza.exceptions.{ PersistenceException, ValidacionException, ValidacionExceptionPasswordRules }
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.persistence.entities.PermisoAgenteInmobiliario
 import co.com.alianza.util.json.HalPaginationUtils
+import portal.transaccional.autenticacion.service.drivers.contrasenaAgenteInmobiliario.ContrasenaAgenteInmobiliarioRepository
 import portal.transaccional.autenticacion.service.drivers.permisoAgenteInmobiliario.PermisoAgenteInmobiliarioRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.UsuarioInmobiliarioRepository
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import spray.http.StatusCodes
-import spray.routing.Route
+import spray.routing.{ Route, StandardRoute }
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success }
@@ -31,18 +33,18 @@ import scala.util.{ Failure, Success }
 case class AgenteInmobiliarioService(
   usuarioAuth: UsuarioAuth,
   usuariosRepo: UsuarioInmobiliarioRepository,
-  permisosRepo: PermisoAgenteInmobiliarioRepository
+  permisosRepo: PermisoAgenteInmobiliarioRepository,
+  contrasenaRepo : ContrasenaAgenteInmobiliarioRepository
 )(implicit val ec: ExecutionContext)
     extends CommonRESTFul with DomainJsonFormatters with CrossHeaders with HalPaginationUtils {
 
   val agentesPath: String = "agentes-inmobiliarios"
-  val actualizarPath3 = "updateByFid"
   val estadoPath: String = "estado"
   val fideicomisosPath: String = "fideicomisos"
   val permisosPath = "permisos"
   val proyectosPath: String = "proyectos"
-  val updateByProject = "updateByProject"
   val recursosPath = "recursos"
+  val changePassPath = "contrasena"
 
   val route: Route = {
     pathPrefix(fideicomisosPath / IntNumber / proyectosPath / IntNumber / permisosPath) { (fideicomiso, proyecto) =>
@@ -56,6 +58,10 @@ case class AgenteInmobiliarioService(
     } ~ pathPrefix(agentesPath / recursosPath) {
       pathEndOrSingleSlash {
         getRecursos
+      }
+    } ~ pathPrefix(agentesPath / changePassPath ) {
+      pathEndOrSingleSlash {
+        updateByPassword
       }
     } ~ pathPrefix(agentesPath / Segment) { usuarioAgente =>
       pathEndOrSingleSlash {
@@ -94,7 +100,7 @@ case class AgenteInmobiliarioService(
       )
       onComplete(agenteF) {
         case Success(agente: Option[ConsultarAgenteInmobiliarioResponse]) => agente match {
-          case Some(a) => complete(StatusCodes.OK -> a)
+          case Some(a) => complete((StatusCodes.OK , a))
           case _ => complete(StatusCodes.NotFound)
         }
         case Failure(exception) => complete(StatusCodes.InternalServerError)
@@ -195,6 +201,27 @@ case class AgenteInmobiliarioService(
         case Success(recursos) => complete((StatusCodes.OK, recursos))
         case Failure(exception) => complete((StatusCodes.Conflict, "hubo un error"))
       }
+    }
+  }
+
+  private def updateByPassword: Route = {
+    put {
+      entity(as[EdicionContrasena]) { contraseñas =>
+        val updateF = contrasenaRepo.actualizarContrasena(Option.empty,contraseñas.pasOld,contraseñas.pasNew, Option(usuarioAuth.id))
+        onComplete(updateF) {
+          case Success(resultado) => complete(StatusCodes.OK)
+          case Failure(ex) => execution(ex)
+        }
+      }
+    }
+  }
+
+  def execution(ex: Any): StandardRoute = {
+    ex match {
+      case ex: ValidacionException => complete((StatusCodes.Conflict, ex))
+      case ex: PersistenceException => complete((StatusCodes.InternalServerError, "Error inesperado"))
+      case ex: ValidacionExceptionPasswordRules => complete((StatusCodes.Conflict, ex))
+      case ex: Throwable => complete((StatusCodes.InternalServerError, "Error inesperado"))
     }
   }
 

@@ -56,7 +56,8 @@ trait DomainJsonFormatters {
   implicit val consultarAgenteInmobResponseFormatter = jsonFormat7(ConsultarAgenteInmobiliarioResponse)
   implicit val paginationMetadataResponseFormatter = jsonFormat5(PaginacionMetadata)
   implicit val consultarAgenteInmobiliarioListResponseFormatter = jsonFormat2(ConsultarAgenteInmobiliarioListResponse)
-  implicit val recursosInmobiliarios = jsonFormat3(RecursoAgenteInmobiliario)
+  implicit val recursosInmobiliariosFormatter = jsonFormat3(RecursoAgenteInmobiliario)
+  implicit val edicionContrasenaFormatter = jsonFormat2(EdicionContrasena)
 
   // ----- MAPEO DE ENUM!
   private def jsonEnum[T <: Enumeration](enu: T) = new JsonFormat[T#Value] {

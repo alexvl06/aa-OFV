@@ -23,12 +23,12 @@ import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 case class ContrasenaAgenteInmobiliarioDriverRepository(agenteRepo: UsuarioInmobiliarioRepository, oldPassDAO: UltimaContraseñaAgenteInmobiliarioDAOs,
     reglaRepo: ReglaContrasenaRepository) extends ContrasenaAgenteInmobiliarioRepository {
 
-  def actualizarContrasena(token: String, pw_actual: String, pw_nuevo: String, idUsuario: Option[Int]): Future[Int] = {
+  def actualizarContrasena(token: Option[String], pw_actual: String, pw_nuevo: String, idUsuario: Option[Int]): Future[Int] = {
     val passwordActual = Crypto.hashSha512(pw_actual.concat(AppendPasswordUser.appendUsuariosFiducia), idUsuario.getOrElse(0))
     val passwordNew = Crypto.hashSha512(pw_nuevo.concat(AppendPasswordUser.appendUsuariosFiducia), idUsuario.getOrElse(0))
 
     for {
-      us_id <- validarToken(token)
+      us_id <- if(token.isDefined) validarToken(token.get) else Future.successful(idUsuario.get)
       usuarioContrasenaActual <- agenteRepo.getContrasena(passwordActual, us_id)
       idValReglasContra <- validacionReglasClave(pw_nuevo, us_id, PerfilesUsuario.agenteEmpresarial)
       cantRepetidas <- reglaRepo.getRegla(LlavesReglaContrasena.ULTIMAS_CONTRASENAS_NO_VALIDAS.llave)

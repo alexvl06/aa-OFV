@@ -70,7 +70,7 @@ case class AlianzaRouter(
           IpsUsuariosService(kafkaActor, ipsUsuarioActor).route(user) ~
             IpService(user, ipRepo).route ~
             SesionService().route ~
-            AgenteInmobiliarioService(user, usInmobiliarioRepo, permisoAgenteInmob).route ~
+            AgenteInmobiliarioService(user, usInmobiliarioRepo, permisoAgenteInmob, agenteInmobContrasenaRepo).route ~
             ActualizacionService(actualizacionActor, kafkaActor).route(user) ~
             HorarioEmpresaService(kafkaActor, horarioEmpresaActor).route(user) ~
             new AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor, agenteInmobContrasenaRepo).secureRoute(user) ~

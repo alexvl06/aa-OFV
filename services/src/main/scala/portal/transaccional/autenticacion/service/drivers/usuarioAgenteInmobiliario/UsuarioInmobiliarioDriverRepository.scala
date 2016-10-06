@@ -28,9 +28,7 @@ case class UsuarioAgenteInmobDriverRepository(usuarioDAO: UsuarioAgenteInmobDAO)
   UsuarioEmpresarialRepositoryG[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario](usuarioDAO) with
   UsuarioEmpresarialRepository[UsuarioAgenteInmobiliario]
 
-case class UsuarioInmobiliarioDriverRepository(configDao: ConfiguracionDAOs,
-                                               pinDao: PinAgenteInmobiliarioDAOs,
-                                               usuariosDao: UsuarioAgenteInmobDAOs)
+case class UsuarioInmobiliarioDriverRepository(configDao: ConfiguracionDAOs, pinDao: PinAgenteInmobiliarioDAOs, usuariosDao: UsuarioAgenteInmobDAOs)
                                               (implicit val ex: ExecutionContext, system: ActorSystem, config: Config) extends UsuarioInmobiliarioRepository {
 
   override def createAgenteInmobiliario(tipoIdentificacion: Int, identificacion: String,
@@ -100,18 +98,15 @@ case class UsuarioInmobiliarioDriverRepository(configDao: ConfiguracionDAOs,
       case None => Future.successful(Option.empty)
       case Some(agente) =>
         (if (agente.estado == EstadosUsuarioEnumInmobiliario.activo.id) {
-          Option.apply(EstadosUsuarioEnumInmobiliario.inactivo)
+          Option(EstadosUsuarioEnumInmobiliario.inactivo)
         } else if (agente.estado == EstadosUsuarioEnumInmobiliario.inactivo.id) {
-          Option.apply(EstadosUsuarioEnumInmobiliario.activo)
+          Option(EstadosUsuarioEnumInmobiliario.activo)
         } else {
           Option.empty
         }).map { estado =>
           usuariosDao.updateState(identificacion, usuario, estado).map {
             case x if x == 0 => Option.empty
-            case _ => Option.apply(ConsultarAgenteInmobiliarioResponse(
-              agente.id, agente.correo, agente.usuario, estado.id,
-              agente.nombre, agente.cargo, agente.descripcion
-            ))
+            case _ => Option(ConsultarAgenteInmobiliarioResponse(agente.id, agente.correo, agente.usuario, estado.id, agente.nombre, agente.cargo, agente.descripcion))
           }
         }.getOrElse(Future.successful(Option.empty))
     }

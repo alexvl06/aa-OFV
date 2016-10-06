@@ -18,6 +18,6 @@ trait ContrasenaAgenteInmobiliarioRepository {
    *                      retorna el idUsuario al cual se le actualizo la contraseña. De no se asi, retorna un futuro fallido,
    *                      Con un msj de error acorde a la validación fallida.
    */
-  def actualizarContrasena(token: String, pw_actual: String, pw_nuevo: String, idUsuario: Option[Int]): Future[Int]
+  def actualizarContrasena(token: Option[String], pw_actual: String, pw_nuevo: String, idUsuario: Option[Int]): Future[Int]
 
 }
