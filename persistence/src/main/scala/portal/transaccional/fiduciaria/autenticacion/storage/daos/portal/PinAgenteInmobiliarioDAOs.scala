@@ -23,4 +23,12 @@ trait PinAgenteInmobiliarioDAOs {
     * @param tokenHash Hash del pin a buscar
     */
   def get(tokenHash: String): Future[Option[PinAgenteInmobiliario]]
+
+  /**
+    * Elimina un pin asociado a un agente inmobiliario
+    *
+    * @param tokenHash Hash del pin a eliminar
+    * @return Un futuro con el número de filas modificadas (debería ser siempre 1)
+    */
+  def delete(tokenHash: String): Future[Int]
 }
