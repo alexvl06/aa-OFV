@@ -27,6 +27,6 @@ case class PinAgenteInmobiliarioDAO(implicit val dcConfig: DBConfig)
   }
 
   def delete(tokenHash: String): Future[Int] = {
-    run(this.filter(_.tokenHash === tokenHash).delete.result)
+    run(this.filter(_.tokenHash === tokenHash).delete)
   }
 }

@@ -35,7 +35,6 @@ case class AgenteInmobiliarioService(
     extends CommonRESTFul with DomainJsonFormatters with CrossHeaders with HalPaginationUtils {
 
   val agentesPath: String = "agentes-inmobiliarios"
-  val actualizarPath3 = "updateByFid"
   val estadoPath: String = "estado"
   val fideicomisosPath: String = "fideicomisos"
   val permisosPath = "permisos"
