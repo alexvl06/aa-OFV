@@ -18,4 +18,8 @@ case class IpEmpresaDAO()(implicit dcConfig: DBConfig) extends TableQuery(new Ip
 
   def create(ip: IpsEmpresa): Future[String] = run(this returning this.map(_.ip) += ip)
 
+  def delete(ip: IpsEmpresa): Future[Int] = {
+    run(this.filter(x => x.idEmpresa === ip.idEmpresa && x.ip === ip.ip).delete)
+  }
+
 }

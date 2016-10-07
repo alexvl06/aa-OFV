@@ -2,14 +2,9 @@ package co.com.alianza.web
 
 import akka.actor.ActorSystem
 import spray.routing.Directives
-import spray.http.StatusCodes._
 import co.com.alianza.app.AlianzaCommons
-import co.com.alianza.infrastructure.messages.AutenticacionMessagesJsonSupport
-import co.com.alianza.infrastructure.messages.AutenticarMessage
 import co.com.alianza.util.json.JsonUtil
-import enumerations.{ TipoIdentificacion, TipoIdentificaciones }
-
-import scala.concurrent.ExecutionContext;
+import enumerations.{ TipoIdentificaciones }
 
 class EnumeracionService(implicit val system: ActorSystem) extends Directives with AlianzaCommons {
 

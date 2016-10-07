@@ -58,9 +58,10 @@ class IpsUsuarioActor(sessionActor: ActorRef) extends Actor with ActorLogging {
   import co.com.alianza.util.json.MarshallableImplicits._
 
   def receive = {
-    case message: ObtenerIpsUsuarioMessage => obtenerIpsUsuario(message.idUsuario, message.tipoCliente)
-    case message: AgregarIpsUsuarioMessage => agregarIpsUsuarioMessage(message.idUsuario.get, message.ip, obtenerEnumTipoCliente(message.tipoCliente))
-    case message: EliminarIpsUsuarioMessage => eliminarIpsUsuarioMessage(message.idUsuario.get, message.ip, obtenerEnumTipoCliente(message.tipoCliente))
+    case _ => ""
+    //case message: ObtenerIpsUsuarioMessage => obtenerIpsUsuario(message.idUsuario, message.tipoCliente)
+    //case message: AgregarIpsUsuarioMessage => agregarIpsUsuarioMessage(message.idUsuario.get, message.ip, obtenerEnumTipoCliente(message.tipoCliente))
+    //case message: EliminarIpsUsuarioMessage => eliminarIpsUsuarioMessage(message.idUsuario.get, message.ip, obtenerEnumTipoCliente(message.tipoCliente))
   }
 
   def obtenerEnumTipoCliente(tipoCliente: Option[Int]) = {
@@ -93,7 +94,7 @@ class IpsUsuarioActor(sessionActor: ActorRef) extends Actor with ActorLogging {
         }
     }
   }
-
+  /*
   def agregarIpsUsuarioMessage(idUsuario: Int, ip: String, tipoCliente: TiposCliente) = {
     val currentSender = sender()
     val result = {
@@ -139,22 +140,6 @@ class IpsUsuarioActor(sessionActor: ActorRef) extends Actor with ActorLogging {
           case zFailure(error) => currentSender ! error
         }
     }
-  }
-
-  private def agregarIpSesionEmpresa(empresaId: Int, ip: String) =
-    sessionActor ? ObtenerEmpresaSesionActorId(empresaId) map {
-      case Some(empresaSesionActor: ActorRef) =>
-        empresaSesionActor ! AgregarIp(ip); zSuccess((): Unit)
-      case None => zSuccess((): Unit)
-      case _ => zFailure(PersistenceException(new Exception(), BusinessLevel, "Error"))
-    }
-
-  private def removerIpSesionEmpresa(empresaId: Int, ip: String) =
-    sessionActor ? ObtenerEmpresaSesionActorId(empresaId) map {
-      case Some(empresaSesionActor: ActorRef) =>
-        empresaSesionActor ! RemoverIp(ip); zSuccess((): Unit)
-      case None => zSuccess((): Unit)
-      case _ => zFailure(PersistenceException(new Exception(), BusinessLevel, "Error"))
-    }
+  }*/
 
 }

@@ -1,9 +1,6 @@
 package co.com.alianza.infrastructure.messages
 
-import co.com.alianza.commons.enumerations.TiposCliente._
-import co.com.alianza.infrastructure.dto.Pais
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
-import co.com.alianza.infrastructure.messages.AutenticacionMessagesJsonSupport._
 import spray.httpx.SprayJsonSupport
 import spray.json.DefaultJsonProtocol
 

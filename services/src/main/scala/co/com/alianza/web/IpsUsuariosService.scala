@@ -24,11 +24,11 @@ import scalaz.Validation
 case class IpsUsuariosService(kafkaActor: ActorSelection, ipsUsuarioActor: ActorSelection)(implicit val system: ActorSystem) extends Directives
     with AlianzaCommons with CrossHeaders {
 
-  import IpsUsuarioMessagesJsonSupport._
+  //  import IpsUsuarioMessagesJsonSupport._
   import system.dispatcher
 
   val ipsUsuarios = "ipsUsuarios"
-
+  /*
   def route(user: UsuarioAuth) = {
     path(ipsUsuarios) {
       if (user.tipoCliente.eq(TiposCliente.comercialSAC))
@@ -39,7 +39,7 @@ case class IpsUsuariosService(kafkaActor: ActorSelection, ipsUsuarioActor: Actor
             clientIP { ip =>
               mapRequestContext {
                 r: RequestContext =>
-                  val usuario = obtenerUsuario(r, user)
+                  val usuario: Future[Validation[PersistenceException, Option[AuditingUserData]]] = obtenerUsuario(r, user)
                   requestWithFutureAuditing[PersistenceException, Any](r, AuditingHelper.fiduciariaTopic, AuditingHelper.usuarioConsultarIpIndex,
                     ip.value, kafkaActor, usuario, None)
               } {
@@ -99,5 +99,5 @@ case class IpsUsuariosService(kafkaActor: ActorSelection, ipsUsuarioActor: Actor
       case TiposCliente.clienteAdministrador => DataAccessAdapterClienteAdmin.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(stringToken)
       case TiposCliente.agenteEmpresarial => DataAccessAdapterAgenteEmpresarial.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(stringToken)
     }
-  }
+  }*/
 }
