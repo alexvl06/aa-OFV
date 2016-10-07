@@ -11,8 +11,16 @@ trait PinAgenteInmobiliarioDAOs {
 
   /**
     * Inserta un pin generado a la tabla
+    *
     * @param pin Pin a insertar
     * @return Un futuro con el identificador del pin creado
     */
   def create(pin: PinAgenteInmobiliario): Future[Option[Int]]
+
+  /**
+    * Obtiene un pin generado para un agente inmobiliario dado su hash
+    *
+    * @param tokenHash Hash del pin a buscar
+    */
+  def get(tokenHash: String): Future[Option[PinAgenteInmobiliario]]
 }

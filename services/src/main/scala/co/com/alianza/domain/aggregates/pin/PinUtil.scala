@@ -4,22 +4,25 @@ import java.security.MessageDigest
 import java.util.Date
 
 import co.com.alianza.constants.TiposConfiguracion
-import co.com.alianza.domain.aggregates.usuarios.{ ErrorPersistence, ErrorPin, ErrorValidacion }
-import co.com.alianza.exceptions.{ BusinessLevel, PersistenceException }
-import co.com.alianza.infrastructure.anticorruption.configuraciones.{ DataAccessAdapter => dataAccesAdaptarConf, DataAccessTranslator => dataAccessTransConf }
-import co.com.alianza.infrastructure.dto.{ Configuracion, PinUsuario, PinUsuarioAgenteEmpresarial, PinUsuarioEmpresarialAdmin }
-import co.com.alianza.infrastructure.messages.{ ErrorMessage, ResponseMessage }
+import co.com.alianza.domain.aggregates.usuarios.{ErrorPersistence, ErrorPin, ErrorValidacion}
+import co.com.alianza.exceptions.{BusinessLevel, PersistenceException}
+import co.com.alianza.infrastructure.anticorruption.configuraciones.{DataAccessAdapter => dataAccesAdaptarConf, DataAccessTranslator => dataAccessTransConf}
+import co.com.alianza.infrastructure.dto.{Configuracion, PinUsuario, PinUsuarioAgenteEmpresarial, PinUsuarioEmpresarialAdmin}
+import co.com.alianza.infrastructure.messages.{ErrorMessage, ResponseMessage}
 import co.com.alianza.util.json.MarshallableImplicits._
 import spray.http.StatusCodes._
 
-import scala.util.{ Failure, Success }
-import scalaz.{ Failure => zFailure, Success => zSuccess }
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{Failure, Success}
+import scalaz.{Failure => zFailure, Success => zSuccess}
+import scala.concurrent.{ExecutionContext, Future}
 import scalaz.Validation
 import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
-import enumerations.{ EstadosEmpresaEnum, EstadosUsuarioEnum }
-import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => uDataAccessAdapter }
+import enumerations.{EstadosEmpresaEnum, EstadosPin, EstadosUsuarioEnum}
+import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => uDataAccessAdapter}
+import co.com.alianza.persistence.entities.PinAgenteInmobiliario
 import co.com.alianza.persistence.util.DataBaseExecutionContext
+import enumerations.EstadosPin.EstadoPin
+import org.joda.time.DateTime
 
 object PinUtil {
 
@@ -133,6 +136,33 @@ object PinUtil {
           else zFailure(ErrorPin(errorPinNoEncontradoAgenteEmpresarial))
         } else zFailure(ErrorPin(errorPinNoEncontradoAgenteEmpresarial))
       case None => zFailure(ErrorPin(errorPinNoEncontradoAgenteEmpresarial))
+    }
+  }
+
+  /**
+    * Verifica la validez de un pin generado para un agente empresaial
+    *
+    * @param pinOp Pin a validar
+    * @return Un Either [CodigoError, Booleano] que indica si el pin es válido o no
+    *
+    */
+  def validarPinAgenteInmobiliario(pinOp: Option[PinAgenteInmobiliario]): Either[EstadoPin, Boolean] = {
+    pinOp.map { pin =>
+      val hash: String = deserializarPin(pin.token, pin.fechaExpiracion.toDate)
+      if (hash == pin.tokenHash) {
+        if (DateTime.now().isBefore(pin.fechaExpiracion)) {
+          Right(true)
+        } else {
+          // el pin está caducado
+          Left(EstadosPin.PIN_CADUCADO)
+        }
+      } else {
+        // el hash del pin es diferente al hash calculado
+        Left(EstadosPin.PIN_INVALIDO)
+      }
+    }.getOrElse {
+      // no existe el pin
+      Left(EstadosPin.PIN_NO_EXISTE)
     }
   }
 

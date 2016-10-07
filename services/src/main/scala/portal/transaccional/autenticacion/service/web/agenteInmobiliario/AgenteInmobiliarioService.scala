@@ -1,7 +1,6 @@
 package portal.transaccional.autenticacion.service.web.agenteInmobiliario
 
 import co.com.alianza.app.CrossHeaders
-import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.persistence.entities.PermisoAgenteInmobiliario
 import co.com.alianza.util.json.HalPaginationUtils
@@ -41,7 +40,6 @@ case class AgenteInmobiliarioService(
   val fideicomisosPath: String = "fideicomisos"
   val permisosPath = "permisos"
   val proyectosPath: String = "proyectos"
-  val updateByProject = "updateByProject"
   val recursosPath = "recursos"
 
   val route: Route = {
