@@ -35,7 +35,7 @@ case class AutorizacionUsuarioEmpresarialDriverRepository(agenteRepo: UsuarioEmp
       sesion <- sesionRepo.obtenerSesion(token)
       agenteEstado <- alianzaDAO.getByTokenAgente(encriptedToken)
       _ <- validarEstadoEmpresa(agenteEstado._2)
-      ips <- obtenerIps(sesion)
+      ips <- sesionRepo.obtenerIps(sesion)
       validarIp <- validarIps(ips, ip)
       recursos <- alianzaDAO.getAgenteResources(agenteEstado._1.id)
       result <- resolveMessageRecursos(DataAccessTranslator.entityToDto(agenteEstado._1), recursos, url)
@@ -89,14 +89,6 @@ case class AutorizacionUsuarioEmpresarialDriverRepository(agenteRepo: UsuarioEmp
             val usuarioJson: String = JsonUtil.toJson(agenteDTO)
             Autorizado(usuarioJson)
         }
-    }
-  }
-
-  private def obtenerIps(sesion: ActorRef): Future[List[String]] = {
-    (sesion ? ObtenerEmpresaActor).flatMap {
-      case Some(empresaSesionActor: ActorRef) => (empresaSesionActor ? ObtenerIps).mapTo[List[String]]
-      case None => Future.failed(ValidacionException("401.21", "Error sesión"))
-      case _ => Future.failed(ValidacionException("401.21", "esta devolviendo otra cosa"))
     }
   }
 

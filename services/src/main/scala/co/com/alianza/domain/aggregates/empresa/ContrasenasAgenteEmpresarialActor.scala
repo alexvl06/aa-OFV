@@ -9,7 +9,6 @@ import co.com.alianza.domain.aggregates.usuarios.{ ErrorPersistence, ErrorValida
 import co.com.alianza.exceptions.{ AlianzaException, LevelException, PersistenceException }
 import co.com.alianza.infrastructure.anticorruption.ultimasContrasenasAgenteEmpresarial.{ DataAccessAdapter => dataAccessUltimasContrasenasAgente }
 import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{ DataAccessAdapter, DataAccessTranslator }
-import co.com.alianza.infrastructure.anticorruption.empresa.{ DataAccessAdapter => EmpresaDataAccessAdapter }
 import co.com.alianza.infrastructure.dto.{ Configuracion, PinEmpresa, UsuarioEmpresarial }
 import co.com.alianza.infrastructure.messages.{ ErrorMessage, ResponseMessage, UsuarioMessage }
 import co.com.alianza.infrastructure.messages.empresa._

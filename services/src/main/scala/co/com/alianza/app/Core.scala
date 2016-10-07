@@ -9,7 +9,6 @@ import co.com.alianza.domain.aggregates.autovalidacion.PreguntasAutovalidacionSu
 import co.com.alianza.domain.aggregates.confronta.ConfrontaActorSupervisor
 import co.com.alianza.domain.aggregates.contrasenas.ContrasenasActorSupervisor
 import co.com.alianza.domain.aggregates.empresa.{ AgenteEmpresarialActorSupervisor, ContrasenasAgenteEmpresarialActorSupervisor, ContrasenasClienteAdminActorSupervisor, HorarioEmpresaActorSupervisor }
-import co.com.alianza.domain.aggregates.ips.IpsUsuarioActorSupervisor
 import co.com.alianza.domain.aggregates.permisos.PermisoTransaccionalActorSupervisor
 import co.com.alianza.domain.aggregates.pin.PinActorSupervisor
 import co.com.alianza.domain.aggregates.usuarios.UsuariosActorSupervisor
@@ -96,10 +95,6 @@ trait CoreActors {
   val pinUsuarioAgenteEmpresarialActor = system.actorSelection(pinActorSupervisor.path + "/pinUsuarioAgenteEmpresarialActor")
 
   val sesionActorSupervisor = system.actorOf(Props[SesionActorSupervisor], "sesionActorSupervisor")
-  val autorizacionActorSupervisor = system.actorOf(AutorizacionActorSupervisor.props(sesionActorSupervisor), "autorizacionActorSupervisor")
-
-  val ipsUsuarioActorSupervisor = system.actorOf(IpsUsuarioActorSupervisor.props(sesionActorSupervisor), "ipsUsuarioActorSupervisor")
-  val ipsUsuarioActor = system.actorSelection(ipsUsuarioActorSupervisor.path)
 
   val agenteEmpresarialActorSupervisor = system.actorOf(Props[AgenteEmpresarialActorSupervisor], "agenteEmpresarialActorSupervisor")
   val agenteEmpresarialActor = system.actorSelection(agenteEmpresarialActorSupervisor.path)
@@ -160,7 +155,7 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val preguntasValidacionRepository: PreguntasAutovalidacionDriverRepository =
     PreguntasAutovalidacionDriverRepository(preguntasRepo, configuracionRepo, alianzaDAO)
 
-  lazy val ipRepo = IpDriverRepository(empresaAdminDAO, ipEmpresaDAO, ipUsuarioDAO)
+  lazy val ipRepo = IpDriverRepository(empresaAdminDAO, ipEmpresaDAO, ipUsuarioDAO, sesionRepo)
 
   lazy val rolRecursoComercialRepo = RolRecursoComercialDriverRepository(rolRecursoComercialDAO)
 

@@ -21,4 +21,10 @@ trait SesionRepository {
 
   def obtenerSesion(token: String): Future[ActorRef]
 
+  def agregarIpEmpresa(idEmpresa: Int, ip: String): Future[List[String]]
+
+  def eliminarIpEmpresa(idEmpresa: Int, ip: String): Future[List[String]]
+
+  def obtenerIps(sesion: ActorRef): Future[List[String]]
+
 }
