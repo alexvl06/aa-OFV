@@ -50,4 +50,23 @@ case class IpDriverRepository(empresaDAO: EmpresaAdminDAOs, ipEmpresaDAO: IpEmpr
     }
   }
 
+  /*
+  *
+  *  private def agregarIpSesionEmpresa(empresaId: Int, ip: String) =
+    sessionActor ? ObtenerEmpresaSesionActorId(empresaId) map {
+      case Some(empresaSesionActor: ActorRef) =>
+        empresaSesionActor ! AgregarIp(ip); zSuccess((): Unit)
+      case None => zSuccess((): Unit)
+      case _ => zFailure(PersistenceException(new Exception(), BusinessLevel, "Error"))
+    }
+
+  private def removerIpSesionEmpresa(empresaId: Int, ip: String) =
+    sessionActor ? ObtenerEmpresaSesionActorId(empresaId) map {
+      case Some(empresaSesionActor: ActorRef) =>
+        empresaSesionActor ! RemoverIp(ip); zSuccess((): Unit)
+      case None => zSuccess((): Unit)
+      case _ => zFailure(PersistenceException(new Exception(), BusinessLevel, "Error"))
+    }
+  * */
+
 }

@@ -39,13 +39,13 @@ case class AutorizacionActorSupervisor(sesionActorSupervisor: ActorRef) extends 
   )
 
   def receive: PartialFunction[Any, Unit] = {
-
+    /*
     case m: AutorizarUsuarioEmpresarialMessage =>
       autorizacionUsuarioEmpresarialActor forward m; log.info(m.toString)
 
     case m: AutorizarUsuarioEmpresarialAdminMessage =>
       autorizacionUsuarioEmpresarialActor forward m; log.info(m.toString)
-
+*/
     case message: Any => autorizacionActor forward message; log.info(message.toString)
 
   }
@@ -79,7 +79,7 @@ case class AutorizacionActor(sesionActorSupervisor: ActorRef) extends Actor with
 
   def receive = {
 
-    case message: AutorizarUrl =>
+    /*case message: AutorizarUrl =>
 
       val currentSender = sender()
       val future = (for {
@@ -88,7 +88,8 @@ case class AutorizacionActor(sesionActorSupervisor: ActorRef) extends Actor with
       } yield {
         resultAutorizar
       }).run
-      resolveFutureValidation(future, (x: ResponseMessage) => x, errorValidacion, currentSender)
+      resolveFutureValidation(future, (x: ResponseMessage) => x, errorValidacion, currentSender)*/
+    case _ => ""
 
   }
 

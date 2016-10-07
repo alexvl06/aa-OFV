@@ -47,27 +47,11 @@ trait AuditingHelper {
     requestParameters: Any): RequestContext = {
     ctx.withRouteResponseMapped {
       case response: HttpResponse =>
-
         val httpReq: HttpRequest = ctx.request
-
-        val auditingMsg: AuditRequest =
-          AuditRequest(
-            AudRequest(
-              httpReq.method.toString(),
-              httpReq.uri.toRelative.toString(),
-              requestParameters,
-              ip
-            ),
-            AudResponse(
-              response.status.intValue.toString,
-              response.status.reason,
-              response.entity.data.asString
-            ),
-            kafkaTopic,
-            elasticIndex,
-            httpReq.uri.toRelative.toString().split("/")(1)
-          )
-
+        val elasticDocumentType: String = httpReq.uri.toRelative.toString().split("/")(1)
+        val request: AudRequest = AudRequest(httpReq.method.toString(), httpReq.uri.toRelative.toString(), requestParameters, ip)
+        val responseAud: AudResponse = AudResponse(response.status.intValue.toString, response.status.reason, response.entity.data.asString)
+        val auditingMsg: AuditRequest = AuditRequest(request, responseAud, kafkaTopic, elasticIndex, elasticDocumentType)
         kafkaActor ! auditingMsg
         response
       case a => a

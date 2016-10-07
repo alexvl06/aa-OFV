@@ -33,7 +33,7 @@ class AutorizacionUsuarioEmpresarialActor() extends Actor with ActorLogging with
 
   def receive = {
 
-    case message: AutorizarUsuarioEmpresarialMessage =>
+    /*case message: AutorizarUsuarioEmpresarialMessage =>
       val currentSender = sender()
       val future = (for {
         token <- ValidationT(validarToken(message))
@@ -60,7 +60,8 @@ class AutorizacionUsuarioEmpresarialActor() extends Actor with ActorLogging with
         result
       }).run
 
-      resuelveAutorizacionClienteAdmin(future, currentSender)
+      resuelveAutorizacionClienteAdmin(future, currentSender)*/
+    case _ => ""
   }
 
   /**
@@ -70,7 +71,7 @@ class AutorizacionUsuarioEmpresarialActor() extends Actor with ActorLogging with
    *
    * @param message El token para realizar validación
    */
-  private def validarToken(message: AutorizarUsuarioEmpresarialMessage): Future[Validation[ErrorAutorizacion, Option[UsuarioEmpresarial]]] = {
+  /*  private def validarToken(message: AutorizarUsuarioEmpresarialMessage): Future[Validation[ErrorAutorizacion, Option[UsuarioEmpresarial]]] = {
     val decryptedToken = AesUtil.desencriptarToken(message.token)
     Token.autorizarToken(decryptedToken) match {
       case true =>
@@ -83,7 +84,7 @@ class AutorizacionUsuarioEmpresarialActor() extends Actor with ActorLogging with
       case false =>
         Future.successful(Validation.success(None))
     }
-  }
+  }*/
 
   /**
    * Realiza la validación del Token, llamando a [[Token.autorizarToken]]
@@ -207,14 +208,14 @@ class AutorizacionUsuarioEmpresarialActor() extends Actor with ActorLogging with
    * @param message El token
    * @return
    */
-  private def guardaTokenCache(usuarioOption: Option[UsuarioEmpresarial], message: AutorizarUsuarioEmpresarialMessage): Future[Option[UsuarioEmpresarial]] = {
+  /*  private def guardaTokenCache(usuarioOption: Option[UsuarioEmpresarial], message: AutorizarUsuarioEmpresarialMessage): Future[Option[UsuarioEmpresarial]] = {
 
     val validacionSesion: Future[Boolean] = ask(context.parent, ValidarSesion(message.token)).mapTo[Boolean]
     validacionSesion.map {
       case true => usuarioOption.map(usuario => usuario.copy(contrasena = None))
       case false => None
     }
-  }
+  }*/
 
   /**
    *

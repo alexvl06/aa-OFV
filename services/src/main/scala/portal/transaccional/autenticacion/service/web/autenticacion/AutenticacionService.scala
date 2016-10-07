@@ -2,7 +2,6 @@ package portal.transaccional.autenticacion.service.web.autenticacion
 
 import akka.actor.ActorSelection
 import co.com.alianza.app.CrossHeaders
-import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.exceptions.{ PersistenceException, ValidacionException }
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper.requestWithAuiditing
@@ -51,9 +50,10 @@ case class AutenticacionService(
       entity(as[AutenticarRequest]) {
         request =>
           clientIP { ip =>
-            val resultado = autenticacionRepositorio.autenticar(request.tipoIdentificacion, request.numeroIdentificacion, request.password, ip.value)
-            mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.autenticacionIndex,
-              ip.value, kafkaActor, request.copy(password = null))) {
+            val resultado = autenticacionRepositorio.autenticar(request.tipoIdentificacion, request.numeroIdentificacion,
+              request.password, ip.value)
+            mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic,
+              AuditingHelper.autenticacionIndex, ip.value, kafkaActor, request.copy(password = null))) {
               onComplete(resultado) {
                 case Success(token) => encriptarToken(token)
                 case Failure(ex) => execution(ex)
@@ -69,9 +69,10 @@ case class AutenticacionService(
       entity(as[AutenticarUsuarioEmpresarialRequest]) {
         request =>
           clientIP { ip =>
-            val resultado: Future[String] = autenticacionEmpresaRepositorio.autenticarUsuarioEmpresa(request.nit, request.usuario, request.password, ip.value)
-            mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.autenticacionIndex,
-              ip.value, kafkaActor, request.copy(password = null))) {
+            val resultado: Future[String] = autenticacionEmpresaRepositorio.autenticarUsuarioEmpresa(request.nit, request.usuario,
+              request.password, ip.value)
+            mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic,
+              AuditingHelper.autenticacionIndex, ip.value, kafkaActor, request.copy(password = null))) {
               onComplete(resultado) {
                 case Success(token) => encriptarToken(token)
                 case Failure(ex) => execution(ex)
@@ -87,7 +88,10 @@ case class AutenticacionService(
       entity(as[AutenticarUsuarioComercialRequest]) {
         request =>
           clientIP { ip =>
-            val resultado: Future[String] = autenticacionComercialRepositorio.autenticar(request.usuario.toLowerCase, request.tipoUsuario, request.contrasena, ip.value)
+            val resultado: Future[String] = autenticacionComercialRepositorio.autenticar(
+              request.usuario.toLowerCase,
+              request.tipoUsuario, request.contrasena, ip.value
+            )
             onComplete(resultado) {
               case Success(token) => encriptarToken(token)
               case Failure(ex) => execution(ex)

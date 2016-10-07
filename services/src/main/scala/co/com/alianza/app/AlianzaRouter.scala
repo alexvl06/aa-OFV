@@ -60,8 +60,8 @@ case class AlianzaRouter(
       new AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).insecureRoute ~
       authenticate(authenticateUser) {
         user =>
-          IpsUsuariosService(kafkaActor, ipsUsuarioActor).route(user) ~
-            IpService(user, ipRepo).route ~
+          //IpsUsuariosService(kafkaActor, ipsUsuarioActor).route(user) ~
+          IpService(user, kafkaActor, ipRepo).route ~
             SesionService().route ~
             RecursoGraficoComercialService(recursoComercialRepository, rolComercialRepository).route ~
             AutorizacionRecursoComercialService(autorizacionRecursoComercialRepository).route ~
