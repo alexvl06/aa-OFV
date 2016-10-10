@@ -43,6 +43,7 @@ case class LdapDriverRepository(alianzaLdapDAO: AlianzaLdapDAOs)(implicit val ex
       Future.successful(contextTry.get)
     } else {
       //TODO: Encontrar una mejor manera de manejar las excepciones
+      println(contextTry.failed)
       Future.failed(new ValidacionException("401.1", "Credenciales invalidas"))
     }
   }
