@@ -1,30 +1,11 @@
 package co.com.alianza.domain.aggregates.actualizacion
 
-import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, OneForOneStrategy, Props }
 import akka.actor.SupervisorStrategy._
-import akka.routing.RoundRobinPool
-import akka.pattern._
-import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.infrastructure.anticorruption.actualizacion.DataAccessAdapter
+import akka.actor.{ Actor, ActorLogging, OneForOneStrategy, Props }
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => UsDataAdapter }
-import co.com.alianza.infrastructure.dto.security.UsuarioAuth
-import co.com.alianza.infrastructure.messages.ActualizacionMessagesJsonSupport._
-import co.com.alianza.infrastructure.messages._
-import co.com.alianza.infrastructure.dto.{ DatosCliente, Usuario }
-import co.com.alianza.persistence.messages.{ ActualizacionRequest, DatosEmpresaRequest }
-import co.com.alianza.util.transformers.ValidationT
-
-import co.com.alianza.exceptions.BusinessLevel
 import com.typesafe.config.Config
-import enumerations.TiposIdentificacionCore
-import org.joda.time.DateTime
-import spray.http.StatusCodes._
 
-import scala.util.{ Failure, Success }
-import scala.concurrent.Future
-import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
-import scalaz.std.AllInstances._
+import scalaz.{ Failure => zFailure, Success => zSuccess }
 
 class ActualizacionActorSupervisor extends Actor with ActorLogging {
 
@@ -45,24 +26,32 @@ class ActualizacionActorSupervisor extends Actor with ActorLogging {
 
 class ActualizacionActor extends Actor with ActorLogging {
 
-  import co.com.alianza.util.json.MarshallableImplicits._
-
-  import context.dispatcher
-
   implicit val conf: Config = context.system.settings.config
 
   def receive = {
-    case message: ObtenerPaises => obtenerPaises()
-    case message: ObtenerTiposCorreo => obtenerTiposCorreo()
-    case message: ObtenerOcupaciones => obtenerOcupaciones()
-    case message: ObtenerDatos => obtenerDatos(message.user)
-    case message: ComprobarDatos => comprobarDatos(message.user)
-    case message: ObtenerCiudades => obtenerCiudades(message.pais)
-    case message: ObtenerEnvioCorrespondencia => obtenerEnviosCorrespondencia()
-    case message: ObtenerActividadesEconomicas => obtenerActividadesEconomicas()
-    case message: ActualizacionMessage => actualizarDatos(message)
-  }
 
+    case _ => ""
+    /*
+    case message: ObtenerPaises => obtenerPaises()
+
+    case message: ObtenerTiposCorreo => obtenerTiposCorreo()
+
+    case message: ObtenerOcupaciones => obtenerOcupaciones()
+
+    case message: ObtenerDatos => obtenerDatos(message.user)
+
+    case message: ComprobarDatos => comprobarDatos(message.user)
+
+    case message: ObtenerCiudades => obtenerCiudades(message.pais)
+
+    case message: ObtenerEnvioCorrespondencia => obtenerEnviosCorrespondencia()
+
+    case message: ObtenerActividadesEconomicas => obtenerActividadesEconomicas()
+
+    case message: ActualizacionMessage => actualizarDatos(message)*/
+
+  }
+  /*
   def obtenerPaises() = {
     val currentSender = sender()
     val futuro = DataAccessAdapter.consultaPaises
@@ -129,9 +118,7 @@ class ActualizacionActor extends Actor with ActorLogging {
               case None => currentSender ! ResponseMessage(Gone, "")
               case Some(datos: DatosCliente) => {
                 val fechaString =
-                  if (datos.fdpn_fecha_ult_act == null
-                    || datos.fdpn_fecha_ult_act.isEmpty)
-                    "1990-01-01 00:00:00"
+                  if (datos.fdpn_fecha_ult_act == null || datos.fdpn_fecha_ult_act.isEmpty) "1990-01-01 00:00:00"
                   else datos.fdpn_fecha_ult_act
                 //Obtener fecha actualizacion
                 val format = new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss")
@@ -200,6 +187,6 @@ class ActualizacionActor extends Actor with ActorLogging {
       actualizacion.fdpn_pais_residencia, actualizacion.fdpn_drcl_dire_res, actualizacion.fdpn_drcl_dire_ofi, actualizacion.fdpn_drcl_ciud_res,
       actualizacion.fdpn_drcl_tele_res, actualizacion.fdpn_dcfd_email, actualizacion.fdpn_dcfd_email_ant, actualizacion.fdpn_dcfd_tipo, actualizacion.fdpn_dcfd_tipo_ant,
       actualizacion.fdpn_envio_corresp, actualizacion.fdpn_telefono_movil_1, actualizacion.fdpn_pais_tel_mov_1, datosEmpRequest)
-  }
+  }*/
 
 }

@@ -46,7 +46,6 @@ trait AlianzaStorageHelper {
           val records = buildJsFromResult(r)
           r.close()
           records
-
         case r: String => r
         case r: java.lang.Long => r.toString
         case _ => result

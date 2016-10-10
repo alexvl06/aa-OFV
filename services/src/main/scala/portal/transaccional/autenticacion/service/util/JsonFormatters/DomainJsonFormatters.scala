@@ -2,9 +2,12 @@ package portal.transaccional.autenticacion.service.util.JsonFormatters
 
 import co.com.alianza.exceptions.{ NoAutorizado, ValidacionException }
 import co.com.alianza.infrastructure.dto.{ Pregunta, Respuesta }
+import co.com.alianza.infrastructure.messages.ActualizacionMessagesJsonSupport._
+import co.com.alianza.infrastructure.messages.DatosEmpresaMessage
 import co.com.alianza.persistence.entities.{ ReglaContrasena, Empresa, RecursoComercial, RolComercial }
 import portal.transaccional.autenticacion.service.dto.{ PermisoRecursoDTO, RecursoDTO }
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
+import portal.transaccional.autenticacion.service.web.actualizacion.{ ActualizacionMessage, DatosEmpresaMessage }
 import portal.transaccional.autenticacion.service.web.autenticacion.{ AutenticarRequest, AutenticarUsuarioComercialRequest, AutenticarUsuarioEmpresarialRequest }
 import portal.transaccional.autenticacion.service.web.autorizacion.InvalidarTokenRequest
 import portal.transaccional.autenticacion.service.web.comercial.{ ActualizarContrasenaRequest, CrearAdministradorRequest, ValidarEmpresaRequest }
@@ -22,6 +25,10 @@ trait DomainJsonFormatters {
 
   //autorizacion
   implicit val invalidarTokenFormatter = jsonFormat1(InvalidarTokenRequest)
+
+  //actualizacion
+  implicit val datosEmpresaMessageFormat = jsonFormat17(DatosEmpresaMessage)
+  implicit val actualizacionMessageFormat = jsonFormat22(ActualizacionMessage)
 
   //validacion
   implicit val validacionExceptionFormatter = jsonFormat2(ValidacionException)

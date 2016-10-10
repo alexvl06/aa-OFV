@@ -20,7 +20,8 @@ import scala.util.{ Failure, Success }
 /**
  * Created by s4n on 2016
  */
-case class IpService(user: UsuarioAuth, kafkaActor: ActorSelection, ipRepo: IpRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
+case class IpService(user: UsuarioAuth, kafkaActor: ActorSelection, ipRepo: IpRepository)(implicit val ec: ExecutionContext)
+    extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   val ipsUsuarios = "ipsUsuarios"
   val ponerIpHabitual = "ponerIpHabitual"

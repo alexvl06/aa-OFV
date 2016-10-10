@@ -13,7 +13,8 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * Created by s4n on 2016
  */
-case class IpDriverRepository(empresaDAO: EmpresaAdminDAOs, ipEmpresaDAO: IpEmpresaDAOs, ipDAO: IpUsuarioDAOs, sesionRepo: SesionRepository)(implicit val ex: ExecutionContext) extends IpRepository {
+case class IpDriverRepository(empresaDAO: EmpresaAdminDAOs, ipEmpresaDAO: IpEmpresaDAOs,
+    ipDAO: IpUsuarioDAOs, sesionRepo: SesionRepository)(implicit val ex: ExecutionContext) extends IpRepository {
 
   def obtenerIps(usuario: UsuarioAuth): Future[Seq[IpResponse]] = {
     usuario.tipoCliente match {

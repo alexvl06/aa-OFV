@@ -64,4 +64,5 @@ case class AutorizacionRecursoComercialService(autorizacionRepository: Autorizac
       case ex: Throwable => ex.printStackTrace(); complete((StatusCodes.InternalServerError, "Error inesperado"))
     }
   }
+
 }

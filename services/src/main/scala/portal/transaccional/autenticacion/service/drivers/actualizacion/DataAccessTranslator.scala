@@ -1,7 +1,7 @@
-package co.com.alianza.infrastructure.anticorruption.actualizacion
+package portal.transaccional.autenticacion.service.drivers.actualizacion
 
 import co.com.alianza.util.json.MarshallableImplicits._
-import co.com.alianza.infrastructure.dto._
+import portal.transaccional.autenticacion.service.web.actualizacion._
 
 /**
  *
