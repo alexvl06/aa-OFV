@@ -23,6 +23,7 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
   val recursosPerfilesAdmin = TableQuery[RecursoPerfilClienteAdminTable]
   val preguntasTable = TableQuery[PreguntasAutovalidacionTable]
   val respuestasUsuarioTable = TableQuery[RespuestasAutovalidacionUsuarioTable]
+  val respuestasClienteAdministradorTable = TableQuery[RespuestasAutovalidacionUsuarioAdministradorTable]
 
   import dcConfig.DB._
   import dcConfig.driver.api._
@@ -165,5 +166,17 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
       if respuesta.idUsuario === idUsuario
     } yield (pregunta, respuesta)
     run(query.result)
+  }
+
+  def getAdministratorClientQuestions(idUsuario: Int): Future[Seq[(PreguntaAutovalidacion, RespuestasAutovalidacionUsuario)]] = {
+    val query = for {
+      (pregunta, respuesta) <- preguntasTable join respuestasClienteAdministradorTable on (_.id === _.idPregunta)
+      if respuesta.idUsuario === idUsuario
+    } yield (pregunta, respuesta)
+    run(query.result)
+  }
+
+  def deleteIndividualClientAnswers(idUsuario: Int): Future[Int] = {
+    run(respuestasUsuarioTable.filter(x => x.idUsuario === idUsuario).delete)
   }
 }

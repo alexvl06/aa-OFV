@@ -24,4 +24,8 @@ trait AlianzaDAOs {
 
   def getIndividualClientQuestions(idUsuario: Int): Future[Seq[(PreguntaAutovalidacion, RespuestasAutovalidacionUsuario)]]
 
+  def getAdministratorClientQuestions(idUsuario: Int): Future[Seq[(PreguntaAutovalidacion, RespuestasAutovalidacionUsuario)]]
+
+  def deleteIndividualClientAnswers(idUsuario: Int): Future[Int]
+
 }

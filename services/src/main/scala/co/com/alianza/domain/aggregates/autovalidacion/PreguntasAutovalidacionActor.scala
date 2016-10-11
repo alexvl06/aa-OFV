@@ -202,6 +202,7 @@ case class PreguntasAutovalidacionActor() extends Actor with ActorLogging with F
         //5. con los ids, obtener las preguntas a devolver
         val preguntas: List[Pregunta] = response.filter(res => (idsPreguntas).contains(res.idPregunta)).map(x => Pregunta(x.idPregunta, x.pregunta))
         //6. reenviar preguntas desordenadamente
+        val prueba = Random.shuffle(preguntas).take(preguntas.size)
         zFailure(ErrorAutovalidacion(JsonUtil.toJson(Random.shuffle(preguntas).take(preguntas.size))))
       }
     }

@@ -75,7 +75,8 @@ case class AlianzaRouter(
             PermisosTransaccionalesService(kafkaActor, permisoTransaccionalActor).route(user) ~
             // TODO: Servicio Nuevo de PreguntasAutovalidacionService by: Jonathan
             /*portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.PreguntasAutovalidacionService(
-              user, preguntasValidacionRepository, respuestaUsuarioRepository, respuestaUsuarioAdminRepository).route*/
+              user, preguntasValidacionRepository, respuestaUsuarioRepository, respuestaUsuarioAdminRepository
+            ).route*/
             PreguntasAutovalidacionService(kafkaActor, preguntasAutovalidacionActor).route(user)
       }
 

@@ -2,8 +2,12 @@ package portal.transaccional.autenticacion.service.web.preguntasAutovalidacion
 
 import co.com.alianza.app.CrossHeaders
 import co.com.alianza.commons.enumerations.TiposCliente
+import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.exceptions._
+import co.com.alianza.infrastructure.auditing.AuditingHelper
+import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
+import co.com.alianza.infrastructure.messages.BloquearRespuestasMessage
 import portal.transaccional.autenticacion.service.drivers.pregunta.PreguntasAutovalidacionRepository
 import portal.transaccional.autenticacion.service.drivers.respuesta.RespuestaUsuarioRepository
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
@@ -17,9 +21,13 @@ import scala.util.{ Failure, Success }
 /**
  * Created by s4n on 3/08/16.
  */
-case class PreguntasAutovalidacionService(user: UsuarioAuth, preguntasAutoValidacionRepository: PreguntasAutovalidacionRepository,
-    respuestaUsuarioRepository: RespuestaUsuarioRepository,
-    respuestaUsuarioAdminRepository: RespuestaUsuarioRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
+case class PreguntasAutovalidacionService(
+  user: UsuarioAuth,
+  preguntasAutoValidacionRepository: PreguntasAutovalidacionRepository,
+  respuestaUsuarioRepository: RespuestaUsuarioRepository,
+  respuestaUsuarioAdminRepository: RespuestaUsuarioRepository
+)(implicit val ec: ExecutionContext)
+    extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   val preguntasAutovalidacionPath = "preguntasAutovalidacion"
   val comprobarPath = "comprobar"
@@ -79,12 +87,21 @@ case class PreguntasAutovalidacionService(user: UsuarioAuth, preguntasAutoValida
           clientIP {
             ip =>
               // TODO: AUDITORIA by:Jonathan
-              val resultado: Future[Unit] =
-                preguntasAutoValidacionRepository.validarRespuestas(user.id, user.tipoCliente, request.respuestas, request.numeroIntentos)
+              val resultado: Future[String] = preguntasAutoValidacionRepository.validarRespuestas(user.id, user.tipoCliente, request.respuestas, request.numeroIntentos)
               onComplete(resultado) {
-                case Success(value) => complete(value.toString)
+                case Success(value) => complete(value)
                 case Failure(ex) => execution(ex)
               }
+          }
+      }
+    } ~ delete {
+      clientIP {
+        ip =>
+          // TODO: AUDITORIA by:Jonathan
+          val resultado: Future[Int] = preguntasAutoValidacionRepository.bloquearRespuestas(user.id: Int, user.tipoCliente: TiposCliente)
+          onComplete(resultado) {
+            case Success(value) => complete(value.toString)
+            case Failure(ex) => execution(ex)
           }
       }
     }
@@ -92,7 +109,7 @@ case class PreguntasAutovalidacionService(user: UsuarioAuth, preguntasAutoValida
 
   def execution(ex: Any): StandardRoute = {
     ex match {
-      case ex: ValidacionException => complete((StatusCodes.Conflict, ex))
+      case ex: ValidacionException => complete((StatusCodes.Conflict, ex.data))
       case ex: PersistenceException =>
         ex.printStackTrace(); complete((StatusCodes.InternalServerError, "Error inesperado"))
       case ex: Throwable => ex.printStackTrace(); complete((StatusCodes.InternalServerError, "Error inesperado"))
