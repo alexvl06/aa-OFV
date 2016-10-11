@@ -1,6 +1,5 @@
 package portal.transaccional.fiduciaria.autenticacion.storage.daos.portal
 
-import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
 import co.com.alianza.persistence.entities.EmpresaUsuarioAdminTable
 import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
 import slick.lifted.TableQuery

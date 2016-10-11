@@ -8,7 +8,7 @@ import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import portal.transaccional.autenticacion.service.web.autenticacion.{ AutenticarRequest, AutenticarUsuarioComercialRequest, AutenticarUsuarioEmpresarialRequest }
 import portal.transaccional.autenticacion.service.web.autorizacion.InvalidarTokenRequest
 import portal.transaccional.autenticacion.service.web.comercial.{ ActualizarContrasenaRequest, CrearAdministradorRequest, ValidarEmpresaRequest }
-import portal.transaccional.autenticacion.service.web.ip.AgregarIpRequest
+import portal.transaccional.autenticacion.service.web.ip.{ IpResponse, IpRequest }
 import portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.{ GuardarRespuestasRequest, ResponseObtenerPreguntas, ResponseObtenerPreguntasComprobar, RespuestasComprobacionRequest }
 
 trait DomainJsonFormatters {
@@ -38,7 +38,8 @@ trait DomainJsonFormatters {
   implicit val respuestasComprobacionRequest = jsonFormat2(RespuestasComprobacionRequest)
 
   //ip
-  implicit val ipFormatter = jsonFormat2(AgregarIpRequest)
+  implicit val ipRequestFormatter = jsonFormat1(IpRequest)
+  implicit val ipResponseFormatter = jsonFormat1(IpResponse)
 
   //recurso graficos comercial
   implicit val rolesFormater = jsonFormat2(RolComercial)

@@ -13,10 +13,10 @@ object Boot extends App with HostBinding with Core with BootedCore with CoreActo
     Props(AlianzaRouter(autenticacionRepo, autenticacionEmpresaRepo, autenticacionComercialRepo,
       usuarioRepo, usuarioAgenteRepo, usuarioAdminRepo, autorizacionUsuarioRepo, kafkaActor, preguntasAutovalidacionActor, usuariosActor,
       confrontaActor, actualizacionActor, permisoTransaccionalActor, agenteEmpresarialActor, pinActor, pinUsuarioEmpresarialAdminActor,
-      pinUsuarioAgenteEmpresarialActor, ipsUsuarioActor, horarioEmpresaActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor,
-      contrasenasActor, autorizacionActorSupervisor, autorizacionAgenteRepo, autorizacionAdminRepo, preguntasValidacionRepository,
-      respuestaUsuarioRepo, respuestaUsuariAdminoRepo, ipRepo, autorizacionComercialRepo, autorizacionComercialAdminRepo,
-      autorizacionRecursoComercialRepository, recursoComercialRepository, rolComercialRepository, usuarioComercialAdminRepo, reglaContrasenaRepo)),
+      pinUsuarioAgenteEmpresarialActor, horarioEmpresaActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor,
+      contrasenasActor, autorizacionAgenteRepo, autorizacionAdminRepo, preguntasValidacionRepository, respuestaUsuarioRepo,
+      respuestaUsuariAdminoRepo, ipRepo, autorizacionComercialRepo, autorizacionComercialAdminRepo, autorizacionRecursoComercialRepository,
+      recursoComercialRepository, rolComercialRepository, usuarioComercialAdminRepo, reglaContrasenaRepo)),
     name = "api-AlianzaRouter"
   )
 

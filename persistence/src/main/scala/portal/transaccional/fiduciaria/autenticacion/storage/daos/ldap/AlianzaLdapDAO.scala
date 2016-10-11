@@ -48,7 +48,7 @@ case class AlianzaLdapDAO() extends AlianzaLdapDAOs {
     // SEARCH FILTER
     val filter: String = s"(&(&(objectClass=person)(objectCategory=user))(sAMAccountName=$user))"
     // QUERY
-    val searchContext: String = if (tipoCliente == TiposCliente.comercialValores.id) "DC=alianzavaloresint,DC=com" else "DC=Alianza,DC=com,DC=co"
+    val searchContext: String = if (tipoCliente.id == TiposCliente.comercialValores.id) "DC=alianzavaloresint,DC=com" else "DC=Alianza,DC=com,DC=co"
     //En caso que sea necesario obtener mas datos, es necesario agregarlo en el metodo 'getSearchControls'
     val search: NamingEnumeration[SearchResult] = ctx.search(searchContext, filter, getSearchControls)
     // USER INSTANCE

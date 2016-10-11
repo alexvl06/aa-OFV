@@ -1,5 +1,8 @@
 package portal.transaccional.autenticacion.service.drivers.ip
 
+import co.com.alianza.infrastructure.dto.security.UsuarioAuth
+import portal.transaccional.autenticacion.service.web.ip.IpResponse
+
 import scala.concurrent.Future
 
 /**
@@ -7,8 +10,10 @@ import scala.concurrent.Future
  */
 trait IpRepository {
 
-  def agregarIpHabitualUsuario(idUsuario: String, clientIp: String): Future[String]
+  def obtenerIps(usuario: UsuarioAuth): Future[Seq[IpResponse]]
 
-  def agregarIPHabitualUsuarioEmpresarialAdmin(idUsuario: Int, clientIp: String, tipoIdentificacion: Option[Int]): Future[String]
+  def agregarIp(usuario: UsuarioAuth, ip: String): Future[String]
+
+  def eliminarIp(usuario: UsuarioAuth, ip: String): Future[Int]
 
 }

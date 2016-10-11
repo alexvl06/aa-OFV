@@ -1,14 +1,12 @@
 package co.com.alianza.domain.aggregates.autenticacion
 
-import java.sql.{ Time, Timestamp }
-import java.util.{ Calendar, Date }
+import java.sql.Time
+import java.util.Calendar
 import akka.actor.{ Actor, ActorLogging }
 import akka.util.Timeout
 
 import co.com.alianza.domain.aggregates.autenticacion.errores._
-import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => UsDataAdapter }
-import co.com.alianza.infrastructure.anticorruption.empresa.{ DataAccessTranslator => EmpDataAccessTranslator }
 import co.com.alianza.infrastructure.dto._
 import enumerations.empresa.EstadosDeEmpresaEnum
 import scala.concurrent.Future
