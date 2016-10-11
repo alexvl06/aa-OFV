@@ -20,7 +20,7 @@ case class UsuarioInmobiliarioPinDriverRepository(pinDao: PinAgenteInmobiliarioD
     pinDao.create(pinAgente)
   }
 
-  override def validarPinAgente(hash: String)(implicit ex: ExecutionContext): Future[Either[EstadoPin, Boolean]] = {
+  override def validarPinAgente(hash: String)(implicit ex: ExecutionContext): Future[Either[EstadoPin, PinAgenteInmobiliario]] = {
     pinDao.get(hash).map(pin => PinUtil.validarPinAgenteInmobiliario(pin))
   }
 

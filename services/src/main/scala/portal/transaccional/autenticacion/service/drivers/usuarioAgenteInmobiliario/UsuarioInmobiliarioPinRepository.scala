@@ -26,9 +26,9 @@ trait UsuarioInmobiliarioPinRepository {
     *
     * @param hash Hash del pin a validar
     * @param ex   Contexto de ejecución del llamado
-    * @return Un either con la validación del pin
+    * @return Un either con el pin valido
     */
-  def validarPinAgente(hash: String)(implicit ex: ExecutionContext): Future[Either[EstadoPin, Boolean]]
+  def validarPinAgente(hash: String)(implicit ex: ExecutionContext): Future[Either[EstadoPin, PinAgenteInmobiliario]]
 
   /**
     * Genera el pin de un agente inmobiliario

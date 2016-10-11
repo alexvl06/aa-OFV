@@ -146,12 +146,12 @@ object PinUtil {
     * @return Un Either [CodigoError, Booleano] que indica si el pin es válido o no
     *
     */
-  def validarPinAgenteInmobiliario(pinOp: Option[PinAgenteInmobiliario]): Either[EstadoPin, Boolean] = {
+  def validarPinAgenteInmobiliario(pinOp: Option[PinAgenteInmobiliario]): Either[EstadoPin, PinAgenteInmobiliario] = {
     pinOp.map { pin =>
       val hash: String = deserializarPin(pin.token, pin.fechaExpiracion.toDate)
       if (hash == pin.tokenHash) {
         if (DateTime.now().isBefore(pin.fechaExpiracion)) {
-          Right(true)
+          Right(pin)
         } else {
           // el pin está caducado
           Left(EstadosPin.PIN_CADUCADO)

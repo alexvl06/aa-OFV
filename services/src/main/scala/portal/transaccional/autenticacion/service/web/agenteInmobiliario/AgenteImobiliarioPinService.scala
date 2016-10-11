@@ -34,7 +34,7 @@ case class AgenteImobiliarioPinService(pinRepo: UsuarioInmobiliarioPinRepository
 
   private def validatePinAgente(pin: String): Route = {
     get {
-      val validacionF: Future[Either[EstadoPin, Boolean]] = pinRepo.validarPinAgente(pin)
+      val validacionF: Future[Either[EstadoPin, _]] = pinRepo.validarPinAgente(pin)
       onComplete(validacionF) {
         case Success(validacion) => validacion match {
           case Right(_) => complete(StatusCodes.OK)
