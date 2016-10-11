@@ -19,7 +19,9 @@ import scala.util.{ Failure, Success }
 /**
  * Created by hernando on 10/10/16.
  */
-case class ActualizacionService(user: UsuarioAuth, kafkaActor: ActorSelection, actualizacionRepo: ActualizacionRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
+case class ActualizacionService(user: UsuarioAuth, kafkaActor: ActorSelection,
+  actualizacionRepo: ActualizacionRepository)(implicit val ec: ExecutionContext)
+    extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   val datos = "datos"
   val paises = "paises"
@@ -34,7 +36,9 @@ case class ActualizacionService(user: UsuarioAuth, kafkaActor: ActorSelection, a
   def route = {
     pathPrefix(actualizacion) {
       get {
-        obtenerDatos
+        obtenerPaises ~ obtenerCiudades ~ obtenerTiposCorreo ~
+          obtenerEnvioCorrespondencia ~ obtenerOcupaciones ~
+          obtenerActividades ~ obtenerDatos ~ comprobarDatos
       } ~ put {
         actualizar
       }
@@ -62,58 +66,122 @@ case class ActualizacionService(user: UsuarioAuth, kafkaActor: ActorSelection, a
     }
   }
 
-  def obtenerDatos = {
+  def obtenerPaises = {
     pathPrefix(paises) {
-      val result: Future[Seq[Pais]] = actualizacionRepo.obtenerPaises()
-      execution(result)
-    } ~
-      pathPrefix(ciudades / IntNumber) {
-        (pais: Int) =>
-          val result: Future[Seq[Ciudad]] = actualizacionRepo.obtenerCiudades()
-          execution(result)
-      } ~
-      pathPrefix(tiposCorreo) {
-        val result: Future[Seq[TipoCorreo]] = actualizacionRepo.obtenerTiposCorreo()
-        execution(result)
-      } ~
-      pathPrefix(envioCorrespondencia) {
-        val result: Future[Seq[EnvioCorrespondencia]] = actualizacionRepo.obtenerEnviosCorrespondencia()
-        execution(result)
-      } ~
-      pathPrefix(ocupaciones) {
-        val result: Future[Seq[Ocupacion]] = actualizacionRepo.obtenerOcupaciones()
-        execution(result)
-      } ~
-      pathPrefix(actividadesEconomicas) {
-        val result: Future[Seq[ActividadEconomica]] = actualizacionRepo.obtenerActividadesEconomicas()
-        execution(result)
-      } ~
-      pathPrefix(datos) {
-        val result: Future[DatosCliente] = actualizacionRepo.obtenerDatos()
-        execution(result)
-      } ~
-      pathPrefix(comprobar) {
-        val result: Future[Boolean] = actualizacionRepo.comprobarDatos()
-        execution(result)
+      pathEndOrSingleSlash {
+        val result: Future[Seq[Pais]] = actualizacionRepo.obtenerPaises()
+        onComplete(result) {
+          case Success(value) => execution(value)
+          case Failure(ex) => execution(ex)
+        }
       }
+    }
   }
 
-  def execution(ex: Any): StandardRoute = {
+  def obtenerCiudades = {
+    pathPrefix(ciudades / IntNumber) {
+      (pais: Int) =>
+        pathEndOrSingleSlash {
+          val result: Future[Seq[Ciudad]] = actualizacionRepo.obtenerCiudades(pais)
+          onComplete(result) {
+            case Success(value) => execution(value)
+            case Failure(ex) => execution(ex)
+          }
+        }
+    }
+  }
+
+  def obtenerTiposCorreo = {
+    pathPrefix(tiposCorreo) {
+      pathEndOrSingleSlash {
+        val result: Future[Seq[TipoCorreo]] = actualizacionRepo.obtenerTiposCorreo()
+        onComplete(result) {
+          case Success(value) => execution(value)
+          case Failure(ex) => execution(ex)
+        }
+      }
+    }
+  }
+
+  def obtenerEnvioCorrespondencia = {
+    pathPrefix(envioCorrespondencia) {
+      pathEndOrSingleSlash {
+        val result: Future[Seq[EnvioCorrespondencia]] = actualizacionRepo.obtenerEnviosCorrespondencia()
+        onComplete(result) {
+          case Success(value) => execution(value)
+          case Failure(ex) => execution(ex)
+        }
+      }
+    }
+  }
+
+  def obtenerOcupaciones = {
+    pathPrefix(ocupaciones) {
+      pathEndOrSingleSlash {
+        val result: Future[Seq[Ocupacion]] = actualizacionRepo.obtenerOcupaciones()
+        onComplete(result) {
+          case Success(value) => execution(value)
+          case Failure(ex) => execution(ex)
+        }
+      }
+    }
+  }
+
+  def obtenerActividades = {
+    pathPrefix(actividadesEconomicas) {
+      pathEndOrSingleSlash {
+        val result: Future[Seq[ActividadEconomica]] = actualizacionRepo.obtenerActividadesEconomicas()
+        onComplete(result) {
+          case Success(value) => execution(value)
+          case Failure(ex) => execution(ex)
+        }
+      }
+    }
+  }
+
+  def comprobarDatos = {
+    pathPrefix(comprobar) {
+      pathEndOrSingleSlash {
+        val result: Future[Boolean] = actualizacionRepo.comprobarDatos()
+        onComplete(result) {
+          case Success(value) => execution(value)
+          case Failure(ex) => execution(ex)
+        }
+      }
+    }
+  }
+
+  def obtenerDatos = {
+    pathPrefix(datos) {
+      pathEndOrSingleSlash {
+        val result: Future[DatosCliente] = actualizacionRepo.obtenerDatos(user)
+        onComplete(result) {
+          case Success(value) => execution(value)
+          case Failure(ex) => execution(ex)
+        }
+      }
+    }
+  }
+
+  private def execution(ex: Any): StandardRoute = {
     ex match {
+      case value: Seq[Pais] => complete((StatusCodes.OK, value))
+      case value: Seq[Ciudad] => complete((StatusCodes.OK, value))
+      case value: Seq[TipoCorreo] => complete((StatusCodes.OK, value))
+      case value: Seq[EnvioCorrespondencia] => complete((StatusCodes.OK, value))
+      case value: Seq[Ocupacion] => complete((StatusCodes.OK, value))
+      case value: Seq[ActividadEconomica] => complete((StatusCodes.OK, value))
+      case value: DatosCliente =>
+        println("datos clientes"); complete((StatusCodes.OK, value))
       //TODO: AGREGAR MARSHABLE
-      case value: Seq[Pais] => complete((StatusCodes.OK, value.toString()))
-      case value: Seq[Ciudad] => complete((StatusCodes.OK, value.toString()))
-      case value: Seq[TipoCorreo] => complete((StatusCodes.OK, value.toString()))
-      case value: Seq[EnvioCorrespondencia] => complete((StatusCodes.OK, value.toString()))
-      case value: Seq[Ocupacion] => complete((StatusCodes.OK, value.toString()))
-      case value: Seq[ActividadEconomica] => complete((StatusCodes.OK, value.toString()))
-      case value: DatosCliente => complete((StatusCodes.OK, value.toString()))
       case value: Boolean if (value) => complete((StatusCodes.OK, value.toString()))
       case value: Boolean if (!value) => complete((StatusCodes.OK, value.toString()))
 
-      case ex: ValidacionException => complete((StatusCodes.Conflict, ex))
-      case ex: Throwable => complete((StatusCodes.InternalServerError, "Error inesperado"))
-      case _ => complete((StatusCodes.InternalServerError, "Error inesperado"))
+      case ex: ValidacionException =>
+        ex.printStackTrace(); complete((StatusCodes.Conflict, ex))
+      case ex: Throwable =>
+        ex.printStackTrace(); complete((StatusCodes.InternalServerError, "Error inesperado"))
+      case any: Any => println(); complete((StatusCodes.InternalServerError, "Error inesperado"))
     }
   }
 

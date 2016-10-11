@@ -1,5 +1,6 @@
 package portal.transaccional.autenticacion.service.drivers.actualizacion
 
+import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import portal.transaccional.autenticacion.service.web.actualizacion._
 
 import scala.concurrent.Future
@@ -15,11 +16,11 @@ trait ActualizacionRepository {
 
   def obtenerOcupaciones(): Future[Seq[Ocupacion]]
 
-  def obtenerDatos(): Future[DatosCliente]
+  def obtenerDatos(user: UsuarioAuth): Future[DatosCliente]
 
   def comprobarDatos(): Future[Boolean]
 
-  def obtenerCiudades(): Future[Seq[Ciudad]]
+  def obtenerCiudades(pais: Int): Future[Seq[Ciudad]]
 
   def obtenerEnviosCorrespondencia(): Future[Seq[EnvioCorrespondencia]]
 

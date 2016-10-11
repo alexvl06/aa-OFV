@@ -9,48 +9,40 @@ import portal.transaccional.autenticacion.service.web.actualizacion._
  */
 object DataAccessTranslator {
 
-  def translateDatosCliente(clienteJson: String): Option[DatosCliente] = {
-    val datosCliente = clienteJson.fromJson[Array[DatosCliente]]
-    val datosEmpresa = clienteJson.fromJson[Array[DatosEmpresa]]
-    if (datosCliente.nonEmpty && datosEmpresa.nonEmpty)
-      Some(datosCliente(0).copy(datosEmp = datosEmpresa(0)))
-    else None
+  def translateDatosCliente(clienteJson: String): DatosCliente = {
+    val datosCliente: Seq[DatosCliente] = clienteJson.fromJson[Seq[DatosCliente]]
+    val datosEmpresa: Seq[DatosEmpresa] = clienteJson.fromJson[Seq[DatosEmpresa]]
+    datosCliente.head.copy(datosEmp = datosEmpresa.head)
   }
 
   //Traducir paises
-  def translatePaises(dataJson: String): Option[List[Pais]] = {
-    val result = dataJson.fromJson[Array[Pais]]
-    if (result.nonEmpty) Some(result.toList) else None
+  def translatePaises(dataJson: String): Seq[Pais] = {
+    dataJson.fromJson[Seq[Pais]]
   }
 
   //Traducir ciudades
-  def translateCiudades(dataJson: String): Option[List[Ciudad]] = {
-    val result = dataJson.fromJson[Array[Ciudad]]
-    if (result.nonEmpty) Some(result.toList) else None
+  def translateCiudades(dataJson: String): Seq[Ciudad] = {
+    dataJson.fromJson[Seq[Ciudad]]
   }
 
   //Traducir tipo correo
-  def translateTiposCorreo(dataJson: String): Option[List[TipoCorreo]] = {
-    val result = dataJson.fromJson[Array[TipoCorreo]]
-    if (result.nonEmpty) Some(result.toList) else None
+  def translateTiposCorreo(dataJson: String): Seq[TipoCorreo] = {
+    dataJson.fromJson[Seq[TipoCorreo]]
   }
 
   //Traducir Envio Correspondencia
-  def translateEnviosCorrespondencia(dataJson: String): Option[List[EnvioCorrespondencia]] = {
-    val result = dataJson.fromJson[Array[EnvioCorrespondencia]]
-    if (result.nonEmpty) Some(result.toList) else None
+  def translateEnviosCorrespondencia(dataJson: String): Seq[EnvioCorrespondencia] = {
+    dataJson.fromJson[Seq[EnvioCorrespondencia]]
   }
 
   //Traducir Ocupacion
-  def translateOcupaciones(dataJson: String): Option[List[Ocupacion]] = {
-    val result = dataJson.fromJson[Array[Ocupacion]]
-    if (result.nonEmpty) Some(result.toList) else None
+  def translateOcupaciones(dataJson: String): Seq[Ocupacion] = {
+    dataJson.fromJson[Seq[Ocupacion]]
   }
 
   //Traducir Actividad Economica
-  def translateActividadesEconomicas(dataJson: String): Option[List[ActividadEconomica]] = {
-    val result = dataJson.fromJson[Array[ActividadEconomica]]
-    if (result.nonEmpty) Some(result.toList) else None
+  def translateActividadesEconomicas(dataJson: String): Seq[ActividadEconomica] = {
+    dataJson.fromJson[Seq[ActividadEconomica]]
   }
 
 }

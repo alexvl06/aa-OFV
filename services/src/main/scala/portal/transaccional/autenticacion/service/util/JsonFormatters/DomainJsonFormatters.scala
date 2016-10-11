@@ -2,16 +2,14 @@ package portal.transaccional.autenticacion.service.util.JsonFormatters
 
 import co.com.alianza.exceptions.{ NoAutorizado, ValidacionException }
 import co.com.alianza.infrastructure.dto.{ Pregunta, Respuesta }
-import co.com.alianza.infrastructure.messages.ActualizacionMessagesJsonSupport._
-import co.com.alianza.infrastructure.messages.DatosEmpresaMessage
-import co.com.alianza.persistence.entities.{ ReglaContrasena, Empresa, RecursoComercial, RolComercial }
+import co.com.alianza.persistence.entities.{ Empresa, RecursoComercial, ReglaContrasena, RolComercial }
 import portal.transaccional.autenticacion.service.dto.{ PermisoRecursoDTO, RecursoDTO }
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
-import portal.transaccional.autenticacion.service.web.actualizacion.{ ActualizacionMessage, DatosEmpresaMessage }
+import portal.transaccional.autenticacion.service.web.actualizacion._
 import portal.transaccional.autenticacion.service.web.autenticacion.{ AutenticarRequest, AutenticarUsuarioComercialRequest, AutenticarUsuarioEmpresarialRequest }
 import portal.transaccional.autenticacion.service.web.autorizacion.InvalidarTokenRequest
 import portal.transaccional.autenticacion.service.web.comercial.{ ActualizarContrasenaRequest, CrearAdministradorRequest, ValidarEmpresaRequest }
-import portal.transaccional.autenticacion.service.web.ip.{ IpResponse, IpRequest }
+import portal.transaccional.autenticacion.service.web.ip.{ IpRequest, IpResponse }
 import portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.{ GuardarRespuestasRequest, ResponseObtenerPreguntas, ResponseObtenerPreguntasComprobar, RespuestasComprobacionRequest }
 
 trait DomainJsonFormatters {
@@ -29,6 +27,14 @@ trait DomainJsonFormatters {
   //actualizacion
   implicit val datosEmpresaMessageFormat = jsonFormat17(DatosEmpresaMessage)
   implicit val actualizacionMessageFormat = jsonFormat22(ActualizacionMessage)
+  implicit val paisFormat = jsonFormat2(Pais)
+  implicit val ocupacionFormat = jsonFormat2(Ocupacion)
+  implicit val tipoCorreoFormat = jsonFormat2(TipoCorreo)
+  implicit val ciudadFormat = jsonFormat2(Ciudad)
+  implicit val actividadFormat = jsonFormat2(ActividadEconomica)
+  implicit val correspondenciaFormat = jsonFormat2(EnvioCorrespondencia)
+  implicit val datosEmpresaFormat = jsonFormat16(DatosEmpresa)
+  implicit val datosClienteFormat = jsonFormat19(DatosCliente)
 
   //validacion
   implicit val validacionExceptionFormatter = jsonFormat2(ValidacionException)

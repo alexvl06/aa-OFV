@@ -2,7 +2,6 @@ package co.com.alianza.app
 
 import akka.actor.{ ActorRef, ActorSystem, Props }
 import akka.cluster.Cluster
-import co.com.alianza.domain.aggregates.actualizacion.ActualizacionActorSupervisor
 import co.com.alianza.domain.aggregates.autenticacion._
 import co.com.alianza.domain.aggregates.autoregistro.ConsultaClienteActorSupervisor
 import co.com.alianza.domain.aggregates.autovalidacion.PreguntasAutovalidacionSupervisor
@@ -15,6 +14,7 @@ import co.com.alianza.domain.aggregates.usuarios.UsuariosActorSupervisor
 import co.com.alianza.infrastructure.auditing.KafkaActorSupervisor
 import co.com.alianza.util.ConfigApp
 import com.typesafe.config.Config
+import portal.transaccional.autenticacion.service.drivers.actualizacion.ActualizacionDriverRepository
 import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionComercialDriverRepository, AutenticacionDriverRepository, AutenticacionEmpresaDriverRepository }
 import portal.transaccional.autenticacion.service.drivers.autorizacion._
 import portal.transaccional.autenticacion.service.drivers.cliente.ClienteDriverCoreRepository
@@ -37,7 +37,7 @@ import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.Usua
 import portal.transaccional.autenticacion.service.drivers.rolRecursoComercial.{ RecursoComercialDriverRepository, RolComercialDriverRepository, RolRecursoComercialDriverRepository }
 import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
 import portal.transaccional.fiduciaria.autenticacion.storage.config.pg.{ OracleConfig, PGConfig }
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.core.ClienteDAO
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.core.{ ActualizacionDAO, ClienteDAO }
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.ldap.AlianzaLdapDAO
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal._
 
@@ -71,42 +71,40 @@ trait CoreActors {
   //TODO: verificar que usuarios ya no se están utilizando y eliminarlos
   val usuariosActorSupervisor = system.actorOf(Props[UsuariosActorSupervisor], "UsuariosActorSupervisor")
   val usuariosActor = system.actorSelection(usuariosActorSupervisor.path)
+  //TODO: verificar que usuarios ya no se están utilizando y eliminarlos
   val confrontaActorSupervisor = system.actorOf(Props[ConfrontaActorSupervisor], "confrontaActorSupervisor")
   val confrontaActor = system.actorSelection(confrontaActorSupervisor.path)
+  //TODO: verificar que usuarios ya no se están utilizando y eliminarlos
   val consultaClienteActorSupervisor = system.actorOf(Props[ConsultaClienteActorSupervisor], "consultaClienteActorSupervisor")
   val consultaClienteActor = system.actorSelection(consultaClienteActorSupervisor.path)
+  //TODO: verificar que usuarios ya no se están utilizando y eliminarlos
   val contrasenasActorSupervisor = system.actorOf(Props[ContrasenasActorSupervisor], "contrasenasActorSupervisor")
   val contrasenasActor = system.actorSelection(contrasenasActorSupervisor.path)
-  val contrasenasAgenteEmpresarialActorSupervisor = system.actorOf(
-    Props[ContrasenasAgenteEmpresarialActorSupervisor],
-    "contrasenasAgenteEmpresarialActorSupervisor"
-  )
+  val contrasenasAgenteEmpresarialActorSupervisor = system.actorOf(Props[ContrasenasAgenteEmpresarialActorSupervisor], "contrasenasAgenteEmpresarialActorSupervisor")
   val contrasenasAgenteEmpresarialActor = system.actorSelection(contrasenasAgenteEmpresarialActorSupervisor.path)
-
+  //TODO: verificar que usuarios ya no se están utilizando y eliminarlos
   val contrasenasClienteAdminActorSupervisor = system.actorOf(Props[ContrasenasClienteAdminActorSupervisor], "contrasenasClienteAdminActorSupervisor")
   val contrasenasClienteAdminActor = system.actorSelection(contrasenasClienteAdminActorSupervisor.path)
-
+  //TODO: verificar que usuarios ya no se están utilizando y eliminarlos
   val horarioEmpresaActorSupervisor = system.actorOf(Props[HorarioEmpresaActorSupervisor], "horarioEmpresaActorSupervisor")
   val horarioEmpresaActor = system.actorSelection(horarioEmpresaActorSupervisor.path)
-
+  //TODO: verificar que usuarios ya no se están utilizando y eliminarlos
   val pinActorSupervisor = system.actorOf(Props[PinActorSupervisor], "PinActorSupervisor")
   val pinActor = system.actorSelection(pinActorSupervisor.path)
   val pinUsuarioEmpresarialAdminActor = system.actorSelection(pinActorSupervisor.path + "/pinUsuarioEmpresarialAdminActor")
   val pinUsuarioAgenteEmpresarialActor = system.actorSelection(pinActorSupervisor.path + "/pinUsuarioAgenteEmpresarialActor")
-
+  //TODO: verificar que usuarios ya no se están utilizando y eliminarlos
   val sesionActorSupervisor = system.actorOf(Props[SesionActorSupervisor], "sesionActorSupervisor")
-
+  //TODO: verificar que usuarios ya no se están utilizando y eliminarlos
   val agenteEmpresarialActorSupervisor = system.actorOf(Props[AgenteEmpresarialActorSupervisor], "agenteEmpresarialActorSupervisor")
   val agenteEmpresarialActor = system.actorSelection(agenteEmpresarialActorSupervisor.path)
-
+  //TODO: verificar que usuarios ya no se están utilizando y eliminarlos
   val permisoTransaccionalActorSupervisor = system.actorOf(Props[PermisoTransaccionalActorSupervisor], "permisoTransaccionalActorSupervisor")
   val permisoTransaccionalActor = system.actorSelection(permisoTransaccionalActorSupervisor.path)
-
-  val actualizacionActorSupervisor = system.actorOf(Props[ActualizacionActorSupervisor], "actualizacionActorSupervisor")
-  val actualizacionActor = system.actorSelection(actualizacionActorSupervisor.path)
-
+  //TODO: verificar que usuarios ya no se están utilizando y eliminarlos
   val kafkaActorSupervisor = system.actorOf(Props[KafkaActorSupervisor], "kafkaActorSupervisor")
   val kafkaActor = system.actorSelection(kafkaActorSupervisor.path)
+  //TODO: verificar que usuarios ya no se están utilizando y eliminarlos
   val preguntasAutovalidacionSupervisor = system.actorOf(Props[PreguntasAutovalidacionSupervisor], "preguntasAutovalidacionSupervisor")
   val preguntasAutovalidacionActor = system.actorSelection(preguntasAutovalidacionSupervisor.path)
 }
@@ -165,6 +163,8 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
 
   lazy val rolComercialRepository = RolComercialDriverRepository(rolComercialDAO)
 
+  lazy val actualizacionRepository = ActualizacionDriverRepository(actualizacionDAO)
+
 }
 
 private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
@@ -176,6 +176,7 @@ private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
   lazy val usuarioDAO = UsuarioDAO()(config)
   lazy val ipUsuarioDAO = IpUsuarioDAO()(config)
   lazy val ipEmpresaDAO = IpEmpresaDAO()(config)
+  lazy val actualizacionDAO = ActualizacionDAO()(ex, configCore)
   lazy val clienteDAO = ClienteDAO()(ex, configCore)
   lazy val configuracionDAO = ConfiguracionDAO()(config)
   lazy val reglaContrasenaDAO = ReglaContrasenaDAO()(config)
