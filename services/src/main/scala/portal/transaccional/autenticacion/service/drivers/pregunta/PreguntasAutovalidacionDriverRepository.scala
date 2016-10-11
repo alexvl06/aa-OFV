@@ -1,10 +1,12 @@
 package portal.transaccional.autenticacion.service.drivers.pregunta
 
 import akka.util.Timeout
+import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.infrastructure.dto.{ Configuracion, Pregunta, Respuesta, RespuestaCompleta }
 import co.com.alianza.persistence.entities.{ Configuraciones, PreguntaAutovalidacion }
+import co.com.alianza.util.json.JsonUtil
 import enumerations.ConfiguracionEnum
 import portal.transaccional.autenticacion.service.drivers.configuracion.{ ConfiguracionRepository, DataAccessTranslator => configuracionDTO }
 import portal.transaccional.autenticacion.service.drivers.pregunta.{ DataAccessTranslator => preguntasAutovalidacionDTO }
@@ -28,6 +30,10 @@ case class PreguntasAutovalidacionDriverRepository(
    * que debe aparecer en la lista desplegable.
    */
   def obtenerPreguntas(): Future[ResponseObtenerPreguntas] = {
+    println("obtenerPreguntas")
+    println("obtenerPreguntas")
+    println("obtenerPreguntas")
+    println("obtenerPreguntas")
     for {
       preguntas <- preguntasRepository.obtenerPreguntas()
       configuraciones <- configuracionRepository.getAll()
@@ -55,14 +61,16 @@ case class PreguntasAutovalidacionDriverRepository(
   def obtenerPreguntasComprobar(idUsuario: Int, tipoCliente: TiposCliente): Future[ResponseObtenerPreguntasComprobar] = {
     val llaveNumeroPreguntas: String = ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS.name
 
-    /* //TODO: Implementar Tipos Cliente by: Jonathan*/
-    /*val futurePreguntas = tipoCliente match {
+    val futurePreguntas = tipoCliente match {
       case TiposCliente.clienteIndividual => alianzaDao.getIndividualClientQuestions(idUsuario)
-      case _ => Future(List.empty[Pregunta])
-    }*/
+      case TiposCliente.clienteAdministrador =>
+        println("111111111111111")
+        alianzaDao.getAdministratorClientQuestions(idUsuario)
+      case _ => Future.failed(ValidacionException("", "Error tipo de cliente no valido."))
+    }
 
     for {
-      preguntas <- alianzaDao.getIndividualClientQuestions(idUsuario)
+      preguntas <- futurePreguntas
       configuraciones <- configuracionRepository.getAll()
       validar <- validarParametrizacion(preguntas.size, configuraciones.toList, llaveNumeroPreguntas)
       respuesta <- resolveObtenerPreguntasComprobar(preguntasAutovalidacionDTO.toPreguntaList(preguntas), configuraciones.toList)
@@ -88,15 +96,13 @@ case class PreguntasAutovalidacionDriverRepository(
     }
   }
 
-  def validarRespuestas(idUsuario: Int, tipoCliente: TiposCliente, respuestas: List[Respuesta], numeroIntentos: Int): Future[Unit] = {
+  def validarRespuestas(idUsuario: Int, tipoCliente: TiposCliente, respuestas: List[Respuesta], numeroIntentos: Int): Future[String] = {
 
-    /* //TODO: Implementar Tipos Cliente by: Jonathan
-    def futureRespuestas: Future[Validation[PersistenceException, List[RespuestaCompleta]]] = message.tipoCliente match {
-      case TiposCliente.clienteIndividual => DataAccessAdapter.obtenerRespuestaCompletaClienteIndividual(message.idUsuario)
-      case TiposCliente.clienteAdministrador => DataAccessAdapter.obtenerRespuestaCompletaClienteAdministrador(message.idUsuario)
-      case _ => Future(zSuccess(List.empty[RespuestaCompleta]))
+    def futureRespuestas = tipoCliente match {
+      case TiposCliente.clienteIndividual => alianzaDao.getIndividualClientQuestions(idUsuario)
+      case TiposCliente.clienteAdministrador => alianzaDao.getAdministratorClientQuestions(idUsuario)
+      case _ => Future.failed(ValidacionException("", "Error tipo de cliente no valido."))
     }
-    */
 
     val llaveReintentos: String = ConfiguracionEnum.AUTOVALIDACION_NUMERO_REINTENTOS.name
     val llavePreguntasCambio: String = ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS_CAMBIAR.name
@@ -106,14 +112,12 @@ case class PreguntasAutovalidacionDriverRepository(
       configuraciones <- configuracionRepository.getAll()
       validar <- validarParametrizacion(respuestas.size, configuraciones.toList, llavePreguntasComprobar)
       validarReintentos <- validarParametrizacion(numeroIntentos, configuraciones.toList, llaveReintentos)
-      respuestasCompletas <- alianzaDao.getIndividualClientQuestions(idUsuario)
+      respuestasCompletas <- futureRespuestas
       respuesta <- validarRespuestasValidation(
         preguntasAutovalidacionDTO.toRespuestaCompletaList(respuestasCompletas),
         respuestas, obtenerValorEntero(configuraciones.toList.map(conf => configuracionDTO.entityToDto(conf)), llavePreguntasCambio)
       )
     } yield respuesta
-
-    //resolveFutureValidation(future, (response: String) => response, errorValidacion, currentSender)
   }
 
   /**
@@ -122,12 +126,12 @@ case class PreguntasAutovalidacionDriverRepository(
    * @param respuestas
    * @return
    */
-  private def validarRespuestasValidation(response: List[RespuestaCompleta], respuestas: List[Respuesta], numeroPreguntasCambio: Int): Future[String] = Future {
+  private def validarRespuestasValidation(response: List[RespuestaCompleta], respuestas: List[Respuesta], numeroPreguntasCambio: Int): Future[String] = {
     val respuestasGuardadas: List[Respuesta] = response.map(res => Respuesta(res.idPregunta, res.respuesta))
     //comprobar que las respuestas concuerden
     val existe: Boolean = respuestas.foldLeft(true)((existe, respuesta) => existe && respuestasGuardadas.contains(respuesta))
     existe match {
-      case true => "OK"
+      case true => Future.successful("OK")
       case false => {
         //en caso que no concuerden, se envian la preguntas restantes mas una de las contestadas
         //1. obtener los ids de las respuestas
@@ -142,8 +146,16 @@ case class PreguntasAutovalidacionDriverRepository(
         //5. con los ids, obtener las preguntas a devolver
         val preguntas: List[Pregunta] = response.filter(res => (idsPreguntas).contains(res.idPregunta)).map(x => Pregunta(x.idPregunta, x.pregunta))
         //6. reenviar preguntas desordenadamente
-        (Random.shuffle(preguntas).take(preguntas.size)).toString()
+        val preguntasRandom: String = JsonUtil.toJson(Random.shuffle(preguntas).take(preguntas.size))
+        Future.failed(ValidacionException("", preguntasRandom))
       }
+    }
+  }
+
+  override def bloquearRespuestas(idUsuario: Int, tipoCliente: TiposCliente): Future[Int] = {
+    tipoCliente match {
+      case TiposCliente.clienteIndividual => alianzaDao.deleteIndividualClientAnswers(idUsuario)
+      //case TiposCliente.clienteAdministrador => alianzaDao.bloquearRespuestasClienteAdministrador(idUsuario)
     }
   }
 

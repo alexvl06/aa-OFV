@@ -12,6 +12,8 @@ trait PreguntasAutovalidacionRepository {
 
   def obtenerPreguntasComprobar(idUsuario: Int, tipoCliente: TiposCliente): Future[ResponseObtenerPreguntasComprobar]
 
-  def validarRespuestas(idUsuario: Int, tipoCliente: TiposCliente, respuestas: List[Respuesta], numeroIntentos: Int): Future[Unit]
+  def validarRespuestas(idUsuario: Int, tipoCliente: TiposCliente, respuestas: List[Respuesta], numeroIntentos: Int): Future[String]
+
+  def bloquearRespuestas(idUsuario: Int, tipoCliente: TiposCliente): Future[Int]
 
 }
