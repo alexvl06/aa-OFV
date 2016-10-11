@@ -179,4 +179,8 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
   def deleteIndividualClientAnswers(idUsuario: Int): Future[Int] = {
     run(respuestasUsuarioTable.filter(x => x.idUsuario === idUsuario).delete)
   }
+
+  def bloquearRespuestasClienteAdministrador(idUsuario: Int): Future[Int] = {
+    run(respuestasClienteAdministradorTable.filter(x => x.idUsuario === idUsuario).delete)
+  }
 }

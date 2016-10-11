@@ -72,10 +72,10 @@ case class AlianzaRouter(
             UsuarioEmpresaService(kafkaActor, agenteEmpresarialActor).secureUserRouteEmpresa(user) ~
             PermisosTransaccionalesService(kafkaActor, permisoTransaccionalActor).route(user) ~
             // TODO: Servicio Nuevo de PreguntasAutovalidacionService by: Jonathan
-            /*portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.PreguntasAutovalidacionService(
+            portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.PreguntasAutovalidacionService(
               user, preguntasValidacionRepository, respuestaUsuarioRepository, respuestaUsuarioAdminRepository
-            ).route*/
-            PreguntasAutovalidacionService(kafkaActor, preguntasAutovalidacionActor).route(user)
+            ).route
+        //PreguntasAutovalidacionService(kafkaActor, preguntasAutovalidacionActor).route(user)
       }
 
   def receive = runRoute(respondWithHeaders(listCrossHeaders) { routes })(

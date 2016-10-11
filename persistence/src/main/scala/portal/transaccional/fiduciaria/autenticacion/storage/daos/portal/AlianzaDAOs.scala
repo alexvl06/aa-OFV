@@ -28,4 +28,6 @@ trait AlianzaDAOs {
 
   def deleteIndividualClientAnswers(idUsuario: Int): Future[Int]
 
+  def bloquearRespuestasClienteAdministrador(idUsuario: Int): Future[Int]
+
 }

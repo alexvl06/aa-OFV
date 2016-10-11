@@ -155,7 +155,7 @@ case class PreguntasAutovalidacionDriverRepository(
   override def bloquearRespuestas(idUsuario: Int, tipoCliente: TiposCliente): Future[Int] = {
     tipoCliente match {
       case TiposCliente.clienteIndividual => alianzaDao.deleteIndividualClientAnswers(idUsuario)
-      //case TiposCliente.clienteAdministrador => alianzaDao.bloquearRespuestasClienteAdministrador(idUsuario)
+      case TiposCliente.clienteAdministrador => alianzaDao.bloquearRespuestasClienteAdministrador(idUsuario)
     }
   }
 
