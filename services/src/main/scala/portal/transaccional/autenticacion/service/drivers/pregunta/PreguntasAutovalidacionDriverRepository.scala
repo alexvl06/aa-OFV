@@ -30,10 +30,6 @@ case class PreguntasAutovalidacionDriverRepository(
    * que debe aparecer en la lista desplegable.
    */
   def obtenerPreguntas(): Future[ResponseObtenerPreguntas] = {
-    println("obtenerPreguntas")
-    println("obtenerPreguntas")
-    println("obtenerPreguntas")
-    println("obtenerPreguntas")
     for {
       preguntas <- preguntasRepository.obtenerPreguntas()
       configuraciones <- configuracionRepository.getAll()

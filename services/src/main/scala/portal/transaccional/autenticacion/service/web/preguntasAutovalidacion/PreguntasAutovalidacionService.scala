@@ -4,17 +4,13 @@ import co.com.alianza.app.CrossHeaders
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.exceptions._
-import co.com.alianza.infrastructure.auditing.AuditingHelper
-import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
-import co.com.alianza.infrastructure.messages.BloquearRespuestasMessage
 import portal.transaccional.autenticacion.service.drivers.pregunta.PreguntasAutovalidacionRepository
 import portal.transaccional.autenticacion.service.drivers.respuesta.RespuestaUsuarioRepository
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import spray.http.StatusCodes
 import spray.routing._
-
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success }
 
