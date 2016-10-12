@@ -1,7 +1,9 @@
 package portal.transaccional.autenticacion.service.web.agenteInmobiliario
 
 import co.com.alianza.app.CrossHeaders
+import co.com.alianza.exceptions.ValidacionException
 import enumerations.EstadosPin._
+import portal.transaccional.autenticacion.service.drivers.contrasenaAgenteInmobiliario.ContrasenaAgenteInmobiliarioRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.UsuarioInmobiliarioPinRepository
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
@@ -15,19 +17,26 @@ import scala.util.{Failure, Success}
   * Expone los servicios rest relacionados los pines de los agentes inmobiliarios <br/>
   * Services: <br/>
   * <ul>
-  * <li>PUT /agentes-inmobiliarios/pines/{pin-hash}-> Verifica la validez de un pin generado para un agente inmobiliario</li>
+  * <li>GET /agentes-inmobiliarios/pines/{pin-hash}-> Verifica la validez de un pin generado para un agente inmobiliario</li>
+  * <li>PUT /agentes-inmobiliarios/pines/{pin-hash}/credenciales -> Define/actualiza la contraseña de un agente inmobiliario asociado a un pin</li>
   * </ul>
   */
-case class AgenteImobiliarioPinService(pinRepo: UsuarioInmobiliarioPinRepository)(implicit val ec: ExecutionContext)
+case class AgenteImobiliarioPinService(pinRepo: UsuarioInmobiliarioPinRepository,
+                                       agenteInmobContrasenaRepo: ContrasenaAgenteInmobiliarioRepository)(implicit val ec: ExecutionContext)
   extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   val agentesPath: String = "agentes-inmobiliarios"
+  val credencialesPath: String = "credenciales"
   val pinesPath: String = "pines"
 
   val route: Route = {
     pathPrefix(agentesPath / pinesPath / Segment) { pin =>
       pathEndOrSingleSlash {
         validatePinAgente(pin)
+      } ~ pathPrefix(credencialesPath) {
+        pathEndOrSingleSlash {
+          setCredencialesAgente(pin)
+        }
       }
     }
   }
@@ -41,6 +50,22 @@ case class AgenteImobiliarioPinService(pinRepo: UsuarioInmobiliarioPinRepository
           case Left(estadoPin) => complete(StatusCodes.Conflict)
         }
         case Failure(exception) => complete(StatusCodes.InternalServerError)
+      }
+    }
+  }
+
+  private def setCredencialesAgente(pin: String): Route = {
+    put {
+      entity(as[ActualizarCredencialesAgenteRequest]) { r =>
+        val actualizacionF = agenteInmobContrasenaRepo
+          .actualizarContrasenaPin(pin, r.contrasena, r.contrasenaActual)
+        onComplete(actualizacionF) {
+          case Success(_) => complete(StatusCodes.OK)
+          case Failure(error) => error match {
+            case ex: ValidacionException => complete(StatusCodes.BadRequest, ex)
+            case _ => complete(StatusCodes.InternalServerError)
+          }
+        }
       }
     }
   }

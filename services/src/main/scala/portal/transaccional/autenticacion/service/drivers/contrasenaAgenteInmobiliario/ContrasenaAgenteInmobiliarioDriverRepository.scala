@@ -64,6 +64,8 @@ case class ContrasenaAgenteInmobiliarioDriverRepository(agenteRepo: UsuarioInmob
       validacionReglas <- validacionReglasClave(nuevaContrasena, agente.id, PerfilesUsuario.agenteEmpresarial)
       actualizacionContrasena <- agenteRepo.updateContrasena(hashContrasena, agente.id)
       ultimasContrasenas <- oldPassDAO.create(UltimaContrasenaAgenteInmobiliario(None, agente.id, hashContrasena, new Timestamp(new DateTime().getMillis)))
+      eliminarPin <- pinRepo.eliminarPinAgente(pinHash)
+
     } yield agente.id
   }
 
