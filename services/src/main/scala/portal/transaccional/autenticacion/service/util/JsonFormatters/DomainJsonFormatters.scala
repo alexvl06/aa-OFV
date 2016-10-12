@@ -9,6 +9,7 @@ import portal.transaccional.autenticacion.service.web.actualizacion._
 import portal.transaccional.autenticacion.service.web.autenticacion.{ AutenticarRequest, AutenticarUsuarioComercialRequest, AutenticarUsuarioEmpresarialRequest }
 import portal.transaccional.autenticacion.service.web.autorizacion.InvalidarTokenRequest
 import portal.transaccional.autenticacion.service.web.comercial.{ ActualizarContrasenaRequest, CrearAdministradorRequest, ValidarEmpresaRequest }
+import portal.transaccional.autenticacion.service.web.horarioEmpresa.{ AgregarHorarioEmpresaRequest, DiaFestivoRequest }
 import portal.transaccional.autenticacion.service.web.ip.{ IpRequest, IpResponse }
 import portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.{ GuardarRespuestasRequest, ResponseObtenerPreguntas, ResponseObtenerPreguntasComprobar, RespuestasComprobacionRequest }
 
@@ -67,4 +68,7 @@ trait DomainJsonFormatters {
   //reglas contrasena
   implicit val reglaContrasenaFormatter = jsonFormat2(ReglaContrasena)
 
+  //horarioEmpresa
+  implicit val agregarHorarioEmpresaRequestFormatter = jsonFormat6(AgregarHorarioEmpresaRequest)
+  implicit val diaFestivoRequestFormatter = jsonFormat1(DiaFestivoRequest)
 }
