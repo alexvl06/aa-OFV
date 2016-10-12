@@ -3,6 +3,15 @@ package portal.transaccional.autenticacion.service.web.agenteInmobiliario
 import co.com.alianza.commons.enumerations.TipoPermisoInmobiliario._
 import scala.util.matching.Regex
 
+case class ActualizarCredencialesAgenteRequest(contrasena: String,
+                                               confirmarContrasena: String,
+                                               contrasenaActual: Option[String]) {
+  require(!contrasena.isEmpty, "Field contrasena cannot be empty")
+  require(!confirmarContrasena.isEmpty, "Field confirmarContrasena cannot be empty")
+  require(contrasena == confirmarContrasena, "Field contrasena and confirmarContrasena must be equal")
+  contrasenaActual.foreach(x => require(!x.isEmpty, "Field contrasenaActual cannot be empty when provided"))
+}
+
 case class ConsultarPermisoRequest(idAgente: String)
 
 case class CrearAgenteInmobiliarioRequest(

@@ -1,34 +1,34 @@
 package co.com.alianza.app
 
-import akka.actor.{ ActorLogging, ActorRef, ActorSelection, ActorSystem }
+import akka.actor.{ActorLogging, ActorRef, ActorSelection, ActorSystem}
 import co.com.alianza.app.handler.CustomRejectionHandler
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.infrastructure.security.ServiceAuthorization
 import co.com.alianza.persistence.entities.UsuarioEmpresarial
-import co.com.alianza.web.empresa.{ AdministrarContrasenaEmpresaService, UsuarioEmpresaService }
+import co.com.alianza.web.empresa.{AdministrarContrasenaEmpresaService, UsuarioEmpresaService}
 import portal.transaccional.autenticacion.service.drivers.autorizacion._
 import spray.routing._
 import spray.util.LoggingContext
 import co.com.alianza.web._
 import co.com.alianza.webvalidarPinClienteAdmin.PinService
-import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionComercialRepository, AutenticacionEmpresaRepository, AutenticacionRepository }
+import portal.transaccional.autenticacion.service.drivers.autenticacion.{AutenticacionComercialRepository, AutenticacionEmpresaRepository, AutenticacionRepository}
 import portal.transaccional.autenticacion.service.drivers.ip.IpRepository
 import portal.transaccional.autenticacion.service.drivers.pregunta.PreguntasAutovalidacionRepository
 import portal.transaccional.autenticacion.service.drivers.respuesta.RespuestaUsuarioRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioEmpresarialAdminRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioRepository
-import portal.transaccional.autenticacion.service.web.autorizacion.{ AutorizacionRecursoComercialService, AutorizacionService }
+import portal.transaccional.autenticacion.service.web.autorizacion.{AutorizacionRecursoComercialService, AutorizacionService}
 import portal.transaccional.autenticacion.service.web.autenticacion.AutenticacionService
 import portal.transaccional.autenticacion.service.web.sesion.SesionService
 import co.com.alianza.web.PreguntasAutovalidacionService
 import portal.transaccional.autenticacion.service.drivers.contrasenaAgenteInmobiliario.ContrasenaAgenteInmobiliarioRepository
 import portal.transaccional.autenticacion.service.drivers.permisoAgenteInmobiliario.PermisoAgenteInmobiliarioRepository
-import portal.transaccional.autenticacion.service.drivers.rolRecursoComercial.{ RecursoComercialRepository, RolComercialRepository }
-import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.UsuarioInmobiliarioRepository
+import portal.transaccional.autenticacion.service.drivers.rolRecursoComercial.{RecursoComercialRepository, RolComercialRepository}
+import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.{UsuarioInmobiliarioPinRepository, UsuarioInmobiliarioRepository}
 import portal.transaccional.autenticacion.service.drivers.util.SesionAgenteUtilRepository
 import portal.transaccional.autenticacion.service.web.ip.IpService
-import portal.transaccional.autenticacion.service.web.agenteInmobiliario.AgenteInmobiliarioService
+import portal.transaccional.autenticacion.service.web.agenteInmobiliario.{AgenteImobiliarioPinService, AgenteInmobiliarioService}
 import portal.transaccional.autenticacion.service.web.recursoComercial.RecursoGraficoComercialService
 
 case class AlianzaRouter(
@@ -47,13 +47,12 @@ case class AlianzaRouter(
     autorizacionRecursoComercialRepository: AutorizacionRecursoComercialRepository, recursoComercialRepository: RecursoComercialRepository,
     rolComercialRepository: RolComercialRepository, usInmobiliarioRepo: UsuarioInmobiliarioRepository, permisoAgenteInmob: PermisoAgenteInmobiliarioRepository,
     sesionUtilAgenteEmpresarial: SesionAgenteUtilRepository, sesionUtilAgenteInmobiliario: SesionAgenteUtilRepository,
-    agenteInmobContrasenaRepo: ContrasenaAgenteInmobiliarioRepository
+    agenteInmobContrasenaRepo: ContrasenaAgenteInmobiliarioRepository, pinAgenteInmobRepository: UsuarioInmobiliarioPinRepository
 )(implicit val system: ActorSystem) extends HttpServiceActor with RouteConcatenation with CrossHeaders with ServiceAuthorization with ActorLogging {
 
   import system.dispatcher
 
   val routes =
-    //    AgenteInmobiliarioService(permisoAgenteInmob).route ~
     AutorizacionService(usuarioRepositorio, usuarioAgenteRepositorio, usuarioAdminRepositorio, autorizacionUsuarioRepo, kafkaActor, autorizacionAgenteRepo,
       autorizacionAdminRepo, autorizacionComercialRepo, autorizacionComercialAdminRepo, sesionUtilAgenteEmpresarial, sesionUtilAgenteInmobiliario).route ~
       AutenticacionService(autenticacionRepo, autenticacionEmpresaRepositorio, autenticacionComercialRepositorio, kafkaActor).route ~
@@ -65,6 +64,7 @@ case class AlianzaRouter(
       ReglasContrasenasService(contrasenasActor).route ~
       PinService(kafkaActor, pinActor, pinUsuarioEmpresarialAdminActor, pinUsuarioAgenteEmpresarialActor).route ~
       AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor, agenteInmobContrasenaRepo).insecureRoute ~
+      AgenteImobiliarioPinService(pinAgenteInmobRepository, agenteInmobContrasenaRepo).route ~
       authenticate(authenticateUser) {
         user =>
           IpsUsuariosService(kafkaActor, ipsUsuarioActor).route(user) ~

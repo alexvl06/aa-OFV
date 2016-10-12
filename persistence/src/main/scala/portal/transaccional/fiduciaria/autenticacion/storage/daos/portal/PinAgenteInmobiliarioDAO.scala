@@ -21,4 +21,12 @@ case class PinAgenteInmobiliarioDAO(implicit val dcConfig: DBConfig)
   def create(pin: PinAgenteInmobiliario): Future[Option[Int]] = {
     run((this returning this.map(_.id)) += pin)
   }
+
+  def get(tokenHash: String): Future[Option[PinAgenteInmobiliario]] = {
+    run(this.filter(_.tokenHash === tokenHash).result.headOption)
+  }
+
+  def delete(tokenHash: String): Future[Int] = {
+    run(this.filter(_.tokenHash === tokenHash).delete)
+  }
 }
