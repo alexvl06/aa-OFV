@@ -59,8 +59,8 @@ case class ActualizacionService(user: UsuarioAuth, kafkaActor: ActorSelection,
             } {
               val resultado: Future[String] = actualizacionRepo.actualizarDatos(user, actualizacion)
               onComplete(resultado) {
-                case Success(value)if(value.equals("OK")) => complete(value)
-                case Success(value) => manejarError(value)
+                case Success(value) if (value.equals("OK")) => complete(value)
+                case Success(value) => complete((StatusCodes.Conflict, "Error al actualizar"))
                 case Failure(ex) => manejarError(ex)
               }
             }
@@ -86,7 +86,7 @@ case class ActualizacionService(user: UsuarioAuth, kafkaActor: ActorSelection,
         pathEndOrSingleSlash {
           val result: Future[Seq[Ciudad]] = actualizacionRepo.obtenerCiudades(pais)
           onComplete(result) {
-            case Success(value) => complete((StatusCodes.OK, value))
+            case Success(value) => complete(value)
             case Failure(ex) => manejarError(ex)
           }
         }
@@ -98,7 +98,7 @@ case class ActualizacionService(user: UsuarioAuth, kafkaActor: ActorSelection,
       pathEndOrSingleSlash {
         val result: Future[Seq[TipoCorreo]] = actualizacionRepo.obtenerTiposCorreo()
         onComplete(result) {
-          case Success(value) => complete((StatusCodes.OK, value))
+          case Success(value) => complete(value)
           case Failure(ex) => manejarError(ex)
         }
       }
@@ -110,7 +110,7 @@ case class ActualizacionService(user: UsuarioAuth, kafkaActor: ActorSelection,
       pathEndOrSingleSlash {
         val result: Future[Seq[EnvioCorrespondencia]] = actualizacionRepo.obtenerEnviosCorrespondencia()
         onComplete(result) {
-          case Success(value) => complete((StatusCodes.OK, value))
+          case Success(value) => complete(value)
           case Failure(ex) => manejarError(ex)
         }
       }
@@ -122,7 +122,7 @@ case class ActualizacionService(user: UsuarioAuth, kafkaActor: ActorSelection,
       pathEndOrSingleSlash {
         val result: Future[Seq[Ocupacion]] = actualizacionRepo.obtenerOcupaciones()
         onComplete(result) {
-          case Success(value) => complete((StatusCodes.OK, value))
+          case Success(value) => complete(value)
           case Failure(ex) => manejarError(ex)
         }
       }
@@ -134,7 +134,7 @@ case class ActualizacionService(user: UsuarioAuth, kafkaActor: ActorSelection,
       pathEndOrSingleSlash {
         val result: Future[Seq[ActividadEconomica]] = actualizacionRepo.obtenerActividadesEconomicas()
         onComplete(result) {
-          case Success(value) => complete((StatusCodes.OK, value))
+          case Success(value) => complete(value)
           case Failure(ex) => manejarError(ex)
         }
       }
@@ -159,7 +159,7 @@ case class ActualizacionService(user: UsuarioAuth, kafkaActor: ActorSelection,
       pathEndOrSingleSlash {
         val result: Future[DatosCliente] = actualizacionRepo.obtenerDatos(user)
         onComplete(result) {
-          case Success(value) => complete((StatusCodes.OK, JsonUtil.toJson(value)))
+          case Success(value) => complete(JsonUtil.toJson(value))
           case Failure(ex) => manejarError(ex)
         }
       }
@@ -168,11 +168,9 @@ case class ActualizacionService(user: UsuarioAuth, kafkaActor: ActorSelection,
 
   private def manejarError(error: Throwable): StandardRoute = {
     error match {
-      case ex: ValidacionException =>
-        ex.printStackTrace(); complete((StatusCodes.Conflict, ex))
-      case ex: Throwable =>
-        ex.printStackTrace(); complete((StatusCodes.InternalServerError, "Error inesperado"))
-      case any: Any => println("any"); complete((StatusCodes.InternalServerError, "Error inesperado"))
+      case ex: ValidacionException => complete((StatusCodes.Conflict, ex))
+      case ex: Throwable => complete((StatusCodes.InternalServerError, "Error inesperado"))
+      case _ => complete((StatusCodes.InternalServerError, "Error inesperado"))
     }
   }
 

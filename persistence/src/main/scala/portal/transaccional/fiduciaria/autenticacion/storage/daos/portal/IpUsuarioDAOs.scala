@@ -11,8 +11,6 @@ trait IpUsuarioDAOs {
 
   def getById(idUsuario: Int): Future[Seq[IpsUsuario]]
 
-  def getAll(): Future[Seq[IpsUsuario]]
-
   def getByUsuarioIp(idUsuario: Int, ip: String): Future[Option[IpsUsuario]]
 
   def create(ip: IpsUsuario): Future[String]

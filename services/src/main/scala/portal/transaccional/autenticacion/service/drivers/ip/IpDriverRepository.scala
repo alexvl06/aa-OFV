@@ -23,7 +23,7 @@ case class IpDriverRepository(empresaDAO: EmpresaAdminDAOs, ipEmpresaDAO: IpEmpr
           idEmpresa <- empresaDAO.obtenerIdEmpresa(usuario.id)
           ips <- ipEmpresaDAO.getById(idEmpresa)
         } yield ips.map(ip => IpResponse(ip.ip))
-      case TiposCliente.clienteIndividual => ipDAO.getAll().map(_.map(ip => IpResponse(ip.ip)))
+      case TiposCliente.clienteIndividual => ipDAO.getById(usuario.id).map(_.map(ip => IpResponse(ip.ip)))
       case _ => Future.failed(ValidacionException("401.3", "Tipo de usuario no permitido"))
     }
   }

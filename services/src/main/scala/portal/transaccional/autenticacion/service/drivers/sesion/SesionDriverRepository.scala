@@ -43,17 +43,15 @@ case class SesionDriverRepository(sessionActor: ActorRef)(implicit val ex: Execu
 
   def agregarIpEmpresa(idEmpresa: Int, ip: String): Future[List[String]] = {
     sessionActor ? ObtenerEmpresaSesionActorId(idEmpresa) flatMap {
-      case Some(empresaActor: ActorRef) => (empresaActor ? RemoverIp(ip)).mapTo[List[String]]
-      case None => Future.successful(List.empty[String])
-      case _ => Future.failed(ValidacionException("403.9", "Error sesión2"))
+      case Some(empresaActor: ActorRef) => (empresaActor ? AgregarIp(ip)).mapTo[List[String]]
+      case _ => Future.successful(List.empty[String])
     }
   }
 
   def eliminarIpEmpresa(idEmpresa: Int, ip: String): Future[List[String]] = {
     sessionActor ? ObtenerEmpresaSesionActorId(idEmpresa) flatMap {
-      case Some(empresaActor: ActorRef) => (empresaActor ? AgregarIp(ip)).mapTo[List[String]]
-      case None => Future.successful(List.empty[String])
-      case _ => Future.failed(ValidacionException("403.9", "Error sesión2"))
+      case Some(empresaActor: ActorRef) => (empresaActor ? RemoverIp(ip)).mapTo[List[String]]
+      case _ => Future.successful(List.empty[String])
     }
   }
 
