@@ -43,4 +43,8 @@ case class UsuarioInmobiliarioPinDriverRepository(pinDao: PinAgenteInmobiliarioD
     new SmtpServiceClient().send(correo, (_, _) => 1)
     ()
   }
+
+  override def eliminarPinAgente(hash: String): Future[Int] = {
+    pinDao.delete(hash)
+  }
 }

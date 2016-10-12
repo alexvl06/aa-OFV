@@ -4,38 +4,67 @@ import java.sql.Timestamp
 
 import co.com.alianza.constants.LlavesReglaContrasena
 import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial._
-import co.com.alianza.exceptions.{ PersistenceException, ValidacionException, ValidacionExceptionPasswordRules }
-import co.com.alianza.persistence.entities.UltimaContrasenaAgenteInmobiliario
-import co.com.alianza.util.clave.{ Crypto, ErrorValidacionClave, ValidarClave }
+import co.com.alianza.exceptions.{PersistenceException, ValidacionException, ValidacionExceptionPasswordRules}
+import co.com.alianza.persistence.entities.{UltimaContrasenaAgenteInmobiliario, UsuarioAgenteInmobiliario}
+import co.com.alianza.util.clave.{Crypto, ErrorValidacionClave, ValidarClave}
 import co.com.alianza.util.token.Token
-import enumerations.{ AppendPasswordUser, PerfilesUsuario }
+import enumerations.{AppendPasswordUser, PerfilesUsuario, UsoPinEmpresaEnum}
 import org.joda.time.DateTime
 import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaRepository
-import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.UsuarioInmobiliarioRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.{UsuarioInmobiliarioPinRepository, UsuarioInmobiliarioRepository}
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.UltimaContraseñaAgenteInmobiliarioDAOs
 
 import scala.concurrent.Future
-import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
+import scalaz.{Validation, Failure => zFailure, Success => zSuccess}
 
 /**
  * Created by s4n in 2016
  */
 case class ContrasenaAgenteInmobiliarioDriverRepository(agenteRepo: UsuarioInmobiliarioRepository, oldPassDAO: UltimaContraseñaAgenteInmobiliarioDAOs,
-    reglaRepo: ReglaContrasenaRepository) extends ContrasenaAgenteInmobiliarioRepository {
+    reglaRepo: ReglaContrasenaRepository, pinRepo: UsuarioInmobiliarioPinRepository) extends ContrasenaAgenteInmobiliarioRepository {
 
-  def actualizarContrasena(token: String, pw_actual: String, pw_nuevo: String, idUsuario: Option[Int]): Future[Int] = {
-    val passwordActual = Crypto.hashSha512(pw_actual.concat(AppendPasswordUser.appendUsuariosFiducia), idUsuario.getOrElse(0))
-    val passwordNew = Crypto.hashSha512(pw_nuevo.concat(AppendPasswordUser.appendUsuariosFiducia), idUsuario.getOrElse(0))
+  def actualizarContrasenaCaducada(token: String, pw_actual: String, pw_nuevo: String, idUsuario: Option[Int]): Future[Int] = {
+    validarToken(token).flatMap (idAgente => actualizarContrasena(None, pw_actual, pw_nuevo, idAgente))
+  }
 
+  def actualizarContrasenaPin(pinHash: String, nuevaContrasena: String, contrasenaActualOp: Option[String]): Future[Int] = {
+    pinRepo.validarPinAgente(pinHash).flatMap {
+      case Left(_) => Future.failed(ValidacionException("409.11", "Pin invalido y/o vencido"))
+      case Right(pin) => pin.uso match {
+        case uso if uso == UsoPinEmpresaEnum.usoReinicioContrasena.id => agenteRepo.getAgenteInmobiliario(pin.idAgente).flatMap {
+          case None => Future.failed(ValidacionException("409.11", "Pin invalido y/o vencido"))
+          case Some(agente) => actualizarContrasena(Some(pinHash), contrasenaActualOp.getOrElse(""), nuevaContrasena, agente.id)
+        }
+        case uso if uso == UsoPinEmpresaEnum.creacionAgenteInmobiliario.id => agenteRepo.getAgenteInmobiliario(pin.idAgente).flatMap {
+          case None => Future.failed(ValidacionException("409.11", "Pin invalido y/o vencido"))
+          case Some(agente) => definirContrasena(pinHash, nuevaContrasena, agente)
+        }
+        case _ => Future.failed(ValidacionException("409.11", "Pin invalido y/o vencido"))
+      }
+    }
+  }
+
+  private def actualizarContrasena(pinHash: Option[String], contrasenaActual: String, nuevaContrasena: String, idAgente: Int): Future[Int] = {
+    val hashContrasenaActual: String = Crypto.hashSha512(contrasenaActual.concat(AppendPasswordUser.appendUsuariosFiducia), idAgente)
+    val hashNuevaContrasena: String = Crypto.hashSha512(nuevaContrasena.concat(AppendPasswordUser.appendUsuariosFiducia), idAgente)
     for {
-      us_id <- validarToken(token)
-      usuarioContrasenaActual <- agenteRepo.getContrasena(passwordActual, us_id)
-      idValReglasContra <- validacionReglasClave(pw_nuevo, us_id, PerfilesUsuario.agenteEmpresarial)
+      agente <- agenteRepo.getContrasena(hashContrasenaActual, idAgente)
+      validacionReglas <- validacionReglasClave(nuevaContrasena, idAgente, PerfilesUsuario.agenteEmpresarial)
       cantRepetidas <- reglaRepo.getRegla(LlavesReglaContrasena.ULTIMAS_CONTRASENAS_NO_VALIDAS.llave)
-      contrasenasViejas <- validarContrasenasAnteriores(cantRepetidas.valor.toInt, us_id, passwordNew, passwordActual)
-      contrasenaActual <- agenteRepo.updateContrasena(passwordNew, us_id)
-      resultGuardarUltimasContrasenas <- oldPassDAO.create(UltimaContrasenaAgenteInmobiliario(None, us_id, passwordActual, new Timestamp(new DateTime().getMillis)))
-    } yield us_id
+      contrasenasViejas <- validarContrasenasAnteriores(cantRepetidas.valor.toInt, idAgente, hashNuevaContrasena, hashContrasenaActual)
+      contrasenaActual <- agenteRepo.updateContrasena(hashNuevaContrasena, idAgente)
+      ultimasContrasenas <- oldPassDAO.create(UltimaContrasenaAgenteInmobiliario(None, idAgente, hashContrasenaActual, new Timestamp(new DateTime().getMillis)))
+      eliminarPin <- if (pinHash.nonEmpty) pinRepo.eliminarPinAgente(pinHash.get) else Future.successful(0)
+    } yield idAgente
+  }
+
+  private def definirContrasena(pinHash: String, nuevaContrasena: String, agente: UsuarioAgenteInmobiliario): Future[Int] = {
+    val hashContrasena: String = Crypto.hashSha512(nuevaContrasena.concat(AppendPasswordUser.appendUsuariosFiducia), agente.id)
+    for {
+      validacionReglas <- validacionReglasClave(nuevaContrasena, agente.id, PerfilesUsuario.agenteEmpresarial)
+      actualizacionContrasena <- agenteRepo.updateContrasena(hashContrasena, agente.id)
+      ultimasContrasenas <- oldPassDAO.create(UltimaContrasenaAgenteInmobiliario(None, agente.id, hashContrasena, new Timestamp(new DateTime().getMillis)))
+    } yield agente.id
   }
 
   private def validarToken(token: String): Future[Int] = {

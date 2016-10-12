@@ -8,16 +8,26 @@ import scala.concurrent.Future
 trait ContrasenaAgenteInmobiliarioRepository {
 
   /**
-   * Crea un agente inmobiliario
+   * Actualiza la contraseña caducada de un agente inmobiliario
    *
-   * @param token         Token de tipo caducidad de contraseña , encriptado.
+   * @param token         Token de tipo caducidad de contraseña, encriptado.
    * @param pw_actual     Contraseña sin encriptar que se encuentra registrada en base de datos.
    * @param pw_nuevo      Contraseña nueva sin encriptar, por la que se emplezara pw_actual.
    * @param idUsuario     id del Usuario al cual se le registrara la nueva clave.
    * @return              Si es valida la contraseña actual, y cumple con las validaciones la nueva contraseña,
-   *                      retorna el idUsuario al cual se le actualizo la contraseña. De no se asi, retorna un futuro fallido,
-   *                      Con un msj de error acorde a la validación fallida.
+   *                      retorna el idUsuario al cual se le actualizó la contraseña. De no ser asi, retorna un futuro fallido,
+   *                      con un mensaje de error acorde a la validación fallida.
    */
-  def actualizarContrasena(token: String, pw_actual: String, pw_nuevo: String, idUsuario: Option[Int]): Future[Int]
+  def actualizarContrasenaCaducada(token: String, pw_actual: String, pw_nuevo: String, idUsuario: Option[Int]): Future[Int]
 
+  /**
+    * Actualiza la contraseña de un agente inmobiliario dado un hash asociado
+    *
+    * @param pinHash          Pin asociado al agente
+    * @param contrasena       Contraseña nueva a definir
+    * @param contrasenaActual OPCIONAL - Contraseña actual
+    * @return Si cumple con las validaciones la nueva contraseña, retorna el idUsuario al cual se le actualizó la contraseña.
+    *         De no ser asi, retorna un futuro fallido con un mensaje de error acorde a la validación fallida.
+    */
+  def actualizarContrasenaPin(pinHash: String, contrasena: String, contrasenaActual: Option[String]): Future[Int]
 }

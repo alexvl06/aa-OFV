@@ -57,6 +57,10 @@ case class UsuarioInmobiliarioDriverRepository(configDao: ConfiguracionDAOs,
     })
   }
 
+  override def getAgenteInmobiliario(id: Int): Future[Option[UsuarioAgenteInmobiliario]] = {
+    usuariosDao.get(id)
+  }
+
   override def getAgenteInmobiliario(identificacion: String,
                                      usuario: String): Future[Option[ConsultarAgenteInmobiliarioResponse]] = {
     usuariosDao.get(identificacion, usuario).map(_.map(agente => ConsultarAgenteInmobiliarioResponse(

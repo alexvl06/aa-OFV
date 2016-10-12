@@ -30,6 +30,10 @@ case class UsuarioAgenteInmobDAO(implicit dcConfig: DBConfig) extends UsuarioAge
     isExists(id, identificacion, usuario)
   }
 
+  override def get(id: Int): Future[Option[UsuarioAgenteInmobiliario]] = {
+    getById(id)
+  }
+
   override def get(identificacion: String, usuario: String): Future[Option[UsuarioAgenteInmobiliario]] = {
     getByIdentityAndUser(identificacion, usuario)
   }

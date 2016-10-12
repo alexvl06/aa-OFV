@@ -59,4 +59,12 @@ trait UsuarioInmobiliarioPinRepository {
     * @param actorySystem Sistema de actores para ejecutar el cliente smtp
     */
   def enviarEmail(correo: MailMessage)(implicit actorySystem: ActorSystem): Unit
+
+  /**
+    * Elimina un pin asociado a un agente
+    *
+    * @param pin Hash del pin a eliminar
+    * @return Un futuro con la cantidad de filas modificadas
+    */
+  def eliminarPinAgente(pin: String): Future[Int]
 }
