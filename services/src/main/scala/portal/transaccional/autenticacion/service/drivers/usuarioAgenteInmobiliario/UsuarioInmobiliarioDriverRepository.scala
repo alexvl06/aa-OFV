@@ -8,6 +8,7 @@ import co.com.alianza.exceptions.ValidacionExceptionPasswordRules
 import co.com.alianza.microservices.MailMessage
 import co.com.alianza.persistence.entities.{PinAgenteInmobiliario, UsuarioAgenteInmobiliario, UsuarioAgenteInmobiliarioTable}
 import com.typesafe.config.Config
+import enumerations.EstadosUsuarioEnumInmobiliario._
 import enumerations.{EstadosUsuarioEnum, EstadosUsuarioEnumInmobiliario}
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.{UsuarioEmpresarialRepository, UsuarioEmpresarialRepositoryG}
 import portal.transaccional.autenticacion.service.web.agenteInmobiliario.{ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse, PaginacionMetadata}
@@ -126,5 +127,11 @@ case class UsuarioInmobiliarioDriverRepository(configDao: ConfiguracionDAOs,
     }
   }
 
-  def updateContrasena(contrasena: String, idUsuario: Int): Future[Int] = usuariosDao.updateContrasena(contrasena, idUsuario)
+  override def updateContrasena(contrasena: String, idUsuario: Int): Future[Int] = {
+    usuariosDao.updateContrasena(contrasena, idUsuario)
+  }
+
+  override def updateEstadoAgente(identificacion: String, usuario: String, estado: estadoUsuarioInmobiliario): Future[Int] = {
+    usuariosDao.updateState(identificacion, usuario, estado)
+  }
 }

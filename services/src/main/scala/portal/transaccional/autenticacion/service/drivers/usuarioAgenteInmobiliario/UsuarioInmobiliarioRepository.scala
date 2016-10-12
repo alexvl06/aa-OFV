@@ -1,7 +1,8 @@
 package portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario
 
 import co.com.alianza.persistence.entities.UsuarioAgenteInmobiliario
-import portal.transaccional.autenticacion.service.web.agenteInmobiliario.{ ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse }
+import enumerations.EstadosUsuarioEnumInmobiliario._
+import portal.transaccional.autenticacion.service.web.agenteInmobiliario.{ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse}
 
 import scala.concurrent.Future
 
@@ -105,4 +106,13 @@ trait UsuarioInmobiliarioRepository {
    */
   def updateContrasena(contrasena: String, idUsuario: Int): Future[Int]
 
+  /**
+    * Actualiza el estado de un agente inmobiliario
+    *
+    * @param identificacion Identificación de la empresa
+    * @param usuario        Nombre de usuario del agente a actualizar
+    * @param estado         Estado del agente a actualizar
+    * @return Un futuro con la cantidad de filas actualizadas (0 si falla, 1 si se actualiza correctamente)
+    */
+  def updateEstadoAgente(identificacion: String, usuario: String, estado: estadoUsuarioInmobiliario): Future[Int]
 }

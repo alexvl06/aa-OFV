@@ -8,7 +8,7 @@ import co.com.alianza.exceptions.{PersistenceException, ValidacionException, Val
 import co.com.alianza.persistence.entities.{UltimaContrasenaAgenteInmobiliario, UsuarioAgenteInmobiliario}
 import co.com.alianza.util.clave.{Crypto, ErrorValidacionClave, ValidarClave}
 import co.com.alianza.util.token.Token
-import enumerations.{AppendPasswordUser, PerfilesUsuario, UsoPinEmpresaEnum}
+import enumerations.{AppendPasswordUser, EstadosUsuarioEnumInmobiliario, PerfilesUsuario, UsoPinEmpresaEnum}
 import org.joda.time.DateTime
 import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.{UsuarioInmobiliarioPinRepository, UsuarioInmobiliarioRepository}
@@ -54,6 +54,7 @@ case class ContrasenaAgenteInmobiliarioDriverRepository(agenteRepo: UsuarioInmob
       contrasenasViejas <- validarContrasenasAnteriores(cantRepetidas.valor.toInt, idAgente, hashNuevaContrasena, hashContrasenaActual)
       contrasenaActual <- agenteRepo.updateContrasena(hashNuevaContrasena, idAgente)
       ultimasContrasenas <- oldPassDAO.create(UltimaContrasenaAgenteInmobiliario(None, idAgente, hashContrasenaActual, new Timestamp(new DateTime().getMillis)))
+      actualizacionEstado <- agenteRepo.updateEstadoAgente(agente.identificacion, agente.usuario, EstadosUsuarioEnumInmobiliario.activo)
       eliminarPin <- if (pinHash.nonEmpty) pinRepo.eliminarPinAgente(pinHash.get) else Future.successful(0)
     } yield idAgente
   }
@@ -64,8 +65,8 @@ case class ContrasenaAgenteInmobiliarioDriverRepository(agenteRepo: UsuarioInmob
       validacionReglas <- validacionReglasClave(nuevaContrasena, agente.id, PerfilesUsuario.agenteEmpresarial)
       actualizacionContrasena <- agenteRepo.updateContrasena(hashContrasena, agente.id)
       ultimasContrasenas <- oldPassDAO.create(UltimaContrasenaAgenteInmobiliario(None, agente.id, hashContrasena, new Timestamp(new DateTime().getMillis)))
+      actualizacionEstado <- agenteRepo.updateEstadoAgente(agente.identificacion, agente.usuario, EstadosUsuarioEnumInmobiliario.activo)
       eliminarPin <- pinRepo.eliminarPinAgente(pinHash)
-
     } yield agente.id
   }
 
