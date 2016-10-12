@@ -1,7 +1,7 @@
 package portal.transaccional.autenticacion.service.util.JsonFormatters
 
 import co.com.alianza.commons.enumerations.TipoPermisoInmobiliario
-import co.com.alianza.exceptions.ValidacionException
+import co.com.alianza.exceptions.{ ValidacionException, ValidacionExceptionPasswordRules }
 import co.com.alianza.infrastructure.dto.{ Pregunta, Respuesta }
 import co.com.alianza.persistence.entities.{ PermisoAgenteInmobiliario, RecursoAgenteInmobiliario, RecursoComercial, RolComercial }
 import portal.transaccional.autenticacion.service.dto.{ PermisoRecursoDTO, RecursoDTO }
@@ -58,6 +58,7 @@ trait DomainJsonFormatters {
   implicit val consultarAgenteInmobiliarioListResponseFormatter = jsonFormat2(ConsultarAgenteInmobiliarioListResponse)
   implicit val recursosInmobiliariosFormatter = jsonFormat3(RecursoAgenteInmobiliario)
   implicit val edicionContrasenaFormatter = jsonFormat2(EdicionContrasena)
+  implicit val validationRulesFormatter = jsonFormat5(ValidacionExceptionPasswordRules)
 
   // ----- MAPEO DE ENUM!
   private def jsonEnum[T <: Enumeration](enu: T) = new JsonFormat[T#Value] {

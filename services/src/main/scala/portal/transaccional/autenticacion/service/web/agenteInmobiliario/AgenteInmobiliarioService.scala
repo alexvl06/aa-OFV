@@ -44,7 +44,7 @@ case class AgenteInmobiliarioService(
   val permisosPath = "permisos"
   val proyectosPath: String = "proyectos"
   val recursosPath = "recursos"
-  val changePassPath = "contrasena"
+  val changePassPath = "credenciales"
 
   val route: Route = {
     pathPrefix(fideicomisosPath / IntNumber / proyectosPath / IntNumber / permisosPath) { (fideicomiso, proyecto) =>
@@ -209,7 +209,7 @@ case class AgenteInmobiliarioService(
       entity(as[EdicionContrasena]) { contraseñas =>
         val updateF = contrasenaRepo.actualizarContrasena(Option.empty,contraseñas.pasOld,contraseñas.pasNew, Option(usuarioAuth.id))
         onComplete(updateF) {
-          case Success(resultado) => complete(StatusCodes.OK)
+          case Success(resultado) => complete(StatusCodes.OK, "true")
           case Failure(ex) => execution(ex)
         }
       }
@@ -219,8 +219,8 @@ case class AgenteInmobiliarioService(
   def execution(ex: Any): StandardRoute = {
     ex match {
       case ex: ValidacionException => complete((StatusCodes.Conflict, ex))
-      case ex: PersistenceException => complete((StatusCodes.InternalServerError, "Error inesperado"))
       case ex: ValidacionExceptionPasswordRules => complete((StatusCodes.Conflict, ex))
+      case ex: PersistenceException => complete((StatusCodes.InternalServerError, "Error inesperado"))
       case ex: Throwable => complete((StatusCodes.InternalServerError, "Error inesperado"))
     }
   }
