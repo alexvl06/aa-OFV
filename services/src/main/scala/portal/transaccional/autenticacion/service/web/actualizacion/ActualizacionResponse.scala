@@ -18,7 +18,7 @@ case class EnvioCorrespondencia(codigo: String, descri: String)
 case class DatosCliente(fdpn_nombre1: String, fdpn_nombre2: String, fdpn_apell1: String, fdpn_apell2: String, fdpn_pais_residencia: String,
   fdpn_drcl_dire_res: String, fdpn_drcl_dire_ofi: String, fdpn_drcl_ciud_res: String, fdpn_drcl_tele_res: String,
   fdpn_dcfd_email: String, fdpn_dcfd_tipo: String, fdpn_envio_corresp: String, fdpn_telefono_movil_1: String,
-  fdpn_pais_tel_mov_1: String, fdpn_ocupacion: String, fdpn_ciua: String, fdpn_fecha_ult_act: String,
+  fdpn_pais_tel_mov_1: String, fdpn_ocupacion: String, fdpn_ciua: String, fdpn_fecha_ult_act: Option[String],
   `nvl(fdpn_fecha_ult_act,fdpn_fecha_creacion)`: String, datosEmp: DatosEmpresa)
 
 case class DatosEmpresa(fdpn_pafd_pais: String, fdpn_nombre_emp: String, fdpn_nit_emp: String, fdpn_cargo: String, fdpn_dire_emp: String,

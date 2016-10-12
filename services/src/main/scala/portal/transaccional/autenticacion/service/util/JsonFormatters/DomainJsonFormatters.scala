@@ -26,15 +26,13 @@ trait DomainJsonFormatters {
 
   //actualizacion
   implicit val datosEmpresaMessageFormat = jsonFormat17(DatosEmpresaMessage)
-  implicit val actualizacionMessageFormat = jsonFormat22(ActualizacionMessage)
+  implicit val actualizacionMessageFormat = jsonFormat20(ActualizacionMessage)
   implicit val paisFormat = jsonFormat2(Pais)
   implicit val ocupacionFormat = jsonFormat2(Ocupacion)
   implicit val tipoCorreoFormat = jsonFormat2(TipoCorreo)
   implicit val ciudadFormat = jsonFormat2(Ciudad)
   implicit val actividadFormat = jsonFormat2(ActividadEconomica)
   implicit val correspondenciaFormat = jsonFormat2(EnvioCorrespondencia)
-  implicit val datosEmpresaFormat = jsonFormat16(DatosEmpresa)
-  implicit val datosClienteFormat = jsonFormat19(DatosCliente)
 
   //validacion
   implicit val validacionExceptionFormatter = jsonFormat2(ValidacionException)

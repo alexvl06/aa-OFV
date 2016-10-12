@@ -18,7 +18,7 @@ trait ActualizacionRepository {
 
   def obtenerDatos(user: UsuarioAuth): Future[DatosCliente]
 
-  def comprobarDatos(): Future[Boolean]
+  def comprobarDatos(user: UsuarioAuth): Future[Boolean]
 
   def obtenerCiudades(pais: Int): Future[Seq[Ciudad]]
 
@@ -26,6 +26,6 @@ trait ActualizacionRepository {
 
   def obtenerActividadesEconomicas(): Future[Seq[ActividadEconomica]]
 
-  def actualizarDatos(): Future[Boolean]
+  def actualizarDatos(user: UsuarioAuth, msg: ActualizacionMessage): Future[String]
 
 }

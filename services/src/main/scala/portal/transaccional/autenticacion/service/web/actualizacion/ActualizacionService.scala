@@ -7,6 +7,7 @@ import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.infrastructure.auditing.AuditingUser.AuditingUserData
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
+import co.com.alianza.util.json.JsonUtil
 import portal.transaccional.autenticacion.service.drivers.actualizacion.ActualizacionRepository
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
@@ -56,10 +57,11 @@ case class ActualizacionService(user: UsuarioAuth, kafkaActor: ActorSelection,
                 requestAuditing[PersistenceException, ActualizacionMessage](r, AuditingHelper.fiduciariaTopic, AuditingHelper.actualizacionDatosUsuarioIndex,
                   ip.value, kafkaActor, usuario, Option(actualizacion))
             } {
-              val resultado = actualizacionRepo.actualizarDatos()
+              val resultado: Future[String] = actualizacionRepo.actualizarDatos(user, actualizacion)
               onComplete(resultado) {
-                case Success(value) => complete(value.toString)
-                case Failure(ex) => complete((StatusCodes.Unauthorized, "El usuario no esta autorizado para obtener ip"))
+                case Success(value)if(value.equals("OK")) => complete(value)
+                case Success(value) => manejarError(value)
+                case Failure(ex) => manejarError(ex)
               }
             }
         }
@@ -71,8 +73,8 @@ case class ActualizacionService(user: UsuarioAuth, kafkaActor: ActorSelection,
       pathEndOrSingleSlash {
         val result: Future[Seq[Pais]] = actualizacionRepo.obtenerPaises()
         onComplete(result) {
-          case Success(value) => execution(value)
-          case Failure(ex) => execution(ex)
+          case Success(value) => complete((StatusCodes.OK, value))
+          case Failure(ex) => manejarError(ex)
         }
       }
     }
@@ -84,8 +86,8 @@ case class ActualizacionService(user: UsuarioAuth, kafkaActor: ActorSelection,
         pathEndOrSingleSlash {
           val result: Future[Seq[Ciudad]] = actualizacionRepo.obtenerCiudades(pais)
           onComplete(result) {
-            case Success(value) => execution(value)
-            case Failure(ex) => execution(ex)
+            case Success(value) => complete((StatusCodes.OK, value))
+            case Failure(ex) => manejarError(ex)
           }
         }
     }
@@ -96,8 +98,8 @@ case class ActualizacionService(user: UsuarioAuth, kafkaActor: ActorSelection,
       pathEndOrSingleSlash {
         val result: Future[Seq[TipoCorreo]] = actualizacionRepo.obtenerTiposCorreo()
         onComplete(result) {
-          case Success(value) => execution(value)
-          case Failure(ex) => execution(ex)
+          case Success(value) => complete((StatusCodes.OK, value))
+          case Failure(ex) => manejarError(ex)
         }
       }
     }
@@ -108,8 +110,8 @@ case class ActualizacionService(user: UsuarioAuth, kafkaActor: ActorSelection,
       pathEndOrSingleSlash {
         val result: Future[Seq[EnvioCorrespondencia]] = actualizacionRepo.obtenerEnviosCorrespondencia()
         onComplete(result) {
-          case Success(value) => execution(value)
-          case Failure(ex) => execution(ex)
+          case Success(value) => complete((StatusCodes.OK, value))
+          case Failure(ex) => manejarError(ex)
         }
       }
     }
@@ -120,8 +122,8 @@ case class ActualizacionService(user: UsuarioAuth, kafkaActor: ActorSelection,
       pathEndOrSingleSlash {
         val result: Future[Seq[Ocupacion]] = actualizacionRepo.obtenerOcupaciones()
         onComplete(result) {
-          case Success(value) => execution(value)
-          case Failure(ex) => execution(ex)
+          case Success(value) => complete((StatusCodes.OK, value))
+          case Failure(ex) => manejarError(ex)
         }
       }
     }
@@ -132,8 +134,8 @@ case class ActualizacionService(user: UsuarioAuth, kafkaActor: ActorSelection,
       pathEndOrSingleSlash {
         val result: Future[Seq[ActividadEconomica]] = actualizacionRepo.obtenerActividadesEconomicas()
         onComplete(result) {
-          case Success(value) => execution(value)
-          case Failure(ex) => execution(ex)
+          case Success(value) => complete((StatusCodes.OK, value))
+          case Failure(ex) => manejarError(ex)
         }
       }
     }
@@ -142,10 +144,11 @@ case class ActualizacionService(user: UsuarioAuth, kafkaActor: ActorSelection,
   def comprobarDatos = {
     pathPrefix(comprobar) {
       pathEndOrSingleSlash {
-        val result: Future[Boolean] = actualizacionRepo.comprobarDatos()
+        val result: Future[Boolean] = actualizacionRepo.comprobarDatos(user)
         onComplete(result) {
-          case Success(value) => execution(value)
-          case Failure(ex) => execution(ex)
+          case Success(value) if (value) => complete((StatusCodes.Conflict, value.toString()))
+          case Success(value) if (!value) => complete((StatusCodes.OK, value.toString()))
+          case Failure(ex) => manejarError(ex)
         }
       }
     }
@@ -156,32 +159,20 @@ case class ActualizacionService(user: UsuarioAuth, kafkaActor: ActorSelection,
       pathEndOrSingleSlash {
         val result: Future[DatosCliente] = actualizacionRepo.obtenerDatos(user)
         onComplete(result) {
-          case Success(value) => execution(value)
-          case Failure(ex) => execution(ex)
+          case Success(value) => complete((StatusCodes.OK, JsonUtil.toJson(value)))
+          case Failure(ex) => manejarError(ex)
         }
       }
     }
   }
 
-  private def execution(ex: Any): StandardRoute = {
-    ex match {
-      case value: Seq[Pais] => complete((StatusCodes.OK, value))
-      case value: Seq[Ciudad] => complete((StatusCodes.OK, value))
-      case value: Seq[TipoCorreo] => complete((StatusCodes.OK, value))
-      case value: Seq[EnvioCorrespondencia] => complete((StatusCodes.OK, value))
-      case value: Seq[Ocupacion] => complete((StatusCodes.OK, value))
-      case value: Seq[ActividadEconomica] => complete((StatusCodes.OK, value))
-      case value: DatosCliente =>
-        println("datos clientes"); complete((StatusCodes.OK, value))
-      //TODO: AGREGAR MARSHABLE
-      case value: Boolean if (value) => complete((StatusCodes.OK, value.toString()))
-      case value: Boolean if (!value) => complete((StatusCodes.OK, value.toString()))
-
+  private def manejarError(error: Throwable): StandardRoute = {
+    error match {
       case ex: ValidacionException =>
         ex.printStackTrace(); complete((StatusCodes.Conflict, ex))
       case ex: Throwable =>
         ex.printStackTrace(); complete((StatusCodes.InternalServerError, "Error inesperado"))
-      case any: Any => println(); complete((StatusCodes.InternalServerError, "Error inesperado"))
+      case any: Any => println("any"); complete((StatusCodes.InternalServerError, "Error inesperado"))
     }
   }
 
