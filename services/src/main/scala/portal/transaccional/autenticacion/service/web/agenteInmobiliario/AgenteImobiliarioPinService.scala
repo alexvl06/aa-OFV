@@ -62,8 +62,8 @@ case class AgenteImobiliarioPinService(pinRepo: UsuarioInmobiliarioPinRepository
         onComplete(actualizacionF) {
           case Success(_) => complete(StatusCodes.OK)
           case Failure(error) => error match {
-            case x: ValidacionException => complete(StatusCodes.BadRequest -> x)
-            case x: ValidacionExceptionPasswordRules => complete(StatusCodes.BadRequest -> x)
+            case x: ValidacionException => complete(StatusCodes.Conflict -> x)
+            case x: ValidacionExceptionPasswordRules => complete(StatusCodes.Conflict -> x)
             case _ => complete(StatusCodes.InternalServerError)
           }
         }
