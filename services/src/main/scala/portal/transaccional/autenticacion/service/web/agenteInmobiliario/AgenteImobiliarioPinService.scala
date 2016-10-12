@@ -1,7 +1,7 @@
 package portal.transaccional.autenticacion.service.web.agenteInmobiliario
 
 import co.com.alianza.app.CrossHeaders
-import co.com.alianza.exceptions.ValidacionException
+import co.com.alianza.exceptions.{ValidacionException, ValidacionExceptionPasswordRules}
 import enumerations.EstadosPin._
 import portal.transaccional.autenticacion.service.drivers.contrasenaAgenteInmobiliario.ContrasenaAgenteInmobiliarioRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.UsuarioInmobiliarioPinRepository
@@ -62,7 +62,8 @@ case class AgenteImobiliarioPinService(pinRepo: UsuarioInmobiliarioPinRepository
         onComplete(actualizacionF) {
           case Success(_) => complete(StatusCodes.OK)
           case Failure(error) => error match {
-            case ex: ValidacionException => complete(StatusCodes.BadRequest, ex)
+            case x: ValidacionException => complete(StatusCodes.BadRequest -> x)
+            case x: ValidacionExceptionPasswordRules => complete(StatusCodes.BadRequest -> x)
             case _ => complete(StatusCodes.InternalServerError)
           }
         }
