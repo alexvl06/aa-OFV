@@ -6,15 +6,15 @@ import akka.actor.ActorSystem
 import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.exceptions.ValidacionExceptionPasswordRules
 import co.com.alianza.microservices.MailMessage
-import co.com.alianza.persistence.entities.{PinAgenteInmobiliario, UsuarioAgenteInmobiliario, UsuarioAgenteInmobiliarioTable}
+import co.com.alianza.persistence.entities.{ PinAgenteInmobiliario, UsuarioAgenteInmobiliario, UsuarioAgenteInmobiliarioTable }
 import com.typesafe.config.Config
 import enumerations.EstadosUsuarioEnumInmobiliario._
-import enumerations.{EstadosUsuarioEnum, EstadosUsuarioEnumInmobiliario}
-import portal.transaccional.autenticacion.service.drivers.usuarioAgente.{UsuarioEmpresarialRepository, UsuarioEmpresarialRepositoryG}
-import portal.transaccional.autenticacion.service.web.agenteInmobiliario.{ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse, PaginacionMetadata}
+import enumerations.{ EstadosUsuarioEnum, EstadosUsuarioEnumInmobiliario }
+import portal.transaccional.autenticacion.service.drivers.usuarioAgente.{ UsuarioEmpresarialRepository, UsuarioEmpresarialRepositoryG }
+import portal.transaccional.autenticacion.service.web.agenteInmobiliario.{ ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse, PaginacionMetadata }
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 /**
   * Implementación del repositorio de agentes inmobiliarios

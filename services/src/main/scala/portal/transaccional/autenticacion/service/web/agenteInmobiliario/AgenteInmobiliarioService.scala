@@ -1,7 +1,6 @@
 package portal.transaccional.autenticacion.service.web.agenteInmobiliario
 
 import co.com.alianza.app.CrossHeaders
-import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import co.com.alianza.exceptions.{ PersistenceException, ValidacionException, ValidacionExceptionPasswordRules }
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.persistence.entities.PermisoAgenteInmobiliario
@@ -28,6 +27,8 @@ import scala.util.{ Failure, Success }
  * <li>GET /agentes-inmobiliarios/{usuario-agente} -> Lista el detalle de un agente inmobiliario</li>
  * <li>PUT /agentes-inmobiliarios/{usuario-agente} -> Edita el detalle un agente inmobiliario</li>
  * <li>PUT /agentes-inmobiliarios/{usuario-agente}/estado -> Activa o desactiva un agente inmobiliario</li>
+ * <li>PUT /agentes-inmobiliarios/{usuario-agente}/credenciales -> Cambia las credenciales de un agente inmobiliario</li>
+ * <li>GET /agentes-inmobiliarios/{usuario-agente}/recursos -> Lista los recursos autorizados de un agente inmobiliario</li>
  * </ul>
  */
 case class AgenteInmobiliarioService(
@@ -55,11 +56,11 @@ case class AgenteInmobiliarioService(
       pathEndOrSingleSlash {
         getAgenteInmobiliarioList ~ createAgenteInmobiliario
       }
-    } ~ pathPrefix(agentesPath / recursosPath) {
+    } ~ pathPrefix(agentesPath / Segment / recursosPath) { usuarioAgente =>
       pathEndOrSingleSlash {
         getRecursos
       }
-    } ~ pathPrefix(agentesPath / changePassPath ) {
+    } ~ pathPrefix(agentesPath / Segment / changePassPath ) { usuarioAgente =>
       pathEndOrSingleSlash {
         updateByPassword
       }
@@ -206,8 +207,8 @@ case class AgenteInmobiliarioService(
 
   private def updateByPassword: Route = {
     put {
-      entity(as[EdicionContrasena]) { contraseñas =>
-        val updateF = contrasenaRepo.actualizarContrasena(Option.empty,contraseñas.pasOld,contraseñas.pasNew, Option(usuarioAuth.id))
+      entity(as[ActualizarCredencialesAgenteRequest]) { contraseñas =>
+        val updateF = contrasenaRepo.actualizarContrasenaCaducada(Option.empty, contraseñas.contrasenaActual.getOrElse(""), contraseñas.contrasena, Option(usuarioAuth.id))
         onComplete(updateF) {
           case Success(resultado) => complete(StatusCodes.OK, "true")
           case Failure(ex) => execution(ex)
@@ -224,5 +225,4 @@ case class AgenteInmobiliarioService(
       case ex: Throwable => complete((StatusCodes.InternalServerError, "Error inesperado"))
     }
   }
-
 }

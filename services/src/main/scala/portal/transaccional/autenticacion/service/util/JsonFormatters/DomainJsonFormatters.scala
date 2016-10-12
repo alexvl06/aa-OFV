@@ -5,17 +5,13 @@ import co.com.alianza.exceptions.{ ValidacionException, ValidacionExceptionPassw
 import co.com.alianza.infrastructure.dto.{ Pregunta, Respuesta }
 import co.com.alianza.persistence.entities.{ PermisoAgenteInmobiliario, RecursoAgenteInmobiliario, RecursoComercial, RolComercial }
 import portal.transaccional.autenticacion.service.dto.{ PermisoRecursoDTO, RecursoDTO }
-import co.com.alianza.exceptions.{ValidacionException, ValidacionExceptionPasswordRules}
-import co.com.alianza.infrastructure.dto.{Pregunta, Respuesta}
-import co.com.alianza.persistence.entities.{PermisoAgenteInmobiliario, RecursoAgenteInmobiliario, RecursoComercial, RolComercial}
-import portal.transaccional.autenticacion.service.dto.{PermisoRecursoDTO, RecursoDTO}
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
-import portal.transaccional.autenticacion.service.web.autenticacion.{AutenticarRequest, AutenticarUsuarioComercialRequest, AutenticarUsuarioEmpresarialRequest}
+import portal.transaccional.autenticacion.service.web.agenteInmobiliario._
+import portal.transaccional.autenticacion.service.web.autenticacion.{ AutenticarRequest, AutenticarUsuarioComercialRequest, AutenticarUsuarioEmpresarialRequest }
 import portal.transaccional.autenticacion.service.web.autorizacion.InvalidarTokenRequest
 import portal.transaccional.autenticacion.service.web.ip.AgregarIpRequest
-import portal.transaccional.autenticacion.service.web.agenteInmobiliario._
-import portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.{GuardarRespuestasRequest, ResponseObtenerPreguntas, ResponseObtenerPreguntasComprobar, RespuestasComprobacionRequest}
-import spray.json.{DeserializationException, JsString, JsValue, JsonFormat}
+import portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.{ GuardarRespuestasRequest, ResponseObtenerPreguntas, ResponseObtenerPreguntasComprobar, RespuestasComprobacionRequest }
+import spray.json.{ DeserializationException, JsString, JsValue, JsonFormat }
 
 trait DomainJsonFormatters {
 
@@ -62,7 +58,6 @@ trait DomainJsonFormatters {
   implicit val paginationMetadataResponseFormatter = jsonFormat5(PaginacionMetadata)
   implicit val consultarAgenteInmobiliarioListResponseFormatter = jsonFormat2(ConsultarAgenteInmobiliarioListResponse)
   implicit val recursosInmobiliariosFormatter = jsonFormat3(RecursoAgenteInmobiliario)
-  implicit val edicionContrasenaFormatter = jsonFormat2(EdicionContrasena)
   implicit val actualizarCredencialesRequestFormatter = jsonFormat3(ActualizarCredencialesAgenteRequest)
 
   // ----- MAPEO DE ENUM!
