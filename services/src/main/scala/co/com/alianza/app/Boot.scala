@@ -11,7 +11,7 @@ object Boot extends App with HostBinding with Core with BootedCore with CoreActo
   private val rootService = system.actorOf(
     Props(AlianzaRouter(autenticacionRepo, autenticacionEmpresaRepo, autenticacionComercialRepo,
       usuarioRepo, usuarioAgenteRepo, usuarioAdminRepo, autorizacionUsuarioRepo, kafkaActor, preguntasAutovalidacionActor, usuariosActor,
-      confrontaActor, actualizacionActor, permisoTransaccionalActor, agenteEmpresarialActor, pinActor, pinUsuarioEmpresarialAdminActor,
+      confrontaActor, actualizacionRepository, permisoTransaccionalActor, agenteEmpresarialActor, pinActor, pinUsuarioEmpresarialAdminActor,
       pinUsuarioAgenteEmpresarialActor, horarioEmpresaActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor,
       contrasenasActor, autorizacionAgenteRepo, autorizacionAdminRepo, preguntasValidacionRepository, respuestaUsuarioRepo,
       respuestaUsuariAdminoRepo, ipRepo, autorizacionComercialRepo, autorizacionComercialAdminRepo, autorizacionRecursoComercialRepository,

@@ -13,7 +13,8 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * Created by s4n on 2016
  */
-case class IpDriverRepository(empresaDAO: EmpresaAdminDAOs, ipEmpresaDAO: IpEmpresaDAOs, ipDAO: IpUsuarioDAOs, sesionRepo: SesionRepository)(implicit val ex: ExecutionContext) extends IpRepository {
+case class IpDriverRepository(empresaDAO: EmpresaAdminDAOs, ipEmpresaDAO: IpEmpresaDAOs,
+    ipDAO: IpUsuarioDAOs, sesionRepo: SesionRepository)(implicit val ex: ExecutionContext) extends IpRepository {
 
   def obtenerIps(usuario: UsuarioAuth): Future[Seq[IpResponse]] = {
     usuario.tipoCliente match {
@@ -22,7 +23,7 @@ case class IpDriverRepository(empresaDAO: EmpresaAdminDAOs, ipEmpresaDAO: IpEmpr
           idEmpresa <- empresaDAO.obtenerIdEmpresa(usuario.id)
           ips <- ipEmpresaDAO.getById(idEmpresa)
         } yield ips.map(ip => IpResponse(ip.ip))
-      case TiposCliente.clienteIndividual => ipDAO.getAll().map(_.map(ip => IpResponse(ip.ip)))
+      case TiposCliente.clienteIndividual => ipDAO.getById(usuario.id).map(_.map(ip => IpResponse(ip.ip)))
       case _ => Future.failed(ValidacionException("401.3", "Tipo de usuario no permitido"))
     }
   }

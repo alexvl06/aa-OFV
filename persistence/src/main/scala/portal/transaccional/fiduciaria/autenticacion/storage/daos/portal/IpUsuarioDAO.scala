@@ -20,10 +20,6 @@ case class IpUsuarioDAO(implicit val dcConfig: DBConfig) extends TableQuery(new 
     run(this.filter(_.idUsuario === idUsuario).result)
   }
 
-  def getAll(): Future[Seq[IpsUsuario]] = {
-    run(this.result)
-  }
-
   def getByUsuarioIp(idUsuario: Int, ip: String): Future[Option[IpsUsuario]] = {
     run(this.filter(x => x.idUsuario === idUsuario && x.ip === ip).result.headOption)
   }

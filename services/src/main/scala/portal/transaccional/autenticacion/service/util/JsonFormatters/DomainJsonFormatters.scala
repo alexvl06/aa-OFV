@@ -5,6 +5,7 @@ import co.com.alianza.infrastructure.dto.{ Pregunta, Respuesta }
 import co.com.alianza.persistence.entities._
 import portal.transaccional.autenticacion.service.dto.{ PermisoRecursoDTO, RecursoDTO }
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
+import portal.transaccional.autenticacion.service.web.actualizacion._
 import portal.transaccional.autenticacion.service.web.autenticacion.{ AutenticarRequest, AutenticarUsuarioComercialRequest, AutenticarUsuarioEmpresarialRequest }
 import portal.transaccional.autenticacion.service.web.autorizacion.InvalidarTokenRequest
 import portal.transaccional.autenticacion.service.web.comercial.{ ActualizarContrasenaRequest, CrearAdministradorRequest, ValidarEmpresaRequest }
@@ -23,6 +24,16 @@ trait DomainJsonFormatters {
 
   //autorizacion
   implicit val invalidarTokenFormatter = jsonFormat1(InvalidarTokenRequest)
+
+  //actualizacion
+  implicit val datosEmpresaMessageFormat = jsonFormat17(DatosEmpresaMessage)
+  implicit val actualizacionMessageFormat = jsonFormat20(ActualizacionMessage)
+  implicit val paisFormat = jsonFormat2(Pais)
+  implicit val ocupacionFormat = jsonFormat2(Ocupacion)
+  implicit val tipoCorreoFormat = jsonFormat2(TipoCorreo)
+  implicit val ciudadFormat = jsonFormat2(Ciudad)
+  implicit val actividadFormat = jsonFormat2(ActividadEconomica)
+  implicit val correspondenciaFormat = jsonFormat2(EnvioCorrespondencia)
 
   //validacion
   implicit val validacionExceptionFormatter = jsonFormat2(ValidacionException)

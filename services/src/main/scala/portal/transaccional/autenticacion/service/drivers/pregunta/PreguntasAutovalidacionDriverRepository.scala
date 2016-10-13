@@ -151,6 +151,7 @@ case class PreguntasAutovalidacionDriverRepository(
     tipoCliente match {
       case TiposCliente.clienteIndividual => alianzaDao.deleteIndividualClientAnswers(idUsuario)
       case TiposCliente.clienteAdministrador => alianzaDao.bloquearRespuestasClienteAdministrador(idUsuario)
+      case _ => Future.failed(ValidacionException("", "Error tipo de cliente no valido."))
     }
   }
 

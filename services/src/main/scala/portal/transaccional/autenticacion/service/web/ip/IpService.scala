@@ -20,7 +20,8 @@ import scala.util.{ Failure, Success }
 /**
  * Created by s4n on 2016
  */
-case class IpService(user: UsuarioAuth, kafkaActor: ActorSelection, ipRepo: IpRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
+case class IpService(user: UsuarioAuth, kafkaActor: ActorSelection, ipRepo: IpRepository)(implicit val ec: ExecutionContext)
+    extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   val ipsUsuarios = "ipsUsuarios"
   val ponerIpHabitual = "ponerIpHabitual"
@@ -51,7 +52,7 @@ case class IpService(user: UsuarioAuth, kafkaActor: ActorSelection, ipRepo: IpRe
         val resultado: Future[Seq[IpResponse]] = ipRepo.obtenerIps(user)
         onComplete(resultado) {
           case Success(value) => complete(value)
-          case Failure(ex) => complete((StatusCodes.Unauthorized, "El usuario no esta autorizado para obtener ip"))
+          case Failure(ex) => complete((StatusCodes.Conflict, "Error obtener"))
         }
       }
     }
@@ -70,7 +71,7 @@ case class IpService(user: UsuarioAuth, kafkaActor: ActorSelection, ipRepo: IpRe
             val resultado: Future[Int] = ipRepo.eliminarIp(user, eliminarIp.ip)
             onComplete(resultado) {
               case Success(value) => complete(value.toString)
-              case Failure(ex) => complete((StatusCodes.Unauthorized, "El usuario no esta autorizado para registrar ip"))
+              case Failure(ex) => complete((StatusCodes.Conflict, "Error al eliminar"))
             }
           }
       }
@@ -90,7 +91,7 @@ case class IpService(user: UsuarioAuth, kafkaActor: ActorSelection, ipRepo: IpRe
             val resultado: Future[String] = ipRepo.agregarIp(user, agregarIp.ip)
             onComplete(resultado) {
               case Success(value) => complete("Registro de IP Exitoso")
-              case Failure(ex) => complete((StatusCodes.Unauthorized, "El usuario no esta autorizado para registrar ip"))
+              case Failure(ex) => complete((StatusCodes.Conflict, "Error al agregar"))
             }
           }
       }
@@ -108,7 +109,7 @@ case class IpService(user: UsuarioAuth, kafkaActor: ActorSelection, ipRepo: IpRe
         val resultado: Future[String] = ipRepo.agregarIp(user, ipPeticion)
         onComplete(resultado) {
           case Success(value) => complete(value)
-          case Failure(ex) => complete((StatusCodes.Unauthorized, "El usuario no esta autorizado para registrar ip"))
+          case Failure(ex) => complete((StatusCodes.Conflict, "Error al agregar"))
         }
       }
     }

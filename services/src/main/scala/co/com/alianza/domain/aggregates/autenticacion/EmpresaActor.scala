@@ -35,9 +35,15 @@ class EmpresaActor(var empresa: Empresa) extends Actor with ActorLogging {
       if (sesionesActivas.isEmpty) context.stop(self)
       sender ! Unit
 
-    case AgregarIp(ip) => ips = if (!ips.contains(ip)) List(ip) ::: ips else ips
+    case AgregarIp(ip) =>
+      val currentSender = sender()
+      ips = if (!ips.contains(ip)) List(ip) ::: ips else ips
+      sender() ! ips
 
-    case RemoverIp(ip) => ips = if (ips.contains(ip)) ips filterNot { _ == ip } else ips
+    case RemoverIp(ip) =>
+      val currentSender = sender()
+      ips = if (ips.contains(ip)) ips filterNot { _ == ip } else ips
+      sender() ! ips
 
     case CerrarSesiones =>
       sesionesActivas foreach { _ ! ExpirarSesion() }; context.stop(self)

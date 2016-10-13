@@ -4,8 +4,10 @@ import akka.actor.{ ActorLogging, ActorSelection, ActorSystem }
 import co.com.alianza.app.handler.CustomRejectionHandler
 import co.com.alianza.infrastructure.security.ServiceAuthorization
 import co.com.alianza.web.empresa.{ AdministrarContrasenaEmpresaService, UsuarioEmpresaService }
+import portal.transaccional.autenticacion.service.drivers.actualizacion.ActualizacionRepository
 import portal.transaccional.autenticacion.service.drivers.autorizacion._
 import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaRepository
+import portal.transaccional.autenticacion.service.web.actualizacion.ActualizacionService
 import portal.transaccional.autenticacion.service.web.reglaContrasena.ReglaContrasenaService
 import spray.routing._
 import spray.util.LoggingContext
@@ -22,6 +24,7 @@ import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.Usua
 import portal.transaccional.autenticacion.service.web.autorizacion.{ AutorizacionRecursoComercialService, AutorizacionService }
 import portal.transaccional.autenticacion.service.web.autenticacion.AutenticacionService
 import portal.transaccional.autenticacion.service.web.sesion.SesionService
+import co.com.alianza.web.PreguntasAutovalidacionService
 import portal.transaccional.autenticacion.service.drivers.rolRecursoComercial.{ RecursoComercialRepository, RolComercialRepository }
 import portal.transaccional.autenticacion.service.drivers.usuarioComercialAdmin.UsuarioComercialAdminRepository
 import portal.transaccional.autenticacion.service.web.ip.IpService
@@ -33,7 +36,7 @@ case class AlianzaRouter(
   autenticacionComercialRepositorio: AutenticacionComercialRepository, usuarioRepositorio: UsuarioRepository,
   usuarioAgenteRepositorio: UsuarioEmpresarialRepository, usuarioAdminRepositorio: UsuarioEmpresarialAdminRepository,
   autorizacionUsuarioRepo: AutorizacionUsuarioRepository, kafkaActor: ActorSelection, preguntasAutovalidacionActor: ActorSelection,
-  usuariosActor: ActorSelection, confrontaActor: ActorSelection, actualizacionActor: ActorSelection, permisoTransaccionalActor: ActorSelection,
+  usuariosActor: ActorSelection, confrontaActor: ActorSelection, actualizacionRepo: ActualizacionRepository, permisoTransaccionalActor: ActorSelection,
   agenteEmpresarialActor: ActorSelection, pinActor: ActorSelection, pinUsuarioEmpresarialAdminActor: ActorSelection,
   pinUsuarioAgenteEmpresarialActor: ActorSelection, horarioEmpresaActor: ActorSelection, contrasenasAgenteEmpresarialActor: ActorSelection,
   contrasenasClienteAdminActor: ActorSelection, contrasenasActor: ActorSelection, autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository,
@@ -65,7 +68,7 @@ case class AlianzaRouter(
             RecursoGraficoComercialService(recursoComercialRepository, rolComercialRepository).route ~
             AutorizacionRecursoComercialService(autorizacionRecursoComercialRepository).route ~
             ComercialService(user, usuarioComercialAdminRepo).route ~
-            ActualizacionService(actualizacionActor, kafkaActor).route(user) ~
+            ActualizacionService(user, kafkaActor, actualizacionRepo).route ~
           HorarioEmpresaService(kafkaActor, horarioEmpresaActor).route(user) ~
             //TODO: Completar Refactor HorarioEmpresa By Jonathan
             //portal.transaccional.autenticacion.service.web.horarioEmpresa.HorarioEmpresaService(user, horarioEmpresaRepository).route ~
