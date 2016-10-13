@@ -23,7 +23,7 @@ case class HorarioEmpresaService(user: UsuarioAuth, horarioEmpresaRepository: Ho
 
   val route: Route = {
     path(horarioEmpresaPath) {
-      obtenerHorarioEmpresa() ~ agregarHorarioEmpresa(user)
+      obtenerHorarioEmpresa(user) ~ agregarHorarioEmpresa(user)
     } ~ path(diaFestivoPath) {
       esDiaFestivo()
     } ~ path(validarHorarioPath) {
@@ -31,9 +31,9 @@ case class HorarioEmpresaService(user: UsuarioAuth, horarioEmpresaRepository: Ho
     }
   }
 
-  private def obtenerHorarioEmpresa() = {
+  private def obtenerHorarioEmpresa(user: UsuarioAuth) = {
     get {
-      val resultado: Future[String] = horarioEmpresaRepository.obtenerHorarioEmpresa()
+      val resultado: Future[Option[ResponseObtenerHorario]] = horarioEmpresaRepository.obtenerHorarioEmpresa(user.identificacion)
       onComplete(resultado) {
         case Success(value) => complete(value)
         case Failure(ex) => execution(ex)

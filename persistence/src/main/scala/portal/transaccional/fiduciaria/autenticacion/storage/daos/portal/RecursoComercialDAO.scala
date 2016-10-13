@@ -10,7 +10,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * Created by dfbaratov on 23/08/16.
  */
-case class RecursoComercialDAO()(implicit val ec: ExecutionContext, dcConfig: DBConfig) extends TableQuery(new RecursoComercialTable(_)) with RecursoComercialDAOs with AlianzaStorageHelper {
+case class RecursoComercialDAO()(implicit val dcConfig: DBConfig) extends TableQuery(new RecursoComercialTable(_)) with RecursoComercialDAOs {
 
   import dcConfig.DB._
   import dcConfig.driver.api._

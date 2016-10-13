@@ -60,7 +60,6 @@ case class PreguntasAutovalidacionDriverRepository(
     val futurePreguntas = tipoCliente match {
       case TiposCliente.clienteIndividual => alianzaDao.getIndividualClientQuestions(idUsuario)
       case TiposCliente.clienteAdministrador =>
-        println("111111111111111")
         alianzaDao.getAdministratorClientQuestions(idUsuario)
       case _ => Future.failed(ValidacionException("", "Error tipo de cliente no valido."))
     }

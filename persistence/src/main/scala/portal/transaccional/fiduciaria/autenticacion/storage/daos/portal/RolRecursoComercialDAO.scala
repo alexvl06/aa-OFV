@@ -10,7 +10,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * Created by dfbaratov on 23/08/16.
  */
-case class RolRecursoComercialDAO()(implicit val ec: ExecutionContext, dcConfig: DBConfig) extends RolRecursoComercialDAOs with AlianzaStorageHelper {
+case class RolRecursoComercialDAO()(dcConfig: DBConfig) extends RolRecursoComercialDAOs {
 
   val recursos = TableQuery[RecursoComercialTable]
   val rolesRecurso = TableQuery[RolRecursoComercialTable]

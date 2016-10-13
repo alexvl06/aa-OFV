@@ -1,6 +1,6 @@
 package co.com.alianza.app
 
-import akka.actor.{ ActorLogging, ActorRef, ActorSelection, ActorSystem }
+import akka.actor.{ ActorLogging, ActorSelection, ActorSystem }
 import co.com.alianza.app.handler.CustomRejectionHandler
 import co.com.alianza.infrastructure.security.ServiceAuthorization
 import co.com.alianza.web.empresa.{ AdministrarContrasenaEmpresaService, UsuarioEmpresaService }
@@ -12,6 +12,7 @@ import spray.util.LoggingContext
 import co.com.alianza.web._
 import co.com.alianza.webvalidarPinClienteAdmin.PinService
 import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionComercialRepository, AutenticacionEmpresaRepository, AutenticacionRepository }
+import portal.transaccional.autenticacion.service.drivers.horarioEmpresa.HorarioEmpresaRepository
 import portal.transaccional.autenticacion.service.drivers.ip.IpRepository
 import portal.transaccional.autenticacion.service.drivers.pregunta.PreguntasAutovalidacionRepository
 import portal.transaccional.autenticacion.service.drivers.respuesta.RespuestaUsuarioRepository
@@ -21,7 +22,6 @@ import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.Usua
 import portal.transaccional.autenticacion.service.web.autorizacion.{ AutorizacionRecursoComercialService, AutorizacionService }
 import portal.transaccional.autenticacion.service.web.autenticacion.AutenticacionService
 import portal.transaccional.autenticacion.service.web.sesion.SesionService
-import co.com.alianza.web.PreguntasAutovalidacionService
 import portal.transaccional.autenticacion.service.drivers.rolRecursoComercial.{ RecursoComercialRepository, RolComercialRepository }
 import portal.transaccional.autenticacion.service.drivers.usuarioComercialAdmin.UsuarioComercialAdminRepository
 import portal.transaccional.autenticacion.service.web.ip.IpService
@@ -41,7 +41,8 @@ case class AlianzaRouter(
   respuestaUsuarioRepository: RespuestaUsuarioRepository, respuestaUsuarioAdminRepository: RespuestaUsuarioRepository, ipRepo: IpRepository,
   autorizacionComercialRepo: AutorizacionUsuarioComercialRepository, autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository,
   autorizacionRecursoComercialRepository: AutorizacionRecursoComercialRepository, recursoComercialRepository: RecursoComercialRepository,
-  rolComercialRepository: RolComercialRepository, usuarioComercialAdminRepo: UsuarioComercialAdminRepository, reglaRepo: ReglaContrasenaRepository
+  rolComercialRepository: RolComercialRepository, usuarioComercialAdminRepo: UsuarioComercialAdminRepository, reglaRepo: ReglaContrasenaRepository,
+  horarioEmpresaRepository: HorarioEmpresaRepository
 )(implicit val system: ActorSystem) extends HttpServiceActor with RouteConcatenation with CrossHeaders with ServiceAuthorization
     with ActorLogging {
 
@@ -65,13 +66,14 @@ case class AlianzaRouter(
             AutorizacionRecursoComercialService(autorizacionRecursoComercialRepository).route ~
             ComercialService(user, usuarioComercialAdminRepo).route ~
             ActualizacionService(actualizacionActor, kafkaActor).route(user) ~
-            HorarioEmpresaService(kafkaActor, horarioEmpresaActor).route(user) ~
+          HorarioEmpresaService(kafkaActor, horarioEmpresaActor).route(user) ~
+            //TODO: Completar Refactor HorarioEmpresa By Jonathan
+            //portal.transaccional.autenticacion.service.web.horarioEmpresa.HorarioEmpresaService(user, horarioEmpresaRepository).route ~
             new AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).secureRoute(user) ~
             // TODO Cambiar al authenticate de cliente empresarial
             new AdministrarContrasenaEmpresaService(kafkaActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).secureRouteEmpresa(user) ~
             UsuarioEmpresaService(kafkaActor, agenteEmpresarialActor).secureUserRouteEmpresa(user) ~
             PermisosTransaccionalesService(kafkaActor, permisoTransaccionalActor).route(user) ~
-            // TODO: Servicio Nuevo de PreguntasAutovalidacionService by: Jonathan
             portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.PreguntasAutovalidacionService(
               user, preguntasValidacionRepository, respuestaUsuarioRepository, respuestaUsuarioAdminRepository
             ).route
