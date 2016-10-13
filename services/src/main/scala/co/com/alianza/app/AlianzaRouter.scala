@@ -8,6 +8,8 @@ import portal.transaccional.autenticacion.service.drivers.actualizacion.Actualiz
 import portal.transaccional.autenticacion.service.drivers.autorizacion._
 import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaRepository
 import portal.transaccional.autenticacion.service.web.actualizacion.ActualizacionService
+import portal.transaccional.autenticacion.service.web.horarioEmpresa.HorarioEmpresaService
+import portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.PreguntasAutovalidacionService
 import portal.transaccional.autenticacion.service.web.reglaContrasena.ReglaContrasenaService
 import spray.routing._
 import spray.util.LoggingContext
@@ -24,7 +26,6 @@ import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.Usua
 import portal.transaccional.autenticacion.service.web.autorizacion.{ AutorizacionRecursoComercialService, AutorizacionService }
 import portal.transaccional.autenticacion.service.web.autenticacion.AutenticacionService
 import portal.transaccional.autenticacion.service.web.sesion.SesionService
-import co.com.alianza.web.PreguntasAutovalidacionService
 import portal.transaccional.autenticacion.service.drivers.rolRecursoComercial.{ RecursoComercialRepository, RolComercialRepository }
 import portal.transaccional.autenticacion.service.drivers.usuarioComercialAdmin.UsuarioComercialAdminRepository
 import portal.transaccional.autenticacion.service.web.ip.IpService
@@ -35,10 +36,10 @@ case class AlianzaRouter(
   autenticacionRepo: AutenticacionRepository, autenticacionEmpresaRepositorio: AutenticacionEmpresaRepository,
   autenticacionComercialRepositorio: AutenticacionComercialRepository, usuarioRepositorio: UsuarioRepository,
   usuarioAgenteRepositorio: UsuarioEmpresarialRepository, usuarioAdminRepositorio: UsuarioEmpresarialAdminRepository,
-  autorizacionUsuarioRepo: AutorizacionUsuarioRepository, kafkaActor: ActorSelection, preguntasAutovalidacionActor: ActorSelection,
+  autorizacionUsuarioRepo: AutorizacionUsuarioRepository, kafkaActor: ActorSelection,
   usuariosActor: ActorSelection, confrontaActor: ActorSelection, actualizacionRepo: ActualizacionRepository, permisoTransaccionalActor: ActorSelection,
   agenteEmpresarialActor: ActorSelection, pinActor: ActorSelection, pinUsuarioEmpresarialAdminActor: ActorSelection,
-  pinUsuarioAgenteEmpresarialActor: ActorSelection, horarioEmpresaActor: ActorSelection, contrasenasAgenteEmpresarialActor: ActorSelection,
+  pinUsuarioAgenteEmpresarialActor: ActorSelection, contrasenasAgenteEmpresarialActor: ActorSelection,
   contrasenasClienteAdminActor: ActorSelection, contrasenasActor: ActorSelection, autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository,
   autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository, preguntasValidacionRepository: PreguntasAutovalidacionRepository,
   respuestaUsuarioRepository: RespuestaUsuarioRepository, respuestaUsuarioAdminRepository: RespuestaUsuarioRepository, ipRepo: IpRepository,
@@ -55,10 +56,14 @@ case class AlianzaRouter(
     AutorizacionService(kafkaActor, usuarioRepositorio, usuarioAgenteRepositorio, usuarioAdminRepositorio, autorizacionUsuarioRepo,
       autorizacionAgenteRepo, autorizacionAdminRepo, autorizacionComercialRepo, autorizacionComercialAdminRepo).route ~
       AutenticacionService(autenticacionRepo, autenticacionEmpresaRepositorio, autenticacionComercialRepositorio, kafkaActor).route ~
+      //TODO: refactorizar
       new ConfrontaService(confrontaActor).route ~
+      //TODO: refactorizar
       new EnumeracionService().route ~
+      //TODO: refactorizar
       UsuarioService(kafkaActor, usuariosActor).route ~
       ReglaContrasenaService(reglaRepo).route ~
+      //TODO: refactorizar
       PinService(kafkaActor, pinActor, pinUsuarioEmpresarialAdminActor, pinUsuarioAgenteEmpresarialActor).route ~
       new AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).insecureRoute ~
       authenticate(authenticateUser) {
@@ -69,18 +74,16 @@ case class AlianzaRouter(
             AutorizacionRecursoComercialService(autorizacionRecursoComercialRepository).route ~
             ComercialService(user, usuarioComercialAdminRepo).route ~
             ActualizacionService(user, kafkaActor, actualizacionRepo).route ~
-            HorarioEmpresaService(kafkaActor, horarioEmpresaActor).route(user) ~
-            //TODO: Completar Refactor HorarioEmpresa By Jonathan
-            //portal.transaccional.autenticacion.service.web.horarioEmpresa.HorarioEmpresaService(user, horarioEmpresaRepository).route ~
+            HorarioEmpresaService(user, kafkaActor, horarioEmpresaRepository).route ~
+            //TODO: refactorizar
             new AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).secureRoute(user) ~
             // TODO Cambiar al authenticate de cliente empresarial
             new AdministrarContrasenaEmpresaService(kafkaActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).secureRouteEmpresa(user) ~
+            //TODO: refactorizar
             UsuarioEmpresaService(kafkaActor, agenteEmpresarialActor).secureUserRouteEmpresa(user) ~
+            //TODO: refactorizar
             PermisosTransaccionalesService(kafkaActor, permisoTransaccionalActor).route(user) ~
-            portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.PreguntasAutovalidacionService(
-              user, preguntasValidacionRepository, respuestaUsuarioRepository, respuestaUsuarioAdminRepository
-            ).route
-        //PreguntasAutovalidacionService(kafkaActor, preguntasAutovalidacionActor).route(user)
+            PreguntasAutovalidacionService(user, preguntasValidacionRepository, respuestaUsuarioRepository, respuestaUsuarioAdminRepository).route
       }
 
   def receive = runRoute(respondWithHeaders(listCrossHeaders) { routes })(

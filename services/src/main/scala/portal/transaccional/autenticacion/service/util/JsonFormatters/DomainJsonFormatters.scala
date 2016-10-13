@@ -69,7 +69,7 @@ trait DomainJsonFormatters {
   implicit val reglaContrasenaFormatter = jsonFormat2(ReglaContrasena)
 
   //horarioEmpresa
-  implicit val agregarHorarioEmpresaRequestFormatter = jsonFormat6(AgregarHorarioEmpresaRequest)
+  implicit val agregarHorarioEmpresaRequestFormatter = jsonFormat4(AgregarHorarioEmpresaRequest)
   implicit val diaFestivoRequestFormatter = jsonFormat1(DiaFestivoRequest)
   implicit val HorarioEmpresaFormatter = jsonFormat4(ResponseObtenerHorario)
 }

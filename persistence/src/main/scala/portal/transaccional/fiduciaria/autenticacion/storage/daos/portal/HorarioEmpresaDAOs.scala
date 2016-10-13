@@ -11,4 +11,8 @@ trait HorarioEmpresaDAOs {
 
   def obtenerHorarioEmpresa(idUsuario: Int): Future[Option[HorarioEmpresa]]
 
+  def create(horario: HorarioEmpresa): Future[Int]
+
+  def update(horario: HorarioEmpresa): Future[Int]
+
 }

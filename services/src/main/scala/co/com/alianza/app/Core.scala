@@ -4,10 +4,9 @@ import akka.actor.{ ActorRef, ActorSystem, Props }
 import akka.cluster.Cluster
 import co.com.alianza.domain.aggregates.autenticacion._
 import co.com.alianza.domain.aggregates.autoregistro.ConsultaClienteActorSupervisor
-import co.com.alianza.domain.aggregates.autovalidacion.PreguntasAutovalidacionSupervisor
 import co.com.alianza.domain.aggregates.confronta.ConfrontaActorSupervisor
 import co.com.alianza.domain.aggregates.contrasenas.ContrasenasActorSupervisor
-import co.com.alianza.domain.aggregates.empresa.{ AgenteEmpresarialActorSupervisor, ContrasenasAgenteEmpresarialActorSupervisor, ContrasenasClienteAdminActorSupervisor, HorarioEmpresaActorSupervisor }
+import co.com.alianza.domain.aggregates.empresa.{ AgenteEmpresarialActorSupervisor, ContrasenasAgenteEmpresarialActorSupervisor, ContrasenasClienteAdminActorSupervisor }
 import co.com.alianza.domain.aggregates.permisos.PermisoTransaccionalActorSupervisor
 import co.com.alianza.domain.aggregates.pin.PinActorSupervisor
 import co.com.alianza.domain.aggregates.usuarios.UsuariosActorSupervisor
@@ -87,9 +86,6 @@ trait CoreActors {
   val contrasenasClienteAdminActorSupervisor = system.actorOf(Props[ContrasenasClienteAdminActorSupervisor], "contrasenasClienteAdminActorSupervisor")
   val contrasenasClienteAdminActor = system.actorSelection(contrasenasClienteAdminActorSupervisor.path)
   //TODO: verificar que usuarios ya no se están utilizando y eliminarlos
-  val horarioEmpresaActorSupervisor = system.actorOf(Props[HorarioEmpresaActorSupervisor], "horarioEmpresaActorSupervisor")
-  val horarioEmpresaActor = system.actorSelection(horarioEmpresaActorSupervisor.path)
-  //TODO: verificar que usuarios ya no se están utilizando y eliminarlos
   val pinActorSupervisor = system.actorOf(Props[PinActorSupervisor], "PinActorSupervisor")
   val pinActor = system.actorSelection(pinActorSupervisor.path)
   val pinUsuarioEmpresarialAdminActor = system.actorSelection(pinActorSupervisor.path + "/pinUsuarioEmpresarialAdminActor")
@@ -105,9 +101,6 @@ trait CoreActors {
   //TODO: verificar que usuarios ya no se están utilizando y eliminarlos
   val kafkaActorSupervisor = system.actorOf(Props[KafkaActorSupervisor], "kafkaActorSupervisor")
   val kafkaActor = system.actorSelection(kafkaActorSupervisor.path)
-  //TODO: verificar que usuarios ya no se están utilizando y eliminarlos
-  val preguntasAutovalidacionSupervisor = system.actorOf(Props[PreguntasAutovalidacionSupervisor], "preguntasAutovalidacionSupervisor")
-  val preguntasAutovalidacionActor = system.actorSelection(preguntasAutovalidacionSupervisor.path)
 }
 
 trait Storage extends StoragePGAlianzaDB with BootedCore {
@@ -166,7 +159,7 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
 
   lazy val actualizacionRepository = ActualizacionDriverRepository(actualizacionDAO)
 
-  lazy val horarioEmpresaRepository = HorarioEmpresaDriverRepository(empresaDAO, horarioEmpresaDAO)
+  lazy val horarioEmpresaRepository = HorarioEmpresaDriverRepository(empresaRepo, horarioEmpresaDAO, diaFestivoDAO)
 
 }
 
@@ -196,6 +189,7 @@ private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
   lazy val recursoComercialDAO = RecursoComercialDAO()(config)
   lazy val rolComercialDAO = RolComercialDAO()(config)
   lazy val horarioEmpresaDAO = HorarioEmpresaDAO()(config)
+  lazy val diaFestivoDAO = DiaFestivoDAO()(config)
 }
 
 /**

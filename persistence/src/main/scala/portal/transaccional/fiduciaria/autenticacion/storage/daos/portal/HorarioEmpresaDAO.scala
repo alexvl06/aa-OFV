@@ -17,4 +17,11 @@ case class HorarioEmpresaDAO()(implicit dcConfig: DBConfig) extends TableQuery(n
   def obtenerHorarioEmpresa(idEmpresa: Int): Future[Option[HorarioEmpresa]] = {
     run(this.filter(x => x.idEmpresa === idEmpresa).result.headOption)
   }
+
+  def create(horario: HorarioEmpresa): Future[Int] = run(this returning this.map(_.idEmpresa) += horario)
+
+  def update(horario: HorarioEmpresa): Future[Int] = {
+    run(this.filter(_.idEmpresa === horario.idEmpresa).update(horario))
+  }
+
 }
