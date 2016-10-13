@@ -2,7 +2,6 @@ package co.com.alianza.app
 
 import akka.actor.{ ActorRef, Props }
 import akka.io.IO
-import portal.transaccional.autenticacion.service.drivers.autorizacion.AutorizacionUsuarioComercialRepository
 import spray.can.Http
 
 object Boot extends App with HostBinding with Core with BootedCore with CoreActors with Storage {
@@ -11,12 +10,12 @@ object Boot extends App with HostBinding with Core with BootedCore with CoreActo
 
   private val rootService = system.actorOf(
     Props(AlianzaRouter(autenticacionRepo, autenticacionEmpresaRepo, autenticacionComercialRepo,
-      usuarioRepo, usuarioAgenteRepo, usuarioAdminRepo, autorizacionUsuarioRepo, kafkaActor, preguntasAutovalidacionActor, usuariosActor,
+      usuarioRepo, usuarioAgenteRepo, usuarioAdminRepo, autorizacionUsuarioRepo, kafkaActor, usuariosActor,
       confrontaActor, actualizacionRepository, permisoTransaccionalActor, agenteEmpresarialActor, pinActor, pinUsuarioEmpresarialAdminActor,
-      pinUsuarioAgenteEmpresarialActor, horarioEmpresaActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor,
+      pinUsuarioAgenteEmpresarialActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor,
       contrasenasActor, autorizacionAgenteRepo, autorizacionAdminRepo, preguntasValidacionRepository, respuestaUsuarioRepo,
       respuestaUsuariAdminoRepo, ipRepo, autorizacionComercialRepo, autorizacionComercialAdminRepo, autorizacionRecursoComercialRepository,
-      recursoComercialRepository, rolComercialRepository, usuarioComercialAdminRepo, reglaContrasenaRepo)),
+      recursoComercialRepository, rolComercialRepository, usuarioComercialAdminRepo, reglaContrasenaRepo, horarioEmpresaRepository)),
     name = "api-AlianzaRouter"
   )
 

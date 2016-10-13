@@ -2,10 +2,6 @@ package co.com.alianza.persistence.entities
 
 import CustomDriver.simple._
 
-/**
- * Created by manuel on 10/12/14.
- */
-
 case class Empresa(id: Int, nit: String, estadoEmpresa: Int)
 
 class EmpresaTable(tag: Tag) extends Table[Empresa](tag, "EMPRESA") {

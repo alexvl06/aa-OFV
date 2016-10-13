@@ -3,7 +3,6 @@ package portal.transaccional.fiduciaria.autenticacion.storage.daos.portal
 import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
 import co.com.alianza.persistence.entities.{ PinUsuarioEmpresarialAdmin, PinUsuarioEmpresarialAdminTable }
 import slick.lifted.TableQuery
-
 import scala.concurrent.Future
 
 /**

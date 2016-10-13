@@ -1,5 +1,6 @@
 package portal.transaccional.autenticacion.service.web.horarioEmpresa
 
+import akka.actor.ActorSelection
 import co.com.alianza.app.CrossHeaders
 import co.com.alianza.exceptions.{ PersistenceException, ValidacionException }
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
@@ -15,7 +16,7 @@ import scala.util.{ Failure, Success }
 /**
  * @author s4n on 16/06/15.
  */
-case class HorarioEmpresaService(user: UsuarioAuth, horarioEmpresaRepository: HorarioEmpresaRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
+case class HorarioEmpresaService(user: UsuarioAuth, kafkaActor: ActorSelection, horarioEmpresaRepository: HorarioEmpresaRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   val diaFestivoPath = "diaFestivo"
   val horarioEmpresaPath = "horarioEmpresa"
@@ -23,17 +24,17 @@ case class HorarioEmpresaService(user: UsuarioAuth, horarioEmpresaRepository: Ho
 
   val route: Route = {
     path(horarioEmpresaPath) {
-      obtenerHorarioEmpresa() ~ agregarHorarioEmpresa(user)
+      obtenerHorarioEmpresa ~ agregarHorarioEmpresa
     } ~ path(diaFestivoPath) {
-      esDiaFestivo()
+      esDiaFestivo
     } ~ path(validarHorarioPath) {
-      validarHorario()
+      validarHorario
     }
   }
 
-  private def obtenerHorarioEmpresa() = {
+  private def obtenerHorarioEmpresa = {
     get {
-      val resultado: Future[String] = horarioEmpresaRepository.obtenerHorarioEmpresa()
+      val resultado: Future[Option[ResponseObtenerHorario]] = horarioEmpresaRepository.obtener(user.identificacion)
       onComplete(resultado) {
         case Success(value) => complete(value)
         case Failure(ex) => execution(ex)
@@ -41,12 +42,12 @@ case class HorarioEmpresaService(user: UsuarioAuth, horarioEmpresaRepository: Ho
     }
   }
 
-  private def agregarHorarioEmpresa(user: UsuarioAuth) = {
+  private def agregarHorarioEmpresa = {
     put {
       entity(as[AgregarHorarioEmpresaRequest]) {
         request =>
           // TODO: AUDITORIA by:Jonathan
-          val resultado: Future[String] = horarioEmpresaRepository.agregarHorarioEmpresa()
+          val resultado: Future[Int] = horarioEmpresaRepository.agregar(user, request.diaHabil, request.sabado, request.horaInicio, request.horaFin)
           onComplete(resultado) {
             case Success(value) => complete(value.toString)
             case Failure(ex) => execution(ex)
@@ -55,11 +56,11 @@ case class HorarioEmpresaService(user: UsuarioAuth, horarioEmpresaRepository: Ho
     }
   }
 
-  private def esDiaFestivo() = {
+  private def esDiaFestivo = {
     post {
       entity(as[DiaFestivoRequest]) {
         request =>
-          val resultado: Future[Boolean] = horarioEmpresaRepository.esDiaFestivo()
+          val resultado: Future[Boolean] = horarioEmpresaRepository.esDiaFestivo(request.fecha)
           onComplete(resultado) {
             case Success(value) => complete(value.toString)
             case Failure(ex) => execution(ex)
@@ -68,13 +69,13 @@ case class HorarioEmpresaService(user: UsuarioAuth, horarioEmpresaRepository: Ho
     }
   }
 
-  private def validarHorario() = {
+  private def validarHorario = {
     get {
       parameters('idUsuarioRecurso.as[Option[String]], 'tipoIdentificacion.as[Option[Int]]) {
         (idUsuarioRecurso, tipoIdentificacion) =>
-          val resultado: Future[String] = horarioEmpresaRepository.validarHorario(idUsuarioRecurso, tipoIdentificacion)
+          val resultado: Future[Boolean] = horarioEmpresaRepository.validar(user, idUsuarioRecurso, tipoIdentificacion)
           onComplete(resultado) {
-            case Success(value) => complete(value)
+            case Success(value) => complete(value.toString)
             case Failure(ex) => execution(ex)
           }
       }
