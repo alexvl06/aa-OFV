@@ -4,7 +4,6 @@ object TiposCliente extends Enumeration {
 
   type TiposCliente = Value
 
-  val clienteIndividual, agenteEmpresarial, clienteAdministrador, comercialAdmin, comercialFiduciaria, comercialValores, clienteAdminInmobiliario,
-  agenteInmobiliario = Value
+  val clienteIndividual, agenteEmpresarial, clienteAdministrador, comercialAdmin, comercialFiduciaria, comercialValores, clienteAdminInmobiliario, agenteInmobiliario = Value
 
 }

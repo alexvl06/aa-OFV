@@ -26,7 +26,7 @@ class MailMessageEmpresa(templateBody: String) extends MailTemplate {
   }
 
   def getMessagePinCreacionAgenteInmobiliario(pin: String, caducidad: Int,
-                                              identificacion: String, usuario: String)(implicit config: Config): String = {
+    identificacion: String, usuario: String)(implicit config: Config): String = {
     val mailParams: Map[String, Any] = Map(
       "pin" -> pin,
       "numHorasCaducidad" -> caducidad,

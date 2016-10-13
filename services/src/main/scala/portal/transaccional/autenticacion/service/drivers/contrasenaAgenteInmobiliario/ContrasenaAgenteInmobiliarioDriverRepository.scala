@@ -4,18 +4,18 @@ import java.sql.Timestamp
 
 import co.com.alianza.constants.LlavesReglaContrasena
 import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial._
-import co.com.alianza.exceptions.{PersistenceException, ValidacionException, ValidacionExceptionPasswordRules}
-import co.com.alianza.persistence.entities.{UltimaContrasenaAgenteInmobiliario, UsuarioAgenteInmobiliario}
-import co.com.alianza.util.clave.{Crypto, ErrorValidacionClave, ValidarClave}
+import co.com.alianza.exceptions.{ PersistenceException, ValidacionException, ValidacionExceptionPasswordRules }
+import co.com.alianza.persistence.entities.{ UltimaContrasenaAgenteInmobiliario, UsuarioAgenteInmobiliario }
+import co.com.alianza.util.clave.{ Crypto, ErrorValidacionClave, ValidarClave }
 import co.com.alianza.util.token.Token
-import enumerations.{AppendPasswordUser, EstadosUsuarioEnumInmobiliario, PerfilesUsuario, UsoPinEmpresaEnum}
+import enumerations.{ AppendPasswordUser, EstadosUsuarioEnumInmobiliario, PerfilesUsuario, UsoPinEmpresaEnum }
 import org.joda.time.DateTime
 import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaRepository
-import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.{UsuarioInmobiliarioPinRepository, UsuarioInmobiliarioRepository}
+import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.{ UsuarioInmobiliarioPinRepository, UsuarioInmobiliarioRepository }
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.UltimaContraseñaAgenteInmobiliarioDAOs
 
 import scala.concurrent.Future
-import scalaz.{Validation, Failure => zFailure, Success => zSuccess}
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 
 /**
  * Created by s4n in 2016
@@ -25,7 +25,7 @@ case class ContrasenaAgenteInmobiliarioDriverRepository(agenteRepo: UsuarioInmob
 
   def actualizarContrasenaCaducada(token: Option[String], pw_actual: String, pw_nuevo: String, idUsuario: Option[Int]): Future[Int] = {
     (token, idUsuario) match {
-      case (Some(tk), None) => validarToken(tk).flatMap (idAgente => actualizarContrasena(None, pw_actual, pw_nuevo, idAgente))
+      case (Some(tk), None) => validarToken(tk).flatMap(idAgente => actualizarContrasena(None, pw_actual, pw_nuevo, idAgente))
       case (None, Some(idAgente)) => actualizarContrasena(None, pw_actual, pw_nuevo, idAgente)
       case _ => Future.failed(ValidacionException("409.69", "Solo uno de los campos token, idUsuario deben ser provistos"))
     }

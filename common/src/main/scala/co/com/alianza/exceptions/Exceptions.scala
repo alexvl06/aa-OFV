@@ -40,7 +40,7 @@ case class ValidacionException(code: String, data: String) extends NoStackTrace 
   override def getMessage: String = s"code: $code; data: $data"
 }
 //{"code":"409.5","title":"Error clave","detail":"ErrorMinCaracteresEsp-ErrorMinMayusculas-ErrorMinMinusculas-","time":"2016/09/26 16:50","data":null}
-case class ValidacionExceptionPasswordRules(code: String, title: String, detail: String, time : String, data: String) extends NoStackTrace {
+case class ValidacionExceptionPasswordRules(code: String, title: String, detail: String, time: String, data: String) extends NoStackTrace {
   override def getMessage: String = s"code: $code; title: $title; detail: $detail; time: $time; data: $data"
 }
 

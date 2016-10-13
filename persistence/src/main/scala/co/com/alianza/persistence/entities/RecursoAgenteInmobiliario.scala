@@ -7,7 +7,7 @@ import co.com.alianza.persistence.entities.CustomDriver.simple._
  */
 case class RecursoAgenteInmobiliario(id: Int, nombre: String, url: String)
 
-case class RecursoAgenteInmobiliarioTable(tag: Tag) extends Table[RecursoAgenteInmobiliario] (tag, "RECURSO_GRAFICO_AGENTE_INMOBILIARIO") {
+case class RecursoAgenteInmobiliarioTable(tag: Tag) extends Table[RecursoAgenteInmobiliario](tag, "RECURSO_GRAFICO_AGENTE_INMOBILIARIO") {
 
   def id: Rep[Int] = column[Int]("ID", O.PrimaryKey, O.AutoInc)
   def titulo: Rep[String] = column[String]("TITULO")

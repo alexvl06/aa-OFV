@@ -29,11 +29,11 @@ trait UsuarioAgenteInmobDAOs {
   def exists(id: Int, identificacion: String, usuario: String): Future[Boolean]
 
   /**
-    * Obtiene un agente inmobiliario dado su identificador
-    *
-    * @param id Identificador de base de datos del agente
-    * @return Un futuro con el agente a buscar embebido en un option
-    */
+   * Obtiene un agente inmobiliario dado su identificador
+   *
+   * @param id Identificador de base de datos del agente
+   * @return Un futuro con el agente a buscar embebido en un option
+   */
   def get(id: Int): Future[Option[UsuarioAgenteInmobiliario]]
 
   /**

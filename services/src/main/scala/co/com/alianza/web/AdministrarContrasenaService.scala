@@ -21,7 +21,7 @@ import scala.util.{ Failure, Success }
  * Created by seven4n on 01/09/14.
  */
 case class AdministrarContrasenaService(kafkaActor: ActorSelection, contrasenasActor: ActorSelection, contrasenasAgenteEmpresarialActor: ActorSelection,
-  contrasenasClienteAdminActor: ActorSelection, agenteInmobContrasenaRepo: ContrasenaAgenteInmobiliarioRepository)(implicit val system: ActorSystem) extends Directives with AlianzaCommons {
+    contrasenasClienteAdminActor: ActorSelection, agenteInmobContrasenaRepo: ContrasenaAgenteInmobiliarioRepository)(implicit val system: ActorSystem) extends Directives with AlianzaCommons {
 
   import AdministrarContrasenaMessagesJsonSupport._
   import system.dispatcher
@@ -94,7 +94,8 @@ case class AdministrarContrasenaService(kafkaActor: ActorSelection, contrasenasA
 
   def execution(ex: Any): StandardRoute = {
     ex match {
-      case ex: ValidacionException => println(StatusCodes.OK); complete((StatusCodes.Conflict, ex))
+      case ex: ValidacionException =>
+        println(StatusCodes.OK); complete((StatusCodes.Conflict, ex))
       case ex: PersistenceException => complete((StatusCodes.InternalServerError, "Error inesperado"))
       case ex: ValidacionExceptionPasswordRules => complete((StatusCodes.Conflict, ex))
       case ex: Throwable => complete((StatusCodes.InternalServerError, "Error inesperado"))

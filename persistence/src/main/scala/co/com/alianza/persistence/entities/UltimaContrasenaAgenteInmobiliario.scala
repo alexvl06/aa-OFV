@@ -8,8 +8,10 @@ import CustomDriver.simple._
  */
 case class UltimaContrasenaAgenteInmobiliario(id: Option[Int], idUsuario: Int, contrasena: String, fechaUltimaContrasena: Timestamp)
 
-class UltimaContrasenaUsuarioAgenteInmobiliarioTable(tag: Tag) extends Table[UltimaContrasenaAgenteInmobiliario](tag,
-  "ULTIMAS_CONTRASENAS_USUARIO_AGENTE_INMOBILIARIO") {
+class UltimaContrasenaUsuarioAgenteInmobiliarioTable(tag: Tag) extends Table[UltimaContrasenaAgenteInmobiliario](
+  tag,
+  "ULTIMAS_CONTRASENAS_USUARIO_AGENTE_INMOBILIARIO"
+) {
 
   def id: Rep[Option[Int]] = column[Option[Int]]("ID", O.PrimaryKey, O.AutoInc)
   def idUsuario: Rep[Int] = column[Int]("ID_USUARIO")

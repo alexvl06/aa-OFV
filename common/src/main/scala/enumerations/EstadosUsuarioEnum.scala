@@ -11,7 +11,6 @@ object EstadosUsuarioEnum extends Enumeration(0) {
 
 }
 
-
 object EstadosUsuarioEnumInmobiliario extends Enumeration(0) {
 
   type estadoUsuarioInmobiliario = Value

@@ -17,23 +17,22 @@ import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal._
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
-  * Implementación del repositorio de agentes inmobiliarios
-  *
-  * @param ex Contexto de ejecución
-  */
+ * Implementación del repositorio de agentes inmobiliarios
+ *
+ * @param ex Contexto de ejecución
+ */
 
-case class UsuarioAgenteInmobDriverRepository(usuarioDAO: UsuarioAgenteInmobDAO)(implicit val ex: ExecutionContext) extends
-  UsuarioEmpresarialRepositoryG[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario](usuarioDAO) with
-  UsuarioEmpresarialRepository[UsuarioAgenteInmobiliario]
+case class UsuarioAgenteInmobDriverRepository(usuarioDAO: UsuarioAgenteInmobDAO)(implicit val ex: ExecutionContext) extends UsuarioEmpresarialRepositoryG[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario](usuarioDAO) with UsuarioEmpresarialRepository[UsuarioAgenteInmobiliario]
 
-case class UsuarioInmobiliarioDriverRepository(configDao: ConfiguracionDAOs,
-                                               usuariosDao: UsuarioAgenteInmobDAOs,
-                                               pinRepository: UsuarioInmobiliarioPinRepository)
-                                              (implicit val ex: ExecutionContext, system: ActorSystem, config: Config) extends UsuarioInmobiliarioRepository {
+case class UsuarioInmobiliarioDriverRepository(
+  configDao: ConfiguracionDAOs,
+    usuariosDao: UsuarioAgenteInmobDAOs,
+    pinRepository: UsuarioInmobiliarioPinRepository
+)(implicit val ex: ExecutionContext, system: ActorSystem, config: Config) extends UsuarioInmobiliarioRepository {
 
   override def createAgenteInmobiliario(tipoIdentificacion: Int, identificacion: String,
-                                        correo: String, usuario: String,
-                                        nombre: Option[String], cargo: Option[String], descripcion: Option[String]): Future[Int] = {
+    correo: String, usuario: String,
+    nombre: Option[String], cargo: Option[String], descripcion: Option[String]): Future[Int] = {
     usuariosDao.exists(0, identificacion, usuario).flatMap({
       case true => Future.successful(0)
       case false =>
@@ -46,8 +45,10 @@ case class UsuarioInmobiliarioDriverRepository(configDao: ConfiguracionDAOs,
           configExpiracion <- configDao.getByKey(TiposConfiguracion.EXPIRACION_PIN.llave)
           pinAgente: PinAgenteInmobiliario = pinRepository.generarPinAgente(configExpiracion, idAgente)
           idPin <- pinRepository.asociarPinAgente(pinAgente)
-          correoActivacion: MailMessage = pinRepository.generarCorreoActivacion(pinAgente.tokenHash,
-            configExpiracion.valor.toInt, identificacion, usuario, correo)
+          correoActivacion: MailMessage = pinRepository.generarCorreoActivacion(
+            pinAgente.tokenHash,
+            configExpiracion.valor.toInt, identificacion, usuario, correo
+          )
         } yield {
           // el envío del correo se ejecuta de forma asíncrona dado que no interesa el éxito de la operación,
           // es decir, si el envío falla, no se debería responder con error la creación del agente inmobiliario
@@ -62,8 +63,10 @@ case class UsuarioInmobiliarioDriverRepository(configDao: ConfiguracionDAOs,
     usuariosDao.get(id)
   }
 
-  override def getAgenteInmobiliario(identificacion: String,
-                                     usuario: String): Future[Option[ConsultarAgenteInmobiliarioResponse]] = {
+  override def getAgenteInmobiliario(
+    identificacion: String,
+    usuario: String
+  ): Future[Option[ConsultarAgenteInmobiliarioResponse]] = {
     usuariosDao.get(identificacion, usuario).map(_.map(agente => ConsultarAgenteInmobiliarioResponse(
       agente.id,
       agente.correo,
@@ -76,8 +79,8 @@ case class UsuarioInmobiliarioDriverRepository(configDao: ConfiguracionDAOs,
   }
 
   override def getAgenteInmobiliarioList(identificacion: String, nombre: Option[String], usuario: Option[String],
-                                         correo: Option[String], estado: Option[Int],
-                                         pagina: Option[Int], itemsPorPagina: Option[Int]): Future[ConsultarAgenteInmobiliarioListResponse] = {
+    correo: Option[String], estado: Option[Int],
+    pagina: Option[Int], itemsPorPagina: Option[Int]): Future[ConsultarAgenteInmobiliarioListResponse] = {
     usuariosDao
       .getAll(identificacion, nombre, usuario, correo, estado, pagina, itemsPorPagina)
       .map(res => {
@@ -93,8 +96,8 @@ case class UsuarioInmobiliarioDriverRepository(configDao: ConfiguracionDAOs,
   }
 
   override def updateAgenteInmobiliario(identificacion: String, usuario: String,
-                                        correo: String, nombre: Option[String],
-                                        cargo: Option[String], descripcion: Option[String]): Future[Int] = {
+    correo: String, nombre: Option[String],
+    cargo: Option[String], descripcion: Option[String]): Future[Int] = {
     usuariosDao.update(identificacion, usuario, correo, nombre, cargo, descripcion)
   }
 

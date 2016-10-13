@@ -9,9 +9,9 @@ import CustomDriver.simple._
  */
 trait UsuarioAgente {
   val id: Int
-  val identificacion : String
+  val identificacion: String
   val usuario: String
-  val correo:String
+  val correo: String
   val estado: Int
   val contrasena: Option[String]
   val token: Option[String]
@@ -24,7 +24,7 @@ trait UsuarioAgente {
 }
 
 abstract class UsuarioAgenteTable[E: ClassTag](tag: Tag, tableName: String)
-  extends Table[E](tag, tableName) {
+    extends Table[E](tag, tableName) {
 
   val classOfEntity = classTag[E].runtimeClass
 

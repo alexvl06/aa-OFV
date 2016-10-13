@@ -2,7 +2,7 @@ package portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobili
 
 import co.com.alianza.persistence.entities.UsuarioAgenteInmobiliario
 import enumerations.EstadosUsuarioEnumInmobiliario._
-import portal.transaccional.autenticacion.service.web.agenteInmobiliario.{ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse}
+import portal.transaccional.autenticacion.service.web.agenteInmobiliario.{ ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse }
 
 import scala.concurrent.Future
 
@@ -29,11 +29,11 @@ trait UsuarioInmobiliarioRepository {
     nombre: Option[String], cargo: Option[String], descripcion: Option[String]): Future[Int]
 
   /**
-    * Obtiene un agente inmobiliario dado su identificador
-    *
-    * @param id Identificador de base de datos del agente
-    * @return Un futuro con el agente a buscar embebido en un option
-    */
+   * Obtiene un agente inmobiliario dado su identificador
+   *
+   * @param id Identificador de base de datos del agente
+   * @return Un futuro con el agente a buscar embebido en un option
+   */
   def getAgenteInmobiliario(id: Int): Future[Option[UsuarioAgenteInmobiliario]]
 
   /**
@@ -107,12 +107,12 @@ trait UsuarioInmobiliarioRepository {
   def updateContrasena(contrasena: String, idUsuario: Int): Future[Int]
 
   /**
-    * Actualiza el estado de un agente inmobiliario
-    *
-    * @param identificacion Identificación de la empresa
-    * @param usuario        Nombre de usuario del agente a actualizar
-    * @param estado         Estado del agente a actualizar
-    * @return Un futuro con la cantidad de filas actualizadas (0 si falla, 1 si se actualiza correctamente)
-    */
+   * Actualiza el estado de un agente inmobiliario
+   *
+   * @param identificacion Identificación de la empresa
+   * @param usuario        Nombre de usuario del agente a actualizar
+   * @param estado         Estado del agente a actualizar
+   * @return Un futuro con la cantidad de filas actualizadas (0 si falla, 1 si se actualiza correctamente)
+   */
   def updateEstadoAgente(identificacion: String, usuario: String, estado: estadoUsuarioInmobiliario): Future[Int]
 }

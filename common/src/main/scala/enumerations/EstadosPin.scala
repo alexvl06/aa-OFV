@@ -1,8 +1,8 @@
 package enumerations
 
 /**
-  * Enumeración que contiene los posibles errores producidos al validar un PIN
-  */
+ * Enumeración que contiene los posibles errores producidos al validar un PIN
+ */
 object EstadosPin extends Enumeration(1) {
 
   type EstadoPin = Value

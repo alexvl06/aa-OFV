@@ -35,7 +35,7 @@ case class AgenteInmobiliarioService(
   usuarioAuth: UsuarioAuth,
   usuariosRepo: UsuarioInmobiliarioRepository,
   permisosRepo: PermisoAgenteInmobiliarioRepository,
-  contrasenaRepo : ContrasenaAgenteInmobiliarioRepository
+  contrasenaRepo: ContrasenaAgenteInmobiliarioRepository
 )(implicit val ec: ExecutionContext)
     extends CommonRESTFul with DomainJsonFormatters with CrossHeaders with HalPaginationUtils {
 
@@ -56,11 +56,11 @@ case class AgenteInmobiliarioService(
       pathEndOrSingleSlash {
         getAgenteInmobiliarioList ~ createAgenteInmobiliario
       }
-    } ~ pathPrefix(agentesPath / Segment / recursosPath) { usuarioAgente =>
+    } ~ pathPrefix(agentesPath / recursosPath) {
       pathEndOrSingleSlash {
         getRecursos
       }
-    } ~ pathPrefix(agentesPath / Segment / changePassPath ) { usuarioAgente =>
+    } ~ pathPrefix(agentesPath / Segment / changePassPath) { usuarioAgente =>
       pathEndOrSingleSlash {
         updateByPassword
       }
@@ -101,7 +101,7 @@ case class AgenteInmobiliarioService(
       )
       onComplete(agenteF) {
         case Success(agente: Option[ConsultarAgenteInmobiliarioResponse]) => agente match {
-          case Some(a) => complete((StatusCodes.OK , a))
+          case Some(a) => complete((StatusCodes.OK, a))
           case _ => complete(StatusCodes.NotFound)
         }
         case Failure(exception) => complete(StatusCodes.InternalServerError)
