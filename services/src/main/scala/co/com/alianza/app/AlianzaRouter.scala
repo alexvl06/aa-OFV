@@ -69,7 +69,7 @@ case class AlianzaRouter(
             AutorizacionRecursoComercialService(autorizacionRecursoComercialRepository).route ~
             ComercialService(user, usuarioComercialAdminRepo).route ~
             ActualizacionService(user, kafkaActor, actualizacionRepo).route ~
-          HorarioEmpresaService(kafkaActor, horarioEmpresaActor).route(user) ~
+            HorarioEmpresaService(kafkaActor, horarioEmpresaActor).route(user) ~
             //TODO: Completar Refactor HorarioEmpresa By Jonathan
             //portal.transaccional.autenticacion.service.web.horarioEmpresa.HorarioEmpresaService(user, horarioEmpresaRepository).route ~
             new AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).secureRoute(user) ~
