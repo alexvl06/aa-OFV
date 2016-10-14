@@ -82,16 +82,18 @@ case class HorarioEmpresaService(user: UsuarioAuth, kafkaActor: ActorSelection, 
     }
   }
 
-  def execution(ex: Any): StandardRoute = {
+  def execution(ex: Throwable): StandardRoute = {
     ex match {
-      case ex: ValidacionException => complete((StatusCodes.Conflict, ex.data))
+      case ex: ValidacionException => complete((StatusCodes.Conflict, ex))
       case ex: PersistenceException =>
         ex.printStackTrace(); complete((StatusCodes.InternalServerError, "Error inesperado"))
       case ex: Throwable => ex.printStackTrace(); complete((StatusCodes.InternalServerError, "Error inesperado"))
     }
   }
 
-  /*def route(user: UsuarioAuth) = {
+  /*
+  //TODO: agregar la auditoria
+  def route(user: UsuarioAuth) = {
 
     path(horarioEmpresa) {
       get {
@@ -123,28 +125,7 @@ case class HorarioEmpresaService(user: UsuarioAuth, kafkaActor: ActorSelection, 
                 }
             }
         }
-    } ~
-      path(diaFestivo) {
-        post {
-          entity(as[DiaFestivoMessage]) {
-            diaFestivoMessage =>
-              respondWithMediaType(mediaType) {
-                requestExecute(diaFestivoMessage, horarioEmpresaActor)
-              }
-          }
-        }
-      } ~
-      path(validarHorario) {
-        get {
-          parameters('idUsuarioRecurso.as[Option[String]], 'tipoIdentificacion.as[Option[Int]]) {
-            (idUsuarioRecurso, tipoIdentificacion) =>
-              respondWithMediaType(mediaType) {
-                println("llego a validar horario")
-                requestExecute(ValidarHorarioEmpresaMessage(user, idUsuarioRecurso, tipoIdentificacion), horarioEmpresaActor)
-              }
-          }
-        }
-      }
+    }
   }*/
 
 }
