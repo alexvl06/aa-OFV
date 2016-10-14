@@ -83,15 +83,16 @@ case class ContrasenaAgenteInmobiliarioDriverRepository(agenteRepo: UsuarioInmob
   }
 
   private def validacionReglasClave(contrasena: String, idUsuario: Int, perfilUsuario: PerfilesUsuario.perfilUsuario): Future[String] = {
-    val usuarioFuture = ValidarClave.aplicarReglas(contrasena, Some(idUsuario), perfilUsuario, ValidarClave.reglasGenerales: _*)
-    usuarioFuture.flatMap {
-      case e: Validation[PersistenceException, List[ErrorValidacionClave]] =>
-        e match {
-          case zSuccess(a) => if (a.isEmpty) Future.successful("True") else Future.failed(ValidacionExceptionPasswordRules("409.5", "Error Clave",
-            a.map(_.toString + "-").toString().replace("List(", "").replace(")", "").replace(",", "").replace(" ", ""), "", ""))
-          case zFailure(_) => Future.failed(ValidacionException("409.5", "Contraseña MAL 1"))
-        }
-      case _ => Future.failed(ValidacionException("409.5", "Contraseña MAL 2"))
+    val validacionesContrasena: Future[Validation[PersistenceException, List[(ErrorValidacionClave, String)]]] = ValidarClave
+      .aplicarReglasValor(contrasena, Some(idUsuario), perfilUsuario, ValidarClave.reglasGenerales: _*)
+    validacionesContrasena.flatMap {
+      case zSuccess(erroresContrasena) => erroresContrasena.isEmpty match {
+        case true => Future.successful("True")
+        case false =>
+          val erroresMsg: String = erroresContrasena.map(error => s"${error._1.toString}:${error._2}").mkString("\0")
+          Future.failed(ValidacionException("409.5", erroresMsg))
+      }
+      case zFailure => Future.failed(ValidacionException("409.5", "Error de persistencia ..."))
     }
   }
 
