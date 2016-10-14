@@ -210,7 +210,7 @@ case class AgenteInmobiliarioService(
       entity(as[ActualizarCredencialesAgenteRequest]) { contraseñas =>
         val updateF = contrasenaRepo.actualizarContrasenaCaducada(Option.empty, contraseñas.contrasenaActual.getOrElse(""), contraseñas.contrasena, Option(usuarioAuth.id))
         onComplete(updateF) {
-          case Success(resultado) => complete(StatusCodes.OK, "true")
+          case Success(resultado) => complete(StatusCodes.OK)
           case Failure(ex) => execution(ex)
         }
       }
