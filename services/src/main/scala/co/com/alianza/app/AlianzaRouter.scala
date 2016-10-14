@@ -84,7 +84,7 @@ case class AlianzaRouter(
             UsuarioEmpresaService(kafkaActor, agenteEmpresarialActor).secureUserRouteEmpresa(user) ~
             //TODO: refactorizar
             PermisosTransaccionalesService(kafkaActor, permisoTransaccionalActor).route(user) ~
-            PreguntasAutovalidacionService(user, preguntasValidacionRepository, respuestaUsuarioRepository, respuestaUsuarioAdminRepository).route
+            PreguntasAutovalidacionService(user, kafkaActor, preguntasValidacionRepository, respuestaUsuarioRepository, respuestaUsuarioAdminRepository).route
       }
 
   def receive = runRoute(respondWithHeaders(listCrossHeaders) { routes })(

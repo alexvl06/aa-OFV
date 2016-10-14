@@ -19,7 +19,9 @@ import scala.util.{ Failure, Success }
 /**
  * @author s4n on 16/06/15.
  */
-case class HorarioEmpresaService(user: UsuarioAuth, kafkaActor: ActorSelection, horarioEmpresaRepository: HorarioEmpresaRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
+case class HorarioEmpresaService(user: UsuarioAuth, kafkaActor: ActorSelection,
+  horarioEmpresaRepository: HorarioEmpresaRepository)(implicit val ec: ExecutionContext)
+    extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   val diaFestivoPath = "diaFestivo"
   val horarioEmpresaPath = "horarioEmpresa"
@@ -102,28 +104,5 @@ case class HorarioEmpresaService(user: UsuarioAuth, kafkaActor: ActorSelection, 
       case ex: Throwable => ex.printStackTrace(); complete((StatusCodes.InternalServerError, "Error inesperado"))
     }
   }
-
-  /*
-  //TODO: agregar la auditoria
-  entity(as[AgregarHorarioEmpresaMessage]) {
-    agregarHorarioEmpresaMessage =>
-      respondWithMediaType(mediaType) {
-        clientIP {
-          ip =>
-            mapRequestContext {
-              r: RequestContext =>
-                val token = r.request.headers.find(header => header.name equals "token")
-                val usuario = DataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
-
-                requestWithFutureAuditing[PersistenceException, AgregarHorarioEmpresaMessage](r, AuditingHelper.fiduciariaTopic,
-                  AuditingHelper.cambioHorarioIndex, ip.value, kafkaActor, usuario, Some(agregarHorarioEmpresaMessage))
-            } {
-              requestExecute(agregarHorarioEmpresaMessage.copy(idUsuario = Some(user.id), tipoCliente = Some(user.tipoCliente.id)), horarioEmpresaActor)
-            }
-        }
-
-      }
-  }
-  }*/
 
 }

@@ -4,6 +4,7 @@ import akka.util.Timeout
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import co.com.alianza.exceptions.ValidacionException
+import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.infrastructure.dto.{ Configuracion, Pregunta, Respuesta, RespuestaCompleta }
 import co.com.alianza.persistence.entities.{ Configuraciones, PreguntaAutovalidacion }
 import co.com.alianza.util.json.JsonUtil
@@ -91,11 +92,11 @@ case class PreguntasAutovalidacionDriverRepository(
     }
   }
 
-  def validarRespuestas(idUsuario: Int, tipoCliente: TiposCliente, respuestas: List[Respuesta], numeroIntentos: Int): Future[String] = {
+  def validarRespuestas(user: UsuarioAuth, respuestas: List[Respuesta], numeroIntentos: Int): Future[String] = {
 
-    def futureRespuestas = tipoCliente match {
-      case TiposCliente.clienteIndividual => alianzaDao.getIndividualClientQuestions(idUsuario)
-      case TiposCliente.clienteAdministrador => alianzaDao.getAdministratorClientQuestions(idUsuario)
+    def futureRespuestas = user.tipoCliente match {
+      case TiposCliente.clienteIndividual => alianzaDao.getIndividualClientQuestions(user.id)
+      case TiposCliente.clienteAdministrador => alianzaDao.getAdministratorClientQuestions(user.id)
       case _ => Future.failed(ValidacionException("", "Error tipo de cliente no valido."))
     }
 
