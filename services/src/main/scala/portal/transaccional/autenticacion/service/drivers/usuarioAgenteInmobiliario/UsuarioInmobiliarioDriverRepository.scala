@@ -98,7 +98,32 @@ case class UsuarioInmobiliarioDriverRepository(
   override def updateAgenteInmobiliario(identificacion: String, usuario: String,
     correo: String, nombre: Option[String],
     cargo: Option[String], descripcion: Option[String]): Future[Int] = {
-    usuariosDao.update(identificacion, usuario, correo, nombre, cargo, descripcion)
+    usuariosDao.get(identificacion, usuario).flatMap {
+      case None => Future.successful(0)
+      case Some(agente) =>
+        val correoCambio: Boolean = correo != agente.correo
+        usuariosDao.update(identificacion, usuario, correo, nombre, cargo, descripcion).flatMap { r =>
+          if (!correoCambio) {
+            Future.successful(r)
+          } else {
+            for {
+              configExpiracion <- configDao.getByKey(TiposConfiguracion.EXPIRACION_PIN.llave)
+              pinAgente: PinAgenteInmobiliario = pinRepository.generarPinAgente(configExpiracion, agente.id)
+              idPin <- pinRepository.asociarPinAgente(pinAgente)
+              correoActivacion: MailMessage = pinRepository.generarCorreoActivacion(
+                pinAgente.tokenHash,
+                configExpiracion.valor.toInt, identificacion, usuario, correo
+              )
+            } yield {
+              // el envío del correo se ejecuta de forma asíncrona dado que no interesa el éxito de la operación,
+              // es decir, si el envío falla, no se debería responder con error la creación del agente inmobiliario
+              pinRepository.enviarEmail(correoActivacion)
+              // se retorna el id del agente generado
+              r
+            }
+          }
+        }
+    }
   }
 
   override def activateOrDeactivateAgenteInmobiliario(identificacion: String, usuario: String): Future[Option[ConsultarAgenteInmobiliarioResponse]] = {
