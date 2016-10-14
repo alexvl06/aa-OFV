@@ -89,7 +89,7 @@ case class ContrasenaAgenteInmobiliarioDriverRepository(agenteRepo: UsuarioInmob
       case zSuccess(erroresContrasena) => erroresContrasena.isEmpty match {
         case true => Future.successful("True")
         case false =>
-          val erroresMsg: String = erroresContrasena.map(error => s"${error._1.toString}:${error._2}").mkString("\0")
+          val erroresMsg: String = erroresContrasena.map(error => s"${error._1.toString}:${error._2}").mkString("\u0000")
           Future.failed(ValidacionException("409.5", erroresMsg))
       }
       case zFailure => Future.failed(ValidacionException("409.5", "Error de persistencia ..."))
