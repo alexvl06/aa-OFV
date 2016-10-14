@@ -3,6 +3,9 @@ package portal.transaccional.autenticacion.service.web.horarioEmpresa
 import akka.actor.ActorSelection
 import co.com.alianza.app.CrossHeaders
 import co.com.alianza.exceptions.{ PersistenceException, ValidacionException }
+import co.com.alianza.infrastructure.auditing.AuditingHelper
+import co.com.alianza.infrastructure.auditing.AuditingHelper._
+import co.com.alianza.infrastructure.auditing.AuditingUser.AuditingUserData
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import portal.transaccional.autenticacion.service.drivers.horarioEmpresa.HorarioEmpresaRepository
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
@@ -46,11 +49,20 @@ case class HorarioEmpresaService(user: UsuarioAuth, kafkaActor: ActorSelection, 
     put {
       entity(as[AgregarHorarioEmpresaRequest]) {
         request =>
-          // TODO: AUDITORIA by:Jonathan
-          val resultado: Future[Int] = horarioEmpresaRepository.agregar(user, request.diaHabil, request.sabado, request.horaInicio, request.horaFin)
-          onComplete(resultado) {
-            case Success(value) => complete(value.toString)
-            case Failure(ex) => execution(ex)
+          clientIP {
+            ip =>
+              mapRequestContext {
+                r: RequestContext =>
+                  val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, user.usuario)
+                  requestAuditing[PersistenceException, AgregarHorarioEmpresaRequest](r, AuditingHelper.fiduciariaTopic,
+                    AuditingHelper.cambioHorarioIndex, ip.value, kafkaActor, usuario, Some(request))
+              } {
+                val resultado: Future[Int] = horarioEmpresaRepository.agregar(user, request.diaHabil, request.sabado, request.horaInicio, request.horaFin)
+                onComplete(resultado) {
+                  case Success(value) => complete(value.toString)
+                  case Failure(ex) => execution(ex)
+                }
+              }
           }
       }
     }
@@ -93,39 +105,25 @@ case class HorarioEmpresaService(user: UsuarioAuth, kafkaActor: ActorSelection, 
 
   /*
   //TODO: agregar la auditoria
-  def route(user: UsuarioAuth) = {
+  entity(as[AgregarHorarioEmpresaMessage]) {
+    agregarHorarioEmpresaMessage =>
+      respondWithMediaType(mediaType) {
+        clientIP {
+          ip =>
+            mapRequestContext {
+              r: RequestContext =>
+                val token = r.request.headers.find(header => header.name equals "token")
+                val usuario = DataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
 
-    path(horarioEmpresa) {
-      get {
-        respondWithMediaType(mediaType) {
-          requestExecute(ObtenerHorarioEmpresaMessage(user.id, user.tipoCliente), horarioEmpresaActor)
-        }
-      } ~
-        put {
-          if (user.tipoCliente.eq(TiposCliente.comercialSAC))
-            complete((StatusCodes.Unauthorized, "Tipo usuario SAC no está autorizado para realizar esta acción"))
-          else
-            entity(as[AgregarHorarioEmpresaMessage]) {
-              agregarHorarioEmpresaMessage =>
-                respondWithMediaType(mediaType) {
-                  clientIP {
-                    ip =>
-                      mapRequestContext {
-                        r: RequestContext =>
-                          val token = r.request.headers.find(header => header.name equals "token")
-                          val usuario = DataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
-
-                          requestWithFutureAuditing[PersistenceException, AgregarHorarioEmpresaMessage](r, AuditingHelper.fiduciariaTopic,
-                            AuditingHelper.cambioHorarioIndex, ip.value, kafkaActor, usuario, Some(agregarHorarioEmpresaMessage))
-                      } {
-                        requestExecute(agregarHorarioEmpresaMessage.copy(idUsuario = Some(user.id), tipoCliente = Some(user.tipoCliente.id)), horarioEmpresaActor)
-                      }
-                  }
-
-                }
+                requestWithFutureAuditing[PersistenceException, AgregarHorarioEmpresaMessage](r, AuditingHelper.fiduciariaTopic,
+                  AuditingHelper.cambioHorarioIndex, ip.value, kafkaActor, usuario, Some(agregarHorarioEmpresaMessage))
+            } {
+              requestExecute(agregarHorarioEmpresaMessage.copy(idUsuario = Some(user.id), tipoCliente = Some(user.tipoCliente.id)), horarioEmpresaActor)
             }
         }
-    }
+
+      }
+  }
   }*/
 
 }
