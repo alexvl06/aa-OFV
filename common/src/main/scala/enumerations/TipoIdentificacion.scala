@@ -9,7 +9,7 @@ import com.fasterxml.jackson.core.`type`.TypeReference
  */
 object TipoIdentificacion extends Enumeration {
 
-   case class Val(identificador: Int, name: String, descripcion: String) extends super.Val(nextId, name) with Serializable
+  case class Val(identificador: Int, name: String, descripcion: String) extends super.Val(nextId, name) with Serializable
 
   val CEDULA_CUIDADANIA = Val(1, "CC", "Cédula de Ciudadanía")
   val CEDULA_EXTRANJERIA = Val(2, "CE", "Cédula de Extranjería")
@@ -22,13 +22,12 @@ object TipoIdentificacion extends Enumeration {
   val NUIP = Val(9, "Nuip", "NUIP")
   val GRUPO = Val(10, "Grupo", "GRUPO")
 
-
   def obtenerTodos(): List[TipoIdentificacionDTO] = {
     List(CEDULA_CUIDADANIA, CEDULA_EXTRANJERIA, TI, PASAPORTE, REGISTRO_CIVIL, NUIP).map(enumToDto(_))
   }
 
   def obtenerTiposIdentificacionNatural(): List[TipoIdentificacionDTO] = {
-     List(CEDULA_CUIDADANIA, CEDULA_EXTRANJERIA).map(enumToDto(_))
+    List(CEDULA_CUIDADANIA, CEDULA_EXTRANJERIA).map(enumToDto(_))
   }
 
   def obtenerTiposIdentificacionEmpresas(): List[TipoIdentificacionDTO] = {

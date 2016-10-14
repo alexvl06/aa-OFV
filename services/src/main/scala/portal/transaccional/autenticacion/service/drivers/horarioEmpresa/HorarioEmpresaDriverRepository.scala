@@ -86,7 +86,6 @@ case class HorarioEmpresaDriverRepository(empresaRepo: EmpresaDriverRepository, 
       java.sql.Date.valueOf(c.get(Calendar.YEAR) + "-" + (c.get(Calendar.MONTH) + 1) + "-" + c.get(Calendar.DAY_OF_MONTH))
     }
     optionHorario match {
-      case None => Future.successful(true)
       case Some(horario) => {
         //Obtener la hora actual de la fecha real
         val calendar = Calendar.getInstance()
@@ -113,6 +112,7 @@ case class HorarioEmpresaDriverRepository(empresaRepo: EmpresaDriverRepository, 
           Future.successful(true)
         }
       }
+      case _ => Future.successful(true)
     }
   }
 

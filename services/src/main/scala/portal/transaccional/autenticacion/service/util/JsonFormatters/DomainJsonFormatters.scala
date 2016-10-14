@@ -1,18 +1,18 @@
 package portal.transaccional.autenticacion.service.util.JsonFormatters
 
-import co.com.alianza.exceptions.{NoAutorizado, ValidacionException}
-import co.com.alianza.infrastructure.dto.{Pregunta, Respuesta}
-import co.com.alianza.persistence.entities.{Empresa, RecursoComercial, ReglaContrasena, RolComercial}
+import co.com.alianza.exceptions.{ NoAutorizado, ValidacionException }
+import co.com.alianza.infrastructure.dto.{ Pregunta, Respuesta }
+import co.com.alianza.persistence.entities.{ Empresa, RecursoComercial, ReglaContrasena, RolComercial }
 import enumerations.TipoIdentificacionDTO
-import portal.transaccional.autenticacion.service.dto.{PermisoRecursoDTO, RecursoDTO}
+import portal.transaccional.autenticacion.service.dto.{ PermisoRecursoDTO, RecursoDTO }
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import portal.transaccional.autenticacion.service.web.actualizacion._
-import portal.transaccional.autenticacion.service.web.autenticacion.{AutenticarRequest, AutenticarUsuarioComercialRequest, AutenticarUsuarioEmpresarialRequest}
+import portal.transaccional.autenticacion.service.web.autenticacion.{ AutenticarRequest, AutenticarUsuarioComercialRequest, AutenticarUsuarioEmpresarialRequest }
 import portal.transaccional.autenticacion.service.web.autorizacion.InvalidarTokenRequest
-import portal.transaccional.autenticacion.service.web.comercial.{ActualizarContrasenaRequest, CrearAdministradorRequest, ValidarEmpresaRequest}
-import portal.transaccional.autenticacion.service.web.horarioEmpresa.{AgregarHorarioEmpresaRequest, DiaFestivoRequest, ResponseObtenerHorario}
-import portal.transaccional.autenticacion.service.web.ip.{IpRequest, IpResponse}
-import portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.{GuardarRespuestasRequest, ResponseObtenerPreguntas, ResponseObtenerPreguntasComprobar, RespuestasComprobacionRequest}
+import portal.transaccional.autenticacion.service.web.comercial.{ ActualizarContrasenaRequest, CrearAdministradorRequest, ValidarEmpresaRequest }
+import portal.transaccional.autenticacion.service.web.horarioEmpresa.{ AgregarHorarioEmpresaRequest, DiaFestivoRequest, ResponseObtenerHorario }
+import portal.transaccional.autenticacion.service.web.ip.{ IpRequest, IpResponse }
+import portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.{ GuardarRespuestasRequest, ResponseObtenerPreguntas, ResponseObtenerPreguntasComprobar, RespuestasComprobacionRequest }
 
 trait DomainJsonFormatters {
 
@@ -73,7 +73,7 @@ trait DomainJsonFormatters {
   implicit val agregarHorarioEmpresaRequestFormatter = jsonFormat4(AgregarHorarioEmpresaRequest)
   implicit val diaFestivoRequestFormatter = jsonFormat1(DiaFestivoRequest)
   implicit val HorarioEmpresaFormatter = jsonFormat4(ResponseObtenerHorario)
-	
+
   //Enumeracion
   implicit val tipoIdentificacionDTOFormatter = jsonFormat2(TipoIdentificacionDTO)
 
