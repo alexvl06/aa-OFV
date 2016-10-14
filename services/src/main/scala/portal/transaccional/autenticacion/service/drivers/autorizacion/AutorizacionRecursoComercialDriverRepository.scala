@@ -12,7 +12,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 case class AutorizacionRecursoComercialDriverRepository(rolRecursoRepo: RolRecursoComercialRepository)(implicit val ex: ExecutionContext) extends AutorizacionRecursoComercialRepository {
 
   override def obtenerRolesPorRecurso(nombreRecurso: String): Future[Seq[RolComercial]] = {
-    rolRecursoRepo.obtenerRolesPorRecurso(nombreRecurso);
+    rolRecursoRepo.obtenerRolesPorRecurso(nombreRecurso)
   }
 
   override def actualizarRecursos(permiso: PermisoRecursoDTO): Future[Option[Int]] = {

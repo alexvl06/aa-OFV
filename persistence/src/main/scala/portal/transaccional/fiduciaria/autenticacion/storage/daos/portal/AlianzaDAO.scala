@@ -187,4 +187,14 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
     } yield s
     run(query.distinctOn(_.titulo).result)
   }
+
+  def getByToken(token: String): Future[UsuarioAgenteInmobiliario] = {
+    val query = for {
+      a <- usuariosAgentesInmobiliarios if a.token === token
+      e <- empresas if e.nit === a.identificacion if e.estadoEmpresa === 1
+    } yield a
+
+    run(query.result.head)
+  }
+
 }

@@ -33,7 +33,7 @@ trait ServiceAuthorization {
   val autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository
   val autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository
 
-  implicit val timeout: Timeout = Timeout(10.seconds)
+  implicit val timeout: Timeout = Timeout(5.seconds)
 
   def authenticateUser: ContextAuthenticator[UsuarioAuth] = {
     ctx =>

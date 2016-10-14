@@ -1,6 +1,5 @@
-package portal.transaccional.autenticacion.service.drivers.autorizacion
+package portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario
 
-import akka.util.Timeout
 import co.com.alianza.exceptions.{ Autorizado, Prohibido, ValidacionAutorizacion, ValidacionException }
 import co.com.alianza.infrastructure.dto.UsuarioEmpresarialAdmin
 import co.com.alianza.infrastructure.messages.ResponseMessage
@@ -8,24 +7,22 @@ import co.com.alianza.persistence.entities.RecursoPerfilClienteAdmin
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.token.Token
 import enumerations.empresa.EstadosDeEmpresaEnum
+import portal.transaccional.autenticacion.service.drivers.autorizacion.{ AutorizacionUsuarioEmpresarialAdminRepository, ForbiddenMessageAdmin }
 import portal.transaccional.autenticacion.service.drivers.recurso.RecursoRepository
 import portal.transaccional.autenticacion.service.drivers.sesion.SesionRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.{ DataAccessTranslator, UsuarioEmpresarialAdminRepository }
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.AlianzaDAO
 import spray.http.StatusCodes._
 
-import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
- * Created by seven4n in 2016
+ * Created by alexandra on 13/10/16.
  */
-case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: UsuarioEmpresarialAdminRepository, sesionRepo: SesionRepository,
+case class AutorizacionDriverRepository(adminRepo: UsuarioEmpresarialAdminRepository, sesionRepo: SesionRepository,
     alianzaDAO: AlianzaDAO, recursoRepo: RecursoRepository)(implicit val ex: ExecutionContext) extends AutorizacionUsuarioEmpresarialAdminRepository {
 
-  implicit val timeout = Timeout(5.seconds)
-
-  def autorizar(token: String, encriptedToken: String, url: String, ip: String): Future[ValidacionAutorizacion] = {
+  def autorizar(token: String, encriptedToken: String, url: Option[String], ip: String): Future[ValidacionAutorizacion] = {
     for {
       _ <- validarToken(token)
       _ <- sesionRepo.validarSesion(token)
@@ -33,15 +30,8 @@ case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: Usuari
       adminEstado <- alianzaDAO.getByTokenAdmin(encriptedToken)
       _ <- validarEstadoEmpresa(adminEstado._2)
       recursos <- alianzaDAO.getAdminResources(adminEstado._1.id)
-      result <- resolveMessageRecursos(DataAccessTranslator.entityToDto(adminEstado._1), recursos, url)
+      result <- resolveMessageRecursos(DataAccessTranslator.entityToDto(adminEstado._1), recursos, url.getOrElse(""))
     } yield result
-  }
-
-  def invalidarToken(token: String, encriptedToken: String): Future[Int] = {
-    for {
-      x <- adminRepo.invalidarToken(encriptedToken)
-      _ <- sesionRepo.eliminarSesion(token)
-    } yield x
   }
 
   private def validarToken(token: String): Future[Boolean] = {
@@ -67,6 +57,7 @@ case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: Usuari
    */
   private def resolveMessageRecursos(adminDTO: UsuarioEmpresarialAdmin, recursos: Seq[RecursoPerfilClienteAdmin], url: String): Future[ValidacionAutorizacion] = Future {
     val recursosFiltro = recursoRepo.filtrarRecursosClienteAdmin(recursos, url)
+
     recursosFiltro.nonEmpty match {
       case false =>
         val usuarioForbidden: ForbiddenMessageAdmin = ForbiddenMessageAdmin(adminDTO, None)
@@ -82,6 +73,5 @@ case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: Usuari
         }
     }
   }
-}
 
-case class ForbiddenMessageAdmin(usuario: UsuarioEmpresarialAdmin, filtro: Option[String])
+}
