@@ -20,13 +20,6 @@ object DataAccessAdapter {
 
   implicit val ec: ExecutionContext = DataBaseExecutionContext.executionContext
 
-  def obtenerUsuarios(): Future[Validation[PersistenceException, List[Usuario]]] = {
-    val repo = new UsuariosRepository()
-    repo.obtenerUsuarios() map {
-      x => transformValidationList(x)
-    }
-  }
-
   def crearUsuario(usuario: eUsuario): Future[Validation[PersistenceException, Int]] = {
     val repo = new UsuariosRepository()
     repo.guardar(usuario)
@@ -45,13 +38,6 @@ object DataAccessAdapter {
   def obtenerUsuarioNumeroIdentificacion(numeroIdentificacion: String): Future[Validation[PersistenceException, Option[Usuario]]] = {
     val repo = new UsuariosRepository()
     repo.obtenerUsuarioNumeroIdentificacion(numeroIdentificacion) map {
-      x => transformValidation(x)
-    }
-  }
-
-  def obtenerUsuarioId(idUsuario: Int): Future[Validation[PersistenceException, Option[Usuario]]] = {
-    val repo = new UsuariosRepository()
-    repo.obtenerUsuarioId(idUsuario) map {
       x => transformValidation(x)
     }
   }
@@ -224,11 +210,6 @@ object DataAccessAdapter {
     new HorarioEmpresaRepository().agregarHorarioEmpresa(horarioEmpresa, existeHorario: Boolean)
   }
 
-  def obtenerIpsUsuario(idUsuario: Int): Future[Validation[PersistenceException, Seq[IpsUsuario]]] = {
-    val repo = new IpsUsuarioRepository()
-    repo.obtenerIpsUsuario(idUsuario)
-  }
-
   def obtenerIpsEmpresa(idEmpresa: Int): Future[Validation[PersistenceException, Seq[IpsEmpresa]]] = {
     new IpsEmpresaRepository().obtenerIpsEmpresa(idEmpresa)
   }
@@ -247,21 +228,6 @@ object DataAccessAdapter {
   def agregarIpEmpresa(ip: IpsEmpresa): Future[Validation[PersistenceException, String]] = {
     val repo = new IpsEmpresaRepository()
     repo.guardar(ip)
-  }
-
-  def eliminarIpEmpresa(ip: IpsEmpresa): Future[Validation[PersistenceException, Int]] = {
-    val repo = new IpsEmpresaRepository()
-    repo.eliminar(ip)
-  }
-
-  def eliminarIpUsuario(ip: IpsUsuario): Future[Validation[PersistenceException, Int]] = {
-    val repo = new IpsUsuarioRepository()
-    repo.eliminar(ip)
-  }
-
-  def obtenerIpUsuarioValida(idUsuario: Int, ip: String): Future[Validation[PersistenceException, Option[IpsUsuario]]] = {
-    val repo = new IpsUsuarioRepository()
-    repo.obtenerIpUsuario(idUsuario, ip)
   }
 
   def actualizarEstadoUsuario(numeroIdentificacion: String, estado: Int): Future[Validation[PersistenceException, Int]] = {

@@ -27,10 +27,4 @@ class IpsEmpresaRepository(implicit executionContext: ExecutionContext) extends 
       resolveTry(resultTry, "Relaciona Ip Empresa")
   }
 
-  def eliminar(IpsEmpresa: IpsEmpresa): Future[Validation[PersistenceException, Int]] = loan {
-    implicit session =>
-      val query = ipsEmpresa.filter(x => x.idEmpresa === IpsEmpresa.idEmpresa && x.ip === IpsEmpresa.ip).delete
-      val resultTry = session.database.run(query)
-      resolveTry(resultTry, "Elimina Ip Empresa")
-  }
 }

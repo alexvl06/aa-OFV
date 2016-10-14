@@ -22,7 +22,6 @@ import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
 
-// TODO: Implement 256-bit version like: http://securejava.wordpress.com/2012/10/25/aes-256/
 public class Aes {
 
     private final int keySize;

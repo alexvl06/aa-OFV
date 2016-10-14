@@ -20,12 +20,6 @@ class UsuariosRepository(implicit executionContext: ExecutionContext) extends Al
   val perfilesUsuarios = TableQuery[PerfilUsuarioTable]
   val pinusuarios = TableQuery[PinUsuarioTable]
 
-  def obtenerUsuarios(): Future[Validation[PersistenceException, Seq[Usuario]]] = loan {
-    implicit session =>
-      val resultTry = session.database.run(usuarios.result)
-      resolveTry(resultTry, "Consulta todos los Usuarios")
-  }
-
   def obtenerUsuarioNumeroIdentificacion(numeroIdentificacion: String): Future[Validation[PersistenceException, Option[Usuario]]] = loan {
     implicit session =>
       val resultTry = session.database.run(usuarios.filter(_.identificacion === numeroIdentificacion).result.headOption)
@@ -123,7 +117,6 @@ class UsuariosRepository(implicit executionContext: ExecutionContext) extends Al
   }
 
   def asociarPerfiles(perfiles: List[PerfilUsuario]): Future[Validation[PersistenceException, List[Int]]] = loan {
-
     implicit session =>
       val resultTry = perfiles.map(perfil => session.database.run(perfilesUsuarios += perfil))
       resolveTry(Future.sequence(resultTry), "Actualizar usuario en token")
