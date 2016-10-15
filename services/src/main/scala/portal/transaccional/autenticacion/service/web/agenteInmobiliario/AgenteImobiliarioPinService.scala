@@ -51,7 +51,9 @@ case class AgenteImobiliarioPinService(
           case Right(_) => complete(StatusCodes.OK)
           case Left(estadoPin) => complete(StatusCodes.Conflict)
         }
-        case Failure(exception) => complete(StatusCodes.InternalServerError)
+        case Failure(exception) =>
+          exception.printStackTrace()
+          complete(StatusCodes.InternalServerError)
       }
     }
   }
@@ -63,11 +65,13 @@ case class AgenteImobiliarioPinService(
           .actualizarContrasenaPin(pin, r.contrasena, r.contrasenaActual)
         onComplete(actualizacionF) {
           case Success(_) => complete(StatusCodes.OK)
-          case Failure(error) => error match {
-            case x: ValidacionException => complete(StatusCodes.Conflict -> x)
-            case x: ValidacionExceptionPasswordRules => complete(StatusCodes.Conflict -> x)
-            case _ => complete(StatusCodes.InternalServerError)
-          }
+          case Failure(error) =>
+            error.printStackTrace()
+            error match {
+              case x: ValidacionException => complete(StatusCodes.Conflict -> x)
+              case x: ValidacionExceptionPasswordRules => complete(StatusCodes.Conflict -> x)
+              case _ => complete(StatusCodes.InternalServerError)
+            }
         }
       }
     }
