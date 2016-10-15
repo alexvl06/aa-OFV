@@ -49,7 +49,9 @@ case class AgenteImobiliarioPinService(
       onComplete(validacionF) {
         case Success(validacion) => validacion match {
           case Right(_) => complete(StatusCodes.OK)
-          case Left(estadoPin) => complete(StatusCodes.Conflict)
+          case Left(estadoPin) =>
+            println(s"ESTADO DEL PIN!!!!!!!!!!!! $estadoPin")
+            complete(StatusCodes.Conflict)
         }
         case Failure(exception) =>
           exception.printStackTrace()
