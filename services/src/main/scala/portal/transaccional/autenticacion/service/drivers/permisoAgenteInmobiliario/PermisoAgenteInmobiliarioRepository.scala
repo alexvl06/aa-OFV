@@ -13,9 +13,10 @@ trait PermisoAgenteInmobiliarioRepository {
    * @param identificacion Identificación de la empresa
    * @param fideicomiso    Número identificador del fideicomiso
    * @param proyecto       Número identificador del proyecto
+   * @param idAgentes      Identificadores de los agentes a retornar los permisos
    * @return La lista de permisos delproyecto
    */
-  def getPermisosProyecto(identificacion: String, fideicomiso: Int, proyecto: Int): Future[Seq[PermisoAgenteInmobiliario]]
+  def getPermisosProyecto(identificacion: String, fideicomiso: Int, proyecto: Int, idAgentes: Seq[Int]): Future[Seq[PermisoAgenteInmobiliario]]
 
   /**
    * Actualiza (agrega y/o elimina) los permisos de un proyecto

@@ -173,12 +173,15 @@ case class AgenteInmobiliarioService(
 
   private def getPermisosProyecto(fideicomiso: Int, proyecto: Int): Route = {
     get {
-      val permisosF: Future[Seq[PermisoAgenteInmobiliario]] = permisosRepo.getPermisosProyecto(
-        usuarioAuth.identificacionUsuario, fideicomiso, proyecto
-      )
-      onComplete(permisosF) {
-        case Success(permisos) => complete(StatusCodes.OK -> permisos)
-        case Failure(exception) => complete(StatusCodes.InternalServerError)
+      parameters("ids" ? "") { ids =>
+        val idAgentes: Seq[Int] = ids.split(",").map(_.toInt).toSeq
+        val permisosF: Future[Seq[PermisoAgenteInmobiliario]] = permisosRepo.getPermisosProyecto(
+          usuarioAuth.identificacionUsuario, fideicomiso, proyecto, idAgentes
+        )
+        onComplete(permisosF) {
+          case Success(permisos) => complete(StatusCodes.OK -> permisos)
+          case Failure(exception) => complete(StatusCodes.InternalServerError)
+        }
       }
     }
   }

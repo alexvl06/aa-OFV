@@ -10,8 +10,8 @@ import scala.concurrent.{ ExecutionContext, Future }
 case class PermisoAgenteInmobiliarioDriverRepository(alianzaDao: AlianzaDAO, usuariosDao: UsuarioAgenteInmobDAOs,
     permisosDAO: PermisoInmobiliarioDAOs, recursoDao: RecursoInmobiliarioDAOs)(implicit val ex: ExecutionContext) extends PermisoAgenteInmobiliarioRepository {
 
-  def getPermisosProyecto(identificacion: String, fideicomiso: Int, proyecto: Int): Future[Seq[PermisoAgenteInmobiliario]] = {
-    alianzaDao.getPermisosProyectoInmobiliario(identificacion, fideicomiso, proyecto)
+  def getPermisosProyecto(identificacion: String, fideicomiso: Int, proyecto: Int, idAgentes: Seq[Int]): Future[Seq[PermisoAgenteInmobiliario]] = {
+    alianzaDao.getPermisosProyectoInmobiliario(identificacion, fideicomiso, proyecto, idAgentes)
   }
 
   def getPermisosProyectoByAgente(idAgente : Int , username : String): Future[Seq[PermisoAgenteInmobiliario]] = {
@@ -22,7 +22,7 @@ case class PermisoAgenteInmobiliarioDriverRepository(alianzaDao: AlianzaDAO, usu
     for {
       agentesEmpresa <- usuariosDao.getAll(identificacion)
       permisosFiltrados: Seq[PermisoAgenteInmobiliario] = permisos.filter(permiso => agentesEmpresa.exists(agente => agente.id == permiso.idAgente))
-      permisosActuales <- alianzaDao.getPermisosProyectoInmobiliario(identificacion, fideicomiso, proyecto)
+      permisosActuales <- alianzaDao.getPermisosProyectoInmobiliario(identificacion, fideicomiso, proyecto, Nil)
       permisosEliminados: Seq[PermisoAgenteInmobiliario] = permisosActuales.diff(permisosFiltrados)
       permisosAgregados: Seq[PermisoAgenteInmobiliario] = permisosFiltrados.diff(permisosActuales)
       actualizar <- permisosDAO.update(permisosEliminados, permisosAgregados)
