@@ -10,19 +10,21 @@ import scala.concurrent.{ ExecutionContext, Future }
 case class PermisoAgenteInmobiliarioDriverRepository(alianzaDao: AlianzaDAO, usuariosDao: UsuarioAgenteInmobDAOs,
     permisosDAO: PermisoInmobiliarioDAOs, recursoDao: RecursoInmobiliarioDAOs)(implicit val ex: ExecutionContext) extends PermisoAgenteInmobiliarioRepository {
 
-  def getPermisosProyecto(identificacion: String, fideicomiso: Int, proyecto: Int): Future[Seq[PermisoAgenteInmobiliario]] = {
-    alianzaDao.getPermisosProyectoInmobiliario(identificacion, fideicomiso, proyecto)
+  def getPermisosProyecto(identificacion: String, fideicomiso: Int, proyecto: Int, idAgentes: Seq[Int]): Future[Seq[PermisoAgenteInmobiliario]] = {
+    alianzaDao.getPermisosProyectoInmobiliario(identificacion, fideicomiso, proyecto, idAgentes)
   }
 
   def getPermisosProyectoByAgente(idAgente : Int , username : String): Future[Seq[PermisoAgenteInmobiliario]] = {
     alianzaDao.getPermisosProyectoInmobiliarioByAgente(username, idAgente)
   }
 
-  def updatePermisosProyecto(identificacion: String, fideicomiso: Int, proyecto: Int, permisos: Seq[PermisoAgenteInmobiliario]): Future[Option[Int]] = {
+  def updatePermisosProyecto(identificacion: String, fideicomiso: Int, proyecto: Int,
+                             idAgentes: Seq[Int], permisos: Seq[PermisoAgenteInmobiliario]): Future[Option[Int]] = {
     for {
       agentesEmpresa <- usuariosDao.getAll(identificacion)
-      permisosFiltrados: Seq[PermisoAgenteInmobiliario] = permisos.filter(permiso => agentesEmpresa.exists(agente => agente.id == permiso.idAgente))
-      permisosActuales <- alianzaDao.getPermisosProyectoInmobiliario(identificacion, fideicomiso, proyecto)
+      permisosFiltrados: Seq[PermisoAgenteInmobiliario] = permisos
+        .filter(permiso => agentesEmpresa.exists(agente => agente.id == permiso.idAgente) && idAgentes.contains(permiso.idAgente))
+      permisosActuales <- alianzaDao.getPermisosProyectoInmobiliario(identificacion, fideicomiso, proyecto, idAgentes)
       permisosEliminados: Seq[PermisoAgenteInmobiliario] = permisosActuales.diff(permisosFiltrados)
       permisosAgregados: Seq[PermisoAgenteInmobiliario] = permisosFiltrados.diff(permisosActuales)
       actualizar <- permisosDAO.update(permisosEliminados, permisosAgregados)

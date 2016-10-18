@@ -24,7 +24,7 @@ trait AlianzaDAOs {
 
   def getIndividualClientQuestions(idUsuario: Int): Future[Seq[(PreguntaAutovalidacion, RespuestasAutovalidacionUsuario)]]
 
-  def getPermisosProyectoInmobiliario(nit: String, idFideicomiso: Int, idProyecto: Int): Future[Seq[PermisoAgenteInmobiliario]]
+  def getPermisosProyectoInmobiliario(nit: String, idFideicomiso: Int, idProyecto: Int, idAgentes: Seq[Int]): Future[Seq[PermisoAgenteInmobiliario]]
 
   def getRecursosAgenteInmobiliario(usuarioId: Int): Future[Seq[RecursoAgenteInmobiliario]]
 }
