@@ -174,7 +174,10 @@ case class AgenteInmobiliarioService(
   private def getPermisosProyecto(fideicomiso: Int, proyecto: Int): Route = {
     get {
       parameters("ids" ? "") { ids =>
-        val idAgentes: Seq[Int] = ids.split(",").map(_.toInt).toSeq
+        val idAgentes: Seq[Int] = ids match {
+          case x if x.isEmpty => Seq.empty
+          case x => x.split(",").map(_.toInt).toSeq
+        }
         val permisosF: Future[Seq[PermisoAgenteInmobiliario]] = permisosRepo.getPermisosProyecto(
           usuarioAuth.identificacionUsuario, fideicomiso, proyecto, idAgentes
         )
