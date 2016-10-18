@@ -55,7 +55,7 @@ case class ContrasenaAgenteInmobiliarioDriverRepository(agenteRepo: UsuarioInmob
       agente <- agenteRepo.getContrasena(hashContrasenaActual, idAgente)
       validacionReglas <- validacionReglasClave(nuevaContrasena, idAgente, PerfilesUsuario.agenteEmpresarial, valoresRegla)
       cantRepetidas <- reglaRepo.getRegla(LlavesReglaContrasena.ULTIMAS_CONTRASENAS_NO_VALIDAS.llave)
-      contrasenasViejas <- validarContrasenasAnteriores(cantRepetidas.valor.toInt, idAgente, hashNuevaContrasena, hashContrasenaActual)
+      contrasenasViejas <- validarContrasenasAnteriores(cantRepetidas.valor.toInt, idAgente, hashNuevaContrasena, hashContrasenaActual, valoresRegla)
       contrasenaActual <- agenteRepo.updateContrasena(hashNuevaContrasena, idAgente)
       ultimasContrasenas <- oldPassDAO.create(UltimaContrasenaAgenteInmobiliario(None, idAgente, hashContrasenaActual, new Timestamp(new DateTime().getMillis)))
       actualizacionEstado <- agenteRepo.updateEstadoAgente(agente.identificacion, agente.usuario, EstadosUsuarioEnumInmobiliario.activo)
@@ -110,13 +110,19 @@ case class ContrasenaAgenteInmobiliarioDriverRepository(agenteRepo: UsuarioInmob
     }
   }
 
-  private def validarContrasenasAnteriores(cantContraseñasAnteriores: Int, id: Int, passNew: String, passOld: String) = {
+  private def validarContrasenasAnteriores(cantContraseñasAnteriores: Int, id: Int, passNew: String, passOld: String, valoresRegla : Boolean) = {
+    val code =  "409.5"
+    val error = "ErrorUltimasContrasenas"
+
     for {
       contrasenasViejas <- oldPassDAO.findById(cantContraseñasAnteriores, id)
-      validarToken <- if (!contrasenasViejas.exists(_.contrasena == passNew) && passNew != passOld) {
+      validarToken <-
+      if (!contrasenasViejas.exists(_.contrasena == passNew) && passNew != passOld) {
         Future.successful(true)
+      } else if (valoresRegla) {
+        Future.failed(ValidacionException(code, error + ":" + cantContraseñasAnteriores.toString))
       } else {
-        Future.failed(ValidacionExceptionPasswordRules("409.5", "Error clave", "ErrorUltimasContrasenas-", "", ""))
+        Future.failed(ValidacionExceptionPasswordRules(code, "Error clave", error + "-", "", ""))
       }
     } yield validarToken
   }
