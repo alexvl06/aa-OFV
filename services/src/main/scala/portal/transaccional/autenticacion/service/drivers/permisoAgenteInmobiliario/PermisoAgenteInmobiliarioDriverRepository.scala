@@ -18,11 +18,13 @@ case class PermisoAgenteInmobiliarioDriverRepository(alianzaDao: AlianzaDAO, usu
     alianzaDao.getPermisosProyectoInmobiliarioByAgente(username, idAgente)
   }
 
-  def updatePermisosProyecto(identificacion: String, fideicomiso: Int, proyecto: Int, permisos: Seq[PermisoAgenteInmobiliario]): Future[Option[Int]] = {
+  def updatePermisosProyecto(identificacion: String, fideicomiso: Int, proyecto: Int,
+                             idAgentes: Seq[Int], permisos: Seq[PermisoAgenteInmobiliario]): Future[Option[Int]] = {
     for {
       agentesEmpresa <- usuariosDao.getAll(identificacion)
-      permisosFiltrados: Seq[PermisoAgenteInmobiliario] = permisos.filter(permiso => agentesEmpresa.exists(agente => agente.id == permiso.idAgente))
-      permisosActuales <- alianzaDao.getPermisosProyectoInmobiliario(identificacion, fideicomiso, proyecto, Nil)
+      permisosFiltrados: Seq[PermisoAgenteInmobiliario] = permisos
+        .filter(permiso => agentesEmpresa.exists(agente => agente.id == permiso.idAgente) && idAgentes.contains(permiso.idAgente))
+      permisosActuales <- alianzaDao.getPermisosProyectoInmobiliario(identificacion, fideicomiso, proyecto, idAgentes)
       permisosEliminados: Seq[PermisoAgenteInmobiliario] = permisosActuales.diff(permisosFiltrados)
       permisosAgregados: Seq[PermisoAgenteInmobiliario] = permisosFiltrados.diff(permisosActuales)
       actualizar <- permisosDAO.update(permisosEliminados, permisosAgregados)

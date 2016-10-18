@@ -201,14 +201,19 @@ case class AgenteInmobiliarioService(
 
   private def updatePermisosProyecto(fideicomiso: Int, proyecto: Int): Route = {
     put {
-      entity(as[Seq[PermisoAgenteInmobiliario]]) { permisos =>
-        val updateF: Future[Option[Int]] = permisosRepo.updatePermisosProyecto(
-          usuarioAuth.identificacionUsuario, fideicomiso, proyecto, permisos
-        )
-        onComplete(updateF) {
-          case Success(update) => complete(StatusCodes.OK)
-          case Failure(exception) => complete(StatusCodes.InternalServerError)
-          case _ => println(updateF); complete(StatusCodes.InternalServerError)
+      parameters("ids" ? "") { ids =>
+        entity(as[Seq[PermisoAgenteInmobiliario]]) { permisos =>
+          val idAgentes: Seq[Int] = ids match {
+            case x if x.isEmpty => Seq.empty
+            case x => x.split(",").map(_.toInt).toSeq
+          }
+          val updateF: Future[Option[Int]] = permisosRepo.updatePermisosProyecto(
+            usuarioAuth.identificacionUsuario, fideicomiso, proyecto, idAgentes, permisos
+          )
+          onComplete(updateF) {
+            case Success(update) => complete(StatusCodes.OK)
+            case Failure(exception) => complete(StatusCodes.InternalServerError)
+          }
         }
       }
     }
