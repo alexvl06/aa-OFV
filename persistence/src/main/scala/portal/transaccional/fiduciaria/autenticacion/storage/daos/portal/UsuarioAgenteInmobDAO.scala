@@ -43,21 +43,29 @@ case class UsuarioAgenteInmobDAO(implicit dcConfig: DBConfig) extends UsuarioAge
   }
 
   override def getAll(identificacion: String, nombre: Option[String],
-    usuario: Option[String], correo: Option[String], estado: Option[Int], pagina: Option[Int],
+    usuario: Option[String], correo: Option[String], estado: Option[String], pagina: Option[Int],
     itemsPorPagina: Option[Int])(implicit ec: ExecutionContext): Future[(Int, Int, Int, Int, Seq[UsuarioAgenteInmobiliario])] = {
+
+    val estados: Option[Seq[Int]] = estado match {
+      case None => None
+      case Some(e) => e match {
+        case x if x.isEmpty => Some(Seq.empty)
+        case x => Some(x.split(",").map(_.toInt).toSeq)
+      }
+    }
 
     val basequery: Query[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario, Seq] = MaybeFilter(table)
       .filter(Some(identificacion))(id => agente => agente.identificacion === id)
       .filter(nombre)(n => agente => agente.nombre like s"%$n%")
       .filter(usuario)(u => agente => agente.usuario like s"%$u%")
       .filter(correo)(c => agente => agente.correo like s"%$c%")
-      .filter(estado)(e => agente => agente.estado === e)
+      .filter(estados)(e => agente => agente.estado inSetBind e)
       .query
 
     run(
       for {
         totalAgentes <- basequery.length.result
-        agentes <- basequery.paginate(pagina, itemsPorPagina).result
+        agentes <- basequery.paginate(pagina, itemsPorPagina).sortBy(_.usuario).result
       } yield {
         (pagina.getOrElse(defaultPage), itemsPorPagina.getOrElse(defaultPageSize), agentes.length, totalAgentes, agentes)
       }
