@@ -180,6 +180,14 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
     run(query.result)
   }
 
+  def getPermisosProyectoInmobiliarioByAgente(username : String , idAgente: Int): Future[Seq[PermisoAgenteInmobiliario]] = {
+    val query = for {
+      a <- usuariosAgentesInmobiliarios if a.id === idAgente if a.usuario === username
+      p <- permisosInmobiliarios if p.idAgente === a.id
+    } yield p
+    run(query.result)
+  }
+
   def getRecursosAgenteInmobiliario(usuarioId: Int): Future[Seq[RecursoAgenteInmobiliario]] = {
     val query = for {
       c <- permisosInmobiliarios if c.idAgente === usuarioId

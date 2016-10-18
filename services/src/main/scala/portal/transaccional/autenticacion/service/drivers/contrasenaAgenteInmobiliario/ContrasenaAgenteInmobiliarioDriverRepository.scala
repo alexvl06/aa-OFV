@@ -21,7 +21,7 @@ import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
  * Created by s4n in 2016
  */
 case class ContrasenaAgenteInmobiliarioDriverRepository(agenteRepo: UsuarioInmobiliarioRepository, oldPassDAO: UltimaContraseñaAgenteInmobiliarioDAOs,
-  reglaRepo: ReglaContrasenaRepository, pinRepo: UsuarioInmobiliarioPinRepository) extends ContrasenaAgenteInmobiliarioRepository {
+    reglaRepo: ReglaContrasenaRepository, pinRepo: UsuarioInmobiliarioPinRepository) extends ContrasenaAgenteInmobiliarioRepository {
 
   def actualizarContrasenaCaducada(token: Option[String], pw_actual: String, pw_nuevo: String, idUsuario: Option[Int]): Future[Int] = {
     (token, idUsuario) match {
@@ -48,7 +48,7 @@ case class ContrasenaAgenteInmobiliarioDriverRepository(agenteRepo: UsuarioInmob
     }
   }
 
-  private def actualizarContrasena(pinHash: Option[String], contrasenaActual: String, nuevaContrasena: String, idAgente: Int, valoresRegla : Boolean): Future[Int] = {
+  private def actualizarContrasena(pinHash: Option[String], contrasenaActual: String, nuevaContrasena: String, idAgente: Int, valoresRegla: Boolean): Future[Int] = {
     val hashContrasenaActual: String = Crypto.hashSha512(contrasenaActual.concat(AppendPasswordUser.appendUsuariosFiducia), idAgente)
     val hashNuevaContrasena: String = Crypto.hashSha512(nuevaContrasena.concat(AppendPasswordUser.appendUsuariosFiducia), idAgente)
     for {
@@ -82,10 +82,10 @@ case class ContrasenaAgenteInmobiliarioDriverRepository(agenteRepo: UsuarioInmob
     }
   }
 
-  private def validacionReglasClave(contrasena: String, idUsuario: Int, perfilUsuario: PerfilesUsuario.perfilUsuario, valoresRegla : Boolean ) = {
+  private def validacionReglasClave(contrasena: String, idUsuario: Int, perfilUsuario: PerfilesUsuario.perfilUsuario, valoresRegla: Boolean) = {
 
     val sucess = Future.successful("True")
-    val error =  Future.failed(ValidacionException("409.5", "Error de persistencia ..."))
+    val error = Future.failed(ValidacionException("409.5", "Error de persistencia ..."))
     val code = "409.5"
 
     valoresRegla match {
@@ -93,7 +93,7 @@ case class ContrasenaAgenteInmobiliarioDriverRepository(agenteRepo: UsuarioInmob
         ValidarClave.aplicarReglasValor(contrasena, Some(idUsuario), perfilUsuario, ValidarClave.reglasGenerales: _*).flatMap {
           case zSuccess(erroresContrasena) => erroresContrasena.isEmpty match {
             case true => sucess
-            case false => Future.failed(ValidacionException(code ,erroresContrasena.map(error => s"${error._1.toString}:${error._2}").mkString("\u0000")))
+            case false => Future.failed(ValidacionException(code, erroresContrasena.map(error => s"${error._1.toString}:${error._2}").mkString("\u0000")))
           }
           case zFailure => error
         }

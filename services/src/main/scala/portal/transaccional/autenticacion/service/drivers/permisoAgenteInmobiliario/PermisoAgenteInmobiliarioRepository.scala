@@ -20,6 +20,14 @@ trait PermisoAgenteInmobiliarioRepository {
   /**
    * Actualiza (agrega y/o elimina) los permisos de un proyecto
    *
+   * @param idAgente Id de la persona que fue autenticada
+   * @param username    Número identificador del fideicomiso
+   */
+  def getPermisosProyectoByAgente(idAgente : Int , username : String): Future[Seq[PermisoAgenteInmobiliario]]
+
+  /**
+   * Actualiza (agrega y/o elimina) los permisos de un proyecto
+   *
    * @param identificacion Identificación de la empresa
    * @param fideicomiso    Número identificador del fideicomiso
    * @param proyecto       Número identificador del proyecto
@@ -27,5 +35,13 @@ trait PermisoAgenteInmobiliarioRepository {
    */
   def updatePermisosProyecto(identificacion: String, fideicomiso: Int, proyecto: Int, permisos: Seq[PermisoAgenteInmobiliario]): Future[Option[Int]]
 
+  /**
+   * Actualiza (agrega y/o elimina) los permisos de un proyecto
+   *
+   * @param idUser Id de la persona que fue autenticada, puede ser tanto constructor como agente inmobiliario.
+   * @param tiposCliente Tipo de constructor o agenteInmobiliario [co.com.alianza.commons.enumerations.TiposCliente]
+   */
   def getRecurso(idUser: Int, tiposCliente: TiposCliente): Future[Seq[RecursoAgenteInmobiliario]]
+
+
 }

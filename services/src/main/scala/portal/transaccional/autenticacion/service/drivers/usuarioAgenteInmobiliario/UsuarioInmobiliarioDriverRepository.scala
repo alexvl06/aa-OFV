@@ -25,7 +25,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 case class UsuarioAgenteInmobDriverRepository(usuarioDAO: UsuarioAgenteInmobDAO)(implicit val ex: ExecutionContext) extends UsuarioEmpresarialRepositoryG[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario](usuarioDAO) with UsuarioEmpresarialRepository[UsuarioAgenteInmobiliario]
 
 case class UsuarioInmobiliarioDriverRepository(
-  configDao: ConfiguracionDAOs,
+    configDao: ConfiguracionDAOs,
     usuariosDao: UsuarioAgenteInmobDAOs,
     pinRepository: UsuarioInmobiliarioPinRepository
 )(implicit val ex: ExecutionContext, system: ActorSystem, config: Config) extends UsuarioInmobiliarioRepository {

@@ -14,6 +14,10 @@ case class PermisoAgenteInmobiliarioDriverRepository(alianzaDao: AlianzaDAO, usu
     alianzaDao.getPermisosProyectoInmobiliario(identificacion, fideicomiso, proyecto)
   }
 
+  def getPermisosProyectoByAgente(idAgente : Int , username : String): Future[Seq[PermisoAgenteInmobiliario]] = {
+    alianzaDao.getPermisosProyectoInmobiliarioByAgente(username, idAgente)
+  }
+
   def updatePermisosProyecto(identificacion: String, fideicomiso: Int, proyecto: Int, permisos: Seq[PermisoAgenteInmobiliario]): Future[Option[Int]] = {
     for {
       agentesEmpresa <- usuariosDao.getAll(identificacion)

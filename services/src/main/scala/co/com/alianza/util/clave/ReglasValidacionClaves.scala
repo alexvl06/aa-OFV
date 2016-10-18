@@ -196,26 +196,28 @@ case object UltimasContrasenas extends Regla("ULTIMAS_CONTRASENAS_NO_VALIDAS") {
 object ValidarClave {
 
   def aplicarReglas(input: String, idUsuario: Option[Int], perfilUsuario: PerfilesUsuario.perfilUsuario,
-                    validaciones: Regla*): Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = {
+    validaciones: Regla*): Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = {
     obtenerReglasToMap.map(_.flatMap { f =>
       zSuccess(
         validaciones.foldLeft(Nil: List[ErrorValidacionClave]) {
-          (acc: List[ErrorValidacionClave], r: Regla) => r.validar(input, idUsuario, perfilUsuario, f.get(r.name))
-            .map(_ :: acc)
-            .getOrElse(acc)
+          (acc: List[ErrorValidacionClave], r: Regla) =>
+            r.validar(input, idUsuario, perfilUsuario, f.get(r.name))
+              .map(_ :: acc)
+              .getOrElse(acc)
         }
       )
     })
   }
 
   def aplicarReglasValor(input: String, idUsuario: Option[Int], perfilUsuario: PerfilesUsuario.perfilUsuario,
-                         validaciones: Regla*): Future[Validation[PersistenceException, List[(ErrorValidacionClave, String)]]] = {
+    validaciones: Regla*): Future[Validation[PersistenceException, List[(ErrorValidacionClave, String)]]] = {
     obtenerReglasToMap.map(_.flatMap { f =>
       zSuccess(
         validaciones.foldLeft(Nil: List[(ErrorValidacionClave, String)]) {
-          (acc: List[(ErrorValidacionClave, String)], r: Regla) => r.validar(input, idUsuario, perfilUsuario, f.get(r.name))
-            .map(x => (x, f.getOrElse(r.name, "")) :: acc)
-            .getOrElse(acc)
+          (acc: List[(ErrorValidacionClave, String)], r: Regla) =>
+            r.validar(input, idUsuario, perfilUsuario, f.get(r.name))
+              .map(x => (x, f.getOrElse(r.name, "")) :: acc)
+              .getOrElse(acc)
         }
       )
     })

@@ -52,6 +52,10 @@ case class AgenteInmobiliarioService(
       pathEndOrSingleSlash {
         getPermisosProyecto(fideicomiso, proyecto) ~ updatePermisosProyecto(fideicomiso, proyecto)
       }
+    } ~ pathPrefix(agentesPath / Segment / permisosPath) { usuarioAgente =>
+      pathEndOrSingleSlash {
+        getPermisosAgente(usuarioAgente)
+      }
     } ~ pathPrefix(agentesPath) {
       pathEndOrSingleSlash {
         getAgenteInmobiliarioList ~ createAgenteInmobiliario
@@ -97,8 +101,7 @@ case class AgenteInmobiliarioService(
   private def getAgenteInmobiliario(usuarioAgente: String): Route = {
     get {
       val agenteF: Future[Option[ConsultarAgenteInmobiliarioResponse]] = usuariosRepo.getAgenteInmobiliario(
-        usuarioAuth.identificacionUsuario, usuarioAgente
-      )
+        usuarioAuth.identificacionUsuario, usuarioAgente)
       onComplete(agenteF) {
         case Success(agente: Option[ConsultarAgenteInmobiliarioResponse]) => agente match {
           case Some(a) => complete((StatusCodes.OK, a))
@@ -173,6 +176,16 @@ case class AgenteInmobiliarioService(
       val permisosF: Future[Seq[PermisoAgenteInmobiliario]] = permisosRepo.getPermisosProyecto(
         usuarioAuth.identificacionUsuario, fideicomiso, proyecto
       )
+      onComplete(permisosF) {
+        case Success(permisos) => complete(StatusCodes.OK -> permisos)
+        case Failure(exception) => complete(StatusCodes.InternalServerError)
+      }
+    }
+  }
+
+  private def getPermisosAgente(username : String): Route = {
+    get {
+      val permisosF: Future[Seq[PermisoAgenteInmobiliario]] = permisosRepo.getPermisosProyectoByAgente(usuarioAuth.id, username)
       onComplete(permisosF) {
         case Success(permisos) => complete(StatusCodes.OK -> permisos)
         case Failure(exception) => complete(StatusCodes.InternalServerError)
