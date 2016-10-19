@@ -61,11 +61,12 @@ case class UsuarioAgenteInmobDAO(implicit dcConfig: DBConfig) extends UsuarioAge
       .filter(correo)(c => agente => agente.correo like s"%$c%")
       .filter(estados)(e => agente => agente.estado inSetBind e)
       .query
+      .sortBy(_.usuario)
 
     run(
       for {
         totalAgentes <- basequery.length.result
-        agentes <- basequery.paginate(pagina, itemsPorPagina).sortBy(_.usuario).result
+        agentes <- basequery.paginate(pagina, itemsPorPagina).result
       } yield {
         (pagina.getOrElse(defaultPage), itemsPorPagina.getOrElse(defaultPageSize), agentes.length, totalAgentes, agentes)
       }
