@@ -99,14 +99,14 @@ case class AutorizacionService(
           val encriptedToken = AesUtil.encriptarToken(token)
           val resultado = usuario.tipoCliente match {
             case `agente` => autorizacionAgenteRepo.autorizar(token, encriptedToken, url, ipRemota)
-            case `admin` | `adminInmobiliaria` => autorizacionAdminRepo.autorizar(token, encriptedToken, url, ipRemota)
+            case `admin` | `adminInmobiliaria` => autorizacionAdminRepo.autorizar(token, encriptedToken, url, ipRemota, `admin`)
             case `individual` => autorizacionRepository.autorizar(token, encriptedToken, url)
             case `agenteInmobiliario` => obtenerUsuarioComercialMock(TiposCliente.agenteInmobiliario, usuario.usuario)
             //TODO: Agregar la autorizacion de url para los tipo comerciales (Pendiente HU) By : Hernando
             case `comercialFiduciaria` => obtenerUsuarioComercialMock(TiposCliente.comercialFiduciaria, usuario.usuario)
             case `comercialValores` => obtenerUsuarioComercialMock(TiposCliente.comercialValores, usuario.usuario)
             case `comercialAdmin` => obtenerUsuarioComercialMock(TiposCliente.clienteAdministrador, usuario.usuario)
-            case _ => Future.failed(NoAutorizado("Tipo usuario no existe -3"))
+            case _ => Future.failed(NoAutorizado("Tipo usuario no existe"))
           }
 
           onComplete(resultado) {

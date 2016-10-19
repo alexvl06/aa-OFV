@@ -52,6 +52,10 @@ case class AgenteInmobiliarioService(
       pathEndOrSingleSlash {
         getPermisosProyecto(fideicomiso, proyecto) ~ updatePermisosProyecto(fideicomiso, proyecto)
       }
+    } ~ pathPrefix(agentesPath / Segment / permisosPath) { usuarioAgente =>
+      pathEndOrSingleSlash {
+        getPermisosAgente(usuarioAgente)
+      }
     } ~ pathPrefix(agentesPath) {
       pathEndOrSingleSlash {
         getAgenteInmobiliarioList ~ createAgenteInmobiliario
@@ -78,11 +82,9 @@ case class AgenteInmobiliarioService(
   private def createAgenteInmobiliario: Route = {
     post {
       entity(as[CrearAgenteInmobiliarioRequest]) { r =>
-        val idAgente: Future[Int] = usuariosRepo.createAgenteInmobiliario(
-          usuarioAuth.tipoIdentificacion, usuarioAuth.identificacionUsuario,
-          r.correo, r.usuario,
-          r.nombre, r.cargo, r.descripcion
-        )
+        val idAgente: Future[Int] = usuariosRepo.createAgenteInmobiliario(usuarioAuth.tipoIdentificacion, usuarioAuth.identificacionUsuario, r.correo,
+          r.usuario, r.nombre, r.cargo, r.descripcion)
+
         onComplete(idAgente) {
           case Success(id) => id match {
             case 0 => complete(StatusCodes.Conflict)
@@ -170,9 +172,25 @@ case class AgenteInmobiliarioService(
 
   private def getPermisosProyecto(fideicomiso: Int, proyecto: Int): Route = {
     get {
-      val permisosF: Future[Seq[PermisoAgenteInmobiliario]] = permisosRepo.getPermisosProyecto(
-        usuarioAuth.identificacionUsuario, fideicomiso, proyecto
-      )
+      parameters("ids" ? "") { ids =>
+        val idAgentes: Seq[Int] = ids match {
+          case x if x.isEmpty => Seq.empty
+          case x => x.split(",").map(_.toInt).toSeq
+        }
+        val permisosF: Future[Seq[PermisoAgenteInmobiliario]] = permisosRepo.getPermisosProyecto(
+          usuarioAuth.identificacionUsuario, fideicomiso, proyecto, idAgentes
+        )
+        onComplete(permisosF) {
+          case Success(permisos) => complete(StatusCodes.OK -> permisos)
+          case Failure(exception) => complete(StatusCodes.InternalServerError)
+        }
+      }
+    }
+  }
+
+  private def getPermisosAgente(username: String): Route = {
+    get {
+      val permisosF: Future[Seq[PermisoAgenteInmobiliario]] = permisosRepo.getPermisosProyectoByAgente(usuarioAuth.id, username)
       onComplete(permisosF) {
         case Success(permisos) => complete(StatusCodes.OK -> permisos)
         case Failure(exception) => complete(StatusCodes.InternalServerError)
@@ -182,14 +200,19 @@ case class AgenteInmobiliarioService(
 
   private def updatePermisosProyecto(fideicomiso: Int, proyecto: Int): Route = {
     put {
-      entity(as[Seq[PermisoAgenteInmobiliario]]) { permisos =>
-        val updateF: Future[Option[Int]] = permisosRepo.updatePermisosProyecto(
-          usuarioAuth.identificacionUsuario, fideicomiso, proyecto, permisos
-        )
-        onComplete(updateF) {
-          case Success(update) => complete(StatusCodes.OK)
-          case Failure(exception) => complete(StatusCodes.InternalServerError)
-          case _ => println(updateF); complete(StatusCodes.InternalServerError)
+      parameters("ids" ? "") { ids =>
+        entity(as[Seq[PermisoAgenteInmobiliario]]) { permisos =>
+          val idAgentes: Seq[Int] = ids match {
+            case x if x.isEmpty => Seq.empty
+            case x => x.split(",").map(_.toInt).toSeq
+          }
+          val updateF: Future[Option[Int]] = permisosRepo.updatePermisosProyecto(
+            usuarioAuth.identificacionUsuario, fideicomiso, proyecto, idAgentes, permisos
+          )
+          onComplete(updateF) {
+            case Success(update) => complete(StatusCodes.OK)
+            case Failure(exception) => complete(StatusCodes.InternalServerError)
+          }
         }
       }
     }
@@ -210,7 +233,7 @@ case class AgenteInmobiliarioService(
       entity(as[ActualizarCredencialesAgenteRequest]) { contraseñas =>
         val updateF = contrasenaRepo.actualizarContrasenaCaducada(Option.empty, contraseñas.contrasenaActual.getOrElse(""), contraseñas.contrasena, Option(usuarioAuth.id))
         onComplete(updateF) {
-          case Success(resultado) => complete(StatusCodes.OK, "true")
+          case Success(resultado) => complete(StatusCodes.OK)
           case Failure(ex) => execution(ex)
         }
       }

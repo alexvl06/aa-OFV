@@ -25,7 +25,7 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
   val respuestasUsuarioTable = TableQuery[RespuestasAutovalidacionUsuarioTable]
   val usuariosAgentesInmobiliarios = TableQuery[UsuarioAgenteInmobiliarioTable]
   val permisosInmobiliarios = TableQuery[PermisoInmobiliarioTable]
-  val recursosInmobiliarios = TableQuery[RecursoAgenteInmobiliarioTable]
+  val recursosInmobiliarios = TableQuery[RecursoGraficoInmobiliarioTable]
 
   import dcConfig.DB._
   import dcConfig.driver.api._
@@ -172,29 +172,28 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
 
   //  ------------------  Agente inmobiliario ---------------------------
 
-  def getPermisosProyectoInmobiliario(nit: String, idFideicomiso: Int, idProyecto: Int): Future[Seq[PermisoAgenteInmobiliario]] = {
+  def getPermisosProyectoInmobiliario(nit: String, idFideicomiso: Int, idProyecto: Int, idAgentes: Seq[Int]): Future[Seq[PermisoAgenteInmobiliario]] = {
     val query = for {
-      (agentes, permisos) <- usuariosAgentesInmobiliarios join permisosInmobiliarios on (_.id === _.idAgente)
-      if agentes.identificacion === nit && permisos.fideicomiso === idFideicomiso && permisos.proyecto === idProyecto
+      agentesFiltrados <- usuariosAgentesInmobiliarios.filter(_.id inSetBind idAgentes)
+      permisos <- permisosInmobiliarios if agentesFiltrados.id === permisos.idAgente
+      if agentesFiltrados.identificacion === nit && permisos.fideicomiso === idFideicomiso && permisos.proyecto === idProyecto
     } yield permisos
     run(query.result)
   }
 
-  def getRecursosAgenteInmobiliario(usuarioId: Int): Future[Seq[RecursoAgenteInmobiliario]] = {
+  def getPermisosProyectoInmobiliarioByAgente(username: String, idAgente: Int): Future[Seq[PermisoAgenteInmobiliario]] = {
+    val query = for {
+      a <- usuariosAgentesInmobiliarios if a.id === idAgente if a.usuario === username
+      p <- permisosInmobiliarios if p.idAgente === a.id
+    } yield p
+    run(query.result)
+  }
+
+  def getRecursosAgenteInmobiliario(usuarioId: Int): Future[Seq[RecursoGraficoInmobiliario]] = {
     val query = for {
       c <- permisosInmobiliarios if c.idAgente === usuarioId
       s <- recursosInmobiliarios if c.tipoPermiso === s.id
     } yield s
     run(query.distinctOn(_.titulo).result)
   }
-
-  def getByToken(token: String): Future[UsuarioAgenteInmobiliario] = {
-    val query = for {
-      a <- usuariosAgentesInmobiliarios if a.token === token
-      e <- empresas if e.nit === a.identificacion if e.estadoEmpresa === 1
-    } yield a
-
-    run(query.result.head)
-  }
-
 }

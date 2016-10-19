@@ -3,7 +3,7 @@ package portal.transaccional.autenticacion.service.util.JsonFormatters
 import co.com.alianza.commons.enumerations.TipoPermisoInmobiliario
 import co.com.alianza.exceptions.{ ValidacionException, ValidacionExceptionPasswordRules }
 import co.com.alianza.infrastructure.dto.{ Pregunta, Respuesta }
-import co.com.alianza.persistence.entities.{ PermisoAgenteInmobiliario, RecursoAgenteInmobiliario, RecursoComercial, RolComercial }
+import co.com.alianza.persistence.entities.{ PermisoAgenteInmobiliario, RecursoGraficoInmobiliario, RecursoComercial, RolComercial }
 import portal.transaccional.autenticacion.service.dto.{ PermisoRecursoDTO, RecursoDTO }
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import portal.transaccional.autenticacion.service.web.agenteInmobiliario._
@@ -57,7 +57,7 @@ trait DomainJsonFormatters {
   implicit val consultarAgenteInmobResponseFormatter = jsonFormat7(ConsultarAgenteInmobiliarioResponse)
   implicit val paginationMetadataResponseFormatter = jsonFormat5(PaginacionMetadata)
   implicit val consultarAgenteInmobiliarioListResponseFormatter = jsonFormat2(ConsultarAgenteInmobiliarioListResponse)
-  implicit val recursosInmobiliariosFormatter = jsonFormat3(RecursoAgenteInmobiliario)
+  implicit val recursosInmobiliariosFormatter = jsonFormat4(RecursoGraficoInmobiliario)
   implicit val actualizarCredencialesRequestFormatter = jsonFormat3(ActualizarCredencialesAgenteRequest)
 
   // ----- MAPEO DE ENUM!

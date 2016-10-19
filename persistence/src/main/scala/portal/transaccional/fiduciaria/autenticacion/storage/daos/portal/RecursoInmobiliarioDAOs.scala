@@ -1,6 +1,6 @@
 package portal.transaccional.fiduciaria.autenticacion.storage.daos.portal
 
-import co.com.alianza.persistence.entities.RecursoAgenteInmobiliario
+import co.com.alianza.persistence.entities.RecursoGraficoInmobiliario
 
 import scala.concurrent.Future
 
@@ -9,6 +9,6 @@ import scala.concurrent.Future
  */
 trait RecursoInmobiliarioDAOs {
 
-  def getAll(): Future[Seq[RecursoAgenteInmobiliario]]
+  def getAll(): Future[Seq[RecursoGraficoInmobiliario]]
 
 }

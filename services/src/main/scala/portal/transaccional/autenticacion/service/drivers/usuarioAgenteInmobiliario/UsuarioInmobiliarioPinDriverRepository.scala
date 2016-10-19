@@ -9,7 +9,7 @@ import co.com.alianza.util.token.{ PinData, TokenPin }
 import com.typesafe.config.Config
 import enumerations.EstadosPin._
 import enumerations.UsoPinEmpresaEnum
-import org.joda.time.DateTime
+import org.joda.time.{ DateTime, DateTimeZone }
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.PinAgenteInmobiliarioDAOs
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -25,7 +25,7 @@ case class UsuarioInmobiliarioPinDriverRepository(pinDao: PinAgenteInmobiliarioD
   }
 
   override def generarPinAgente(configExpiracion: Configuraciones, idUsuario: Int): PinAgenteInmobiliario = {
-    val fechaExpiracion: DateTime = new DateTime().plusHours(configExpiracion.valor.toInt)
+    val fechaExpiracion: DateTime = new DateTime(DateTimeZone.UTC).plusHours(configExpiracion.valor.toInt)
     val (pin: PinData, usoPin: Int) = (TokenPin.obtenerToken(fechaExpiracion.toDate), UsoPinEmpresaEnum.creacionAgenteInmobiliario.id)
     PinAgenteInmobiliario(None, idUsuario, pin.token, fechaExpiracion, pin.tokenHash.getOrElse(""), usoPin)
   }

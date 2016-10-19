@@ -117,6 +117,7 @@ case class UsuarioInmobiliarioDriverRepository(configDao: ConfiguracionDAOs, usu
   }
 
   override def getContrasena(contrasena: String, idUsuario: Int): Future[UsuarioAgenteInmobiliario] = {
+    println(contrasena)
     usuariosDao.getContrasena(contrasena, idUsuario).flatMap {
       case Some(agente) => Future.successful(agente)
       case None => Future.failed(ValidacionExceptionPasswordRules("409.7", "No existe la contrasena actual", "", "", ""))

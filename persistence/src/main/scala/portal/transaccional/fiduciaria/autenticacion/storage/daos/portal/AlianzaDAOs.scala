@@ -26,5 +26,5 @@ trait AlianzaDAOs {
 
   def getPermisosProyectoInmobiliario(nit: String, idFideicomiso: Int, idProyecto: Int): Future[Seq[PermisoAgenteInmobiliario]]
 
-  def getRecursosAgenteInmobiliario(usuarioId: Int): Future[Seq[RecursoAgenteInmobiliario]]
+  def getRecursosAgenteInmobiliario(usuarioId: Int): Future[Seq[RecursoGraficoInmobiliario]]
 }

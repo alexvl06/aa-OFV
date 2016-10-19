@@ -25,8 +25,8 @@ case class ContrasenaAgenteInmobiliarioDriverRepository(agenteRepo: UsuarioInmob
 
   def actualizarContrasenaCaducada(token: Option[String], pw_actual: String, pw_nuevo: String, idUsuario: Option[Int]): Future[Int] = {
     (token, idUsuario) match {
-      case (Some(tk), None) => validarToken(tk).flatMap(idAgente => actualizarContrasena(None, pw_actual, pw_nuevo, idAgente))
-      case (None, Some(idAgente)) => actualizarContrasena(None, pw_actual, pw_nuevo, idAgente)
+      case (Some(tk), None) => validarToken(tk).flatMap(idAgente => actualizarContrasena(None, pw_actual, pw_nuevo, idAgente, valoresRegla = false))
+      case (None, Some(idAgente)) => actualizarContrasena(None, pw_actual, pw_nuevo, idAgente, valoresRegla = true)
       case _ => Future.failed(ValidacionException("409.69", "Solo uno de los campos token, idUsuario deben ser provistos"))
     }
   }
@@ -37,7 +37,7 @@ case class ContrasenaAgenteInmobiliarioDriverRepository(agenteRepo: UsuarioInmob
       case Right(pin) => pin.uso match {
         case uso if uso == UsoPinEmpresaEnum.usoReinicioContrasena.id => agenteRepo.getAgenteInmobiliario(pin.idAgente).flatMap {
           case None => Future.failed(ValidacionException("409.11", "Pin invalido y/o vencido"))
-          case Some(agente) => actualizarContrasena(Some(pinHash), contrasenaActualOp.getOrElse(""), nuevaContrasena, agente.id)
+          case Some(agente) => actualizarContrasena(Some(pinHash), contrasenaActualOp.getOrElse(""), nuevaContrasena, agente.id, valoresRegla = true)
         }
         case uso if uso == UsoPinEmpresaEnum.creacionAgenteInmobiliario.id => agenteRepo.getAgenteInmobiliario(pin.idAgente).flatMap {
           case None => Future.failed(ValidacionException("409.11", "Pin invalido y/o vencido"))
@@ -48,14 +48,15 @@ case class ContrasenaAgenteInmobiliarioDriverRepository(agenteRepo: UsuarioInmob
     }
   }
 
-  private def actualizarContrasena(pinHash: Option[String], contrasenaActual: String, nuevaContrasena: String, idAgente: Int): Future[Int] = {
+  private def actualizarContrasena(pinHash: Option[String], contrasenaActual: String, nuevaContrasena: String, idAgente: Int, valoresRegla: Boolean): Future[Int] = {
     val hashContrasenaActual: String = Crypto.hashSha512(contrasenaActual.concat(AppendPasswordUser.appendUsuariosFiducia), idAgente)
+    println(contrasenaActual, idAgente)
     val hashNuevaContrasena: String = Crypto.hashSha512(nuevaContrasena.concat(AppendPasswordUser.appendUsuariosFiducia), idAgente)
     for {
       agente <- agenteRepo.getContrasena(hashContrasenaActual, idAgente)
-      validacionReglas <- validacionReglasClave(nuevaContrasena, idAgente, PerfilesUsuario.agenteEmpresarial)
+      validacionReglas <- validacionReglasClave(nuevaContrasena, idAgente, PerfilesUsuario.agenteEmpresarial, valoresRegla)
       cantRepetidas <- reglaRepo.getRegla(LlavesReglaContrasena.ULTIMAS_CONTRASENAS_NO_VALIDAS.llave)
-      contrasenasViejas <- validarContrasenasAnteriores(cantRepetidas.valor.toInt, idAgente, hashNuevaContrasena, hashContrasenaActual)
+      contrasenasViejas <- validarContrasenasAnteriores(cantRepetidas.valor.toInt, idAgente, hashNuevaContrasena, hashContrasenaActual, valoresRegla)
       contrasenaActual <- agenteRepo.updateContrasena(hashNuevaContrasena, idAgente)
       ultimasContrasenas <- oldPassDAO.create(UltimaContrasenaAgenteInmobiliario(None, idAgente, hashContrasenaActual, new Timestamp(new DateTime().getMillis)))
       actualizacionEstado <- agenteRepo.updateEstadoAgente(agente.identificacion, agente.usuario, EstadosUsuarioEnumInmobiliario.activo)
@@ -66,7 +67,7 @@ case class ContrasenaAgenteInmobiliarioDriverRepository(agenteRepo: UsuarioInmob
   private def definirContrasena(pinHash: String, nuevaContrasena: String, agente: UsuarioAgenteInmobiliario): Future[Int] = {
     val hashContrasena: String = Crypto.hashSha512(nuevaContrasena.concat(AppendPasswordUser.appendUsuariosFiducia), agente.id)
     for {
-      validacionReglas <- validacionReglasClave(nuevaContrasena, agente.id, PerfilesUsuario.agenteEmpresarial)
+      validacionReglas <- validacionReglasClave(nuevaContrasena, agente.id, PerfilesUsuario.agenteEmpresarial, valoresRegla = true)
       actualizacionContrasena <- agenteRepo.updateContrasena(hashContrasena, agente.id)
       ultimasContrasenas <- oldPassDAO.create(UltimaContrasenaAgenteInmobiliario(None, agente.id, hashContrasena, new Timestamp(new DateTime().getMillis)))
       actualizacionEstado <- agenteRepo.updateEstadoAgente(agente.identificacion, agente.usuario, EstadosUsuarioEnumInmobiliario.activo)
@@ -82,27 +83,46 @@ case class ContrasenaAgenteInmobiliarioDriverRepository(agenteRepo: UsuarioInmob
     }
   }
 
-  private def validacionReglasClave(contrasena: String, idUsuario: Int, perfilUsuario: PerfilesUsuario.perfilUsuario): Future[String] = {
-    val validacionesContrasena: Future[Validation[PersistenceException, List[(ErrorValidacionClave, String)]]] = ValidarClave
-      .aplicarReglasValor(contrasena, Some(idUsuario), perfilUsuario, ValidarClave.reglasGenerales: _*)
-    validacionesContrasena.flatMap {
-      case zSuccess(erroresContrasena) => erroresContrasena.isEmpty match {
-        case true => Future.successful("True")
-        case false =>
-          val erroresMsg: String = erroresContrasena.map(error => s"${error._1.toString}:${error._2}").mkString("\u0000")
-          Future.failed(ValidacionException("409.5", erroresMsg))
+  private def validacionReglasClave(contrasena: String, idUsuario: Int, perfilUsuario: PerfilesUsuario.perfilUsuario, valoresRegla: Boolean) = {
+
+    val sucess = Future.successful("True")
+    val error = Future.failed(ValidacionException("409.5", "Error de persistencia ..."))
+    val code = "409.5"
+
+    valoresRegla match {
+      case true => {
+        ValidarClave.aplicarReglasValor(contrasena, Some(idUsuario), perfilUsuario, ValidarClave.reglasGenerales: _*).flatMap {
+          case zSuccess(erroresContrasena) => erroresContrasena.isEmpty match {
+            case true => sucess
+            case false => Future.failed(ValidacionException(code, erroresContrasena.map(error => s"${error._1.toString}:${error._2}").mkString("\u0000")))
+          }
+          case zFailure => error
+        }
       }
-      case zFailure => Future.failed(ValidacionException("409.5", "Error de persistencia ..."))
+      case false => {
+        ValidarClave.aplicarReglas(contrasena, Some(idUsuario), perfilUsuario, ValidarClave.reglasGenerales: _*).flatMap {
+          case zSuccess(erroresContrasena) => erroresContrasena.isEmpty match {
+            case true => sucess
+            case false => Future.failed(ValidacionExceptionPasswordRules(code, "Error clave", erroresContrasena.map(error => s"${error.toString}").mkString("-"), "", ""))
+          }
+          case zFailure => error
+        }
+      }
     }
   }
 
-  private def validarContrasenasAnteriores(cantContraseñasAnteriores: Int, id: Int, passNew: String, passOld: String) = {
+  private def validarContrasenasAnteriores(cantContraseñasAnteriores: Int, id: Int, passNew: String, passOld: String, valoresRegla: Boolean) = {
+    val code = "409.5"
+    val error = "ErrorUltimasContrasenas"
+
     for {
       contrasenasViejas <- oldPassDAO.findById(cantContraseñasAnteriores, id)
       validarToken <- if (!contrasenasViejas.exists(_.contrasena == passNew) && passNew != passOld) {
         Future.successful(true)
+      } else if (valoresRegla) {
+        Future.failed(ValidacionException(code, error + ":" + cantContraseñasAnteriores.toString))
       } else {
-        Future.failed(ValidacionExceptionPasswordRules("409.5", "Error clave", "ErrorUltimasContrasenas-", "", ""))
+        Future.failed(ValidacionExceptionPasswordRules(code, "Error clave", error + "-", "", ""))
       }
     } yield validarToken
   }

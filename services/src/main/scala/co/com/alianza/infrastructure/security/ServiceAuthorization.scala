@@ -70,7 +70,7 @@ trait ServiceAuthorization {
     if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
       autorizacionAgenteRepo.autorizar(token, encriptedToken, "", obtenerIp(ctx).get.value)
     } else if (tipoCliente == TiposCliente.clienteAdministrador.toString || tipoCliente == TiposCliente.clienteAdminInmobiliario.toString) {
-      autorizacionAdminRepo.autorizar(token, encriptedToken, "", obtenerIp(ctx).get.value)
+      autorizacionAdminRepo.autorizar(token, encriptedToken, "", obtenerIp(ctx).get.value, TiposCliente.clienteAdministrador.toString)
     } else if (tipoCliente == TiposCliente.agenteInmobiliario.toString) {
       autorizarMock(token)
     } else {

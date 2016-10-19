@@ -14,7 +14,7 @@ class PermisoInmobiliarioTable(tag: Tag) extends Table[PermisoAgenteInmobiliario
   def fideicomiso = column[Int]("ID_FIDEICOMISO")
   def tipoPermiso = column[Int]("ID_PERMISO")
 
-  def pk = primaryKey("PERMISO_AGENTE_PK", (idAgente, proyecto, fideicomiso, tipoPermiso))
+  def pk = primaryKey("PERMISO_INMOBILIARIO_PK", (idAgente, proyecto, fideicomiso, tipoPermiso))
 
   def * = (idAgente, proyecto, fideicomiso, tipoPermiso) <> (PermisoAgenteInmobiliario.tupled, PermisoAgenteInmobiliario.unapply)
 }

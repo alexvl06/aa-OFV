@@ -25,7 +25,7 @@ case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: Usuari
 
   implicit val timeout = Timeout(5.seconds)
 
-  def autorizar(token: String, encriptedToken: String, url: String, ip: String): Future[ValidacionAutorizacion] = {
+  def autorizar(token: String, encriptedToken: String, url: String, ip: String, tipoCliente : String): Future[ValidacionAutorizacion] = {
     for {
       _ <- validarToken(token)
       _ <- sesionRepo.validarSesion(token)
@@ -33,7 +33,7 @@ case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: Usuari
       adminEstado <- alianzaDAO.getByTokenAdmin(encriptedToken)
       _ <- validarEstadoEmpresa(adminEstado._2)
       recursos <- alianzaDAO.getAdminResources(adminEstado._1.id)
-      result <- resolveMessageRecursos(DataAccessTranslator.entityToDto(adminEstado._1), recursos, url)
+      result <- resolveMessageRecursos(DataAccessTranslator.entityToDto(adminEstado._1, tipoCliente), recursos, url)
     } yield result
   }
 
