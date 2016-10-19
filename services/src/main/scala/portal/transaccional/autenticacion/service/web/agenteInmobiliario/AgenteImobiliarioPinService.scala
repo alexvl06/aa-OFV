@@ -63,8 +63,7 @@ case class AgenteImobiliarioPinService(
   private def setCredencialesAgente(pin: String): Route = {
     put {
       entity(as[ActualizarCredencialesAgenteRequest]) { r =>
-        val actualizacionF = agenteInmobContrasenaRepo
-          .actualizarContrasenaPin(pin, r.contrasena, r.contrasenaActual)
+        val actualizacionF = agenteInmobContrasenaRepo.actualizarContrasenaPin(pin, r.contrasena)
         onComplete(actualizacionF) {
           case Success(_) => complete(StatusCodes.OK)
           case Failure(error) =>
