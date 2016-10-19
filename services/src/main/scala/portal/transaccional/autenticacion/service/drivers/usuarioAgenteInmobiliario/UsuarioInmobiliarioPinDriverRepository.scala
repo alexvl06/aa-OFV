@@ -24,9 +24,13 @@ case class UsuarioInmobiliarioPinDriverRepository(pinDao: PinAgenteInmobiliarioD
     pinDao.get(hash).map(pin => PinUtil.validarPinAgenteInmobiliario(pin))
   }
 
-  override def generarPinAgente(configExpiracion: Configuraciones, idUsuario: Int): PinAgenteInmobiliario = {
+  override def generarPinAgente(configExpiracion: Configuraciones, idUsuario: Int, reinicio: Boolean = false): PinAgenteInmobiliario = {
     val fechaExpiracion: DateTime = new DateTime(DateTimeZone.UTC).plusHours(configExpiracion.valor.toInt)
-    val (pin: PinData, usoPin: Int) = (TokenPin.obtenerToken(fechaExpiracion.toDate), UsoPinEmpresaEnum.creacionAgenteInmobiliario.id)
+    val pin: PinData = TokenPin.obtenerToken(fechaExpiracion.toDate)
+    val usoPin: Int = reinicio match {
+      case true => UsoPinEmpresaEnum.usoReinicioContrasena.id
+      case _ => UsoPinEmpresaEnum.creacionAgenteInmobiliario.id
+    }
     PinAgenteInmobiliario(None, idUsuario, pin.token, fechaExpiracion, pin.tokenHash.getOrElse(""), usoPin)
   }
 

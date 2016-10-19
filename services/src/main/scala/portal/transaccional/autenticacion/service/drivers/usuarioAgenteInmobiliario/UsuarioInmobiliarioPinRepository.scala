@@ -35,9 +35,10 @@ trait UsuarioInmobiliarioPinRepository {
    *
    * @param configExpiracion Configuración del tiempo de expiración
    * @param idUsuario        Identificador del agente
+   * @param reinicio         Indica si el pin debe ser generado para reinicio de contraseña
    * @return Una instancia de la clase PinAgenteInmobiliario con el pin generado
    */
-  def generarPinAgente(configExpiracion: Configuraciones, idUsuario: Int): PinAgenteInmobiliario
+  def generarPinAgente(configExpiracion: Configuraciones, idUsuario: Int, reinicio: Boolean = false): PinAgenteInmobiliario
 
   /**
    * Genera el correo de activación del agente inmobiliario

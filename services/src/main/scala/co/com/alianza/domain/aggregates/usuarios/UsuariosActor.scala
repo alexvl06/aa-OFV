@@ -440,7 +440,7 @@ class UsuariosActor(agentesInmobDao: UsuarioAgenteInmobDAOs,
         if (agente.estado != EstadosUsuarioEnumInmobiliario.inactivo.id) {
           for {
             configExpiracion <- configDao.getByKey(TiposConfiguracion.EXPIRACION_PIN.llave)
-            pinAgente: PinAgenteInmobiliario = agentesInmobPinRepo.generarPinAgente(configExpiracion, agente.id)
+            pinAgente: PinAgenteInmobiliario = agentesInmobPinRepo.generarPinAgente(configExpiracion, agente.id, reinicio = true)
             idPin <- agentesInmobPinRepo.asociarPinAgente(pinAgente)
             correoReinicio: MailMessage = agentesInmobPinRepo.generarCorreoReinicio(
               pinAgente.tokenHash, configExpiracion.valor.toInt, agente.correo
