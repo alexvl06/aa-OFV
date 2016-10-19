@@ -47,20 +47,6 @@ case class ContrasenaAgenteInmobiliarioDriverRepository(agenteRepo: UsuarioInmob
         }
       }
     }
-//    pinRepo.validarPinAgente(pinHash).flatMap {
-//      case Left(_) => Future.failed(ValidacionException("409.11", "Pin invalido y/o vencido"))
-//      case Right(pin) => pin.uso match {
-//        case uso if uso == UsoPinEmpresaEnum.usoReinicioContrasena.id => agenteRepo.getAgenteInmobiliario(pin.idAgente).flatMap {
-//          case None => Future.failed(ValidacionException("409.11", "Pin invalido y/o vencido"))
-//          case Some(agente) => actualizarContrasena(Some(pinHash), contrasenaActualOp.getOrElse(""), nuevaContrasena, agente.id, valoresRegla = true)
-//        }
-//        case uso if uso == UsoPinEmpresaEnum.creacionAgenteInmobiliario.id => agenteRepo.getAgenteInmobiliario(pin.idAgente).flatMap {
-//          case None => Future.failed(ValidacionException("409.11", "Pin invalido y/o vencido"))
-//          case Some(agente) => definirContrasena(pinHash, nuevaContrasena, agente)
-//        }
-//        case _ => Future.failed(ValidacionException("409.11", "Pin invalido y/o vencido"))
-//      }
-//    }
   }
 
   private def actualizarContrasena(pinHash: Option[String], contrasenaActual: String, nuevaContrasena: String,
