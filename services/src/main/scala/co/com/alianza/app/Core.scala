@@ -66,6 +66,9 @@ trait BootedCore extends Core {
   implicit lazy val ex: ExecutionContext = system.dispatcher
   implicit lazy val cluster = Cluster.get(system)
 
+  implicit lazy val config: DBConfig = new DBConfig with PGConfig
+  implicit lazy val configCore: DBConfig = new DBConfig with OracleConfig
+
   sys.addShutdownHook(system.terminate())
 }
 
@@ -73,8 +76,9 @@ trait BootedCore extends Core {
  * Template project actors instantiation
  */
 trait CoreActors {
-  this: Core with BootedCore =>
-  val usuariosActorSupervisor = system.actorOf(Props[UsuariosActorSupervisor], "UsuariosActorSupervisor")
+  this: Core with BootedCore with Storage =>
+
+  val usuariosActorSupervisor = system.actorOf(Props(new UsuariosActorSupervisor(usuarioInmobDAO, pinAgenteInmobRepository)), "UsuariosActorSupervisor")
   val usuariosActor = system.actorSelection(usuariosActorSupervisor.path)
   val confrontaActorSupervisor = system.actorOf(Props[ConfrontaActorSupervisor], "confrontaActorSupervisor")
   val confrontaActor = system.actorSelection(confrontaActorSupervisor.path)
@@ -171,9 +175,6 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
 }
 
 private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
-  implicit val config: DBConfig = new DBConfig with PGConfig
-  implicit val configCore: DBConfig = new DBConfig with OracleConfig
-
   lazy val alianzaDAO = AlianzaDAO()(config)
   lazy val empresaDAO = EmpresaDAO()(config)
   lazy val usuarioDAO = UsuarioDAO()(config)
@@ -201,5 +202,3 @@ private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
   lazy val recursoInmobiliarioDAO = RecursoInmobiliarioDAO()(config)
   lazy val pinInmobDAO = PinAgenteInmobiliarioDAO()(config)
 }
-
-object MainActors extends BootedCore with CoreActors
