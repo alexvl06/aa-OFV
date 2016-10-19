@@ -78,7 +78,7 @@ trait BootedCore extends Core {
 trait CoreActors {
   this: Core with BootedCore with Storage =>
 
-  val usuariosActorSupervisor = system.actorOf(Props(new UsuariosActorSupervisor(usuarioInmobDAO, pinAgenteInmobRepository)), "UsuariosActorSupervisor")
+  val usuariosActorSupervisor = system.actorOf(Props(new UsuariosActorSupervisor(usuarioInmobDAO, pinAgenteInmobRepository, configuracionDAO)), "UsuariosActorSupervisor")
   val usuariosActor = system.actorSelection(usuariosActorSupervisor.path)
   val confrontaActorSupervisor = system.actorOf(Props[ConfrontaActorSupervisor], "confrontaActorSupervisor")
   val confrontaActor = system.actorSelection(confrontaActorSupervisor.path)

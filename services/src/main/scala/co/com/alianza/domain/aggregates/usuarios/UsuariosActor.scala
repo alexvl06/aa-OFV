@@ -5,6 +5,7 @@ import java.util.Calendar
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.routing.RoundRobinPool
 import co.cifin.confrontaultra.dto.ultra.{CuestionarioULTRADTO, ParametrosSeguridadULTRADTO, ParametrosULTRADTO, ResultadoEvaluacionCuestionarioULTRADTO}
+import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.exceptions.{BusinessLevel, PersistenceException}
 import co.com.alianza.infrastructure.anticorruption.pin.{DataAccessTranslator => DataAccessTranslatorPin}
 import co.com.alianza.infrastructure.anticorruption.pinclienteadmin.{DataAccessTranslator => DataAccessTranslatorPinClienteAdmin}
@@ -13,7 +14,7 @@ import co.com.alianza.infrastructure.dto.{Empresa, _}
 import co.com.alianza.infrastructure.messages.{OlvidoContrasenaMessage, ResponseMessage, UsuarioMessage, _}
 import co.com.alianza.microservices.{MailMessage, SmtpServiceClient}
 import co.com.alianza.persistence.entities
-import co.com.alianza.persistence.entities.UsuarioAgenteInmobiliario
+import co.com.alianza.persistence.entities.{PinAgenteInmobiliario, UsuarioAgenteInmobiliario}
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.json.MarshallableImplicits._
 import co.com.alianza.util.token.{PinData, TokenPin}
@@ -23,23 +24,26 @@ import com.typesafe.config.Config
 import enumerations.empresa.EstadosDeEmpresaEnum
 import enumerations.{EstadosEmpresaEnum, EstadosUsuarioEnum, EstadosUsuarioEnumInmobiliario}
 import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.UsuarioInmobiliarioPinRepository
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.UsuarioAgenteInmobDAOs
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ConfiguracionDAOs, UsuarioAgenteInmobDAOs}
 import spray.http.StatusCodes._
 
 import scala.concurrent.Future
 import scala.util.{Failure => sFailure, Success => sSuccess}
-import scalaz.std.AllInstances._
 import scalaz.Validation.FlatMap._
+import scalaz.std.AllInstances._
 import scalaz.{Validation, Failure => zFailure, Success => zSuccess}
 
 class UsuariosActorSupervisor(agentesInmobDao: UsuarioAgenteInmobDAOs,
-                              agentesInmobPinRepo: UsuarioInmobiliarioPinRepository) extends Actor with ActorLogging {
+                              agentesInmobPinRepo: UsuarioInmobiliarioPinRepository,
+                              configDao: ConfiguracionDAOs) extends Actor with ActorLogging {
 
   import akka.actor.OneForOneStrategy
   import akka.actor.SupervisorStrategy._
 
-  val usuariosActor = context.actorOf(Props(new UsuariosActor(agentesInmobDao, agentesInmobPinRepo)).withRouter(RoundRobinPool(nrOfInstances = 2)), "usuariosActor")
-  val usuarioEmpresarialActor = context.actorOf(Props[UsuarioEmpresarialActor].withRouter(RoundRobinPool(nrOfInstances = 2)), "usuarioEmpresarialActor")
+  val usuariosActor = context.actorOf(Props(new UsuariosActor(agentesInmobDao, agentesInmobPinRepo, configDao))
+      .withRouter(RoundRobinPool(nrOfInstances = 2)), "usuariosActor")
+  val usuarioEmpresarialActor = context.actorOf(Props[UsuarioEmpresarialActor]
+    .withRouter(RoundRobinPool(nrOfInstances = 2)), "usuarioEmpresarialActor")
 
   def receive = {
     case message: ConsultaUsuarioEmpresarialMessage =>
@@ -59,7 +63,8 @@ class UsuariosActorSupervisor(agentesInmobDao: UsuarioAgenteInmobDAOs,
 }
 
 class UsuariosActor(agentesInmobDao: UsuarioAgenteInmobDAOs,
-                    agentesInmobPinRepo: UsuarioInmobiliarioPinRepository) extends Actor with ActorLogging {
+                    agentesInmobPinRepo: UsuarioInmobiliarioPinRepository,
+                    configDao: ConfiguracionDAOs) extends Actor with ActorLogging {
 
   import ValidacionesUsuario._
   implicit val config: Config = context.system.settings.config
@@ -99,17 +104,8 @@ class UsuariosActor(agentesInmobDao: UsuarioAgenteInmobDAOs,
         )
         case _ => Future.successful(Validation.failure(PersistenceException(new Exception, BusinessLevel,
           "El perfil del usuario no es soportado por la aplicacion")))
-      }).flatMap {
-        case zFailure(failure) => Future.successful(Validation.failure(failure))
-        case zSuccess(usuarioOpt) => usuarioOpt match {
-          case Some(usuario) => Future.successful(Validation.success(Some(usuario)))
-          case None =>
-            // validar si es agente inmobiliario
-            agentesInmobDao.get(msg.identificacion, msg.usuarioClienteAdmin.get).map { agenteInmobOpt =>
-              Validation.success(agenteInmobOpt)
-            }
-        }
-      }
+      }).flatMap(res => buscarAgenteInmobiliario(res, msg.identificacion, msg.usuarioClienteAdmin.getOrElse("")))
+
       val validarClienteFuture = (for {
         cliente <- ValidationT(validaSolicitudCliente(message.identificacion, message.tipoIdentificacion))
       } yield {
@@ -208,10 +204,7 @@ class UsuariosActor(agentesInmobDao: UsuarioAgenteInmobDAOs,
                               currentSender ! ResponseMessage(Conflict, errorEstadoUsuarioNoPermitido)
 
                           case agenteInmobiliario: UsuarioAgenteInmobiliario =>
-                            // validar empresa
-                            // validar estado del agente inmobiliario
-                            // generar - asociar pin
-                            // enviar email
+                            olvidoContrasenaAgenteInmobiliario(currentSender, agenteInmobiliario)
 
                           case _ =>
                             log.info("Error al obtener usuario para olvido de contrasena")
@@ -419,4 +412,46 @@ class UsuariosActor(agentesInmobDao: UsuarioAgenteInmobDAOs,
     ErrorMessage("409.13", "Usuario no existe para perfil cliente, cliente admin", "Usuario no existe para perfil cliente, cliente admin").toJson
   private val errorUsuarioEmpresaAdminActivo = ErrorMessage("409.14", "Usuario admin ya existe", "Ya hay un cliente administrador para ese NIT.").toJson
 
+  // --------------------------------------
+  // Extensión portal alianza inmobiliaria
+  // --------------------------------------
+
+  def buscarAgenteInmobiliario(busquedaUsuarioPortal: Validation[PersistenceException, Option[Any]],
+                               identificacion: String,
+                               usuario: String): Future[Validation[PersistenceException, Option[Any]]] = {
+    busquedaUsuarioPortal match {
+      case zFailure(failure) => Future.successful(Validation.failure(failure))
+      case zSuccess(usuarioOpt) => usuarioOpt match {
+        case Some(us) => Future.successful(Validation.success(Some(us)))
+        case None =>
+          // validar si es agente inmobiliario
+          agentesInmobDao.get(identificacion, usuario).map { agenteInmobOpt =>
+            Validation.success(agenteInmobOpt)
+          }
+      }
+    }
+  }
+
+  def olvidoContrasenaAgenteInmobiliario(currentSender: ActorRef,
+                                         agente: UsuarioAgenteInmobiliario): Unit = {
+    esEmpresaActiva(agente.identificacion).flatMap {
+      case zFailure(failure) => Future.successful(ResponseMessage(Conflict, errorEstadoEmpresa))
+      case zSuccess(_) =>
+        if (agente.estado != EstadosUsuarioEnumInmobiliario.inactivo.id) {
+          for {
+            configExpiracion <- configDao.getByKey(TiposConfiguracion.EXPIRACION_PIN.llave)
+            pinAgente: PinAgenteInmobiliario = agentesInmobPinRepo.generarPinAgente(configExpiracion, agente.id)
+            idPin <- agentesInmobPinRepo.asociarPinAgente(pinAgente)
+            correoActivacion: MailMessage = agentesInmobPinRepo.generarCorreoReinicio(
+              pinAgente.tokenHash, configExpiracion.valor.toInt, agente.usuario, agente.correo
+            )
+          } yield {
+            agentesInmobPinRepo.enviarEmail(correoActivacion)(context.system)
+            ResponseMessage(Created)
+          }
+        } else {
+          Future.successful(ResponseMessage(Conflict, errorEstadoUsuarioNoPermitido))
+        }
+    }.foreach(responseMessage => currentSender ! responseMessage)
+  }
 }
