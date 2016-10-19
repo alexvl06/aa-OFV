@@ -442,11 +442,11 @@ class UsuariosActor(agentesInmobDao: UsuarioAgenteInmobDAOs,
             configExpiracion <- configDao.getByKey(TiposConfiguracion.EXPIRACION_PIN.llave)
             pinAgente: PinAgenteInmobiliario = agentesInmobPinRepo.generarPinAgente(configExpiracion, agente.id)
             idPin <- agentesInmobPinRepo.asociarPinAgente(pinAgente)
-            correoActivacion: MailMessage = agentesInmobPinRepo.generarCorreoReinicio(
-              pinAgente.tokenHash, configExpiracion.valor.toInt, agente.usuario, agente.correo
+            correoReinicio: MailMessage = agentesInmobPinRepo.generarCorreoReinicio(
+              pinAgente.tokenHash, configExpiracion.valor.toInt, agente.correo
             )
           } yield {
-            agentesInmobPinRepo.enviarEmail(correoActivacion)(context.system)
+            agentesInmobPinRepo.enviarEmail(correoReinicio)(context.system)
             ResponseMessage(Created)
           }
         } else {
