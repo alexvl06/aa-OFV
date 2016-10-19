@@ -34,8 +34,8 @@ case class UsuarioInmobiliarioPinDriverRepository(pinDao: PinAgenteInmobiliarioD
     PinAgenteInmobiliario(None, idUsuario, pin.token, fechaExpiracion, pin.tokenHash.getOrElse(""), usoPin)
   }
 
-  override def generarCorreoActivacion(pin: String, caducidad: Int, identificacion: String,
-                                       usuario: String, correo: String)(implicit config: Config): MailMessage = {
+  override def generarCorreoActivacion(pin: String, caducidad: Int, usuario: String,
+                                       correo: String)(implicit config: Config): MailMessage = {
     val remitente: String = config.getString("alianza.smtp.from")
     val asunto: String = config.getString("alianza.smtp.asunto.creacionAgenteInmobiliario")
     val cuerpo: String = new MailMessageEmpresa("alianza.smtp.templatepin.creacionAgenteInmobiliario")

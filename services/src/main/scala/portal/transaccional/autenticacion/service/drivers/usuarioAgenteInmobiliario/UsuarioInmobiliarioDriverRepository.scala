@@ -47,7 +47,7 @@ case class UsuarioInmobiliarioDriverRepository(
           idPin <- pinRepository.asociarPinAgente(pinAgente)
           correoActivacion: MailMessage = pinRepository.generarCorreoActivacion(
             pinAgente.tokenHash,
-            configExpiracion.valor.toInt, identificacion, usuario, correo
+            configExpiracion.valor.toInt, usuario, correo
           )
         } yield {
           // el envío del correo se ejecuta de forma asíncrona dado que no interesa el éxito de la operación,
@@ -108,17 +108,14 @@ case class UsuarioInmobiliarioDriverRepository(
           } else {
             for {
               configExpiracion <- configDao.getByKey(TiposConfiguracion.EXPIRACION_PIN.llave)
-              pinAgente: PinAgenteInmobiliario = pinRepository.generarPinAgente(configExpiracion, agente.id)
+              pinAgente: PinAgenteInmobiliario = pinRepository.generarPinAgente(configExpiracion, agente.id, reinicio = true)
               idPin <- pinRepository.asociarPinAgente(pinAgente)
-              correoActivacion: MailMessage = pinRepository.generarCorreoActivacion(
+              correoReinicio: MailMessage = pinRepository.generarCorreoReinicio(
                 pinAgente.tokenHash,
-                configExpiracion.valor.toInt, identificacion, usuario, correo
+                configExpiracion.valor.toInt, correo
               )
             } yield {
-              // el envío del correo se ejecuta de forma asíncrona dado que no interesa el éxito de la operación,
-              // es decir, si el envío falla, no se debería responder con error la creación del agente inmobiliario
-              pinRepository.enviarEmail(correoActivacion)
-              // se retorna el id del agente generado
+              pinRepository.enviarEmail(correoReinicio)
               r
             }
           }

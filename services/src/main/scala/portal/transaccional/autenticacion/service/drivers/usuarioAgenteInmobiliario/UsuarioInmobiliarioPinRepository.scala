@@ -45,13 +45,12 @@ trait UsuarioInmobiliarioPinRepository {
    *
    * @param pin            Pin generado para el agente
    * @param caducidad      Tiempo de caducidad
-   * @param identificacion Identificación de la empresa
    * @param usuario        Nombre de usuario del agente inmobiliario
    * @param correo         Correo del agente inmobiliario
    * @return Una instancia de la clase MailMessage con el contenido del correo a enviar
    */
-  def generarCorreoActivacion(pin: String, caducidad: Int, identificacion: String, usuario: String,
-    correo: String)(implicit config: Config): MailMessage
+  def generarCorreoActivacion(pin: String, caducidad: Int,
+                              usuario: String, correo: String)(implicit config: Config): MailMessage
 
   /**
     * Genera el correo de reinicio de contraseña del agente inmobiliario
