@@ -452,6 +452,9 @@ class UsuariosActor(agentesInmobDao: UsuarioAgenteInmobDAOs,
         } else {
           Future.successful(ResponseMessage(Conflict, errorEstadoUsuarioNoPermitido))
         }
-    }.foreach(responseMessage => currentSender ! responseMessage)
+    }.onComplete {
+      case sFailure(exception) => currentSender ! exception
+      case sSuccess(responseMessage) => currentSender ! responseMessage
+    }
   }
 }
