@@ -66,7 +66,8 @@ case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: Usuari
    * @return
    */
   private def resolveMessageRecursos(adminDTO: UsuarioEmpresarialAdmin, recursos: Seq[RecursoPerfilClienteAdmin], url: String): Future[ValidacionAutorizacion] = Future {
-    val recursosFiltro = recursoRepo.filtrarRecursosClienteAdmin(recursos, url)
+    val recursosFiltro: Seq[RecursoPerfilClienteAdmin] = recursoRepo.filtrarRecursosClienteAdmin(recursos, url)
+
     recursosFiltro.nonEmpty match {
       case false =>
         val usuarioForbidden: ForbiddenMessageAdmin = ForbiddenMessageAdmin(adminDTO, None)

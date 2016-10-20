@@ -1,6 +1,6 @@
 package portal.transaccional.autenticacion.service.drivers.recurso
 
-import co.com.alianza.persistence.entities.{ RecursoPerfil, RecursoPerfilAgente, RecursoPerfilClienteAdmin }
+import co.com.alianza.persistence.entities.{ RecursoBackendInmobiliario, RecursoPerfil, RecursoPerfilAgente, RecursoPerfilClienteAdmin }
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ AlianzaDAO, AlianzaDAOs }
 
 import scala.concurrent.Future
@@ -64,12 +64,20 @@ case class RecursoDriverRepository(generalDAO: AlianzaDAOs) extends RecursoRepos
    */
   private def filtrarRecursosClienteAdmin(recurso: RecursoPerfilClienteAdmin, url: String): Boolean = {
     val indexSlash: Int = recurso.urlRecurso.lastIndexOf("/")
-    val myUrl: String = if (recurso.urlRecurso.contains("/*") && url.size > recurso.urlRecurso.size)
-      url.substring(0, indexSlash)
-    else if (url.endsWith("/")) url.substring(0, url.lastIndexOf("/"))
-    else url
+    val myUrl: String =
+      if (recurso.urlRecurso.contains("/*") && url.size > recurso.urlRecurso.size) {
+        url.substring(0, indexSlash)
+      } else if (url.endsWith("/")) {
+        url.substring(0, url.lastIndexOf("/"))
+      } else {
+        url
+      }
     val urlR: String = recurso.urlRecurso.substring(0, indexSlash)
     urlR.contains(myUrl) && urlR.equals(myUrl) && recurso.acceso
+  }
+
+  def filtrarRecursoAgenteInmobiliario(recurso: Seq[RecursoBackendInmobiliario], url: String): Seq[RecursoBackendInmobiliario] = {
+    recurso
   }
 
 }

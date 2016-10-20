@@ -13,6 +13,7 @@ import co.com.alianza.util.token.{ AesUtil, Token }
 import portal.transaccional.autenticacion.service.drivers.autorizacion._
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioEmpresarialAdminRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.{ AutorizacionDriverRepository, AutorizacionRepository }
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioRepository
 import portal.transaccional.autenticacion.service.drivers.util.SesionAgenteUtilRepository
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
@@ -27,17 +28,18 @@ import scala.util.{ Failure, Success }
  * Created by s4n 2016
  */
 case class AutorizacionService(
-    usuarioRepository: UsuarioRepository,
-    usuarioAgenteRepository: UsuarioEmpresarialRepository[UsuarioEmpresarial],
-    usuarioAdminRepository: UsuarioEmpresarialAdminRepository,
-    autorizacionRepository: AutorizacionUsuarioRepository,
-    kafkaActor: ActorSelection,
-    autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository,
-    autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository,
-    autorizacionComercialRepo: AutorizacionUsuarioComercialRepository,
-    autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository,
-    sesionUtilAgenteEmpresarial: SesionAgenteUtilRepository,
-    sesionUtilAgenteInmobiliario: SesionAgenteUtilRepository
+  usuarioRepository: UsuarioRepository,
+  usuarioAgenteRepository: UsuarioEmpresarialRepository[UsuarioEmpresarial],
+  usuarioAdminRepository: UsuarioEmpresarialAdminRepository,
+  autorizacionRepository: AutorizacionUsuarioRepository,
+  kafkaActor: ActorSelection,
+  autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository,
+  autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository,
+  autorizacionComercialRepo: AutorizacionUsuarioComercialRepository,
+  autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository,
+  sesionUtilAgenteEmpresarial: SesionAgenteUtilRepository,
+  sesionUtilAgenteInmobiliario: SesionAgenteUtilRepository,
+  autorizacionAgenteInmob : AutorizacionRepository
 )(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   val invalidarTokenPath = "invalidarToken"
@@ -101,7 +103,7 @@ case class AutorizacionService(
             case `agente` => autorizacionAgenteRepo.autorizar(token, encriptedToken, url, ipRemota)
             case `admin` | `adminInmobiliaria` => autorizacionAdminRepo.autorizar(token, encriptedToken, url, ipRemota, `admin`)
             case `individual` => autorizacionRepository.autorizar(token, encriptedToken, url)
-            case `agenteInmobiliario` => obtenerUsuarioComercialMock(TiposCliente.agenteInmobiliario, usuario.usuario)
+            case `agenteInmobiliario` => autorizacionAgenteInmob.autorizar(token, encriptedToken, Option(url), ipRemota)
             //TODO: Agregar la autorizacion de url para los tipo comerciales (Pendiente HU) By : Hernando
             case `comercialFiduciaria` => obtenerUsuarioComercialMock(TiposCliente.comercialFiduciaria, usuario.usuario)
             case `comercialValores` => obtenerUsuarioComercialMock(TiposCliente.comercialValores, usuario.usuario)

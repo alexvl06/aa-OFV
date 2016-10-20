@@ -15,6 +15,7 @@ import co.com.alianza.util.token.{ AesUtil, Token }
 import com.typesafe.config.Config
 import org.joda.time.DateTime
 import portal.transaccional.autenticacion.service.drivers.autorizacion.{ AutorizacionUsuarioEmpresarialAdminRepository, AutorizacionUsuarioEmpresarialRepository, AutorizacionUsuarioRepository }
+import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.AutorizacionRepository
 import spray.http.StatusCodes._
 import spray.routing.RequestContext
 import spray.routing.authentication.ContextAuthenticator
@@ -32,6 +33,7 @@ trait ServiceAuthorization {
   val autorizacionUsuarioRepo: AutorizacionUsuarioRepository
   val autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository
   val autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository
+  val autorizacionAgenteInmob : AutorizacionRepository
 
   implicit val timeout: Timeout = Timeout(5.seconds)
 
@@ -72,34 +74,9 @@ trait ServiceAuthorization {
     } else if (tipoCliente == TiposCliente.clienteAdministrador.toString || tipoCliente == TiposCliente.clienteAdminInmobiliario.toString) {
       autorizacionAdminRepo.autorizar(token, encriptedToken, "", obtenerIp(ctx).get.value, TiposCliente.clienteAdministrador.toString)
     } else if (tipoCliente == TiposCliente.agenteInmobiliario.toString) {
-      autorizarMock(token)
+      autorizacionAgenteInmob.autorizar(token, encriptedToken, Option.empty , obtenerIp(ctx).get.value)
     } else {
       autorizacionUsuarioRepo.autorizar(token, encriptedToken, "")
-    }
-  }
-
-  private def autorizarMock(token: String) = {
-
-    val tipoCliente = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
-    val tipoIdentificacion = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoIdentificacion").toString
-    val correo = Token.getToken(token).getJWTClaimsSet.getCustomClaim("correo").toString
-    val ultimaIpIngreso = Token.getToken(token).getJWTClaimsSet.getCustomClaim("ultimaIpIngreso").toString
-
-    Future {
-      Autorizado(
-        JsonUtil.toJson(Usuario(
-          Option(1): Option[Int],
-          correo: String,
-          new Date(): Date,
-          "1234": String,
-          1: Int,
-          1: Int,
-          0: Int,
-          Option(ultimaIpIngreso): Option[String],
-          None: Option[Date],
-          TiposCliente.agenteInmobiliario: TiposCliente
-        ))
-      )
     }
   }
 

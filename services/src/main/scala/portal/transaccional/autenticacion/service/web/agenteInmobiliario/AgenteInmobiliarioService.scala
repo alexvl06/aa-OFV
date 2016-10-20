@@ -220,9 +220,10 @@ case class AgenteInmobiliarioService(
 
   private def getRecursos: Route = {
     get {
+      println(usuarioAuth)
       val recursosF = permisosRepo.getRecurso(usuarioAuth.id, usuarioAuth.tipoCliente)
       onComplete(recursosF) {
-        case Success(recursos) => complete((StatusCodes.OK, recursos))
+        case Success(recursos) => complete(StatusCodes.OK -> recursos)
         case Failure(exception) => complete((StatusCodes.Conflict, "hubo un error"))
       }
     }

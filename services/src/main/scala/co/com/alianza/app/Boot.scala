@@ -2,9 +2,6 @@ package co.com.alianza.app
 
 import akka.actor.{ ActorRef, Props }
 import akka.io.IO
-import portal.transaccional.autenticacion.service.drivers.autorizacion.AutorizacionUsuarioComercialRepository
-import portal.transaccional.autenticacion.service.drivers.contrasenaAgenteInmobiliario.ContrasenaAgenteInmobiliarioRepository
-import portal.transaccional.autenticacion.service.drivers.util.SesionAgenteUtilRepository
 import spray.can.Http
 
 object Boot extends App with HostBinding with Core with BootedCore with CoreActors with Storage {
@@ -19,7 +16,7 @@ object Boot extends App with HostBinding with Core with BootedCore with CoreActo
       contrasenasActor, autorizacionActorSupervisor, autorizacionAgenteRepo, autorizacionAdminRepo, preguntasValidacionRepository,
       respuestaUsuarioRepo, respuestaUsuariAdminoRepo, ipRepo, autorizacionComercialRepo, autorizacionComercialAdminRepo,
       autorizacionRecursoComercialRepository, recursoComercialRepository, rolComercialRepository, agenteInmobRepo, permisoAgenteInmob,
-      sesionUtilAgenteEmpresarial, sesionUtilAgenteInmobiliario, agenteInmobContrasenaRepo, pinAgenteInmobRepository)),
+      sesionUtilAgenteEmpresarial, sesionUtilAgenteInmobiliario, agenteInmobContrasenaRepo, pinAgenteInmobRepository, autorizacionAgenteInmob)),
     name = "api-AlianzaRouter"
   )
 

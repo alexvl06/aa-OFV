@@ -25,7 +25,9 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
   val respuestasUsuarioTable = TableQuery[RespuestasAutovalidacionUsuarioTable]
   val usuariosAgentesInmobiliarios = TableQuery[UsuarioAgenteInmobiliarioTable]
   val permisosInmobiliarios = TableQuery[PermisoInmobiliarioTable]
-  val recursosInmobiliarios = TableQuery[RecursoGraficoInmobiliarioTable]
+  val recursosGraficosInmobiliarios = TableQuery[RecursoGraficoInmobiliarioTable]
+  val recursosaInmobiliarios = TableQuery[RecursoInmobiliarioTable]
+  val recursosBackendInmobiliarios = TableQuery[RecursoBackendInmobiliarioTable]
 
   import dcConfig.DB._
   import dcConfig.driver.api._
@@ -192,8 +194,34 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
   def getRecursosAgenteInmobiliario(usuarioId: Int): Future[Seq[RecursoGraficoInmobiliario]] = {
     val query = for {
       c <- permisosInmobiliarios if c.idAgente === usuarioId
-      s <- recursosInmobiliarios if c.tipoPermiso === s.id
+      s <- recursosGraficosInmobiliarios.filter( x => x.rol === 1 || x.rol === 3) if c.tipoPermiso === s.id
     } yield s
     run(query.distinctOn(_.titulo).result)
+  }
+
+  def getByTokenAgenteInmobiliario(token: String): Future[UsuarioAgenteInmobiliario] = {
+    val query = usuariosAgentesInmobiliarios.filter(a => a.token === token)
+    run(query.result.head)
+  }
+
+  // Obtiene todos los recursos del back al que puede acceder un agente inmobiliario
+  def getAgenteInmobiliarionResources(idUsuario: Int): Future[Seq[RecursoBackendInmobiliario]] = {
+    val resources = for {
+      p <- permisosInmobiliarios if p.idAgente === idUsuario
+      g <- recursosGraficosInmobiliarios.filter( x => x.rol === 1 || x.rol === 3) if p.tipoPermiso === g.id
+      r <- recursosaInmobiliarios if g.id == r.idGrafico
+      b <- recursosBackendInmobiliarios.filter( x => x.rol === 1 || x.rol === 3) if b.id === r.idBacken
+    } yield b
+    run(resources.result)
+  }
+
+  // Obtiene todos los recursos del back al que puede acceder un constructor
+  def getAdminInmobiliarionResources(idUsuario: Int): Future[Seq[RecursoBackendInmobiliario]] = {
+    val resources = for {
+      g <- recursosGraficosInmobiliarios.filter( x => x.rol === 2 || x.rol === 3)
+      r <- recursosaInmobiliarios if g.id === r.idGrafico
+      b <- recursosBackendInmobiliarios.filter( x => x.rol === 2 || x.rol === 3) if b.id === r.idBacken
+    } yield b
+    run(resources.result)
   }
 }

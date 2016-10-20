@@ -25,7 +25,7 @@ case class ContrasenaAgenteInmobiliarioDriverRepository(agenteRepo: UsuarioInmob
 
   def actualizarContrasenaCaducada(token: Option[String], pw_actual: String, pw_nuevo: String, idUsuario: Option[Int]): Future[Int] = {
     (token, idUsuario) match {
-      case (Some(tk), None) => validarToken(tk).flatMap(idAgente => actualizarContrasena(None, pw_actual, pw_nuevo, idAgente, valoresRegla = false))
+      case (Some(tk), None) => validarToken(tk).flatMap(idAgente =>  actualizarContrasena(None, pw_actual, pw_nuevo, idAgente, valoresRegla = false))
       case (None, Some(idAgente)) => actualizarContrasena(None, pw_actual, pw_nuevo, idAgente, valoresRegla = true)
       case _ => Future.failed(ValidacionException("409.69", "Solo uno de los campos token, idUsuario deben ser provistos"))
     }
@@ -50,8 +50,8 @@ case class ContrasenaAgenteInmobiliarioDriverRepository(agenteRepo: UsuarioInmob
 
   private def actualizarContrasena(pinHash: Option[String], contrasenaActual: String, nuevaContrasena: String, idAgente: Int, valoresRegla: Boolean): Future[Int] = {
     val hashContrasenaActual: String = Crypto.hashSha512(contrasenaActual.concat(AppendPasswordUser.appendUsuariosFiducia), idAgente)
-    println(contrasenaActual, idAgente)
     val hashNuevaContrasena: String = Crypto.hashSha512(nuevaContrasena.concat(AppendPasswordUser.appendUsuariosFiducia), idAgente)
+
     for {
       agente <- agenteRepo.getContrasena(hashContrasenaActual, idAgente)
       validacionReglas <- validacionReglasClave(nuevaContrasena, idAgente, PerfilesUsuario.agenteEmpresarial, valoresRegla)
