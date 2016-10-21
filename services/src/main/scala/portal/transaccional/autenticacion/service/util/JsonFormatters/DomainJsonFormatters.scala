@@ -60,9 +60,6 @@ trait DomainJsonFormatters {
   implicit val recursosInmobiliariosFormatter = jsonFormat3(RecursoAgenteInmobiliario)
   implicit val actualizarCredencialesRequestFormatter = jsonFormat3(ActualizarCredencialesAgenteRequest)
   implicit val valdiarTokenFormatter = jsonFormat1(ValidarTokenAgenteRequest)
-  implicit val usuarioAgenteInmobiliarioFormatter = jsonFormat10(UsuarioAgenteInmobiliario)
-
-  //implicit val agenteInmobFormatter = jsonFormat12(UsuarioAgenteInmobiliario)
 
   // ----- MAPEO DE ENUM!
   private def jsonEnum[T <: Enumeration](enu: T) = new JsonFormat[T#Value] {

@@ -11,7 +11,7 @@ object DataAccessTranslator {
 
   def entityToDto(admin: eUsuarioAgenteInmobiliario): UsuarioAgenteInmobiliario = {
     UsuarioAgenteInmobiliario(admin.id, admin.correo, admin.identificacion, admin.tipoIdentificacion, admin.usuario, admin.estado,
-      Option.empty, admin.numeroIngresosErroneos, admin.ipUltimoIngreso, TiposCliente.agenteInmobiliario.toString)
+      Option.empty, admin.numeroIngresosErroneos, admin.ipUltimoIngreso, TiposCliente.agenteInmobiliario)
   }
 
   def dtoToEntity(admin: UsuarioAgenteInmobiliario): eUsuarioAgenteInmobiliario = ???

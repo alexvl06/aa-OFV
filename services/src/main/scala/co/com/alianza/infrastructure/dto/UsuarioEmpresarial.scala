@@ -62,7 +62,7 @@ case class UsuarioAgenteInmobiliario(
   contrasena: Option[String],
   numeroIngresosErroneos: Int,
   ipUltimoIngreso: Option[String],
-  tipoCliente: String
+  tipoCliente: TiposCliente
 )
 
 case class UsuarioEmpresa(
