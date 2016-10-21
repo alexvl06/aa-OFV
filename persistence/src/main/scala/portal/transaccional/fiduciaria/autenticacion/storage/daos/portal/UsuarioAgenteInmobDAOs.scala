@@ -112,4 +112,6 @@ trait UsuarioAgenteInmobDAOs {
    * @return Un futuro con un entero, si es 0 no actualizo, 2 actualizo el registro.
    */
   def updateContrasena(contrasena: String, idUsuario: Int): Future[Int]
+
+  def getByToken(token: String): Future[Option[UsuarioAgenteInmobiliario]]
 }

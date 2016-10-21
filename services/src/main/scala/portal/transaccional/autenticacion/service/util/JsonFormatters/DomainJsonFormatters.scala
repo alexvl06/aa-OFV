@@ -2,13 +2,13 @@ package portal.transaccional.autenticacion.service.util.JsonFormatters
 
 import co.com.alianza.commons.enumerations.TipoPermisoInmobiliario
 import co.com.alianza.exceptions.{ ValidacionException, ValidacionExceptionPasswordRules }
-import co.com.alianza.infrastructure.dto.{ Pregunta, Respuesta }
+import co.com.alianza.infrastructure.dto.{ Pregunta, Respuesta, UsuarioAgenteInmobiliario }
 import co.com.alianza.persistence.entities.{ PermisoAgenteInmobiliario, RecursoAgenteInmobiliario, RecursoComercial, RolComercial }
 import portal.transaccional.autenticacion.service.dto.{ PermisoRecursoDTO, RecursoDTO }
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import portal.transaccional.autenticacion.service.web.agenteInmobiliario._
 import portal.transaccional.autenticacion.service.web.autenticacion.{ AutenticarRequest, AutenticarUsuarioComercialRequest, AutenticarUsuarioEmpresarialRequest }
-import portal.transaccional.autenticacion.service.web.autorizacion.InvalidarTokenRequest
+import portal.transaccional.autenticacion.service.web.autorizacion.{ InvalidarTokenRequest, ValidarTokenAgenteRequest }
 import portal.transaccional.autenticacion.service.web.ip.AgregarIpRequest
 import portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.{ GuardarRespuestasRequest, ResponseObtenerPreguntas, ResponseObtenerPreguntasComprobar, RespuestasComprobacionRequest }
 import spray.json.{ DeserializationException, JsString, JsValue, JsonFormat }
@@ -59,6 +59,10 @@ trait DomainJsonFormatters {
   implicit val consultarAgenteInmobiliarioListResponseFormatter = jsonFormat2(ConsultarAgenteInmobiliarioListResponse)
   implicit val recursosInmobiliariosFormatter = jsonFormat3(RecursoAgenteInmobiliario)
   implicit val actualizarCredencialesRequestFormatter = jsonFormat3(ActualizarCredencialesAgenteRequest)
+  implicit val valdiarTokenFormatter = jsonFormat1(ValidarTokenAgenteRequest)
+  implicit val usuarioAgenteInmobiliarioFormatter = jsonFormat10(UsuarioAgenteInmobiliario)
+
+  //implicit val agenteInmobFormatter = jsonFormat12(UsuarioAgenteInmobiliario)
 
   // ----- MAPEO DE ENUM!
   private def jsonEnum[T <: Enumeration](enu: T) = new JsonFormat[T#Value] {

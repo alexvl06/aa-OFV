@@ -7,18 +7,21 @@ import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import co.com.alianza.exceptions._
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
+import co.com.alianza.infrastructure.dto.UsuarioAgenteInmobiliario
 import co.com.alianza.persistence.entities.UsuarioEmpresarial
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.token.{ AesUtil, Token }
 import portal.transaccional.autenticacion.service.drivers.autorizacion._
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioEmpresarialAdminRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.AutorizacionDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioRepository
 import portal.transaccional.autenticacion.service.drivers.util.SesionAgenteUtilRepository
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import spray.http.StatusCodes
 import spray.routing.{ RequestContext, Route, StandardRoute }
+import spray.json._
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success }
@@ -27,21 +30,23 @@ import scala.util.{ Failure, Success }
  * Created by s4n 2016
  */
 case class AutorizacionService(
-    usuarioRepository: UsuarioRepository,
-    usuarioAgenteRepository: UsuarioEmpresarialRepository[UsuarioEmpresarial],
-    usuarioAdminRepository: UsuarioEmpresarialAdminRepository,
-    autorizacionRepository: AutorizacionUsuarioRepository,
-    kafkaActor: ActorSelection,
-    autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository,
-    autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository,
-    autorizacionComercialRepo: AutorizacionUsuarioComercialRepository,
-    autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository,
-    sesionUtilAgenteEmpresarial: SesionAgenteUtilRepository,
-    sesionUtilAgenteInmobiliario: SesionAgenteUtilRepository
+  usuarioRepository: UsuarioRepository,
+  usuarioAgenteRepository: UsuarioEmpresarialRepository[UsuarioEmpresarial],
+  usuarioAdminRepository: UsuarioEmpresarialAdminRepository,
+  autorizacionRepository: AutorizacionUsuarioRepository,
+  kafkaActor: ActorSelection,
+  autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository,
+  autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository,
+  autorizacionComercialRepo: AutorizacionUsuarioComercialRepository,
+  autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository,
+  sesionUtilAgenteEmpresarial: SesionAgenteUtilRepository,
+  sesionUtilAgenteInmobiliario: SesionAgenteUtilRepository,
+  autorizacionInmobRepo : AutorizacionDriverRepository
 )(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   val invalidarTokenPath = "invalidarToken"
   val validarTokenPath = "validarToken"
+  val validarTokenAgentePath = "validarTokenAgente"
 
   val agente = TiposCliente.agenteEmpresarial.toString
   val admin = TiposCliente.clienteAdministrador.toString
@@ -59,6 +64,10 @@ case class AutorizacionService(
       }
     } ~ path(validarTokenPath / Segment) {
       token => validarToken(token)
+    } ~ path(validarTokenAgentePath) {
+      optionalHeaderValueByName("token") { token =>
+        validarTokenAgente(token)
+      }
     }
   }
 
@@ -97,16 +106,17 @@ case class AutorizacionService(
         (url, ipRemota) =>
           val usuario = getTokenData(token)
           val encriptedToken = AesUtil.encriptarToken(token)
+          println("TIPO CLIENTE", usuario.tipoCliente)
           val resultado = usuario.tipoCliente match {
             case `agente` => autorizacionAgenteRepo.autorizar(token, encriptedToken, url, ipRemota)
             case `admin` | `adminInmobiliaria` => autorizacionAdminRepo.autorizar(token, encriptedToken, url, ipRemota)
             case `individual` => autorizacionRepository.autorizar(token, encriptedToken, url)
-            case `agenteInmobiliario` => obtenerUsuarioComercialMock(TiposCliente.agenteInmobiliario, usuario.usuario)
+            case `agenteInmobiliario` => autorizacionInmobRepo.autorizar(encriptedToken)
             //TODO: Agregar la autorizacion de url para los tipo comerciales (Pendiente HU) By : Hernando
             case `comercialFiduciaria` => obtenerUsuarioComercialMock(TiposCliente.comercialFiduciaria, usuario.usuario)
             case `comercialValores` => obtenerUsuarioComercialMock(TiposCliente.comercialValores, usuario.usuario)
             case `comercialAdmin` => obtenerUsuarioComercialMock(TiposCliente.clienteAdministrador, usuario.usuario)
-            case _ => Future.failed(NoAutorizado("Tipo usuario no existe -3"))
+            case _ => Future.failed(NoAutorizado("Tipo usuario no existe"))
           }
 
           onComplete(resultado) {
@@ -116,6 +126,17 @@ case class AutorizacionService(
       }
     }
   }
+
+  private def validarTokenAgente(token : Option[String]): Route = {
+    get {
+      val resultado = autorizacionInmobRepo.autorizar(token.getOrElse(""))
+      onComplete(resultado) {
+        case Success(value) => execution(value)
+        case Failure(ex) => execution(ex)
+      }
+    }
+  }
+
 
   //TODO: Borrar este metodo cuando se realice la autorizacion de url para comerciales (Pendiente HU) By : Henando
   private def obtenerUsuarioComercialMock(tipoCliente: TiposCliente, usuario: String): Future[Autorizado] = Future {
@@ -128,13 +149,12 @@ case class AutorizacionService(
   def execution(ex: Any): StandardRoute = {
     ex match {
       case value: Autorizado => complete((StatusCodes.OK, value.usuario))
+      case value: AutorizadoAgente => complete((StatusCodes.OK,  value.usuario.parseJson.convertTo[UsuarioAgenteInmobiliario]))
       case value: Prohibido => complete((StatusCodes.Forbidden, value.usuario))
-      case ex: NoAutorizado => complete((StatusCodes.Unauthorized, "1234"))
-      case ex: ValidacionException => complete((StatusCodes.Unauthorized, "sdf"))
+      case ex: NoAutorizado => complete((StatusCodes.Unauthorized, ex.codigo))
+      case ex: ValidacionException => complete((StatusCodes.Unauthorized, ex.data))
       case ex: PersistenceException => complete((StatusCodes.InternalServerError, "Error inesperado"))
-      case ex: Throwable =>
-        ex.printStackTrace()
-        complete((StatusCodes.Unauthorized, "Error inesperado"))
+      case ex: Throwable => complete((StatusCodes.Unauthorized, "Error inesperado"))
     }
   }
 

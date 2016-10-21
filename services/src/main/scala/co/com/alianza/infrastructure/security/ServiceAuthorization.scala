@@ -1,20 +1,17 @@
 package co.com.alianza.infrastructure.security
 
-import java.util.Date
-
 import akka.actor._
 import akka.util.Timeout
 import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
-import co.com.alianza.exceptions.{ Autorizado, NoAutorizado, Prohibido, ValidacionException }
+import co.com.alianza.exceptions._
 import co.com.alianza.infrastructure.dto.Usuario
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.infrastructure.security.AuthenticationFailedRejection.{ CredentialsMissing, CredentialsRejected }
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.token.{ AesUtil, Token }
 import com.typesafe.config.Config
-import org.joda.time.DateTime
 import portal.transaccional.autenticacion.service.drivers.autorizacion.{ AutorizacionUsuarioEmpresarialAdminRepository, AutorizacionUsuarioEmpresarialRepository, AutorizacionUsuarioRepository }
+import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.AutorizacionDriverRepository
 import spray.http.StatusCodes._
 import spray.routing.RequestContext
 import spray.routing.authentication.ContextAuthenticator
@@ -32,6 +29,7 @@ trait ServiceAuthorization {
   val autorizacionUsuarioRepo: AutorizacionUsuarioRepository
   val autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository
   val autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository
+  val autorizacionInmobRepo: AutorizacionDriverRepository
 
   implicit val timeout: Timeout = Timeout(10.seconds)
 
@@ -57,6 +55,9 @@ trait ServiceAuthorization {
           case validacion: Autorizado =>
             val user = JsonUtil.fromJson[Usuario](validacion.usuario)
             Right(UsuarioAuth(user.id.get, user.tipoCliente, user.identificacion, user.tipoIdentificacion))
+          case validacion: AutorizadoAgente =>
+            val user = JsonUtil.fromJson[Usuario](validacion.usuario)
+            Right(UsuarioAuth(user.id.get, user.tipoCliente, user.identificacion, user.tipoIdentificacion))
           case validacion: Prohibido =>
             val user = JsonUtil.fromJson[UsuarioForbidden](validacion.usuario)
             Right(UsuarioAuth(user.usuario.id.get, user.usuario.tipoCliente, user.usuario.identificacion, user.usuario.tipoIdentificacion))
@@ -72,36 +73,13 @@ trait ServiceAuthorization {
     } else if (tipoCliente == TiposCliente.clienteAdministrador.toString || tipoCliente == TiposCliente.clienteAdminInmobiliario.toString) {
       autorizacionAdminRepo.autorizar(token, encriptedToken, "", obtenerIp(ctx).get.value)
     } else if (tipoCliente == TiposCliente.agenteInmobiliario.toString) {
-      autorizarMock(token)
+      autorizacionInmobRepo.autorizar(encriptedToken)
     } else {
       autorizacionUsuarioRepo.autorizar(token, encriptedToken, "")
     }
   }
 
-  private def autorizarMock(token: String) = {
 
-    val tipoCliente = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
-    val tipoIdentificacion = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoIdentificacion").toString
-    val correo = Token.getToken(token).getJWTClaimsSet.getCustomClaim("correo").toString
-    val ultimaIpIngreso = Token.getToken(token).getJWTClaimsSet.getCustomClaim("ultimaIpIngreso").toString
-
-    Future {
-      Autorizado(
-        JsonUtil.toJson(Usuario(
-          Option(1): Option[Int],
-          correo: String,
-          new Date(): Date,
-          "1234": String,
-          1: Int,
-          1: Int,
-          0: Int,
-          Option(ultimaIpIngreso): Option[String],
-          None: Option[Date],
-          TiposCliente.agenteInmobiliario: TiposCliente
-        ))
-      )
-    }
-  }
 
   private def obtenerIp(ctx: RequestContext) = ctx.request.headers.find {
     header =>

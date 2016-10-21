@@ -34,6 +34,10 @@ case class UsuarioAgenteInmobDAO(implicit dcConfig: DBConfig) extends UsuarioAge
     getById(id)
   }
 
+  override def getByToken(token: String): Future[Option[UsuarioAgenteInmobiliario]] = {
+    run(table.filter(_.token === token).result.headOption)
+  }
+
   override def get(identificacion: String, usuario: String): Future[Option[UsuarioAgenteInmobiliario]] = {
     getByIdentityAndUser(identificacion, usuario)
   }

@@ -25,7 +25,7 @@ import co.com.alianza.web.PreguntasAutovalidacionService
 import portal.transaccional.autenticacion.service.drivers.contrasenaAgenteInmobiliario.ContrasenaAgenteInmobiliarioRepository
 import portal.transaccional.autenticacion.service.drivers.permisoAgenteInmobiliario.PermisoAgenteInmobiliarioRepository
 import portal.transaccional.autenticacion.service.drivers.rolRecursoComercial.{ RecursoComercialRepository, RolComercialRepository }
-import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.{ UsuarioInmobiliarioPinRepository, UsuarioInmobiliarioRepository }
+import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.{ AutorizacionDriverRepository, UsuarioInmobiliarioPinRepository, UsuarioInmobiliarioRepository }
 import portal.transaccional.autenticacion.service.drivers.util.SesionAgenteUtilRepository
 import portal.transaccional.autenticacion.service.web.ip.IpService
 import portal.transaccional.autenticacion.service.web.agenteInmobiliario.{ AgenteImobiliarioPinService, AgenteInmobiliarioService }
@@ -47,14 +47,16 @@ case class AlianzaRouter(
     autorizacionRecursoComercialRepository: AutorizacionRecursoComercialRepository, recursoComercialRepository: RecursoComercialRepository,
     rolComercialRepository: RolComercialRepository, usInmobiliarioRepo: UsuarioInmobiliarioRepository, permisoAgenteInmob: PermisoAgenteInmobiliarioRepository,
     sesionUtilAgenteEmpresarial: SesionAgenteUtilRepository, sesionUtilAgenteInmobiliario: SesionAgenteUtilRepository,
-    agenteInmobContrasenaRepo: ContrasenaAgenteInmobiliarioRepository, pinAgenteInmobRepository: UsuarioInmobiliarioPinRepository
+    agenteInmobContrasenaRepo: ContrasenaAgenteInmobiliarioRepository, pinAgenteInmobRepository: UsuarioInmobiliarioPinRepository,
+    autorizacionInmobRepo : AutorizacionDriverRepository
 )(implicit val system: ActorSystem) extends HttpServiceActor with RouteConcatenation with CrossHeaders with ServiceAuthorization with ActorLogging {
 
   import system.dispatcher
 
   val routes =
     AutorizacionService(usuarioRepositorio, usuarioAgenteRepositorio, usuarioAdminRepositorio, autorizacionUsuarioRepo, kafkaActor, autorizacionAgenteRepo,
-      autorizacionAdminRepo, autorizacionComercialRepo, autorizacionComercialAdminRepo, sesionUtilAgenteEmpresarial, sesionUtilAgenteInmobiliario).route ~
+      autorizacionAdminRepo, autorizacionComercialRepo, autorizacionComercialAdminRepo, sesionUtilAgenteEmpresarial, sesionUtilAgenteInmobiliario,
+      autorizacionInmobRepo).route ~
       AutenticacionService(autenticacionRepo, autenticacionEmpresaRepositorio, autenticacionComercialRepositorio, kafkaActor).route ~
       RecursoGraficoComercialService(recursoComercialRepository, rolComercialRepository).route ~
       AutorizacionRecursoComercialService(autorizacionRecursoComercialRepository).route ~

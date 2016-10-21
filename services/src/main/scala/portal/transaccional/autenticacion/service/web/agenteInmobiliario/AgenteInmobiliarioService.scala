@@ -224,7 +224,7 @@ case class AgenteInmobiliarioService(
       val recursosF = permisosRepo.getRecurso(usuarioAuth.id, usuarioAuth.tipoCliente)
       onComplete(recursosF) {
         case Success(recursos) => complete((StatusCodes.OK, recursos))
-        case Failure(exception) => complete((StatusCodes.Conflict, "hubo un error"))
+        case Failure(exception) => exception.printStackTrace(); complete((StatusCodes.Conflict, "hubo un error"))
       }
     }
   }
