@@ -46,7 +46,7 @@ case class AutorizacionService(
 
   val invalidarTokenPath = "invalidarToken"
   val validarTokenPath = "validarToken"
-  val validarTokenAgentePath = "validarTokenAgente"
+  val validarTokenInmobPath = "validarTokenInmob"
 
   val agente = TiposCliente.agenteEmpresarial.toString
   val admin = TiposCliente.clienteAdministrador.toString
@@ -64,9 +64,9 @@ case class AutorizacionService(
       }
     } ~ path(validarTokenPath / Segment) {
       token => validarToken(token)
-    } ~ path(validarTokenAgentePath) {
+    } ~ path(validarTokenInmobPath) {
       optionalHeaderValueByName("token") { token =>
-        validarTokenAgente(token)
+        validarTokenInmobiliaria(token)
       }
     }
   }
@@ -127,9 +127,9 @@ case class AutorizacionService(
     }
   }
 
-  private def validarTokenAgente(token : Option[String]): Route = {
+  private def validarTokenInmobiliaria(token : Option[String]): Route = {
     get {
-      val resultado = autorizacionInmobRepo.autorizar(token.getOrElse(""))
+      val resultado = autorizacionInmobRepo.validarTokenInmobiliaria(token.getOrElse(""))
       onComplete(resultado) {
         case Success(value) => execution(value)
         case Failure(ex) => execution(ex)
@@ -149,7 +149,7 @@ case class AutorizacionService(
   def execution(ex: Any): StandardRoute = {
     ex match {
       case value: Autorizado => complete((StatusCodes.OK, value.usuario))
-      case value: AutorizadoAgente => complete((StatusCodes.OK,  value.usuario.parseJson.convertTo[UsuarioAgenteInmobiliario]))
+      case value: AutorizadoAgente => complete((StatusCodes.OK,  value.usuario))
       case value: Prohibido => complete((StatusCodes.Forbidden, value.usuario))
       case ex: NoAutorizado => complete((StatusCodes.Unauthorized, ex.codigo))
       case ex: ValidacionException => complete((StatusCodes.Unauthorized, ex.data))

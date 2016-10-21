@@ -1,27 +1,41 @@
 package portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario
 
 import co.com.alianza.exceptions._
-import co.com.alianza.persistence.entities.UsuarioAgenteInmobiliario
+import co.com.alianza.persistence.entities.{UsuarioAgenteInmobiliario, UsuarioEmpresarialAdmin}
+import co.com.alianza.persistence.repositories.UsuarioEmpresarialAdminRepository
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.token.Token
 import portal.transaccional.autenticacion.service.drivers.sesion.SesionRepository
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ AlianzaDAOs, UsuarioAgenteInmobDAO }
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{AlianzaDAOs, UsuarioAgenteInmobDAO}
+import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.{DataAccessTranslator => ConstructorDataAccessTranslator}
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * Created by alexandra in 2016
  */
-case class AutorizacionDriverRepository(sesionRepo: SesionRepository, alianzaDAO: AlianzaDAOs, usuarioDAO : UsuarioAgenteInmobDAO)(implicit val ex:
-ExecutionContext) {
+case class AutorizacionDriverRepository(sesionRepo: SesionRepository,
+                                        alianzaDAO: AlianzaDAOs,
+                                        usuarioInmobDAO : UsuarioAgenteInmobDAO)(implicit val ex: ExecutionContext) {
 
   def autorizar(token: String): Future[ValidacionAutorizacion] = {
     for {
       //_ <- validarToken(token)
       //_ <- sesionRepo.validarSesion(token)
       //_ <- sesionRepo.obtenerSesion(token)
-      agente <- usuarioDAO.getByToken(token)
-      validacion <- obtener(agente)
+      agente <- usuarioInmobDAO.getByToken(token)
+      validacion <- obtener(None, agente)
+    } yield validacion
+  }
+
+  def validarTokenInmobiliaria(token: String): Future[ValidacionAutorizacion] = {
+    for {
+    //_ <- validarToken(token)
+    //_ <- sesionRepo.validarSesion(token)
+    //_ <- sesionRepo.obtenerSesion(token)
+      constructor <- alianzaDAO.getAdminTokenAgente(token)
+      agente <- if (constructor.isEmpty) usuarioInmobDAO.getByToken(token) else Future.successful(None)
+      validacion <- obtener(constructor, agente)
     } yield validacion
   }
 
@@ -32,11 +46,12 @@ ExecutionContext) {
     }
   }
 
-  private def obtener(agente: Option[UsuarioAgenteInmobiliario]): Future[ValidacionAutorizacion] = Future {
-    agente match {
-      case Some(e)=> AutorizadoAgente(JsonUtil.toJson(DataAccessTranslator.entityToDto(e)))
-      case None => NoAutorizado("El usuario no se encuentra logueado")
+  private def obtener(constructor: Option[(UsuarioEmpresarialAdmin, Int)],
+                      agente: Option[UsuarioAgenteInmobiliario]): Future[ValidacionAutorizacion] = Future {
+    (constructor, agente) match {
+      case (Some(c), None) =>  Autorizado(JsonUtil.toJson(ConstructorDataAccessTranslator.entityToDto(c._1)))
+      case (None, Some(a)) => AutorizadoAgente(JsonUtil.toJson(DataAccessTranslator.entityToDto(a)))
+      case _ => NoAutorizado("El usuario no se encuentra logueado")
     }
   }
-
 }

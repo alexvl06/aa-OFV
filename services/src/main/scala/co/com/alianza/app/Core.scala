@@ -172,7 +172,7 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val rolComercialRepository = RolComercialDriverRepository(rolComercialDAO)
   lazy val permisoAgenteInmob = PermisoAgenteInmobiliarioDriverRepository(alianzaDAO, usuarioInmobDAO, permisoInmobDAO, recursoInmobiliarioDAO)
   lazy val pinAgenteInmobRepository = UsuarioInmobiliarioPinDriverRepository(pinInmobDAO)
-  lazy val autorizacionInmobRepo : AutorizacionDriverRepository = AutorizacionDriverRepository(sesionRepo,alianzaDAO , usuarioAgenteInmobDAO)
+  lazy val autorizacionInmobRepo : AutorizacionDriverRepository = AutorizacionDriverRepository(sesionRepo, alianzaDAO, usuarioAgenteInmobDAO)
 }
 
 private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
