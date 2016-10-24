@@ -60,9 +60,9 @@ case class UsuarioAgenteInmobDAO(implicit dcConfig: DBConfig) extends UsuarioAge
 
     val basequery: Query[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario, Seq] = MaybeFilter(table)
       .filter(Some(identificacion))(id => agente => agente.identificacion === id)
-      .filter(nombre)(n => agente => agente.nombre like s"%$n%")
-      .filter(usuario)(u => agente => agente.usuario like s"%$u%")
-      .filter(correo)(c => agente => agente.correo like s"%$c%")
+      .filter(nombre)(n => agente => agente.nombre.toLowerCase like s"%${n.toLowerCase}%")
+      .filter(usuario)(u => agente => agente.usuario.toLowerCase like s"%${u.toLowerCase}%")
+      .filter(correo)(c => agente => agente.correo.toLowerCase like s"%${c.toLowerCase}%")
       .filter(estados)(e => agente => agente.estado inSetBind e)
       .query
       .sortBy(_.usuario)
