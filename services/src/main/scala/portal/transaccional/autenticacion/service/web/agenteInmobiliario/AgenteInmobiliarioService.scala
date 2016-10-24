@@ -83,7 +83,7 @@ case class AgenteInmobiliarioService(
     post {
       entity(as[CrearAgenteInmobiliarioRequest]) { r =>
         val idAgente: Future[Int] = usuariosRepo.createAgenteInmobiliario(
-          usuarioAuth.tipoIdentificacion, usuarioAuth.identificacionUsuario,
+          usuarioAuth.id, usuarioAuth.tipoIdentificacion, usuarioAuth.identificacionUsuario,
           r.correo, r.usuario,
           r.nombre, r.cargo, r.descripcion
         )

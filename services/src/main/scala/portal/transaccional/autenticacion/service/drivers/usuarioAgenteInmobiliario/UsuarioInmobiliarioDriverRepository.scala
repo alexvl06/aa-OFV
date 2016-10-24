@@ -6,36 +6,38 @@ import akka.actor.ActorSystem
 import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.exceptions.ValidacionExceptionPasswordRules
 import co.com.alianza.microservices.MailMessage
-import co.com.alianza.persistence.entities.{ PinAgenteInmobiliario, UsuarioAgenteInmobiliario, UsuarioAgenteInmobiliarioTable }
+import co.com.alianza.persistence.entities.{PinAgenteInmobiliario, UsuarioAgenteInmobiliario, UsuarioAgenteInmobiliarioTable}
 import com.typesafe.config.Config
 import enumerations.EstadosUsuarioEnumInmobiliario._
-import enumerations.{ EstadosUsuarioEnum, EstadosUsuarioEnumInmobiliario }
-import portal.transaccional.autenticacion.service.drivers.usuarioAgente.{ UsuarioEmpresarialRepository, UsuarioEmpresarialRepositoryG }
-import portal.transaccional.autenticacion.service.web.agenteInmobiliario.{ ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse, PaginacionMetadata }
+import enumerations.{EstadosUsuarioEnum, EstadosUsuarioEnumInmobiliario}
+import portal.transaccional.autenticacion.service.drivers.usuarioAgente.{UsuarioEmpresarialRepository, UsuarioEmpresarialRepositoryG}
+import portal.transaccional.autenticacion.service.web.agenteInmobiliario.{ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse, PaginacionMetadata}
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal._
 
-import scala.concurrent.{ ExecutionContext, Future }
-
-/**
- * Implementación del repositorio de agentes inmobiliarios
- *
- * @param ex Contexto de ejecución
- */
-
-case class UsuarioAgenteInmobDriverRepository(usuarioDAO: UsuarioAgenteInmobDAO)(implicit val ex: ExecutionContext) extends UsuarioEmpresarialRepositoryG[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario](usuarioDAO) with UsuarioEmpresarialRepository[UsuarioAgenteInmobiliario]
+import scala.concurrent.{ExecutionContext, Future}
 
 case class UsuarioInmobiliarioDriverRepository(
     configDao: ConfiguracionDAOs,
-    usuariosDao: UsuarioAgenteInmobDAOs,
+    constructoresDao: UsuarioEmpresarialAdminDAOs,
+    usuariosDao: UsuarioAgenteInmobDAO,
     pinRepository: UsuarioInmobiliarioPinRepository
-)(implicit val ex: ExecutionContext, system: ActorSystem, config: Config) extends UsuarioInmobiliarioRepository {
+)(implicit val ex: ExecutionContext, system: ActorSystem, config: Config)
+  extends UsuarioEmpresarialRepositoryG[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario](usuariosDao)
+    with UsuarioEmpresarialRepository[UsuarioAgenteInmobiliario] with UsuarioInmobiliarioRepository {
 
-  override def createAgenteInmobiliario(tipoIdentificacion: Int, identificacion: String,
+  override def createAgenteInmobiliario(idConstructor: Int, tipoIdentificacion: Int, identificacion: String,
     correo: String, usuario: String,
     nombre: Option[String], cargo: Option[String], descripcion: Option[String]): Future[Int] = {
-    usuariosDao.exists(0, identificacion, usuario).flatMap({
-      case true => Future.successful(0)
-      case false =>
+    // se verifica que el agente inmobiliario no se vaya a crear con el mismo nombre de usuario del constructor
+    // y que no haya sido creado previamente
+    val proceder: Future[Boolean] = for {
+      constructorOp <- constructoresDao.getById(idConstructor)
+      existeAgente <- usuariosDao.exists(0, identificacion, usuario)
+    } yield constructorOp.isDefined && constructorOp.get.usuario != usuario && !existeAgente
+
+    proceder.flatMap({
+      case false => Future.successful(0)
+      case true =>
         val agente = UsuarioAgenteInmobiliario(
           0, identificacion, tipoIdentificacion, usuario, correo, EstadosUsuarioEnum.pendienteActivacion.id,
           None, None, new Timestamp(System.currentTimeMillis()), 0, None, nombre, cargo, descripcion, None
@@ -136,7 +138,8 @@ case class UsuarioInmobiliarioDriverRepository(
         }).map { estado =>
           usuariosDao.updateState(identificacion, usuario, estado).map {
             case x if x == 0 => Option.empty
-            case _ => Option(ConsultarAgenteInmobiliarioResponse(agente.id, agente.correo, agente.usuario, estado.id, agente.nombre, agente.cargo, agente.descripcion))
+            case _ => Option(ConsultarAgenteInmobiliarioResponse(agente.id, agente.correo, agente.usuario, estado.id,
+              agente.nombre, agente.cargo, agente.descripcion))
           }
         }.getOrElse(Future.successful(Option.empty))
     }
