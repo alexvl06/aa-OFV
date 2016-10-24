@@ -19,7 +19,7 @@ import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.Usua
 import portal.transaccional.autenticacion.service.drivers.util.SesionAgenteUtilRepository
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
-import spray.http.StatusCodes
+import spray.http.{ MediaTypes, StatusCodes }
 import spray.routing.{ RequestContext, Route, StandardRoute }
 import spray.json._
 
@@ -30,18 +30,18 @@ import scala.util.{ Failure, Success }
  * Created by s4n 2016
  */
 case class AutorizacionService(
-  usuarioRepository: UsuarioRepository,
-  usuarioAgenteRepository: UsuarioEmpresarialRepository[UsuarioEmpresarial],
-  usuarioAdminRepository: UsuarioEmpresarialAdminRepository,
-  autorizacionRepository: AutorizacionUsuarioRepository,
-  kafkaActor: ActorSelection,
-  autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository,
-  autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository,
-  autorizacionComercialRepo: AutorizacionUsuarioComercialRepository,
-  autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository,
-  sesionUtilAgenteEmpresarial: SesionAgenteUtilRepository,
-  sesionUtilAgenteInmobiliario: SesionAgenteUtilRepository,
-  autorizacionInmobRepo : AutorizacionDriverRepository
+    usuarioRepository: UsuarioRepository,
+    usuarioAgenteRepository: UsuarioEmpresarialRepository[UsuarioEmpresarial],
+    usuarioAdminRepository: UsuarioEmpresarialAdminRepository,
+    autorizacionRepository: AutorizacionUsuarioRepository,
+    kafkaActor: ActorSelection,
+    autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository,
+    autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository,
+    autorizacionComercialRepo: AutorizacionUsuarioComercialRepository,
+    autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository,
+    sesionUtilAgenteEmpresarial: SesionAgenteUtilRepository,
+    sesionUtilAgenteInmobiliario: SesionAgenteUtilRepository,
+    autorizacionInmobRepo: AutorizacionDriverRepository
 )(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   val invalidarTokenPath = "invalidarToken"
@@ -127,16 +127,17 @@ case class AutorizacionService(
     }
   }
 
-  private def validarTokenInmobiliaria(token : Option[String]): Route = {
+  private def validarTokenInmobiliaria(token: Option[String]): Route = {
     get {
-      val resultado = autorizacionInmobRepo.validarTokenInmobiliaria(token.getOrElse(""))
-      onComplete(resultado) {
-        case Success(value) => execution(value)
-        case Failure(ex) => execution(ex)
+      respondWithMediaType(MediaTypes.`application/json`) {
+        val resultado = autorizacionInmobRepo.validarTokenInmobiliaria(token.getOrElse(""))
+        onComplete(resultado) {
+          case Success(value) => execution(value)
+          case Failure(ex) => execution(ex)
+        }
       }
     }
   }
-
 
   //TODO: Borrar este metodo cuando se realice la autorizacion de url para comerciales (Pendiente HU) By : Henando
   private def obtenerUsuarioComercialMock(tipoCliente: TiposCliente, usuario: String): Future[Autorizado] = Future {
@@ -149,7 +150,7 @@ case class AutorizacionService(
   def execution(ex: Any): StandardRoute = {
     ex match {
       case value: Autorizado => complete((StatusCodes.OK, value.usuario))
-      case value: AutorizadoAgente => complete((StatusCodes.OK,  value.usuario))
+      case value: AutorizadoAgente => complete((StatusCodes.OK, value.usuario))
       case value: Prohibido => complete((StatusCodes.Forbidden, value.usuario))
       case ex: NoAutorizado => complete((StatusCodes.Unauthorized, ex.codigo))
       case ex: ValidacionException => complete((StatusCodes.Unauthorized, ex.data))
