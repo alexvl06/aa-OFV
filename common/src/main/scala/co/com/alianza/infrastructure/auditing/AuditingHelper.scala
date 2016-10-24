@@ -38,7 +38,11 @@ object AuditingHelper extends AuditingHelper {
   val olvidoContrasenaIndex = "olvido-contrasena-fiduciaria"
   val autovalidacionBloquearIndex = "autovalidacion-bloquear-fiduciaria"
   val autovalidacionComprobarIndex = "autovalidacion-comprobar-fiduciaria"
-
+  //comercial
+  val autenticacionComercialIndex = "autenticacion-comercial-fiduciaria"
+  val recursosComercialIndex = "actualizar-recursos-comercial-fiduciaria"
+  val crearAdministradorComercialIndex = "crear-administrador-comercial-fiduciaria"
+  val cambioContrasenaAdministradorComercialIndex = "cambio-contrasena-administrador-comercial-fiduciaria"
 }
 
 trait AuditingHelper {

@@ -60,4 +60,5 @@ case class RecursoGraficoComercialService(recursoComercialRepository: RecursoCom
       case ex: Throwable => ex.printStackTrace(); complete((StatusCodes.InternalServerError, "Error inesperado"))
     }
   }
+
 }

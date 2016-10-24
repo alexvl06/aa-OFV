@@ -92,9 +92,12 @@ case class AutenticacionService(
               request.usuario.toLowerCase,
               request.tipoUsuario, request.contrasena, ip.value
             )
-            onComplete(resultado) {
-              case Success(token) => encriptarToken(token)
-              case Failure(ex) => execution(ex)
+            mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic,
+              AuditingHelper.autenticacionComercialIndex, ip.value, kafkaActor, request.copy(contrasena = null))) {
+              onComplete(resultado) {
+                case Success(token) => encriptarToken(token)
+                case Failure(ex) => execution(ex)
+              }
             }
           }
       }

@@ -59,7 +59,6 @@ case class AlianzaRouter(
       AutenticacionService(autenticacionRepo, autenticacionEmpresaRepositorio, autenticacionComercialRepositorio, kafkaActor).route ~
       //TODO: refactorizar
       new ConfrontaService(confrontaActor).route ~
-      //TODO: refactorizar
       new EnumeracionService().route ~
       //TODO: refactorizar
       UsuarioService(kafkaActor, usuariosActor).route ~
@@ -72,8 +71,8 @@ case class AlianzaRouter(
           IpService(user, kafkaActor, ipRepo).route ~
             SesionService().route ~
             RecursoGraficoComercialService(recursoComercialRepository, rolComercialRepository).route ~
-            AutorizacionRecursoComercialService(autorizacionRecursoComercialRepository).route ~
-            ComercialService(user, usuarioComercialAdminRepo).route ~
+            AutorizacionRecursoComercialService(user, kafkaActor, autorizacionRecursoComercialRepository).route ~
+            ComercialService(user, kafkaActor, usuarioComercialAdminRepo).route ~
             ActualizacionService(user, kafkaActor, actualizacionRepo).route ~
             HorarioEmpresaService(user, kafkaActor, horarioEmpresaRepository).route ~
             //TODO: refactorizar
