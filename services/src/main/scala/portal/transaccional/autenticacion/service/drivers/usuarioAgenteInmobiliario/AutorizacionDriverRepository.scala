@@ -18,13 +18,12 @@ case class AutorizacionDriverRepository(sesionRepo: SesionRepository, alianzaDAO
   (implicit val ex: ExecutionContext) extends AutorizacionRepository {
 
   def autorizar(token: String, encriptedToken: String, url: Option[String], ip: String): Future[ValidacionAutorizacion] = {
-
     for {
       _ <- validarToken(token)
       _ <- sesionRepo.validarSesion(token)
       _ <- sesionRepo.obtenerSesion(token)
       agente <- alianzaDAO.getByTokenAgenteInmobiliario(encriptedToken)
-      recursos <- alianzaDAO.getAgenteInmobiliarionResources(agente.id)
+      recursos <- alianzaDAO.get5(agente.id)
       validacion <- filtrarUrl(DataAccessTranslator.entityToDto(agente), recursos, url.getOrElse(""))
     } yield validacion
   }
@@ -38,10 +37,9 @@ case class AutorizacionDriverRepository(sesionRepo: SesionRepository, alianzaDAO
 
   private def filtrarUrl(agente: UsuarioAgenteInmobiliario, recursos: Seq[RecursoBackendInmobiliario], url: String): Future[ValidacionAutorizacion] = Future {
 
-    val recursosFiltro = recursoRepo.filtrarRecursoAgenteInmobiliario(recursos, url)
+    val recursosFiltro: Seq[RecursoBackendInmobiliario] = recursoRepo.filtrarRecursoAgenteInmobiliario(recursos, url)
 
     if (recursosFiltro.nonEmpty){
-      //Prohibido("403.2", JsonUtil.toJson( ForbiddenMessageAgenteInmob(agente, None)))
       Autorizado(JsonUtil.toJson(agente))
     } else {
       val usuarioForbidden = ForbiddenMessageAgenteInmob(agente, None)

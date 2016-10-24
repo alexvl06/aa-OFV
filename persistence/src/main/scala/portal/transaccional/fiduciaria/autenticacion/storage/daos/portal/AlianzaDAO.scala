@@ -1,5 +1,6 @@
 package portal.transaccional.fiduciaria.autenticacion.storage.daos.portal
 
+import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import co.com.alianza.persistence.entities._
 import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
 import slick.lifted.TableQuery
@@ -23,11 +24,14 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
   val recursosPerfilesAdmin = TableQuery[RecursoPerfilClienteAdminTable]
   val preguntasTable = TableQuery[PreguntasAutovalidacionTable]
   val respuestasUsuarioTable = TableQuery[RespuestasAutovalidacionUsuarioTable]
+
   val usuariosAgentesInmobiliarios = TableQuery[UsuarioAgenteInmobiliarioTable]
   val permisosInmobiliarios = TableQuery[PermisoInmobiliarioTable]
   val recursosGraficosInmobiliarios = TableQuery[RecursoGraficoInmobiliarioTable]
-  val recursosaInmobiliarios = TableQuery[RecursoInmobiliarioTable]
+  val recursosInmobiliarios = TableQuery[RecursoInmobiliarioTable]
   val recursosBackendInmobiliarios = TableQuery[RecursoBackendInmobiliarioTable]
+  val perfilInmobiliario = TableQuery[PerfilInmobiliarioTable]
+  val recursosPerfilInmobiliario = TableQuery[RecursoPerfilInmobiliarioTable]
 
   import dcConfig.DB._
   import dcConfig.driver.api._
@@ -87,12 +91,12 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
   def getByNitAndUserAgente(nit: String, usuario: String): Future[Option[UsuarioEmpresarial]] = {
     run(
       (for {
-      ((usuarioEmpresarial, usuarioEmpresarialEmpresa), empresa) <- usuariosEmpresariales join usuariosEmpresarialesEmpresa on {
-        (ue, uee) => ue.id === uee.idUsuarioEmpresarial && ue.usuario === usuario
-      } join empresas on {
-        case ((ue, uee), e) => e.nit === nit && uee.idEmpresa === e.id
-      }
-    } yield usuarioEmpresarial).result.headOption
+        ((usuarioEmpresarial, usuarioEmpresarialEmpresa), empresa) <- usuariosEmpresariales join usuariosEmpresarialesEmpresa on {
+          (ue, uee) => ue.id === uee.idUsuarioEmpresarial && ue.usuario === usuario
+        } join empresas on {
+          case ((ue, uee), e) => e.nit === nit && uee.idEmpresa === e.id
+        }
+      } yield usuarioEmpresarial).result.headOption
     )
   }
 
@@ -140,12 +144,12 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
   def getByNitAndUserAdmin(nit: String, usuario: String): Future[Option[UsuarioEmpresarialAdmin]] = {
     run(
       (for {
-      ((usuarioEmpresarial, usuarioEmpresarialEmpresa), empresa) <- usuariosEmpresarialesAdmin join usuariosEmpresarialesAdminEmpresa on {
-        (ue, uee) => ue.id === uee.idUsuarioEmpresarialAdmin && ue.usuario === usuario
-      } join empresas on {
-        case ((ue, uee), e) => e.nit === nit && uee.idEmpresa === e.id
-      }
-    } yield usuarioEmpresarial).result.headOption
+        ((usuarioEmpresarial, usuarioEmpresarialEmpresa), empresa) <- usuariosEmpresarialesAdmin join usuariosEmpresarialesAdminEmpresa on {
+          (ue, uee) => ue.id === uee.idUsuarioEmpresarialAdmin && ue.usuario === usuario
+        } join empresas on {
+          case ((ue, uee), e) => e.nit === nit && uee.idEmpresa === e.id
+        }
+      } yield usuarioEmpresarial).result.headOption
     )
   }
 
@@ -183,6 +187,7 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
     run(query.result)
   }
 
+  // Obtiene los permisos a los que un agente puede acceder
   def getPermisosProyectoInmobiliarioByAgente(username: String, idAgente: Int): Future[Seq[PermisoAgenteInmobiliario]] = {
     val query = for {
       a <- usuariosAgentesInmobiliarios if a.id === idAgente if a.usuario === username
@@ -191,12 +196,46 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
     run(query.result)
   }
 
-  def getRecursosAgenteInmobiliario(usuarioId: Int): Future[Seq[RecursoGraficoInmobiliario]] = {
+  //Obtiene el menu de constructor
+  def get0(): Future[Seq[RecursoGraficoInmobiliario]] = {
     val query = for {
-      c <- permisosInmobiliarios if c.idAgente === usuarioId
-      s <- recursosGraficosInmobiliarios.filter( x => x.rol === 1 || x.rol === 3) if c.tipoPermiso === s.id
-    } yield s
-    run(query.distinctOn(_.titulo).result)
+      p <- perfilInmobiliario if p.nombre === "ADMIN"
+      pg <- recursosPerfilInmobiliario if p.id === pg.idPerfil
+      g <- recursosGraficosInmobiliarios if g.id === pg.urlRecurso if g.visible
+    } yield g
+    run(query.result)
+  }
+
+  //Obtiene el menu de AGENTE
+  def get1(username: String, idAgente: Int): Future[Seq[RecursoGraficoInmobiliario]] = {
+    val query = for {
+      p <- perfilInmobiliario if p.nombre === "AGENTE"
+      pg <- recursosPerfilInmobiliario if p.id === pg.idPerfil
+      g <- recursosGraficosInmobiliarios if g.id === pg.urlRecurso if g.visible
+    } yield g
+    run(query.result)
+  }
+
+  //Obtiene su propio menu
+  def get3( idAgente: Int): Future[Seq[RecursoGraficoInmobiliario]] = {
+    val query = for {
+      a <- usuariosAgentesInmobiliarios if a.id === idAgente
+      p <- permisosInmobiliarios if p.idAgente === a.id
+      g <- recursosGraficosInmobiliarios if g.id === p.tipoPermiso if g.visible
+    } yield g
+    run(query.result)
+  }
+
+  //Obtiene los recursos a los que puede acceder Admin
+  def get4(): Future[Seq[RecursoBackendInmobiliario]] = {
+    val query = for {
+      p <- perfilInmobiliario if p.nombre === "ADMIN"
+      pg <- recursosPerfilInmobiliario if p.id === pg.idPerfil
+      g <- recursosGraficosInmobiliarios if g.id === pg.urlRecurso
+      rg <- recursosInmobiliarios if rg.idGrafico === g.id
+      r <- recursosBackendInmobiliarios if rg.idBacken === r.id
+    } yield r
+    run(query.result)
   }
 
   def getByTokenAgenteInmobiliario(token: String): Future[UsuarioAgenteInmobiliario] = {
@@ -204,24 +243,23 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
     run(query.result.head)
   }
 
-  // Obtiene todos los recursos del back al que puede acceder un agente inmobiliario
-  def getAgenteInmobiliarionResources(idUsuario: Int): Future[Seq[RecursoBackendInmobiliario]] = {
-    val resources = for {
-      p <- permisosInmobiliarios if p.idAgente === idUsuario
-      g <- recursosGraficosInmobiliarios.filter( x => x.rol === 1 || x.rol === 3) if p.tipoPermiso === g.id
-      r <- recursosaInmobiliarios if g.id == r.idGrafico
-      b <- recursosBackendInmobiliarios.filter( x => x.rol === 1 || x.rol === 3) if b.id === r.idBacken
-    } yield b
-    run(resources.result)
-  }
+  //Obtiene los recursos a los que puede acceder Agente
+  def get5( idAgente: Int): Future[Seq[RecursoBackendInmobiliario]] = {
+    val query = for {
+      a <- usuariosAgentesInmobiliarios if a.id === idAgente
+      p <- permisosInmobiliarios if p.idAgente === a.id
+      g <- recursosGraficosInmobiliarios if g.id === p.tipoPermiso
+      rg <- recursosInmobiliarios if rg.idGrafico === g.id
+      r <- recursosBackendInmobiliarios if rg.idBacken === r.id
+    } yield r
 
-  // Obtiene todos los recursos del back al que puede acceder un constructor
-  def getAdminInmobiliarionResources(idUsuario: Int): Future[Seq[RecursoBackendInmobiliario]] = {
-    val resources = for {
-      g <- recursosGraficosInmobiliarios.filter( x => x.rol === 2 || x.rol === 3)
-      r <- recursosaInmobiliarios if g.id === r.idGrafico
-      b <- recursosBackendInmobiliarios.filter( x => x.rol === 2 || x.rol === 3) if b.id === r.idBacken
-    } yield b
-    run(resources.result)
+    val query2 = for {
+      p <- perfilInmobiliario if p.nombre === "AGENTE"
+      pg <- recursosPerfilInmobiliario if p.id === pg.idPerfil
+      g <- recursosGraficosInmobiliarios if g.id === pg.urlRecurso if !g.visible
+      rg <- recursosInmobiliarios if rg.idGrafico === g.id
+      r <- recursosBackendInmobiliarios if rg.idBacken === r.id
+    } yield r
+    run((query ++ query2).result)
   }
 }

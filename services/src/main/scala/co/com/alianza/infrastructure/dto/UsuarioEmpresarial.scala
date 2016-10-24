@@ -53,17 +53,10 @@ case class UsuarioEmpresarialAdmin(
 )
 
 case class UsuarioAgenteInmobiliario(
-  id: Int,
-  correo: String,
-  fechaCaducidad: Date,
   identificacion: String,
   tipoIdentificacion: Int,
   usuario: String,
-  estado: Int,
-  numeroIngresosErroneos: Int,
-  ipUltimoIngreso: Option[String],
-  fechaUltimoIngreso: Option[Date],
-  tipoCliente: TiposCliente
+  tipoCliente: Int
 )
 
 case class UsuarioEmpresa(

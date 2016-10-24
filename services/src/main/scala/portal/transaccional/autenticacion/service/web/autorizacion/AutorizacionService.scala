@@ -44,6 +44,7 @@ case class AutorizacionService(
 
   val invalidarTokenPath = "invalidarToken"
   val validarTokenPath = "validarToken"
+  val validarTokenInmobiliarioPath = "validarTokenInmobiliario"
 
   val agente = TiposCliente.agenteEmpresarial.toString
   val admin = TiposCliente.clienteAdministrador.toString
@@ -61,6 +62,8 @@ case class AutorizacionService(
       }
     } ~ path(validarTokenPath / Segment) {
       token => validarToken(token)
+    } ~ path(validarTokenInmobiliarioPath) {
+      validarTokenInmobiliario()
     }
   }
 
@@ -110,11 +113,35 @@ case class AutorizacionService(
             case `comercialAdmin` => obtenerUsuarioComercialMock(TiposCliente.clienteAdministrador, usuario.usuario)
             case _ => Future.failed(NoAutorizado("Tipo usuario no existe"))
           }
-
           onComplete(resultado) {
             case Success(value) => execution(value)
             case Failure(ex) => execution(ex)
           }
+      }
+    }
+  }
+
+  //Todo : A veces se necesita solo validar el token sin el recurso ?   By: Alexa
+  private def validarTokenInmobiliario() = {
+    get {
+      headerValueByName("token") { token =>
+        headerValueByName("ipRemota") { ipRemota =>
+          parameters('url) {
+            (url) =>
+              val decriptedToken : String = AesUtil.desencriptarToken(token)
+              val usuario: AuditityUser = getTokenData(decriptedToken)
+
+              val responseF = usuario.tipoCliente match {
+                case `adminInmobiliaria` => autorizacionAdminRepo.autorizar(decriptedToken, token, url, ipRemota, `adminInmobiliaria`)
+                case `agenteInmobiliario` => autorizacionAgenteInmob.autorizar(decriptedToken, token, Option(url), ipRemota)
+              }
+
+              onComplete(responseF) {
+                case Success(value) => execution(value)
+                case Failure(ex) => execution(ex)
+              }
+          }
+        }
       }
     }
   }
@@ -132,7 +159,7 @@ case class AutorizacionService(
       case value: Autorizado => complete((StatusCodes.OK, value.usuario))
       case value: Prohibido => complete((StatusCodes.Forbidden, value.usuario))
       case ex: NoAutorizado => complete((StatusCodes.Unauthorized, "1234"))
-      case ex: ValidacionException => complete((StatusCodes.Unauthorized, "sdf"))
+      case ex: ValidacionException => complete((StatusCodes.Unauthorized, ex.getMessage))
       case ex: PersistenceException => complete((StatusCodes.InternalServerError, "Error inesperado"))
       case ex: Throwable =>
         ex.printStackTrace()

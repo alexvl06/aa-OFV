@@ -76,8 +76,23 @@ case class RecursoDriverRepository(generalDAO: AlianzaDAOs) extends RecursoRepos
     urlR.contains(myUrl) && urlR.equals(myUrl) && recurso.acceso
   }
 
-  def filtrarRecursoAgenteInmobiliario(recurso: Seq[RecursoBackendInmobiliario], url: String): Seq[RecursoBackendInmobiliario] = {
-    recurso
+
+  def filtrarRecursoAgenteInmobiliario(recursos: Seq[RecursoBackendInmobiliario], url: String): Seq[RecursoBackendInmobiliario] = {
+
+    recursos.filter{ recurso =>
+      val indexSlash: Int = recurso.url.lastIndexOf("/")
+      val myUrl: String =
+        if (recurso.url.contains("/*") && url.size > recurso.url.size) {
+          url.substring(0, indexSlash)
+        } else if (url.endsWith("/")) {
+          url.substring(0, url.lastIndexOf("/"))
+        } else {
+          url
+        }
+      val urlR: String = recurso.url.substring(0, indexSlash)
+      urlR.contains(myUrl) && urlR.equals(myUrl)
+    }
+
   }
 
 }
