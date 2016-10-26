@@ -52,7 +52,7 @@ case class UsuarioEmpresarialAdmin(
   tipoCliente: TiposCliente
 )
 
-case class UsuarioAgenteInmobiliario(
+case class UsuarioInmobiliario(
   identificacion: String,
   tipoIdentificacion: Int,
   usuario: String,

@@ -18,7 +18,7 @@ import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.Usua
 import portal.transaccional.autenticacion.service.drivers.util.SesionAgenteUtilRepository
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
-import spray.http.StatusCodes
+import spray.http.{ ContentType, MediaTypes, StatusCodes }
 import spray.routing.{ RequestContext, Route, StandardRoute }
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -125,26 +125,28 @@ case class AutorizacionService(
   private def validarTokenInmobiliario() = {
     get {
       headerValueByName("token") { token =>
-        headerValueByName("ipRemota") { ipRemota =>
-          parameters('url) {
-            (url) =>
-              val decriptedToken : String = AesUtil.desencriptarToken(token)
-              val usuario: AuditityUser = getTokenData(decriptedToken)
+        clientIP { ipRemota =>
+          respondWithMediaType(MediaTypes.`application/json`) {
+            parameters('url) { (url) =>
+                val decriptedToken: String = AesUtil.desencriptarToken(token)
+                val usuario: AuditityUser = getTokenData(decriptedToken)
 
-              val responseF = usuario.tipoCliente match {
-                case `adminInmobiliaria` => autorizacionAdminRepo.autorizar(decriptedToken, token, url, ipRemota, `adminInmobiliaria`)
-                case `agenteInmobiliario` => autorizacionAgenteInmob.autorizar(decriptedToken, token, Option(url), ipRemota)
-              }
+                val responseF = usuario.tipoCliente match {
+                  case `adminInmobiliaria` => autorizacionAdminRepo.autorizar(decriptedToken, token, url, ipRemota.value, `adminInmobiliaria`)
+                  case `agenteInmobiliario` => autorizacionAgenteInmob.autorizar(decriptedToken, token, Option(url), ipRemota.value)
+                }
 
-              onComplete(responseF) {
-                case Success(value) => execution(value)
-                case Failure(ex) => execution(ex)
-              }
+                onComplete(responseF) {
+                  case Success(value) => execution(value)
+                  case Failure(ex) => execution(ex)
+                }
+            }
           }
         }
       }
     }
   }
+
 
   //TODO: Borrar este metodo cuando se realice la autorizacion de url para comerciales (Pendiente HU) By : Henando
   private def obtenerUsuarioComercialMock(tipoCliente: TiposCliente, usuario: String): Future[Autorizado] = Future {
@@ -158,7 +160,7 @@ case class AutorizacionService(
     ex match {
       case value: Autorizado => complete((StatusCodes.OK, value.usuario))
       case value: Prohibido => complete((StatusCodes.Forbidden, value.usuario))
-      case ex: NoAutorizado => complete((StatusCodes.Unauthorized, "1234"))
+      case ex: NoAutorizado => complete((StatusCodes.Unauthorized, "El usuario no esta autorizado para acceder"))
       case ex: ValidacionException => complete((StatusCodes.Unauthorized, ex.getMessage))
       case ex: PersistenceException => complete((StatusCodes.InternalServerError, "Error inesperado"))
       case ex: Throwable =>

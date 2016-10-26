@@ -1,10 +1,11 @@
 package portal.transaccional.autenticacion.service.drivers.autorizacion
 
 import akka.util.Timeout
+import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.exceptions.{ Autorizado, Prohibido, ValidacionAutorizacion, ValidacionException }
-import co.com.alianza.infrastructure.dto.UsuarioEmpresarialAdmin
+import co.com.alianza.infrastructure.dto.{ UsuarioEmpresarialAdmin, UsuarioInmobiliario }
 import co.com.alianza.infrastructure.messages.ResponseMessage
-import co.com.alianza.persistence.entities.RecursoPerfilClienteAdmin
+import co.com.alianza.persistence.entities.{ RecursoBackendInmobiliario, RecursoPerfilClienteAdmin }
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.token.Token
 import enumerations.empresa.EstadosDeEmpresaEnum
@@ -21,7 +22,7 @@ import scala.concurrent.{ ExecutionContext, Future }
  * Created by seven4n in 2016
  */
 case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: UsuarioEmpresarialAdminRepository, sesionRepo: SesionRepository,
-    alianzaDAO: AlianzaDAO, recursoRepo: RecursoRepository)(implicit val ex: ExecutionContext) extends AutorizacionUsuarioEmpresarialAdminRepository {
+  alianzaDAO: AlianzaDAO, recursoRepo: RecursoRepository)(implicit val ex: ExecutionContext) extends AutorizacionUsuarioEmpresarialAdminRepository {
 
   implicit val timeout = Timeout(5.seconds)
 
@@ -32,8 +33,7 @@ case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: Usuari
       sesion <- sesionRepo.obtenerSesion(token)
       adminEstado <- alianzaDAO.getByTokenAdmin(encriptedToken)
       _ <- validarEstadoEmpresa(adminEstado._2)
-      recursos <- alianzaDAO.getAdminResources(adminEstado._1.id)
-      result <- resolveMessageRecursos(DataAccessTranslator.entityToDto(adminEstado._1, tipoCliente), recursos, url)
+      result <- obtenerRecursos(DataAccessTranslator.entityToDto(adminEstado._1, tipoCliente) , tipoCliente, url)
     } yield result
   }
 
@@ -59,15 +59,30 @@ case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: Usuari
     }
   }
 
+
+  private def obtenerRecursos(adminDTO :  UsuarioEmpresarialAdmin, tipoCliente : String , url : String): Future[ValidacionAutorizacion] = {
+    if (tipoCliente == TiposCliente.clienteAdministrador.toString){
+      for {
+        recursos <- alianzaDAO.getAdminResources(adminDTO.id)
+        result <- resolveMessageRecursos(adminDTO, recursos, url)
+      } yield result
+    } else {
+      for {
+        recursos <- alianzaDAO.get4()
+        result <- resolveMessageRecursosInmob(adminDTO, recursos, url)
+      } yield result
+    }
+  }
+
   /**
    * De acuerdo si la lista tiene contenido retorna un ResponseMessage
    *
    * @param recursos Listado de recursos
    * @return
    */
-  private def resolveMessageRecursos(adminDTO: UsuarioEmpresarialAdmin, recursos: Seq[RecursoPerfilClienteAdmin], url: String): Future[ValidacionAutorizacion] = Future {
+  private def resolveMessageRecursos(adminDTO: UsuarioEmpresarialAdmin, recursos: Seq[RecursoPerfilClienteAdmin], url: String): Future[ValidacionAutorizacion] =
+  Future {
     val recursosFiltro: Seq[RecursoPerfilClienteAdmin] = recursoRepo.filtrarRecursosClienteAdmin(recursos, url)
-
     recursosFiltro.nonEmpty match {
       case false =>
         val usuarioForbidden: ForbiddenMessageAdmin = ForbiddenMessageAdmin(adminDTO, None)
@@ -83,6 +98,18 @@ case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: Usuari
         }
     }
   }
+
+  private def resolveMessageRecursosInmob(adminDTO: UsuarioEmpresarialAdmin, recursos: Seq[RecursoBackendInmobiliario], url: String):
+  Future[ValidacionAutorizacion] = Future {
+    println(recursos, url)
+    val usuario = UsuarioInmobiliario(adminDTO.identificacion, adminDTO.tipoIdentificacion, adminDTO.usuario, adminDTO.tipoCliente.id)
+    val recursosFiltro = recursoRepo.filtrarRecursoAgenteInmobiliario(recursos, url)
+    recursosFiltro.nonEmpty match {
+      case false => Prohibido("403.1", s"El usuario no tiene permisos suficientes para ingresar a este servicio : $url .")
+      case true => Autorizado(JsonUtil.toJson(usuario))
+    }
+  }
+
 }
 
 case class ForbiddenMessageAdmin(usuario: UsuarioEmpresarialAdmin, filtro: Option[String])

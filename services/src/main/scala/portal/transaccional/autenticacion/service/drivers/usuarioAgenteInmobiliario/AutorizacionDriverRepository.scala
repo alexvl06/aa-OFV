@@ -1,7 +1,7 @@
 package portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario
 
 import co.com.alianza.exceptions.{ Autorizado, Prohibido, ValidacionAutorizacion, ValidacionException }
-import co.com.alianza.infrastructure.dto.UsuarioAgenteInmobiliario
+import co.com.alianza.infrastructure.dto.UsuarioInmobiliario
 import co.com.alianza.persistence.entities.RecursoBackendInmobiliario
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.token.Token
@@ -35,18 +35,12 @@ case class AutorizacionDriverRepository(sesionRepo: SesionRepository, alianzaDAO
     }
   }
 
-  private def filtrarUrl(agente: UsuarioAgenteInmobiliario, recursos: Seq[RecursoBackendInmobiliario], url: String): Future[ValidacionAutorizacion] = Future {
-
+  private def filtrarUrl(agente: UsuarioInmobiliario, recursos: Seq[RecursoBackendInmobiliario], url: String): Future[ValidacionAutorizacion] = Future {
     val recursosFiltro: Seq[RecursoBackendInmobiliario] = recursoRepo.filtrarRecursoAgenteInmobiliario(recursos, url)
-
     if (recursosFiltro.nonEmpty){
       Autorizado(JsonUtil.toJson(agente))
     } else {
-      val usuarioForbidden = ForbiddenMessageAgenteInmob(agente, None)
-      Prohibido("403.1", JsonUtil.toJson(usuarioForbidden))
+      Prohibido("403.1", JsonUtil.toJson(s"El usuario no tiene permisos suficientes para ingresar al servicio.$url"))
     }
   }
-
 }
-
-case class ForbiddenMessageAgenteInmob(usuario: UsuarioAgenteInmobiliario, filtro: Option[String])
