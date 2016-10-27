@@ -46,6 +46,5 @@ object Versions {
   val junit: String              = "4.12"
   val scalacheck: String         = "1.13.1"
   val scalatest: String          = "2.2.6"
-  val specs2: String             = "2.3.13" // No se puede actualizar mas ya que tiene problema de compatibilidad spray 1.3.3
   val restAssured: String        = "2.9.0"
 }
