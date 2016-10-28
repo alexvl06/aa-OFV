@@ -16,11 +16,11 @@ case class PinUsuarioDAO(implicit val dcConfig: DBConfig) extends TableQuery(new
   }
 
   def findById(token: String): Future[Option[PinUsuario]] = {
-    run(this.filter(_.token === token).result.headOption)
+    run(this.filter(_.tokenHash === token).result.headOption)
   }
 
   def delete(token: String): Future[Int] = {
-    run(this.filter(_.token === token).delete)
+    run(this.filter(_.tokenHash === token).delete)
   }
 
 }

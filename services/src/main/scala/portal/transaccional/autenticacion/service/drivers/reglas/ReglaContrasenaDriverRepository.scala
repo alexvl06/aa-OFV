@@ -2,6 +2,7 @@ package portal.transaccional.autenticacion.service.drivers.reglas
 
 import java.util.regex.Pattern
 
+import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.persistence.entities.{ ReglaContrasena, UltimaContrasena }
 import co.com.alianza.util.clave.Crypto
 import enumerations.{ AppendPasswordUser, PerfilesUsuario }
@@ -14,7 +15,7 @@ import scala.concurrent.{ ExecutionContext, Future }
  * Created by hernando on 25/07/16.
  */
 case class ReglaContrasenaDriverRepository(
-  reglaDAO: ReglaContrasenaDAOs,
+    reglaDAO: ReglaContrasenaDAOs,
     ultimaContrasenaRepo: UltimaContrasenaRepository
 )(implicit val ex: ExecutionContext) extends ReglaContrasenaRepository {
 
@@ -71,7 +72,7 @@ case class ReglaContrasenaDriverRepository(
     val listaErrores: List[ValidacionClave] = optionlistvalidacion.filter(_.isDefined).map(_.get)
     listaErrores.isEmpty match {
       case true => Future.successful(true)
-      case _ => Future.failed(new Exception(listaErrores.toString()))
+      case _ => Future.failed(ValidacionException("409.12", listaErrores.mkString("-")))
     }
   }
 
@@ -186,10 +187,10 @@ case class ReglaContrasenaDriverRepository(
         case Some(value) =>
           val cantidad: Int = value.toInt
           ultimasContrasenas match {
-            case Some(contrasenas) if (contrasenas.size == cantidad) =>
+            case Some(contrasenas) if (contrasenas.isEmpty) => None
+            case Some(contrasenas) if (contrasenas.size <= cantidad) =>
               val contrasenaHash: String = Crypto.hashSha512(contrasena.concat(AppendPasswordUser.appendUsuariosFiducia), contrasenas.head.idUsuario)
-              if (contrasenas.exists(_.contrasena.equals(contrasenaHash)))
-                Some(ErrorUltimasContrasenas)
+              if (contrasenas.exists(_.contrasena.equals(contrasenaHash))) Some(ErrorUltimasContrasenas)
               else None
             case _ => Some(ErrorUltimasContrasenas)
           }

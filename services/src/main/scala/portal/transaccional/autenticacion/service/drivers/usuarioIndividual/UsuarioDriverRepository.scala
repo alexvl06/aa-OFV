@@ -42,6 +42,10 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
     usuarioDAO.createToken(numeroIdentificacion, token)
   }
 
+  def actualizarEstado(idUsuario: Int, estado: Int): Future[Int] = {
+    usuarioDAO.updateStateById(idUsuario, estado)
+  }
+
   /**
    * Actualiza los ingresos erroneos de un usuario al numero especificado por parametro
    *

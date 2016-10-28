@@ -22,6 +22,8 @@ trait UsuarioRepository {
 
   def actualizarToken(numeroIdentificacion: String, token: String): Future[Int]
 
+  def actualizarEstado(idUsuario: Int, estado: Int): Future[Int]
+
   def actualizarIngresosErroneosUsuario(idUsuario: Int, numeroIntentos: Int): Future[Int]
 
   def actualizarIp(numeroIdentificacion: String, ip: String): Future[Int]

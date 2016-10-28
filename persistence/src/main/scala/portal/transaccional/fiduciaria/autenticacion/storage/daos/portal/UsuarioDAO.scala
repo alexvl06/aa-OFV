@@ -72,10 +72,6 @@ case class UsuarioDAO()(implicit dcConfig: DBConfig) extends TableQuery(new Usua
     run(this.filter(_.id === idUsuario).map(_.fechaActualizacion).update(fechaActual))
   }
 
-  def updateStateByIdentity(numeroIdentificacion: String, estado: Int): Future[Int] = {
-    run(this.filter(_.identificacion === numeroIdentificacion).map(_.estado).update(estado))
-  }
-
   def updateStateById(idUsuario: Int, estado: Int): Future[Int] = {
     run(this.filter(_.id === idUsuario).map(_.estado).update(estado))
   }

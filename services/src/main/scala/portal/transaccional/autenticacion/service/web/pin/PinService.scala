@@ -2,6 +2,7 @@ package portal.transaccional.autenticacion.service.web.ip
 
 import akka.actor.ActorSelection
 import co.com.alianza.app.CrossHeaders
+import co.com.alianza.exceptions.{ PersistenceException, ValidacionException }
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper.requestWithAuiditing
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
@@ -39,10 +40,11 @@ case class PinService(kafkaActor: ActorSelection, pinRepo: PinRepository)(implic
 
   private def validarPin(pin: String, funcionalidad: Int) = {
     post {
+      println("validar pin")
       val resultado: Future[Boolean] = pinRepo.validarPinUsuario(pin, funcionalidad)
       onComplete(resultado) {
         case Success(value) => complete(value.toString)
-        case Failure(ex) => complete((StatusCodes.Conflict, ex))
+        case Failure(ex) => manejarError(ex)
       }
     }
   }
@@ -52,7 +54,7 @@ case class PinService(kafkaActor: ActorSelection, pinRepo: PinRepository)(implic
       val resultado: Future[Boolean] = pinRepo.validarPinAdmin(pin, funcionalidad)
       onComplete(resultado) {
         case Success(value) => complete(value.toString)
-        case Failure(ex) => complete((StatusCodes.Conflict, ex))
+        case Failure(ex) => manejarError(ex)
       }
     }
   }
@@ -62,7 +64,7 @@ case class PinService(kafkaActor: ActorSelection, pinRepo: PinRepository)(implic
       val resultado: Future[Boolean] = pinRepo.validarPinAgente(pin)
       onComplete(resultado) {
         case Success(value) => complete(value.toString)
-        case Failure(ex) => complete((StatusCodes.Conflict, ex))
+        case Failure(ex) => manejarError(ex)
       }
     }
   }
@@ -83,7 +85,7 @@ case class PinService(kafkaActor: ActorSelection, pinRepo: PinRepository)(implic
                   val resultado: Future[Int] = pinRepo.cambioContrasenaUsuario(pin, request.pw, ipOption)
                   onComplete(resultado) {
                     case Success(value) => complete(value.toString)
-                    case Failure(ex) => complete((StatusCodes.Conflict, ex))
+                    case Failure(ex) => manejarError(ex)
                   }
                 }
             }
@@ -108,7 +110,7 @@ case class PinService(kafkaActor: ActorSelection, pinRepo: PinRepository)(implic
                   val resultado: Future[Int] = pinRepo.cambioContrasenaAdmin(pin, request.pw, ipOption)
                   onComplete(resultado) {
                     case Success(value) => complete(value.toString)
-                    case Failure(ex) => complete((StatusCodes.Conflict, ex))
+                    case Failure(ex) => manejarError(ex)
                   }
                 }
             }
@@ -129,12 +131,25 @@ case class PinService(kafkaActor: ActorSelection, pinRepo: PinRepository)(implic
                   val resultado: Future[Int] = pinRepo.cambioContrasenaAgente(pin, request.pw)
                   onComplete(resultado) {
                     case Success(value) => complete(value.toString)
-                    case Failure(ex) => complete((StatusCodes.Conflict, ex))
+                    case Failure(ex) => manejarError(ex)
                   }
                 }
             }
           }
         }
+    }
+  }
+
+  def manejarError(ex: Any): StandardRoute = {
+    ex match {
+      case ex: ValidacionException =>
+        complete((StatusCodes.Conflict, ex))
+      case ex: PersistenceException =>
+        ex.printStackTrace()
+        complete((StatusCodes.InternalServerError, "Error inesperado"))
+      case ex: Throwable =>
+        ex.printStackTrace()
+        complete((StatusCodes.InternalServerError, "Error inesperado"))
     }
   }
 

@@ -5,9 +5,9 @@ import java.sql.Timestamp
 import java.util.Date
 
 import co.com.alianza.exceptions.ValidacionException
-import co.com.alianza.persistence.entities.{ IpsEmpresa, IpsUsuario, UltimaContrasena }
+import co.com.alianza.persistence.entities.{ PinUsuario, IpsEmpresa, IpsUsuario, UltimaContrasena }
 import co.com.alianza.util.clave.Crypto
-import enumerations.{ AppendPasswordUser, EstadosEmpresaEnum, PerfilesUsuario }
+import enumerations.{ EstadosUsuarioEnum, AppendPasswordUser, EstadosEmpresaEnum, PerfilesUsuario }
 import portal.transaccional.autenticacion.service.drivers.empresa.EmpresaRepository
 import portal.transaccional.autenticacion.service.drivers.ipempresa.IpEmpresaRepository
 import portal.transaccional.autenticacion.service.drivers.ipusuario.IpUsuarioRepository
@@ -28,15 +28,12 @@ case class PinDriverRepository(pinUsuarioDAO: PinUsuarioDAOs, pinAdminDAO: PinAd
     usuarioRepo: UsuarioRepository, usuarioAdminRepo: UsuarioAdminRepository, usuarioAgenteRepo: UsuarioAgenteRepository,
     ultimaContrasenaRepo: UltimaContrasenaRepository, reglasRepo: ReglaContrasenaRepository)(implicit val ex: ExecutionContext) extends PinRepository {
 
-  //todo: cambiar estado dependiendo la funcionalidad
-  /*case 1 => uDataAccessAdapter.actualizarEstadoUsuario(valueResponse.idUsuario, EstadosUsuarioEnum.pendienteReinicio.id)
-          case _ => Future.successful(Validation.failure(PersistenceException(new Exception, BusinessLevel,
-          "La funcionalidad no permite cambio de estado del usuario al que pertenece el PIN")))*/
   def validarPinUsuario(token: String, funcionalidad: Int): Future[Boolean] = {
     for {
       pinOption <- pinUsuarioDAO.findById(token)
-      pin <- validarPinOption(pinOption)
-      validar <- validar(token, pin.token, new Date(pin.fechaExpiracion.getTime))
+      pin <- validarPinOption[PinUsuario](pinOption)
+      validar <- validar(token, pin.token, pin.tokenHash, new Date(pin.fechaExpiracion.getTime))
+      _ <- if (funcionalidad == 1) usuarioRepo.actualizarEstado(pin.idUsuario, EstadosUsuarioEnum.pendienteActivacion.id) else Future.successful(true)
     } yield validar
   }
 
@@ -44,7 +41,7 @@ case class PinDriverRepository(pinUsuarioDAO: PinUsuarioDAOs, pinAdminDAO: PinAd
     for {
       pinOption <- pinAdminDAO.findById(token)
       pin <- validarPinOption(pinOption)
-      validar <- validar(token, pin.token, new Date(pin.fechaExpiracion.getTime))
+      validar <- validar(token, pin.token, pin.tokenHash, new Date(pin.fechaExpiracion.getTime))
       admin <- usuarioAdminRepo.getById(pin.idUsuario)
       optionEmpresa <- empresaRepo.getByIdentity(admin.identificacion)
       _ <- empresaRepo.validarEmpresa(optionEmpresa)
@@ -59,7 +56,7 @@ case class PinDriverRepository(pinUsuarioDAO: PinUsuarioDAOs, pinAdminDAO: PinAd
     for {
       pinOption <- pinAgenteDAO.findById(token)
       pin <- validarPinOption(pinOption)
-      validar <- validar(token, pin.token, new Date(pin.fechaExpiracion.getTime))
+      validar <- validar(token, pin.token, pin.tokenHash, new Date(pin.fechaExpiracion.getTime))
       agenteOption <- usuarioAgenteRepo.getById(pin.idUsuarioEmpresarial)
       agente <- usuarioAgenteRepo.validarUsuario(agenteOption)
       _ <- usuarioAgenteRepo.validacionBloqueoAdmin(agente)
@@ -73,7 +70,7 @@ case class PinDriverRepository(pinUsuarioDAO: PinUsuarioDAOs, pinAdminDAO: PinAd
       pinOption <- pinUsuarioDAO.findById(token)
       pin <- validarPinOption(pinOption)
       contrasenaHash <- Future.successful(Crypto.hashSha512(contrasena.concat(AppendPasswordUser.appendUsuariosFiducia), pin.idUsuario))
-      _ <- validar(token, pin.token, new Date(pin.fechaExpiracion.getTime))
+      _ <- validar(token, pin.token, pin.tokenHash, new Date(pin.fechaExpiracion.getTime))
       _ <- reglasRepo.validarContrasenaReglasGenerales(pin.idUsuario, PerfilesUsuario.clienteIndividual, contrasena)
       - <- usuarioRepo.actualizarContrasena(pin.idUsuario, contrasenaHash)
       _ <- ultimaContrasenaRepo.crearUltimaContrasena(UltimaContrasena(None, pin.idUsuario, contrasenaHash, new Timestamp(new Date().getTime)))
@@ -86,12 +83,12 @@ case class PinDriverRepository(pinUsuarioDAO: PinUsuarioDAOs, pinAdminDAO: PinAd
     for {
       pinOption <- pinAdminDAO.findById(token)
       pin <- validarPinOption(pinOption)
-      _ <- validar(token, pin.token, new Date(pin.fechaExpiracion.getTime))
+      _ <- validar(token, pin.token, pin.tokenHash, new Date(pin.fechaExpiracion.getTime))
       admin <- usuarioAdminRepo.getById(pin.idUsuario)
       _ <- usuarioAdminRepo.validarEstado(admin)
       optionEmpresa <- empresaRepo.getByIdentity(admin.identificacion)
       _ <- empresaRepo.validarEmpresa(optionEmpresa)
-      _ <- validar(token, pin.token, new Date(pin.fechaExpiracion.getTime))
+      _ <- validar(token, pin.token, pin.tokenHash, new Date(pin.fechaExpiracion.getTime))
       _ <- reglasRepo.validarContrasenaReglasGenerales(pin.idUsuario, PerfilesUsuario.clienteAdministrador, contrasena)
       contrasenaHash <- Future.successful(Crypto.hashSha512(contrasena.concat(AppendPasswordUser.appendUsuariosFiducia), pin.idUsuario))
       _ <- usuarioAdminRepo.actualizarContrasena(admin.id, contrasenaHash)
@@ -105,7 +102,7 @@ case class PinDriverRepository(pinUsuarioDAO: PinUsuarioDAOs, pinAdminDAO: PinAd
     for {
       pinOption <- pinAgenteDAO.findById(token)
       pin <- validarPinOption(pinOption)
-      validar <- validar(token, pin.token, new Date(pin.fechaExpiracion.getTime))
+      validar <- validar(token, pin.token, pin.tokenHash, new Date(pin.fechaExpiracion.getTime))
       agenteOption <- usuarioAgenteRepo.getById(pin.idUsuarioEmpresarial)
       agente <- usuarioAgenteRepo.validarUsuario(agenteOption)
       _ <- usuarioAgenteRepo.validacionBloqueoAdmin(agente)
@@ -140,12 +137,10 @@ case class PinDriverRepository(pinUsuarioDAO: PinUsuarioDAOs, pinAdminDAO: PinAd
     }
   }
 
-  def validar(pin: String, token: String, fecha: Date): Future[Boolean] = {
+  def validar(pin: String, token: String, tokenHash: String, fecha: Date): Future[Boolean] = {
     val pinHash: String = deserializarPin(token, fecha)
-    (pinHash.equals(token)) match {
-      case true if (new Date().getTime > fecha.getTime) => Future.successful(true)
-      case false => Future.failed(ValidacionException("409.1", "Pin invalido"))
-    }
+    if (pinHash.equals(tokenHash) && new Date().getTime < fecha.getTime) Future.successful(true)
+    else Future.failed(ValidacionException("409.1", "Pin invalido"))
   }
 
   private def deserializarPin(pin: String, fechaExpiracion: Date): String = {
