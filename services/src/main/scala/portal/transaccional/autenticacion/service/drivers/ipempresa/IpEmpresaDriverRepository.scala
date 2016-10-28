@@ -21,6 +21,10 @@ case class IpEmpresaDriverRepository(ipDAO: IpEmpresaDAOs)(implicit val ex: Exec
     ipDAO.getById(idEmpresa)
   }
 
+  def guardarIp(ipEmpresa: IpsEmpresa): Future[String] = {
+    ipDAO.create(ipEmpresa)
+  }
+
   /**
    * Valida si el agente tiene alguna ip guardada
    * @param ip

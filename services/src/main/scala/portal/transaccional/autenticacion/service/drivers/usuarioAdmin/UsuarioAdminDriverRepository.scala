@@ -4,8 +4,8 @@ import java.sql.Timestamp
 import java.util.Date
 
 import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
-import co.com.alianza.exceptions.{ PersistenceException, ValidacionException }
-import co.com.alianza.persistence.entities.{ Usuario, UsuarioEmpresarialAdmin }
+import co.com.alianza.exceptions.ValidacionException
+import co.com.alianza.persistence.entities.UsuarioEmpresarialAdmin
 import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.token.Token
 import enumerations.{ AppendPasswordUser, EstadosEmpresaEnum, EstadosUsuarioEnum }
@@ -17,8 +17,8 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * Created by hernando on 26/07/16.
  */
-case class UsuarioEmpresarialAdminDriverRepository(usuarioDAO: UsuarioEmpresarialAdminDAOs)(implicit val ex: ExecutionContext)
-    extends UsuarioEmpresarialAdminRepository {
+case class UsuarioAdminDriverRepository(usuarioDAO: UsuarioEmpresarialAdminDAOs)(implicit val ex: ExecutionContext)
+    extends UsuarioAdminRepository {
 
   def getById(id: Int): Future[UsuarioEmpresarialAdmin] = {
     usuarioDAO.getById(id) flatMap {
@@ -74,12 +74,31 @@ case class UsuarioEmpresarialAdminDriverRepository(usuarioDAO: UsuarioEmpresaria
     usuarioDAO.updateLastDate(idUsuario, fechaActual)
   }
 
+  def actualizarEstado(idUsuario: Int, estado: Int): Future[Int] = {
+    usuarioDAO.updateStateById(idUsuario, estado)
+  }
+
   def actualizarInfoUsuario(usuario: UsuarioEmpresarialAdmin, ip: String): Future[Int] = {
     for {
       intentos <- usuarioDAO.updateIncorrectEntries(usuario.id, 0)
       ip <- usuarioDAO.updateLastIp(usuario.id, ip)
       fecha <- usuarioDAO.updateLastDate(usuario.id, new Timestamp((new Date).getTime))
     } yield fecha
+  }
+
+  /**
+   * Guardar contrasena
+   *
+   * @param idUsuario
+   * @param contrasena
+   */
+  def actualizarContrasena(idUsuario: Int, contrasena: String): Future[Int] = {
+    for {
+      cambiar <- usuarioDAO.updatePassword(idUsuario, contrasena)
+      _ <- usuarioDAO.updateStateById(idUsuario, EstadosEmpresaEnum.activo.id)
+      _ <- usuarioDAO.updateUpdateDate(idUsuario, new Timestamp(new Date().getTime))
+      _ <- usuarioDAO.updateIncorrectEntries(idUsuario, 0)
+    } yield cambiar
   }
 
   /**
@@ -104,6 +123,25 @@ case class UsuarioEmpresarialAdminDriverRepository(usuarioDAO: UsuarioEmpresaria
       estado <- validarEstado(usuario)
       contrasena <- validarContrasena(contrasena, usuario, reintentosErroneos)
     } yield contrasena
+  }
+
+  def validacionBloqueoAdmin(usuario: UsuarioEmpresarialAdmin): Future[Boolean] = {
+    val bloqueoPorAdmin: Int = EstadosEmpresaEnum.bloqueadoPorAdmin.id
+    usuario.estado match {
+      case `bloqueoPorAdmin` => Future.failed(ValidacionException("409.13", "Usuario Bloqueado Admin"))
+      case _ => Future.successful(true)
+    }
+  }
+
+  def validacionExisteAdminActivo(usuario: UsuarioEmpresarialAdmin): Future[Boolean] = {
+    val activo: Int = EstadosEmpresaEnum.activo.id
+    usuario.estado match {
+      case `activo` => Future.successful(true)
+      case _ => for {
+        existe <- usuarioDAO.existAdminActive(usuario.identificacion)
+        validacion <- if (existe) Future.failed(ValidacionException("409.12", "Usuario Admin Activo Existe")) else Future.successful(existe)
+      } yield validacion
+    }
   }
 
   /**

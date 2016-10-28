@@ -59,7 +59,7 @@ case class AutenticacionDriverRepository(usuarioRepo: UsuarioRepository, cliente
       validarCaducidad <- usuarioRepo.validarCaducidadContrasena(TiposCliente.clienteIndividual, usuario, reglaDias.valor.toInt)
       ingErroneos <- usuarioRepo.actualizarIngresosErroneosUsuario(usuario.id.get, 0)
       actualizarIP <- usuarioRepo.actualizarIp(numeroIdentificacion, ip)
-      fechaUltimoIngreso <- usuarioRepo.actualizarFechaIngreso(numeroIdentificacion, new Timestamp((new Date).getTime))
+      fechaUltimoIngreso <- usuarioRepo.actualizarFechaIngreso(usuario.id.get, new Timestamp((new Date).getTime))
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
       token <- generarToken(usuario, cliente, ip, inactividad.valor)
       asociarToken <- usuarioRepo.actualizarToken(numeroIdentificacion, AesUtil.encriptarToken(token))

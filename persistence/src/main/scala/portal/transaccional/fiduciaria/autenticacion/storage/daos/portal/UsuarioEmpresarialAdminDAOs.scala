@@ -15,6 +15,8 @@ trait UsuarioEmpresarialAdminDAOs {
 
   def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[UsuarioEmpresarialAdmin]]
 
+  def existAdminActive(identificacion: String): Future[Boolean]
+
   def createToken(idUsuario: Int, token: String): Future[Int]
 
   def deleteToken(token: String): Future[Int]
@@ -25,6 +27,10 @@ trait UsuarioEmpresarialAdminDAOs {
 
   def updateLastDate(idUsuario: Int, fechaActual: Timestamp): Future[Int]
 
+  def updateUpdateDate(idUsuario: Int, fechaActual: Timestamp): Future[Int]
+
   def updateStateById(idUsuario: Int, estado: Int): Future[Int]
+
+  def updatePassword(idUsuario: Int, password: String): Future[Int]
 
 }

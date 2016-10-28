@@ -1,6 +1,5 @@
 package co.com.alianza.domain.aggregates.empresa
 
-import akka.actor.ActorSystem
 import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.domain.aggregates.usuarios._
 import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{ DataAccessAdapter => DataAccessAdapterUsuarioAE }
@@ -10,10 +9,11 @@ import co.com.alianza.infrastructure.messages.ErrorMessage
 import enumerations.empresa.EstadosDeEmpresaEnum
 import enumerations.{ EstadosEmpresaEnum, PerfilesUsuario }
 import co.com.alianza.infrastructure.anticorruption.configuraciones.{ DataAccessAdapter => dataAccesAdaptarConf }
+import portal.transaccional.autenticacion.service.drivers.reglas.ValidacionClave
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
-import co.com.alianza.util.clave.{ Crypto, ErrorValidacionClave, ValidarClave }
+import co.com.alianza.util.clave.{ Crypto, ValidarClave }
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => UsDataAdapter }
 import co.com.alianza.persistence.util.DataBaseExecutionContext
@@ -90,9 +90,9 @@ object ValidacionesAgenteEmpresarial {
   }
 
   def validacionReglasClave(contrasena: String, idUsuario: Int, perfilUsuario: PerfilesUsuario.perfilUsuario): Future[Validation[ErrorValidacion, Unit.type]] = {
-    val usuarioFuture: Future[Validation[PersistenceException, List[ErrorValidacionClave]]] = ValidarClave.aplicarReglas(contrasena, Some(idUsuario), perfilUsuario, ValidarClave.reglasGenerales: _*)
+    val usuarioFuture: Future[Validation[PersistenceException, List[ValidacionClave]]] = ValidarClave.aplicarReglas(contrasena, Some(idUsuario), perfilUsuario, ValidarClave.reglasGenerales: _*)
     usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message, pe)).flatMap {
-      (x: List[ErrorValidacionClave]) =>
+      (x: List[ValidacionClave]) =>
         x match {
           case List() => zSuccess(Unit)
           case erroresList =>
@@ -101,17 +101,6 @@ object ValidacionesAgenteEmpresarial {
         }
     })
 
-  }
-
-  def validacionObtenerAgenteEmpId(idUsuario: Int): Future[Validation[ErrorValidacion, UsuarioEmpresarial]] = {
-    val agenteEmpFuture: Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = DataAccessAdapterUsuarioAE.obtenerUsuarioEmpresarialPorId(idUsuario)
-    agenteEmpFuture.map(_.leftMap(pe => ErrorPersistence(pe.message, pe)).flatMap {
-      (agenteEmp: Option[UsuarioEmpresarial]) =>
-        agenteEmp match {
-          case None => zFailure(ErrorAgenteEmpresarialNoExiste(errorAgenteEmpresarialNoExiste))
-          case Some(agenteEmp) => zSuccess(agenteEmp)
-        }
-    })
   }
 
   def validarEstadoEmpresa(nit: String): Future[Validation[ErrorValidacion, Boolean]] = {
@@ -125,14 +114,6 @@ object ValidacionesAgenteEmpresarial {
         }
       case None => Validation.failure(ErrorClienteNoExiste(errorClienteNoExiste))
     })
-  }
-
-  def validacionEstadoAgenteEmp(usuario: UsuarioEmpresarial): Future[Validation[ErrorValidacion, Boolean]] = Future {
-    val bloqueoPorAdmin = EstadosEmpresaEnum.bloqueadoPorAdmin.id
-    usuario.estado match {
-      case `bloqueoPorAdmin` => zFailure(ErrorClienteInactivo(errorEstadoUsuarioEmpresaAdmin))
-      case _ => zSuccess(true)
-    }
   }
 
   /**

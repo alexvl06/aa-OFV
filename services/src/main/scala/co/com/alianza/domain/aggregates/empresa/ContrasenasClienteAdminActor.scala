@@ -1,37 +1,27 @@
 package co.com.alianza.domain.aggregates.empresa
 
-import java.util.Calendar
+import java.sql.Timestamp
 
-import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, Props }
+import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import akka.routing.RoundRobinPool
-
 import co.com.alianza.domain.aggregates.usuarios.{ ErrorPersistence, ErrorValidacion }
-import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{ DataAccessAdapter, DataAccessTranslator }
-import co.com.alianza.infrastructure.dto.{ Configuracion, PinEmpresa, UsuarioEmpresarialAdmin }
-import co.com.alianza.infrastructure.messages._
-import co.com.alianza.infrastructure.messages.empresa.{ CambiarContrasenaCaducadaClienteAdminMessage, CambiarContrasenaClienteAdminMessage, UsuarioMessageCorreo }
-import co.com.alianza.util.token.{ PinData, Token, TokenPin }
-import co.com.alianza.util.transformers.ValidationT
-import com.typesafe.config.Config
-import enumerations.{ AppendPasswordUser, EstadosEmpresaEnum, PerfilesUsuario, UsoPinEmpresaEnum }
-
-import scalaz.std.AllInstances._
-import scala.util.{ Failure => sFailure, Success => sSuccess }
-import scalaz.{ Failure => zFailure, Success => zSuccess }
-import co.com.alianza.persistence.entities
-
-import scala.concurrent.{ ExecutionContext, Future }
-import scalaz.Validation
-import spray.http.StatusCodes._
-import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario._
-import akka.routing.RoundRobinPool
-import co.com.alianza.util.transformers.ValidationT
-import co.com.alianza.util.clave.Crypto
 import co.com.alianza.infrastructure.anticorruption.ultimasContrasenasClienteAdmin.{ DataAccessAdapter => dataAccessUltimasPwClienteAdmin }
 import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.DataAccessAdapter
-import co.com.alianza.persistence.entities.{ UltimaContrasena, UltimaContrasenaUsuarioEmpresarialAdmin }
-import java.sql.Timestamp
+import co.com.alianza.infrastructure.dto.UsuarioEmpresarialAdmin
+import co.com.alianza.infrastructure.messages._
+import co.com.alianza.infrastructure.messages.empresa.{ CambiarContrasenaCaducadaClienteAdminMessage, CambiarContrasenaClienteAdminMessage }
+import co.com.alianza.persistence.entities.UltimaContrasena
+import co.com.alianza.util.clave.Crypto
+import co.com.alianza.util.token.Token
+import co.com.alianza.util.transformers.ValidationT
+import com.typesafe.config.Config
+import enumerations.{ AppendPasswordUser, PerfilesUsuario }
+import spray.http.StatusCodes._
+
+import scala.concurrent.Future
+import scala.util.{ Failure => sFailure, Success => sSuccess }
+import scalaz.{ Failure => zFailure, Success => zSuccess }
+import scalaz.std.AllInstances._
 
 /**
  * Created by S4N on 17/12/14.
@@ -64,28 +54,18 @@ class ContrasenasClienteAdminActorSupervisor extends Actor with ActorLogging {
  * Actor que se encarga de procesar los mensajes relacionados con la administración de contraseñas de los usuarios emopresa (Cliente Administrador y Agente Empresarial)
  */
 class ContrasenasClienteAdminActor extends Actor with ActorLogging {
-
-  import context.dispatcher
   implicit val conf: Config = context.system.settings.config
 
   import scalaz._
-  import scalaz.std.string._
 
   // to get `Monoid[String]`
 
-  import scalaz.std.list._
-
   // to get `Traverse[List]`
-
-  import scalaz.syntax.traverse._
 
   // to get the `sequence` method
 
-  import scala.concurrent.ExecutionContext
-
-  import co.com.alianza.util.json.MarshallableImplicits._
-
   import co.com.alianza.domain.aggregates.empresa.ValidacionesClienteAdmin._
+  import co.com.alianza.util.json.MarshallableImplicits._
 
   def receive = {
 
@@ -149,7 +129,7 @@ class ContrasenasClienteAdminActor extends Actor with ActorLogging {
   }
 
   private def guardarUltimaContrasena(idUsuario: Int, uContrasena: String): Future[Validation[ErrorValidacion, Int]] = {
-    dataAccessUltimasPwClienteAdmin.guardarUltimaContrasena(UltimaContrasenaUsuarioEmpresarialAdmin(None, idUsuario, uContrasena, new Timestamp(System.currentTimeMillis()))).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
+    dataAccessUltimasPwClienteAdmin.guardarUltimaContrasena(UltimaContrasena(None, idUsuario, uContrasena, new Timestamp(System.currentTimeMillis()))).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
   }
 
   private def actualizarContrasena(pw_nuevo: String, usuario: Option[UsuarioEmpresarialAdmin]): Future[Validation[ErrorValidacion, Int]] = {

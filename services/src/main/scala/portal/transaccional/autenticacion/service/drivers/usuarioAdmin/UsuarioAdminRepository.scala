@@ -10,7 +10,7 @@ import scala.concurrent.Future
 /**
  * Created by hernando on 26/07/16.
  */
-trait UsuarioEmpresarialAdminRepository {
+trait UsuarioAdminRepository {
 
   def getById(id: Int): Future[UsuarioEmpresarialAdmin]
 
@@ -24,9 +24,17 @@ trait UsuarioEmpresarialAdminRepository {
 
   def actualizarFechaIngreso(idUsuario: Int, fechaActual: Timestamp): Future[Int]
 
+  def actualizarEstado(idUsuario: Int, estado: Int): Future[Int]
+
   def actualizarInfoUsuario(usuario: UsuarioEmpresarialAdmin, ip: String): Future[Int]
 
+  def actualizarContrasena(idUsuario: Int, contrasenaHash: String): Future[Int]
+
   def validarUsuario(usuario: UsuarioEmpresarialAdmin, contrasena: String, reintentosErroneos: Int): Future[Boolean]
+
+  def validacionBloqueoAdmin(usuario: UsuarioEmpresarialAdmin): Future[Boolean]
+
+  def validacionExisteAdminActivo(usuario: UsuarioEmpresarialAdmin): Future[Boolean]
 
   def validarEstado(usuario: UsuarioEmpresarialAdmin): Future[Boolean]
 

@@ -7,14 +7,7 @@ import CustomDriver.simple._
 /**
  * Created by manuel on 7/01/15.
  */
-case class UltimaContrasenaUsuarioEmpresarialAdmin(
-  id: Option[Int],
-  idUsuario: Int,
-  contrasena: String,
-  fechaUltimaContrasena: Timestamp
-)
-
-class UltimaContrasenaUsuarioEmpresarialAdminTable(tag: Tag) extends Table[UltimaContrasenaUsuarioEmpresarialAdmin](tag, "ULTIMAS_CONTRASENAS_USUARIO_EMPRESARIAL_ADMIN") {
+class UltimaContrasenaAdminTable(tag: Tag) extends Table[UltimaContrasena](tag, "ULTIMAS_CONTRASENAS_USUARIO_EMPRESARIAL_ADMIN") {
 
   def id = column[Option[Int]]("ID", O.PrimaryKey, O.AutoInc) // This is the primary key column
 
@@ -25,5 +18,5 @@ class UltimaContrasenaUsuarioEmpresarialAdminTable(tag: Tag) extends Table[Ultim
   def fechaUltimaContrasena = column[Timestamp]("FECHA_ULTIMA_CONTRASENA")
 
   // Every table needs a * projection with the same type as the table's type parameter
-  def * = (id, idUsuario, contrasena, fechaUltimaContrasena) <> (UltimaContrasenaUsuarioEmpresarialAdmin.tupled, UltimaContrasenaUsuarioEmpresarialAdmin.unapply)
+  def * = (id, idUsuario, contrasena, fechaUltimaContrasena) <> (UltimaContrasena.tupled, UltimaContrasena.unapply)
 }

@@ -35,35 +35,10 @@ class UsuarioEmpresarialAdminRepository(implicit executionContext: ExecutionCont
       resolveTry(resultTry, "Consulta cliente administrador por token: " + token)
   }
 
-  //Ya esta [UsuarioEmpresarialAdminDAO.deleteToken]
-  def invalidarTokenUsuario(token: String): Future[Validation[PersistenceException, Int]] = loan {
-
-    implicit session =>
-      val resultTry = session.database.run(usuariosEmpresarialesAdmin.filter(_.token === token).map(_.token).update(Some(null)))
-      resolveTry(resultTry, "Invalidar token usuario")
-  }
-
-  //Ya esta [UsuarioEmpresarialAdminDAO.createToken]
-  def asociarTokenUsuario(usuarioId: Int, token: String): Future[Validation[PersistenceException, Int]] = loan {
-    implicit session =>
-      val resultTry = session.database.run(usuariosEmpresarialesAdmin.filter(_.id === usuarioId).map(_.token).update(Some(token)))
-      resolveTry(resultTry, "Actualizar token de usuario empresarial")
-  }
-
   def actualizarEstadoUsuario(idUsuario: Int, estado: Int): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
       val resultTry = session.database.run(usuariosEmpresarialesAdmin.filter(_.id === idUsuario).map(_.estado).update(estado))
       resolveTry(resultTry, "Actualizar estado de usuario cliente admin")
-  }
-
-  // ya esta en [UsuarioEmpresarialAdminDAO.updatePassword]
-  def cambiarPassword(idUsuario: Int, password: String): Future[Validation[PersistenceException, Int]] = loan {
-    implicit session =>
-      val query = for {
-        u <- usuariosEmpresarialesAdmin.filter(_.id === idUsuario)
-      } yield (u.contrasena, u.numeroIngresosErroneos)
-      val resultTry = session.database.run(query.update((Some(password), 0)))
-      resolveTry(resultTry, "Cambiar la contraseña de usuario cliente admin")
   }
 
   // ya esta en [UsuarioEmpresarialAdminDAO.updateIncorrectEntries]
@@ -87,15 +62,8 @@ class UsuarioEmpresarialAdminRepository(implicit executionContext: ExecutionCont
       resolveTry(resultTry, "Actualizar usuario empresarial admin en fechaUltimoIngreso ")
   }
 
-  // ya esta en [UsuarioEmpresarialAdminDAO.getById]
-  def obtenerUsuarioEmpresarialAdminPorId(idUsuario: Int): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = loan {
-    implicit session =>
-      val resultTry = session.database.run(usuariosEmpresarialesAdmin.filter(_.id === idUsuario).result.headOption)
-      resolveTry(resultTry, "Actualizar usuario empresarial admin en fechaUltimoIngreso ")
-  }
-
   //ya esta en [AlianzaDAO.createPinAdmin]
-  def guardarPinUsuarioClienteAdmin(pinUsuario: PinUsuarioEmpresarialAdmin): Future[Validation[PersistenceException, Int]] = loan {
+  def guardarPinUsuarioClienteAdmin(pinUsuario: PinAdmin): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
       val resultTry = session.database.run((pinusuariosEmpresarialesAdmin returning pinusuariosEmpresarialesAdmin.map(_.id.get)) += pinUsuario)
       resolveTry(resultTry, "Agregar pin usuario empresarial administrador")
@@ -106,16 +74,6 @@ class UsuarioEmpresarialAdminRepository(implicit executionContext: ExecutionCont
     implicit session =>
       val resultTry = session.database.run(usuariosEmpresarialesAdmin.filter(_.token === token).result.headOption)
       resolveTry(resultTry, "Consulta usuario empresarial con token" + token)
-  }
-
-  // ya esta en [UsuarioEmpresarialAdminDAO.getByNit]
-  def existeUsuarioEmpresarialAdminActivo(nitEmpresa: String): Future[Validation[PersistenceException, Boolean]] = loan {
-    implicit session =>
-      val estado = EstadosEmpresaEnum.activo.id
-      val query = usuariosEmpresarialesAdmin.filter(u => u.identificacion === nitEmpresa && u.estado === estado).exists.result
-      val resultTry = session.database.run(query)
-
-      resolveTry(resultTry, "Validacion: existe usuario empresarial admin activo")
   }
 
 }

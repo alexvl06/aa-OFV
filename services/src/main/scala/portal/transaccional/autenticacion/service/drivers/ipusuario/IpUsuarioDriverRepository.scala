@@ -21,6 +21,10 @@ case class IpUsuarioDriverRepository(ipDAO: IpUsuarioDAOs)(implicit val ex: Exec
     ipDAO.getById(idUsuario)
   }
 
+  def guardarIp(ipUsuario: IpsUsuario): Future[String] = {
+    ipDAO.create(ipUsuario)
+  }
+
   /**
    * Valida si el usuario tiene alguna ip guardada, teniendo en cuenta si tiene respuestas de autovalidacion
    * @param ip

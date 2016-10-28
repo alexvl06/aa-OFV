@@ -14,11 +14,11 @@ trait AlianzaDAOs {
 
   def getAdminTokenAgente(token: String): Future[Option[(UsuarioEmpresarialAdmin, Int)]]
 
-  def getByNitAndUserAgente(nit: String, usuario: String): Future[Option[UsuarioEmpresarial]]
+  def getByNitAndUserAgente(nit: String, usuario: String): Future[Option[UsuarioAgente]]
 
-  def getByTokenAgente(token: String): Future[(UsuarioEmpresarial, Int)]
+  def getByTokenAgente(token: String): Future[(UsuarioAgente, Int)]
 
-  def validateAgente(id: String, correo: String, tipoId: Int, idClienteAdmin: Int): Future[Option[UsuarioEmpresarial]]
+  def validateAgente(id: String, correo: String, tipoId: Int, idClienteAdmin: Int): Future[Option[UsuarioAgente]]
 
   def getByNitAndUserAdmin(nit: String, usuario: String): Future[Option[UsuarioEmpresarialAdmin]]
 

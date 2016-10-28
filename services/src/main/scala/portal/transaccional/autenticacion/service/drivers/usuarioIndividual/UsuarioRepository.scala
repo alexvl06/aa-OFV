@@ -26,7 +26,9 @@ trait UsuarioRepository {
 
   def actualizarIp(numeroIdentificacion: String, ip: String): Future[Int]
 
-  def actualizarFechaIngreso(numeroIdentificacion: String, fechaActual: Timestamp): Future[Int]
+  def actualizarFechaIngreso(idUsuario: Int, fechaActual: Timestamp): Future[Int]
+
+  def actualizarContrasena(idUsuario: Int, contrasena: String): Future[Int]
 
   def validarCaducidadContrasena(tipoCliente: TiposCliente, usuario: Usuario, dias: Int): Future[Boolean]
 

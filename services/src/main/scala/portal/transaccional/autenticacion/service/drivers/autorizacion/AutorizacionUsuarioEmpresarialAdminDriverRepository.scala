@@ -10,7 +10,7 @@ import co.com.alianza.util.token.Token
 import enumerations.empresa.EstadosDeEmpresaEnum
 import portal.transaccional.autenticacion.service.drivers.recurso.RecursoRepository
 import portal.transaccional.autenticacion.service.drivers.sesion.SesionRepository
-import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.{ DataAccessTranslator, UsuarioEmpresarialAdminRepository }
+import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.{ DataAccessTranslator, UsuarioAdminRepository }
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.AlianzaDAO
 import spray.http.StatusCodes._
 
@@ -20,7 +20,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * Created by seven4n on 2016
  */
-case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: UsuarioEmpresarialAdminRepository, sesionRepo: SesionRepository,
+case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: UsuarioAdminRepository, sesionRepo: SesionRepository,
     alianzaDAO: AlianzaDAO, recursoRepo: RecursoRepository)(implicit val ex: ExecutionContext) extends AutorizacionUsuarioEmpresarialAdminRepository {
 
   implicit val timeout = Timeout(5.seconds)

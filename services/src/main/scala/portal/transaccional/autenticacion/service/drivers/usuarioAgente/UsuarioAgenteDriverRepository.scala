@@ -5,7 +5,7 @@ import java.util.Date
 
 import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.exceptions.ValidacionException
-import co.com.alianza.persistence.entities.UsuarioEmpresarial
+import co.com.alianza.persistence.entities.UsuarioAgente
 import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.token.Token
 import enumerations.{ AppendPasswordUser, EstadosEmpresaEnum, EstadosUsuarioEnum }
@@ -17,9 +17,11 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * Created by s4n on 2016
  */
-case class UsuarioEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs)(implicit val ex: ExecutionContext) extends UsuarioEmpresarialRepository {
+case class UsuarioAgenteDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs)(implicit val ex: ExecutionContext) extends UsuarioAgenteRepository {
 
-  def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[UsuarioEmpresarial]] = {
+  def getById(idUsuario: Int): Future[Option[UsuarioAgente]] = usuarioDAO.getById(idUsuario)
+
+  def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[UsuarioAgente]] = {
     usuarioDAO.getByIdentityAndUser(identificacion, usuario)
   }
 
@@ -61,7 +63,22 @@ case class UsuarioEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs
     usuarioDAO.updateLastEntryDate(idUsuario, fechaActual)
   }
 
-  def actualizarInfoUsuario(usuario: UsuarioEmpresarial, ip: String): Future[Int] = {
+  /**
+   * Guardar contrasena
+   *
+   * @param idUsuario
+   * @param contrasena
+   */
+  def actualizarContrasena(idUsuario: Int, contrasena: String): Future[Int] = {
+    for {
+      cambiar <- usuarioDAO.updatePasswordById(idUsuario, contrasena)
+      _ <- usuarioDAO.updateStateById(idUsuario, EstadosEmpresaEnum.activo.id)
+      _ <- usuarioDAO.updateUpdateDate(idUsuario, new Timestamp(new Date().getTime))
+      _ <- usuarioDAO.updateIncorrectEntries(idUsuario, 0)
+    } yield cambiar
+  }
+
+  def actualizarInfoUsuario(usuario: UsuarioAgente, ip: String): Future[Int] = {
     for {
       intentos <- usuarioDAO.updateIncorrectEntries(usuario.id, 0)
       ip <- usuarioDAO.updateLastIp(usuario.id, ip)
@@ -71,13 +88,28 @@ case class UsuarioEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs
 
   /////////////////////////////// validaciones //////////////////////////////////
 
+  def validacionBloqueoAdmin(usuario: UsuarioAgente): Future[Boolean] = {
+    val bloqueoPorAdmin: Int = EstadosEmpresaEnum.bloqueadoPorAdmin.id
+    usuario.estado match {
+      case `bloqueoPorAdmin` => Future.failed(ValidacionException("409.13", "Usuario Bloqueado Admin"))
+      case _ => Future.successful(true)
+    }
+  }
+
+  def validarUsuario(usuarioOption: Option[UsuarioAgente]): Future[UsuarioAgente] = {
+    usuarioOption match {
+      case Some(usuario) => Future.successful(usuario)
+      case _ => Future.failed(ValidacionException("409.01", "No existe usuario"))
+    }
+  }
+
   /**
    * Validacion de existencia, estado y contrasena
    * @param usuario
    * @param contrasena
    * @return
    */
-  def validarUsuario(usuario: UsuarioEmpresarial, contrasena: String, reintentosErroneos: Int): Future[Boolean] = {
+  def validarUsuario(usuario: UsuarioAgente, contrasena: String, reintentosErroneos: Int): Future[Boolean] = {
     for {
       estado <- validarEstado(usuario)
       contrasena <- validarContrasena(contrasena, usuario, reintentosErroneos)
@@ -89,7 +121,7 @@ case class UsuarioEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs
    * @param usuario
    * @return
    */
-  def validarEstado(usuario: UsuarioEmpresarial): Future[Boolean] = {
+  def validarEstado(usuario: UsuarioAgente): Future[Boolean] = {
     val estado = usuario.estado
     if (estado == EstadosEmpresaEnum.bloqueContraseña.id) {
       Future.failed(ValidacionException("401.8", "Usuario Bloqueado"))
@@ -110,7 +142,7 @@ case class UsuarioEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs
    * @param usuario
    * @return
    */
-  def validarContrasena(contrasena: String, usuario: UsuarioEmpresarial, reintentosErroneos: Int): Future[Boolean] = {
+  def validarContrasena(contrasena: String, usuario: UsuarioAgente, reintentosErroneos: Int): Future[Boolean] = {
     val hash = Crypto.hashSha512(contrasena.concat(AppendPasswordUser.appendUsuariosFiducia), usuario.id)
     if (hash.contentEquals(usuario.contrasena.get)) {
       Future.successful(true)
@@ -149,7 +181,7 @@ case class UsuarioEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs
    * @param dias
    * @return
    */
-  def validarCaducidadContrasena(tipoCliente: TiposCliente, usuario: UsuarioEmpresarial, dias: Int): Future[Boolean] = {
+  def validarCaducidadContrasena(tipoCliente: TiposCliente, usuario: UsuarioAgente, dias: Int): Future[Boolean] = {
     if (new DateTime().isAfter(new DateTime(usuario.fechaActualizacion.getTime).plusDays(dias))) {
       val token: String = Token.generarTokenCaducidadContrasena(tipoCliente, usuario.id)
       Future.failed(ValidacionException("401.9", token))

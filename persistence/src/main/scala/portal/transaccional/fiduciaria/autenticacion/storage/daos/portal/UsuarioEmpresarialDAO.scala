@@ -3,7 +3,7 @@ package portal.transaccional.fiduciaria.autenticacion.storage.daos.portal
 import java.sql.Timestamp
 
 import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
-import co.com.alianza.persistence.entities.{ UsuarioEmpresarial, UsuarioEmpresarialTable }
+import co.com.alianza.persistence.entities.{ UsuarioAgente, UsuarioEmpresarialTable }
 import enumerations.EstadosEmpresaEnum
 import slick.lifted.TableQuery
 
@@ -17,7 +17,7 @@ case class UsuarioEmpresarialDAO(implicit dcConfig: DBConfig) extends TableQuery
   import dcConfig.DB._
   import dcConfig.driver.api._
 
-  def create(agenteEmpresarial: UsuarioEmpresarial): Future[Int] = {
+  def create(agenteEmpresarial: UsuarioAgente): Future[Int] = {
     run((this returning this.map(_.id)) += agenteEmpresarial)
   }
 
@@ -43,19 +43,27 @@ case class UsuarioEmpresarialDAO(implicit dcConfig: DBConfig) extends TableQuery
     run(this.filter(_.id === idUsuario).map(_.fechaUltimoIngreso).update(Some(fechaActual)))
   }
 
+  def updateUpdateDate(idUsuario: Int, fechaActual: Timestamp): Future[Int] = {
+    run(this.filter(_.id === idUsuario).map(_.fechaActualizacion).update(fechaActual))
+  }
+
   def updateStateById(idUsuario: Int, estado: Int): Future[Int] = {
     run(this.filter(_.id === idUsuario).map(_.estado).update(estado))
+  }
+
+  def updatePasswordById(idUsuario: Int, contrasena: String): Future[Int] = {
+    run(this.filter(_.id === idUsuario).map(_.contrasena).update(Option(contrasena)))
   }
 
   def updateState(idUsuario: Int, estado: Int): Future[Int] = {
     run(this.filter(_.id === idUsuario).map(_.estado).update(estado))
   }
 
-  def getById(idUsuario: Int): Future[Option[UsuarioEmpresarial]] = {
+  def getById(idUsuario: Int): Future[Option[UsuarioAgente]] = {
     run(this.filter(_.id === idUsuario).result.headOption)
   }
 
-  def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[UsuarioEmpresarial]] = {
+  def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[UsuarioAgente]] = {
     run(this.filter(u => u.identificacion === identificacion && u.usuario === usuario).result.headOption)
   }
 

@@ -11,6 +11,8 @@ trait IpUsuarioRepository {
 
   def getIpsUsuarioById(idUsuario: Int): Future[Seq[IpsUsuario]]
 
+  def guardarIp(ipUsuario: IpsUsuario): Future[String]
+
   def validarControlIp(ip: String, ips: Seq[IpsUsuario], token: String, tieneRespuestas: Boolean): Future[String]
 
 }

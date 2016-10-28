@@ -28,6 +28,7 @@ case class AdministrarContrasenaEmpresaService(kafkaActor: ActorSelection, contr
 
   def secureRouteEmpresa(user: UsuarioAuth) = {
     pathPrefix("empresa") {
+      //TODO: esta validacion no va acá !!
       if (user.tipoCliente.eq(TiposCliente.comercialSAC))
         complete((StatusCodes.Unauthorized, "Tipo usuario SAC no está autorizado para realizar esta acción"))
       else

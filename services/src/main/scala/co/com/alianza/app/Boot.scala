@@ -9,13 +9,12 @@ object Boot extends App with HostBinding with Core with BootedCore with CoreActo
   val sessionActor: ActorRef = sesionActorSupervisor
 
   private val rootService = system.actorOf(
-    Props(AlianzaRouter(autenticacionRepo, autenticacionEmpresaRepo, autenticacionComercialRepo,
-      usuarioRepo, usuarioAgenteRepo, usuarioAdminRepo, autorizacionUsuarioRepo, kafkaActor, usuariosActor,
-      confrontaActor, actualizacionRepository, permisoTransaccionalActor, agenteEmpresarialActor, pinActor, pinUsuarioEmpresarialAdminActor,
-      pinUsuarioAgenteEmpresarialActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor,
-      contrasenasActor, autorizacionAgenteRepo, autorizacionAdminRepo, preguntasValidacionRepository, respuestaUsuarioRepo,
-      respuestaUsuariAdminoRepo, ipRepo, autorizacionComercialRepo, autorizacionComercialAdminRepo, autorizacionRecursoComercialRepository,
-      recursoComercialRepository, rolComercialRepository, usuarioComercialAdminRepo, reglaContrasenaRepo, horarioEmpresaRepository)),
+    Props(AlianzaRouter(autenticacionRepo, autenticacionEmpresaRepo, autenticacionComercialRepo, usuarioRepo, usuarioAgenteRepo, usuarioAdminRepo,
+      autorizacionUsuarioRepo, kafkaActor, usuariosActor, confrontaActor, actualizacionRepository, permisoTransaccionalActor, agenteEmpresarialActor,
+      pinRepository, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor, contrasenasActor, autorizacionAgenteRepo, autorizacionAdminRepo,
+      preguntasValidacionRepository, respuestaUsuarioRepo, respuestaUsuariAdminoRepo, ipRepo, autorizacionComercialRepo, autorizacionComercialAdminRepo,
+      autorizacionRecursoComercialRepository, recursoComercialRepository, rolComercialRepository, usuarioComercialAdminRepo, reglaContrasenaRepo,
+      horarioEmpresaRepository)),
     name = "api-AlianzaRouter"
   )
 

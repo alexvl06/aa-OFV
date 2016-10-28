@@ -25,9 +25,9 @@ case class UsuarioEmpresarialAdminDAO()(implicit dcConfig: DBConfig) extends Tab
     run(this.filter(u => u.identificacion === identificacion && u.usuario === usuario).result.headOption)
   }
 
-  def getByNit(nitEmpresa: String): Future[Boolean] = {
+  def existAdminActive(identificacion: String): Future[Boolean] = {
     val estado = EstadosEmpresaEnum.activo.id
-    val query = this.filter(u => u.identificacion === nitEmpresa && u.estado === estado).exists.result
+    val query = this.filter(u => u.identificacion === identificacion && u.estado === estado).exists.result
     run(query)
   }
 
@@ -43,13 +43,17 @@ case class UsuarioEmpresarialAdminDAO()(implicit dcConfig: DBConfig) extends Tab
     run(this.filter(_.id === idUsuario).map(_.fechaUltimoIngreso).update(Some(fechaActual)))
   }
 
+  def updateUpdateDate(idUsuario: Int, fechaActual: Timestamp): Future[Int] = {
+    run(this.filter(_.id === idUsuario).map(_.fechaActualizacion).update(fechaActual))
+  }
+
   def updateStateById(idUsuario: Int, estado: Int): Future[Int] = {
     run(this.filter(_.id === idUsuario).map(_.estado).update(estado))
   }
 
   def updatePassword(idUsuario: Int, password: String): Future[Int] = {
-    val query = this.filter(_.id === idUsuario).map(admin => (admin.contrasena, admin.numeroIngresosErroneos))
-    run(query.update((Some(password), 0)))
+    val query = this.filter(_.id === idUsuario).map(admin => admin.contrasena)
+    run(query.update(Some(password)))
   }
 
   def createToken(idUsuario: Int, token: String): Future[Int] = {

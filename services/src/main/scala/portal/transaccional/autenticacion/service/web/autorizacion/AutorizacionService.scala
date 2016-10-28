@@ -12,8 +12,8 @@ import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.token.{ AesUtil, Token }
 import enumerations.CryptoAesParameters
 import portal.transaccional.autenticacion.service.drivers.autorizacion._
-import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioEmpresarialAdminRepository
-import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioAdminRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioAgenteRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioRepository
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
@@ -29,8 +29,8 @@ import scala.util.{ Failure, Success }
 case class AutorizacionService(
     kafkaActor: ActorSelection,
     usuarioRepository: UsuarioRepository,
-    usuarioAgenteRepository: UsuarioEmpresarialRepository,
-    usuarioAdminRepository: UsuarioEmpresarialAdminRepository,
+    usuarioAgenteRepository: UsuarioAgenteRepository,
+    usuarioAdminRepository: UsuarioAdminRepository,
     autorizacionRepository: AutorizacionUsuarioRepository,
     autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository,
     autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository,

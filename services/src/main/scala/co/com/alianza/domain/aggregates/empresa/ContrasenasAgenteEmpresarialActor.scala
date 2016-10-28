@@ -1,52 +1,30 @@
 package co.com.alianza.domain.aggregates.empresa
 
-import java.util.Calendar
+import java.sql.Timestamp
+import java.util.{ Calendar, Date }
 
-import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, Props }
+import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import akka.routing.RoundRobinPool
-
-import co.com.alianza.domain.aggregates.usuarios.{ ErrorPersistence, ErrorValidacion, MailMessageUsuario }
-import co.com.alianza.exceptions.{ AlianzaException, LevelException, PersistenceException }
+import co.com.alianza.domain.aggregates.usuarios.{ ErrorPersistence, ErrorValidacion }
 import co.com.alianza.infrastructure.anticorruption.ultimasContrasenasAgenteEmpresarial.{ DataAccessAdapter => dataAccessUltimasContrasenasAgente }
 import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{ DataAccessAdapter, DataAccessTranslator }
-import co.com.alianza.infrastructure.dto.{ Configuracion, PinEmpresa, UsuarioEmpresarial }
-import co.com.alianza.infrastructure.messages.{ ErrorMessage, ResponseMessage, UsuarioMessage }
-import co.com.alianza.infrastructure.messages.empresa._
+import co.com.alianza.infrastructure.dto.{ Configuracion, UsuarioEmpresarial }
+import co.com.alianza.infrastructure.messages.{ ErrorMessage, ResponseMessage }
+import co.com.alianza.infrastructure.messages.empresa.{ BloquearDesbloquearAgenteEMessage, CambiarContrasenaAgenteEmpresarialMessage, CambiarContrasenaCaducadaAgenteEmpresarialMessage, ReiniciarContrasenaAgenteEMessage, UsuarioMessageCorreo }
 import co.com.alianza.microservices.{ MailMessage, SmtpServiceClient }
+import co.com.alianza.persistence.entities
+import co.com.alianza.persistence.entities.{ UltimaContrasena, PinAgente, ReglaContrasena }
+import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.token.{ PinData, Token, TokenPin }
 import co.com.alianza.util.transformers.ValidationT
 import com.typesafe.config.Config
 import enumerations._
-import enumerations.empresa.EstadosDeEmpresaEnum
+import spray.http.StatusCodes._
 
-import scalaz.std.AllInstances._
+import scala.concurrent.Future
 import scala.util.{ Failure => sFailure, Success => sSuccess }
 import scalaz.{ Failure => zFailure, Success => zSuccess }
-import co.com.alianza.persistence.entities
-
-import scala.concurrent.{ ExecutionContext, Future }
-import scalaz.Validation
-import spray.http.StatusCodes._
-import co.com.alianza.util.clave.Crypto
-import co.com.alianza.persistence.entities.{ Empresa, ReglaContrasena, UltimaContrasenaUsuarioAgenteEmpresarial }
-import java.sql.Timestamp
-import java.util.Date
-
-import co.com.alianza.infrastructure.messages.empresa.CambiarContrasenaAgenteEmpresarialMessage
-import co.com.alianza.infrastructure.dto.PinEmpresa
-import co.com.alianza.util.transformers.ValidationT
-import co.com.alianza.infrastructure.messages.empresa.BloquearDesbloquearAgenteEMessage
-import co.com.alianza.infrastructure.dto.Configuracion
-import co.com.alianza.microservices.MailMessage
-import co.com.alianza.domain.aggregates.usuarios.ErrorPersistence
-import akka.routing.RoundRobinPool
-import co.com.alianza.infrastructure.messages.empresa.CambiarContrasenaCaducadaAgenteEmpresarialMessage
-import co.com.alianza.infrastructure.dto.UsuarioEmpresarial
-import co.com.alianza.util.token.PinData
-import co.com.alianza.infrastructure.messages.ResponseMessage
-import co.com.alianza.infrastructure.messages.empresa.UsuarioMessageCorreo
-import co.com.alianza.infrastructure.messages.empresa.ReiniciarContrasenaAgenteEMessage
-
+import scalaz.std.AllInstances._
 /**
  * Created by S4N on 17/12/14.
  */
@@ -78,26 +56,17 @@ class ContrasenasAgenteEmpresarialActorSupervisor extends Actor with ActorLoggin
  * Actor que se encarga de procesar los mensajes relacionados con la administración de contraseñas de los usuarios emopresa (Cliente Administrador y Agente Empresarial)
  */
 class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging {
-
-  import context.dispatcher
   implicit val config: Config = context.system.settings.config
 
   import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial._
 
   import scalaz._
-  import scalaz.std.string._
 
   // to get `Monoid[String]`
 
-  import scalaz.std.list._
-
   // to get `Traverse[List]`
 
-  import scalaz.syntax.traverse._
-
   // to get the `sequence` method
-
-  import scala.concurrent.ExecutionContext
 
   //implicit val _: ExecutionContext = context.dispatcher
 
@@ -186,7 +155,7 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging {
   }
 
   private def guardarUltimaContrasena(idUsuario: Int, uContrasena: String): Future[Validation[ErrorValidacion, Int]] = {
-    dataAccessUltimasContrasenasAgente.guardarUltimaContrasena(UltimaContrasenaUsuarioAgenteEmpresarial(None, idUsuario, uContrasena, new Timestamp(System.currentTimeMillis()))).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
+    dataAccessUltimasContrasenasAgente.guardarUltimaContrasena(UltimaContrasena(None, idUsuario, uContrasena, new Timestamp(System.currentTimeMillis()))).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
   }
 
   private def ActualizarContrasena(pw_nuevo: String, usuario: Option[UsuarioEmpresarial]): Future[Validation[ErrorValidacion, Int]] = {
@@ -221,13 +190,12 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging {
               val fechaActual: Calendar = Calendar.getInstance()
               fechaActual.add(Calendar.HOUR_OF_DAY, responseFutureReiniciarContraAE._3.valor.toInt)
               val tokenPin: PinData = TokenPin.obtenerToken(fechaActual.getTime)
-
-              val pin: PinEmpresa = PinEmpresa(None, responseFutureReiniciarContraAE._1, tokenPin.token, tokenPin.fechaExpiracion, tokenPin.tokenHash.get, UsoPinEmpresaEnum.usoReinicioContrasena.id)
-              val pinEmpresaAgenteEmpresarial: entities.PinEmpresa = DataAccessTranslator.translateEntityPinEmpresa(pin)
+              val fecha = new Timestamp(tokenPin.fechaExpiracion.getTime)
+              val pin: PinAgente = PinAgente(None, responseFutureReiniciarContraAE._1, tokenPin.token, fecha, tokenPin.tokenHash.get, UsoPinEmpresaEnum.usoReinicioContrasena.id)
 
               val resultCrearPinEmpresaAgenteEmpresarial = for {
                 idResultEliminarPinesEmpresaAnteriores <- DataAccessAdapter.eliminarPinEmpresaReiniciarAnteriores(responseFutureReiniciarContraAE._1, UsoPinEmpresaEnum.usoReinicioContrasena.id)
-                idResultGuardarPinEmpresa <- DataAccessAdapter.crearPinEmpresaAgenteEmpresarial(pinEmpresaAgenteEmpresarial)
+                idResultGuardarPinEmpresa <- DataAccessAdapter.crearPinEmpresaAgenteEmpresarial(pin)
               } yield {
                 idResultGuardarPinEmpresa
               }
@@ -272,13 +240,11 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging {
               val fechaActual: Calendar = Calendar.getInstance()
               fechaActual.add(Calendar.HOUR_OF_DAY, responseFutureBloquearDesbloquearAgenteFuture._3.valor.toInt)
               val tokenPin: PinData = TokenPin.obtenerToken(fechaActual.getTime)
-
-              val pin: PinEmpresa = PinEmpresa(None, responseFutureBloquearDesbloquearAgenteFuture._1._1, tokenPin.token, tokenPin.fechaExpiracion, tokenPin.tokenHash.get, UsoPinEmpresaEnum.usoReinicioContrasena.id)
-              val pinEmpresaAgenteEmpresarial: entities.PinEmpresa = DataAccessTranslator.translateEntityPinEmpresa(pin)
-
+              val fecha = new Timestamp(tokenPin.fechaExpiracion.getTime)
+              val pin: PinAgente = PinAgente(None, responseFutureBloquearDesbloquearAgenteFuture._1._1, tokenPin.token, fecha, tokenPin.tokenHash.get, UsoPinEmpresaEnum.usoReinicioContrasena.id)
               val resultCrearPinEmpresaAgenteEmpresarial = for {
                 idResultEliminarPinesEmpresaAnteriores <- DataAccessAdapter.eliminarPinEmpresaReiniciarAnteriores(responseFutureBloquearDesbloquearAgenteFuture._1._1, UsoPinEmpresaEnum.usoReinicioContrasena.id)
-                idResultGuardarPinEmpresa <- DataAccessAdapter.crearPinEmpresaAgenteEmpresarial(pinEmpresaAgenteEmpresarial)
+                idResultGuardarPinEmpresa <- DataAccessAdapter.crearPinEmpresaAgenteEmpresarial(pin)
                 correoEnviado <- new SmtpServiceClient()(context.system).send(buildMessage(responseFutureBloquearDesbloquearAgenteFuture._3.valor.toInt, pin, UsuarioMessageCorreo(message.correoUsuarioAgenteEmpresarial, message.numIdentificacionAgenteEmpresarial, message.tipoIdentiAgenteEmpresarial), "alianza.smtp.templatepin.reiniciarContrasenaEmpresa", "alianza.smtp.asunto.reiniciarContrasenaEmpresa"), (_, _) => Unit)
               } yield { correoEnviado }
 
@@ -302,7 +268,7 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging {
     }
   }
 
-  private def buildMessage(numHorasCaducidad: Int, pinEmpresa: PinEmpresa, message: UsuarioMessageCorreo, templateBody: String, asuntoTemp: String) = {
+  private def buildMessage(numHorasCaducidad: Int, pinEmpresa: PinAgente, message: UsuarioMessageCorreo, templateBody: String, asuntoTemp: String) = {
     val body: String = new MailMessageEmpresa(templateBody).getMessagePin(pinEmpresa, numHorasCaducidad)
     val asunto: String = config.getString(asuntoTemp)
     MailMessage(config.getString("alianza.smtp.from"), "luisaceleita@seven4n.com", List(), asunto, body, "")

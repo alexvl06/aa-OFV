@@ -5,8 +5,8 @@ import akka.actor.SupervisorStrategy._
 import akka.util.Timeout
 import co.com.alianza.domain.aggregates.autenticacion.errores.{ ErrorAutenticacion, ErrorClienteNoExisteCore, ErrorPasswordInvalido, ErrorPersistencia }
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.util.clave.ErrorUltimasContrasenas
 import enumerations.{ TipoIdentificacion, TiposIdentificacionCore }
+import portal.transaccional.autenticacion.service.drivers.reglas.ErrorUltimasContrasenas
 
 import scala.util.{ Failure, Success }
 

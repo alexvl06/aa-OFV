@@ -15,7 +15,11 @@ import portal.transaccional.autenticacion.service.web.horarioEmpresa.ResponseObt
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-case class HorarioEmpresaDriverRepository(empresaRepo: EmpresaDriverRepository, horarioEmpresaDAO: HorarioEmpresaDAOs, diaFestivoDAO: DiaFestivoDAOs)(implicit val ex: ExecutionContext) extends HorarioEmpresaRepository {
+case class HorarioEmpresaDriverRepository(
+  empresaRepo: EmpresaDriverRepository,
+    horarioEmpresaDAO: HorarioEmpresaDAOs,
+    diaFestivoDAO: DiaFestivoDAOs
+)(implicit val ex: ExecutionContext) extends HorarioEmpresaRepository {
 
   def obtener(identificacion: String): Future[Option[ResponseObtenerHorario]] = {
     for {

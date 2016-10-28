@@ -1,6 +1,7 @@
 package portal.transaccional.autenticacion.service.drivers.usuarioIndividual
 
 import java.sql.Timestamp
+import java.util.Date
 
 import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.exceptions.ValidacionException
@@ -66,12 +67,12 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
   /**
    * Actualizar fecha ingreso
    *
-   * @param numeroIdentificacion
+   * @param idUsuario
    * @param fechaActual
    * @return
    */
-  def actualizarFechaIngreso(numeroIdentificacion: String, fechaActual: Timestamp): Future[Int] = {
-    usuarioDAO.updateLastDate(numeroIdentificacion, fechaActual)
+  def actualizarFechaIngreso(idUsuario: Int, fechaActual: Timestamp): Future[Int] = {
+    usuarioDAO.updateLastDate(idUsuario, fechaActual)
   }
 
   /////////////////////////////// validaciones //////////////////////////////////
@@ -90,6 +91,21 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
     else if (estado == EstadosUsuarioEnum.pendienteReinicio.id)
       Future.failed(ValidacionException("401.12", "Usuario Bloqueado"))
     else Future.successful(true)
+  }
+
+  /**
+   * Guardar contrasena
+   *
+   * @param idUsuario
+   * @param contrasena
+   */
+  def actualizarContrasena(idUsuario: Int, contrasena: String): Future[Int] = {
+    for {
+      cambiar <- usuarioDAO.updatePassword(idUsuario, contrasena)
+      _ <- usuarioDAO.updateStateById(idUsuario, EstadosUsuarioEnum.activo.id)
+      _ <- usuarioDAO.updateUpdateDate(idUsuario, new Timestamp(new Date().getTime))
+      _ <- usuarioDAO.updateIncorrectEntries(idUsuario, 0)
+    } yield cambiar
   }
 
   /**

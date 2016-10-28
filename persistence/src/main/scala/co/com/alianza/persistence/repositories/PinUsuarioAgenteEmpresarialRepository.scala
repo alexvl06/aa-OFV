@@ -19,7 +19,7 @@ class PinUsuarioAgenteEmpresarialRepository(implicit executionContext: Execution
 
   val pin = TableQuery[PinEmpresaTable]
 
-  def obtenerPin(tokenHash: String): Future[Validation[PersistenceException, Option[PinEmpresa]]] = loan {
+  def obtenerPin(tokenHash: String): Future[Validation[PersistenceException, Option[PinAgente]]] = loan {
     implicit session =>
       val resultTry = session.database.run(pin.filter(_.tokenHash === tokenHash).result.headOption)
       resolveTry(resultTry, "Consulta un pin de agente empresarial dado su hash")

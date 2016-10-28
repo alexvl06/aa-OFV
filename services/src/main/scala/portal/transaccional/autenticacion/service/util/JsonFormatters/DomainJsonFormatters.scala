@@ -12,6 +12,7 @@ import portal.transaccional.autenticacion.service.web.autorizacion.InvalidarToke
 import portal.transaccional.autenticacion.service.web.comercial.{ ActualizarContrasenaRequest, CrearAdministradorRequest, ValidarEmpresaRequest }
 import portal.transaccional.autenticacion.service.web.horarioEmpresa.{ AgregarHorarioEmpresaRequest, DiaFestivoRequest, ResponseObtenerHorario }
 import portal.transaccional.autenticacion.service.web.ip.{ IpRequest, IpResponse }
+import portal.transaccional.autenticacion.service.web.pin.ContrasenaUsuario
 import portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.{ GuardarRespuestasRequest, ResponseObtenerPreguntas, ResponseObtenerPreguntasComprobar, RespuestasComprobacionRequest }
 
 trait DomainJsonFormatters {
@@ -76,5 +77,8 @@ trait DomainJsonFormatters {
 
   //Enumeracion
   implicit val tipoIdentificacionDTOFormatter = jsonFormat2(TipoIdentificacionDTO)
+
+  //pin
+  implicit val cambioContrasenaFormatter = jsonFormat2(ContrasenaUsuario)
 
 }

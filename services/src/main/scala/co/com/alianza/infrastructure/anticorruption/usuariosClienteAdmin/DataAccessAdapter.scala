@@ -32,16 +32,8 @@ object DataAccessAdapter {
     usuariosEmpresa.actualizarContrasena(Crypto.hashSha512(pw_nuevo, idUsuario), idUsuario)
   }
 
-  def existeUsuarioEmpresarialAdminActivo(nitEmpresa: String): Future[Validation[PersistenceException, Boolean]] = {
-    usuarioEmpresarial.existeUsuarioEmpresarialAdminActivo(nitEmpresa)
-  }
-
   def obtieneClientePorNitYUsuario(nit: String, usuario: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] =
     usuariosEmpresa.obtieneClientePorNitYUsuario(nit, usuario) map transformValidation
-
-  def obtenerUsuarioEmpresarialAdminPorId(idUsuario: Int): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = {
-    usuarioEmpresarial.obtenerUsuarioEmpresarialAdminPorId(idUsuario) map transformValidation
-  }
 
   def obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token: String): Future[Validation[PersistenceException, Option[AuditingUserData]]] = {
     usuarioEmpresarial.obtenerUsuarioPorToken(token) map {

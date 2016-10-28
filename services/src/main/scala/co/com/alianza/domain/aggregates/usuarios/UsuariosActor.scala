@@ -1,9 +1,9 @@
 package co.com.alianza.domain.aggregates.usuarios
 
-import akka.actor.{ Actor, ActorLogging, ActorRef, ActorSystem, Props }
-import co.com.alianza.infrastructure.anticorruption.clientes.DataAccessAdapter
-import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.DataAccessAdapter
-import co.com.alianza.persistence.messages.ConsultaClienteRequest
+import java.sql.Timestamp
+
+import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
+import co.com.alianza.persistence.entities.{ PinAdmin, PinUsuario }
 
 import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 import scala.util.{ Failure => sFailure, Success => sSuccess }
@@ -13,33 +13,22 @@ import spray.http.StatusCodes._
 
 import scala.concurrent.Future
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => DataAccessAdapterUsuario }
-import co.com.alianza.infrastructure.anticorruption.pin.{ DataAccessTranslator => DataAccessTranslatorPin }
-import co.com.alianza.infrastructure.anticorruption.pinclienteadmin.{ DataAccessTranslator => DataAccessTranslatorPinClienteAdmin }
-import co.com.alianza.util.clave.Crypto
 import com.typesafe.config.Config
-import enumerations.{ AppendPasswordUser, EstadosEmpresaEnum, EstadosUsuarioEnum }
-import co.com.alianza.util.token.{ PinData, TokenPin }
-import akka.routing.RoundRobinPool
+import enumerations.{ EstadosEmpresaEnum, EstadosUsuarioEnum }
+import co.com.alianza.util.token.{ TokenPin }
 
-import scalaz.Failure
-import scala.util.{ Failure, Success }
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.infrastructure.dto._
 
-import scalaz.Success
 import co.com.alianza.util.transformers.ValidationT
 import co.com.alianza.persistence.entities
 import co.com.alianza.microservices.{ MailMessage, SmtpServiceClient }
 
-import scalaz.Failure
-import scalaz.Success
-import scala.util.Success
 import java.util.{ Calendar, Date }
 
 import scalaz.std.AllInstances._
 import co.com.alianza.util.FutureResponse
 
-import scala.Some
 import co.com.alianza.infrastructure.messages.OlvidoContrasenaMessage
 import co.com.alianza.util.transformers.ValidationT
 import co.com.alianza.microservices.MailMessage
@@ -53,7 +42,6 @@ import com.asobancaria.cifinpruebas.cifin.confrontav2plusws.services.ConfrontaUl
 import co.cifin.confrontaultra.dto.ultra.{ CuestionarioULTRADTO, ParametrosSeguridadULTRADTO, ParametrosULTRADTO, ResultadoEvaluacionCuestionarioULTRADTO }
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.exceptions.{ BusinessLevel, PersistenceException }
-import co.com.alianza.domain.aggregates.autenticacion.errores.{ ErrorAutenticacion, ErrorCredencialesInvalidas, ErrorPersistencia }
 import co.com.alianza.infrastructure.dto.Empresa
 import enumerations.empresa.EstadosDeEmpresaEnum
 
@@ -271,19 +259,16 @@ class UsuariosActor extends Actor with ActorLogging {
             val tokenPin: PinData = TokenPin.obtenerToken(fechaActual.getTime)
 
             val pin = perfilCliente match {
-              case 1 => PinUsuario(None, idUsuario.get, tokenPin.token, tokenPin.fechaExpiracion, tokenPin.tokenHash.get)
-              case 2 => PinUsuarioEmpresarialAdmin(None, idUsuario.get, tokenPin.token, tokenPin.fechaExpiracion, tokenPin.tokenHash.get)
+              case 1 => PinUsuario(None, idUsuario.get, tokenPin.token, new Timestamp(tokenPin.fechaExpiracion.getTime), tokenPin.tokenHash.get)
+              case 2 => PinAdmin(None, idUsuario.get, tokenPin.token, new Timestamp(tokenPin.fechaExpiracion.getTime), tokenPin.tokenHash.get)
               case _ => unhandled((): Unit)
             }
 
             val resultCrearPinUsuario: Future[Validation[PersistenceException, Int]] = pin match {
-              case pinUsuarioDto @ PinUsuario(param1, param2, param3, param4, param5) =>
-                val puPersistence: entities.PinUsuario = DataAccessTranslatorPin.translateEntityPinUsuario(pinUsuarioDto)
-                DataAccessAdapterUsuario.crearUsuarioPin(puPersistence)
-              case pinUsuarioEmpresarialAdminDto @ PinUsuarioEmpresarialAdmin(param1, param2, param3, param4, param5) =>
-                val pueaPersistence: entities.PinUsuarioEmpresarialAdmin =
-                  DataAccessTranslatorPinClienteAdmin.translateEntityPinUsuario(pinUsuarioEmpresarialAdminDto)
-                DataAccessAdapterUsuario.crearUsuarioClienteAdministradorPin(pueaPersistence)
+              case pinUsuario @ PinUsuario(param1, param2, param3, param4, param5) =>
+                DataAccessAdapterUsuario.crearUsuarioPin(pinUsuario)
+              case pinAdmin @ PinAdmin(param1, param2, param3, param4, param5) =>
+                DataAccessAdapterUsuario.crearUsuarioClienteAdministradorPin(pinAdmin)
               case _ => Future.successful(Validation.failure(PersistenceException(new Exception, BusinessLevel,
                 "Error ... por verifique los datos y vuelva a intentarlo")))
             }
@@ -305,7 +290,7 @@ class UsuariosActor extends Actor with ActorLogging {
                         ), template, asunto), (_, _) => Unit)
                         currentSender ! ResponseMessage(Created)
 
-                      case pinUsuarioEmpresarialAdminDto @ PinUsuarioEmpresarialAdmin(param1, param2, param3, param4, param5) =>
+                      case pinUsuarioEmpresarialAdminDto @ PinAdmin(param1, param2, param3, param4, param5) =>
                         new SmtpServiceClient()(context.system).send(buildMessage(pinUsuarioEmpresarialAdminDto, responseConf.valor.toInt,
                           UsuarioMessage(correoCliente, identificacion, tipoIdentificacion, null, false, None), template, asunto), (_, _) => Unit)
                         currentSender ! ResponseMessage(Created)
@@ -406,7 +391,7 @@ class UsuariosActor extends Actor with ActorLogging {
     val body: String = pinUsuario match {
       case pinUsuarioDto @ PinUsuario(param1, param2, param3, param4, param5) =>
         new MailMessageUsuario(templateBody).getMessagePin(pinUsuarioDto, numHorasCaducidad, "1", "1")
-      case pinUsuarioEmpresarialAdminDto @ PinUsuarioEmpresarialAdmin(param1, param2, param3, param4, param5) =>
+      case pinUsuarioEmpresarialAdminDto @ PinAdmin(param1, param2, param3, param4, param5) =>
         new MailMessageUsuario(templateBody).getMessagePin(pinUsuarioEmpresarialAdminDto, numHorasCaducidad, "2", "1")
 
     }

@@ -8,4 +8,8 @@ trait PinUsuarioDAOs {
 
   def create(pinUsuario: PinUsuario): Future[Int]
 
+  def findById(token: String): Future[Option[PinUsuario]]
+
+  def delete(token: String): Future[Int]
+
 }

@@ -35,7 +35,9 @@ trait UsuarioDAOs {
 
   def updateLastIp(numeroIdentificacion: String, ipActual: String): Future[Int]
 
-  def updateLastDate(numeroIdentificacion: String, fechaActual: Timestamp): Future[Int]
+  def updateLastDate(idUsuario: Int, fechaActual: Timestamp): Future[Int]
+
+  def updateUpdateDate(idUsuario: Int, fechaActual: Timestamp): Future[Int]
 
   def updateStateByIdentity(numeroIdentificacion: String, estado: Int): Future[Int]
 
