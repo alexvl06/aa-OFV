@@ -13,59 +13,52 @@ import scala.concurrent.Future
 // scalastyle:off
 class AgenteInmobiliarioServiceSpec extends RouteTest {
 
+  // ---------- GET /agentes-inmobiliarios ------------------
+
   def getAgentesInmobiliariosStub(constructor: UsuarioAuth): AgenteInmobiliarioService = {
-    // --------- dependencies ---------
+
     val agentesRepo = stub[UsuarioInmobiliarioRepository]
     val permisosRepo = stub[PermisoAgenteInmobiliarioRepository]
     val contrasenasRepo = stub[ContrasenaAgenteInmobiliarioRepository]
 
-    // ----------- stubs -----------
-
     // empty list
-    (agentesRepo.getAgenteInmobiliarioList _)
-      .when("", None, None, None, None, None, None)
+    (agentesRepo.getAgenteInmobiliarioList _).when("", None, None, None, None, None, None)
       .returns(Future.successful(ConsultarAgenteInmobiliarioListResponse(PaginacionMetadata(0, 0, 0, 0, None), Seq.empty)))
 
     // list with one element
-    (agentesRepo.getAgenteInmobiliarioList _)
-      .when("1", None, None, None, None, None, None)
+    (agentesRepo.getAgenteInmobiliarioList _).when("1", None, None, None, None, None, None)
       .returns(Future.successful(ConsultarAgenteInmobiliarioListResponse(
         PaginacionMetadata(1, 1, 1, 1, None),
         Seq(ConsultarAgenteInmobiliarioResponse(1, "agente@constructor.com", "agente", 1, Some("Agente"), None, None))
       )))
 
     // paginated list
-    (agentesRepo.getAgenteInmobiliarioList _)
-      .when("2", None, None, None, None, Some(1), Some(1))
+    (agentesRepo.getAgenteInmobiliarioList _).when("2", None, None, None, None, Some(1), Some(1))
       .returns(Future.successful(ConsultarAgenteInmobiliarioListResponse(
         PaginacionMetadata(1, 1, 1, 3, None),
         Seq(ConsultarAgenteInmobiliarioResponse(1, "agente@constructor.com", "agente", 1, Some("Agente"), None, None))
       )))
 
-    (agentesRepo.getAgenteInmobiliarioList _)
-      .when("2", None, None, None, None, Some(2), Some(1))
+    (agentesRepo.getAgenteInmobiliarioList _).when("2", None, None, None, None, Some(2), Some(1))
       .returns(Future.successful(ConsultarAgenteInmobiliarioListResponse(
         PaginacionMetadata(2, 1, 1, 3, None),
         Seq(ConsultarAgenteInmobiliarioResponse(1, "agente2@constructor.com", "agente2", 1, Some("Agente2"), None, None))
       )))
 
-    (agentesRepo.getAgenteInmobiliarioList _)
-      .when("2", None, None, None, None, Some(3), Some(1))
+    (agentesRepo.getAgenteInmobiliarioList _).when("2", None, None, None, None, Some(3), Some(1))
       .returns(Future.successful(ConsultarAgenteInmobiliarioListResponse(
         PaginacionMetadata(3, 1, 1, 3, None),
         Seq(ConsultarAgenteInmobiliarioResponse(1, "agente3@constructor.com", "agente3", 1, Some("Agente3"), None, None))
       )))
 
     // error
-    (agentesRepo.getAgenteInmobiliarioList _)
-      .when("error", None, None, None, None, None, None)
-      .returns(Future.failed(new RuntimeException()))
+    (agentesRepo.getAgenteInmobiliarioList _).when("error", None, None, None, None, None, None)
+      .returns(Future.failed(new Exception()))
 
-    // ------------- build service ----------
     AgenteInmobiliarioService(constructor, agentesRepo, permisosRepo, contrasenasRepo)
   }
 
-  "AgenteInmobiliarioService" should "respond an empty list when trying to GET /agentes-inmobiliarios from an invalid constructor" in {
+  "AgenteInmobiliarioService" should "GET /agentes-inmobiliarios - respond an empty list - invalid constructor" in {
     val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "", 3)
     Get("/agentes-inmobiliarios") ~> getAgentesInmobiliariosStub(constructor).route ~> check {
       status shouldEqual StatusCodes.OK
@@ -73,7 +66,7 @@ class AgenteInmobiliarioServiceSpec extends RouteTest {
     }
   }
 
-  it should "respond a list with one element when trying to GET /agentes-inmobiliarios from constructor with id 1" in {
+  it should "GET /agentes-inmobiliarios - respond a list with one element - constructor with id 1" in {
     val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "1", 3)
     Get("/agentes-inmobiliarios") ~> getAgentesInmobiliariosStub(constructor).route ~> check {
       status shouldEqual StatusCodes.OK
@@ -82,7 +75,7 @@ class AgenteInmobiliarioServiceSpec extends RouteTest {
     }
   }
 
-  it should "respond a paginated list when trying to GET /agentes-inmobiliarios from constructor with id 2" in {
+  it should "GET /agentes-inmobiliarios - respond a paginated list - constructor with id 2" in {
     val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "2", 3)
 
     Get("/agentes-inmobiliarios?pagina=1&itemsPorPagina=1") ~> getAgentesInmobiliariosStub(constructor).route ~> check {
@@ -125,9 +118,53 @@ class AgenteInmobiliarioServiceSpec extends RouteTest {
     }
   }
 
-  it should "respond 500 InternalServerError when" in {
+  it should "GET /agentes-inmobiliarios - respond status code 500-InternalServerError - an exception occurs" in {
     val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "error", 3)
-    Get("/agentes-inmobiliarios?pagina=3&itemsPorPagina=1") ~> getAgentesInmobiliariosStub(constructor).route ~> check {
+    Get("/agentes-inmobiliarios") ~> getAgentesInmobiliariosStub(constructor).route ~> check {
+      status shouldEqual StatusCodes.InternalServerError
+    }
+  }
+
+  // ---------- POST /agentes-inmobiliarios ------------------
+
+  def postAgentesInmobiliariosStub(constructor: UsuarioAuth): AgenteInmobiliarioService = {
+    val agentesRepo = stub[UsuarioInmobiliarioRepository]
+    val permisosRepo = stub[PermisoAgenteInmobiliarioRepository]
+    val contrasenasRepo = stub[ContrasenaAgenteInmobiliarioRepository]
+
+    (agentesRepo.createAgenteInmobiliario _).when(1, 3, "1", "agente@constructor.com", "agente", Some("Agente"), None, None)
+      .returns(Future.successful(1))
+
+    (agentesRepo.createAgenteInmobiliario _).when(1, 3, "1", "agente@constructor.com", "agenteYaExiste", Some("Agente"), None, None)
+      .returns(Future.successful(0))
+
+    (agentesRepo.createAgenteInmobiliario _).when(1, 3, "error", "agente@constructor.com", "agente", Some("Agente"), None, None)
+      .returns(Future.failed(new Exception()))
+
+    AgenteInmobiliarioService(constructor, agentesRepo, permisosRepo, contrasenasRepo)
+  }
+
+  it should "POST /agentes-inmobiliarios - agent created successfully" in {
+    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "1", 3)
+    val agenteACrear = CrearAgenteInmobiliarioRequest("agente@constructor.com", "agente", Some("Agente"), None, None)
+    Post("/agentes-inmobiliarios", agenteACrear) ~> postAgentesInmobiliariosStub(constructor).route ~> check {
+      status shouldEqual StatusCodes.Created
+    }
+  }
+
+  it should "POST /agentes-inmobiliarios - respond status code 409-Conflict - agent already exists" in {
+    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "1", 3)
+    val agenteACrear = CrearAgenteInmobiliarioRequest("agente@constructor.com", "agenteYaExiste", Some("Agente"), None, None)
+    Post("/agentes-inmobiliarios", agenteACrear) ~> postAgentesInmobiliariosStub(constructor).route ~> check {
+      println(status)
+      status shouldEqual StatusCodes.Conflict
+    }
+  }
+
+  it should "POST /agentes-inmobiliarios - respond status code 500-InternalServerError - an exception occurs" in {
+    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "error", 3)
+    val agenteACrear = CrearAgenteInmobiliarioRequest("agente@constructor.com", "agente", Some("Agente"), None, None)
+    Post("/agentes-inmobiliarios", agenteACrear) ~> postAgentesInmobiliariosStub(constructor).route ~> check {
       status shouldEqual StatusCodes.InternalServerError
     }
   }
