@@ -25,40 +25,42 @@ case class ContrasenaAgenteInmobiliarioDriverRepository(agenteRepo: UsuarioInmob
 
   def actualizarContrasenaCaducada(token: Option[String], pw_actual: String, pw_nuevo: String, idUsuario: Option[Int]): Future[Int] = {
     (token, idUsuario) match {
-      case (Some(tk), None) => validarToken(tk).flatMap(idAgente =>  actualizarContrasena(None, pw_actual, pw_nuevo, idAgente, valoresRegla = false))
+      case (Some(tk), None) => validarToken(tk).flatMap(idAgente => actualizarContrasena(None, pw_actual, pw_nuevo, idAgente, valoresRegla = false))
       case (None, Some(idAgente)) => actualizarContrasena(None, pw_actual, pw_nuevo, idAgente, valoresRegla = true)
       case _ => Future.failed(ValidacionException("409.69", "Solo uno de los campos token, idUsuario deben ser provistos"))
     }
   }
 
-  def actualizarContrasenaPin(pinHash: String, nuevaContrasena: String, contrasenaActualOp: Option[String]): Future[Int] = {
+  def actualizarContrasenaPin(pinHash: String, nuevaContrasena: String): Future[Int] = {
     pinRepo.validarPinAgente(pinHash).flatMap {
       case Left(_) => Future.failed(ValidacionException("409.11", "Pin invalido y/o vencido"))
       case Right(pin) => pin.uso match {
         case uso if uso == UsoPinEmpresaEnum.usoReinicioContrasena.id => agenteRepo.getAgenteInmobiliario(pin.idAgente).flatMap {
           case None => Future.failed(ValidacionException("409.11", "Pin invalido y/o vencido"))
-          case Some(agente) => actualizarContrasena(Some(pinHash), contrasenaActualOp.getOrElse(""), nuevaContrasena, agente.id, valoresRegla = true)
+          case Some(agente) if agente.contrasena.isEmpty => definirContrasena(pinHash, nuevaContrasena, agente)
+          case Some(agente) =>
+            actualizarContrasena(Some(pinHash), agente.contrasena.get, nuevaContrasena, agente.id, valoresRegla = true, Some(agente))
         }
         case uso if uso == UsoPinEmpresaEnum.creacionAgenteInmobiliario.id => agenteRepo.getAgenteInmobiliario(pin.idAgente).flatMap {
           case None => Future.failed(ValidacionException("409.11", "Pin invalido y/o vencido"))
           case Some(agente) => definirContrasena(pinHash, nuevaContrasena, agente)
         }
-        case _ => Future.failed(ValidacionException("409.11", "Pin invalido y/o vencido"))
       }
     }
   }
 
-  private def actualizarContrasena(pinHash: Option[String], contrasenaActual: String, nuevaContrasena: String, idAgente: Int, valoresRegla: Boolean): Future[Int] = {
+  private def actualizarContrasena(pinHash: Option[String], contrasenaActual: String, nuevaContrasena: String,
+                                   idAgente: Int, valoresRegla: Boolean, agenteOp: Option[UsuarioAgenteInmobiliario] = None): Future[Int] = {
     val hashContrasenaActual: String = Crypto.hashSha512(contrasenaActual.concat(AppendPasswordUser.appendUsuariosFiducia), idAgente)
     val hashNuevaContrasena: String = Crypto.hashSha512(nuevaContrasena.concat(AppendPasswordUser.appendUsuariosFiducia), idAgente)
 
     for {
-      agente <- agenteRepo.getContrasena(hashContrasenaActual, idAgente)
+      agente <- if (agenteOp.isEmpty) agenteRepo.getContrasena(hashContrasenaActual, idAgente) else Future.successful(agenteOp.get)
       validacionReglas <- validacionReglasClave(nuevaContrasena, idAgente, PerfilesUsuario.agenteEmpresarial, valoresRegla)
       cantRepetidas <- reglaRepo.getRegla(LlavesReglaContrasena.ULTIMAS_CONTRASENAS_NO_VALIDAS.llave)
-      contrasenasViejas <- validarContrasenasAnteriores(cantRepetidas.valor.toInt, idAgente, hashNuevaContrasena, hashContrasenaActual, valoresRegla)
+      contrasenasViejas <- validarContrasenasAnteriores(cantRepetidas.valor.toInt, idAgente, hashNuevaContrasena, agente.contrasena.get, valoresRegla)
       contrasenaActual <- agenteRepo.updateContrasena(hashNuevaContrasena, idAgente)
-      ultimasContrasenas <- oldPassDAO.create(UltimaContrasenaAgenteInmobiliario(None, idAgente, hashContrasenaActual, new Timestamp(new DateTime().getMillis)))
+      ultimasContrasenas <- oldPassDAO.create(UltimaContrasenaAgenteInmobiliario(None, idAgente, hashNuevaContrasena, new Timestamp(new DateTime().getMillis)))
       actualizacionEstado <- agenteRepo.updateEstadoAgente(agente.identificacion, agente.usuario, EstadosUsuarioEnumInmobiliario.activo)
       eliminarPin <- if (pinHash.nonEmpty) pinRepo.eliminarPinAgente(pinHash.get) else Future.successful(0)
     } yield idAgente
@@ -90,7 +92,7 @@ case class ContrasenaAgenteInmobiliarioDriverRepository(agenteRepo: UsuarioInmob
     val code = "409.5"
 
     valoresRegla match {
-      case true => {
+      case true =>
         ValidarClave.aplicarReglasValor(contrasena, Some(idUsuario), perfilUsuario, ValidarClave.reglasGenerales: _*).flatMap {
           case zSuccess(erroresContrasena) => erroresContrasena.isEmpty match {
             case true => sucess
@@ -98,8 +100,7 @@ case class ContrasenaAgenteInmobiliarioDriverRepository(agenteRepo: UsuarioInmob
           }
           case zFailure => error
         }
-      }
-      case false => {
+      case false =>
         ValidarClave.aplicarReglas(contrasena, Some(idUsuario), perfilUsuario, ValidarClave.reglasGenerales: _*).flatMap {
           case zSuccess(erroresContrasena) => erroresContrasena.isEmpty match {
             case true => sucess
@@ -107,7 +108,6 @@ case class ContrasenaAgenteInmobiliarioDriverRepository(agenteRepo: UsuarioInmob
           }
           case zFailure => error
         }
-      }
     }
   }
 
@@ -117,7 +117,8 @@ case class ContrasenaAgenteInmobiliarioDriverRepository(agenteRepo: UsuarioInmob
 
     for {
       contrasenasViejas <- oldPassDAO.findById(cantContraseñasAnteriores, id)
-      validarToken <- if (!contrasenasViejas.exists(_.contrasena == passNew) && passNew != passOld) {
+      validarToken <-
+      if (!contrasenasViejas.exists(_.contrasena == passNew) && passNew != passOld) {
         Future.successful(true)
       } else if (valoresRegla) {
         Future.failed(ValidacionException(code, error + ":" + cantContraseñasAnteriores.toString))

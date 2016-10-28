@@ -60,14 +60,14 @@ trait UsuarioAgenteInmobDAOs {
    * @param nombre         Filtro - Nombre del agente inmobiliario - Opcional
    * @param usuario        Filtro - Nombre de usuario del agente inmobiliario - Opcional
    * @param correo         Filtro - Correo del agente inmobiliario - Opcional
-   * @param estado         Filtro - Estado del agente inmobiliario - Opcional
+   * @param estado         Filtro - Estado(s) del agente inmobiliario - Opcional
    * @param pagina         Paginación - Número de página - Opcional
    * @param itemsPorPagina Paginación - Número de agentes por página - Opcional
    * @return Una tupla de 5 elementos de la siguiente forma: <br/>
    *         <b>(pagina, maxItemsPorPagina, totalItemsEnPagina, totalItemsEnBD, itemsPagina)<b/>
    */
   def getAll(identificacion: String, nombre: Option[String],
-    usuario: Option[String], correo: Option[String], estado: Option[Int], pagina: Option[Int],
+    usuario: Option[String], correo: Option[String], estado: Option[String], pagina: Option[Int],
     itemsPorPagina: Option[Int])(implicit ec: ExecutionContext): Future[(Int, Int, Int, Int, Seq[UsuarioAgenteInmobiliario])]
 
   /**
@@ -112,4 +112,6 @@ trait UsuarioAgenteInmobDAOs {
    * @return Un futuro con un entero, si es 0 no actualizo, 2 actualizo el registro.
    */
   def updateContrasena(contrasena: String, idUsuario: Int): Future[Int]
+
+  def getByToken(token: String): Future[Option[UsuarioAgenteInmobiliario]]
 }

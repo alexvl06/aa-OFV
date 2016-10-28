@@ -36,6 +36,7 @@ import portal.transaccional.autenticacion.service.drivers.rolRecursoComercial.{ 
 import portal.transaccional.autenticacion.service.drivers.sesion.SesionDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioEmpresarialAdminDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgenteEmpresarial.UsuarioEmpresarialDriverRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.{ AutorizacionDriverRepository, UsuarioInmobiliarioDriverRepository, UsuarioInmobiliarioPinDriverRepository }
 import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario._
 import portal.transaccional.autenticacion.service.drivers.usuarioComercial.UsuarioComercialDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioComercialAdmin.{ UsuarioComercialAdminDriverRepository, UsuarioComercialAdminRepository }
@@ -66,6 +67,9 @@ trait BootedCore extends Core {
   implicit lazy val ex: ExecutionContext = system.dispatcher
   implicit lazy val cluster = Cluster.get(system)
 
+  implicit lazy val config: DBConfig = new DBConfig with PGConfig
+  implicit lazy val configCore: DBConfig = new DBConfig with OracleConfig
+
   sys.addShutdownHook(system.terminate())
 }
 
@@ -73,8 +77,9 @@ trait BootedCore extends Core {
  * Template project actors instantiation
  */
 trait CoreActors {
-  this: Core with BootedCore =>
-  val usuariosActorSupervisor = system.actorOf(Props[UsuariosActorSupervisor], "UsuariosActorSupervisor")
+  this: Core with BootedCore with Storage =>
+
+  val usuariosActorSupervisor = system.actorOf(Props(new UsuariosActorSupervisor(usuarioInmobDAO, pinAgenteInmobRepository, configuracionDAO)), "UsuariosActorSupervisor")
   val usuariosActor = system.actorSelection(usuariosActorSupervisor.path)
   val confrontaActorSupervisor = system.actorOf(Props[ConfrontaActorSupervisor], "confrontaActorSupervisor")
   val confrontaActor = system.actorSelection(confrontaActorSupervisor.path)
@@ -135,8 +140,7 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val configuracionRepo = ConfiguracionDriverRepository(configuracionDAO)
   lazy val reglaContrasenaRepo = ReglaContrasenaDriverRepository(reglaContrasenaDAO)
   lazy val usuarioAgenteRepo = UsuarioEmpresarialDriverRepository(usuarioAgenteDAO)
-  lazy val usuarioAgenteInmobRepo = UsuarioAgenteInmobDriverRepository(usuarioAgenteInmob)
-  lazy val agenteInmobRepo = UsuarioInmobiliarioDriverRepository(configuracionDAO, usuarioInmobDAO, pinAgenteInmobRepository)
+  lazy val agenteInmobRepo = UsuarioInmobiliarioDriverRepository(configuracionDAO, usuarioAdminDAO, usuarioInmobDAO, pinAgenteInmobRepository)
   lazy val agenteInmobContrasenaRepo = ContrasenaAgenteInmobiliarioDriverRepository(agenteInmobRepo, ultimaContraseñaAgenteInmobDAO, reglaContrasenaRepo, pinAgenteInmobRepository)
   lazy val usuarioComercialRepo = UsuarioComercialDriverRepository(usuarioComercialDAO)
   lazy val usuarioComercialAdminRepo = UsuarioComercialAdminDriverRepository(usuarioComercialAdminDAO)
@@ -149,11 +153,11 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val autenticacionRepo = AutenticacionDriverRepository(usuarioRepo, clienteRepo, configuracionRepo, reglaContrasenaRepo, ipUsuarioRepo,
     respuestaUsuarioRepo, sesionRepo)
   lazy val autenticacionEmpresaRepo = AutenticacionEmpresaDriverRepository(usuarioAgenteRepo, usuarioAdminRepo, clienteRepo, empresaRepo, reglaContrasenaRepo,
-    configuracionRepo, ipEmpresaRepo, sesionRepo, respuestaUsuariAdminoRepo, usuarioAgenteInmobRepo)
+    configuracionRepo, ipEmpresaRepo, sesionRepo, respuestaUsuariAdminoRepo, agenteInmobRepo)
   lazy val autenticacionComercialRepo = AutenticacionComercialDriverRepository(ldapRepo, usuarioComercialRepo,
     usuarioComercialAdminRepo: UsuarioComercialAdminRepository, configuracionRepo, sesionRepo)
   lazy val sesionUtilAgenteEmpresarial: SesionAgenteUtilRepository = SesionAgenteUtilDriverRepository[UsuarioEmpresarial](usuarioAgenteRepo, sesionRepo)
-  lazy val sesionUtilAgenteInmobiliario: SesionAgenteUtilRepository = SesionAgenteUtilDriverRepository[UsuarioAgenteInmobiliario](usuarioAgenteInmobRepo, sesionRepo)
+  lazy val sesionUtilAgenteInmobiliario: SesionAgenteUtilRepository = SesionAgenteUtilDriverRepository[UsuarioAgenteInmobiliario](agenteInmobRepo, sesionRepo)
   lazy val autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialDriverRepository = AutorizacionUsuarioEmpresarialDriverRepository(
     usuarioAgenteRepo, alianzaDAO, sesionRepo, recursoRepo, sesionUtilAgenteEmpresarial
   )
@@ -173,9 +177,6 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
 }
 
 private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
-  implicit val config: DBConfig = new DBConfig with PGConfig
-  implicit val configCore: DBConfig = new DBConfig with OracleConfig
-
   lazy val alianzaDAO = AlianzaDAO()(config)
   lazy val empresaDAO = EmpresaDAO()(config)
   lazy val usuarioDAO = UsuarioDAO()(config)
@@ -187,7 +188,7 @@ private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
   lazy val usuarioAgenteDAO: UsuarioEmpresarialDAO = UsuarioEmpresarialDAO()(config)
   lazy val respuestaUsuarioDAO = RespuestaUsuarioDAO()(config)
   lazy val usuarioAdminDAO = UsuarioEmpresarialAdminDAO()(config)
-  lazy val usuarioAgenteInmob: UsuarioAgenteInmobDAO = UsuarioAgenteInmobDAO()(config)
+  lazy val usuarioAgenteInmobDAO: UsuarioAgenteInmobDAO = UsuarioAgenteInmobDAO()(config)
   lazy val respuestaUsuarioAdminDAO = RespuestaUsuarioAdminDAO()(config)
   lazy val preguntaDAO = PreguntasDAO()(config)
   lazy val empresaAdminDAO = EmpresaAdminDAO()(config)
@@ -202,5 +203,3 @@ private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
   lazy val ultimaContraseñaAgenteInmobDAO = UltimaContraseñaAgenteInmobiliarioDAO()(config)
   lazy val pinInmobDAO = PinAgenteInmobiliarioDAO()(config)
 }
-
-object MainActors extends BootedCore with CoreActors

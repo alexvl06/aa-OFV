@@ -59,6 +59,7 @@ trait DomainJsonFormatters {
   implicit val consultarAgenteInmobiliarioListResponseFormatter = jsonFormat2(ConsultarAgenteInmobiliarioListResponse)
   implicit val recursosInmobiliariosFormatter = jsonFormat4(RecursoGraficoInmobiliario)
   implicit val actualizarCredencialesRequestFormatter = jsonFormat3(ActualizarCredencialesAgenteRequest)
+  implicit val valdiarTokenFormatter = jsonFormat1(ValidarTokenAgenteRequest)
   implicit val messageFormat2 = jsonFormat5(UsuarioInmobiliarioAuth)
   implicit val asdasds = jsonFormat2(GenericNoAutorizado)
 
@@ -71,6 +72,4 @@ trait DomainJsonFormatters {
       case something => throw DeserializationException(s"Expected a value from enum $enu instead of $something")
     }
   }
-
-
 }

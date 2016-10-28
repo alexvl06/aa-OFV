@@ -25,9 +25,8 @@ trait ContrasenaAgenteInmobiliarioRepository {
    *
    * @param pinHash          Pin asociado al agente
    * @param contrasena       Contraseña nueva a definir
-   * @param contrasenaActual OPCIONAL - Contraseña actual
    * @return Si cumple con las validaciones la nueva contraseña, retorna el idUsuario al cual se le actualizó la contraseña.
    *         De no ser asi, retorna un futuro fallido con un mensaje de error acorde a la validación fallida.
    */
-  def actualizarContrasenaPin(pinHash: String, contrasena: String, contrasenaActual: Option[String]): Future[Int]
+  def actualizarContrasenaPin(pinHash: String, contrasena: String): Future[Int]
 }

@@ -25,16 +25,16 @@ class MailMessageEmpresa(templateBody: String) extends MailTemplate {
     engine.layout(config.getString(templateBody), mailParams)
   }
 
-  def getMessagePinCreacionAgenteInmobiliario(pin: String, caducidad: Int,
-    identificacion: String, usuario: String)(implicit config: Config): String = {
+  def getMessageAgenteInmobiliario(pin: String, caducidad: Int, usuario: Option[String])(implicit config: Config): String = {
     val mailParams: Map[String, Any] = Map(
       "pin" -> pin,
       "numHorasCaducidad" -> caducidad,
-      "medida" -> getMedidaCaducidad(caducidad),
-      "nitEmpresa" -> identificacion,
-      "usuario" -> usuario
+      "medida" -> getMedidaCaducidad(caducidad)
     )
-    engine.layout(config.getString(templateBody), mailParams)
+    usuario match {
+      case None => engine.layout(config.getString(templateBody), mailParams)
+      case Some(us) => engine.layout(config.getString(templateBody), mailParams + ("usuario" -> us))
+    }
   }
 
   private def getMedidaCaducidad(caducidad: Int): String = if (caducidad > 1) "horas" else "hora"

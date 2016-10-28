@@ -34,6 +34,10 @@ case class UsuarioAgenteInmobDAO(implicit dcConfig: DBConfig) extends UsuarioAge
     getById(id)
   }
 
+  override def getByToken(token: String): Future[Option[UsuarioAgenteInmobiliario]] = {
+    run(table.filter(_.token === token).result.headOption)
+  }
+
   override def get(identificacion: String, usuario: String): Future[Option[UsuarioAgenteInmobiliario]] = {
     getByIdentityAndUser(identificacion, usuario)
   }
@@ -43,16 +47,25 @@ case class UsuarioAgenteInmobDAO(implicit dcConfig: DBConfig) extends UsuarioAge
   }
 
   override def getAll(identificacion: String, nombre: Option[String],
-    usuario: Option[String], correo: Option[String], estado: Option[Int], pagina: Option[Int],
+    usuario: Option[String], correo: Option[String], estado: Option[String], pagina: Option[Int],
     itemsPorPagina: Option[Int])(implicit ec: ExecutionContext): Future[(Int, Int, Int, Int, Seq[UsuarioAgenteInmobiliario])] = {
+
+    val estados: Option[Seq[Int]] = estado match {
+      case None => None
+      case Some(e) => e match {
+        case x if x.isEmpty => Some(Seq.empty)
+        case x => Some(x.split(",").map(_.toInt).toSeq)
+      }
+    }
 
     val basequery: Query[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario, Seq] = MaybeFilter(table)
       .filter(Some(identificacion))(id => agente => agente.identificacion === id)
-      .filter(nombre)(n => agente => agente.nombre like s"%$n%")
-      .filter(usuario)(u => agente => agente.usuario like s"%$u%")
-      .filter(correo)(c => agente => agente.correo like s"%$c%")
-      .filter(estado)(e => agente => agente.estado === e)
+      .filter(nombre)(n => agente => agente.nombre.toLowerCase like s"%${n.toLowerCase}%")
+      .filter(usuario)(u => agente => agente.usuario.toLowerCase like s"%${u.toLowerCase}%")
+      .filter(correo)(c => agente => agente.correo.toLowerCase like s"%${c.toLowerCase}%")
+      .filter(estados)(e => agente => agente.estado inSetBind e)
       .query
+      .sortBy(_.usuario)
 
     run(
       for {

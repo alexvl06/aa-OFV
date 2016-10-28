@@ -10,6 +10,16 @@ import portal.transaccional.autenticacion.service.util.ws.{ GenericAutorizado, G
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.AlianzaDAOs
 
 import scala.concurrent.{ ExecutionContext, Future }
+import co.com.alianza.exceptions._
+import co.com.alianza.persistence.entities.{UsuarioAgenteInmobiliario, UsuarioEmpresarialAdmin}
+import co.com.alianza.persistence.repositories.UsuarioEmpresarialAdminRepository
+import co.com.alianza.util.json.JsonUtil
+import co.com.alianza.util.token.Token
+import portal.transaccional.autenticacion.service.drivers.sesion.SesionRepository
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{AlianzaDAOs, UsuarioAgenteInmobDAO}
+import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.{DataAccessTranslator => ConstructorDataAccessTranslator}
+
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * Created by alexandra in 2016

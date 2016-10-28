@@ -52,6 +52,19 @@ case class UsuarioEmpresarialAdmin(
   tipoCliente: TiposCliente
 )
 
+case class UsuarioAgenteInmobiliario(
+  id: Int,
+  correo: String,
+  identificacion: String,
+  tipoIdentificacion: Int,
+  usuario: String,
+  estado: Int,
+  contrasena: Option[String],
+  numeroIngresosErroneos: Int,
+  ipUltimoIngreso: Option[String],
+  tipoCliente: TiposCliente
+)
+
 case class UsuarioEmpresa(
   id: Int,
   identificacion: String,

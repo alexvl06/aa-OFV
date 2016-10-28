@@ -24,7 +24,6 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
   val recursosPerfilesAdmin = TableQuery[RecursoPerfilClienteAdminTable]
   val preguntasTable = TableQuery[PreguntasAutovalidacionTable]
   val respuestasUsuarioTable = TableQuery[RespuestasAutovalidacionUsuarioTable]
-
   val usuariosAgentesInmobiliarios = TableQuery[UsuarioAgenteInmobiliarioTable]
   val permisosInmobiliarios = TableQuery[PermisoInmobiliarioTable]
   val recursosGraficosInmobiliarios = TableQuery[RecursoGraficoInmobiliarioTable]
@@ -184,6 +183,14 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
       permisos <- permisosInmobiliarios if agentesFiltrados.id === permisos.idAgente
       if agentesFiltrados.identificacion === nit && permisos.fideicomiso === idFideicomiso && permisos.proyecto === idProyecto
     } yield permisos
+    run(query.result)
+  }
+
+  def getPermisosProyectoInmobiliarioByAgente(username : String , idAgente: Int): Future[Seq[PermisoAgenteInmobiliario]] = {
+    val query = for {
+      a <- usuariosAgentesInmobiliarios if a.id === idAgente if a.usuario === username
+      p <- permisosInmobiliarios if p.idAgente === a.id
+    } yield p
     run(query.result)
   }
 

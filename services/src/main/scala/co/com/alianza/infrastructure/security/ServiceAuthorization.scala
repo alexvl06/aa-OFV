@@ -86,6 +86,8 @@ trait ServiceAuthorization {
     }
   }
 
+
+
   private def obtenerIp(ctx: RequestContext) = ctx.request.headers.find {
     header =>
       header.name.equals("X-Forwarded-For") || header.name.equals("X-Real-IP") || header.name.equals("Remote-Address")

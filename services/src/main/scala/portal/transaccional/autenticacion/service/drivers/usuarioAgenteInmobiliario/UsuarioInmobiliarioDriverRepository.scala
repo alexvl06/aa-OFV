@@ -6,32 +6,38 @@ import akka.actor.ActorSystem
 import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.exceptions.ValidacionExceptionPasswordRules
 import co.com.alianza.microservices.MailMessage
-import co.com.alianza.persistence.entities.{ PinAgenteInmobiliario, UsuarioAgenteInmobiliario, UsuarioAgenteInmobiliarioTable }
+import co.com.alianza.persistence.entities.{PinAgenteInmobiliario, UsuarioAgenteInmobiliario, UsuarioAgenteInmobiliarioTable}
 import com.typesafe.config.Config
 import enumerations.EstadosUsuarioEnumInmobiliario._
-import enumerations.{ EstadosUsuarioEnum, EstadosUsuarioEnumInmobiliario }
-import portal.transaccional.autenticacion.service.drivers.usuarioAgente.{ UsuarioEmpresarialRepository, UsuarioEmpresarialRepositoryG }
-import portal.transaccional.autenticacion.service.web.agenteInmobiliario.{ ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse, PaginacionMetadata }
+import enumerations.{EstadosUsuarioEnum, EstadosUsuarioEnumInmobiliario}
+import portal.transaccional.autenticacion.service.drivers.usuarioAgente.{UsuarioEmpresarialRepository, UsuarioEmpresarialRepositoryG}
+import portal.transaccional.autenticacion.service.web.agenteInmobiliario.{ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse, PaginacionMetadata}
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal._
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
-/**
- * Implementación del repositorio de agentes inmobiliarios
- *
- * @param ex Contexto de ejecución
- */
+case class UsuarioInmobiliarioDriverRepository(
+    configDao: ConfiguracionDAOs,
+    constructoresDao: UsuarioEmpresarialAdminDAOs,
+    usuariosDao: UsuarioAgenteInmobDAO,
+    pinRepository: UsuarioInmobiliarioPinRepository
+)(implicit val ex: ExecutionContext, system: ActorSystem, config: Config)
+  extends UsuarioEmpresarialRepositoryG[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario](usuariosDao)
+    with UsuarioEmpresarialRepository[UsuarioAgenteInmobiliario] with UsuarioInmobiliarioRepository {
 
-case class UsuarioAgenteInmobDriverRepository(usuarioDAO: UsuarioAgenteInmobDAO)(implicit val ex: ExecutionContext) extends UsuarioEmpresarialRepositoryG[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario](usuarioDAO) with UsuarioEmpresarialRepository[UsuarioAgenteInmobiliario]
-
-case class UsuarioInmobiliarioDriverRepository(configDao: ConfiguracionDAOs, usuariosDao: UsuarioAgenteInmobDAOs, pinRepository: UsuarioInmobiliarioPinRepository)(implicit val ex: ExecutionContext, system: ActorSystem, config: Config) extends UsuarioInmobiliarioRepository {
-
-  override def createAgenteInmobiliario(tipoIdentificacion: Int, identificacion: String,
+  override def createAgenteInmobiliario(idConstructor: Int, tipoIdentificacion: Int, identificacion: String,
     correo: String, usuario: String,
     nombre: Option[String], cargo: Option[String], descripcion: Option[String]): Future[Int] = {
-    usuariosDao.exists(0, identificacion, usuario).flatMap({
-      case true => Future.successful(0)
-      case false =>
+    // se verifica que el agente inmobiliario no se vaya a crear con el mismo nombre de usuario del constructor
+    // y que no haya sido creado previamente
+    val proceder: Future[Boolean] = for {
+      constructorOp <- constructoresDao.getById(idConstructor)
+      existeAgente <- usuariosDao.exists(0, identificacion, usuario)
+    } yield constructorOp.isDefined && constructorOp.get.usuario != usuario && !existeAgente
+
+    proceder.flatMap({
+      case false => Future.successful(0)
+      case true =>
         val agente = UsuarioAgenteInmobiliario(
           0, identificacion, tipoIdentificacion, usuario, correo, EstadosUsuarioEnum.pendienteActivacion.id,
           None, None, new Timestamp(System.currentTimeMillis()), 0, None, nombre, cargo, descripcion, None
@@ -43,7 +49,7 @@ case class UsuarioInmobiliarioDriverRepository(configDao: ConfiguracionDAOs, usu
           idPin <- pinRepository.asociarPinAgente(pinAgente)
           correoActivacion: MailMessage = pinRepository.generarCorreoActivacion(
             pinAgente.tokenHash,
-            configExpiracion.valor.toInt, identificacion, usuario, correo
+            configExpiracion.valor.toInt, usuario, correo
           )
         } yield {
           // el envío del correo se ejecuta de forma asíncrona dado que no interesa el éxito de la operación,
@@ -75,7 +81,7 @@ case class UsuarioInmobiliarioDriverRepository(configDao: ConfiguracionDAOs, usu
   }
 
   override def getAgenteInmobiliarioList(identificacion: String, nombre: Option[String], usuario: Option[String],
-    correo: Option[String], estado: Option[Int],
+    correo: Option[String], estado: Option[String],
     pagina: Option[Int], itemsPorPagina: Option[Int]): Future[ConsultarAgenteInmobiliarioListResponse] = {
     usuariosDao
       .getAll(identificacion, nombre, usuario, correo, estado, pagina, itemsPorPagina)
@@ -94,7 +100,29 @@ case class UsuarioInmobiliarioDriverRepository(configDao: ConfiguracionDAOs, usu
   override def updateAgenteInmobiliario(identificacion: String, usuario: String,
     correo: String, nombre: Option[String],
     cargo: Option[String], descripcion: Option[String]): Future[Int] = {
-    usuariosDao.update(identificacion, usuario, correo, nombre, cargo, descripcion)
+    usuariosDao.get(identificacion, usuario).flatMap {
+      case None => Future.successful(0)
+      case Some(agente) =>
+        val correoCambio: Boolean = correo != agente.correo
+        usuariosDao.update(identificacion, usuario, correo, nombre, cargo, descripcion).flatMap { r =>
+          if (!correoCambio) {
+            Future.successful(r)
+          } else {
+            for {
+              configExpiracion <- configDao.getByKey(TiposConfiguracion.EXPIRACION_PIN.llave)
+              pinAgente: PinAgenteInmobiliario = pinRepository.generarPinAgente(configExpiracion, agente.id, reinicio = true)
+              idPin <- pinRepository.asociarPinAgente(pinAgente)
+              correoReinicio: MailMessage = pinRepository.generarCorreoReinicio(
+                pinAgente.tokenHash,
+                configExpiracion.valor.toInt, correo
+              )
+            } yield {
+              pinRepository.enviarEmail(correoReinicio)
+              r
+            }
+          }
+        }
+    }
   }
 
   override def activateOrDeactivateAgenteInmobiliario(identificacion: String, usuario: String): Future[Option[ConsultarAgenteInmobiliarioResponse]] = {
@@ -110,14 +138,14 @@ case class UsuarioInmobiliarioDriverRepository(configDao: ConfiguracionDAOs, usu
         }).map { estado =>
           usuariosDao.updateState(identificacion, usuario, estado).map {
             case x if x == 0 => Option.empty
-            case _ => Option(ConsultarAgenteInmobiliarioResponse(agente.id, agente.correo, agente.usuario, estado.id, agente.nombre, agente.cargo, agente.descripcion))
+            case _ => Option(ConsultarAgenteInmobiliarioResponse(agente.id, agente.correo, agente.usuario, estado.id,
+              agente.nombre, agente.cargo, agente.descripcion))
           }
         }.getOrElse(Future.successful(Option.empty))
     }
   }
 
   override def getContrasena(contrasena: String, idUsuario: Int): Future[UsuarioAgenteInmobiliario] = {
-    println(contrasena)
     usuariosDao.getContrasena(contrasena, idUsuario).flatMap {
       case Some(agente) => Future.successful(agente)
       case None => Future.failed(ValidacionExceptionPasswordRules("409.7", "No existe la contrasena actual", "", "", ""))

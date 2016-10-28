@@ -14,6 +14,7 @@ trait UsuarioInmobiliarioRepository {
   /**
    * Crea un agente inmobiliario
    *
+   * @param idConstructor      Número identificador de la empresa a agregar el agente
    * @param tipoIdentificacion Tipo de identificación de la empresa a agregar el agente
    * @param identificacion     Número de identificación de la empresa a agregar el agente
    * @param correo             Correo electrónico del agente
@@ -24,7 +25,7 @@ trait UsuarioInmobiliarioRepository {
    * @return Un futuro con el identificador del agente agregado.
    *         Si el agente ya existe, el identificador que devuleve corresponde a cero (0)
    */
-  def createAgenteInmobiliario(tipoIdentificacion: Int, identificacion: String,
+  def createAgenteInmobiliario(idConstructor: Int, tipoIdentificacion: Int, identificacion: String,
     correo: String, usuario: String,
     nombre: Option[String], cargo: Option[String], descripcion: Option[String]): Future[Int]
 
@@ -55,13 +56,13 @@ trait UsuarioInmobiliarioRepository {
    * @param nombre         Filtro - Nombre del agente inmobiliario - Opcional
    * @param usuario        Filtro - Nombre de usuario del agente inmobiliario - Opcional
    * @param correo         Filtro - Correo del agente inmobiliario - Opcional
-   * @param estado         Filtro - Estado del agente inmobiliario - Opcional
+   * @param estado         Filtro - Estado(s) del agente inmobiliario - Opcional
    * @param pagina         Paginación - Número de página - Opcional
    * @param itemsPorPagina Paginación - Número de agentes por página - Opcional
    * @return La lista de agentes inmobiliarios (entidad de servicio)
    */
   def getAgenteInmobiliarioList(identificacion: String, nombre: Option[String], usuario: Option[String],
-    correo: Option[String], estado: Option[Int],
+    correo: Option[String], estado: Option[String],
     pagina: Option[Int], itemsPorPagina: Option[Int]): Future[ConsultarAgenteInmobiliarioListResponse]
 
   /**

@@ -82,9 +82,11 @@ case class AgenteInmobiliarioService(
   private def createAgenteInmobiliario: Route = {
     post {
       entity(as[CrearAgenteInmobiliarioRequest]) { r =>
-        val idAgente: Future[Int] = usuariosRepo.createAgenteInmobiliario(usuarioAuth.tipoIdentificacion, usuarioAuth.identificacion, r.correo,
-          r.usuario, r.nombre, r.cargo, r.descripcion)
-
+        val idAgente: Future[Int] = usuariosRepo.createAgenteInmobiliario(
+          usuarioAuth.id, usuarioAuth.tipoIdentificacion, usuarioAuth.identificacion,
+          r.correo, r.usuario,
+          r.nombre, r.cargo, r.descripcion
+        )
         onComplete(idAgente) {
           case Success(id) => id match {
             case 0 => complete(StatusCodes.Conflict)
@@ -115,7 +117,7 @@ case class AgenteInmobiliarioService(
     get {
       requestUri { uri =>
         parameters('nombre.as[Option[String]], 'usuario.as[Option[String]],
-          'correo.as[Option[String]], 'estado.as[Option[Int]], 'pagina.as[Option[Int]], 'itemsPorPagina.as[Option[Int]]) {
+          'correo.as[Option[String]], 'estado.as[Option[String]], 'pagina.as[Option[Int]], 'itemsPorPagina.as[Option[Int]]) {
           (nombreOpt, usuarioOpt, correoOpt, estadoOpt, paginaOpt, itemsPorPaginaOpt) =>
             {
               val agentesF: Future[ConsultarAgenteInmobiliarioListResponse] = usuariosRepo.getAgenteInmobiliarioList(
@@ -188,7 +190,7 @@ case class AgenteInmobiliarioService(
     }
   }
 
-  private def getPermisosAgente(username: String): Route = {
+  private def getPermisosAgente(username : String): Route = {
     get {
       val permisosF: Future[Seq[PermisoAgenteInmobiliario]] = permisosRepo.getPermisosProyectoByAgente(usuarioAuth.id, username)
       onComplete(permisosF) {

@@ -26,6 +26,7 @@ import portal.transaccional.autenticacion.service.drivers.contrasenaAgenteInmobi
 import portal.transaccional.autenticacion.service.drivers.permisoAgenteInmobiliario.PermisoAgenteInmobiliarioRepository
 import portal.transaccional.autenticacion.service.drivers.rolRecursoComercial.{ RecursoComercialRepository, RolComercialRepository }
 import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.{ AutorizacionRepository, UsuarioInmobiliarioPinRepository, UsuarioInmobiliarioRepository }
+import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.{ AutorizacionDriverRepository, UsuarioInmobiliarioPinRepository, UsuarioInmobiliarioRepository }
 import portal.transaccional.autenticacion.service.drivers.util.SesionAgenteUtilRepository
 import portal.transaccional.autenticacion.service.web.ip.IpService
 import portal.transaccional.autenticacion.service.web.agenteInmobiliario.{ AgenteImobiliarioPinService, AgenteInmobiliarioService }
@@ -48,7 +49,7 @@ case class AlianzaRouter(
     rolComercialRepository: RolComercialRepository, usInmobiliarioRepo: UsuarioInmobiliarioRepository, permisoAgenteInmob: PermisoAgenteInmobiliarioRepository,
     sesionUtilAgenteEmpresarial: SesionAgenteUtilRepository, sesionUtilAgenteInmobiliario: SesionAgenteUtilRepository,
     agenteInmobContrasenaRepo: ContrasenaAgenteInmobiliarioRepository, pinAgenteInmobRepository: UsuarioInmobiliarioPinRepository,
-  autorizacionAgenteInmob: AutorizacionRepository
+    autorizacionInmobRepo : AutorizacionRepository
 )(implicit val system: ActorSystem) extends HttpServiceActor with RouteConcatenation with CrossHeaders with ServiceAuthorization with ActorLogging {
 
   import system.dispatcher
