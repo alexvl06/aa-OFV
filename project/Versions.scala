@@ -45,6 +45,7 @@ object Versions {
 
   val junit: String              = "4.12"
   val scalacheck: String         = "1.13.1"
-  val scalatest: String          = "2.2.6"
+  val scalatest: String          = "3.0.0"
+  val scalaMock: String          = "3.3.0"
   val restAssured: String        = "2.9.0"
 }
