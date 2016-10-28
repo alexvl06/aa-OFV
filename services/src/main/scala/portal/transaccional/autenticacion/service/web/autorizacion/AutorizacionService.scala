@@ -7,18 +7,19 @@ import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import co.com.alianza.exceptions._
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
+import co.com.alianza.infrastructure.dto.UsuarioInmobiliarioAuth
 import co.com.alianza.persistence.entities.UsuarioEmpresarial
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.token.{ AesUtil, Token }
 import portal.transaccional.autenticacion.service.drivers.autorizacion._
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioEmpresarialAdminRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialRepository
-import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.{ AutorizacionDriverRepository, AutorizacionRepository }
+import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.AutorizacionRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioRepository
 import portal.transaccional.autenticacion.service.drivers.util.SesionAgenteUtilRepository
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
-import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
-import spray.http.{ ContentType, MediaTypes, StatusCodes }
+import portal.transaccional.autenticacion.service.util.ws.{ CommonRESTFul, GenericAutorizado, GenericNoAutorizado }
+import spray.http.{ MediaTypes, StatusCodes }
 import spray.routing.{ RequestContext, Route, StandardRoute }
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -82,7 +83,7 @@ case class AutorizacionService(
               case `individual` => autorizacionRepository.invalidarToken(token, encriptedToken)
               case `comercialFiduciaria` | `comercialValores` => autorizacionComercialRepo.invalidarToken(token, encriptedToken)
               case `comercialAdmin` => autorizacionComercialAdminRepo.invalidarToken(token, encriptedToken)
-              case _ => Future.failed(NoAutorizado("Tipo usuario no existe -4 "))
+              case _ => Future.failed(NoAutorizado("Tipo usuario no existe"))
             }
             mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.cierreSesionIndex, ip.value,
               kafkaActor, usuario)) {
@@ -124,22 +125,22 @@ case class AutorizacionService(
   //Todo : A veces se necesita solo validar el token sin el recurso ?   By: Alexa
   private def validarTokenInmobiliario() = {
     get {
-      headerValueByName("token") { token =>
-        clientIP { ipRemota =>
-          respondWithMediaType(MediaTypes.`application/json`) {
-            parameters('url) { (url) =>
-                val decriptedToken: String = AesUtil.desencriptarToken(token)
-                val usuario: AuditityUser = getTokenData(decriptedToken)
+      clientIP { ipRemota =>
+        headerValueByName("token") { token =>
+          parameters('url) { (url) =>
+            respondWithMediaType(MediaTypes.`application/json`) {
+              val decriptedToken: String = AesUtil.desencriptarToken(token)
+              val usuario: AuditityUser = getTokenData(decriptedToken)
 
-                val responseF = usuario.tipoCliente match {
-                  case `adminInmobiliaria` => autorizacionAdminRepo.autorizar(decriptedToken, token, url, ipRemota.value, `adminInmobiliaria`)
-                  case `agenteInmobiliario` => autorizacionAgenteInmob.autorizar(decriptedToken, token, Option(url), ipRemota.value)
-                }
+              val responseF = usuario.tipoCliente match {
+                case `adminInmobiliaria` => autorizacionAdminRepo.autorizar(decriptedToken, token, url, ipRemota.value, `adminInmobiliaria`)
+                case `agenteInmobiliario` => autorizacionAgenteInmob.autorizar(decriptedToken, token, Option(url), ipRemota.value)
+              }
 
-                onComplete(responseF) {
-                  case Success(value) => execution(value)
-                  case Failure(ex) => execution(ex)
-                }
+              onComplete(responseF) {
+                case Success(value) => execution(value)
+                case Failure(ex) => execution(ex)
+              }
             }
           }
         }
@@ -158,14 +159,14 @@ case class AutorizacionService(
 
   def execution(ex: Any): StandardRoute = {
     ex match {
-      case value: Autorizado => complete((StatusCodes.OK, value.usuario))
-      case value: Prohibido => complete((StatusCodes.Forbidden, value.usuario))
-      case ex: NoAutorizado => complete((StatusCodes.Unauthorized, "El usuario no esta autorizado para acceder"))
-      case ex: ValidacionException => complete((StatusCodes.Unauthorized, ex.getMessage))
-      case ex: PersistenceException => complete((StatusCodes.InternalServerError, "Error inesperado"))
-      case ex: Throwable =>
-        ex.printStackTrace()
-        complete((StatusCodes.Unauthorized, "Error inesperado"))
+      case ex : Autorizado => complete((StatusCodes.OK, ex.usuario))
+      case ex : Prohibido => complete((StatusCodes.Forbidden, ex.usuario))
+      case ex : NoAutorizado => complete((StatusCodes.Unauthorized, "El usuario no esta autorizado para acceder"))
+      case ex : ValidacionException => complete((StatusCodes.Unauthorized, ex.getMessage))
+      case ex : PersistenceException => complete((StatusCodes.InternalServerError, "Error inesperado"))
+      case ex : GenericNoAutorizado => complete((StatusCodes.Forbidden, ex))
+      case ex : GenericAutorizado[UsuarioInmobiliarioAuth] => complete((StatusCodes.OK, ex.usuario))
+      case ex : Throwable => ex.printStackTrace() ; complete((StatusCodes.Unauthorized, "Error inesperado"))
     }
   }
 

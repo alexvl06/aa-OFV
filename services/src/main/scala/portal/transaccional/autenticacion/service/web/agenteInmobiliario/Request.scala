@@ -1,6 +1,5 @@
 package portal.transaccional.autenticacion.service.web.agenteInmobiliario
 
-import co.com.alianza.commons.enumerations.TipoPermisoInmobiliario._
 import scala.util.matching.Regex
 
 case class ActualizarCredencialesAgenteRequest(
@@ -38,15 +37,3 @@ case class CrearAgenteInmobiliarioRequest(
   }
 }
 
-case class EdicionPermisoRequest(
-  fideicomiso: Int,
-  agentesInmobiliarios: Seq[Int],
-  permisos: Seq[TipoPermisoInmobiliario],
-  proyectos: Seq[Int]
-)
-
-case class EdicionFidPermisoRequest(
-  fideicomiso: Int,
-  agentesInmobiliarios: Seq[(Int, Seq[TipoPermisoInmobiliario])],
-  proyectos: Seq[Int]
-)

@@ -74,7 +74,7 @@ case class UsuarioEmpresaService(kafkaActor: ActorSelection, agenteEmpresarialAc
                             requestWithFutureAuditing[PersistenceException, ActualizarAgenteMessage](r, AuditingHelper.fiduciariaTopic,
                               AuditingHelper.editarAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, Some(data))
                         } {
-                          requestExecute(data.copy(nit = Some(user.identificacionUsuario)), agenteEmpresarialActor)
+                          requestExecute(data.copy(nit = Some(user.identificacion)), agenteEmpresarialActor)
                         }
                     }
                   }

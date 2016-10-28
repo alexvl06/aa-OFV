@@ -157,8 +157,9 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialDriverRepository = AutorizacionUsuarioEmpresarialDriverRepository(
     usuarioAgenteRepo, alianzaDAO, sesionRepo, recursoRepo, sesionUtilAgenteEmpresarial
   )
+  lazy val autorizacionAgenteInmob: AutorizacionRepository = AutorizacionDriverRepository(sesionRepo, alianzaDAO, recursoRepo)
   lazy val autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminDriverRepository =
-    AutorizacionUsuarioEmpresarialAdminDriverRepository(usuarioAdminRepo, sesionRepo, alianzaDAO, recursoRepo)
+    AutorizacionUsuarioEmpresarialAdminDriverRepository(usuarioAdminRepo, sesionRepo, alianzaDAO, recursoRepo, autorizacionAgenteInmob )
   lazy val preguntasRepo: PreguntasDriverRepository = PreguntasDriverRepository(preguntaDAO)
   lazy val preguntasValidacionRepository: PreguntasAutovalidacionDriverRepository = PreguntasAutovalidacionDriverRepository(preguntasRepo, configuracionRepo, alianzaDAO)
   lazy val ipRepo = IpDriverRepository(usuarioRepo, usuarioAgenteRepo, empresaAdminDAO, ipEmpresaDAO, usuarioAdminRepo, clienteRepo, ipUsuarioDAO)
@@ -168,7 +169,7 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val rolComercialRepository = RolComercialDriverRepository(rolComercialDAO)
   lazy val permisoAgenteInmob = PermisoAgenteInmobiliarioDriverRepository(alianzaDAO, usuarioInmobDAO, permisoInmobDAO)
   lazy val pinAgenteInmobRepository = UsuarioInmobiliarioPinDriverRepository(pinInmobDAO)
-  lazy val  autorizacionAgenteInmob: AutorizacionRepository = AutorizacionDriverRepository(sesionRepo, alianzaDAO, recursoRepo)
+
 }
 
 private[app] sealed trait StoragePGAlianzaDB extends BootedCore {

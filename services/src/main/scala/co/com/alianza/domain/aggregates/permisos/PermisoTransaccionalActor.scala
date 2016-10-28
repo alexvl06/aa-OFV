@@ -104,7 +104,7 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
 
     case ConsultarPermisosAgenteLoginMessage(usuario) =>
       val currentSender = sender
-      val identificacionUsuario = usuario.identificacionUsuario
+      val identificacionUsuario = usuario.identificacion
       if (usuario.tipoCliente == TiposCliente.agenteEmpresarial) {
         val tienePermisosPagosMasivosFidCore = verificarPermisosCore(identificacionUsuario)
         val permisosFuture = DataAccessAdapter.consultaPermisosAgenteLogin(usuario.id)

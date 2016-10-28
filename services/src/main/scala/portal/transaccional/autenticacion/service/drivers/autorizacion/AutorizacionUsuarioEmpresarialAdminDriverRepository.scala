@@ -2,31 +2,34 @@ package portal.transaccional.autenticacion.service.drivers.autorizacion
 
 import akka.util.Timeout
 import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.exceptions.{ Autorizado, Prohibido, ValidacionAutorizacion, ValidacionException }
-import co.com.alianza.infrastructure.dto.{ UsuarioEmpresarialAdmin, UsuarioInmobiliario }
+import co.com.alianza.exceptions._
+import co.com.alianza.infrastructure.dto.{ UsuarioEmpresarialAdmin, UsuarioInmobiliarioAuth }
 import co.com.alianza.infrastructure.messages.ResponseMessage
-import co.com.alianza.persistence.entities.{ RecursoBackendInmobiliario, RecursoPerfilClienteAdmin }
+import co.com.alianza.persistence.entities.RecursoPerfilClienteAdmin
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.token.Token
 import enumerations.empresa.EstadosDeEmpresaEnum
 import portal.transaccional.autenticacion.service.drivers.recurso.RecursoRepository
 import portal.transaccional.autenticacion.service.drivers.sesion.SesionRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.{ DataAccessTranslator, UsuarioEmpresarialAdminRepository }
+import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.AutorizacionRepository
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.AlianzaDAO
 import spray.http.StatusCodes._
 
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.control.NoStackTrace
 
 /**
  * Created by seven4n in 2016
  */
 case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: UsuarioEmpresarialAdminRepository, sesionRepo: SesionRepository,
-  alianzaDAO: AlianzaDAO, recursoRepo: RecursoRepository)(implicit val ex: ExecutionContext) extends AutorizacionUsuarioEmpresarialAdminRepository {
+  alianzaDAO: AlianzaDAO, recursoRepo: RecursoRepository, authInmobiliario : AutorizacionRepository)(implicit val ex: ExecutionContext)
+  extends AutorizacionUsuarioEmpresarialAdminRepository {
 
   implicit val timeout = Timeout(5.seconds)
 
-  def autorizar(token: String, encriptedToken: String, url: String, ip: String, tipoCliente : String): Future[ValidacionAutorizacion] = {
+  def autorizar(token: String, encriptedToken: String, url: String, ip: String, tipoCliente : String): Future[NoStackTrace] = {
     for {
       _ <- validarToken(token)
       _ <- sesionRepo.validarSesion(token)
@@ -60,7 +63,7 @@ case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: Usuari
   }
 
 
-  private def obtenerRecursos(adminDTO :  UsuarioEmpresarialAdmin, tipoCliente : String , url : String): Future[ValidacionAutorizacion] = {
+  private def obtenerRecursos(adminDTO :  UsuarioEmpresarialAdmin, tipoCliente : String , url : String): Future[NoStackTrace] = {
     if (tipoCliente == TiposCliente.clienteAdministrador.toString){
       for {
         recursos <- alianzaDAO.getAdminResources(adminDTO.id)
@@ -69,7 +72,9 @@ case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: Usuari
     } else {
       for {
         recursos <- alianzaDAO.get4()
-        result <- resolveMessageRecursosInmob(adminDTO, recursos, url)
+        result <- {
+          val authUser = UsuarioInmobiliarioAuth(adminDTO.id, adminDTO.tipoCliente, adminDTO.identificacion, adminDTO.tipoIdentificacion, adminDTO.usuario)
+          authInmobiliario.filtrarRecuros(authUser, recursos, Option(url)) }
       } yield result
     }
   }
@@ -98,18 +103,6 @@ case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: Usuari
         }
     }
   }
-
-  private def resolveMessageRecursosInmob(adminDTO: UsuarioEmpresarialAdmin, recursos: Seq[RecursoBackendInmobiliario], url: String):
-  Future[ValidacionAutorizacion] = Future {
-    println(recursos, url)
-    val usuario = UsuarioInmobiliario(adminDTO.identificacion, adminDTO.tipoIdentificacion, adminDTO.usuario, adminDTO.tipoCliente.id)
-    val recursosFiltro = recursoRepo.filtrarRecursoAgenteInmobiliario(recursos, url)
-    recursosFiltro.nonEmpty match {
-      case false => Prohibido("403.1", s"El usuario no tiene permisos suficientes para ingresar a este servicio : $url .")
-      case true => Autorizado(JsonUtil.toJson(usuario))
-    }
-  }
-
 }
 
 case class ForbiddenMessageAdmin(usuario: UsuarioEmpresarialAdmin, filtro: Option[String])

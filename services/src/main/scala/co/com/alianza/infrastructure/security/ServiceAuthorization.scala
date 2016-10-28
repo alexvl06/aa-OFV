@@ -1,21 +1,18 @@
 package co.com.alianza.infrastructure.security
 
-import java.util.Date
-
 import akka.actor._
 import akka.util.Timeout
 import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
-import co.com.alianza.exceptions.{ Autorizado, NoAutorizado, Prohibido, ValidacionException }
-import co.com.alianza.infrastructure.dto.Usuario
+import co.com.alianza.exceptions._
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
+import co.com.alianza.infrastructure.dto.{ Usuario, UsuarioInmobiliarioAuth }
 import co.com.alianza.infrastructure.security.AuthenticationFailedRejection.{ CredentialsMissing, CredentialsRejected }
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.token.{ AesUtil, Token }
 import com.typesafe.config.Config
-import org.joda.time.DateTime
 import portal.transaccional.autenticacion.service.drivers.autorizacion.{ AutorizacionUsuarioEmpresarialAdminRepository, AutorizacionUsuarioEmpresarialRepository, AutorizacionUsuarioRepository }
 import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.AutorizacionRepository
+import portal.transaccional.autenticacion.service.util.ws.{ GenericAutorizado, GenericNoAutorizado }
 import spray.http.StatusCodes._
 import spray.routing.RequestContext
 import spray.routing.authentication.ContextAuthenticator
@@ -51,7 +48,7 @@ trait ServiceAuthorization {
 
         val autorizarF = autorizar(tipoCliente, token, encriptedToken)(ctx)
 
-        autorizarF.map {
+        val Validation: Future[Either[AuthenticationFailedRejection, UsuarioAuth] with Product with Serializable] = autorizarF.map {
           case validacion: ValidacionException =>
             Left(AuthenticationFailedRejection(CredentialsRejected, List(), Some(Unauthorized.intValue), Option(validacion.code)))
           case validacion: NoAutorizado =>
@@ -62,10 +59,19 @@ trait ServiceAuthorization {
           case validacion: Prohibido =>
             val user = JsonUtil.fromJson[UsuarioForbidden](validacion.usuario)
             Right(UsuarioAuth(user.usuario.id.get, user.usuario.tipoCliente, user.usuario.identificacion, user.usuario.tipoIdentificacion))
+          case validacion: GenericNoAutorizado =>
+            Left(AuthenticationFailedRejection(CredentialsRejected, List(), Some(Unauthorized.intValue), None))
+          case validacion: GenericAutorizado[UsuarioInmobiliarioAuth] =>
+            val user = validacion.usuario
+            Right(UsuarioAuth(user.id, user.tipoCliente, user.identificacion, user.tipoIdentificacion))
           case ex: Any =>
             Left(AuthenticationFailedRejection(CredentialsRejected, List()))
         }
+
+        Validation
       }
+
+
   }
 
   private def autorizar(tipoCliente: String, token: String, encriptedToken: String)(implicit ctx: RequestContext) = {

@@ -77,22 +77,31 @@ case class RecursoDriverRepository(generalDAO: AlianzaDAOs) extends RecursoRepos
   }
 
 
-  def filtrarRecursoAgenteInmobiliario(recursos: Seq[RecursoBackendInmobiliario], url: String): Seq[RecursoBackendInmobiliario] = {
 
-    recursos.filter{ recurso =>
-      val indexSlash: Int = recurso.url.lastIndexOf("/")
-      val myUrl: String =
-        if (recurso.url.contains("/*") && url.size > recurso.url.size) {
-          url.substring(0, indexSlash)
-        } else if (url.endsWith("/")) {
-          url.substring(0, url.lastIndexOf("/"))
-        } else {
-          url
-        }
-      val urlR: String = recurso.url.substring(0, indexSlash)
-      urlR.contains(myUrl) && urlR.equals(myUrl)
+  def filtrarRecurso(recursos: Seq[String], urlI: String): Boolean = {
+
+    val url = urlI.replace("?","%")
+
+    val encontrarVariablesNumericas = "/:id(\\w*)".r
+    val encontrarVariablesAlfaNumericas = "/:\\w*".r
+    val encontrarVariablesOpcionales = "%".r
+
+
+    val sacarProyecto = "/fideicomisos/([0-9]+)/proyectos/([0-9]+)/[\\w]*".r
+
+    val (fideicomiso, proyecto) = url match {
+      case sacarProyecto(f, p) => (f, p)
+      case _ => (0, 0)
     }
 
+    recursos.exists(
+      x => {
+        val remplazo1 = "^" + encontrarVariablesNumericas.replaceAllIn(x, "/([0-9]+)") + "$"
+        val remplazo2 = encontrarVariablesOpcionales.replaceAllIn(remplazo1, "%(([a-zA-z]+)=([a-zA-Z]*[0-9,]*)(&)?)*")
+        val reglaGeneral = encontrarVariablesAlfaNumericas.replaceAllIn(remplazo2, "/([a-zA-Z0-9]*)").r
+        url.matches(reglaGeneral.toString())
+      }
+    )
   }
 
 }

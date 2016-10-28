@@ -82,7 +82,7 @@ case class AgenteInmobiliarioService(
   private def createAgenteInmobiliario: Route = {
     post {
       entity(as[CrearAgenteInmobiliarioRequest]) { r =>
-        val idAgente: Future[Int] = usuariosRepo.createAgenteInmobiliario(usuarioAuth.tipoIdentificacion, usuarioAuth.identificacionUsuario, r.correo,
+        val idAgente: Future[Int] = usuariosRepo.createAgenteInmobiliario(usuarioAuth.tipoIdentificacion, usuarioAuth.identificacion, r.correo,
           r.usuario, r.nombre, r.cargo, r.descripcion)
 
         onComplete(idAgente) {
@@ -99,7 +99,7 @@ case class AgenteInmobiliarioService(
   private def getAgenteInmobiliario(usuarioAgente: String): Route = {
     get {
       val agenteF: Future[Option[ConsultarAgenteInmobiliarioResponse]] = usuariosRepo.getAgenteInmobiliario(
-        usuarioAuth.identificacionUsuario, usuarioAgente
+        usuarioAuth.identificacion, usuarioAgente
       )
       onComplete(agenteF) {
         case Success(agente: Option[ConsultarAgenteInmobiliarioResponse]) => agente match {
@@ -119,7 +119,7 @@ case class AgenteInmobiliarioService(
           (nombreOpt, usuarioOpt, correoOpt, estadoOpt, paginaOpt, itemsPorPaginaOpt) =>
             {
               val agentesF: Future[ConsultarAgenteInmobiliarioListResponse] = usuariosRepo.getAgenteInmobiliarioList(
-                usuarioAuth.identificacionUsuario, nombreOpt,
+                usuarioAuth.identificacion, nombreOpt,
                 usuarioOpt, correoOpt, estadoOpt, paginaOpt, itemsPorPaginaOpt
               )
               onComplete(agentesF) {
@@ -141,7 +141,7 @@ case class AgenteInmobiliarioService(
     put {
       entity(as[CrearAgenteInmobiliarioRequest]) { r =>
         val numModificadas: Future[Int] = usuariosRepo.updateAgenteInmobiliario(
-          usuarioAuth.identificacionUsuario, usuarioAgente,
+          usuarioAuth.identificacion, usuarioAgente,
           r.correo, r.nombre, r.cargo, r.descripcion
         )
         onComplete(numModificadas) {
@@ -158,7 +158,7 @@ case class AgenteInmobiliarioService(
   private def activateOrDeactivateAgenteInmobiliario(usuarioAgente: String): Route = {
     put {
       val agenteF: Future[Option[ConsultarAgenteInmobiliarioResponse]] = usuariosRepo.activateOrDeactivateAgenteInmobiliario(
-        usuarioAuth.identificacionUsuario, usuarioAgente
+        usuarioAuth.identificacion, usuarioAgente
       )
       onComplete(agenteF) {
         case Success(agenteOp) => agenteOp match {
@@ -178,7 +178,7 @@ case class AgenteInmobiliarioService(
           case x => x.split(",").map(_.toInt).toSeq
         }
         val permisosF: Future[Seq[PermisoAgenteInmobiliario]] = permisosRepo.getPermisosProyecto(
-          usuarioAuth.identificacionUsuario, fideicomiso, proyecto, idAgentes
+          usuarioAuth.identificacion, fideicomiso, proyecto, idAgentes
         )
         onComplete(permisosF) {
           case Success(permisos) => complete(StatusCodes.OK -> permisos)
@@ -207,7 +207,7 @@ case class AgenteInmobiliarioService(
             case x => x.split(",").map(_.toInt).toSeq
           }
           val updateF: Future[Option[Int]] = permisosRepo.updatePermisosProyecto(
-            usuarioAuth.identificacionUsuario, fideicomiso, proyecto, idAgentes, permisos
+            usuarioAuth.identificacion, fideicomiso, proyecto, idAgentes, permisos
           )
           onComplete(updateF) {
             case Success(update) => complete(StatusCodes.OK)
@@ -220,7 +220,6 @@ case class AgenteInmobiliarioService(
 
   private def getRecursos: Route = {
     get {
-      println(usuarioAuth)
       val recursosF = permisosRepo.getRecurso(usuarioAuth.id, usuarioAuth.tipoCliente)
       onComplete(recursosF) {
         case Success(recursos) => complete(StatusCodes.OK -> recursos)

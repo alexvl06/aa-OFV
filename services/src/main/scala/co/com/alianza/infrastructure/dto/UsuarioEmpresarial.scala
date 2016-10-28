@@ -52,13 +52,6 @@ case class UsuarioEmpresarialAdmin(
   tipoCliente: TiposCliente
 )
 
-case class UsuarioInmobiliario(
-  identificacion: String,
-  tipoIdentificacion: Int,
-  usuario: String,
-  tipoCliente: Int
-)
-
 case class UsuarioEmpresa(
   id: Int,
   identificacion: String,

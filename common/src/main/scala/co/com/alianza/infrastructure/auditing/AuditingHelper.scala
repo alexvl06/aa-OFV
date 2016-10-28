@@ -8,11 +8,14 @@ import spray.http.{ HttpRequest, HttpResponse }
 import spray.routing._
 
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.{ Success }
+import scala.util.Success
 import scalaz.{ Validation, Success => zSuccess }
 
 object AuditingHelper extends AuditingHelper {
+
   val fiduciariaTopic = "Fiduciaria"
+  val webInmobilairiaTopic = "WebInmobiliaria"
+
   val cambioContrasenaIndex = "cambio-contrasena-fiduciaria"
   val autenticacionIndex = "autenticacion-fiduciaria"
   val cierreSesionIndex = "cierre-sesion-fiduciaria"

@@ -20,4 +20,3 @@ case class Usuario(
   fechaUltimoIngreso: Option[Date],
   tipoCliente: TiposCliente
 )
-

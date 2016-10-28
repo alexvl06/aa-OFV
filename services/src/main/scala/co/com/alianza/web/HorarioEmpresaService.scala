@@ -66,7 +66,7 @@ case class HorarioEmpresaService(kafkaActor: ActorSelection, horarioEmpresaActor
       path(validarHorario) {
         get {
           respondWithMediaType(mediaType) {
-            requestExecute(new ValidarHorarioEmpresaMessage(user.identificacionUsuario, user.tipoCliente), horarioEmpresaActor)
+            requestExecute(new ValidarHorarioEmpresaMessage(user.identificacion, user.tipoCliente), horarioEmpresaActor)
           }
 
         }

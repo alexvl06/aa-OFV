@@ -1,12 +1,12 @@
 package portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario
 
-import co.com.alianza.exceptions.{ Autorizado, Prohibido, ValidacionAutorizacion, ValidacionException }
-import co.com.alianza.infrastructure.dto.UsuarioInmobiliario
+import co.com.alianza.exceptions.{ ValidacionAutorizacion, ValidacionException }
+import co.com.alianza.infrastructure.dto.UsuarioInmobiliarioAuth
 import co.com.alianza.persistence.entities.RecursoBackendInmobiliario
-import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.token.Token
 import portal.transaccional.autenticacion.service.drivers.recurso.RecursoRepository
 import portal.transaccional.autenticacion.service.drivers.sesion.SesionRepository
+import portal.transaccional.autenticacion.service.util.ws.{ GenericAutorizado, GenericNoAutorizado, GenericValidacionAutorizacion }
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.AlianzaDAOs
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -17,14 +17,14 @@ import scala.concurrent.{ ExecutionContext, Future }
 case class AutorizacionDriverRepository(sesionRepo: SesionRepository, alianzaDAO: AlianzaDAOs, recursoRepo: RecursoRepository)
   (implicit val ex: ExecutionContext) extends AutorizacionRepository {
 
-  def autorizar(token: String, encriptedToken: String, url: Option[String], ip: String): Future[ValidacionAutorizacion] = {
+  def autorizar(token: String, encriptedToken: String, url: Option[String], ip: String): Future[GenericValidacionAutorizacion] = {
     for {
       _ <- validarToken(token)
       _ <- sesionRepo.validarSesion(token)
       _ <- sesionRepo.obtenerSesion(token)
       agente <- alianzaDAO.getByTokenAgenteInmobiliario(encriptedToken)
       recursos <- alianzaDAO.get5(agente.id)
-      validacion <- filtrarUrl(DataAccessTranslator.entityToDto(agente), recursos, url.getOrElse(""))
+      validacion <- filtrarRecuros(DataAccessTranslator.entityToDto(agente), recursos, url)
     } yield validacion
   }
 
@@ -35,12 +35,17 @@ case class AutorizacionDriverRepository(sesionRepo: SesionRepository, alianzaDAO
     }
   }
 
-  private def filtrarUrl(agente: UsuarioInmobiliario, recursos: Seq[RecursoBackendInmobiliario], url: String): Future[ValidacionAutorizacion] = Future {
-    val recursosFiltro: Seq[RecursoBackendInmobiliario] = recursoRepo.filtrarRecursoAgenteInmobiliario(recursos, url)
-    if (recursosFiltro.nonEmpty){
-      Autorizado(JsonUtil.toJson(agente))
-    } else {
-      Prohibido("403.1", JsonUtil.toJson(s"El usuario no tiene permisos suficientes para ingresar al servicio.$url"))
-    }
-  }
+  def filtrarRecuros(agente: UsuarioInmobiliarioAuth, recursos: Seq[RecursoBackendInmobiliario], urlO: Option[String]): Future[GenericValidacionAutorizacion] ={
+
+    val usuarioExitoso  = Future.successful(GenericAutorizado[UsuarioInmobiliarioAuth](agente))
+    val usuarioNoExitoso = Future.failed(GenericNoAutorizado("403.1", s"El usuario no tiene permisos suficientes para ingresar al servicio." + urlO.getOrElse("")))
+
+    urlO match {
+      case Some(url) => {
+        val recursosFiltro = recursoRepo.filtrarRecurso(recursos.map(_.url), url)
+        if (recursosFiltro) usuarioExitoso else usuarioNoExitoso
+      }
+      case None => usuarioExitoso
+    }}
+
 }
