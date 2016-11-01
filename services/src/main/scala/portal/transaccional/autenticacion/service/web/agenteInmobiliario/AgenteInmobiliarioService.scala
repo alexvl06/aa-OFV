@@ -16,21 +16,24 @@ import spray.routing.{ Route, StandardRoute }
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success }
 
+// format: OFF
 /**
- * Expone los servicios rest relacionados con agentes inmobiliarios <br/>
- * Services: <br/>
- * <ul>
- * <li>GET /fideicomisos/{fid-id}/proyectos/{proyecto-id}/permisos -> Lista los permisos de los agentes de un proyecto asociado a un fideicomiso</li>
- * <li>PUT /fideicomisos/{fid-id}/proyectos/{proyecto-id}/permisos -> Actualiza los permisos de los agentes de un proyecto asociado a un fideicomiso</li>
- * <li>GET /agentes-inmobiliarios -> Lista todos los agentes inmobiliarios</li>
- * <li>POST /agentes-inmobiliarios -> Crea un agente inmobiliario</li>
- * <li>GET /agentes-inmobiliarios/{usuario-agente} -> Lista el detalle de un agente inmobiliario</li>
- * <li>PUT /agentes-inmobiliarios/{usuario-agente} -> Edita el detalle un agente inmobiliario</li>
- * <li>PUT /agentes-inmobiliarios/{usuario-agente}/estado -> Activa o desactiva un agente inmobiliario</li>
- * <li>PUT /agentes-inmobiliarios/{usuario-agente}/credenciales -> Cambia las credenciales de un agente inmobiliario</li>
- * <li>GET /agentes-inmobiliarios/{usuario-agente}/recursos -> Lista los recursos autorizados de un agente inmobiliario</li>
- * </ul>
- */
+  * Expone los servicios rest relacionados con agentes inmobiliarios <br/>
+  * Servicios: <br/>
+  * <ul>
+  * <li> GET  /agentes-inmobiliarios                                    Lista todos los agentes inmobiliarios</li>
+  * <li> POST /agentes-inmobiliarios                                    Crea un agente inmobiliario</li>
+  * <li> GET  /agentes-inmobiliarios/{usuario-agente}                   Lista el detalle de un agente inmobiliario</li>
+  * <li> PUT  /agentes-inmobiliarios/{usuario-agente}                   Edita el detalle un agente inmobiliario</li>
+  * <li> GET  /agentes-inmobiliarios/{usuario-agente}/permisos          Lista los recursos autorizados de un agente inmobiliario</li>
+  * <li> GET  /agentes-inmobiliarios/{usuario-agente}/recursos          Lista los recursos autorizados de un agente inmobiliario</li>
+  * <li> PUT  /agentes-inmobiliarios/{usuario-agente}/estado            Activa o desactiva un agente inmobiliario</li>
+  * <li> PUT  /agentes-inmobiliarios/{usuario-agente}/credenciales      Cambia las credenciales de un agente inmobiliario</li>
+  * <li> GET  /fideicomisos/{fid-id}/proyectos/{proyecto-id}/permisos   Lista los permisos de los agentes de un proyecto asociado a un fideicomiso</li>
+  * <li> PUT  /fideicomisos/{fid-id}/proyectos/{proyecto-id}/permisos   Actualiza los permisos de los agentes de un proyecto asociado a un fideicomiso</li>
+  * </ul>
+  */
+// format: ON
 case class AgenteInmobiliarioService(
   usuarioAuth: UsuarioAuth,
   usuariosRepo: UsuarioInmobiliarioRepository,
