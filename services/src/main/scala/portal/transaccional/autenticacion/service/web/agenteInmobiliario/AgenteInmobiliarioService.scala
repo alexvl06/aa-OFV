@@ -233,7 +233,9 @@ case class AgenteInmobiliarioService(
   private def updateByPassword: Route = {
     put {
       entity(as[ActualizarCredencialesAgenteRequest]) { contraseñas =>
-        val updateF = contrasenaRepo.actualizarContrasenaCaducada(Option.empty, contraseñas.contrasenaActual.getOrElse(""), contraseñas.contrasena, Option(usuarioAuth.id))
+        val updateF = contrasenaRepo.actualizarContrasenaCaducada(Option.empty, contraseñas.contrasenaActual.getOrElse(""), contraseñas.contrasena,
+          Option(usuarioAuth.id))
+
         onComplete(updateF) {
           case Success(resultado) => complete(StatusCodes.OK)
           case Failure(ex) => execution(ex)

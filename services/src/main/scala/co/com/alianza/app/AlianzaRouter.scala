@@ -56,7 +56,7 @@ case class AlianzaRouter(
 
   val routes =
     AutorizacionService(usuarioRepositorio, usuarioAgenteRepositorio, usuarioAdminRepositorio, autorizacionUsuarioRepo, kafkaActor, autorizacionAgenteRepo,
-      autorizacionAdminRepo, autorizacionComercialRepo, autorizacionComercialAdminRepo, sesionUtilAgenteEmpresarial, sesionUtilAgenteInmobiliario, autorizacionAgenteInmob).route ~
+      autorizacionAdminRepo, autorizacionComercialRepo, autorizacionComercialAdminRepo, sesionUtilAgenteEmpresarial, sesionUtilAgenteInmobiliario, autorizacionInmobRepo).route ~
       AutenticacionService(autenticacionRepo, autenticacionEmpresaRepositorio, autenticacionComercialRepositorio, kafkaActor).route ~
       RecursoGraficoComercialService(recursoComercialRepository, rolComercialRepository).route ~
       AutorizacionRecursoComercialService(autorizacionRecursoComercialRepository).route ~

@@ -1,7 +1,7 @@
 package portal.transaccional.autenticacion.service.drivers.permisoAgenteInmobiliario
 
 import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
-import co.com.alianza.persistence.entities.{ PermisoAgenteInmobiliario, RecursoAgenteInmobiliario }
+import co.com.alianza.persistence.entities.{ PermisoAgenteInmobiliario, RecursoGraficoInmobiliario }
 
 import scala.concurrent.Future
 
@@ -44,5 +44,5 @@ trait PermisoAgenteInmobiliarioRepository {
    * @param idUser Id de la persona que fue autenticada, puede ser tanto constructor como agente inmobiliario.
    * @param tiposCliente Tipo de constructor o agenteInmobiliario [co.com.alianza.commons.enumerations.TiposCliente]
    */
-  def getRecurso(idUser: Int, tiposCliente: TiposCliente): Future[Seq[RecursoAgenteInmobiliario]]
+  def getRecurso(idUser: Int, tiposCliente: TiposCliente): Future[Seq[RecursoGraficoInmobiliario]]
 }

@@ -86,19 +86,11 @@ case class RecursoDriverRepository(generalDAO: AlianzaDAOs) extends RecursoRepos
     val encontrarVariablesAlfaNumericas = "/:\\w*".r
     val encontrarVariablesOpcionales = "%".r
 
-
-    val sacarProyecto = "/fideicomisos/([0-9]+)/proyectos/([0-9]+)/[\\w]*".r
-
-    val (fideicomiso, proyecto) = url match {
-      case sacarProyecto(f, p) => (f, p)
-      case _ => (0, 0)
-    }
-
-    recursos.exists(
+   recursos.exists(
       x => {
-        val remplazo1 = "^" + encontrarVariablesNumericas.replaceAllIn(x, "/([0-9]+)") + "$"
-        val remplazo2 = encontrarVariablesOpcionales.replaceAllIn(remplazo1, "%(([a-zA-z]+)=([a-zA-Z]*[0-9,]*)(&)?)*")
-        val reglaGeneral = encontrarVariablesAlfaNumericas.replaceAllIn(remplazo2, "/([a-zA-Z0-9]*)").r
+        val remplazo1 = "^" + encontrarVariablesNumericas.replaceAllIn(x,"/([0-9]+)") + "$"
+        val remplazo2 = encontrarVariablesOpcionales.replaceAllIn(remplazo1,"%(([a-zA-z]+)=([a-zA-Z]*[0-9,]*)(&)?)*")
+        val reglaGeneral = encontrarVariablesAlfaNumericas.replaceAllIn(remplazo2,"/([a-zA-Z0-9]*)").r
         url.matches(reglaGeneral.toString())
       }
     )

@@ -30,7 +30,7 @@ trait ServiceAuthorization {
   val autorizacionUsuarioRepo: AutorizacionUsuarioRepository
   val autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository
   val autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository
-  val autorizacionAgenteInmob : AutorizacionRepository
+  val autorizacionInmobRepo : AutorizacionRepository
 
   implicit val timeout: Timeout = Timeout(5.seconds)
 
@@ -80,7 +80,7 @@ trait ServiceAuthorization {
     } else if (tipoCliente == TiposCliente.clienteAdministrador.toString || tipoCliente == TiposCliente.clienteAdminInmobiliario.toString) {
       autorizacionAdminRepo.autorizar(token, encriptedToken, "", obtenerIp(ctx).get.value, TiposCliente.clienteAdministrador.toString)
     } else if (tipoCliente == TiposCliente.agenteInmobiliario.toString) {
-      autorizacionAgenteInmob.autorizar(token, encriptedToken, Option.empty , obtenerIp(ctx).get.value)
+      autorizacionInmobRepo.autorizar(token, encriptedToken, Option.empty , obtenerIp(ctx).get.value)
     } else {
       autorizacionUsuarioRepo.autorizar(token, encriptedToken, "")
     }

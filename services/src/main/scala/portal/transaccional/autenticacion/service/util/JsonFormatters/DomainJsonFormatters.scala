@@ -10,7 +10,7 @@ import portal.transaccional.autenticacion.service.dto.{ PermisoRecursoDTO, Recur
 import portal.transaccional.autenticacion.service.util.ws.{ CommonRESTFul, GenericNoAutorizado }
 import portal.transaccional.autenticacion.service.web.agenteInmobiliario._
 import portal.transaccional.autenticacion.service.web.autenticacion.{ AutenticarRequest, AutenticarUsuarioComercialRequest, AutenticarUsuarioEmpresarialRequest }
-import portal.transaccional.autenticacion.service.web.autorizacion.InvalidarTokenRequest
+import portal.transaccional.autenticacion.service.web.autorizacion.{ InvalidarTokenRequest, ValidarTokenAgenteRequest }
 import portal.transaccional.autenticacion.service.web.ip.AgregarIpRequest
 import portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.{ GuardarRespuestasRequest, ResponseObtenerPreguntas, ResponseObtenerPreguntasComprobar, RespuestasComprobacionRequest }
 import spray.json.{ DefaultJsonProtocol, DeserializationException, JsNumber, JsObject, JsString, JsValue, JsonFormat, RootJsonFormat }

@@ -2,13 +2,13 @@ package portal.transaccional.autenticacion.service.drivers.permisoAgenteInmobili
 
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente._
-import co.com.alianza.persistence.entities.{ PermisoAgenteInmobiliario, RecursoAgenteInmobiliario }
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ AlianzaDAO, PermisoInmobiliarioDAOs, RecursoInmobiliarioDAOs, UsuarioAgenteInmobDAOs }
+import co.com.alianza.persistence.entities.{ PermisoAgenteInmobiliario, RecursoGraficoInmobiliario }
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ AlianzaDAO, PermisoInmobiliarioDAOs, UsuarioAgenteInmobDAOs }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
 case class PermisoAgenteInmobiliarioDriverRepository(alianzaDao: AlianzaDAO, usuariosDao: UsuarioAgenteInmobDAOs,
-    permisosDAO: PermisoInmobiliarioDAOs, recursoDao: RecursoInmobiliarioDAOs)(implicit val ex: ExecutionContext) extends PermisoAgenteInmobiliarioRepository {
+    permisosDAO: PermisoInmobiliarioDAOs)(implicit val ex: ExecutionContext) extends PermisoAgenteInmobiliarioRepository {
 
   def getPermisosProyecto(identificacion: String, fideicomiso: Int, proyecto: Int, idAgentes: Seq[Int]): Future[Seq[PermisoAgenteInmobiliario]] = {
     alianzaDao.getPermisosProyectoInmobiliario(identificacion, fideicomiso, proyecto, idAgentes)
@@ -31,10 +31,10 @@ case class PermisoAgenteInmobiliarioDriverRepository(alianzaDao: AlianzaDAO, usu
     } yield actualizar
   }
 
-  def getRecurso(idUser: Int, tiposCliente: TiposCliente): Future[Seq[RecursoAgenteInmobiliario]] = {
+  def getRecurso(idUser: Int, tiposCliente: TiposCliente): Future[Seq[RecursoGraficoInmobiliario]] = {
     tiposCliente match {
-      case TiposCliente.agenteInmobiliario => alianzaDao.getRecursosAgenteInmobiliario(idUser)
-      case _ => recursoDao.getAll()
+      case TiposCliente.agenteInmobiliario => alianzaDao.getAgentResourcesById(idUser)
+      case _ => alianzaDao.getAdminResourcesVisible(true)
     }
   }
 
