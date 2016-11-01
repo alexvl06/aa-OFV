@@ -44,5 +44,5 @@ trait PermisoAgenteInmobiliarioRepository {
    * @param idUser Id de la persona que fue autenticada, puede ser tanto constructor como agente inmobiliario.
    * @param tiposCliente Tipo de constructor o agenteInmobiliario [co.com.alianza.commons.enumerations.TiposCliente]
    */
-  def getRecurso(idUser: Int, tiposCliente: TiposCliente): Future[Seq[RecursoGraficoInmobiliario]]
+  def getRecurso(idUser: Int, tiposCliente: TiposCliente, isMatriz: Boolean): Future[Seq[RecursoGraficoInmobiliario]]
 }

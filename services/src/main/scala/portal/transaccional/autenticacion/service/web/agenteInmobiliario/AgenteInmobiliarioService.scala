@@ -37,7 +37,7 @@ case class AgenteInmobiliarioService(
   permisosRepo: PermisoAgenteInmobiliarioRepository,
   contrasenaRepo: ContrasenaAgenteInmobiliarioRepository
 )(implicit val ec: ExecutionContext)
-    extends CommonRESTFul with DomainJsonFormatters with CrossHeaders with HalPaginationUtils {
+  extends CommonRESTFul with DomainJsonFormatters with CrossHeaders with HalPaginationUtils {
 
   val agentesPath: String = "agentes-inmobiliarios"
   val estadoPath: String = "estado"
@@ -119,21 +119,21 @@ case class AgenteInmobiliarioService(
         parameters('nombre.as[Option[String]], 'usuario.as[Option[String]],
           'correo.as[Option[String]], 'estado.as[Option[String]], 'pagina.as[Option[Int]], 'itemsPorPagina.as[Option[Int]]) {
           (nombreOpt, usuarioOpt, correoOpt, estadoOpt, paginaOpt, itemsPorPaginaOpt) =>
-            {
-              val agentesF: Future[ConsultarAgenteInmobiliarioListResponse] = usuariosRepo.getAgenteInmobiliarioList(
-                usuarioAuth.identificacion, nombreOpt,
-                usuarioOpt, correoOpt, estadoOpt, paginaOpt, itemsPorPaginaOpt
-              )
-              onComplete(agentesF) {
-                case Success(agentes) =>
-                  val links = getHalLinks(
-                    agentes._metadata.totalItems, agentes._metadata.itemsPorPagina,
-                    agentes._metadata.pagina, uri.toRelative, uri.toRelative.query.toMap
-                  )
-                  complete(StatusCodes.OK -> agentes.copy(_metadata = agentes._metadata.copy(links = Some(links))))
-                case Failure(exception) => complete(StatusCodes.InternalServerError)
-              }
+          {
+            val agentesF: Future[ConsultarAgenteInmobiliarioListResponse] = usuariosRepo.getAgenteInmobiliarioList(
+              usuarioAuth.identificacion, nombreOpt,
+              usuarioOpt, correoOpt, estadoOpt, paginaOpt, itemsPorPaginaOpt
+            )
+            onComplete(agentesF) {
+              case Success(agentes) =>
+                val links = getHalLinks(
+                  agentes._metadata.totalItems, agentes._metadata.itemsPorPagina,
+                  agentes._metadata.pagina, uri.toRelative, uri.toRelative.query.toMap
+                )
+                complete(StatusCodes.OK -> agentes.copy(_metadata = agentes._metadata.copy(links = Some(links))))
+              case Failure(exception) => complete(StatusCodes.InternalServerError)
             }
+          }
         }
       }
     }
@@ -222,10 +222,12 @@ case class AgenteInmobiliarioService(
 
   private def getRecursos: Route = {
     get {
-      val recursosF = permisosRepo.getRecurso(usuarioAuth.id, usuarioAuth.tipoCliente)
-      onComplete(recursosF) {
-        case Success(recursos) => complete(StatusCodes.OK -> recursos)
-        case Failure(exception) => complete((StatusCodes.Conflict, "hubo un error"))
+      parameters("matriz" ? false) { isMatriz =>
+        val recursosF = permisosRepo.getRecurso(usuarioAuth.id, usuarioAuth.tipoCliente, isMatriz)
+        onComplete(recursosF) {
+          case Success(recursos) => complete(StatusCodes.OK -> recursos)
+          case Failure(exception) => complete((StatusCodes.Conflict, "hubo un error"))
+        }
       }
     }
   }

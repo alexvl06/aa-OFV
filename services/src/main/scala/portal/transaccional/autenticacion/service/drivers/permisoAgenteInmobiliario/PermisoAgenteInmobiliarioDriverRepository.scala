@@ -8,7 +8,7 @@ import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ Alian
 import scala.concurrent.{ ExecutionContext, Future }
 
 case class PermisoAgenteInmobiliarioDriverRepository(alianzaDao: AlianzaDAO, usuariosDao: UsuarioAgenteInmobDAOs,
-    permisosDAO: PermisoInmobiliarioDAOs)(implicit val ex: ExecutionContext) extends PermisoAgenteInmobiliarioRepository {
+  permisosDAO: PermisoInmobiliarioDAOs)(implicit val ex: ExecutionContext) extends PermisoAgenteInmobiliarioRepository {
 
   def getPermisosProyecto(identificacion: String, fideicomiso: Int, proyecto: Int, idAgentes: Seq[Int]): Future[Seq[PermisoAgenteInmobiliario]] = {
     alianzaDao.getPermisosProyectoInmobiliario(identificacion, fideicomiso, proyecto, idAgentes)
@@ -19,7 +19,7 @@ case class PermisoAgenteInmobiliarioDriverRepository(alianzaDao: AlianzaDAO, usu
   }
 
   def updatePermisosProyecto(identificacion: String, fideicomiso: Int, proyecto: Int,
-                             idAgentes: Seq[Int], permisos: Seq[PermisoAgenteInmobiliario]): Future[Option[Int]] = {
+    idAgentes: Seq[Int], permisos: Seq[PermisoAgenteInmobiliario]): Future[Option[Int]] = {
     for {
       agentesEmpresa <- usuariosDao.getAll(identificacion)
       permisosFiltrados: Seq[PermisoAgenteInmobiliario] = permisos
@@ -31,10 +31,16 @@ case class PermisoAgenteInmobiliarioDriverRepository(alianzaDao: AlianzaDAO, usu
     } yield actualizar
   }
 
-  def getRecurso(idUser: Int, tiposCliente: TiposCliente): Future[Seq[RecursoGraficoInmobiliario]] = {
+  def getRecurso(idUser: Int, tiposCliente: TiposCliente, isMatriz : Boolean): Future[Seq[RecursoGraficoInmobiliario]] = {
+
     tiposCliente match {
       case TiposCliente.agenteInmobiliario => alianzaDao.getAgentResourcesById(idUser)
-      case _ => alianzaDao.getAdminResourcesVisible(true)
+      case _ =>
+        if (isMatriz) {
+          alianzaDao.getAdminResourcesVisible(false).map(_.filterNot(_.id == 13))
+        } else {
+          alianzaDao.getAdminResourcesVisible(true)
+        }
     }
   }
 
