@@ -252,11 +252,13 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
   }
 
   private def getAgentPermission(idAgente : Int) = {
-    for {
+    val k =for {
       a <- usuariosAgentesInmobiliarios if a.id === idAgente
       p <- permisosInmobiliarios if p.idAgente === a.id
       g <- recursosGraficosInmobiliarios if g.id === p.tipoPermiso
     } yield g
+
+    k ++ recursosGraficosInmobiliarios.filter(_.id === 13)
   }
 
 }
