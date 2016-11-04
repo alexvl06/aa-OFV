@@ -3,7 +3,7 @@ package portal.transaccional.autenticacion.service.util.JsonFormatters
 import co.com.alianza.exceptions.{ NoAutorizado, ValidacionException }
 import co.com.alianza.infrastructure.dto.{ Pregunta, Respuesta }
 import co.com.alianza.persistence.entities.{ Empresa, RecursoComercial, ReglaContrasena, RolComercial }
-import enumerations.TipoIdentificacionDTO
+import enumerations.{ TipoIdentificacionComercialDTO, TipoIdentificacionDTO }
 import portal.transaccional.autenticacion.service.dto.{ PermisoRecursoDTO, RecursoDTO }
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import portal.transaccional.autenticacion.service.web.actualizacion._
@@ -77,6 +77,7 @@ trait DomainJsonFormatters {
 
   //Enumeracion
   implicit val tipoIdentificacionDTOFormatter = jsonFormat2(TipoIdentificacionDTO)
+  implicit val TipoIdentificacionComercialDTOFormatter = jsonFormat4(TipoIdentificacionComercialDTO)
 
   //pin
   implicit val cambioContrasenaFormatter = jsonFormat2(ContrasenaUsuario)
