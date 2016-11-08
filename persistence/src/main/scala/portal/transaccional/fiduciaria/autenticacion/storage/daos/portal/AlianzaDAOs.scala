@@ -6,6 +6,8 @@ import scala.concurrent.Future
 
 trait AlianzaDAOs {
 
+  def getClienteIndividualResources(): Future[Seq[RecursoPerfil]]
+
   def getResources(idUsuario: Int): Future[Seq[RecursoPerfil]]
 
   def getAgenteResources(idUsuario: Int): Future[Seq[RecursoPerfilAgente]]

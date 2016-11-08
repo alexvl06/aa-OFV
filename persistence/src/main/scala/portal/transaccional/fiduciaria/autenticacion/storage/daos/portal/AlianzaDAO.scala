@@ -60,6 +60,10 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
     run(resources.result)
   }
 
+  def getClienteIndividualResources(): Future[Seq[RecursoPerfil]] = {
+    run(this.recursos.result)
+  }
+
   //  --------------- Usuario empresarial -------------------
   /**
    * Obtiene el token de usuario empresarial admin
