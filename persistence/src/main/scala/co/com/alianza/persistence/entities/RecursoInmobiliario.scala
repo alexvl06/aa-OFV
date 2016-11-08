@@ -12,7 +12,7 @@ case class RecursoInmobiliarioTable(tag: Tag) extends Table[RecursoInmobiliario]
   def idGrafico: Rep[Int] = column[Int]("ID_RECURSO_GRAFICO")
   def idBacken: Rep[Int] = column[Int]("ID_RECURSO_BACKEND")
 
-  def pk = primaryKey("RECURSO_INMOBILIARIO_PKEY", (idGrafico,idBacken))
+  def pk = primaryKey("RECURSO_INMOBILIARIO_PKEY", (idGrafico, idBacken))
 
   def * = (idGrafico, idBacken) <> (RecursoInmobiliario.tupled, RecursoInmobiliario.unapply)
 }

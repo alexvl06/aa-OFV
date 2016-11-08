@@ -30,7 +30,7 @@ trait ServiceAuthorization {
   val autorizacionUsuarioRepo: AutorizacionUsuarioRepository
   val autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository
   val autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository
-  val autorizacionInmobRepo : AutorizacionRepository
+  val autorizacionInmobRepo: AutorizacionRepository
 
   implicit val timeout: Timeout = Timeout(5.seconds)
 
@@ -71,7 +71,6 @@ trait ServiceAuthorization {
         Validation
       }
 
-
   }
 
   private def autorizar(tipoCliente: String, token: String, encriptedToken: String)(implicit ctx: RequestContext) = {
@@ -80,13 +79,11 @@ trait ServiceAuthorization {
     } else if (tipoCliente == TiposCliente.clienteAdministrador.toString || tipoCliente == TiposCliente.clienteAdminInmobiliario.toString) {
       autorizacionAdminRepo.autorizar(token, encriptedToken, "", obtenerIp(ctx).get.value, TiposCliente.clienteAdministrador.toString)
     } else if (tipoCliente == TiposCliente.agenteInmobiliario.toString) {
-      autorizacionInmobRepo.autorizar(token, encriptedToken, Option.empty , obtenerIp(ctx).get.value)
+      autorizacionInmobRepo.autorizar(token, encriptedToken, Option.empty, obtenerIp(ctx).get.value)
     } else {
       autorizacionUsuarioRepo.autorizar(token, encriptedToken, "")
     }
   }
-
-
 
   private def obtenerIp(ctx: RequestContext) = ctx.request.headers.find {
     header =>

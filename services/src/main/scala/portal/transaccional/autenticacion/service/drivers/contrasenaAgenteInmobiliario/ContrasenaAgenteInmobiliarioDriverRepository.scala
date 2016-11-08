@@ -50,7 +50,7 @@ case class ContrasenaAgenteInmobiliarioDriverRepository(agenteRepo: UsuarioInmob
   }
 
   private def actualizarContrasena(pinHash: Option[String], contrasenaActual: String, nuevaContrasena: String,
-                                   idAgente: Int, valoresRegla: Boolean, agenteOp: Option[UsuarioAgenteInmobiliario] = None): Future[Int] = {
+    idAgente: Int, valoresRegla: Boolean, agenteOp: Option[UsuarioAgenteInmobiliario] = None): Future[Int] = {
     val hashContrasenaActual: String = Crypto.hashSha512(contrasenaActual.concat(AppendPasswordUser.appendUsuariosFiducia), idAgente)
     val hashNuevaContrasena: String = Crypto.hashSha512(nuevaContrasena.concat(AppendPasswordUser.appendUsuariosFiducia), idAgente)
 
@@ -117,8 +117,7 @@ case class ContrasenaAgenteInmobiliarioDriverRepository(agenteRepo: UsuarioInmob
 
     for {
       contrasenasViejas <- oldPassDAO.findById(cantContraseñasAnteriores, id)
-      validarToken <-
-      if (!contrasenasViejas.exists(_.contrasena == passNew) && passNew != passOld) {
+      validarToken <- if (!contrasenasViejas.exists(_.contrasena == passNew) && passNew != passOld) {
         Future.successful(true)
       } else if (valoresRegla) {
         Future.failed(ValidacionException(code, error + ":" + cantContraseñasAnteriores.toString))

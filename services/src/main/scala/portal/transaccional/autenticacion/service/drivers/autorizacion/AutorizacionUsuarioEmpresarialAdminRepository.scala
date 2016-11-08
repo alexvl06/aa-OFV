@@ -10,7 +10,7 @@ import scala.util.control.NoStackTrace
  */
 trait AutorizacionUsuarioEmpresarialAdminRepository {
 
-  def autorizar(token: String, encriptedToken: String, url: String, ip: String, tipoCliente : String): Future[NoStackTrace]
+  def autorizar(token: String, encriptedToken: String, url: String, ip: String, tipoCliente: String): Future[NoStackTrace]
 
   def invalidarToken(token: String, encriptedToken: String): Future[Int]
 

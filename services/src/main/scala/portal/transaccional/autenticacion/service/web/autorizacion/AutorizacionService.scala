@@ -29,18 +29,18 @@ import scala.util.{ Failure, Success }
  * Created by s4n 2016
  */
 case class AutorizacionService(
-  usuarioRepository: UsuarioRepository,
-  usuarioAgenteRepository: UsuarioEmpresarialRepository[UsuarioEmpresarial],
-  usuarioAdminRepository: UsuarioEmpresarialAdminRepository,
-  autorizacionRepository: AutorizacionUsuarioRepository,
-  kafkaActor: ActorSelection,
-  autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository,
-  autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository,
-  autorizacionComercialRepo: AutorizacionUsuarioComercialRepository,
-  autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository,
-  sesionUtilAgenteEmpresarial: SesionAgenteUtilRepository,
-  sesionUtilAgenteInmobiliario: SesionAgenteUtilRepository,
-  autorizacionAgenteInmob : AutorizacionRepository
+    usuarioRepository: UsuarioRepository,
+    usuarioAgenteRepository: UsuarioEmpresarialRepository[UsuarioEmpresarial],
+    usuarioAdminRepository: UsuarioEmpresarialAdminRepository,
+    autorizacionRepository: AutorizacionUsuarioRepository,
+    kafkaActor: ActorSelection,
+    autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository,
+    autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository,
+    autorizacionComercialRepo: AutorizacionUsuarioComercialRepository,
+    autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository,
+    sesionUtilAgenteEmpresarial: SesionAgenteUtilRepository,
+    sesionUtilAgenteInmobiliario: SesionAgenteUtilRepository,
+    autorizacionAgenteInmob: AutorizacionRepository
 )(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   val invalidarTokenPath = "invalidarToken"
@@ -149,7 +149,6 @@ case class AutorizacionService(
     }
   }
 
-
   //TODO: Borrar este metodo cuando se realice la autorizacion de url para comerciales (Pendiente HU) By : Henando
   private def obtenerUsuarioComercialMock(tipoCliente: TiposCliente, usuario: String): Future[Autorizado] = Future {
     case class UsuarioLogged(id: Int, correo: String, identificacion: String, tipoIdentificacion: Int, tipoCliente: TiposCliente, usuario: String)
@@ -160,14 +159,14 @@ case class AutorizacionService(
 
   def execution(ex: Any): StandardRoute = {
     ex match {
-      case ex : Autorizado => complete((StatusCodes.OK, ex.usuario))
-      case ex : Prohibido => complete((StatusCodes.Forbidden, ex.usuario))
-      case ex : NoAutorizado => complete((StatusCodes.Unauthorized, "El usuario no esta autorizado para acceder"))
-      case ex : ValidacionException => complete((StatusCodes.Unauthorized, ex.getMessage))
-      case ex : PersistenceException => complete((StatusCodes.InternalServerError, "Error inesperado"))
-      case ex : GenericNoAutorizado => complete((StatusCodes.Forbidden, ex))
-      case ex : GenericAutorizado[UsuarioInmobiliarioAuth] => complete((StatusCodes.OK, ex.usuario))
-      case ex : Throwable => ex.printStackTrace() ; complete((StatusCodes.Unauthorized, "Error inesperado"))
+      case ex: Autorizado => complete((StatusCodes.OK, ex.usuario))
+      case ex: Prohibido => complete((StatusCodes.Forbidden, ex.usuario))
+      case ex: NoAutorizado => complete((StatusCodes.Unauthorized, "El usuario no esta autorizado para acceder"))
+      case ex: ValidacionException => complete((StatusCodes.Unauthorized, ex.getMessage))
+      case ex: PersistenceException => complete((StatusCodes.InternalServerError, "Error inesperado"))
+      case ex: GenericNoAutorizado => complete((StatusCodes.Forbidden, ex))
+      case ex: GenericAutorizado[UsuarioInmobiliarioAuth] => complete((StatusCodes.OK, ex.usuario))
+      case ex: Throwable => ex.printStackTrace(); complete((StatusCodes.Unauthorized, "Error inesperado"))
     }
   }
 

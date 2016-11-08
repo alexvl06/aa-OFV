@@ -49,7 +49,7 @@ case class AlianzaRouter(
     rolComercialRepository: RolComercialRepository, usInmobiliarioRepo: UsuarioInmobiliarioRepository, permisoAgenteInmob: PermisoAgenteInmobiliarioRepository,
     sesionUtilAgenteEmpresarial: SesionAgenteUtilRepository, sesionUtilAgenteInmobiliario: SesionAgenteUtilRepository,
     agenteInmobContrasenaRepo: ContrasenaAgenteInmobiliarioRepository, pinAgenteInmobRepository: UsuarioInmobiliarioPinRepository,
-    autorizacionInmobRepo : AutorizacionRepository
+    autorizacionInmobRepo: AutorizacionRepository
 )(implicit val system: ActorSystem) extends HttpServiceActor with RouteConcatenation with CrossHeaders with ServiceAuthorization with ActorLogging {
 
   import system.dispatcher

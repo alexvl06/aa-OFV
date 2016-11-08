@@ -3,7 +3,7 @@ package portal.transaccional.autenticacion.service.web.agenteInmobiliario
 import scala.util.matching.Regex
 
 case class ActualizarCredencialesAgenteRequest(
-  contrasena: String,
+    contrasena: String,
     confirmarContrasena: String,
     contrasenaActual: Option[String]
 ) {

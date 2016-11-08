@@ -163,7 +163,7 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   )
   lazy val autorizacionAgenteInmob: AutorizacionRepository = AutorizacionDriverRepository(sesionRepo, alianzaDAO, recursoRepo)
   lazy val autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminDriverRepository =
-    AutorizacionUsuarioEmpresarialAdminDriverRepository(usuarioAdminRepo, sesionRepo, alianzaDAO, recursoRepo, autorizacionAgenteInmob )
+    AutorizacionUsuarioEmpresarialAdminDriverRepository(usuarioAdminRepo, sesionRepo, alianzaDAO, recursoRepo, autorizacionAgenteInmob)
   lazy val preguntasRepo: PreguntasDriverRepository = PreguntasDriverRepository(preguntaDAO)
   lazy val preguntasValidacionRepository: PreguntasAutovalidacionDriverRepository = PreguntasAutovalidacionDriverRepository(preguntasRepo, configuracionRepo, alianzaDAO)
   lazy val ipRepo = IpDriverRepository(usuarioRepo, usuarioAgenteRepo, empresaAdminDAO, ipEmpresaDAO, usuarioAdminRepo, clienteRepo, ipUsuarioDAO)

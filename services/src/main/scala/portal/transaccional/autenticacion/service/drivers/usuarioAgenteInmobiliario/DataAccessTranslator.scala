@@ -8,7 +8,7 @@ import co.com.alianza.persistence.entities.{ UsuarioAgenteInmobiliario => eUsuar
  */
 object DataAccessTranslator {
 
-  def entityToDto(admin: eUsuarioAgenteInmob) : UsuarioInmobiliarioAuth = {
+  def entityToDto(admin: eUsuarioAgenteInmob): UsuarioInmobiliarioAuth = {
     UsuarioInmobiliarioAuth(admin.id, TiposCliente.agenteInmobiliario, admin.identificacion, admin.tipoIdentificacion, admin.usuario)
   }
 

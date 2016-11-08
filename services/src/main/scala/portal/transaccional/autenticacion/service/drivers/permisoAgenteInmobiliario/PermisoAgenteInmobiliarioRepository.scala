@@ -24,7 +24,7 @@ trait PermisoAgenteInmobiliarioRepository {
    * @param idAgente Id de la persona que fue autenticada
    * @param username    Número identificador del fideicomiso
    */
-  def getPermisosProyectoByAgente(idAgente : Int , username : String): Future[Seq[PermisoAgenteInmobiliario]]
+  def getPermisosProyectoByAgente(idAgente: Int, username: String): Future[Seq[PermisoAgenteInmobiliario]]
 
   /**
    * Actualiza (agrega y/o elimina) los permisos de un proyecto
@@ -36,7 +36,7 @@ trait PermisoAgenteInmobiliarioRepository {
    * @param permisos       Lista de permisos del proyecto
    */
   def updatePermisosProyecto(identificacion: String, fideicomiso: Int, proyecto: Int,
-                             idAgentes: Seq[Int], permisos: Seq[PermisoAgenteInmobiliario]): Future[Option[Int]]
+    idAgentes: Seq[Int], permisos: Seq[PermisoAgenteInmobiliario]): Future[Option[Int]]
 
   /**
    * Actualiza (agrega y/o elimina) los permisos de un proyecto

@@ -9,8 +9,8 @@ import co.com.alianza.persistence.entities.{ UsuarioEmpresarialAdmin => eUsuario
  */
 object DataAccessTranslator {
 
-  def entityToDto(admin: eUsuarioEmpresarialAdmin, tipoCliente : String) : UsuarioEmpresarialAdmin = {
-    val tipoAdmin = if (tipoCliente == TiposCliente.clienteAdministrador.toString) TiposCliente.clienteAdministrador  else TiposCliente.clienteAdminInmobiliario
+  def entityToDto(admin: eUsuarioEmpresarialAdmin, tipoCliente: String): UsuarioEmpresarialAdmin = {
+    val tipoAdmin = if (tipoCliente == TiposCliente.clienteAdministrador.toString) TiposCliente.clienteAdministrador else TiposCliente.clienteAdminInmobiliario
     UsuarioEmpresarialAdmin(admin.id, admin.correo, admin.fechaActualizacion, admin.identificacion, admin.tipoIdentificacion, admin.usuario, admin.estado,
       admin.contrasena, admin.numeroIngresosErroneos, admin.ipUltimoIngreso, admin.fechaUltimoIngreso, tipoAdmin)
   }

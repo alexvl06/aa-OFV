@@ -33,7 +33,7 @@ trait AlianzaDAOs {
 
   def getByTokenAgenteInmobiliario(token: String): Future[UsuarioAgenteInmobiliario]
 
-  def getAdminResourcesVisible(isAdmin : Boolean): Future[Seq[RecursoGraficoInmobiliario]]
+  def getAdminResourcesVisible(isAdmin: Boolean): Future[Seq[RecursoGraficoInmobiliario]]
 
   //Obtiene su propio menu
   def getAgentResourcesById(idAgente: Int): Future[Seq[RecursoGraficoInmobiliario]]

@@ -6,5 +6,5 @@ import scala.util.control.NoStackTrace
 
 sealed abstract class GenericValidacionAutorizacion() extends NoStackTrace
 
-case class GenericNoAutorizado(codigo: String, msj : String) extends GenericValidacionAutorizacion
+case class GenericNoAutorizado(codigo: String, msj: String) extends GenericValidacionAutorizacion
 case class GenericAutorizado[E <: GenericUsuario](usuario: E) extends GenericValidacionAutorizacion

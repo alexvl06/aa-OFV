@@ -15,8 +15,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * Created by alexandra in 2016
  */
-case class AutorizacionDriverRepository(sesionRepo: SesionRepository, alianzaDAO: AlianzaDAOs, recursoRepo: RecursoRepository)
-  (implicit val ex: ExecutionContext) extends AutorizacionRepository {
+case class AutorizacionDriverRepository(sesionRepo: SesionRepository, alianzaDAO: AlianzaDAOs, recursoRepo: RecursoRepository)(implicit val ex: ExecutionContext) extends AutorizacionRepository {
 
   def autorizar(token: String, encriptedToken: String, url: Option[String], ip: String): Future[GenericValidacionAutorizacion] = {
     for {
@@ -37,14 +36,14 @@ case class AutorizacionDriverRepository(sesionRepo: SesionRepository, alianzaDAO
     }
   }
 
-  private def getPermiso (idUsuario : Int, nit: String, url : String) = {
+  private def getPermiso(idUsuario: Int, nit: String, url: String) = {
     val sacarProyecto = "(/[\\w]*)*/fideicomisos/([0-9]+)/proyectos/([0-9]+)(/[\\w|\\W]*)".r
 
     url match {
-      case sacarProyecto(inicio,fideicomiso,proyecto,fin) =>
-        alianzaDAO.getPermisosProyectoInmobiliario(nit,fideicomiso.toInt,proyecto.toInt,Seq(idUsuario)).flatMap{ permisos =>
-          if(permisos.isEmpty) {
-            Future.failed(GenericNoAutorizado("403.1","El usuario no tiene permisos suficientes para ver información del proyecto."))
+      case sacarProyecto(inicio, fideicomiso, proyecto, fin) =>
+        alianzaDAO.getPermisosProyectoInmobiliario(nit, fideicomiso.toInt, proyecto.toInt, Seq(idUsuario)).flatMap { permisos =>
+          if (permisos.isEmpty) {
+            Future.failed(GenericNoAutorizado("403.1", "El usuario no tiene permisos suficientes para ver información del proyecto."))
           } else {
             Future.successful(permisos)
           }
@@ -54,9 +53,9 @@ case class AutorizacionDriverRepository(sesionRepo: SesionRepository, alianzaDAO
 
   }
 
-  def filtrarRecuros(agente: UsuarioInmobiliarioAuth, recursos: Seq[RecursoBackendInmobiliario], urlO: Option[String]): Future[GenericValidacionAutorizacion] ={
+  def filtrarRecuros(agente: UsuarioInmobiliarioAuth, recursos: Seq[RecursoBackendInmobiliario], urlO: Option[String]): Future[GenericValidacionAutorizacion] = {
 
-    val usuarioExitoso  = Future.successful(GenericAutorizado[UsuarioInmobiliarioAuth](agente))
+    val usuarioExitoso = Future.successful(GenericAutorizado[UsuarioInmobiliarioAuth](agente))
     val usuarioNoExitoso = Future.failed(GenericNoAutorizado("403.1", s"El usuario no tiene permisos suficientes para ingresar al servicio." + urlO.getOrElse("")))
 
     urlO match {
@@ -65,6 +64,7 @@ case class AutorizacionDriverRepository(sesionRepo: SesionRepository, alianzaDAO
         if (recursosFiltro) usuarioExitoso else usuarioNoExitoso
       }
       case None => usuarioExitoso
-    }}
+    }
+  }
 
 }

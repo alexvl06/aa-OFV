@@ -2,7 +2,7 @@ package co.com.alianza.persistence.util.mappers
 
 import java.sql.Timestamp
 
-import org.joda.time.{DateTime, DateTimeZone}
+import org.joda.time.{ DateTime, DateTimeZone }
 import slick.driver.JdbcProfile
 
 object JodatimeMapper {
@@ -16,7 +16,7 @@ object JodatimeMapper {
     import profile.api._
     MappedColumnType.base[DateTime, Timestamp](
       dt => new Timestamp(dt.withZone(DateTimeZone.UTC).getMillis),
-      ts => new DateTime(ts.getTime,DateTimeZone.UTC)
+      ts => new DateTime(ts.getTime, DateTimeZone.UTC)
     )
   }
 

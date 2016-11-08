@@ -3,17 +3,17 @@ package portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobili
 import akka.actor.ActorSystem
 import co.com.alianza.domain.aggregates.empresa.MailMessageEmpresa
 import co.com.alianza.domain.aggregates.pin.PinUtil
-import co.com.alianza.microservices.{MailMessage, SmtpServiceClient}
-import co.com.alianza.persistence.entities.{Configuraciones, PinAgenteInmobiliario}
-import co.com.alianza.util.token.{PinData, TokenPin}
+import co.com.alianza.microservices.{ MailMessage, SmtpServiceClient }
+import co.com.alianza.persistence.entities.{ Configuraciones, PinAgenteInmobiliario }
+import co.com.alianza.util.token.{ PinData, TokenPin }
 import com.typesafe.config.Config
 import enumerations.EstadosPin._
 import enumerations.UsoPinEmpresaEnum
 import org.joda.time.{ DateTime, DateTimeZone }
-import org.joda.time.{DateTime, DateTimeZone}
+import org.joda.time.{ DateTime, DateTimeZone }
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.PinAgenteInmobiliarioDAOs
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 case class UsuarioInmobiliarioPinDriverRepository(pinDao: PinAgenteInmobiliarioDAOs) extends UsuarioInmobiliarioPinRepository {
 
@@ -36,7 +36,7 @@ case class UsuarioInmobiliarioPinDriverRepository(pinDao: PinAgenteInmobiliarioD
   }
 
   override def generarCorreoActivacion(pin: String, caducidad: Int, usuario: String,
-                                       correo: String)(implicit config: Config): MailMessage = {
+    correo: String)(implicit config: Config): MailMessage = {
     val remitente: String = config.getString("alianza.smtp.from")
     val asunto: String = config.getString("alianza.smtp.asunto.creacionAgenteInmobiliario")
     val cuerpo: String = new MailMessageEmpresa("alianza.smtp.templatepin.creacionAgenteInmobiliario")

@@ -2,46 +2,48 @@ package co.com.alianza.domain.aggregates.usuarios
 
 import java.util.Calendar
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import akka.routing.RoundRobinPool
-import co.cifin.confrontaultra.dto.ultra.{CuestionarioULTRADTO, ParametrosSeguridadULTRADTO, ParametrosULTRADTO, ResultadoEvaluacionCuestionarioULTRADTO}
+import co.cifin.confrontaultra.dto.ultra.{ CuestionarioULTRADTO, ParametrosSeguridadULTRADTO, ParametrosULTRADTO, ResultadoEvaluacionCuestionarioULTRADTO }
 import co.com.alianza.constants.TiposConfiguracion
-import co.com.alianza.exceptions.{BusinessLevel, PersistenceException}
-import co.com.alianza.infrastructure.anticorruption.pin.{DataAccessTranslator => DataAccessTranslatorPin}
-import co.com.alianza.infrastructure.anticorruption.pinclienteadmin.{DataAccessTranslator => DataAccessTranslatorPinClienteAdmin}
-import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => DataAccessAdapterUsuario}
-import co.com.alianza.infrastructure.dto.{Empresa, _}
-import co.com.alianza.infrastructure.messages.{OlvidoContrasenaMessage, ResponseMessage, UsuarioMessage, _}
-import co.com.alianza.microservices.{MailMessage, SmtpServiceClient}
+import co.com.alianza.exceptions.{ BusinessLevel, PersistenceException }
+import co.com.alianza.infrastructure.anticorruption.pin.{ DataAccessTranslator => DataAccessTranslatorPin }
+import co.com.alianza.infrastructure.anticorruption.pinclienteadmin.{ DataAccessTranslator => DataAccessTranslatorPinClienteAdmin }
+import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => DataAccessAdapterUsuario }
+import co.com.alianza.infrastructure.dto.{ Empresa, _ }
+import co.com.alianza.infrastructure.messages.{ OlvidoContrasenaMessage, ResponseMessage, UsuarioMessage, _ }
+import co.com.alianza.microservices.{ MailMessage, SmtpServiceClient }
 import co.com.alianza.persistence.entities
-import co.com.alianza.persistence.entities.{PinAgenteInmobiliario, UsuarioAgenteInmobiliario}
+import co.com.alianza.persistence.entities.{ PinAgenteInmobiliario, UsuarioAgenteInmobiliario }
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.json.MarshallableImplicits._
-import co.com.alianza.util.token.{PinData, TokenPin}
+import co.com.alianza.util.token.{ PinData, TokenPin }
 import co.com.alianza.util.transformers.ValidationT
-import com.asobancaria.cifinpruebas.cifin.confrontav2plusws.services.ConfrontaUltraWS.{ConfrontaUltraWSSoapBindingStub, ConfrontaUltraWebServiceServiceLocator}
+import com.asobancaria.cifinpruebas.cifin.confrontav2plusws.services.ConfrontaUltraWS.{ ConfrontaUltraWSSoapBindingStub, ConfrontaUltraWebServiceServiceLocator }
 import com.typesafe.config.Config
 import enumerations.empresa.EstadosDeEmpresaEnum
-import enumerations.{EstadosEmpresaEnum, EstadosUsuarioEnum, EstadosUsuarioEnumInmobiliario}
+import enumerations.{ EstadosEmpresaEnum, EstadosUsuarioEnum, EstadosUsuarioEnumInmobiliario }
 import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.UsuarioInmobiliarioPinRepository
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ConfiguracionDAOs, UsuarioAgenteInmobDAOs}
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ ConfiguracionDAOs, UsuarioAgenteInmobDAOs }
 import spray.http.StatusCodes._
 
 import scala.concurrent.Future
-import scala.util.{Failure => sFailure, Success => sSuccess}
+import scala.util.{ Failure => sFailure, Success => sSuccess }
 import scalaz.Validation.FlatMap._
 import scalaz.std.AllInstances._
-import scalaz.{Validation, Failure => zFailure, Success => zSuccess}
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 
-class UsuariosActorSupervisor(agentesInmobDao: UsuarioAgenteInmobDAOs,
-                              agentesInmobPinRepo: UsuarioInmobiliarioPinRepository,
-                              configDao: ConfiguracionDAOs) extends Actor with ActorLogging {
+class UsuariosActorSupervisor(
+  agentesInmobDao: UsuarioAgenteInmobDAOs,
+    agentesInmobPinRepo: UsuarioInmobiliarioPinRepository,
+    configDao: ConfiguracionDAOs
+) extends Actor with ActorLogging {
 
   import akka.actor.OneForOneStrategy
   import akka.actor.SupervisorStrategy._
 
   val usuariosActor = context.actorOf(Props(new UsuariosActor(agentesInmobDao, agentesInmobPinRepo, configDao))
-      .withRouter(RoundRobinPool(nrOfInstances = 2)), "usuariosActor")
+    .withRouter(RoundRobinPool(nrOfInstances = 2)), "usuariosActor")
   val usuarioEmpresarialActor = context.actorOf(Props[UsuarioEmpresarialActor]
     .withRouter(RoundRobinPool(nrOfInstances = 2)), "usuarioEmpresarialActor")
 
@@ -62,9 +64,11 @@ class UsuariosActorSupervisor(agentesInmobDao: UsuarioAgenteInmobDAOs,
   }
 }
 
-class UsuariosActor(agentesInmobDao: UsuarioAgenteInmobDAOs,
-                    agentesInmobPinRepo: UsuarioInmobiliarioPinRepository,
-                    configDao: ConfiguracionDAOs) extends Actor with ActorLogging {
+class UsuariosActor(
+  agentesInmobDao: UsuarioAgenteInmobDAOs,
+    agentesInmobPinRepo: UsuarioInmobiliarioPinRepository,
+    configDao: ConfiguracionDAOs
+) extends Actor with ActorLogging {
 
   import ValidacionesUsuario._
   implicit val config: Config = context.system.settings.config
@@ -416,9 +420,11 @@ class UsuariosActor(agentesInmobDao: UsuarioAgenteInmobDAOs,
   // Extensión portal alianza inmobiliaria
   // --------------------------------------
 
-  def buscarAgenteInmobiliario(busquedaUsuarioPortal: Validation[PersistenceException, Option[Any]],
-                               identificacion: String,
-                               usuario: String): Future[Validation[PersistenceException, Option[Any]]] = {
+  def buscarAgenteInmobiliario(
+    busquedaUsuarioPortal: Validation[PersistenceException, Option[Any]],
+    identificacion: String,
+    usuario: String
+  ): Future[Validation[PersistenceException, Option[Any]]] = {
     busquedaUsuarioPortal match {
       case zFailure(failure) => Future.successful(Validation.failure(failure))
       case zSuccess(usuarioOpt) => usuarioOpt match {
@@ -432,8 +438,10 @@ class UsuariosActor(agentesInmobDao: UsuarioAgenteInmobDAOs,
     }
   }
 
-  def olvidoContrasenaAgenteInmobiliario(currentSender: ActorRef,
-                                         agente: UsuarioAgenteInmobiliario): Unit = {
+  def olvidoContrasenaAgenteInmobiliario(
+    currentSender: ActorRef,
+    agente: UsuarioAgenteInmobiliario
+  ): Unit = {
     esEmpresaActiva(agente.identificacion).flatMap {
       case zFailure(failure) => Future.successful(ResponseMessage(Conflict, errorEstadoEmpresa))
       case zSuccess(_) =>

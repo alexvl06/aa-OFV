@@ -90,12 +90,12 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
   def getByNitAndUserAgente(nit: String, usuario: String): Future[Option[UsuarioEmpresarial]] = {
     run(
       (for {
-        ((usuarioEmpresarial, usuarioEmpresarialEmpresa), empresa) <- usuariosEmpresariales join usuariosEmpresarialesEmpresa on {
-          (ue, uee) => ue.id === uee.idUsuarioEmpresarial && ue.usuario === usuario
-        } join empresas on {
-          case ((ue, uee), e) => e.nit === nit && uee.idEmpresa === e.id
-        }
-      } yield usuarioEmpresarial).result.headOption
+      ((usuarioEmpresarial, usuarioEmpresarialEmpresa), empresa) <- usuariosEmpresariales join usuariosEmpresarialesEmpresa on {
+        (ue, uee) => ue.id === uee.idUsuarioEmpresarial && ue.usuario === usuario
+      } join empresas on {
+        case ((ue, uee), e) => e.nit === nit && uee.idEmpresa === e.id
+      }
+    } yield usuarioEmpresarial).result.headOption
     )
   }
 
@@ -143,12 +143,12 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
   def getByNitAndUserAdmin(nit: String, usuario: String): Future[Option[UsuarioEmpresarialAdmin]] = {
     run(
       (for {
-        ((usuarioEmpresarial, usuarioEmpresarialEmpresa), empresa) <- usuariosEmpresarialesAdmin join usuariosEmpresarialesAdminEmpresa on {
-          (ue, uee) => ue.id === uee.idUsuarioEmpresarialAdmin && ue.usuario === usuario
-        } join empresas on {
-          case ((ue, uee), e) => e.nit === nit && uee.idEmpresa === e.id
-        }
-      } yield usuarioEmpresarial).result.headOption
+      ((usuarioEmpresarial, usuarioEmpresarialEmpresa), empresa) <- usuariosEmpresarialesAdmin join usuariosEmpresarialesAdminEmpresa on {
+        (ue, uee) => ue.id === uee.idUsuarioEmpresarialAdmin && ue.usuario === usuario
+      } join empresas on {
+        case ((ue, uee), e) => e.nit === nit && uee.idEmpresa === e.id
+      }
+    } yield usuarioEmpresarial).result.headOption
     )
   }
 
@@ -195,16 +195,23 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
     run(query.result)
   }
 
-  //Obtiene el menu de constructor o agente
+  // Obtiene el menu de constructor o agente
   def getAdminResourcesVisible(admin: Boolean): Future[Seq[RecursoGraficoInmobiliario]] = {
     val tipo = if (admin) PerfilInmobiliarioEnum.admin.toString else PerfilInmobiliarioEnum.agente.toString
-    val query = getGraphicalResources(tipo).filter(_.visible)
+    val query = getGraphicalResources(tipo)
     run(query.result)
   }
 
-  //Obtiene su propio menu
-  def getAgentResourcesById( idAgente: Int): Future[Seq[RecursoGraficoInmobiliario]] = {
-    val query = getAgentPermission(idAgente).filter(_.visible)
+  // Obtiene su propio menu
+  def getAgentResourcesById(idAgente: Int): Future[Seq[RecursoGraficoInmobiliario]] = {
+    val query1 = getAgentPermission(idAgente)
+    val query2 =
+      for {
+        x <- query1.filterNot(_.visible)
+        y <- recursosGraficosInmobiliarios.filter(_.id === x.menuPrincipal)
+      } yield y
+
+    val query = query1.filter(_.visible) ++ query2
     run(query.distinctOn(_.id).result)
   }
 
@@ -223,20 +230,20 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
   }
 
   //Obtiene los recursos a los que puede acceder Agente
-  def get5( idAgente: Int): Future[Seq[RecursoBackendInmobiliario]] = {
+  def get5(idAgente: Int): Future[Seq[RecursoBackendInmobiliario]] = {
     val query = for {
       g <- getAgentPermission(idAgente)
       r <- getBackendResources(g)
     } yield r
 
     val query2 = for {
-      g <- getGraphicalResources(PerfilInmobiliarioEnum.agente.toString).filter(!_.visible)
+      g <- getGraphicalResources(PerfilInmobiliarioEnum.agente.toString).filterNot(_.visible)
       r <- getBackendResources(g)
     } yield r
     run((query ++ query2).distinctOn(_.id).result)
   }
 
-  private def getGraphicalResources (tipo : String) = {
+  private def getGraphicalResources(tipo: String) = {
     for {
       p <- perfilInmobiliario if p.nombre === tipo
       pg <- recursosPerfilInmobiliario if p.id === pg.idPerfil
@@ -244,15 +251,15 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
     } yield g
   }
 
-  private def getBackendResources (table:  RecursoGraficoInmobiliarioTable) = {
+  private def getBackendResources(table: RecursoGraficoInmobiliarioTable) = {
     for {
       rg <- recursosInmobiliarios if rg.idGrafico === table.id
       r <- recursosBackendInmobiliarios if rg.idBacken === r.id
     } yield r
   }
 
-  private def getAgentPermission(idAgente : Int) = {
-    val k =for {
+  private def getAgentPermission(idAgente: Int) = {
+    val k = for {
       a <- usuariosAgentesInmobiliarios if a.id === idAgente
       p <- permisosInmobiliarios if p.idAgente === a.id
       g <- recursosGraficosInmobiliarios if g.id === p.tipoPermiso

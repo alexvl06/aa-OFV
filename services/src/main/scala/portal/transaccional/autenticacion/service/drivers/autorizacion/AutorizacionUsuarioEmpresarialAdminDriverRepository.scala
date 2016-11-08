@@ -24,19 +24,19 @@ import scala.util.control.NoStackTrace
  * Created by seven4n in 2016
  */
 case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: UsuarioEmpresarialAdminRepository, sesionRepo: SesionRepository,
-  alianzaDAO: AlianzaDAO, recursoRepo: RecursoRepository, authInmobiliario : AutorizacionRepository)(implicit val ex: ExecutionContext)
-  extends AutorizacionUsuarioEmpresarialAdminRepository {
+  alianzaDAO: AlianzaDAO, recursoRepo: RecursoRepository, authInmobiliario: AutorizacionRepository)(implicit val ex: ExecutionContext)
+    extends AutorizacionUsuarioEmpresarialAdminRepository {
 
   implicit val timeout = Timeout(5.seconds)
 
-  def autorizar(token: String, encriptedToken: String, url: String, ip: String, tipoCliente : String): Future[NoStackTrace] = {
+  def autorizar(token: String, encriptedToken: String, url: String, ip: String, tipoCliente: String): Future[NoStackTrace] = {
     for {
       _ <- validarToken(token)
       _ <- sesionRepo.validarSesion(token)
       sesion <- sesionRepo.obtenerSesion(token)
       adminEstado <- alianzaDAO.getByTokenAdmin(encriptedToken)
       _ <- validarEstadoEmpresa(adminEstado._2)
-      result <- obtenerRecursos(DataAccessTranslator.entityToDto(adminEstado._1, tipoCliente) , tipoCliente, url)
+      result <- obtenerRecursos(DataAccessTranslator.entityToDto(adminEstado._1, tipoCliente), tipoCliente, url)
     } yield result
   }
 
@@ -62,9 +62,8 @@ case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: Usuari
     }
   }
 
-
-  private def obtenerRecursos(adminDTO :  UsuarioEmpresarialAdmin, tipoCliente : String , url : String): Future[NoStackTrace] = {
-    if (tipoCliente == TiposCliente.clienteAdministrador.toString){
+  private def obtenerRecursos(adminDTO: UsuarioEmpresarialAdmin, tipoCliente: String, url: String): Future[NoStackTrace] = {
+    if (tipoCliente == TiposCliente.clienteAdministrador.toString) {
       for {
         recursos <- alianzaDAO.getAdminResources(adminDTO.id)
         result <- resolveMessageRecursos(adminDTO, recursos, url)
@@ -74,7 +73,8 @@ case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: Usuari
         recursos <- alianzaDAO.get4()
         result <- {
           val authUser = UsuarioInmobiliarioAuth(adminDTO.id, adminDTO.tipoCliente, adminDTO.identificacion, adminDTO.tipoIdentificacion, adminDTO.usuario)
-          authInmobiliario.filtrarRecuros(authUser, recursos, Option(url)) }
+          authInmobiliario.filtrarRecuros(authUser, recursos, Option(url))
+        }
       } yield result
     }
   }
@@ -86,23 +86,23 @@ case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: Usuari
    * @return
    */
   private def resolveMessageRecursos(adminDTO: UsuarioEmpresarialAdmin, recursos: Seq[RecursoPerfilClienteAdmin], url: String): Future[ValidacionAutorizacion] =
-  Future {
-    val recursosFiltro: Seq[RecursoPerfilClienteAdmin] = recursoRepo.filtrarRecursosClienteAdmin(recursos, url)
-    recursosFiltro.nonEmpty match {
-      case false =>
-        val usuarioForbidden: ForbiddenMessageAdmin = ForbiddenMessageAdmin(adminDTO, None)
-        Prohibido("403.1", JsonUtil.toJson(usuarioForbidden))
-      case true =>
-        recursos.head.filtro match {
-          case filtro @ Some(_) =>
-            val usuarioForbidden: ForbiddenMessageAdmin = ForbiddenMessageAdmin(adminDTO, filtro)
-            Prohibido("403.2", JsonUtil.toJson(usuarioForbidden))
-          case None =>
-            val usuarioJson: String = JsonUtil.toJson(adminDTO)
-            Autorizado(usuarioJson)
-        }
+    Future {
+      val recursosFiltro: Seq[RecursoPerfilClienteAdmin] = recursoRepo.filtrarRecursosClienteAdmin(recursos, url)
+      recursosFiltro.nonEmpty match {
+        case false =>
+          val usuarioForbidden: ForbiddenMessageAdmin = ForbiddenMessageAdmin(adminDTO, None)
+          Prohibido("403.1", JsonUtil.toJson(usuarioForbidden))
+        case true =>
+          recursos.head.filtro match {
+            case filtro @ Some(_) =>
+              val usuarioForbidden: ForbiddenMessageAdmin = ForbiddenMessageAdmin(adminDTO, filtro)
+              Prohibido("403.2", JsonUtil.toJson(usuarioForbidden))
+            case None =>
+              val usuarioJson: String = JsonUtil.toJson(adminDTO)
+              Autorizado(usuarioJson)
+          }
+      }
     }
-  }
 }
 
 case class ForbiddenMessageAdmin(usuario: UsuarioEmpresarialAdmin, filtro: Option[String])

@@ -8,13 +8,13 @@ import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ Alian
 import scala.concurrent.{ ExecutionContext, Future }
 
 case class PermisoAgenteInmobiliarioDriverRepository(alianzaDao: AlianzaDAO, usuariosDao: UsuarioAgenteInmobDAOs,
-  permisosDAO: PermisoInmobiliarioDAOs)(implicit val ex: ExecutionContext) extends PermisoAgenteInmobiliarioRepository {
+    permisosDAO: PermisoInmobiliarioDAOs)(implicit val ex: ExecutionContext) extends PermisoAgenteInmobiliarioRepository {
 
   def getPermisosProyecto(identificacion: String, fideicomiso: Int, proyecto: Int, idAgentes: Seq[Int]): Future[Seq[PermisoAgenteInmobiliario]] = {
     alianzaDao.getPermisosProyectoInmobiliario(identificacion, fideicomiso, proyecto, idAgentes)
   }
 
-  def getPermisosProyectoByAgente(idAgente : Int , username : String): Future[Seq[PermisoAgenteInmobiliario]] = {
+  def getPermisosProyectoByAgente(idAgente: Int, username: String): Future[Seq[PermisoAgenteInmobiliario]] = {
     alianzaDao.getPermisosProyectoInmobiliarioByAgente(username, idAgente)
   }
 
@@ -31,17 +31,15 @@ case class PermisoAgenteInmobiliarioDriverRepository(alianzaDao: AlianzaDAO, usu
     } yield actualizar
   }
 
-  def getRecurso(idUser: Int, tiposCliente: TiposCliente, isMatriz : Boolean): Future[Seq[RecursoGraficoInmobiliario]] = {
-
+  def getRecurso(idUser: Int, tiposCliente: TiposCliente, isMatriz: Boolean): Future[Seq[RecursoGraficoInmobiliario]] = {
     tiposCliente match {
       case TiposCliente.agenteInmobiliario => alianzaDao.getAgentResourcesById(idUser)
       case _ =>
         if (isMatriz) {
-          alianzaDao.getAdminResourcesVisible(false).map(_.filterNot(_.id == 13))
+          alianzaDao.getAdminResourcesVisible(false).map(_.filter(_.administrable))
         } else {
-          alianzaDao.getAdminResourcesVisible(true)
+          alianzaDao.getAdminResourcesVisible(true).map(_.filter(_.visibleMenu))
         }
     }
   }
-
 }
