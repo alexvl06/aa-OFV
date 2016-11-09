@@ -32,7 +32,7 @@ import portal.transaccional.autenticacion.service.drivers.rolRecursoComercial.{ 
 import portal.transaccional.autenticacion.service.drivers.sesion.SesionDriverRepository
 import portal.transaccional.autenticacion.service.drivers.ultimaContrasena.UltimaContrasenaDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioAdminDriverRepository
-import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioAgenteDriverRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioAgenteEmpresarialDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioComercial.UsuarioComercialDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioComercialAdmin.{ UsuarioComercialAdminDriverRepository, UsuarioComercialAdminRepository }
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioDriverRepository
@@ -115,7 +115,7 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val configuracionRepo = ConfiguracionDriverRepository(configuracionDAO)
   lazy val ultimaContrasenaRepo = UltimaContrasenaDriverRepository(ultimaContrasenaDAO, ultimaContrasenaAdminDAO, ultimaContrasenaAgenteDAO)
   lazy val reglaContrasenaRepo = ReglaContrasenaDriverRepository(reglaContrasenaDAO, ultimaContrasenaRepo)
-  lazy val usuarioAgenteRepo = UsuarioAgenteDriverRepository(usuarioAgenteDAO)
+  lazy val usuarioAgenteRepo = UsuarioAgenteEmpresarialDriverRepository(usuarioAgenteDAO)
   lazy val usuarioComercialRepo = UsuarioComercialDriverRepository(usuarioComercialDAO)
   lazy val usuarioComercialAdminRepo = UsuarioComercialAdminDriverRepository(usuarioComercialAdminDAO, empresaRepo)
   lazy val respuestaUsuarioRepo = RespuestaUsuarioDriverRepository(respuestaUsuarioDAO, configuracionRepo)

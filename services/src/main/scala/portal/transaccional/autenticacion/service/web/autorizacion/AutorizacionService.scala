@@ -13,7 +13,7 @@ import co.com.alianza.util.token.{ AesUtil, Token }
 import enumerations.CryptoAesParameters
 import portal.transaccional.autenticacion.service.drivers.autorizacion._
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioAdminRepository
-import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioAgenteRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioAgenteEmpresarialRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioRepository
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
@@ -29,7 +29,7 @@ import scala.util.{ Failure, Success }
 case class AutorizacionService(
     kafkaActor: ActorSelection,
     usuarioRepository: UsuarioRepository,
-    usuarioAgenteRepository: UsuarioAgenteRepository,
+    usuarioAgenteRepository: UsuarioAgenteEmpresarialRepository,
     usuarioAdminRepository: UsuarioAdminRepository,
     autorizacionRepository: AutorizacionUsuarioRepository,
     autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository,

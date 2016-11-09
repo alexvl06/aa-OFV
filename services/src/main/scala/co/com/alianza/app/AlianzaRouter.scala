@@ -21,7 +21,7 @@ import portal.transaccional.autenticacion.service.drivers.ip.IpRepository
 import portal.transaccional.autenticacion.service.drivers.pregunta.PreguntasAutovalidacionRepository
 import portal.transaccional.autenticacion.service.drivers.respuesta.RespuestaUsuarioRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioAdminRepository
-import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioAgenteRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioAgenteEmpresarialRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioRepository
 import portal.transaccional.autenticacion.service.web.autorizacion.{ AutorizacionRecursoComercialService, AutorizacionService }
 import portal.transaccional.autenticacion.service.web.autenticacion.AutenticacionService
@@ -35,7 +35,7 @@ import portal.transaccional.autenticacion.service.web.enumeracion.EnumeracionSer
 
 case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, autenticacionEmpresaRepositorio: AutenticacionEmpresaRepository,
   autenticacionComercialRepositorio: AutenticacionComercialRepository, usuarioRepositorio: UsuarioRepository,
-  usuarioAgenteRepositorio: UsuarioAgenteRepository, usuarioAdminRepositorio: UsuarioAdminRepository,
+  usuarioAgenteRepositorio: UsuarioAgenteEmpresarialRepository, usuarioAdminRepositorio: UsuarioAdminRepository,
   autorizacionUsuarioRepo: AutorizacionUsuarioRepository, kafkaActor: ActorSelection,
   usuariosActor: ActorSelection, confrontaActor: ActorSelection, actualizacionRepo: ActualizacionRepository, permisoTransaccionalActor: ActorSelection,
   agenteEmpresarialActor: ActorSelection, pinRepo: PinRepository, contrasenasAgenteEmpresarialActor: ActorSelection,

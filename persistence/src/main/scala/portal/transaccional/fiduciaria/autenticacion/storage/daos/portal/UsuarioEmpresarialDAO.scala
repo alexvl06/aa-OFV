@@ -3,7 +3,7 @@ package portal.transaccional.fiduciaria.autenticacion.storage.daos.portal
 import java.sql.Timestamp
 
 import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
-import co.com.alianza.persistence.entities.{ UsuarioAgente, UsuarioEmpresarialTable }
+import co.com.alianza.persistence.entities.{ UsuarioAgenteEmpresarial, UsuarioEmpresarialTable }
 import enumerations.EstadosEmpresaEnum
 import slick.lifted.TableQuery
 
@@ -17,7 +17,7 @@ case class UsuarioEmpresarialDAO(implicit dcConfig: DBConfig) extends TableQuery
   import dcConfig.DB._
   import dcConfig.driver.api._
 
-  def create(agenteEmpresarial: UsuarioAgente): Future[Int] = {
+  def create(agenteEmpresarial: UsuarioAgenteEmpresarial): Future[Int] = {
     run((this returning this.map(_.id)) += agenteEmpresarial)
   }
 
@@ -59,11 +59,11 @@ case class UsuarioEmpresarialDAO(implicit dcConfig: DBConfig) extends TableQuery
     run(this.filter(_.id === idUsuario).map(_.estado).update(estado))
   }
 
-  def getById(idUsuario: Int): Future[Option[UsuarioAgente]] = {
+  def getById(idUsuario: Int): Future[Option[UsuarioAgenteEmpresarial]] = {
     run(this.filter(_.id === idUsuario).result.headOption)
   }
 
-  def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[UsuarioAgente]] = {
+  def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[UsuarioAgenteEmpresarial]] = {
     run(this.filter(u => u.identificacion === identificacion && u.usuario === usuario).result.headOption)
   }
 

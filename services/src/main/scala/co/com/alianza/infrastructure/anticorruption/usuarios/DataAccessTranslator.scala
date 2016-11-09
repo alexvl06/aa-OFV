@@ -8,7 +8,7 @@ import co.com.alianza.persistence.entities.{
   Empresa => dEmpresa,
   HorarioEmpresa => dHorarioEmpresa,
   Usuario => dUsuario,
-  UsuarioAgente => eUsuarioEmpresarial,
+  UsuarioAgenteEmpresarial => eUsuarioEmpresarial,
   UsuarioEmpresarialAdmin => eUsuarioEmpresarialAdmin
 }
 

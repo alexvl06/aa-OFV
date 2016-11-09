@@ -2,7 +2,7 @@ package portal.transaccional.fiduciaria.autenticacion.storage.daos.portal
 
 import java.sql.Timestamp
 
-import co.com.alianza.persistence.entities.UsuarioAgente
+import co.com.alianza.persistence.entities.UsuarioAgenteEmpresarial
 import enumerations.EstadosEmpresaEnum
 
 import scala.concurrent.Future
@@ -12,7 +12,7 @@ import scala.concurrent.Future
  */
 trait UsuarioEmpresarialDAOs {
 
-  def create(agenteEmpresarial: UsuarioAgente): Future[Int]
+  def create(agenteEmpresarial: UsuarioAgenteEmpresarial): Future[Int]
 
   def update(id: Int, usuario: String, correo: String, nombreUsuario: String, cargo: String, descripcion: String): Future[Int]
 
@@ -32,9 +32,9 @@ trait UsuarioEmpresarialDAOs {
 
   def updateState(idUsuario: Int, estado: Int): Future[Int]
 
-  def getById(idUsuario: Int): Future[Option[UsuarioAgente]]
+  def getById(idUsuario: Int): Future[Option[UsuarioAgenteEmpresarial]]
 
-  def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[UsuarioAgente]]
+  def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[UsuarioAgenteEmpresarial]]
 
   def isExists(idUsuario: Int, nit: String, usuario: String): Future[Boolean]
 
