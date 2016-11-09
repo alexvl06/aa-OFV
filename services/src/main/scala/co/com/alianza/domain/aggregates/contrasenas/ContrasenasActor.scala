@@ -90,7 +90,6 @@ case class ContrasenasActor() extends Actor with ActorLogging {
       } yield {
         idUsuario
       }).run
-
       resolveCambiarContrasenaFuture(CambiarContrasenaFuture, currentSender)
 
     //TODO: Verificar si el metodo CambiarContrasenaCaducadaMessage se está utilizando
