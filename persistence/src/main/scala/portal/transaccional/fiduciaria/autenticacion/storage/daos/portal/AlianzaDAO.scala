@@ -211,7 +211,7 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
         y <- recursosGraficosInmobiliarios.filter(_.id === x.menuPrincipal)
       } yield y
 
-    val query = query1.filter(_.visible) ++ query2
+    val query = query1 ++ query2
     run(query.distinctOn(_.id).result)
   }
 

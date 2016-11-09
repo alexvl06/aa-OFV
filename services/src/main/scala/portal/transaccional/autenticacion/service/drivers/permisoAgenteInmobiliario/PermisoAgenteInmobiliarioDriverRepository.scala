@@ -38,7 +38,7 @@ case class PermisoAgenteInmobiliarioDriverRepository(alianzaDao: AlianzaDAO, usu
         if (isMatriz) {
           alianzaDao.getAdminResourcesVisible(false).map(_.filter(_.administrable))
         } else {
-          alianzaDao.getAdminResourcesVisible(true).map(_.filter(_.visibleMenu))
+          alianzaDao.getAdminResourcesVisible(true)
         }
     }
   }
