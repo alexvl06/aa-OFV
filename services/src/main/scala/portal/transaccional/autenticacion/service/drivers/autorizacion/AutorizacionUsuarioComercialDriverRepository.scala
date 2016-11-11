@@ -1,6 +1,6 @@
 package portal.transaccional.autenticacion.service.drivers.autorizacion
 
-import co.com.alianza.commons.enumerations.TiposCliente
+import co.com.alianza.commons.enumerations.{ RolesComercial, TiposCliente }
 import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import co.com.alianza.exceptions.{ AutorizadoComercial, NoAutorizado, ValidacionAutorizacion }
 import co.com.alianza.infrastructure.dto.UsuarioComercialDTO
@@ -15,7 +15,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * Created by s4n 2016
  */
-case class AutorizacionUsuarioComercialDriverRepository(sesionRepo: SesionRepository, usuarioRepo: UsuarioComercialRepository)(implicit val ex: ExecutionContext) extends AutorizacionUsuarioComercialRepository {
+case class AutorizacionUsuarioComercialDriverRepository(sesionRepo: SesionRepository, usuarioRepo: UsuarioComercialRepository, servicioComercialRepo: AutorizacionServicioComercialRepository)(implicit val ex: ExecutionContext) extends AutorizacionUsuarioComercialRepository {
 
   def invalidarToken(token: String, encriptedToken: String): Future[Int] = {
     for {
@@ -33,6 +33,7 @@ case class AutorizacionUsuarioComercialDriverRepository(sesionRepo: SesionReposi
       validar <- validarToken(token)
       validarSesion <- sesionRepo.validarSesion(token)
       usuarioOption <- usuarioRepo.getByToken(encriptedToken)
+      _ <- servicioComercialRepo.estaAutorizado(RolesComercial.Comercial.codigo, url)
       usuario <- validarUsario(usuarioOption, TiposCliente.comercialFiduciaria)
     } yield usuario
   }
@@ -42,6 +43,7 @@ case class AutorizacionUsuarioComercialDriverRepository(sesionRepo: SesionReposi
       validar <- validarToken(token)
       validarSesion <- sesionRepo.validarSesion(token)
       usuarioOption <- usuarioRepo.getByToken(encriptedToken)
+      _ <- servicioComercialRepo.estaAutorizado(RolesComercial.Comercial.codigo, url)
       usuario <- validarUsario(usuarioOption, TiposCliente.comercialValores)
     } yield usuario
   }
@@ -50,6 +52,7 @@ case class AutorizacionUsuarioComercialDriverRepository(sesionRepo: SesionReposi
     for {
       validar <- validarToken(token, false)
       usuarioOption <- usuarioRepo.getByToken(encriptedToken)
+      _ <- servicioComercialRepo.estaAutorizado(RolesComercial.noComercial.codigo, url)
       usuario <- validarUsario(usuarioOption, TiposCliente.comercialSAC)
     } yield usuario
   }
