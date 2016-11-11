@@ -1,6 +1,8 @@
 package portal.transaccional.fiduciaria.autenticacion.storage.daos.portal
 
-import co.com.alianza.persistence.entities.{ UsuarioEmpresarial, UsuarioEmpresarialTable }
+import java.sql.Timestamp
+
+import scala.concurrent.Future
 /**
   * Created by hernando in 2016
   */

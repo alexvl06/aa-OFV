@@ -1,7 +1,7 @@
 package co.com.alianza.domain.aggregates.empresa
 
-import co.com.alianza.infrastructure.dto.PinEmpresa
 import co.com.alianza.mail.MailTemplate
+import co.com.alianza.persistence.entities.PinAgente
 import com.typesafe.config.Config
 
 class MailMessageEmpresa(templateBody: String) extends MailTemplate {

@@ -59,7 +59,7 @@ class AgenteInmobiliarioServiceSpec extends RouteTest {
   }
 
   "AgenteInmobiliarioService" should "GET /agentes-inmobiliarios - respond an empty list - invalid constructor" in {
-    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "", 3)
+    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "", 3, "conin")
     Get("/agentes-inmobiliarios") ~> getAgentesInmobiliariosStub(constructor).route ~> check {
       status shouldEqual StatusCodes.OK
       responseAs[ConsultarAgenteInmobiliarioListResponse].agentes shouldEqual Seq.empty
@@ -67,7 +67,7 @@ class AgenteInmobiliarioServiceSpec extends RouteTest {
   }
 
   it should "GET /agentes-inmobiliarios - respond a list with one element - constructor with id 1" in {
-    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "1", 3)
+    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "1", 3, "conin")
     Get("/agentes-inmobiliarios") ~> getAgentesInmobiliariosStub(constructor).route ~> check {
       status shouldEqual StatusCodes.OK
       responseAs[ConsultarAgenteInmobiliarioListResponse].agentes shouldEqual
@@ -76,7 +76,7 @@ class AgenteInmobiliarioServiceSpec extends RouteTest {
   }
 
   it should "GET /agentes-inmobiliarios - respond a paginated list - constructor with id 2" in {
-    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "2", 3)
+    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "2", 3, "conin")
 
     Get("/agentes-inmobiliarios?pagina=1&itemsPorPagina=1") ~> getAgentesInmobiliariosStub(constructor).route ~> check {
       status shouldEqual StatusCodes.OK
@@ -119,7 +119,7 @@ class AgenteInmobiliarioServiceSpec extends RouteTest {
   }
 
   it should "GET /agentes-inmobiliarios - respond status code 500-InternalServerError - an exception occurs" in {
-    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "error", 3)
+    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "error", 3, "conin")
     Get("/agentes-inmobiliarios") ~> getAgentesInmobiliariosStub(constructor).route ~> check {
       status shouldEqual StatusCodes.InternalServerError
     }
@@ -145,7 +145,7 @@ class AgenteInmobiliarioServiceSpec extends RouteTest {
   }
 
   it should "POST /agentes-inmobiliarios - agent created successfully" in {
-    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "1", 3)
+    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "1", 3, "conin")
     val agenteACrear = CrearAgenteInmobiliarioRequest("agente@constructor.com", "agente", Some("Agente"), None, None)
     Post("/agentes-inmobiliarios", agenteACrear) ~> postAgentesInmobiliariosStub(constructor).route ~> check {
       status shouldEqual StatusCodes.Created
@@ -153,7 +153,7 @@ class AgenteInmobiliarioServiceSpec extends RouteTest {
   }
 
   it should "POST /agentes-inmobiliarios - respond status code 409-Conflict - agent already exists" in {
-    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "1", 3)
+    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "1", 3, "conin")
     val agenteACrear = CrearAgenteInmobiliarioRequest("agente@constructor.com", "agenteYaExiste", Some("Agente"), None, None)
     Post("/agentes-inmobiliarios", agenteACrear) ~> postAgentesInmobiliariosStub(constructor).route ~> check {
       println(status)
@@ -162,7 +162,7 @@ class AgenteInmobiliarioServiceSpec extends RouteTest {
   }
 
   it should "POST /agentes-inmobiliarios - respond status code 500-InternalServerError - an exception occurs" in {
-    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "error", 3)
+    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "error", 3, "conin")
     val agenteACrear = CrearAgenteInmobiliarioRequest("agente@constructor.com", "agente", Some("Agente"), None, None)
     Post("/agentes-inmobiliarios", agenteACrear) ~> postAgentesInmobiliariosStub(constructor).route ~> check {
       status shouldEqual StatusCodes.InternalServerError
@@ -189,7 +189,7 @@ class AgenteInmobiliarioServiceSpec extends RouteTest {
   }
 
   it should "GET /agentes-inmobiliarios/{usuario-agente} - respond agent details - constructor with id '1', agent with username 'agente'" in {
-    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "1", 3)
+    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "1", 3, "conin")
     Get("/agentes-inmobiliarios/agente") ~> getAgentesInmobiliariosDetailStub(constructor).route ~> check {
       status shouldEqual StatusCodes.OK
       responseAs[ConsultarAgenteInmobiliarioResponse] shouldEqual
@@ -198,14 +198,14 @@ class AgenteInmobiliarioServiceSpec extends RouteTest {
   }
 
   it should "GET /agentes-inmobiliarios/{usuario-agente} - respond status code 404-NotFound - agent does not exist" in {
-    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "1", 3)
+    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "1", 3, "conin")
     Get("/agentes-inmobiliarios/agenteInvalido") ~> getAgentesInmobiliariosDetailStub(constructor).route ~> check {
       status shouldEqual StatusCodes.NotFound
     }
   }
 
   it should "GET /agentes-inmobiliarios/{usuario-agente} - respond status code 500-InternalServerError - an exception occurs" in {
-    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "1", 3)
+    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "1", 3, "conin")
     Get("/agentes-inmobiliarios/error") ~> getAgentesInmobiliariosDetailStub(constructor).route ~> check {
       status shouldEqual StatusCodes.InternalServerError
     }
@@ -231,7 +231,7 @@ class AgenteInmobiliarioServiceSpec extends RouteTest {
   }
 
   it should "PUT /agentes-inmobiliarios/{usuario-agente} - update agent successfully - constructor with id '1', agent with username 'agente'" in {
-    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "1", 3)
+    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "1", 3, "conin")
     val agenteEditado = CrearAgenteInmobiliarioRequest("agenteEditado@constructor.com", "agente", Some("Agente"), Some("nuevoCargo"), Some("nuevaDescripcion"))
     Put("/agentes-inmobiliarios/agente", agenteEditado) ~> putAgentesInmobiliariosDetailStub(constructor).route ~> check {
       status shouldEqual StatusCodes.OK
@@ -239,7 +239,7 @@ class AgenteInmobiliarioServiceSpec extends RouteTest {
   }
 
   it should "PUT /agentes-inmobiliarios/{usuario-agente} - respond status code 404-NotFound - agent does not exist" in {
-    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "1", 3)
+    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "1", 3, "conin")
     val agenteEditado = CrearAgenteInmobiliarioRequest("agenteEditado@constructor.com", "agente", Some("Agente"), Some("nuevoCargo"), Some("nuevaDescripcion"))
     Put("/agentes-inmobiliarios/agenteInvalido", agenteEditado) ~> putAgentesInmobiliariosDetailStub(constructor).route ~> check {
       status shouldEqual StatusCodes.NotFound
@@ -247,7 +247,7 @@ class AgenteInmobiliarioServiceSpec extends RouteTest {
   }
 
   it should "PUT /agentes-inmobiliarios/{usuario-agente} - respond status code 500-InternalServerError - an exception occurs" in {
-    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "1", 3)
+    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "1", 3, "conin")
     val agenteEditado = CrearAgenteInmobiliarioRequest("agenteEditado@constructor.com", "agente", Some("Agente"), Some("nuevoCargo"), Some("nuevaDescripcion"))
     Put("/agentes-inmobiliarios/error", agenteEditado) ~> putAgentesInmobiliariosDetailStub(constructor).route ~> check {
       status shouldEqual StatusCodes.InternalServerError
@@ -274,21 +274,21 @@ class AgenteInmobiliarioServiceSpec extends RouteTest {
   }
 
   it should "PUT /agentes-inmobiliarios/{usuario-agente}/estado - update status successfully - constructor with id '1', agent with username 'agente'" in {
-    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "1", 3)
+    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "1", 3, "conin")
     Put("/agentes-inmobiliarios/agente/estado") ~> putAgentesInmobiliariosStatusStub(constructor).route ~> check {
       status shouldEqual StatusCodes.OK
     }
   }
 
   it should "PUT /agentes-inmobiliarios/{usuario-agente}/estado - respond status code 404-NotFound - agent does not exist" in {
-    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "1", 3)
+    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "1", 3, "conin")
     Put("/agentes-inmobiliarios/agenteInvalido/estado") ~> putAgentesInmobiliariosStatusStub(constructor).route ~> check {
       status shouldEqual StatusCodes.NotFound
     }
   }
 
   it should "PUT /agentes-inmobiliarios/{usuario-agente}/estado - respond status code 500-InternalServerError - an exception occurs" in {
-    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "1", 3)
+    val constructor = UsuarioAuth(1, TiposCliente.clienteAdminInmobiliario, "1", 3, "conin")
     Put("/agentes-inmobiliarios/error/estado") ~> putAgentesInmobiliariosStatusStub(constructor).route ~> check {
       status shouldEqual StatusCodes.InternalServerError
     }

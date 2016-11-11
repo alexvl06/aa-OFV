@@ -5,84 +5,27 @@ import java.util.Date
 
 import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.exceptions.ValidacionException
-import co.com.alianza.persistence.entities.UsuarioAgenteEmpresarial
 import co.com.alianza.persistence.entities._
 import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.token.Token
-import enumerations.{ AppendPasswordUser, EstadosEmpresaEnum, EstadosUsuarioEnum }
+import enumerations.{AppendPasswordUser, EstadosEmpresaEnum, EstadosUsuarioEnum}
 import org.joda.time.DateTime
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ UsuarioAgenteDAOs, UsuarioAgenteInmobDAO, UsuarioEmpresarialDAO }
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.UsuarioAgenteDAOs
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
- * Created by s4n on 2016
- */
+  * Created by s4n on 2016
+  */
 abstract class UsuarioEmpresarialRepositoryG[T <: UsuarioAgenteTable[E], E <: UsuarioAgente](usuarioDAO: UsuarioAgenteDAOs[T, E]) extends UsuarioEmpresarialRepository[E] {
 
   implicit val ex: ExecutionContext
 
-  def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[E]] = {
-  def getById(idUsuario: Int): Future[Option[UsuarioAgenteEmpresarial]] = usuarioDAO.getById(idUsuario)
-
-  def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[UsuarioAgenteEmpresarial]] = {
+  def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[UsuarioAgente]] = {
     usuarioDAO.getByIdentityAndUser(identificacion, usuario)
   }
 
-  def invalidarToken(token: String) = usuarioDAO.deleteToken(token)
-
-  /**
-   * Asociar el token al usuario
-   * @param idUsuario
-   * @param token
-   * @return
-   */
-  def actualizarToken(idUsuario: Int, token: String): Future[Int] = usuarioDAO.updateToken(idUsuario, token)
-
-  /**
-   * Actualiza los ingresos erroneos de un usuario al numero especificado por parametro
-   * @param idUsuario
-   * @param numeroIntentos
-   * @return
-   */
-  def actualizarIngresosErroneosUsuario(idUsuario: Int, numeroIntentos: Int): Future[Int] = usuarioDAO.updateIncorrectEntries(idUsuario, numeroIntentos)
-
-  /**
-   * Actualizar ultima ip
-   * @param idUsuario
-   * @param ip
-   * @return
-   */
-  def actualizarIp(idUsuario: Int, ip: String): Future[Int] = {
-    usuarioDAO.updateLastIp(idUsuario, ip)
-  }
-
-  /**
-   * Actualizar fecha ingreso
-   * @param idUsuario
-   * @param fechaActual
-   * @return
-   */
-  def actualizarFechaIngreso(idUsuario: Int, fechaActual: Timestamp): Future[Int] = {
-    usuarioDAO.updateLastEntryDate(idUsuario, fechaActual)
-  }
-
-  /**
-   * Guardar contrasena
-   *
-   * @param idUsuario
-   * @param contrasena
-   */
-  def actualizarContrasena(idUsuario: Int, contrasena: String): Future[Int] = {
-    for {
-      cambiar <- usuarioDAO.updatePasswordById(idUsuario, contrasena)
-      _ <- usuarioDAO.updateStateById(idUsuario, EstadosEmpresaEnum.activo.id)
-      _ <- usuarioDAO.updateUpdateDate(idUsuario, new Timestamp(new Date().getTime))
-      _ <- usuarioDAO.updateIncorrectEntries(idUsuario, 0)
-    } yield cambiar
-  }
-
-  def actualizarInfoUsuario(usuario: UsuarioAgenteEmpresarial, ip: String): Future[Int] = {
+  def actualizarInfoUsuario(usuario: UsuarioAgente, ip: String): Future[Int] = {
     for {
       intentos <- usuarioDAO.updateIncorrectEntries(usuario.id, 0)
       ip <- usuarioDAO.updateLastIp(usuario.id, ip)
@@ -90,29 +33,53 @@ abstract class UsuarioEmpresarialRepositoryG[T <: UsuarioAgenteTable[E], E <: Us
     } yield fecha
   }
 
-  /////////////////////////////// validaciones //////////////////////////////////
+  def getById(idUsuario: Int): Future[Option[UsuarioAgente]] = usuarioDAO.getById(idUsuario)
 
-  def validacionBloqueoAdmin(usuario: UsuarioAgente): Future[Boolean] = {
-    val bloqueoPorAdmin: Int = EstadosEmpresaEnum.bloqueadoPorAdmin.id
-    usuario.estado match {
-      case `bloqueoPorAdmin` => Future.failed(ValidacionException("409.13", "Usuario Bloqueado Admin"))
-      case _ => Future.successful(true)
-    }
-  }
+  def invalidarToken(token: String) = usuarioDAO.deleteToken(token)
 
-  def validarUsuario(usuarioOption: Option[UsuarioAgente]): Future[UsuarioAgenteEmpresarial] = {
-    usuarioOption match {
-      case Some(usuario) => Future.successful(usuario)
-      case _ => Future.failed(ValidacionException("409.01", "No existe usuario"))
-    }
+  /**
+    * Asociar el token al usuario
+    * @param idUsuario
+    * @param token
+    * @return
+    */
+  def actualizarToken(idUsuario: Int, token: String): Future[Int] = usuarioDAO.updateToken(idUsuario, token)
+
+  /**
+    * Actualiza los ingresos erroneos de un usuario al numero especificado por parametro
+    * @param idUsuario
+    * @param numeroIntentos
+    * @return
+    */
+  def actualizarIngresosErroneosUsuario(idUsuario: Int, numeroIntentos: Int): Future[Int] = usuarioDAO.updateIncorrectEntries(idUsuario, numeroIntentos)
+
+  /**
+    * Actualizar ultima ip
+    * @param idUsuario
+    * @param ip
+    * @return
+    */
+  def actualizarIp(idUsuario: Int, ip: String): Future[Int] = {
+    usuarioDAO.updateLastIp(idUsuario, ip)
   }
 
   /**
-   * Validacion de existencia, estado y contrasena
-   * @param usuario
-   * @param contrasena
-   * @return
-   */
+    * Actualizar fecha ingreso
+    * @param idUsuario
+    * @param fechaActual
+    * @return
+    */
+  def actualizarFechaIngreso(idUsuario: Int, fechaActual: Timestamp): Future[Int] = {
+    usuarioDAO.updateLastEntryDate(idUsuario, fechaActual)
+  }
+
+
+  /**
+    * Validacion de existencia, estado y contrasena
+    * @param usuario
+    * @param contrasena
+    * @return
+    */
   def validarUsuario(usuario: UsuarioAgente, contrasena: String, reintentosErroneos: Int): Future[Boolean] = {
     for {
       estado <- validarEstado(usuario)
@@ -121,10 +88,10 @@ abstract class UsuarioEmpresarialRepositoryG[T <: UsuarioAgenteTable[E], E <: Us
   }
 
   /**
-   * Validar los estados del usuario
-   * @param usuario
-   * @return
-   */
+    * Validar los estados del usuario
+    * @param usuario
+    * @return
+    */
   def validarEstado(usuario: UsuarioAgente): Future[Boolean] = {
     val estado = usuario.estado
     if (estado == EstadosEmpresaEnum.bloqueContraseña.id) {
@@ -141,11 +108,11 @@ abstract class UsuarioEmpresarialRepositoryG[T <: UsuarioAgenteTable[E], E <: Us
   }
 
   /**
-   * Validar la contrasena
-   * @param contrasena
-   * @param usuario
-   * @return
-   */
+    * Validar la contrasena
+    * @param contrasena
+    * @param usuario
+    * @return
+    */
   def validarContrasena(contrasena: String, usuario: UsuarioAgente, reintentosErroneos: Int): Future[Boolean] = {
     val hash = Crypto.hashSha512(contrasena.concat(AppendPasswordUser.appendUsuariosFiducia), usuario.id)
     if (hash.contentEquals(usuario.contrasena.get)) {
@@ -164,12 +131,12 @@ abstract class UsuarioEmpresarialRepositoryG[T <: UsuarioAgenteTable[E], E <: Us
   }
 
   /**
-   * Bloquea el usuario si se incumple la regla por parametro
-   * @param idUsuario
-   * @param reintentos
-   * @param reintentosErroneos
-   * @return
-   */
+    * Bloquea el usuario si se incumple la regla por parametro
+    * @param idUsuario
+    * @param reintentos
+    * @param reintentosErroneos
+    * @return
+    */
   private def validarBloqueoUsuario(idUsuario: Int, reintentos: Int, reintentosErroneos: Int): Future[Boolean] = {
     if (reintentos >= reintentosErroneos) {
       usuarioDAO.updateStateById(idUsuario, EstadosUsuarioEnum.bloqueContraseña.id).map(_ => true)
@@ -179,12 +146,12 @@ abstract class UsuarioEmpresarialRepositoryG[T <: UsuarioAgenteTable[E], E <: Us
   }
 
   /**
-   * Valida la fecha de caducidad de la contraseña de un usuario
-   * @param tipoCliente
-   * @param usuario
-   * @param dias
-   * @return
-   */
+    * Valida la fecha de caducidad de la contraseña de un usuario
+    * @param tipoCliente
+    * @param usuario
+    * @param dias
+    * @return
+    */
   def validarCaducidadContrasena(tipoCliente: TiposCliente, usuario: UsuarioAgente, dias: Int): Future[Boolean] = {
     if (new DateTime().isAfter(new DateTime(usuario.fechaActualizacion.getTime).plusDays(dias))) {
       val token: String = Token.generarTokenCaducidadContrasena(tipoCliente, usuario.id)

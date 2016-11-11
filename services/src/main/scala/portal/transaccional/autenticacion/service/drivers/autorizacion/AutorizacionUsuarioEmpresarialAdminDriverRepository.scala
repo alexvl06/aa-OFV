@@ -3,7 +3,7 @@ package portal.transaccional.autenticacion.service.drivers.autorizacion
 import akka.util.Timeout
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.exceptions._
-import co.com.alianza.infrastructure.dto.{ UsuarioEmpresarialAdmin, UsuarioInmobiliarioAuth }
+import co.com.alianza.infrastructure.dto.{UsuarioEmpresarialAdmin, UsuarioInmobiliarioAuth}
 import co.com.alianza.infrastructure.messages.ResponseMessage
 import co.com.alianza.persistence.entities.RecursoPerfilClienteAdmin
 import co.com.alianza.util.json.JsonUtil
@@ -11,14 +11,13 @@ import co.com.alianza.util.token.Token
 import enumerations.empresa.EstadosDeEmpresaEnum
 import portal.transaccional.autenticacion.service.drivers.recurso.RecursoRepository
 import portal.transaccional.autenticacion.service.drivers.sesion.SesionRepository
-import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.{ DataAccessTranslator, UsuarioEmpresarialAdminRepository }
+import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.{DataAccessTranslator, UsuarioAdminRepository}
 import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.AutorizacionRepository
-import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.{ DataAccessTranslator, UsuarioAdminRepository }
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.AlianzaDAO
 import spray.http.StatusCodes._
 
 import scala.concurrent.duration._
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NoStackTrace
 
 /**

@@ -4,18 +4,18 @@ import java.sql.Timestamp
 
 import co.com.alianza.constants.LlavesReglaContrasena
 import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial._
-import co.com.alianza.exceptions.{ PersistenceException, ValidacionException, ValidacionExceptionPasswordRules }
-import co.com.alianza.persistence.entities.{ UltimaContrasenaAgenteInmobiliario, UsuarioAgenteInmobiliario }
-import co.com.alianza.util.clave.{ Crypto, ErrorValidacionClave, ValidarClave }
+import co.com.alianza.exceptions.{ValidacionException, ValidacionExceptionPasswordRules}
+import co.com.alianza.persistence.entities.{UltimaContrasenaAgenteInmobiliario, UsuarioAgenteInmobiliario}
+import co.com.alianza.util.clave.{Crypto, ValidarClave}
 import co.com.alianza.util.token.Token
-import enumerations.{ AppendPasswordUser, EstadosUsuarioEnumInmobiliario, PerfilesUsuario, UsoPinEmpresaEnum }
+import enumerations.{AppendPasswordUser, EstadosUsuarioEnumInmobiliario, PerfilesUsuario, UsoPinEmpresaEnum}
 import org.joda.time.DateTime
 import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaRepository
-import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.{ UsuarioInmobiliarioPinRepository, UsuarioInmobiliarioRepository }
+import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.{UsuarioInmobiliarioPinRepository, UsuarioInmobiliarioRepository}
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.UltimaContraseñaAgenteInmobiliarioDAOs
 
 import scala.concurrent.Future
-import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
+import scalaz.{Failure => zFailure, Success => zSuccess}
 
 /**
  * Created by s4n in 2016

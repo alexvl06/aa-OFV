@@ -3,7 +3,7 @@ package co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial
 import java.sql.Timestamp
 
 import co.com.alianza.infrastructure.auditing.AuditingUser.AuditingUserData
-import co.com.alianza.persistence.entities.{ PinAgente => ePinEmpresa, UsuarioAgenteEmpresarial => eUsuario, _ }
+import co.com.alianza.persistence.entities.{ PinAgente => ePinEmpresa, UsuarioAgente => eUsuario, _ }
 import co.com.alianza.persistence.repositories.UsuariosEmpresarialRepository
 import co.com.alianza.exceptions.PersistenceException
 import enumerations.EstadosEmpresaEnum
@@ -63,7 +63,7 @@ object DataAccessAdapter {
     repo.guardarPinEmpresaAgenteEmpresarial(pinEmpresaAgenteEmpresarial)
   }
 
-  def crearAgenteEmpresarial(nuevoUsuarioAgenteEmpresarial: eUsuario): Future[Validation[PersistenceException, Int]] = {
+  def crearAgenteEmpresarial(nuevoUsuarioAgenteEmpresarial: UsuarioEmpresarial): Future[Validation[PersistenceException, Int]] = {
     repo.insertarAgenteEmpresarial(nuevoUsuarioAgenteEmpresarial)
   }
 
@@ -115,7 +115,7 @@ object DataAccessAdapter {
   def asociarPerfiles(idAgente: Int, idsPerfiles: List[Int]): Future[Validation[PersistenceException, List[Int]]] =
     new UsuariosEmpresaRepository() asociarPerfiles (idsPerfiles map { PerfilAgenteAgente(idAgente, _) })
 
-  private def transformValidation(origin: Validation[PersistenceException, Option[eUsuario]]): Validation[PersistenceException, Option[dtoUsuario]] = {
+  private def transformValidation(origin: Validation[PersistenceException, Option[UsuarioEmpresarial]]): Validation[PersistenceException, Option[dtoUsuario]] = {
     origin match {
       case zSuccess(response) =>
         response match {
@@ -127,7 +127,7 @@ object DataAccessAdapter {
     }
   }
 
-  private def transformValidationList(origin: Validation[PersistenceException, Seq[eUsuario]]): Validation[PersistenceException, List[dtoEstadoUsuario]] = {
+  private def transformValidationList(origin: Validation[PersistenceException, Seq[UsuarioEmpresarial]]): Validation[PersistenceException, List[dtoEstadoUsuario]] = {
     origin match {
       case zSuccess(response: Seq[eUsuario]) => zSuccess(DataAccessTranslator.translateUsuarioEstado(response))
       case zFailure(error) => zFailure(error)
@@ -139,7 +139,7 @@ object DataAccessAdapter {
       case zSuccess(response) =>
         response match {
           case Some(usuario) => {
-            zSuccess(Some(AuditingUserData(usuario.tipoIdentificacion, usuario.identificacion, Some(usuario.nombreUsuario))))
+            zSuccess(Some(AuditingUserData(usuario.tipoIdentificacion, usuario.identificacion, Some(usuario.usuario))))
           }
           case _ => zSuccess(None)
         }

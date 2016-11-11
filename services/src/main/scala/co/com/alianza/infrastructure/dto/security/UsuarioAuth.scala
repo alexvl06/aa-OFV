@@ -8,6 +8,7 @@ trait GenericUsuario {
   val tipoCliente: TiposCliente
   val identificacion: String
   val tipoIdentificacion: Int
+  val usuario: String
 }
 
 /**
@@ -16,5 +17,5 @@ trait GenericUsuario {
  * @param id El id del usuario autenticado
  */
 
-case class UsuarioAuth(id: Int, tipoCliente: TiposCliente.TiposCliente, identificacion: String, tipoIdentificacion: Int) extends GenericUsuario
+case class UsuarioAuth(id: Int, tipoCliente: TiposCliente.TiposCliente, identificacion: String, tipoIdentificacion: Int, usuario: String) extends GenericUsuario
 

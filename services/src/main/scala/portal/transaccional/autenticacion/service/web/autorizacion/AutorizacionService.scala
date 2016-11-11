@@ -3,29 +3,25 @@ package portal.transaccional.autenticacion.service.web.autorizacion
 import akka.actor.ActorSelection
 import co.com.alianza.app.CrossHeaders
 import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import co.com.alianza.exceptions._
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.infrastructure.dto.UsuarioInmobiliarioAuth
 import co.com.alianza.persistence.entities.UsuarioEmpresarial
-import co.com.alianza.util.json.JsonUtil
-import co.com.alianza.util.token.{ AesUtil, Token }
+import co.com.alianza.util.token.{AesUtil, Token}
 import portal.transaccional.autenticacion.service.drivers.autorizacion._
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioAdminRepository
-import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioAgenteEmpresarialRepository
-import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioEmpresarialAdminRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.AutorizacionRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioRepository
 import portal.transaccional.autenticacion.service.drivers.util.SesionAgenteUtilRepository
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
-import portal.transaccional.autenticacion.service.util.ws.{ CommonRESTFul, GenericAutorizado, GenericNoAutorizado }
-import spray.http.{ MediaTypes, StatusCodes }
-import spray.routing.{ RequestContext, Route, StandardRoute }
+import portal.transaccional.autenticacion.service.util.ws.{CommonRESTFul, GenericAutorizado, GenericNoAutorizado}
+import spray.http.{MediaTypes, StatusCodes}
+import spray.routing.{RequestContext, Route, StandardRoute}
 
-import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.{ Failure, Success }
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 /**
  * Created by s4n 2016
@@ -122,6 +118,31 @@ case class AutorizacionService(
             case Success(value) => execution(value)
             case Failure(ex) => execution(ex)
           }
+      }
+    }
+  }
+
+  private def validarTokenInmobiliario() = {
+    get {
+      clientIP { ipRemota =>
+        headerValueByName("token") { token =>
+          parameters('url) { (url) =>
+            respondWithMediaType(MediaTypes.`application/json`) {
+              val decriptedToken: String = AesUtil.desencriptarToken(token)
+              val usuario: AuditityUser = getTokenData(decriptedToken)
+
+              val responseF = usuario.tipoCliente match {
+                case `adminInmobiliaria` => autorizacionAdminRepo.autorizar(decriptedToken, token, url, ipRemota.value, `adminInmobiliaria`)
+                case `agenteInmobiliario` => autorizacionAgenteInmob.autorizar(decriptedToken, token, Option(url), ipRemota.value)
+              }
+
+              onComplete(responseF) {
+                case Success(value) => execution(value)
+                case Failure(ex) => execution(ex)
+              }
+            }
+          }
+        }
       }
     }
   }

@@ -1,33 +1,22 @@
 package portal.transaccional.autenticacion.service.util.JsonFormatters
 
 import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
-import co.com.alianza.exceptions.{ ValidacionException, ValidacionExceptionPasswordRules }
-import co.com.alianza.infrastructure.dto.security.UsuarioAuth
-import co.com.alianza.infrastructure.dto.{ Pregunta, Respuesta, UsuarioInmobiliarioAuth }
-import co.com.alianza.persistence.entities._
-import portal.transaccional.autenticacion.service.dto.{ PermisoRecursoDTO, RecursoDTO }
-import portal.transaccional.autenticacion.service.util.ws.{ CommonRESTFul, GenericNoAutorizado }
-import portal.transaccional.autenticacion.service.web.agenteInmobiliario._
-import portal.transaccional.autenticacion.service.web.autenticacion.{ AutenticarRequest, AutenticarUsuarioComercialRequest, AutenticarUsuarioEmpresarialRequest }
-import portal.transaccional.autenticacion.service.web.autorizacion.{ InvalidarTokenRequest, ValidarTokenAgenteRequest }
-import portal.transaccional.autenticacion.service.web.ip.AgregarIpRequest
-import portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.{ GuardarRespuestasRequest, ResponseObtenerPreguntas, ResponseObtenerPreguntasComprobar, RespuestasComprobacionRequest }
-import spray.json.{ DefaultJsonProtocol, DeserializationException, JsNumber, JsObject, JsString, JsValue, JsonFormat, RootJsonFormat }
-import co.com.alianza.exceptions.{ NoAutorizado, ValidacionException }
-import co.com.alianza.infrastructure.dto.{ Pregunta, Respuesta }
-import co.com.alianza.persistence.entities.{ Empresa, RecursoComercial, ReglaContrasena, RolComercial }
-import enumerations.{ TipoIdentificacionComercialDTO, TipoIdentificacionDTO }
-import portal.transaccional.autenticacion.service.dto.{ PermisoRecursoDTO, RecursoDTO }
-import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
+import co.com.alianza.exceptions.{NoAutorizado, ValidacionException, ValidacionExceptionPasswordRules}
+import co.com.alianza.infrastructure.dto.{Pregunta, Respuesta, UsuarioInmobiliarioAuth}
+import co.com.alianza.persistence.entities.{Empresa, RecursoComercial, ReglaContrasena, RolComercial, _}
+import enumerations.{TipoIdentificacionComercialDTO, TipoIdentificacionDTO}
+import portal.transaccional.autenticacion.service.dto.{PermisoRecursoDTO, RecursoDTO}
+import portal.transaccional.autenticacion.service.util.ws.{CommonRESTFul, GenericNoAutorizado}
 import portal.transaccional.autenticacion.service.web.actualizacion._
-import portal.transaccional.autenticacion.service.web.autenticacion.{ AutenticarRequest, AutenticarUsuarioComercialRequest, AutenticarUsuarioEmpresarialRequest }
-import portal.transaccional.autenticacion.service.web.autorizacion.InvalidarTokenRequest
-import portal.transaccional.autenticacion.service.web.comercial.{ ActualizarContrasenaRequest, CrearAdministradorRequest, ValidarEmpresaRequest }
-import portal.transaccional.autenticacion.service.web.horarioEmpresa.{ AgregarHorarioEmpresaRequest, DiaFestivoRequest, ResponseObtenerHorario }
-import portal.transaccional.autenticacion.service.web.ip.{ IpRequest, IpResponse }
+import portal.transaccional.autenticacion.service.web.agenteInmobiliario._
+import portal.transaccional.autenticacion.service.web.autenticacion.{AutenticarRequest, AutenticarUsuarioComercialRequest, AutenticarUsuarioEmpresarialRequest}
+import portal.transaccional.autenticacion.service.web.autorizacion.{InvalidarTokenRequest, ValidarTokenAgenteRequest}
+import portal.transaccional.autenticacion.service.web.comercial.{ActualizarContrasenaRequest, CrearAdministradorRequest, ValidarEmpresaRequest}
+import portal.transaccional.autenticacion.service.web.horarioEmpresa.{AgregarHorarioEmpresaRequest, DiaFestivoRequest, ResponseObtenerHorario}
+import portal.transaccional.autenticacion.service.web.ip.{IpRequest, IpResponse}
 import portal.transaccional.autenticacion.service.web.pin.ContrasenaUsuario
-import portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.{ GuardarRespuestasRequest, ResponseObtenerPreguntas, ResponseObtenerPreguntasComprobar, RespuestasComprobacionRequest }
+import portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.{GuardarRespuestasRequest, ResponseObtenerPreguntas, ResponseObtenerPreguntasComprobar, RespuestasComprobacionRequest}
+import spray.json.{DeserializationException, JsString, JsValue, JsonFormat, RootJsonFormat}
 
 trait DomainJsonFormatters {
 

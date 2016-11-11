@@ -7,32 +7,29 @@ import akka.pattern.ask
 import akka.util.Timeout
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
-import co.com.alianza.constants.{ LlavesReglaContrasena, TiposConfiguracion }
+import co.com.alianza.constants.{LlavesReglaContrasena, TiposConfiguracion}
 import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.infrastructure.messages.CrearSesionUsuario
-import co.com.alianza.persistence.entities._
-import co.com.alianza.persistence.entities.{ Empresa, UsuarioAgenteEmpresarial, UsuarioEmpresarialAdmin }
-import co.com.alianza.util.token.{ AesUtil, Token }
-import enumerations.{ EstadosEmpresaEnum, TipoIdentificacion }
+import co.com.alianza.persistence.entities.{Empresa, UsuarioEmpresarialAdmin, _}
+import co.com.alianza.util.token.{AesUtil, Token}
+import enumerations.{EstadosEmpresaEnum, TipoIdentificacion}
 import portal.transaccional.autenticacion.service.drivers.cliente.ClienteRepository
 import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionRepository
-import portal.transaccional.autenticacion.service.drivers.empresa.{ EmpresaRepository, DataAccessTranslator => EmpresaDTO }
+import portal.transaccional.autenticacion.service.drivers.empresa.{EmpresaRepository, DataAccessTranslator => EmpresaDTO}
 import portal.transaccional.autenticacion.service.drivers.ipempresa.IpEmpresaRepository
 import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaRepository
 import portal.transaccional.autenticacion.service.drivers.respuesta.RespuestaUsuarioRepository
 import portal.transaccional.autenticacion.service.drivers.sesion.SesionRepository
-import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioEmpresarialAdminRepository
-import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialRepository
-import portal.transaccional.autenticacion.service.drivers.sesion.{ SesionDriverRepository, SesionRepository }
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioAdminRepository
-import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioAgenteEmpresarialRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioAgenteEmpresarial.UsuarioEmpresarialCustomRepository
 
 import scala.concurrent.duration._
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
 case class AutenticacionEmpresaDriverRepository(
-    usuarioRepo: UsuarioEmpresarialRepository[UsuarioEmpresarial], usuarioAdminRepo: UsuarioAdminRepository, clienteCoreRepo: ClienteRepository,
+    usuarioRepo: UsuarioEmpresarialRepository[UsuarioEmpresarial] with UsuarioEmpresarialCustomRepository, usuarioAdminRepo: UsuarioAdminRepository, clienteCoreRepo: ClienteRepository,
     empresaRepo: EmpresaRepository, reglaRepo: ReglaContrasenaRepository, configuracionRepo: ConfiguracionRepository, ipRepo: IpEmpresaRepository,
     sesionRepo: SesionRepository, respuestasRepo: RespuestaUsuarioRepository, usuarioAgenteInmobRepo: UsuarioEmpresarialRepository[UsuarioAgenteInmobiliario]
 )(implicit val ex: ExecutionContext) extends AutenticacionEmpresaRepository {

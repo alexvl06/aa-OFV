@@ -52,7 +52,7 @@ trait ServiceAuthorization {
         val token = AesUtil.desencriptarToken(encriptedToken)
         val tipoCliente: String = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
 
-        val futuro: Future[ValidacionAutorizacion] = {
+        val futuro = {
           if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
             autorizacionAgenteRepo.autorizar(token, encriptedToken, "", obtenerIp(ctx).get.value)
           } else if (tipoCliente == TiposCliente.clienteAdministrador.toString || tipoCliente == TiposCliente.clienteAdminInmobiliario.toString) {
@@ -93,12 +93,12 @@ trait ServiceAuthorization {
       case validacion: AutorizadoComercial =>
         val tipo = TiposCliente.getTipoCliente(tipoCliente)
         val user = JsonUtil.fromJson[UsuarioComercial](validacion.usuario)
-        Right(UsuarioAuth(user.id, tipo, "", 0))
+        Right(UsuarioAuth(user.id, tipo, "", 0, user.usuario))
 
       case validacion: AutorizadoComercialAdmin =>
         val tipo = TiposCliente.getTipoCliente(tipoCliente)
         val user = JsonUtil.fromJson[UsuarioComercialAdmin](validacion.usuario)
-        Right(UsuarioAuth(user.id, tipo, "", 0))
+        Right(UsuarioAuth(user.id, tipo, "", 0, user.usuario))
 
       case validacion: ValidacionException =>
         validacion.printStackTrace()
@@ -117,7 +117,7 @@ trait ServiceAuthorization {
 
       case validacion: GenericAutorizado[UsuarioInmobiliarioAuth] =>
         val user = validacion.usuario
-        Right(UsuarioAuth(user.id, user.tipoCliente, user.identificacion, user.tipoIdentificacion))
+        Right(UsuarioAuth(user.id, user.tipoCliente, user.identificacion, user.tipoIdentificacion, user.usuario))
 
       case _ =>
         Left(AuthenticationFailedRejection(CredentialsRejected, List()))

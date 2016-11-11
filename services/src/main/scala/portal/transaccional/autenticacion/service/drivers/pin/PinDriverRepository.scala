@@ -5,27 +5,28 @@ import java.sql.Timestamp
 import java.util.Date
 
 import co.com.alianza.exceptions.ValidacionException
-import co.com.alianza.persistence.entities.{ PinUsuario, IpsEmpresa, IpsUsuario, UltimaContrasena }
+import co.com.alianza.persistence.entities._
 import co.com.alianza.util.clave.Crypto
-import enumerations.{ EstadosUsuarioEnum, AppendPasswordUser, EstadosEmpresaEnum, PerfilesUsuario }
+import enumerations.{AppendPasswordUser, EstadosEmpresaEnum, EstadosUsuarioEnum, PerfilesUsuario}
 import portal.transaccional.autenticacion.service.drivers.empresa.EmpresaRepository
 import portal.transaccional.autenticacion.service.drivers.ipempresa.IpEmpresaRepository
 import portal.transaccional.autenticacion.service.drivers.ipusuario.IpUsuarioRepository
 import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaRepository
 import portal.transaccional.autenticacion.service.drivers.ultimaContrasena.UltimaContrasenaRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioAdminRepository
-import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioAgenteEmpresarialRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioAgenteEmpresarial.UsuarioEmpresarialCustomRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioRepository
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ PinAdminDAOs, PinAgenteDAOs, PinUsuarioDAOs }
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{PinAdminDAOs, PinAgenteDAOs, PinUsuarioDAOs}
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * Created by hernando on 25/10/16.
  */
 case class PinDriverRepository(pinUsuarioDAO: PinUsuarioDAOs, pinAdminDAO: PinAdminDAOs, pinAgenteDAO: PinAgenteDAOs,
     empresaRepo: EmpresaRepository, ipUsuarioRepo: IpUsuarioRepository, ipEmpresaRepo: IpEmpresaRepository,
-    usuarioRepo: UsuarioRepository, usuarioAdminRepo: UsuarioAdminRepository, usuarioAgenteRepo: UsuarioAgenteEmpresarialRepository,
+    usuarioRepo: UsuarioRepository, usuarioAdminRepo: UsuarioAdminRepository, usuarioAgenteRepo: UsuarioEmpresarialRepository[UsuarioEmpresarial] with UsuarioEmpresarialCustomRepository,
     ultimaContrasenaRepo: UltimaContrasenaRepository, reglasRepo: ReglaContrasenaRepository)(implicit val ex: ExecutionContext) extends PinRepository {
 
   def validarPinUsuario(token: String, funcionalidad: Int): Future[Boolean] = {

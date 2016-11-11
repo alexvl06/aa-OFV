@@ -58,7 +58,7 @@ case class AutorizacionRecursoComercialService(user: UsuarioAuth, kafkaActor: Ac
               //auditoria
               mapRequestContext {
                 r: RequestContext =>
-                  val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, user.usuario)
+                  val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, Option(user.usuario))
                   requestAuditing[PersistenceException, PermisoRecursoDTO](r, AuditingHelper.fiduciariaTopic,
                     AuditingHelper.recursosComercialIndex, ip.value, kafkaActor, usuario, Some(permisoRecurso))
               } {

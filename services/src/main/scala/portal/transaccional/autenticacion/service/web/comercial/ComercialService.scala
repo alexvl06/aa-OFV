@@ -54,7 +54,7 @@ case class ComercialService(user: UsuarioAuth, kafkaActor: ActorSelection, comer
               //auditoria
               mapRequestContext {
                 r: RequestContext =>
-                  val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, user.usuario)
+                  val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, Option(user.usuario))
                   requestAuditing[PersistenceException, CrearAdministradorRequest](r, AuditingHelper.fiduciariaTopic,
                     AuditingHelper.crearAdministradorComercialIndex, ip.value, kafkaActor, usuario, Some(request))
               } {
@@ -79,7 +79,7 @@ case class ComercialService(user: UsuarioAuth, kafkaActor: ActorSelection, comer
               //auditoria
               mapRequestContext {
                 r: RequestContext =>
-                  val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, user.usuario)
+                  val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, Option(user.usuario))
                   requestAuditing[PersistenceException, ActualizarContrasenaRequest](r, AuditingHelper.fiduciariaTopic,
                     AuditingHelper.cambioContrasenaAdministradorComercialIndex, ip.value, kafkaActor, usuario, Some(request))
               } {

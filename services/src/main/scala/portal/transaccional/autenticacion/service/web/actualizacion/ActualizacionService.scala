@@ -53,7 +53,7 @@ case class ActualizacionService(user: UsuarioAuth, kafkaActor: ActorSelection,
           actualizacion =>
             mapRequestContext {
               r: RequestContext =>
-                val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, user.usuario)
+                val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, Option(user.usuario))
                 requestAuditing[PersistenceException, ActualizacionMessage](r, AuditingHelper.fiduciariaTopic, AuditingHelper.actualizacionDatosUsuarioIndex,
                   ip.value, kafkaActor, usuario, Option(actualizacion))
             } {
