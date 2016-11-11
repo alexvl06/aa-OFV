@@ -68,7 +68,7 @@ object DataAccessAdapter {
   }
 
   def actualizarAgenteEmpresarial(id: Int, usuario: String, correo: String, nombreUsuario: String, cargo: String, descripcion: String): Future[Validation[PersistenceException, Int]] = {
-    repo.actualizarAgente(id, usuario, correo, nombreUsuario, cargo, descripcion)
+    repo.actualizarAgente(id, usuario, correo, nombreUsuario, cargo, Option(descripcion))
   }
 
   def eliminarPinEmpresaReiniciarAnteriores(idUsuarioAgenteEmpresarial: Int, usoPinEmpresa: Int): Future[Validation[PersistenceException, Int]] = {

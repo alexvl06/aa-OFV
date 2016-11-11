@@ -154,7 +154,7 @@ object Dependencies {
     val scalatestLib    = "org.scalatest"          %% "scalatest"     % scalatest % Test logScalaExclude
     val scalacheckLib   = "org.scalacheck"         %% "scalacheck"    % scalacheck % Test logScalaExclude
     val sprayTestkitLib = "io.spray"               %% "spray-testkit" % spray % Test specs2Exclude
-    val specs2Lib       = "org.specs2"             %% "specs2"        % specs2 % Test logScalaExclude
+    val scalaMockLib    = "org.scalamock"          %% "scalamock-scalatest-support" % scalaMock % Test
   }
 
   import Dependencies.CompileDep._
@@ -174,5 +174,5 @@ object Dependencies {
 
   val recaptchaLibs: Seq[ModuleID]  = Seq(recaptcha4jLib)
   val loggingLibs: Seq[ModuleID]    = Seq(scalaLoggingLib, slf4jApi, jclOverSlf4j, log4jOverSlf4j, julToSlf4j, logbackClassic, logbackCore)
-  val testLibs: Seq[ModuleID]       = Seq(akkaTestkit, sprayTestkitLib, scalatestLib, junitLib, restAssuredLib, scalacheckLib, specs2Lib)
+  val testLibs: Seq[ModuleID]       = Seq(akkaTestkit, sprayTestkitLib, scalatestLib, junitLib, restAssuredLib, scalacheckLib, scalaMockLib)
 }

@@ -156,9 +156,7 @@ case object UltimasContrasenas extends Regla("ULTIMAS_CONTRASENAS_NO_VALIDAS") {
 
             val UltimaContrasenaExiste: Future[Validation[PersistenceException, Boolean]] = FuturoObtenerUltimasContrasenas.map {
               validationInterior =>
-                validationInterior.map {
-                  listaUltimasContrasenas => contiene(idUsuario.get, listaUltimasContrasenas, valorContrasenaNueva)
-                }
+                validationInterior.map { listaUltimasContrasenas => contiene(idUsuario.get, listaUltimasContrasenas, valorContrasenaNueva) }
             }
             //TODO: AWAIT ?? DE VERDAD ??
             val extraccionFuturo = Await.result(UltimaContrasenaExiste, 8.seconds)
@@ -194,14 +192,31 @@ case object UltimasContrasenas extends Regla("ULTIMAS_CONTRASENAS_NO_VALIDAS") {
 
 object ValidarClave {
 
-  def aplicarReglas(input: String, idUsuario: Option[Int], perfilUsuario: PerfilesUsuario.perfilUsuario, validaciones: Regla*): Future[Validation[PersistenceException, List[ValidacionClave]]] = {
-    obtenerReglasToMap.map(_.flatMap {
-      f =>
-        zSuccess(
-          validaciones.foldLeft(Nil: List[ValidacionClave]) {
-            (acc: List[ValidacionClave], r: Regla) => r.validar(input, idUsuario, perfilUsuario, f.get(r.name)).map(_ :: acc).getOrElse(acc)
-          }
-        )
+  def aplicarReglas(input: String, idUsuario: Option[Int], perfilUsuario: PerfilesUsuario.perfilUsuario,
+    validaciones: Regla*): Future[Validation[PersistenceException, List[ValidacionClave]]] = {
+    obtenerReglasToMap.map(_.flatMap { f =>
+      zSuccess(
+        validaciones.foldLeft(Nil: List[ValidacionClave]) {
+          (acc: List[ValidacionClave], r: Regla) =>
+            r.validar(input, idUsuario, perfilUsuario, f.get(r.name))
+              .map(_ :: acc)
+              .getOrElse(acc)
+        }
+      )
+    })
+  }
+
+  def aplicarReglasValor(input: String, idUsuario: Option[Int], perfilUsuario: PerfilesUsuario.perfilUsuario,
+    validaciones: Regla*): Future[Validation[PersistenceException, List[(ValidacionClave, String)]]] = {
+    obtenerReglasToMap.map(_.flatMap { f =>
+      zSuccess(
+        validaciones.foldLeft(Nil: List[(ValidacionClave, String)]) {
+          (acc: List[(ValidacionClave, String)], r: Regla) =>
+            r.validar(input, idUsuario, perfilUsuario, f.get(r.name))
+              .map(x => (x, f.getOrElse(r.name, "")) :: acc)
+              .getOrElse(acc)
+        }
+      )
     })
   }
 

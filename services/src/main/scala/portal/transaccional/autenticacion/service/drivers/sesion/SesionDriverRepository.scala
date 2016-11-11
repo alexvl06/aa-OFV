@@ -30,14 +30,14 @@ case class SesionDriverRepository(sessionActor: ActorRef)(implicit val ex: Execu
   def validarSesion(token: String): Future[Boolean] = {
     sessionActor ? ValidarSesion(token) flatMap {
       case true => Future.successful(true)
-      case _ => Future.failed(ValidacionException("403.9", "Error sesión1"))
+      case _ => Future.failed(ValidacionException("403.9", "Error sesión"))
     }
   }
 
   def obtenerSesion(token: String): Future[ActorRef] = {
     sessionActor ? BuscarSesion(token) flatMap {
       case Some(sesionActor: ActorRef) => Future.successful(sesionActor)
-      case _ => Future.failed(ValidacionException("403.9", "Error sesión2"))
+      case _ => Future.failed(ValidacionException("403.9", "Error sesión"))
     }
   }
 

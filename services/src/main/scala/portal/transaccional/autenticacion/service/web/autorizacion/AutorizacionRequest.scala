@@ -5,5 +5,8 @@ package portal.transaccional.autenticacion.service.web.autorizacion
  */
 case class InvalidarTokenRequest(token: String)
 
-case class AuditityUser(correo: String, documento: String, tipoDocuemnto: String, usuario: String, ultimaIp: String, ultimoIngreso: String, tipoCliente: String)
+case class ValidarTokenAgenteRequest(token: String)
+
+case class AuditityUser(correo: String, documento: String, tipoDocuemnto: String, usuario: String, ultimaIp: String, ultimoIngreso: String,
+  tipoCliente: String)
 

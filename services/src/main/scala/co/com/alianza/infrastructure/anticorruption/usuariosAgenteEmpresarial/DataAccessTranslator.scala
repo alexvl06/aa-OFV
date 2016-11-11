@@ -19,7 +19,7 @@ object DataAccessTranslator {
 
   def translateUsuarioEstado(usuario: Seq[dUsuario]): List[UsuarioEmpresarialEstado] = {
     usuario.map(ue => UsuarioEmpresarialEstado(ue.id, ue.correo, ue.identificacion, ue.tipoIdentificacion,
-      ue.usuario, ue.cargo, ue.descripcion, estadoUsuario(ue.estado, EstadosEmpresaEnum(ue.estado).toString),
+      ue.usuario, ue.cargo, ue.descripcion.getOrElse(""), estadoUsuario(ue.estado, EstadosEmpresaEnum(ue.estado).toString),
       TiposCliente.agenteEmpresarial, Some(ue.nombreUsuario))).toList
   }
 

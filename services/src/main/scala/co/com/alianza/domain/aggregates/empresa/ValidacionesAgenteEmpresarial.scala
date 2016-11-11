@@ -15,9 +15,12 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 import co.com.alianza.util.clave.{ Crypto, ValidarClave }
 import co.com.alianza.exceptions.PersistenceException
+import co.com.alianza.util.clave.{ Crypto, ErrorValidacionClave, ValidarClave }
+import co.com.alianza.exceptions.{ PersistenceException, ValidacionException }
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => UsDataAdapter }
 import co.com.alianza.persistence.util.DataBaseExecutionContext
 
+import scala.util.{ Failure, Success }
 import scalaz.Validation.FlatMap._
 
 /**
@@ -100,7 +103,6 @@ object ValidacionesAgenteEmpresarial {
             zFailure(ErrorFormatoClave(errorClave(errores)))
         }
     })
-
   }
 
   def validarEstadoEmpresa(nit: String): Future[Validation[ErrorValidacion, Boolean]] = {

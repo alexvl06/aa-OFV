@@ -14,7 +14,8 @@ object Boot extends App with HostBinding with Core with BootedCore with CoreActo
       pinRepository, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor, contrasenasActor, autorizacionAgenteRepo, autorizacionAdminRepo,
       preguntasValidacionRepository, respuestaUsuarioRepo, respuestaUsuariAdminoRepo, ipRepo, autorizacionComercialRepo, autorizacionComercialAdminRepo,
       autorizacionRecursoComercialRepository, recursoComercialRepository, rolComercialRepository, usuarioComercialAdminRepo, reglaContrasenaRepo,
-      horarioEmpresaRepository)),
+      horarioEmpresaRepository, agenteInmobRepo, permisoAgenteInmob,
+      sesionUtilAgenteInmobiliario, agenteInmobContrasenaRepo, pinAgenteInmobRepository, autorizacionAgenteInmob)),
     name = "api-AlianzaRouter"
   )
 

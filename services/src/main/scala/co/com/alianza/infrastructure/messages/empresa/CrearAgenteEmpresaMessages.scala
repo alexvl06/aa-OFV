@@ -30,7 +30,7 @@ case class CrearAgenteMessage(
   def toEntityUsuarioAgenteEmpresarial(): UsuarioAgenteEmpresarial = {
     UsuarioAgenteEmpresarial(0, correo, new Timestamp(System.currentTimeMillis()), nit, tipoIdentificacion, usuario,
       EstadosEmpresaEnum.pendienteActivacion.id, contrasena = None, token = None, numeroIngresosErroneos = 0,
-      ipUltimoIngreso = None, fechaUltimoIngreso = None, nombre, cargo, descripcion)
+      ipUltimoIngreso = None, fechaUltimoIngreso = None, nombre, cargo, Option(descripcion))
   }
 
 }
