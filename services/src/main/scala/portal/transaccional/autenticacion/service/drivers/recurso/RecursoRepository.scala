@@ -10,6 +10,8 @@ import scala.concurrent.Future
 
 trait RecursoRepository {
 
+  def obtenerRecursosClienteIndividual(): Future[Seq[RecursoPerfil]]
+
   def obtenerRecursos(usuarioId: Int): Future[Seq[RecursoPerfil]]
 
   def filtrarRecursos(recursos: Seq[RecursoPerfil], url: String): Seq[RecursoPerfil]

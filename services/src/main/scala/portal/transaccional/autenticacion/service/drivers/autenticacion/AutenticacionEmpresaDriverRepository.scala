@@ -9,7 +9,7 @@ import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.constants.{ LlavesReglaContrasena, TiposConfiguracion }
 import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.infrastructure.messages.CrearSesionUsuario
-import co.com.alianza.persistence.entities.{ Empresa, UsuarioAgente, UsuarioEmpresarialAdmin }
+import co.com.alianza.persistence.entities.{ Empresa, UsuarioAgenteEmpresarial, UsuarioEmpresarialAdmin }
 import co.com.alianza.util.token.{ AesUtil, Token }
 import enumerations.{ EstadosEmpresaEnum, TipoIdentificacion }
 import portal.transaccional.autenticacion.service.drivers.cliente.ClienteRepository
@@ -20,14 +20,14 @@ import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasena
 import portal.transaccional.autenticacion.service.drivers.respuesta.RespuestaUsuarioRepository
 import portal.transaccional.autenticacion.service.drivers.sesion.{ SesionDriverRepository, SesionRepository }
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioAdminRepository
-import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioAgenteRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioAgenteEmpresarialRepository
 
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.reflect.ClassTag
 
 case class AutenticacionEmpresaDriverRepository(
-    usuarioRepo: UsuarioAgenteRepository, usuarioAdminRepo: UsuarioAdminRepository, clienteCoreRepo: ClienteRepository,
+    usuarioRepo: UsuarioAgenteEmpresarialRepository, usuarioAdminRepo: UsuarioAdminRepository, clienteCoreRepo: ClienteRepository,
     empresaRepo: EmpresaRepository, reglaRepo: ReglaContrasenaRepository, configuracionRepo: ConfiguracionRepository, ipRepo: IpEmpresaRepository,
     sesionRepo: SesionRepository, respuestasRepo: RespuestaUsuarioRepository
 )(implicit val ex: ExecutionContext) extends AutenticacionEmpresaRepository {
@@ -60,7 +60,7 @@ case class AutenticacionEmpresaDriverRepository(
    * @return Future[Boolean]
    * Success => True
    */
-  private def autenticar(agente: Option[UsuarioAgente], admin: Option[UsuarioEmpresarialAdmin], contrasena: String, ip: String): Future[String] = {
+  private def autenticar(agente: Option[UsuarioAgenteEmpresarial], admin: Option[UsuarioEmpresarialAdmin], contrasena: String, ip: String): Future[String] = {
     if (agente.isDefined) {
       autenticarAgente(agente.get, contrasena, ip)
     } else if (admin.isDefined) {
@@ -89,7 +89,7 @@ case class AutenticacionEmpresaDriverRepository(
    * - asociar token
    * - crear session de usuario
    */
-  private def autenticarAgente(usuario: UsuarioAgente, contrasena: String, ip: String): Future[String] = {
+  private def autenticarAgente(usuario: UsuarioAgenteEmpresarial, contrasena: String, ip: String): Future[String] = {
     for {
       empresa <- obtenerEmpresaValida(usuario.identificacion)
       reintentosErroneos <- reglaRepo.getRegla(LlavesReglaContrasena.CANTIDAD_REINTENTOS_INGRESO_CONTRASENA.llave)
@@ -161,7 +161,7 @@ case class AutenticacionEmpresaDriverRepository(
     } yield empresa.get
   }
 
-  private def generarTokenAgente(usuario: UsuarioAgente, ip: String, inactividad: String): Future[String] = Future {
+  private def generarTokenAgente(usuario: UsuarioAgenteEmpresarial, ip: String, inactividad: String): Future[String] = Future {
     Token.generarToken(usuario.nombreUsuario, usuario.correo, getTipoPersona(usuario.tipoIdentificacion),
       usuario.ipUltimoIngreso.get, usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())),
       inactividad, TiposCliente.agenteEmpresarial, Some(usuario.identificacion))

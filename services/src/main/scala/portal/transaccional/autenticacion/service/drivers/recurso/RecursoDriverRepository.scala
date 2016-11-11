@@ -12,6 +12,8 @@ case class RecursoDriverRepository(generalDAO: AlianzaDAOs) extends RecursoRepos
 
   def obtenerRecursos(usuarioId: Int): Future[Seq[RecursoPerfil]] = generalDAO.getResources(usuarioId)
 
+  def obtenerRecursosClienteIndividual(): Future[Seq[RecursoPerfil]] = generalDAO.getClienteIndividualResources()
+
   def filtrarRecursos(recursos: Seq[RecursoPerfil], url: String): Seq[RecursoPerfil] = {
     recursos.filter(filtrarRecursos(_, url))
   }

@@ -14,7 +14,7 @@ import portal.transaccional.autenticacion.service.drivers.ipusuario.IpUsuarioRep
 import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaRepository
 import portal.transaccional.autenticacion.service.drivers.ultimaContrasena.UltimaContrasenaRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioAdminRepository
-import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioAgenteRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioAgenteEmpresarialRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioRepository
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ PinAdminDAOs, PinAgenteDAOs, PinUsuarioDAOs }
 
@@ -25,7 +25,7 @@ import scala.concurrent.{ ExecutionContext, Future }
  */
 case class PinDriverRepository(pinUsuarioDAO: PinUsuarioDAOs, pinAdminDAO: PinAdminDAOs, pinAgenteDAO: PinAgenteDAOs,
     empresaRepo: EmpresaRepository, ipUsuarioRepo: IpUsuarioRepository, ipEmpresaRepo: IpEmpresaRepository,
-    usuarioRepo: UsuarioRepository, usuarioAdminRepo: UsuarioAdminRepository, usuarioAgenteRepo: UsuarioAgenteRepository,
+    usuarioRepo: UsuarioRepository, usuarioAdminRepo: UsuarioAdminRepository, usuarioAgenteRepo: UsuarioAgenteEmpresarialRepository,
     ultimaContrasenaRepo: UltimaContrasenaRepository, reglasRepo: ReglaContrasenaRepository)(implicit val ex: ExecutionContext) extends PinRepository {
 
   def validarPinUsuario(token: String, funcionalidad: Int): Future[Boolean] = {
