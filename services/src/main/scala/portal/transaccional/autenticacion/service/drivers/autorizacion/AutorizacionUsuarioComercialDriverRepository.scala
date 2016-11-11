@@ -1,10 +1,10 @@
 package portal.transaccional.autenticacion.service.drivers.autorizacion
 
-import co.com.alianza.commons.enumerations.{RolesComercial, TiposCliente}
+import co.com.alianza.commons.enumerations.{ RolesComercial, TiposCliente }
 import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import co.com.alianza.exceptions._
 import co.com.alianza.infrastructure.dto.UsuarioComercialDTO
-import co.com.alianza.persistence.entities.{RecursoPerfil, UsuarioComercial}
+import co.com.alianza.persistence.entities.{ RecursoPerfil, UsuarioComercial }
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.token.Token
 import portal.transaccional.autenticacion.service.drivers.recurso.RecursoRepository
@@ -12,7 +12,7 @@ import portal.transaccional.autenticacion.service.drivers.sesion.SesionRepositor
 import portal.transaccional.autenticacion.service.drivers.usuarioComercial.UsuarioComercialRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.DataAccessTranslator
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * Created by s4n 2016
