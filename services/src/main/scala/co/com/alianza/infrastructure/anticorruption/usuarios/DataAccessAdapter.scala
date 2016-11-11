@@ -8,7 +8,7 @@ import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.auditing.AuditingUser.AuditingUserData
 import co.com.alianza.infrastructure.dto.{ Usuario, _ }
 import co.com.alianza.persistence.entities
-import co.com.alianza.persistence.entities.{ IpsUsuario, PerfilUsuario, Empresa => eEmpresa, HorarioEmpresa => eHorarioEmpresa, PinUsuario => ePinUsuario, Usuario => eUsuario, UsuarioAgente => eUsuarioEmpresarial, UsuarioEmpresarialAdmin => eUsuarioEmpresarialAdmin, _ }
+import co.com.alianza.persistence.entities.{ IpsUsuario, PerfilUsuario, Empresa => eEmpresa, HorarioEmpresa => eHorarioEmpresa, PinUsuario => ePinUsuario, Usuario => eUsuario, UsuarioAgenteEmpresarial => eUsuarioEmpresarial, UsuarioEmpresarialAdmin => eUsuarioEmpresarialAdmin, _ }
 import co.com.alianza.persistence.repositories.{ IpsUsuarioRepository, UsuariosRepository, _ }
 import co.com.alianza.persistence.util.DataBaseExecutionContext
 import enumerations.EstadosUsuarioEnum

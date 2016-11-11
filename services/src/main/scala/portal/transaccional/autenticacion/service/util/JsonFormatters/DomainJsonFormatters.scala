@@ -22,7 +22,7 @@ trait DomainJsonFormatters {
   //autenticacion
   implicit val autenticarFormatter = jsonFormat3(AutenticarRequest)
   implicit val autenticarUsuarioEmpresarialFormatter = jsonFormat3(AutenticarUsuarioEmpresarialRequest)
-  implicit val autenticarUsuarioComercialRequestFormatter = jsonFormat3(AutenticarUsuarioComercialRequest)
+  implicit val autenticarUsuarioComercialRequestFormatter = jsonFormat4(AutenticarUsuarioComercialRequest)
 
   //autorizacion
   implicit val invalidarTokenFormatter = jsonFormat1(InvalidarTokenRequest)

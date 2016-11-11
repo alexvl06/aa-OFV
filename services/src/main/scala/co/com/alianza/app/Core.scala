@@ -32,7 +32,7 @@ import portal.transaccional.autenticacion.service.drivers.rolRecursoComercial.{ 
 import portal.transaccional.autenticacion.service.drivers.sesion.SesionDriverRepository
 import portal.transaccional.autenticacion.service.drivers.ultimaContrasena.UltimaContrasenaDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioAdminDriverRepository
-import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioAgenteDriverRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioAgenteEmpresarialDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioComercial.UsuarioComercialDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioComercialAdmin.{ UsuarioComercialAdminDriverRepository, UsuarioComercialAdminRepository }
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioDriverRepository
@@ -115,14 +115,14 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val configuracionRepo = ConfiguracionDriverRepository(configuracionDAO)
   lazy val ultimaContrasenaRepo = UltimaContrasenaDriverRepository(ultimaContrasenaDAO, ultimaContrasenaAdminDAO, ultimaContrasenaAgenteDAO)
   lazy val reglaContrasenaRepo = ReglaContrasenaDriverRepository(reglaContrasenaDAO, ultimaContrasenaRepo)
-  lazy val usuarioAgenteRepo = UsuarioAgenteDriverRepository(usuarioAgenteDAO)
+  lazy val usuarioAgenteRepo = UsuarioAgenteEmpresarialDriverRepository(usuarioAgenteDAO)
   lazy val usuarioComercialRepo = UsuarioComercialDriverRepository(usuarioComercialDAO)
   lazy val usuarioComercialAdminRepo = UsuarioComercialAdminDriverRepository(usuarioComercialAdminDAO, empresaRepo)
   lazy val respuestaUsuarioRepo = RespuestaUsuarioDriverRepository(respuestaUsuarioDAO, configuracionRepo)
   lazy val usuarioAdminRepo = UsuarioAdminDriverRepository(usuarioAdminDAO)
   lazy val respuestaUsuariAdminoRepo = RespuestaUsuarioAdminDriverRepository(respuestaUsuarioAdminDAO, configuracionRepo)
   lazy val autorizacionUsuarioRepo = AutorizacionUsuarioDriverRepository(usuarioRepo, recursoRepo, sesionRepo)
-  lazy val autorizacionComercialRepo = AutorizacionUsuarioComercialDriverRepository(sesionRepo, recursoRepo, usuarioComercialRepo)
+  lazy val autorizacionComercialRepo = AutorizacionUsuarioComercialDriverRepository(sesionRepo, recursoRepo, usuarioComercialRepo, servicioComercialRepository)
   lazy val autorizacionComercialAdminRepo = AutorizacionUsuarioComercialAdminDriverRepository(usuarioComercialAdminRepo)
   lazy val autenticacionRepo = AutenticacionDriverRepository(usuarioRepo, clienteRepo, configuracionRepo, reglaContrasenaRepo, ipUsuarioRepo,
     respuestaUsuarioRepo, sesionRepo)
@@ -143,6 +143,7 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val autorizacionRecursoComercialRepository = AutorizacionRecursoComercialDriverRepository(rolRecursoComercialRepo)
   lazy val recursoComercialRepository = RecursoComercialDriverRepository(recursoComercialDAO, rolRecursoComercialDAO)
   lazy val rolComercialRepository = RolComercialDriverRepository(rolComercialDAO)
+  lazy val servicioComercialRepository = AutorizacionServicioComercialDriverRepository(servicioComercialDAO)
   lazy val actualizacionRepository = ActualizacionDriverRepository(actualizacionDAO)
   lazy val horarioEmpresaRepository = HorarioEmpresaDriverRepository(empresaRepo, horarioEmpresaDAO, diaFestivoDAO)
   lazy val pinRepository = PinDriverRepository(pinUsuarioDAO, pinAdminDAO, pinAgenteDAO, empresaRepo, ipUsuarioRepo, ipEmpresaRepo, usuarioRepo,
@@ -175,6 +176,7 @@ private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
   lazy val rolRecursoComercialDAO = RolRecursoComercialDAO()(config)
   lazy val recursoComercialDAO = RecursoComercialDAO()(config)
   lazy val rolComercialDAO = RolComercialDAO()(config)
+  lazy val servicioComercialDAO = ServicioComercialDAO()(config)
   lazy val horarioEmpresaDAO = HorarioEmpresaDAO()(config)
   lazy val diaFestivoDAO = DiaFestivoDAO()(config)
   lazy val ultimaContrasenaDAO = UltimaContrasenaDAO()(config)

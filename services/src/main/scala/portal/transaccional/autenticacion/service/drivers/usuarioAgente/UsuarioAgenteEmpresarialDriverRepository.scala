@@ -5,7 +5,7 @@ import java.util.Date
 
 import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.exceptions.ValidacionException
-import co.com.alianza.persistence.entities.UsuarioAgente
+import co.com.alianza.persistence.entities.UsuarioAgenteEmpresarial
 import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.token.Token
 import enumerations.{ AppendPasswordUser, EstadosEmpresaEnum, EstadosUsuarioEnum }
@@ -17,11 +17,11 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * Created by s4n on 2016
  */
-case class UsuarioAgenteDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs)(implicit val ex: ExecutionContext) extends UsuarioAgenteRepository {
+case class UsuarioAgenteEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs)(implicit val ex: ExecutionContext) extends UsuarioAgenteEmpresarialRepository {
 
-  def getById(idUsuario: Int): Future[Option[UsuarioAgente]] = usuarioDAO.getById(idUsuario)
+  def getById(idUsuario: Int): Future[Option[UsuarioAgenteEmpresarial]] = usuarioDAO.getById(idUsuario)
 
-  def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[UsuarioAgente]] = {
+  def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[UsuarioAgenteEmpresarial]] = {
     usuarioDAO.getByIdentityAndUser(identificacion, usuario)
   }
 
@@ -78,7 +78,7 @@ case class UsuarioAgenteDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs)(imp
     } yield cambiar
   }
 
-  def actualizarInfoUsuario(usuario: UsuarioAgente, ip: String): Future[Int] = {
+  def actualizarInfoUsuario(usuario: UsuarioAgenteEmpresarial, ip: String): Future[Int] = {
     for {
       intentos <- usuarioDAO.updateIncorrectEntries(usuario.id, 0)
       ip <- usuarioDAO.updateLastIp(usuario.id, ip)
@@ -88,7 +88,7 @@ case class UsuarioAgenteDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs)(imp
 
   /////////////////////////////// validaciones //////////////////////////////////
 
-  def validacionBloqueoAdmin(usuario: UsuarioAgente): Future[Boolean] = {
+  def validacionBloqueoAdmin(usuario: UsuarioAgenteEmpresarial): Future[Boolean] = {
     val bloqueoPorAdmin: Int = EstadosEmpresaEnum.bloqueadoPorAdmin.id
     usuario.estado match {
       case `bloqueoPorAdmin` => Future.failed(ValidacionException("409.13", "Usuario Bloqueado Admin"))
@@ -96,7 +96,7 @@ case class UsuarioAgenteDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs)(imp
     }
   }
 
-  def validarUsuario(usuarioOption: Option[UsuarioAgente]): Future[UsuarioAgente] = {
+  def validarUsuario(usuarioOption: Option[UsuarioAgenteEmpresarial]): Future[UsuarioAgenteEmpresarial] = {
     usuarioOption match {
       case Some(usuario) => Future.successful(usuario)
       case _ => Future.failed(ValidacionException("409.01", "No existe usuario"))
@@ -109,7 +109,7 @@ case class UsuarioAgenteDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs)(imp
    * @param contrasena
    * @return
    */
-  def validarUsuario(usuario: UsuarioAgente, contrasena: String, reintentosErroneos: Int): Future[Boolean] = {
+  def validarUsuario(usuario: UsuarioAgenteEmpresarial, contrasena: String, reintentosErroneos: Int): Future[Boolean] = {
     for {
       estado <- validarEstado(usuario)
       contrasena <- validarContrasena(contrasena, usuario, reintentosErroneos)
@@ -121,7 +121,7 @@ case class UsuarioAgenteDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs)(imp
    * @param usuario
    * @return
    */
-  def validarEstado(usuario: UsuarioAgente): Future[Boolean] = {
+  def validarEstado(usuario: UsuarioAgenteEmpresarial): Future[Boolean] = {
     val estado = usuario.estado
     if (estado == EstadosEmpresaEnum.bloqueContraseña.id) {
       Future.failed(ValidacionException("401.8", "Usuario Bloqueado"))
@@ -142,7 +142,7 @@ case class UsuarioAgenteDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs)(imp
    * @param usuario
    * @return
    */
-  def validarContrasena(contrasena: String, usuario: UsuarioAgente, reintentosErroneos: Int): Future[Boolean] = {
+  def validarContrasena(contrasena: String, usuario: UsuarioAgenteEmpresarial, reintentosErroneos: Int): Future[Boolean] = {
     val hash = Crypto.hashSha512(contrasena.concat(AppendPasswordUser.appendUsuariosFiducia), usuario.id)
     if (hash.contentEquals(usuario.contrasena.get)) {
       Future.successful(true)
@@ -181,7 +181,7 @@ case class UsuarioAgenteDriverRepository(usuarioDAO: UsuarioEmpresarialDAOs)(imp
    * @param dias
    * @return
    */
-  def validarCaducidadContrasena(tipoCliente: TiposCliente, usuario: UsuarioAgente, dias: Int): Future[Boolean] = {
+  def validarCaducidadContrasena(tipoCliente: TiposCliente, usuario: UsuarioAgenteEmpresarial, dias: Int): Future[Boolean] = {
     if (new DateTime().isAfter(new DateTime(usuario.fechaActualizacion.getTime).plusDays(dias))) {
       val token: String = Token.generarTokenCaducidadContrasena(tipoCliente, usuario.id)
       Future.failed(ValidacionException("401.9", token))

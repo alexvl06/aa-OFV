@@ -2,7 +2,7 @@ package portal.transaccional.autenticacion.service.drivers.usuarioAgente
 
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.infrastructure.dto.UsuarioEmpresarial
-import co.com.alianza.persistence.entities.{ UsuarioAgente => eUsuarioEmpresarial }
+import co.com.alianza.persistence.entities.{ UsuarioAgenteEmpresarial => eUsuarioEmpresarial }
 
 /**
  * Created by alexandra on 29/07/16.

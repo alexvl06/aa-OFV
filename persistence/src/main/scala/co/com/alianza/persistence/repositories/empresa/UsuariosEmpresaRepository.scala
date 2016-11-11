@@ -32,7 +32,7 @@ class UsuariosEmpresaRepository(implicit executionContext: ExecutionContext) ext
   val usuariosEmpresarialesAdminEmpresa = TableQuery[UsuarioEmpresarialAdminEmpresaTable]
   val perfilesAgentes = TableQuery[PerfilAgenteAgenteTable]
 
-  def obtenerUsuariosBusqueda(correoUsuario: String, usuario: String, nombreUsuario: String, estadoUsuario: Int, idClienteAdmin: Int): Future[Validation[PersistenceException, Seq[UsuarioAgente]]] = loan {
+  def obtenerUsuariosBusqueda(correoUsuario: String, usuario: String, nombreUsuario: String, estadoUsuario: Int, idClienteAdmin: Int): Future[Validation[PersistenceException, Seq[UsuarioAgenteEmpresarial]]] = loan {
     implicit session =>
 
       val usuariosQuery = for {
@@ -95,7 +95,7 @@ class UsuariosEmpresaRepository(implicit executionContext: ExecutionContext) ext
       resolveTry(resultTry, "Actualizar Contrasena clientes admin y fecha de actualizacion")
   }
 
-  def consultaContrasenaActualAgenteEmpresarial(pw_actual: String, idUsuario: Int): Future[Validation[PersistenceException, Option[UsuarioAgente]]] = loan {
+  def consultaContrasenaActualAgenteEmpresarial(pw_actual: String, idUsuario: Int): Future[Validation[PersistenceException, Option[UsuarioAgenteEmpresarial]]] = loan {
     implicit session =>
       val resultTry = session.database.run(usuariosEmpresariales.filter(x => x.id === idUsuario && x.contrasena === pw_actual).result.headOption)
       resolveTry(resultTry, "Consulta contrasena actual de cliente admin  " + pw_actual)
