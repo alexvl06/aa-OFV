@@ -89,7 +89,7 @@ trait ServiceAuthorization {
       case validacion: AutorizadoComercialAdmin =>
         val tipo = TiposCliente.getTipoCliente(tipoCliente)
         val user = JsonUtil.fromJson[UsuarioComercialAdmin](validacion.usuario)
-        Right(UsuarioAuth(user.id, tipo, "", 0))
+        Right(UsuarioAuth(user.id, tipo, "", 0, Option(user.usuario)))
 
       case validacion: ValidacionException =>
         validacion.printStackTrace()

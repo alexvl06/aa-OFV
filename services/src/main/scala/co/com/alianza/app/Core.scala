@@ -122,7 +122,7 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val usuarioAdminRepo = UsuarioAdminDriverRepository(usuarioAdminDAO)
   lazy val respuestaUsuariAdminoRepo = RespuestaUsuarioAdminDriverRepository(respuestaUsuarioAdminDAO, configuracionRepo)
   lazy val autorizacionUsuarioRepo = AutorizacionUsuarioDriverRepository(usuarioRepo, recursoRepo, sesionRepo)
-  lazy val autorizacionComercialRepo = AutorizacionUsuarioComercialDriverRepository(sesionRepo, recursoRepo, usuarioComercialRepo)
+  lazy val autorizacionComercialRepo = AutorizacionUsuarioComercialDriverRepository(sesionRepo, recursoRepo, usuarioComercialRepo, servicioComercialRepository)
   lazy val autorizacionComercialAdminRepo = AutorizacionUsuarioComercialAdminDriverRepository(usuarioComercialAdminRepo)
   lazy val autenticacionRepo = AutenticacionDriverRepository(usuarioRepo, clienteRepo, configuracionRepo, reglaContrasenaRepo, ipUsuarioRepo,
     respuestaUsuarioRepo, sesionRepo)
@@ -143,6 +143,7 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val autorizacionRecursoComercialRepository = AutorizacionRecursoComercialDriverRepository(rolRecursoComercialRepo)
   lazy val recursoComercialRepository = RecursoComercialDriverRepository(recursoComercialDAO, rolRecursoComercialDAO)
   lazy val rolComercialRepository = RolComercialDriverRepository(rolComercialDAO)
+  lazy val servicioComercialRepository = AutorizacionServicioComercialDriverRepository(servicioComercialDAO)
   lazy val actualizacionRepository = ActualizacionDriverRepository(actualizacionDAO)
   lazy val horarioEmpresaRepository = HorarioEmpresaDriverRepository(empresaRepo, horarioEmpresaDAO, diaFestivoDAO)
   lazy val pinRepository = PinDriverRepository(pinUsuarioDAO, pinAdminDAO, pinAgenteDAO, empresaRepo, ipUsuarioRepo, ipEmpresaRepo, usuarioRepo,
@@ -175,6 +176,7 @@ private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
   lazy val rolRecursoComercialDAO = RolRecursoComercialDAO()(config)
   lazy val recursoComercialDAO = RecursoComercialDAO()(config)
   lazy val rolComercialDAO = RolComercialDAO()(config)
+  lazy val servicioComercialDAO = ServicioComercialDAO()(config)
   lazy val horarioEmpresaDAO = HorarioEmpresaDAO()(config)
   lazy val diaFestivoDAO = DiaFestivoDAO()(config)
   lazy val ultimaContrasenaDAO = UltimaContrasenaDAO()(config)

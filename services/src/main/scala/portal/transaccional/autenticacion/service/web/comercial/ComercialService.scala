@@ -81,7 +81,7 @@ case class ComercialService(user: UsuarioAuth, kafkaActor: ActorSelection, comer
                 r: RequestContext =>
                   val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, user.usuario)
                   requestAuditing[PersistenceException, ActualizarContrasenaRequest](r, AuditingHelper.fiduciariaTopic,
-                    AuditingHelper.cambioContrasenaAdministradorComercialIndex, ip.value, kafkaActor, usuario, Some(request))
+                    AuditingHelper.cambioContrasenaAdministradorComercialIndex, ip.value, kafkaActor, usuario, None)
               } {
                 onComplete(resultado) {
                   case Success(value) => complete(value.toString)
