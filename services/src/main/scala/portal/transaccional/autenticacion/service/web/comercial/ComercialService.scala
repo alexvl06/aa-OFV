@@ -73,16 +73,17 @@ case class ComercialService(user: UsuarioAuth, kafkaActor: ActorSelection, comer
     put {
       entity(as[ActualizarContrasenaRequest]) {
         request =>
-          val resultado = comercialRepo.actualizarContrasena(user, request.contrasenaActual, request.contrasenaNueva)
           clientIP {
             ip =>
               //auditoria
               mapRequestContext {
                 r: RequestContext =>
+                  val msg: Option[ActualizarContrasenaRequest] = Option(request.copy(contrasenaActual = "", contrasenaNueva = ""))
                   val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, user.usuario)
                   requestAuditing[PersistenceException, ActualizarContrasenaRequest](r, AuditingHelper.fiduciariaTopic,
-                    AuditingHelper.cambioContrasenaAdministradorComercialIndex, ip.value, kafkaActor, usuario, None)
+                    AuditingHelper.cambioContrasenaAdministradorComercialIndex, ip.value, kafkaActor, usuario, msg)
               } {
+                val resultado = comercialRepo.actualizarContrasena(user, request.contrasenaActual, request.contrasenaNueva)
                 onComplete(resultado) {
                   case Success(value) => complete(value.toString)
                   case Failure(ex) => execution(ex)
