@@ -26,4 +26,8 @@ case class PinAgenteDAO()(implicit val dcConfig: DBConfig) extends TableQuery(ne
     run(this.filter(_.tokenHash === token).delete)
   }
 
+  def deleteAll(idUsuario: Int): Future[Int] = {
+    run(this.filter(_.idUsuarioEmpresarial === idUsuario).delete)
+  }
+
 }

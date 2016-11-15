@@ -78,6 +78,10 @@ case class UsuarioAgenteEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresari
     } yield cambiar
   }
 
+  def actualizarEstado(idUsuario: Int, estado: EstadosEmpresaEnum.estadoEmpresa): Future[Int] = {
+    usuarioDAO.updateStateById(idUsuario, estado.id)
+  }
+
   def actualizarInfoUsuario(usuario: UsuarioAgenteEmpresarial, ip: String): Future[Int] = {
     for {
       intentos <- usuarioDAO.updateIncorrectEntries(usuario.id, 0)
@@ -88,7 +92,7 @@ case class UsuarioAgenteEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresari
 
   /////////////////////////////// validaciones //////////////////////////////////
 
-  def validacionBloqueoAdmin(usuario: UsuarioAgenteEmpresarial): Future[Boolean] = {
+  def validarBloqueoAdmin(usuario: UsuarioAgenteEmpresarial): Future[Boolean] = {
     val bloqueoPorAdmin: Int = EstadosEmpresaEnum.bloqueadoPorAdmin.id
     usuario.estado match {
       case `bloqueoPorAdmin` => Future.failed(ValidacionException("409.13", "Usuario Bloqueado Admin"))
@@ -189,4 +193,5 @@ case class UsuarioAgenteEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresari
       Future.successful(true)
     }
   }
+
 }

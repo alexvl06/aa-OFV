@@ -1,6 +1,6 @@
 package co.com.alianza.infrastructure.anticorruption.configuraciones
 
-import co.com.alianza.persistence.entities.{ Configuraciones => dConfiguracion }
+import co.com.alianza.persistence.entities.{ Configuracion => dConfiguracion }
 import co.com.alianza.infrastructure.dto.Configuracion
 import java.util.Date
 import java.sql.Timestamp

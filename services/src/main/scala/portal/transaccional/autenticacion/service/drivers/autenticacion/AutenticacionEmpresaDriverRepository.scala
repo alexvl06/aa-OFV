@@ -11,7 +11,7 @@ import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.infrastructure.messages.CrearSesionUsuario
 import co.com.alianza.persistence.entities.{ Empresa, UsuarioAgenteEmpresarial, UsuarioEmpresarialAdmin }
 import co.com.alianza.util.token.{ AesUtil, Token }
-import enumerations.{ EstadosEmpresaEnum, TipoIdentificacion }
+import enumerations.{ ConfiguracionEnum, EstadosEmpresaEnum, TipoIdentificacion }
 import portal.transaccional.autenticacion.service.drivers.cliente.ClienteRepository
 import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionRepository
 import portal.transaccional.autenticacion.service.drivers.empresa.{ EmpresaRepository, DataAccessTranslator => EmpresaDTO }
@@ -99,7 +99,7 @@ case class AutenticacionEmpresaDriverRepository(
       reglaDias <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA.llave)
       caducidad <- usuarioRepo.validarCaducidadContrasena(TiposCliente.agenteEmpresarial, usuario, reglaDias.valor.toInt)
       actualizar <- usuarioRepo.actualizarInfoUsuario(usuario, ip)
-      inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
+      inactividad <- configuracionRepo.getConfiguracion(ConfiguracionEnum.EXPIRACION_SESION)
       token <- generarTokenAgente(usuario, ip, inactividad.valor)
       ips <- ipRepo.getIpsByEmpresaId(empresa.id)
       validacionIps <- ipRepo.validarControlIpAgente(ip, ips, token)
@@ -136,7 +136,7 @@ case class AutenticacionEmpresaDriverRepository(
       reglaDias <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA.llave)
       caducidad <- usuarioAdminRepo.validarCaducidadContrasena(TiposCliente.agenteEmpresarial, usuario, reglaDias.valor.toInt)
       actualizar <- usuarioAdminRepo.actualizarInfoUsuario(usuario, ip)
-      inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
+      inactividad <- configuracionRepo.getConfiguracion(ConfiguracionEnum.EXPIRACION_SESION)
       token <- generarTokenAdmin(usuario, ip, inactividad.valor)
       sesion <- sesionRepo.crearSesion(token, inactividad.valor.toInt, Option(EmpresaDTO.entityToDto(empresa)))
       asociarToken <- usuarioAdminRepo.actualizarToken(usuario.id, AesUtil.encriptarToken(token))

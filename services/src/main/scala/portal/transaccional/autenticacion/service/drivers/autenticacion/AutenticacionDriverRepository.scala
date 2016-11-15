@@ -9,6 +9,7 @@ import co.com.alianza.constants.{ LlavesReglaContrasena, TiposConfiguracion }
 import co.com.alianza.infrastructure.dto.Cliente
 import co.com.alianza.persistence.entities.Usuario
 import co.com.alianza.util.token.{ AesUtil, Token }
+import enumerations.ConfiguracionEnum
 import portal.transaccional.autenticacion.service.drivers.cliente.ClienteRepository
 import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionRepository
 import portal.transaccional.autenticacion.service.drivers.ipusuario.IpUsuarioRepository
@@ -60,7 +61,7 @@ case class AutenticacionDriverRepository(usuarioRepo: UsuarioRepository, cliente
       ingErroneos <- usuarioRepo.actualizarIngresosErroneosUsuario(usuario.id.get, 0)
       actualizarIP <- usuarioRepo.actualizarIp(numeroIdentificacion, ip)
       fechaUltimoIngreso <- usuarioRepo.actualizarFechaIngreso(usuario.id.get, new Timestamp((new Date).getTime))
-      inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
+      inactividad <- configuracionRepo.getConfiguracion(ConfiguracionEnum.EXPIRACION_SESION)
       token <- generarToken(usuario, cliente, ip, inactividad.valor)
       asociarToken <- usuarioRepo.actualizarToken(numeroIdentificacion, AesUtil.encriptarToken(token))
       rsp <- sesionRepo.crearSesion(token, inactividad.valor.toInt, None)

@@ -3,7 +3,7 @@ package co.com.alianza.microservices
 import akka.actor.ActorSystem
 import spray.http.{ HttpEntity, HttpResponse, StatusCode }
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ Future }
 import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 import co.com.alianza.exceptions.{ ServiceException, TechnicalLevel, TimeoutLevel }
 import spray.can.Http.RequestTimeoutException
@@ -66,4 +66,5 @@ trait ServiceClient {
         zFailure(ServiceException(ex, TechnicalLevel, s"Error consumiendo el servicio $serviceName."))
     }
   }
+
 }

@@ -19,6 +19,7 @@ import co.com.alianza.util.token.{ PinData, Token, TokenPin }
 import co.com.alianza.util.transformers.ValidationT
 import com.typesafe.config.Config
 import enumerations._
+import portal.transaccional.autenticacion.service.web.contrasena.{ CambiarEstadoAgente, ReiniciarContrasenaAgente }
 import spray.http.StatusCodes._
 
 import scala.concurrent.Future
@@ -74,18 +75,7 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging {
 
   def receive = {
 
-    case message: ReiniciarContrasenaAgenteEMessage =>
-      val currentSender = sender()
-      val reiniciarContrasenaAgenteEmpresarialFuture = (for {
-        idUsuarioAgenteEmpresarial <- ValidationT(validacionAgenteEmpresarial(message.numIdentificacionAgenteEmpresarial, message.correoUsuarioAgenteEmpresarial, message.tipoIdentiAgenteEmpresarial, message.idClienteAdmin.get))
-        idEjecucion <- ValidationT(cambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial, EstadosEmpresaEnum.pendienteReiniciarContrasena))
-        numHorasCaducidad <- ValidationT(validacionConsultaTiempoExpiracion())
-      } yield {
-        (idUsuarioAgenteEmpresarial, idEjecucion, numHorasCaducidad)
-      }).run
-      resolveReiniciarContrasenaAEFuture(reiniciarContrasenaAgenteEmpresarialFuture, currentSender, message)
-
-    case message: BloquearDesbloquearAgenteEMessage =>
+    case message: CambiarEstadoAgente =>
       val currentSender = sender()
       val bloquearDesbloquearAgenteEmpresarialFuture = (for {
         estadoAgenteEmpresarial <- ValidationT(validacionEstadoAgenteEmpresarial(message.numIdentificacionAgenteEmpresarial, message.correoUsuarioAgenteEmpresarial, message.tipoIdentiAgenteEmpresarial, message.idClienteAdmin.get))
@@ -179,56 +169,7 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging {
     DataAccessAdapter.cambiarBloqueoDesbloqueoAgenteEmpresarial(idUsuarioAgenteEmpresarial._1, estadoNuevo, timestamp).map(_.leftMap(pe => ErrorPersistenceEmpresa(pe.message, pe)))
   }
 
-  private def resolveReiniciarContrasenaAEFuture(ReiniciarContrasenaAEFuture: Future[Validation[ErrorValidacionEmpresa, (Int, Int, Configuracion)]], currentSender: ActorRef, message: ReiniciarContrasenaAgenteEMessage) = {
-    ReiniciarContrasenaAEFuture onComplete {
-      case sFailure(failure) => currentSender ! failure
-      case sSuccess(value) =>
-        value match {
-          case zSuccess(responseFutureReiniciarContraAE: (Int, Int, Configuracion)) =>
-            if (responseFutureReiniciarContraAE._2 == 1) {
-
-              val fechaActual: Calendar = Calendar.getInstance()
-              fechaActual.add(Calendar.HOUR_OF_DAY, responseFutureReiniciarContraAE._3.valor.toInt)
-              val tokenPin: PinData = TokenPin.obtenerToken(fechaActual.getTime)
-              val fecha = new Timestamp(tokenPin.fechaExpiracion.getTime)
-              val pin: PinAgente = PinAgente(None, responseFutureReiniciarContraAE._1, tokenPin.token, fecha, tokenPin.tokenHash.get, UsoPinEmpresaEnum.usoReinicioContrasena.id)
-
-              val resultCrearPinEmpresaAgenteEmpresarial = for {
-                idResultEliminarPinesEmpresaAnteriores <- DataAccessAdapter.eliminarPinEmpresaReiniciarAnteriores(responseFutureReiniciarContraAE._1, UsoPinEmpresaEnum.usoReinicioContrasena.id)
-                idResultGuardarPinEmpresa <- DataAccessAdapter.crearPinEmpresaAgenteEmpresarial(pin)
-              } yield {
-                idResultGuardarPinEmpresa
-              }
-
-              resultCrearPinEmpresaAgenteEmpresarial onComplete {
-                case sFailure(fail) => currentSender ! fail
-                case sSuccess(valueResult) =>
-                  valueResult match {
-                    case zFailure(fail) => currentSender ! fail
-                    case zSuccess(intResult) =>
-                      if (intResult == 1) {
-                        new SmtpServiceClient()(context.system).send(buildMessage(responseFutureReiniciarContraAE._3.valor.toInt, pin, UsuarioMessageCorreo(message.correoUsuarioAgenteEmpresarial, message.numIdentificacionAgenteEmpresarial, message.tipoIdentiAgenteEmpresarial), "alianza.smtp.templatepin.reiniciarContrasenaEmpresa", "alianza.smtp.asunto.reiniciarContrasenaEmpresa"), (_, _) => Unit)
-                        currentSender ! ResponseMessage(Created, "Reinicio de contraseña agente empresarial OK")
-                      } else {
-                        log.info("Error... Al momento de guardar el pin empresa")
-                      }
-                  }
-              }
-            } else {
-              log.info("Error... Al momento de cambiar el estado a pendiente de reinicio de contraseña")
-            }
-
-          case zFailure(error) =>
-            error match {
-              case errorPersistence: ErrorPersistenceEmpresa => currentSender ! errorPersistence.exception
-              case errorVal: ErrorValidacionEmpresa =>
-                currentSender ! ResponseMessage(Conflict, errorVal.msg)
-            }
-        }
-    }
-  }
-
-  private def resolveBloquearDesbloquearAgenteFuture(bloquearDesbloquearAgenteFuture: Future[Validation[ErrorValidacionEmpresa, ((Int, Int), Int, Configuracion)]], currentSender: ActorRef, message: BloquearDesbloquearAgenteEMessage) = {
+  private def resolveBloquearDesbloquearAgenteFuture(bloquearDesbloquearAgenteFuture: Future[Validation[ErrorValidacionEmpresa, ((Int, Int), Int, Configuracion)]], currentSender: ActorRef, message: CambiarEstadoAgente) = {
     bloquearDesbloquearAgenteFuture onComplete {
       case sFailure(failure) => currentSender ! failure
       case sSuccess(value) =>
@@ -245,7 +186,9 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging {
               val resultCrearPinEmpresaAgenteEmpresarial = for {
                 idResultEliminarPinesEmpresaAnteriores <- DataAccessAdapter.eliminarPinEmpresaReiniciarAnteriores(responseFutureBloquearDesbloquearAgenteFuture._1._1, UsoPinEmpresaEnum.usoReinicioContrasena.id)
                 idResultGuardarPinEmpresa <- DataAccessAdapter.crearPinEmpresaAgenteEmpresarial(pin)
-                correoEnviado <- new SmtpServiceClient()(context.system).send(buildMessage(responseFutureBloquearDesbloquearAgenteFuture._3.valor.toInt, pin, UsuarioMessageCorreo(message.correoUsuarioAgenteEmpresarial, message.numIdentificacionAgenteEmpresarial, message.tipoIdentiAgenteEmpresarial), "alianza.smtp.templatepin.reiniciarContrasenaEmpresa", "alianza.smtp.asunto.reiniciarContrasenaEmpresa"), (_, _) => Unit)
+                correoEnviado <- new SmtpServiceClient()(context.system).send(buildMessage(responseFutureBloquearDesbloquearAgenteFuture._3.valor.toInt, pin,
+                  UsuarioMessageCorreo(message.correoUsuarioAgenteEmpresarial, message.numIdentificacionAgenteEmpresarial, message.tipoIdentiAgenteEmpresarial),
+                  "alianza.smtp.templatepin.reiniciarContrasenaEmpresa", "alianza.smtp.asunto.reiniciarContrasenaEmpresa"), (_, _) => Unit)
               } yield { correoEnviado }
 
               resultCrearPinEmpresaAgenteEmpresarial onComplete {

@@ -393,7 +393,6 @@ class UsuariosActor extends Actor with ActorLogging {
         new MailMessageUsuario(templateBody).getMessagePin(pinUsuarioDto, numHorasCaducidad, "1", "1")
       case pinUsuarioEmpresarialAdminDto @ PinAdmin(param1, param2, param3, param4, param5) =>
         new MailMessageUsuario(templateBody).getMessagePin(pinUsuarioEmpresarialAdminDto, numHorasCaducidad, "2", "1")
-
     }
     val asunto: String = config.getString(asuntoTemp)
     MailMessage(config.getString("alianza.smtp.from"), "luisaceleita@seven4n.com", List(), asunto, body, "")

@@ -4,6 +4,7 @@ import java.sql.Timestamp
 
 import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.persistence.entities.UsuarioAgenteEmpresarial
+import enumerations.EstadosEmpresaEnum
 
 import scala.concurrent.Future
 
@@ -28,7 +29,9 @@ trait UsuarioAgenteEmpresarialRepository {
 
   def actualizarContrasena(idUsuario: Int, contrasena: String): Future[Int]
 
-  def validacionBloqueoAdmin(usuario: UsuarioAgenteEmpresarial): Future[Boolean]
+  def actualizarEstado(idUsuario: Int, estado: EstadosEmpresaEnum.Value): Future[Int]
+
+  def validarBloqueoAdmin(usuario: UsuarioAgenteEmpresarial): Future[Boolean]
 
   def validarUsuario(usuarioOption: Option[UsuarioAgenteEmpresarial]): Future[UsuarioAgenteEmpresarial]
 

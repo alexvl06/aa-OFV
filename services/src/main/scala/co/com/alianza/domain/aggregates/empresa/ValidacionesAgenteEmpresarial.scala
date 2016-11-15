@@ -32,9 +32,15 @@ object ValidacionesAgenteEmpresarial {
   /*
   Este Metodo de validacionAgenteEmpresarial Me retorna el id de este usuario si cumple con los 3 parametros que se le envian a la DB
    */
-  def validacionAgenteEmpresarial(numIdentificacionAgenteEmpresarial: String, correoUsuarioAgenteEmpresarial: String, tipoIdentiAgenteEmpresarial: Int, idClienteAdmin: Int): Future[Validation[ErrorValidacionEmpresa, Int]] = {
+  def validacionAgenteEmpresarial(numIdentificacionAgenteEmpresarial: String, correoUsuarioAgenteEmpresarial: String, tipoIdentiAgenteEmpresarial: Int,
+    idClienteAdmin: Int): Future[Validation[ErrorValidacionEmpresa, Int]] = {
     val bloqueoPorAdmin = EstadosEmpresaEnum.bloqueadoPorAdmin.id
-    val usuarioAgenteEmpresarialFuture = DataAccessAdapterUsuarioAE.validacionAgenteEmpresarial(numIdentificacionAgenteEmpresarial: String, correoUsuarioAgenteEmpresarial: String, tipoIdentiAgenteEmpresarial: Int, idClienteAdmin: Int)
+
+    val usuarioAgenteEmpresarialFuture = DataAccessAdapterUsuarioAE.validacionAgenteEmpresarial(
+      numIdentificacionAgenteEmpresarial: String,
+      correoUsuarioAgenteEmpresarial: String, tipoIdentiAgenteEmpresarial: Int, idClienteAdmin: Int
+    )
+
     usuarioAgenteEmpresarialFuture.map(_.leftMap(pe => ErrorPersistenceEmpresa(pe.message, pe)).flatMap {
       (idUsuarioAgenteEmpresarial: Option[(Int, Int)]) =>
         idUsuarioAgenteEmpresarial match {

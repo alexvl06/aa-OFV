@@ -5,8 +5,8 @@ import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
-import co.com.alianza.infrastructure.dto.{ Configuracion, Pregunta, Respuesta, RespuestaCompleta }
-import co.com.alianza.persistence.entities.{ Configuraciones, PreguntaAutovalidacion }
+import co.com.alianza.infrastructure.dto.{ Pregunta, Respuesta, RespuestaCompleta }
+import co.com.alianza.persistence.entities.{ Configuracion, PreguntaAutovalidacion }
 import co.com.alianza.util.json.JsonUtil
 import enumerations.ConfiguracionEnum
 import portal.transaccional.autenticacion.service.drivers.configuracion.{ ConfiguracionRepository, DataAccessTranslator => configuracionDTO }
@@ -38,11 +38,10 @@ case class PreguntasAutovalidacionDriverRepository(
     } yield respuesta
   }
 
-  private def resolveObtenerPreguntas(preguntasEntities: List[PreguntaAutovalidacion], configuracionesEntities: List[Configuraciones]): Future[ResponseObtenerPreguntas] = Future {
+  private def resolveObtenerPreguntas(preguntasEntities: List[PreguntaAutovalidacion], configuraciones: List[Configuracion]): Future[ResponseObtenerPreguntas] = Future {
     val preguntasDto = preguntasEntities.map(pregunta => preguntasAutovalidacionDTO.entityToDto(pregunta))
-    val configuracionesDto = configuracionesEntities.map(conf => configuracionDTO.entityToDto(conf))
-    val numeroPreguntas = obtenerValorEntero(configuracionesDto, ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS.name)
-    val numeroPreguntasLista = obtenerValorEntero(configuracionesDto, ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS_LISTA.name)
+    val numeroPreguntas = obtenerValorEntero(configuraciones, ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS.name)
+    val numeroPreguntasLista = obtenerValorEntero(configuraciones, ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS_LISTA.name)
     val preguntas = Random.shuffle(preguntasDto).take(numeroPreguntasLista)
     ResponseObtenerPreguntas(preguntasDto, numeroPreguntas)
   }
@@ -74,17 +73,15 @@ case class PreguntasAutovalidacionDriverRepository(
 
   }
 
-  private def resolveObtenerPreguntasComprobar(preguntasDto: List[Pregunta], configuracionesEntities: List[Configuraciones]): Future[ResponseObtenerPreguntasComprobar] = Future {
-    val configuracionesDto = configuracionesEntities.map(conf => configuracionDTO.entityToDto(conf))
-    val numeroIntentos = obtenerValorEntero(configuracionesDto, ConfiguracionEnum.AUTOVALIDACION_NUMERO_REINTENTOS.name)
-    val numeroPreguntasComprobacion = obtenerValorEntero(configuracionesDto, ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS_COMPROBACION.name)
+  private def resolveObtenerPreguntasComprobar(preguntasDto: List[Pregunta], configuraciones: List[Configuracion]): Future[ResponseObtenerPreguntasComprobar] = Future {
+    val numeroIntentos = obtenerValorEntero(configuraciones, ConfiguracionEnum.AUTOVALIDACION_NUMERO_REINTENTOS.name)
+    val numeroPreguntasComprobacion = obtenerValorEntero(configuraciones, ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS_COMPROBACION.name)
     val preguntasRandom = Random.shuffle(preguntasDto).take(numeroPreguntasComprobacion)
     ResponseObtenerPreguntasComprobar(preguntasRandom, numeroIntentos)
   }
 
-  private def validarParametrizacion(numeroRespuestas: Int, configuraciones: List[Configuraciones], llaveNumeroPreguntas: String): Future[Boolean] = {
-    val configuracionesDto = configuraciones.map(conf => configuracionDTO.entityToDto(conf))
-    val numeroRespuestasParametrizadas = obtenerValorEntero(configuracionesDto, llaveNumeroPreguntas)
+  private def validarParametrizacion(numeroRespuestas: Int, configuraciones: List[Configuracion], llaveNumeroPreguntas: String): Future[Boolean] = {
+    val numeroRespuestasParametrizadas = obtenerValorEntero(configuraciones, llaveNumeroPreguntas)
     val comparacion = numeroRespuestas == numeroRespuestasParametrizadas
     comparacion match {
       case true => Future.successful(comparacion)
@@ -111,7 +108,7 @@ case class PreguntasAutovalidacionDriverRepository(
       respuestasCompletas <- futureRespuestas
       respuesta <- validarRespuestasValidation(
         preguntasAutovalidacionDTO.toRespuestaCompletaList(respuestasCompletas),
-        respuestas, obtenerValorEntero(configuraciones.toList.map(conf => configuracionDTO.entityToDto(conf)), llavePreguntasCambio)
+        respuestas, obtenerValorEntero(configuraciones, llavePreguntasCambio)
       )
     } yield respuesta
   }

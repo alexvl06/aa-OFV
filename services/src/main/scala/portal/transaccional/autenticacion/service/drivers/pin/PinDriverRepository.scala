@@ -2,12 +2,13 @@ package portal.transaccional.autenticacion.service.drivers.pin
 
 import java.security.MessageDigest
 import java.sql.Timestamp
-import java.util.Date
+import java.util.{ Calendar, Date }
 
 import co.com.alianza.exceptions.ValidacionException
-import co.com.alianza.persistence.entities.{ PinUsuario, IpsEmpresa, IpsUsuario, UltimaContrasena }
+import co.com.alianza.persistence.entities._
 import co.com.alianza.util.clave.Crypto
-import enumerations.{ EstadosUsuarioEnum, AppendPasswordUser, EstadosEmpresaEnum, PerfilesUsuario }
+import co.com.alianza.util.token.{ TokenPin, PinData }
+import enumerations._
 import portal.transaccional.autenticacion.service.drivers.empresa.EmpresaRepository
 import portal.transaccional.autenticacion.service.drivers.ipempresa.IpEmpresaRepository
 import portal.transaccional.autenticacion.service.drivers.ipusuario.IpUsuarioRepository
@@ -59,7 +60,7 @@ case class PinDriverRepository(pinUsuarioDAO: PinUsuarioDAOs, pinAdminDAO: PinAd
       validar <- validar(token, pin.token, pin.tokenHash, new Date(pin.fechaExpiracion.getTime))
       agenteOption <- usuarioAgenteRepo.getById(pin.idUsuarioEmpresarial)
       agente <- usuarioAgenteRepo.validarUsuario(agenteOption)
-      _ <- usuarioAgenteRepo.validacionBloqueoAdmin(agente)
+      _ <- usuarioAgenteRepo.validarBloqueoAdmin(agente)
       optionEmpresa <- empresaRepo.getByIdentity(agente.identificacion)
       _ <- empresaRepo.validarEmpresa(optionEmpresa)
     } yield validar
@@ -105,7 +106,7 @@ case class PinDriverRepository(pinUsuarioDAO: PinUsuarioDAOs, pinAdminDAO: PinAd
       validar <- validar(token, pin.token, pin.tokenHash, new Date(pin.fechaExpiracion.getTime))
       agenteOption <- usuarioAgenteRepo.getById(pin.idUsuarioEmpresarial)
       agente <- usuarioAgenteRepo.validarUsuario(agenteOption)
-      _ <- usuarioAgenteRepo.validacionBloqueoAdmin(agente)
+      _ <- usuarioAgenteRepo.validarBloqueoAdmin(agente)
       optionEmpresa <- empresaRepo.getByIdentity(agente.identificacion)
       _ <- empresaRepo.validarEmpresa(optionEmpresa)
       _ <- reglasRepo.validarContrasenaReglasGenerales(pin.idUsuarioEmpresarial, PerfilesUsuario.agenteEmpresarial, contrasena)

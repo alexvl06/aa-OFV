@@ -31,8 +31,10 @@ class ContrasenasClienteAdminActorSupervisor extends Actor with ActorLogging {
   import akka.actor.OneForOneStrategy
   import akka.actor.SupervisorStrategy._
 
-  val contrasenasEmpresaActor = context.actorOf(Props[ContrasenasClienteAdminActor].withRouter(RoundRobinPool(nrOfInstances = 2)),
-    "contrasenasClienteAdminActor")
+  val contrasenasEmpresaActor = context.actorOf(
+    Props[ContrasenasClienteAdminActor].withRouter(RoundRobinPool(nrOfInstances = 2)),
+    "contrasenasClienteAdminActor"
+  )
 
   def receive = {
 
@@ -79,8 +81,10 @@ class ContrasenasClienteAdminActor extends Actor with ActorLogging {
         usuarioContrasenaActual <- ValidationT(validacionConsultaContrasenaActualClienteAdmin(passwordActualAppend, message.idUsuario.get))
         idValReglasContra <- ValidationT(validacionReglasClave(message.pw_nuevo, message.idUsuario.get, PerfilesUsuario.clienteAdministrador))
         idUsuario <- ValidationT(actualizarContrasena(passwordNewAppend, usuarioContrasenaActual))
-        resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(message.idUsuario.get,
-          Crypto.hashSha512(passwordNewAppend, message.idUsuario.get)))
+        resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(
+          message.idUsuario.get,
+          Crypto.hashSha512(passwordNewAppend, message.idUsuario.get)
+        ))
       } yield {
         idUsuario
       }).run

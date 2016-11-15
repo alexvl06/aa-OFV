@@ -3,12 +3,13 @@ package co.com.alianza.app
 import akka.actor.{ ActorLogging, ActorSelection, ActorSystem }
 import co.com.alianza.app.handler.CustomRejectionHandler
 import co.com.alianza.infrastructure.security.ServiceAuthorization
-import co.com.alianza.web.empresa.{ AdministrarContrasenaEmpresaService, UsuarioEmpresaService }
+import co.com.alianza.web.empresa.UsuarioEmpresaService
 import portal.transaccional.autenticacion.service.drivers.actualizacion.ActualizacionRepository
 import portal.transaccional.autenticacion.service.drivers.autorizacion._
 import portal.transaccional.autenticacion.service.drivers.pin.PinRepository
 import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaRepository
 import portal.transaccional.autenticacion.service.web.actualizacion.ActualizacionService
+import portal.transaccional.autenticacion.service.web.contrasena.{ AdministrarContrasenaService, AdministrarContrasenaEmpresaService }
 import portal.transaccional.autenticacion.service.web.horarioEmpresa.HorarioEmpresaService
 import portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.PreguntasAutovalidacionService
 import portal.transaccional.autenticacion.service.web.reglaContrasena.ReglaContrasenaService
@@ -74,7 +75,7 @@ case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, autenticaci
             ActualizacionService(user, kafkaActor, actualizacionRepo).route ~
             HorarioEmpresaService(user, kafkaActor, horarioEmpresaRepository).route ~
             //TODO: refactorizar
-            new AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).secureRoute(user) ~
+            new AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).route(user) ~
             // TODO Cambiar al authenticate de cliente empresarial
             new AdministrarContrasenaEmpresaService(kafkaActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).secureRouteEmpresa(user) ~
             //TODO: refactorizar
