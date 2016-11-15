@@ -68,7 +68,7 @@ case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, autenticaci
         user =>
           IpService(user, kafkaActor, ipRepo).route ~
             SesionService().route ~
-            RecursoGraficoComercialService(recursoComercialRepository, rolComercialRepository).route ~
+            RecursoGraficoComercialService(user, kafkaActor, recursoComercialRepository, rolComercialRepository).route ~
             AutorizacionRecursoComercialService(user, kafkaActor, autorizacionRecursoComercialRepository).route ~
             ComercialService(user, kafkaActor, usuarioComercialAdminRepo).route ~
             ActualizacionService(user, kafkaActor, actualizacionRepo).route ~

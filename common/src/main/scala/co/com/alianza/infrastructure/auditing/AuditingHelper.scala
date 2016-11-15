@@ -40,7 +40,8 @@ object AuditingHelper extends AuditingHelper {
   val autovalidacionComprobarIndex = "autovalidacion-comprobar-fiduciaria"
   //comercial
   val autenticacionComercialIndex = "autenticacion-comercial-fiduciaria"
-  val recursosComercialIndex = "actualizar-recursos-comercial-fiduciaria"
+  val recursosComercialIndex = "consulta-recursos-comercial-fiduciaria"
+  val recursosComercialActualizacionIndex = "actualizar-recursos-comercial-fiduciaria"
   val crearAdministradorComercialIndex = "crear-administrador-comercial-fiduciaria"
   val cambioContrasenaAdministradorComercialIndex = "cambio-contrasena-administrador-comercial-fiduciaria"
 }

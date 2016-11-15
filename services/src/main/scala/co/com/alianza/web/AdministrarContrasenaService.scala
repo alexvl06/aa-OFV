@@ -66,18 +66,23 @@ case class AdministrarContrasenaService(kafkaActor: ActorSelection, contrasenasA
         pathEndOrSingleSlash {
           put {
             entity(as[CambiarContrasenaCaducadaRequestMessage]) {
-              data =>{
+              data =>
+                {
                   val claim = (Token.getToken(data.token)).getJWTClaimsSet()
                   val us_id = claim.getCustomClaim("us_id").toString.toInt
                   val us_tipo = claim.getCustomClaim("us_tipo").toString
                   val tipoCliente = TiposCliente.withName(us_tipo)
                   tipoCliente match {
                     case TiposCliente.agenteEmpresarial =>
-                      requestExecute(CambiarContrasenaCaducadaAgenteEmpresarialMessage(data.token, data.pw_actual, data.pw_nuevo, Some(us_id)),
-                        contrasenasAgenteEmpresarialActor)
+                      requestExecute(
+                        CambiarContrasenaCaducadaAgenteEmpresarialMessage(data.token, data.pw_actual, data.pw_nuevo, Some(us_id)),
+                        contrasenasAgenteEmpresarialActor
+                      )
                     case TiposCliente.clienteAdministrador =>
-                      requestExecute(CambiarContrasenaCaducadaClienteAdminMessage(data.token, data.pw_actual, data.pw_nuevo, Some(us_id)),
-                        contrasenasClienteAdminActor)
+                      requestExecute(
+                        CambiarContrasenaCaducadaClienteAdminMessage(data.token, data.pw_actual, data.pw_nuevo, Some(us_id)),
+                        contrasenasClienteAdminActor
+                      )
                     case TiposCliente.clienteIndividual =>
                       requestExecute(CambiarContrasenaCaducadaMessage(data.token, data.pw_actual, data.pw_nuevo, us_id, us_tipo), contrasenasActor)
                   }
