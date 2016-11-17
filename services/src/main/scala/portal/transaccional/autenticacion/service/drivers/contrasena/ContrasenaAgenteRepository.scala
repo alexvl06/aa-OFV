@@ -11,4 +11,6 @@ trait ContrasenaAgenteRepository {
 
   def reiniciarContrasena(admin: UsuarioAuth, usuarioAgente: String): Future[Boolean]
 
+  def cambiarEstado(admin: UsuarioAuth, usuarioAgente: String): Future[Boolean]
+
 }

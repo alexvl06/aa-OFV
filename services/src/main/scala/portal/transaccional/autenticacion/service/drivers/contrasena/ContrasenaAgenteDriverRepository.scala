@@ -44,6 +44,22 @@ case class ContrasenaAgenteDriverRepository(configuracionRepo: ConfiguracionRepo
     } yield correo
   }
 
+  def cambiarEstado(admin: UsuarioAuth, usuarioAgente: String): Future[Boolean] = {
+    for {
+      _ <- validarAdmin(admin)
+      optionAgente <- agenteRepo.getByIdentityAndUser(admin.identificacion, usuarioAgente)
+      agente <- agenteRepo.validarUsuario(optionAgente)
+      _ <- agenteRepo.validarEstado(agente)
+      //_ <- agenteRepo.actualizarEstado(agente.id, EstadosEmpresaEnum.pendienteReiniciarContrasena)
+      //expiracion <- configuracionRepo.getConfiguracion(ConfiguracionEnum.EXPIRACION_PIN)
+      //_ <- pinAgenteDAO.deleteAll(agente.id)
+      //pin <- obtenerPinAgente(agente.id, UsoPinEmpresaEnum.usoReinicioContrasena, expiracion)
+      //_ <- pinAgenteDAO.create(pin)
+      //mensaje <- obtenerMensaje(agente.correo, expiracion, pin)
+      //correo <- smtpRepo.enviar(mensaje)
+    } yield correo
+  }
+
   private def validarAdmin(admin: UsuarioAuth) = {
     admin.tipoCliente match {
       case TiposCliente.comercialAdmin => Future.successful(true)

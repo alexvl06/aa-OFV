@@ -74,11 +74,11 @@ case class AdministrarContrasenaEmpresaService(user: UsuarioAuth, kafkaActor: Ac
         data =>
           clientIP {
             ip =>
-
+              //TODO: refactor en proceso
               //-----
               mapRequestContext {
                 r: RequestContext =>
-                  val msg: CambiarEstadoAgente = data.copy(idClienteAdmin = Some(user.id))
+                  val msg: CambiarEstadoAgente = data.copy//(idClienteAdmin = Some(user.id))
                   val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, user.usuario)
                   requestAuditing[PersistenceException, CambiarEstadoAgente](r, AuditingHelper.fiduciariaTopic,
                     AuditingHelper.bloqueoAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, Some(msg))
@@ -88,9 +88,9 @@ case class AdministrarContrasenaEmpresaService(user: UsuarioAuth, kafkaActor: Ac
                   case Success(value) => complete(value.toString)
                   case Failure(ex) => execution(ex)
                 }
-val dataAux: BloquearDesbloquearAgenteEMessage = data.copy(idClienteAdmin = Some(user.id))
+                val dataAux: BloquearDesbloquearAgenteEMessage = data.copy(idClienteAdmin = Some(user.id))
                 requestExecute(dataAux, contrasenaAgenteRepo)
-*/
+                */
                 complete("")
               }
           }
@@ -104,8 +104,7 @@ val dataAux: BloquearDesbloquearAgenteEMessage = data.copy(idClienteAdmin = Some
         data =>
           clientIP {
             ip =>
-
-              //ASDFSADFA
+              //TODO: refactor en proceso
               mapRequestContext {
                 r: RequestContext =>
                   val msg: CambiarContrasenaClienteAdminMessage = data.copy(idUsuario = Some(user.id))
@@ -135,7 +134,7 @@ val dataAux: BloquearDesbloquearAgenteEMessage = data.copy(idClienteAdmin = Some
         data =>
           clientIP {
             ip =>
-
+              //TODO: refactor en proceso
               ////
               mapRequestContext {
                 r: RequestContext =>

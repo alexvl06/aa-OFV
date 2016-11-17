@@ -126,7 +126,7 @@ case class UsuarioAgenteEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresari
    * @return
    */
   def validarEstado(usuario: UsuarioAgenteEmpresarial): Future[Boolean] = {
-    val estado = usuario.estado
+    val estado: Int = usuario.estado
     if (estado == EstadosEmpresaEnum.bloqueContraseña.id) {
       Future.failed(ValidacionException("401.8", "Usuario Bloqueado"))
     } else if (estado == EstadosEmpresaEnum.pendienteActivacion.id) {

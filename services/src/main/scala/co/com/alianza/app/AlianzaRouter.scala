@@ -64,7 +64,7 @@ case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, autenticaci
       ReglaContrasenaService(reglaRepo).route ~
       //TODO: refactorizar
       PinService(kafkaActor, pinRepo).route ~
-      new AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).insecureRoute ~
+      new AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).route ~
       authenticate(authenticateUser) {
         user =>
           IpService(user, kafkaActor, ipRepo).route ~
@@ -75,7 +75,7 @@ case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, autenticaci
             ActualizacionService(user, kafkaActor, actualizacionRepo).route ~
             HorarioEmpresaService(user, kafkaActor, horarioEmpresaRepository).route ~
             //TODO: refactorizar
-            new AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).route(user) ~
+            new AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).routeSeguro(user) ~
             // TODO Cambiar al authenticate de cliente empresarial
             new AdministrarContrasenaEmpresaService(kafkaActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).secureRouteEmpresa(user) ~
             //TODO: refactorizar

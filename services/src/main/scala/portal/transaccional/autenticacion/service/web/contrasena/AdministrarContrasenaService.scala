@@ -20,9 +20,10 @@ import scala.concurrent.ExecutionContext
  * Created by seven4n on 01/09/14.
  */
 case class AdministrarContrasenaService(kafkaActor: ActorSelection, contrasenaUsuarioRepo: ContrasenaUsuarioRepository,
-    contrasenaAgenteRepo: ContrasenaAgenteRepository, contrasenaAdminRepo: ContrasenaAdminRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
+    contrasenaAgenteRepo: ContrasenaAgenteRepository, contrasenaAdminRepo: ContrasenaAdminRepository)
+                                       (implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
-  def route(user: UsuarioAuth) = {
+  def routeSeguro(user: UsuarioAuth) = {
     pathPrefix("actualizarContrasena") {
       pathEndOrSingleSlash {
         actualizarContrasena(user)
@@ -43,6 +44,7 @@ case class AdministrarContrasenaService(kafkaActor: ActorSelection, contrasenaUs
                   requestAuditing[PersistenceException, CambiarContrasenaMessage](r, AuditingHelper.fiduciariaTopic,
                     AuditingHelper.cambioContrasenaIndex, ip.value, kafkaActor, usuario, Some(data.copy(pw_actual = null, pw_nuevo = null)))
               } {
+                //TODO: refactor en proceso
                 /*val resultado: Future[Int] = horarioEmpresaRepository.agregar(user, request.diaHabil, request.sabado, request.horaInicio, request.horaFin)
                 onComplete(resultado) {
                   case Success(value) => complete(value.toString)
@@ -58,7 +60,7 @@ case class AdministrarContrasenaService(kafkaActor: ActorSelection, contrasenaUs
     }
   }
 
-  def insecureRoute = {
+  def route = {
     pathPrefix("actualizarContrasenaCaducada") {
       pathEndOrSingleSlash {
         cambiarContrasenaCaducada
@@ -77,17 +79,21 @@ case class AdministrarContrasenaService(kafkaActor: ActorSelection, contrasenaUs
             val tipoCliente = TiposCliente.withName(us_tipo)
             tipoCliente match {
               case TiposCliente.agenteEmpresarial =>
-                requestExecute(
+                //TODO: refactor en proceso
+                /*requestExecute(
                   CambiarContrasenaCaducadaAgenteEmpresarialMessage(data.token, data.pw_actual, data.pw_nuevo, Some(us_id)),
                   contrasenaAgenteRepo
-                )
+                )*/
+                complete("")
               case TiposCliente.clienteAdministrador =>
-                requestExecute(
+                /*requestExecute(
                   CambiarContrasenaCaducadaClienteAdminMessage(data.token, data.pw_actual, data.pw_nuevo, Some(us_id)),
                   contrasenaAdminRepo
-                )
+                )*/
+                complete("")
               case TiposCliente.clienteIndividual =>
-                requestExecute(CambiarContrasenaCaducadaMessage(data.token, data.pw_actual, data.pw_nuevo, us_id, us_tipo), contrasenaUsuarioRepo)
+                //requestExecute(CambiarContrasenaCaducadaMessage(data.token, data.pw_actual, data.pw_nuevo, us_id, us_tipo), contrasenaUsuarioRepo)
+                complete("")
             }
           }
       }
