@@ -47,7 +47,7 @@ case class AdministrarContrasenaEmpresaService(kafkaActor: ActorSelection, contr
                             val usuario = DataAccessAdapterClienteAdmin.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
                             requestWithFutureAuditing[PersistenceException, ReiniciarContrasenaAgenteEMessage](r, AuditingHelper.fiduciariaTopic, AuditingHelper.reiniciarContrasenaAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, Some(data))
                         } {
-                          val dataAux: ReiniciarContrasenaAgenteEMessage = data.copy(idClienteAdmin = Some(user.id))
+                          val dataAux: ReiniciarContrasenaAgenteEMessage = data.copy(nit = Some(user.identificacion))
                           requestExecute(dataAux, contrasenasAgenteEmpresarialActor)
                         }
                     }

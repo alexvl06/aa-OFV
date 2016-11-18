@@ -6,6 +6,7 @@ import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{ 
 import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{ DataAccessAdapter => CliAdmDataAccessAdapter }
 import co.com.alianza.infrastructure.dto.{ Configuracion, Empresa, UsuarioEmpresarial, UsuarioEmpresarialAdmin }
 import co.com.alianza.infrastructure.messages.ErrorMessage
+import co.com.alianza.persistence.entities.UsuarioAgenteEmpresarial
 import enumerations.empresa.EstadosDeEmpresaEnum
 import enumerations.{ EstadosEmpresaEnum, PerfilesUsuario }
 import co.com.alianza.infrastructure.anticorruption.configuraciones.{ DataAccessAdapter => dataAccesAdaptarConf }
@@ -32,15 +33,15 @@ object ValidacionesAgenteEmpresarial {
   /*
   Este Metodo de validacionAgenteEmpresarial Me retorna el id de este usuario si cumple con los 3 parametros que se le envian a la DB
    */
-  def validacionAgenteEmpresarial(numIdentificacionAgenteEmpresarial: String, correoUsuarioAgenteEmpresarial: String, tipoIdentiAgenteEmpresarial: Int, idClienteAdmin: Int): Future[Validation[ErrorValidacionEmpresa, Int]] = {
+  def validacionAgenteEmpresarial(nit: String, usuario: String): Future[Validation[ErrorValidacionEmpresa, UsuarioAgenteEmpresarial]] = {
     val bloqueoPorAdmin = EstadosEmpresaEnum.bloqueadoPorAdmin.id
-    val usuarioAgenteEmpresarialFuture = DataAccessAdapterUsuarioAE.validacionAgenteEmpresarial(numIdentificacionAgenteEmpresarial: String, correoUsuarioAgenteEmpresarial: String, tipoIdentiAgenteEmpresarial: Int, idClienteAdmin: Int)
+    val usuarioAgenteEmpresarialFuture = DataAccessAdapterUsuarioAE.consultaAgenteEmpresarial(nit, usuario)
     usuarioAgenteEmpresarialFuture.map(_.leftMap(pe => ErrorPersistenceEmpresa(pe.message, pe)).flatMap {
-      (idUsuarioAgenteEmpresarial: Option[(Int, Int)]) =>
-        idUsuarioAgenteEmpresarial match {
-          case Some(x) => x._2 match {
+      resultado =>
+        resultado match {
+          case Some(agente) => agente.estado match {
             case `bloqueoPorAdmin` => zFailure(ErrorEstadoAgenteEmpresarial(errorEstadoAgenteEmpresarial))
-            case _ => zSuccess(x._1)
+            case _ => zSuccess(agente)
           }
           case None => zFailure(ErrorAgenteEmpNoExiste(errorAgenteEmpresarialNoExiste))
         }

@@ -28,21 +28,13 @@ case class PinService(kafkaActor: ActorSelection, pinRepo: PinRepository)(implic
     } ~ path("validarPinClienteAdmin" / Segment / IntNumber) {
       (pin, funcionalidad) => validarPinAdmin(pin, funcionalidad)
     } ~ path("validarPinAgenteEmpresarial" / Segment) {
-      pin =>
-        println("validar pin agente => " + pin)
-        validarPinAgente(pin)
+      pin => validarPinAgente(pin)
     } ~ path("cambiarPw" / Segment) {
-      pin =>
-        println("cambiar pw => " + pin)
-        cambiarContrasena(pin)
+      pin => cambiarContrasena(pin)
     } ~ path("cambiarPwClienteAdmin" / Segment) {
-      pin =>
-        println("cambiar pw admin => " + pin)
-        cambiarContrasenaAdmin(pin)
+      pin => cambiarContrasenaAdmin(pin)
     } ~ path("cambiarPwAgenteEmpresarial" / Segment) {
-      pin =>
-        println("cambiar pw agente => " + pin)
-        cambiarContrasenaAgente(pin)
+      pin => cambiarContrasenaAgente(pin)
     }
   }
 

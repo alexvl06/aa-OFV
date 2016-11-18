@@ -37,6 +37,10 @@ object DataAccessAdapter {
     }
   }
 
+  def consultaAgenteEmpresarial(nit: String, usuario: String): Future[Validation[PersistenceException, Option[eUsuario]]] = {
+    repo.obtieneUsuarioEmpresaPorNitYUsuario(nit, usuario)
+  }
+
   def validacionAgenteEmpresarial(numIdentificacionAgenteEmpresarial: String, correoUsuarioAgenteEmpresarial: String, tipoIdentiAgenteEmpresarial: Int, idClienteAdmin: Int): Future[Validation[PersistenceException, Option[(Int, Int)]]] = {
     repo.validacionAgenteEmpresarial(numIdentificacionAgenteEmpresarial: String, correoUsuarioAgenteEmpresarial: String, tipoIdentiAgenteEmpresarial: Int, idClienteAdmin: Int)
   }
