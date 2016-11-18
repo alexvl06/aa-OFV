@@ -85,7 +85,7 @@ case class PinDriverRepository(pinUsuarioDAO: PinUsuarioDAOs, pinAdminDAO: PinAd
       pin <- validarPinOption(pinOption)
       _ <- validar(token, pin.token, pin.tokenHash, new Date(pin.fechaExpiracion.getTime))
       admin <- usuarioAdminRepo.getById(pin.idUsuario)
-      _ <- usuarioAdminRepo.validarEstado(admin)
+      _ <- usuarioAdminRepo.validacionBloqueoAdmin(admin)
       optionEmpresa <- empresaRepo.getByIdentity(admin.identificacion)
       _ <- empresaRepo.validarEmpresa(optionEmpresa)
       _ <- validar(token, pin.token, pin.tokenHash, new Date(pin.fechaExpiracion.getTime))

@@ -28,19 +28,26 @@ case class PinService(kafkaActor: ActorSelection, pinRepo: PinRepository)(implic
     } ~ path("validarPinClienteAdmin" / Segment / IntNumber) {
       (pin, funcionalidad) => validarPinAdmin(pin, funcionalidad)
     } ~ path("validarPinAgenteEmpresarial" / Segment) {
-      pin => validarPinAgente(pin)
+      pin =>
+        println("validar pin agente => " + pin)
+        validarPinAgente(pin)
     } ~ path("cambiarPw" / Segment) {
-      pin => cambiarContrasena(pin)
+      pin =>
+        println("cambiar pw => " + pin)
+        cambiarContrasena(pin)
     } ~ path("cambiarPwClienteAdmin" / Segment) {
-      pin => cambiarContrasenaAdmin(pin)
+      pin =>
+        println("cambiar pw admin => " + pin)
+        cambiarContrasenaAdmin(pin)
     } ~ path("cambiarPwAgenteEmpresarial" / Segment) {
-      pin => cambiarContrasenaAgente(pin)
+      pin =>
+        println("cambiar pw agente => " + pin)
+        cambiarContrasenaAgente(pin)
     }
   }
 
   private def validarPin(pin: String, funcionalidad: Int) = {
     post {
-      println("validar pin")
       val resultado: Future[Boolean] = pinRepo.validarPinUsuario(pin, funcionalidad)
       onComplete(resultado) {
         case Success(value) => complete(value.toString)
