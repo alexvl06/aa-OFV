@@ -33,13 +33,13 @@ case class AdministrarContrasenaEmpresaService(user: UsuarioAuth, kafkaActor: Ac
         pathEndOrSingleSlash {
           cambiarEstadoAgente
         }
-      } ~ pathPrefix("actualizarPwClienteAdmin") {
-        pathEndOrSingleSlash {
-          actualizarContrasenaAdmin
-        }
       } ~ pathPrefix("actualizarPwAgenteEmpresarial") {
         pathEndOrSingleSlash {
           actualizarContrasenaAgente
+        }
+      } ~ pathPrefix("actualizarPwClienteAdmin") {
+        pathEndOrSingleSlash {
+          actualizarContrasenaAdmin
         }
       }
     }
@@ -74,24 +74,40 @@ case class AdministrarContrasenaEmpresaService(user: UsuarioAuth, kafkaActor: Ac
         data =>
           clientIP {
             ip =>
-              //TODO: refactor en proceso
-              //-----
               mapRequestContext {
                 r: RequestContext =>
-                  val msg: CambiarEstadoAgente = data.copy//(idClienteAdmin = Some(user.id))
                   val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, user.usuario)
                   requestAuditing[PersistenceException, CambiarEstadoAgente](r, AuditingHelper.fiduciariaTopic,
-                    AuditingHelper.bloqueoAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, Some(msg))
+                    AuditingHelper.bloqueoAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, Some(data))
               } {
-                /*val resultado: Future[Int] = horarioEmpresaRepository.agregar(user, request.diaHabil, request.sabado, request.horaInicio, request.horaFin)
+                val resultado: Future[Boolean] = contrasenaAgenteRepo.cambiarEstado(user, data.usuario)
                 onComplete(resultado) {
-                  case Success(value) => complete(value.toString)
+                  case Success(value) => complete(OK)
                   case Failure(ex) => execution(ex)
                 }
-                val dataAux: BloquearDesbloquearAgenteEMessage = data.copy(idClienteAdmin = Some(user.id))
-                requestExecute(dataAux, contrasenaAgenteRepo)
-                */
-                complete("")
+              }
+          }
+      }
+    }
+  }
+
+  private def actualizarContrasenaAgente = {
+    put {
+      entity(as[CambiarContrasenaAgenteEmpresarialMessage]) {
+        data =>
+          clientIP {
+            ip =>
+              mapRequestContext {
+                r: RequestContext =>
+                  val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, user.usuario)
+                  requestAuditing[PersistenceException, CambiarContrasenaAgenteEmpresarialMessage](r, AuditingHelper.fiduciariaTopic,
+                    AuditingHelper.cambioContrasenaAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, Some(data.copy(pw_nuevo = null, pw_actual = null)))
+              } {
+                val resultado: Future[Boolean] = contrasenaAgenteRepo.cambiarContrasena(user, data.pw_nuevo, data.pw_actual)
+                onComplete(resultado) {
+                  case Success(value) => complete(OK)
+                  case Failure(ex) => execution(ex)
+                }
               }
           }
       }
@@ -119,38 +135,6 @@ case class AdministrarContrasenaEmpresaService(user: UsuarioAuth, kafkaActor: Ac
                 }
                 val dataComplete: CambiarContrasenaClienteAdminMessage = data.copy(idUsuario = Some(user.id))
                 requestExecute(dataComplete, contrasenaAdminRepo)
-                */
-                complete("")
-              }
-          }
-      }
-    }
-  }
-
-  private def actualizarContrasenaAgente = {
-    put {
-      //Cambiar contrasena por el usuario agente empresarial
-      entity(as[CambiarContrasenaAgenteEmpresarialMessage]) {
-        data =>
-          clientIP {
-            ip =>
-              //TODO: refactor en proceso
-              ////
-              mapRequestContext {
-                r: RequestContext =>
-                  val msg = data.copy(idUsuario = Some(user.id))
-                  val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, user.usuario)
-                  requestAuditing[PersistenceException, CambiarContrasenaAgenteEmpresarialMessage](r, AuditingHelper.fiduciariaTopic,
-                    AuditingHelper.cambioContrasenaAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, Some(msg.copy(pw_nuevo = null, pw_actual = null)))
-              } {
-                /*
-                val resultado: Future[Int] = horarioEmpresaRepository.agregar(user, request.diaHabil, request.sabado, request.horaInicio, request.horaFin)
-                onComplete(resultado) {
-                  case Success(value) => complete(value.toString)
-                  case Failure(ex) => execution(ex)
-                }
-                val dataComplete: CambiarContrasenaAgenteEmpresarialMessage = data.copy(idUsuario = Some(user.id))
-                requestExecute(dataComplete, contrasenaAgenteRepo)
                 */
                 complete("")
               }

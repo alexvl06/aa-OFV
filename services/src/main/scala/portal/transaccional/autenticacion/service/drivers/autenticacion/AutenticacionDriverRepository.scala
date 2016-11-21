@@ -52,11 +52,11 @@ case class AutenticacionDriverRepository(usuarioRepo: UsuarioRepository, cliente
     for {
       usuario <- usuarioRepo.getByIdentificacion(numeroIdentificacion)
       estado <- usuarioRepo.validarEstado(usuario.estado)
-      reintentosErroneos <- reglaRepo.getRegla(LlavesReglaContrasena.CANTIDAD_REINTENTOS_INGRESO_CONTRASENA.llave)
+      reintentosErroneos <- reglaRepo.getRegla(LlavesReglaContrasena.CANTIDAD_REINTENTOS_INGRESO_CONTRASENA)
       contrasena <- usuarioRepo.validarContrasena(contrasena, usuario, reintentosErroneos.valor.toInt)
       cliente <- clienteCoreRepo.getCliente(numeroIdentificacion, Some(tipoIdentificacion))
       estadoCore <- clienteCoreRepo.validarEstado(cliente)
-      reglaDias <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA.llave)
+      reglaDias <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA)
       validarCaducidad <- usuarioRepo.validarCaducidadContrasena(TiposCliente.clienteIndividual, usuario, reglaDias.valor.toInt)
       ingErroneos <- usuarioRepo.actualizarIngresosErroneosUsuario(usuario.id.get, 0)
       actualizarIP <- usuarioRepo.actualizarIp(numeroIdentificacion, ip)

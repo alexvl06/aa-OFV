@@ -1,18 +1,21 @@
 package portal.transaccional.autenticacion.service.drivers.contrasena
 
 import java.sql.Timestamp
-import java.util.Calendar
+import java.util.{ Date, Calendar }
 
 import co.com.alianza.commons.enumerations.TiposCliente
+import co.com.alianza.constants.LlavesReglaContrasena
 import co.com.alianza.domain.aggregates.empresa.MailMessageEmpresa
 import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
-import co.com.alianza.persistence.entities.{ Configuracion, PinAgente }
+import co.com.alianza.persistence.entities._
 import co.com.alianza.util.ConfigApp
+import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.token.{ PinData, TokenPin }
 import com.typesafe.config.Config
-import enumerations.{ ConfiguracionEnum, EstadosEmpresaEnum, UsoPinEmpresaEnum }
+import enumerations.{ AppendPasswordUser, ConfiguracionEnum, EstadosEmpresaEnum, UsoPinEmpresaEnum }
 import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionRepository
+import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaRepository
 import portal.transaccional.autenticacion.service.drivers.smtp.{ Mensaje, SmtpRepository }
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioAgenteEmpresarialRepository
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.PinAgenteDAOs
@@ -22,9 +25,11 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * Created by hernando on 10/11/16.
  */
-case class ContrasenaAgenteDriverRepository(configuracionRepo: ConfiguracionRepository, smtpRepo: SmtpRepository,
+case class ContrasenaAgenteDriverRepository(
     agenteRepo: UsuarioAgenteEmpresarialRepository,
-    pinAgenteDAO: PinAgenteDAOs)(implicit val ex: ExecutionContext) extends ContrasenaAgenteRepository {
+    pinAgenteDAO: PinAgenteDAOs,
+    configuracionRepo: ConfiguracionRepository, smtpRepo: SmtpRepository, reglaRepo: ReglaContrasenaRepository
+)(implicit val ex: ExecutionContext) extends ContrasenaAgenteRepository {
 
   private val config: Config = ConfigApp.conf
 
@@ -35,28 +40,59 @@ case class ContrasenaAgenteDriverRepository(configuracionRepo: ConfiguracionRepo
       agente <- agenteRepo.validarUsuario(optionAgente)
       _ <- agenteRepo.validarBloqueoAdmin(agente)
       _ <- agenteRepo.actualizarEstado(agente.id, EstadosEmpresaEnum.pendienteReiniciarContrasena)
+      correo <- envioCorreoReinicio(agente)
+    } yield correo
+  }
+
+  def cambiarEstado(admin: UsuarioAuth, usuarioAgente: String): Future[Boolean] = {
+    val estadoBloqueado: Int = EstadosEmpresaEnum.bloqueadoPorAdmin.id
+    for {
+      _ <- validarAdmin(admin)
+      optionAgente <- agenteRepo.getByIdentityAndUser(admin.identificacion, usuarioAgente)
+      agente <- agenteRepo.validarUsuario(optionAgente)
+      resultado <- if (agente.estado == estadoBloqueado) desbloquear(agente)
+      else agenteRepo.actualizarEstado(agente.id, EstadosEmpresaEnum.bloqueadoPorAdmin).map(_ > 0)
+    } yield resultado
+  }
+
+  def cambiarContrasena(usuarioAgente: UsuarioAuth, contrasena: String, contrasenaActual: String): Future[Boolean] = {
+    for {
+      agenteOption <- agenteRepo.getById(usuarioAgente.id)
+      agente <- agenteRepo.validarEstado(agenteOption)
+      validar <- validarContrasena(agente, contrasena)
+    } yield validar
+  }
+
+  def validarContrasena(agente: UsuarioAgenteEmpresarial, contrasena: String): Future[Boolean] = {
+    val contrasenaHash = Crypto.hashSha512(contrasena.concat(AppendPasswordUser.appendUsuariosFiducia), agente.id)
+    agente.contrasena.equals(contrasenaHash) match {
+      case true => Future.successful(true)
+      case _ => Future.failed(ValidacionException("409.7", "No existe la contrasena"))
+    }
+  }
+
+  private def desbloquear(agente: UsuarioAgenteEmpresarial): Future[Boolean] = {
+    def obtenerFecha(reglaDias: ReglaContrasena) = {
+      val fechaCaducada = Calendar.getInstance()
+      fechaCaducada.setTime(new Date())
+      fechaCaducada.add(Calendar.DAY_OF_YEAR, reglaDias.valor.toInt * -1)
+      new Timestamp(fechaCaducada.getTimeInMillis)
+    }
+    for {
+      reglaDias <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA)
+      _ <- agenteRepo.actualizarFechaActualizacion(agente.id, obtenerFecha(reglaDias))
+      correo <- envioCorreoReinicio(agente)
+    } yield correo
+  }
+
+  private def envioCorreoReinicio(agente: UsuarioAgenteEmpresarial): Future[Boolean] = {
+    for {
       expiracion <- configuracionRepo.getConfiguracion(ConfiguracionEnum.EXPIRACION_PIN)
       _ <- pinAgenteDAO.deleteAll(agente.id)
       pin <- obtenerPinAgente(agente.id, UsoPinEmpresaEnum.usoReinicioContrasena, expiracion)
       _ <- pinAgenteDAO.create(pin)
       mensaje <- obtenerMensaje(agente.correo, expiracion, pin)
       correo <- smtpRepo.enviar(mensaje)
-    } yield correo
-  }
-
-  def cambiarEstado(admin: UsuarioAuth, usuarioAgente: String): Future[Boolean] = {
-    for {
-      _ <- validarAdmin(admin)
-      optionAgente <- agenteRepo.getByIdentityAndUser(admin.identificacion, usuarioAgente)
-      agente <- agenteRepo.validarUsuario(optionAgente)
-      _ <- agenteRepo.validarEstado(agente)
-      //_ <- agenteRepo.actualizarEstado(agente.id, EstadosEmpresaEnum.pendienteReiniciarContrasena)
-      //expiracion <- configuracionRepo.getConfiguracion(ConfiguracionEnum.EXPIRACION_PIN)
-      //_ <- pinAgenteDAO.deleteAll(agente.id)
-      //pin <- obtenerPinAgente(agente.id, UsoPinEmpresaEnum.usoReinicioContrasena, expiracion)
-      //_ <- pinAgenteDAO.create(pin)
-      //mensaje <- obtenerMensaje(agente.correo, expiracion, pin)
-      //correo <- smtpRepo.enviar(mensaje)
     } yield correo
   }
 

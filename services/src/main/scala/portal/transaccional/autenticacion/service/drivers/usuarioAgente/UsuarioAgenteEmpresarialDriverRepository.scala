@@ -63,6 +63,10 @@ case class UsuarioAgenteEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresari
     usuarioDAO.updateLastEntryDate(idUsuario, fechaActual)
   }
 
+  def actualizarFechaActualizacion(idUsuario: Int, fechaActual: Timestamp): Future[Int] = {
+    usuarioDAO.updateUpdateDate(idUsuario, fechaActual)
+  }
+
   /**
    * Guardar contrasena
    *

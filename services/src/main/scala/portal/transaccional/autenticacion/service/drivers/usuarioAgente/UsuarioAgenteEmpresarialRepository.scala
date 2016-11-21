@@ -25,6 +25,8 @@ trait UsuarioAgenteEmpresarialRepository {
 
   def actualizarFechaIngreso(idUsuario: Int, fechaActual: Timestamp): Future[Int]
 
+  def actualizarFechaActualizacion(idUsuario: Int, fechaActual: Timestamp): Future[Int]
+
   def actualizarInfoUsuario(usuario: UsuarioAgenteEmpresarial, ip: String): Future[Int]
 
   def actualizarContrasena(idUsuario: Int, contrasena: String): Future[Int]

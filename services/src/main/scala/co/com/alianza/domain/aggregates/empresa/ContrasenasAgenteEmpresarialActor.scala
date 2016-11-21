@@ -75,61 +75,6 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging {
 
   def receive = {
 
-    case message: CambiarEstadoAgente =>
-      val currentSender = sender()
-      val bloquearDesbloquearAgenteEmpresarialFuture = (for {
-        estadoAgenteEmpresarial <- ValidationT(validacionEstadoAgenteEmpresarial(message.numIdentificacionAgenteEmpresarial,
-          message.correoUsuarioAgenteEmpresarial, message.tipoIdentiAgenteEmpresarial, message.idClienteAdmin.get))
-        diasCaducidad <- ValidationT(diasCaducidadContrasena())
-        idEjecucion <- ValidationT(BloquearDesbloquearAgenteEmpresarial(estadoAgenteEmpresarial, diasCaducidad))
-        numHorasCaducidad <- ValidationT(validacionConsultaTiempoExpiracion())
-      } yield {
-        (estadoAgenteEmpresarial, idEjecucion, numHorasCaducidad)
-      }).run
-      resolveBloquearDesbloquearAgenteFuture(bloquearDesbloquearAgenteEmpresarialFuture, currentSender, message)
-
-      private def resolveBloquearDesbloquearAgenteFuture(bloquearDesbloquearAgenteFuture: Future[Validation[ErrorValidacionEmpresa, ((Int, Int), Int, Configuracion)]], currentSender: ActorRef, message: CambiarEstadoAgente) = {
-      bloquearDesbloquearAgenteFuture onComplete {
-        case sFailure(failure) => currentSender ! failure
-        case sSuccess(value) =>
-          value match {
-            case zSuccess(responseFutureBloquearDesbloquearAgenteFuture: ((Int, Int), Int, Configuracion)) =>
-              if (responseFutureBloquearDesbloquearAgenteFuture._1._2 != EstadosEmpresaEnum.bloqueadoPorAdmin.id) {
-                currentSender ! ResponseMessage(OK, "La operacion de Bloqueo sobre el Agente empresarial se ha realizado con exio")
-              } else {
-                val fechaActual: Calendar = Calendar.getInstance()
-                fechaActual.add(Calendar.HOUR_OF_DAY, responseFutureBloquearDesbloquearAgenteFuture._3.valor.toInt)
-                val tokenPin: PinData = TokenPin.obtenerToken(fechaActual.getTime)
-                val fecha = new Timestamp(tokenPin.fechaExpiracion.getTime)
-                val pin: PinAgente = PinAgente(None, responseFutureBloquearDesbloquearAgenteFuture._1._1, tokenPin.token, fecha, tokenPin.tokenHash.get, UsoPinEmpresaEnum.usoReinicioContrasena.id)
-                val resultCrearPinEmpresaAgenteEmpresarial = for {
-                  idResultEliminarPinesEmpresaAnteriores <- DataAccessAdapter.eliminarPinEmpresaReiniciarAnteriores(responseFutureBloquearDesbloquearAgenteFuture._1._1, UsoPinEmpresaEnum.usoReinicioContrasena.id)
-                  idResultGuardarPinEmpresa <- DataAccessAdapter.crearPinEmpresaAgenteEmpresarial(pin)
-                  correoEnviado <- new SmtpServiceClient()(context.system).send(buildMessage(responseFutureBloquearDesbloquearAgenteFuture._3.valor.toInt, pin,
-                    UsuarioMessageCorreo(message.correoUsuarioAgenteEmpresarial, message.numIdentificacionAgenteEmpresarial, message.tipoIdentiAgenteEmpresarial),
-                    "alianza.smtp.templatepin.reiniciarContrasenaEmpresa", "alianza.smtp.asunto.reiniciarContrasenaEmpresa"), (_, _) => Unit)
-                } yield { correoEnviado }
-
-                resultCrearPinEmpresaAgenteEmpresarial onComplete {
-                  case sFailure(fail) => currentSender ! fail
-                  case sSuccess(valueResult) =>
-                    valueResult match {
-                      case zFailure(fail) => currentSender ! fail
-                      case zSuccess(intResult) =>
-                        currentSender ! ResponseMessage(OK, "La operacion de Desbloqueo sobre el Agente empresarial se ha realizado con exio")
-                    }
-                }
-              }
-            case zFailure(error) =>
-              error match {
-                case errorPersistence: ErrorPersistenceEmpresa => currentSender ! errorPersistence.exception
-                case errorVal: ErrorValidacionEmpresa =>
-                  currentSender ! ResponseMessage(Conflict, errorVal.msg)
-              }
-          }
-      }
-    }
-
     case message: CambiarContrasenaAgenteEmpresarialMessage =>
       val currentSender = sender()
       val passwordActualAppend = message.pw_actual.concat(AppendPasswordUser.appendUsuariosFiducia)
@@ -193,23 +138,6 @@ class ContrasenasAgenteEmpresarialActor extends Actor with ActorLogging {
 
   private def ActualizarContrasena(pw_nuevo: String, usuario: Option[UsuarioEmpresarial]): Future[Validation[ErrorValidacion, Int]] = {
     DataAccessAdapter.actualizarContrasenaAgenteEmpresarial(pw_nuevo, usuario.get.id).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
-  }
-
-  private def cambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa): Future[Validation[ErrorValidacionEmpresa, Int]] = {
-    DataAccessAdapter.cambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial, estado).map(_.leftMap(pe => ErrorPersistenceEmpresa(pe.message, pe)))
-  }
-
-  private def diasCaducidadContrasena(): Future[Validation[ErrorValidacionEmpresa, Option[ReglaContrasena]]] = {
-    co.com.alianza.infrastructure.anticorruption.contrasenas.DataAccessAdapter.obtenerRegla("DIAS_VALIDA").map(_.leftMap(pe => ErrorPersistenceEmpresa(pe.message, pe)))
-  }
-
-  private def BloquearDesbloquearAgenteEmpresarial(idUsuarioAgenteEmpresarial: (Int, Int), diasCaducidad: Option[ReglaContrasena]): Future[Validation[ErrorValidacionEmpresa, Int]] = {
-    val fechaCaducada = Calendar.getInstance()
-    fechaCaducada.setTime(new Date())
-    fechaCaducada.add(Calendar.DAY_OF_YEAR, (diasCaducidad.getOrElse(ReglaContrasena("", "0")).valor.toInt * -1))
-    val timestamp = new Timestamp(fechaCaducada.getTimeInMillis)
-    val estadoNuevo = if (idUsuarioAgenteEmpresarial._2 == EstadosEmpresaEnum.bloqueContraseña.id || idUsuarioAgenteEmpresarial._2 == EstadosEmpresaEnum.activo.id || idUsuarioAgenteEmpresarial._2 == EstadosEmpresaEnum.pendienteActivacion.id || idUsuarioAgenteEmpresarial._2 == EstadosEmpresaEnum.pendienteReiniciarContrasena.id) { EstadosEmpresaEnum.bloqueadoPorAdmin } else { EstadosEmpresaEnum.pendienteReiniciarContrasena }
-    DataAccessAdapter.cambiarBloqueoDesbloqueoAgenteEmpresarial(idUsuarioAgenteEmpresarial._1, estadoNuevo, timestamp).map(_.leftMap(pe => ErrorPersistenceEmpresa(pe.message, pe)))
   }
 
   private def buildMessage(numHorasCaducidad: Int, pinEmpresa: PinAgente, message: UsuarioMessageCorreo, templateBody: String, asuntoTemp: String) = {

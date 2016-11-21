@@ -75,7 +75,8 @@ trait AuditingHelper {
                   AuditRequest(
                     AudRequest(httpReq.method.toString(), httpReq.uri.toRelative.toString(), extraParameters.getOrElse(""), ip, usuario),
                     AudResponse(response.status.intValue.toString, response.status.reason, response.entity.data.asString),
-                    kafkaTopic, elasticIndex, httpReq.uri.toRelative.toString().split("/")(1))
+                    kafkaTopic, elasticIndex, httpReq.uri.toRelative.toString().split("/")(1)
+                  )
                 kafkaActor ! auditingMsg
               }
             }

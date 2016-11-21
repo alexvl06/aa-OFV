@@ -20,8 +20,7 @@ import scala.concurrent.ExecutionContext
  * Created by seven4n on 01/09/14.
  */
 case class AdministrarContrasenaService(kafkaActor: ActorSelection, contrasenaUsuarioRepo: ContrasenaUsuarioRepository,
-    contrasenaAgenteRepo: ContrasenaAgenteRepository, contrasenaAdminRepo: ContrasenaAdminRepository)
-                                       (implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
+    contrasenaAgenteRepo: ContrasenaAgenteRepository, contrasenaAdminRepo: ContrasenaAdminRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   def routeSeguro(user: UsuarioAuth) = {
     pathPrefix("actualizarContrasena") {
