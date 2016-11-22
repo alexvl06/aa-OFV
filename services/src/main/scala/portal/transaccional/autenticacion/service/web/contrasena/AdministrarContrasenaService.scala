@@ -81,8 +81,11 @@ case class AdministrarContrasenaService(kafkaActor: ActorSelection, contrasenaUs
                 )*/
                 complete("")
               case TiposCliente.clienteIndividual =>
-                //requestExecute(CambiarContrasenaCaducadaMessage(data.token, data.pw_actual, data.pw_nuevo, us_id, us_tipo), contrasenaUsuarioRepo)
-                complete("")
+                val resultado: Future[Int] = contrasenaUsuarioRepo.cambiarContrasena(us_id, data.pw_nuevo, data.pw_actual)
+                onComplete(resultado) {
+                  case Success(value) => complete(value.toString)
+                  case Failure(ex) => execution(ex)
+                }
             }
           }
       }
