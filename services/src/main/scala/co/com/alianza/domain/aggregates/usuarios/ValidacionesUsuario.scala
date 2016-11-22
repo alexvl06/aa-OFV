@@ -43,19 +43,6 @@ object ValidacionesUsuario {
     })
   }
 
-  def validacionReglasClave(contrasena: String, idUsuario: Int, perfilUsuario: PerfilesUsuario.perfilUsuario): Future[Validation[ErrorValidacion, Unit.type]] = {
-    val usuarioFuture: Future[Validation[PersistenceException, List[ValidacionClave]]] = ValidarClave.aplicarReglas(contrasena, Some(idUsuario), perfilUsuario, ValidarClave.reglasGenerales: _*)
-    usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message, pe)).flatMap {
-      (x: List[ValidacionClave]) =>
-        x match {
-          case List() => zSuccess(Unit)
-          case erroresList =>
-            val errores = erroresList.foldLeft("")((z, i) => i.toString + "-" + z)
-            zFailure(ErrorFormatoClave(errorClave(errores)))
-        }
-    })
-  }
-
   def validaCaptcha(message: UsuarioMessage)(implicit config: Config): Future[Validation[ErrorValidacion, Unit.type]] = {
     val validador = new ValidarCaptcha()
     val validacionFuture = validador.validarCaptcha(message.clientIp.get, message.challenge, message.uresponse)
@@ -135,17 +122,6 @@ object ValidacionesUsuario {
       case TipoIdentificacion.SOCIEDAD_EXTRANJERA.identificador => "J"
       case _ => "N"
     }
-  }
-
-  def validacionConsultaContrasenaActual(pw_actual: String, idUsuario: Int): Future[Validation[ErrorValidacion, Option[Usuario]]] = {
-    val contrasenaActualFuture = DataAccessAdapterUsuario.consultaContrasenaActual(Crypto.hashSha512(pw_actual, idUsuario), idUsuario)
-    contrasenaActualFuture.map(_.leftMap(pe => ErrorPersistence(pe.message, pe)).flatMap {
-      (x: Option[Usuario]) =>
-        x match {
-          case Some(c) => zSuccess(x)
-          case None => zFailure(ErrorContrasenaNoExiste(errorContrasenaActualNoExiste))
-        }
-    })
   }
 
   def validacionConsultaTiempoExpiracion(): Future[Validation[ErrorValidacion, Configuracion]] = {

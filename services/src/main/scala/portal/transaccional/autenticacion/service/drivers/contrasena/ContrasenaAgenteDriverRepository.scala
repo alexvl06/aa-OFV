@@ -27,10 +27,12 @@ import scala.concurrent.{ ExecutionContext, Future }
  * Created by hernando on 10/11/16.
  */
 case class ContrasenaAgenteDriverRepository(
-    ultimaContrasenaRepo: UltimaContrasenaRepository,
-    agenteRepo: UsuarioAgenteEmpresarialRepository,
+  agenteRepo: UsuarioAgenteEmpresarialRepository,
     pinAgenteDAO: PinAgenteDAOs,
-    configuracionRepo: ConfiguracionRepository, smtpRepo: SmtpRepository, reglaRepo: ReglaContrasenaRepository
+    ultimaContrasenaRepo: UltimaContrasenaRepository,
+    configuracionRepo: ConfiguracionRepository,
+    smtpRepo: SmtpRepository,
+    reglaRepo: ReglaContrasenaRepository
 )(implicit val ex: ExecutionContext) extends ContrasenaAgenteRepository {
 
   private val config: Config = ConfigApp.conf

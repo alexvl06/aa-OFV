@@ -1,8 +1,9 @@
 package portal.transaccional.autenticacion.service.web.contrasena
 
+import akka.actor.ActorSelection
 import co.com.alianza.app.CrossHeaders
 import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.exceptions.PersistenceException
+import co.com.alianza.exceptions.{ PersistenceException, ValidacionException }
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.infrastructure.auditing.AuditingUser.AuditingUserData
@@ -11,12 +12,21 @@ import co.com.alianza.util.token.Token
 import portal.transaccional.autenticacion.service.drivers.contrasena.{ ContrasenaAdminRepository, ContrasenaAgenteRepository, ContrasenaUsuarioRepository }
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
+import spray.http.StatusCodes._
+import spray.routing.{ RequestContext, StandardRoute }
+
+import scala.concurrent.{ Future, ExecutionContext }
+import scala.util.{ Failure, Success }
 
 /**
  * Created by seven4n on 01/09/14.
  */
-case class AdministrarContrasenaService(kafkaActor: ActorSelection, contrasenaUsuarioRepo: ContrasenaUsuarioRepository,
-    contrasenaAgenteRepo: ContrasenaAgenteRepository, contrasenaAdminRepo: ContrasenaAdminRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
+case class AdministrarContrasenaService(
+    kafkaActor: ActorSelection,
+    contrasenaUsuarioRepo: ContrasenaUsuarioRepository,
+    contrasenaAgenteRepo: ContrasenaAgenteRepository,
+    contrasenaAdminRepo: ContrasenaAdminRepository
+)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   def routeSeguro(user: UsuarioAuth) = {
     pathPrefix("actualizarContrasena") {
@@ -68,18 +78,17 @@ case class AdministrarContrasenaService(kafkaActor: ActorSelection, contrasenaUs
             val tipoCliente = TiposCliente.withName(us_tipo)
             tipoCliente match {
               case TiposCliente.agenteEmpresarial =>
-                //TODO: refactor en proceso
-                /*requestExecute(
-                  CambiarContrasenaCaducadaAgenteEmpresarialMessage(data.token, data.pw_actual, data.pw_nuevo, Some(us_id)),
-                  contrasenaAgenteRepo
-                )*/
-                complete("")
+                val resultado: Future[Int] = contrasenaAgenteRepo.cambiarContrasena(us_id, data.pw_nuevo, data.pw_actual)
+                onComplete(resultado) {
+                  case Success(value) => complete(value.toString)
+                  case Failure(ex) => execution(ex)
+                }
               case TiposCliente.clienteAdministrador =>
-                /*requestExecute(
-                  CambiarContrasenaCaducadaClienteAdminMessage(data.token, data.pw_actual, data.pw_nuevo, Some(us_id)),
-                  contrasenaAdminRepo
-                )*/
-                complete("")
+                val resultado: Future[Int] = contrasenaAdminRepo.cambiarContrasena(us_id, data.pw_nuevo, data.pw_actual)
+                onComplete(resultado) {
+                  case Success(value) => complete(value.toString)
+                  case Failure(ex) => execution(ex)
+                }
               case TiposCliente.clienteIndividual =>
                 val resultado: Future[Int] = contrasenaUsuarioRepo.cambiarContrasena(us_id, data.pw_nuevo, data.pw_actual)
                 onComplete(resultado) {
@@ -89,6 +98,15 @@ case class AdministrarContrasenaService(kafkaActor: ActorSelection, contrasenaUs
             }
           }
       }
+    }
+  }
+
+  private def execution(ex: Throwable): StandardRoute = {
+    ex match {
+      case ex: ValidacionException => complete((Conflict, ex))
+      case ex: PersistenceException =>
+        ex.printStackTrace(); complete((StatusCodes.InternalServerError, "Error inesperado"))
+      case ex: Throwable => ex.printStackTrace(); complete((StatusCodes.InternalServerError, "Error inesperado"))
     }
   }
 

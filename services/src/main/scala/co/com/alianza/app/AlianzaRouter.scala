@@ -77,7 +77,7 @@ case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, autenticaci
             //TODO: refactorizar
             new AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).routeSeguro(user) ~
             // TODO Cambiar al authenticate de cliente empresarial
-            new AdministrarContrasenaEmpresaService(kafkaActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).secureRouteEmpresa(user) ~
+            new AdministrarContrasenaEmpresaService(user, kafkaActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).route ~
             //TODO: refactorizar
             UsuarioEmpresaService(kafkaActor, agenteEmpresarialActor).secureUserRouteEmpresa(user) ~
             //TODO: refactorizar

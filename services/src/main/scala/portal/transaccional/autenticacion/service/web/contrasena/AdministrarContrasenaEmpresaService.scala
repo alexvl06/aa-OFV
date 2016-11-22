@@ -10,12 +10,11 @@ import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import portal.transaccional.autenticacion.service.drivers.contrasena.{ ContrasenaAdminRepository, ContrasenaAgenteRepository }
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
-import spray.http.StatusCodes
 import spray.http.StatusCodes._
 import spray.routing.{ StandardRoute, RequestContext }
 
 import scala.concurrent.{ Future, ExecutionContext }
-import scala.util.Failure
+import scala.util.{ Success, Failure }
 
 /**
  * Created by S4N on 17/12/14.
@@ -23,7 +22,7 @@ import scala.util.Failure
 case class AdministrarContrasenaEmpresaService(user: UsuarioAuth, kafkaActor: ActorSelection, contrasenaAgenteRepo: ContrasenaAgenteRepository,
     contrasenaAdminRepo: ContrasenaAdminRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
-  def secureRouteEmpresa = {
+  def route = {
     pathPrefix("empresa") {
       path("reiniciarContrasena") {
         pathEndOrSingleSlash {
@@ -120,23 +119,17 @@ case class AdministrarContrasenaEmpresaService(user: UsuarioAuth, kafkaActor: Ac
         data =>
           clientIP {
             ip =>
-              //TODO: refactor en proceso
               mapRequestContext {
                 r: RequestContext =>
-                  val msg: CambiarContrasenaClienteAdminMessage = data.copy(idUsuario = Some(user.id))
                   val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, user.usuario)
                   requestAuditing[PersistenceException, CambiarContrasenaClienteAdminMessage](r, AuditingHelper.fiduciariaTopic,
-                    AuditingHelper.cambioContrasenaClienteAdministradorIndex, ip.value, kafkaActor, usuario, Some(msg.copy(pw_nuevo = null, pw_actual = null)))
+                    cambioContrasenaClienteAdministradorIndex, ip.value, kafkaActor, usuario, Some(data.copy(pw_nuevo = null, pw_actual = null)))
               } {
-                /*val resultado: Future[Int] = horarioEmpresaRepository.agregar(user, request.diaHabil, request.sabado, request.horaInicio, request.horaFin)
+                val resultado: Future[Int] = contrasenaAdminRepo.cambiarContrasena(user.id, data.pw_nuevo, data.pw_actual)
                 onComplete(resultado) {
-                  case Success(value) => complete(value.toString)
+                  case Success(value) => complete(OK)
                   case Failure(ex) => execution(ex)
                 }
-                val dataComplete: CambiarContrasenaClienteAdminMessage = data.copy(idUsuario = Some(user.id))
-                requestExecute(dataComplete, contrasenaAdminRepo)
-                */
-                complete("")
               }
           }
       }
@@ -145,10 +138,10 @@ case class AdministrarContrasenaEmpresaService(user: UsuarioAuth, kafkaActor: Ac
 
   private def execution(ex: Throwable): StandardRoute = {
     ex match {
-      case ex: ValidacionException => complete((StatusCodes.Conflict, ex))
+      case ex: ValidacionException => complete((Conflict, ex))
       case ex: PersistenceException =>
-        ex.printStackTrace(); complete((StatusCodes.InternalServerError, "Error inesperado"))
-      case ex: Throwable => ex.printStackTrace(); complete((StatusCodes.InternalServerError, "Error inesperado"))
+        ex.printStackTrace(); complete((InternalServerError, "Error inesperado"))
+      case ex: Throwable => ex.printStackTrace(); complete((InternalServerError, "Error inesperado"))
     }
   }
 
