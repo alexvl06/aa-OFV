@@ -27,7 +27,7 @@ import scala.concurrent.{ ExecutionContext, Future }
  * Created by hernando on 10/11/16.
  */
 case class ContrasenaAgenteDriverRepository(
-  agenteRepo: UsuarioAgenteEmpresarialRepository,
+    agenteRepo: UsuarioAgenteEmpresarialRepository,
     pinAgenteDAO: PinAgenteDAOs,
     ultimaContrasenaRepo: UltimaContrasenaRepository,
     configuracionRepo: ConfiguracionRepository,

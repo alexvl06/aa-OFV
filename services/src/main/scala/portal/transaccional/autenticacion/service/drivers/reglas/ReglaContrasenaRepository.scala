@@ -11,7 +11,7 @@ import scala.concurrent.Future
  */
 trait ReglaContrasenaRepository {
 
-  def getRegla(llave: LlavesReglaContrasena.Val): Future[ReglaContrasena]
+  def getRegla(llave: LlavesReglaContrasena.Value): Future[ReglaContrasena]
 
   def getReglas(): Future[Seq[ReglaContrasena]]
 

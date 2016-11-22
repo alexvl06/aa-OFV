@@ -17,7 +17,7 @@ import scala.concurrent.{ ExecutionContext, Future }
  * Created by hernando on 9/11/16.
  */
 case class ContrasenaUsuarioDriverRepository(
-  ultimaContrasenaRepo: UltimaContrasenaRepository,
+    ultimaContrasenaRepo: UltimaContrasenaRepository,
     usuarioRepo: UsuarioRepository, reglaRepo: ReglaContrasenaRepository
 )(implicit val ex: ExecutionContext) extends ContrasenaUsuarioRepository {
 
