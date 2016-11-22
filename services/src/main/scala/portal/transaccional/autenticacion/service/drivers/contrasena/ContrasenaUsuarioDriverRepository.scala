@@ -1,39 +1,44 @@
 package portal.transaccional.autenticacion.service.drivers.contrasena
 
-import co.com.alianza.exceptions.ValidacionException
-import co.com.alianza.util.clave.Crypto
-import enumerations.AppendPasswordUser
+import java.sql.Timestamp
+import java.util.Date
 
+import co.com.alianza.persistence.entities.{UltimaContrasena, Usuario}
+import co.com.alianza.util.clave.Crypto
+import enumerations.{AppendPasswordUser, PerfilesUsuario}
+import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaRepository
+import portal.transaccional.autenticacion.service.drivers.ultimaContrasena.UltimaContrasenaRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioRepository
 import scala.concurrent.Future
 
 /**
  * Created by hernando on 9/11/16.
  */
-case class ContrasenaUsuarioDriverRepository() {
+case class ContrasenaUsuarioDriverRepository(ultimaContrasenaRepo: UltimaContrasenaRepository,
+                                             usuarioRepo: UsuarioRepository, reglaRepo: ReglaContrasenaRepository) (implicit val ex: ExecutionContext) extends ContrasenaUsuarioRepository {
 
-  def validarContrasenaActual(idUsuario: Int, contrasena: String, contrasenaActualHash: String): Future[Boolean] = {
-    val contrasenaHash: String = Crypto.hashSha512(contrasena.concat(AppendPasswordUser.appendUsuariosFiducia), idUsuario)
-    contrasenaHash.equals(contrasenaActualHash) match {
+  def cambiarContrasena(idUsuario: Int, contrasena: String, contrasenaActual: String): Future[Int] = {
+    for {
+      usuarioOption <- usuarioRepo.getById(idUsuario)
+      usuario <- usuarioRepo.validarUsuario(usuarioOption)
+      _ <- usuarioRepo.validarEstado(usuario)
+      _ <- validarContrasena(usuario, contrasenaActual)
+      _ <- reglaRepo.validarContrasenaReglasGenerales(idUsuario, PerfilesUsuario.clienteIndividual, contrasena)
+      contrasenaHash <- Future.successful(Crypto.hashSha512(contrasena.concat(AppendPasswordUser.appendUsuariosFiducia), idUsuario))
+      actualizar <- usuarioRepo.actualizarContrasena(idUsuario, contrasenaHash)
+      _ <- ultimaContrasenaRepo.crearUltimaContrasenaAgente(UltimaContrasena(None, idUsuario, contrasenaHash, new Timestamp(new Date().getTime)))
+    } yield actualizar
+  }
+
+  def validarContrasena(usuario: Usuario, contrasena: String): Future[Boolean] = {
+    val contrasenaHash = Crypto.hashSha512(contrasena.concat(AppendPasswordUser.appendUsuariosFiducia), usuario.id)
+    usuario.contrasena.equals(contrasenaHash) match {
       case true => Future.successful(true)
-      case _ => Future.failed(ValidacionException("409.7", "No existe la contrasena actual"))
+      case _ => Future.failed(ValidacionException("409.7", "No existe la contrasena"))
     }
   }
 
   /*
-  * //TODO: Verificar si el metodo CambiarContrasenaMessage se está utilizando
-    case message: CambiarContrasenaMessage =>
-      val currentSender = sender()
-      val passwordActualAppend = message.pw_actual.concat(AppendPasswordUser.appendUsuariosFiducia)
-      val passwordNewAppend = message.pw_nuevo.concat(AppendPasswordUser.appendUsuariosFiducia)
-      val CambiarContrasenaFuture = (for {
-        usuarioContrasenaActual <- ValidationT(validacionConsultaContrasenaActual(passwordActualAppend, message.idUsuario.get))
-        idValReglasContra <- ValidationT(validacionReglasClave(message.pw_nuevo, message.idUsuario.get, PerfilesUsuario.clienteIndividual))
-        idUsuario <- ValidationT(actualizarContrasena(passwordNewAppend, usuarioContrasenaActual))
-        resultGuardarUltimasContrasenas <- ValidationT(guardarUltimaContrasena(message.idUsuario.get, Crypto.hashSha512(passwordNewAppend, message.idUsuario.get)))
-      } yield {
-        idUsuario
-      }).run
-      resolveCambiarContrasenaFuture(CambiarContrasenaFuture, currentSender)
 
     //TODO: Verificar si el metodo CambiarContrasenaCaducadaMessage se está utilizando
     case message: CambiarContrasenaCaducadaMessage =>
@@ -59,34 +64,6 @@ case class ContrasenaUsuarioDriverRepository() {
       }
 
   }
-
-  private def guardarUltimaContrasena(idUsuario: Int, uContrasena: String): Future[Validation[ErrorValidacion, Int]] = {
-    DataAccessAdapterUltimaContrasena.guardarUltimaContrasena(UltimaContrasena(None, idUsuario, uContrasena, new Timestamp(System.currentTimeMillis()))).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
-  }
-
-  private def actualizarContrasena(pw_nuevo: String, usuario: Option[Usuario]): Future[Validation[ErrorValidacion, Int]] = {
-    DataAccessAdapter.actualizarContrasena(pw_nuevo, usuario.get.id.get).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
-  }
-
-  private def resolveCambiarContrasenaFuture(CambiarContrasenaFuture: Future[Validation[ErrorValidacion, Int]], currentSender: ActorRef) = {
-    CambiarContrasenaFuture onComplete {
-      case sFailure(failure) =>
-        currentSender ! failure
-      case sSuccess(value) =>
-        value match {
-          case zSuccess(response: Int) =>
-            currentSender ! ResponseMessage(OK, response.toJson)
-          case zFailure(error) =>
-            error match {
-              case errorPersistence: ErrorPersistence => currentSender ! errorPersistence.exception
-              case errorVal: ErrorValidacion =>
-                currentSender ! ResponseMessage(Conflict, errorVal.msg)
-            }
-        }
-    }
-  }
-
-  private val tokenValidationFailure = ErrorMessage("409.11", "Token invalido", "El token de caducidad es invalido").toJson
-  * */
+*/
 
 }

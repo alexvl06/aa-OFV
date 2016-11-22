@@ -1,6 +1,5 @@
 package portal.transaccional.autenticacion.service.web.contrasena
 
-import akka.actor.ActorSelection
 import co.com.alianza.app.CrossHeaders
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.exceptions.PersistenceException
@@ -12,9 +11,6 @@ import co.com.alianza.util.token.Token
 import portal.transaccional.autenticacion.service.drivers.contrasena.{ ContrasenaAdminRepository, ContrasenaAgenteRepository, ContrasenaUsuarioRepository }
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
-import spray.routing.RequestContext
-
-import scala.concurrent.ExecutionContext
 
 /**
  * Created by seven4n on 01/09/14.
@@ -36,23 +32,17 @@ case class AdministrarContrasenaService(kafkaActor: ActorSelection, contrasenaUs
         ip =>
           entity(as[CambiarContrasenaMessage]) {
             data =>
-
               mapRequestContext {
                 r: RequestContext =>
                   val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, user.usuario)
                   requestAuditing[PersistenceException, CambiarContrasenaMessage](r, AuditingHelper.fiduciariaTopic,
                     AuditingHelper.cambioContrasenaIndex, ip.value, kafkaActor, usuario, Some(data.copy(pw_actual = null, pw_nuevo = null)))
               } {
-                //TODO: refactor en proceso
-                /*val resultado: Future[Int] = horarioEmpresaRepository.agregar(user, request.diaHabil, request.sabado, request.horaInicio, request.horaFin)
+                val resultado: Future[Int] = contrasenaUsuarioRepo.cambiarContrasena(user.id, data.pw_nuevo, data.pw_actual)
                 onComplete(resultado) {
                   case Success(value) => complete(value.toString)
                   case Failure(ex) => execution(ex)
                 }
-                val dataComplete: CambiarContrasenaMessage = data.copy(idUsuario = Some(user.id))
-                requestExecute(dataComplete, contrasenaUsuarioRepo)
-                */
-                complete("")
               }
           }
       }

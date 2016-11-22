@@ -1,7 +1,6 @@
 package portal.transaccional.autenticacion.service.drivers.contrasena
 
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
-
 import scala.concurrent.Future
 
 /**
