@@ -13,7 +13,7 @@ import co.com.alianza.infrastructure.anticorruption.clientes.{ DataAccessAdapter
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => DataAccessAdapterUsuario }
 import co.com.alianza.infrastructure.anticorruption.configuraciones.{ DataAccessAdapter => dataAccesAdaptarConf }
 import co.com.alianza.persistence.util.DataBaseExecutionContext
-import enumerations.{ConfiguracionEnum, EstadosCliente, PerfilesUsuario, TipoIdentificacion}
+import enumerations.{ ConfiguracionEnum, EstadosCliente, PerfilesUsuario, TipoIdentificacion }
 
 import scalaz.Validation.FlatMap._
 import co.com.alianza.util.clave.{ ValidarClave }
