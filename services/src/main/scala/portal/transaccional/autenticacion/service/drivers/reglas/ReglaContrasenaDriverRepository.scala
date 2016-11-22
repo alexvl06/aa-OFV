@@ -45,7 +45,7 @@ case class ReglaContrasenaDriverRepository(
     for {
       reglas <- getReglas()
       mapa <- Future.successful(reglas.map(x => (x.llave, x.valor)).toMap)
-      ultimasContrasenas <- obtenerUltimasContrasenas(mapa.get("ULTIMAS_CONTRASENAS_NO_VALIDAS").getOrElse("0")toInt)
+      ultimasContrasenas <- obtenerUltimasContrasenas(mapa.get("ULTIMAS_CONTRASENAS_NO_VALIDAS").getOrElse("0").toInt)
       validacion <- aplicarReglas(contrasena, mapa, Option(ultimasContrasenas), REGLAS_GENERALES)
     } yield validacion
   }
