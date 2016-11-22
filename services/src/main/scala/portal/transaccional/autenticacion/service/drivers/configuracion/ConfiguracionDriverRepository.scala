@@ -11,7 +11,7 @@ import scala.concurrent.{ ExecutionContext, Future }
  */
 case class ConfiguracionDriverRepository(configuracionDAO: ConfiguracionDAOs)(implicit val ex: ExecutionContext) extends ConfiguracionRepository {
 
-  def getConfiguracion(configuracion: ConfiguracionEnum.Value): Future[Configuracion] = { configuracionDAO.getByKey(configuracion.name) }
+  def getConfiguracion(configuracion: ConfiguracionEnum.Val): Future[Configuracion] = { configuracionDAO.getByKey(configuracion.name) }
 
   def getAll(): Future[Seq[Configuracion]] = { configuracionDAO.getAll() }
 

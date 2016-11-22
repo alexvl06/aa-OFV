@@ -5,7 +5,7 @@ package enumerations
  */
 object ConfiguracionEnum extends Enumeration(1) {
 
-  protected case class Val(name: String) extends super.Val(nextId, name) {}
+  case class Val(name: String) extends super.Val(nextId, name) {}
 
   type configuracion = Value
 
