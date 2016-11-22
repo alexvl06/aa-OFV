@@ -43,7 +43,6 @@ case class ContrasenaAgenteDriverRepository(
       optionAgente <- agenteRepo.getByIdentityAndUser(admin.identificacion, usuarioAgente)
       agente <- agenteRepo.validarUsuario(optionAgente)
       _ <- agenteRepo.validarBloqueoAdmin(agente)
-      _ <- agenteRepo.actualizarEstado(agente.id, EstadosEmpresaEnum.pendienteReiniciarContrasena)
       correo <- envioCorreoReinicio(agente)
     } yield correo
   }
@@ -54,8 +53,11 @@ case class ContrasenaAgenteDriverRepository(
       _ <- validarAdmin(admin)
       optionAgente <- agenteRepo.getByIdentityAndUser(admin.identificacion, usuarioAgente)
       agente <- agenteRepo.validarUsuario(optionAgente)
-      resultado <- if (agente.estado == estadoBloqueado) desbloquear(agente)
-      else agenteRepo.actualizarEstado(agente.id, EstadosEmpresaEnum.bloqueadoPorAdmin).map(_ > 0)
+      resultado <- if (agente.estado == estadoBloqueado) {
+          desbloquear(agente)
+        } else {
+          agenteRepo.actualizarEstado(agente.id, EstadosEmpresaEnum.bloqueadoPorAdmin).map(_ > 0)
+        }
     } yield resultado
   }
 
@@ -97,6 +99,7 @@ case class ContrasenaAgenteDriverRepository(
 
   private def envioCorreoReinicio(agente: UsuarioAgenteEmpresarial): Future[Boolean] = {
     for {
+      _ <- agenteRepo.actualizarEstado(agente.id, EstadosEmpresaEnum.pendienteReiniciarContrasena)
       expiracion <- configuracionRepo.getConfiguracion(ConfiguracionEnum.EXPIRACION_PIN)
       _ <- pinAgenteDAO.deleteAll(agente.id)
       pin <- obtenerPinAgente(agente.id, UsoPinEmpresaEnum.usoReinicioContrasena, expiracion)
@@ -108,7 +111,7 @@ case class ContrasenaAgenteDriverRepository(
 
   private def validarAdmin(admin: UsuarioAuth) = {
     admin.tipoCliente match {
-      case TiposCliente.comercialAdmin => Future.successful(true)
+      case TiposCliente.clienteAdministrador => Future.successful(true)
       case _ => Future.failed(ValidacionException("409.15", "El usuario no tiene permiso para realizar la acción"))
     }
   }
@@ -124,7 +127,7 @@ case class ContrasenaAgenteDriverRepository(
   private def obtenerMensaje(para: String, expiracion: Configuracion, pin: PinAgente) = {
     val de: String = config.getString("alianza.smtp.from")
     val asunto: String = config.getString("alianza.smtp.asunto.reiniciarContrasenaEmpresa")
-    val body: String = config.getString("alianza.smtp.templatepin.reiniciarContrasenaEmpresa")
+    val body: String = "alianza.smtp.templatepin.reiniciarContrasenaEmpresa"
     val contenido: String = new MailMessageEmpresa(body).getMessagePin(pin, expiracion.valor.toInt)
     //Future.successful(Mensaje(de, para, List.empty[String], asunto, contenido))
     Future.successful(Mensaje(de, "luisaceleita@seven4n.com", List.empty[String], asunto, contenido))

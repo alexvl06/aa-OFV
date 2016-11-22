@@ -2,7 +2,6 @@ package portal.transaccional.autenticacion.service.drivers.smtp
 
 import akka.actor.ActorSystem
 import co.com.alianza.util.ConfigApp
-import co.com.alianza.util.json.JsonUtil
 import com.typesafe.config.Config
 import spray.client.pipelining._
 import spray.http.HttpHeaders.`Content-Type`
@@ -17,11 +16,13 @@ case class SmtpDriverRepository()(implicit val ex: ExecutionContext, system: Act
 
   private val config: Config = ConfigApp.conf
 
+  import portal.transaccional.autenticacion.service.drivers.smtp.MensajeJsonSupport._
+
   def enviar(mensaje: Mensaje): Future[Boolean] = {
     val endPoint = config.getString("autenticacion.service.smtp.location")
     val pipeline = sendReceive
     val header: HttpHeader = `Content-Type`(ContentTypes.`application/json`)
-    val futureRequest: Future[HttpResponse] = pipeline(Post(s"$endPoint", JsonUtil.toJson(mensaje)) ~> header)
+    val futureRequest: Future[HttpResponse] = pipeline(Post(s"$endPoint", mensaje) ~> header)
     val successStatusCodes = List(StatusCodes.OK)
     futureRequest.map {
       response =>
