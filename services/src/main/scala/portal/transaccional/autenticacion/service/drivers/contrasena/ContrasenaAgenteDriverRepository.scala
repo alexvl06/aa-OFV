@@ -35,7 +35,7 @@ case class ContrasenaAgenteDriverRepository(
     reglaRepo: ReglaContrasenaRepository
 )(implicit val ex: ExecutionContext) extends ContrasenaAgenteRepository {
 
-  private val config: Config = ConfigApp.conf
+  private implicit val config: Config = ConfigApp.conf
 
   def reiniciarContrasena(admin: UsuarioAuth, usuarioAgente: String): Future[Boolean] = {
     for {
