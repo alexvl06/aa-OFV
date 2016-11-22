@@ -93,7 +93,7 @@ case class PinDriverRepository(pinUsuarioDAO: PinUsuarioDAOs, pinAdminDAO: PinAd
       contrasenaHash <- Future.successful(Crypto.hashSha512(contrasena.concat(AppendPasswordUser.appendUsuariosFiducia), pin.idUsuario))
       _ <- usuarioAdminRepo.actualizarContrasena(admin.id, contrasenaHash)
       _ <- ultimaContrasenaRepo.crearUltimaContrasenaAdmin(UltimaContrasena(None, pin.idUsuario, contrasenaHash, new Timestamp(new Date().getTime)))
-      _ <- guardarIpEmpresa(pin.idUsuario, ip)
+      _ <- guardarIpEmpresa(optionEmpresa.get.id, ip)
       eliminar <- pinAdminDAO.delete(token)
     } yield eliminar
   }
