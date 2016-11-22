@@ -12,6 +12,8 @@ import scala.concurrent.Future
  */
 trait UsuarioRepository {
 
+  def getById(idUsuario: Int): Future[Option[Usuario]]
+
   def getByIdentificacion(numeroIdentificacion: String): Future[Usuario]
 
   def getByToken(token: String): Future[Option[Usuario]]
@@ -35,5 +37,7 @@ trait UsuarioRepository {
   def validarCaducidadContrasena(tipoCliente: TiposCliente, usuario: Usuario, dias: Int): Future[Boolean]
 
   def invalidarToken(token: String): Future[Int]
+
+  def validarUsuario(usuarioOption: Option[Usuario]): Future[Usuario]
 
 }

@@ -4,12 +4,14 @@ import co.com.alianza.exceptions.{ NoAutorizado, ValidacionException }
 import co.com.alianza.infrastructure.dto.{ Pregunta, Respuesta }
 import co.com.alianza.persistence.entities.{ Empresa, RecursoComercial, ReglaContrasena, RolComercial }
 import enumerations.{ TipoIdentificacionComercialDTO, TipoIdentificacionDTO }
+import portal.transaccional.autenticacion.service.drivers.smtp.Mensaje
 import portal.transaccional.autenticacion.service.dto.{ PermisoRecursoDTO, RecursoDTO }
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import portal.transaccional.autenticacion.service.web.actualizacion._
 import portal.transaccional.autenticacion.service.web.autenticacion.{ AutenticarRequest, AutenticarUsuarioComercialRequest, AutenticarUsuarioEmpresarialRequest }
 import portal.transaccional.autenticacion.service.web.autorizacion.InvalidarTokenRequest
 import portal.transaccional.autenticacion.service.web.comercial.{ ActualizarContrasenaRequest, CrearAdministradorRequest, ValidarEmpresaRequest }
+import portal.transaccional.autenticacion.service.web.contrasena._
 import portal.transaccional.autenticacion.service.web.horarioEmpresa.{ AgregarHorarioEmpresaRequest, DiaFestivoRequest, ResponseObtenerHorario }
 import portal.transaccional.autenticacion.service.web.ip.{ IpRequest, IpResponse }
 import portal.transaccional.autenticacion.service.web.pin.ContrasenaUsuario
@@ -81,5 +83,14 @@ trait DomainJsonFormatters {
 
   //pin
   implicit val cambioContrasenaFormatter = jsonFormat2(ContrasenaUsuario)
+
+  //smtp
+  implicit val mensajeFormatter = jsonFormat5(Mensaje)
+
+  //contrasenas
+  implicit val reiniciarContrasenaAgenteFormatter = jsonFormat1(ReiniciarContrasenaAgente)
+  implicit val cambiarEstadoAgenteFormatter = jsonFormat1(CambiarEstadoAgente)
+  implicit val cambiarContrasenaFormatter = jsonFormat2(CambiarContrasena)
+  implicit val cambiarContrasenaCaducadaFormatter = jsonFormat3(CambiarContrasenaCaducada)
 
 }

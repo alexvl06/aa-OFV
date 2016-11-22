@@ -4,14 +4,12 @@ import java.sql.Timestamp
 import java.util.Date
 
 import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
-import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.exceptions.ValidacionException
-import co.com.alianza.infrastructure.dto.Cliente
 import co.com.alianza.persistence.dto.UsuarioLdapDTO
-import co.com.alianza.persistence.entities.{ Usuario, UsuarioComercial, UsuarioComercialAdmin }
+import co.com.alianza.persistence.entities.{ UsuarioComercial, UsuarioComercialAdmin }
 import co.com.alianza.util.token.{ AesUtil, Token }
+import enumerations.ConfiguracionEnum
 import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionRepository
 import portal.transaccional.autenticacion.service.drivers.ldap.LdapRepository
 import portal.transaccional.autenticacion.service.drivers.sesion.SesionRepository
@@ -68,7 +66,7 @@ case class AutenticacionComercialDriverRepository(
       _ <- if (!existe) usuarioComercialRepo.crearUsuario(usuario, ip) else Future(true)
       usuarioComercial <- usuarioComercialRepo.getUser(cliente.usuario)
       _ <- usuarioComercialRepo.updateIpFecha(usuario, ip)
-      inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
+      inactividad <- configuracionRepo.getConfiguracion(ConfiguracionEnum.EXPIRACION_SESION)
       token <- generarTokenComercial(cliente, "C", usuarioComercial, tipoCliente, ip, inactividad.valor)
       _ <- usuarioComercialRepo.crearToken(usuarioComercial.id, AesUtil.encriptarToken(token))
       sesion <- sesionRepo.crearSesion(token, inactividad.valor.toInt, None)

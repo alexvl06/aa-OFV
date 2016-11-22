@@ -1,6 +1,5 @@
 package co.com.alianza.domain.aggregates.usuarios
 
-import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.exceptions.{ PersistenceException, ServiceException }
 import portal.transaccional.autenticacion.service.drivers.reglas.ValidacionClave
 import spray.http.StatusCodes._
@@ -14,10 +13,10 @@ import co.com.alianza.infrastructure.anticorruption.clientes.{ DataAccessAdapter
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => DataAccessAdapterUsuario }
 import co.com.alianza.infrastructure.anticorruption.configuraciones.{ DataAccessAdapter => dataAccesAdaptarConf }
 import co.com.alianza.persistence.util.DataBaseExecutionContext
-import enumerations.{ EstadosCliente, PerfilesUsuario, TipoIdentificacion }
+import enumerations.{ ConfiguracionEnum, EstadosCliente, PerfilesUsuario, TipoIdentificacion }
 
 import scalaz.Validation.FlatMap._
-import co.com.alianza.util.clave.{ Crypto, ValidarClave }
+import co.com.alianza.util.clave.{ ValidarClave }
 import co.com.alianza.util.captcha.ValidarCaptcha
 import com.typesafe.config.Config
 
@@ -37,19 +36,6 @@ object ValidacionesUsuario {
         x match {
           case List() => zSuccess(Unit)
           case erroresList: List[ValidacionClave] =>
-            val errores = erroresList.foldLeft("")((z, i) => i.toString + "-" + z)
-            zFailure(ErrorFormatoClave(errorClave(errores)))
-        }
-    })
-  }
-
-  def validacionReglasClave(contrasena: String, idUsuario: Int, perfilUsuario: PerfilesUsuario.perfilUsuario): Future[Validation[ErrorValidacion, Unit.type]] = {
-    val usuarioFuture: Future[Validation[PersistenceException, List[ValidacionClave]]] = ValidarClave.aplicarReglas(contrasena, Some(idUsuario), perfilUsuario, ValidarClave.reglasGenerales: _*)
-    usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message, pe)).flatMap {
-      (x: List[ValidacionClave]) =>
-        x match {
-          case List() => zSuccess(Unit)
-          case erroresList =>
             val errores = erroresList.foldLeft("")((z, i) => i.toString + "-" + z)
             zFailure(ErrorFormatoClave(errorClave(errores)))
         }
@@ -137,19 +123,8 @@ object ValidacionesUsuario {
     }
   }
 
-  def validacionConsultaContrasenaActual(pw_actual: String, idUsuario: Int): Future[Validation[ErrorValidacion, Option[Usuario]]] = {
-    val contrasenaActualFuture = DataAccessAdapterUsuario.consultaContrasenaActual(Crypto.hashSha512(pw_actual, idUsuario), idUsuario)
-    contrasenaActualFuture.map(_.leftMap(pe => ErrorPersistence(pe.message, pe)).flatMap {
-      (x: Option[Usuario]) =>
-        x match {
-          case Some(c) => zSuccess(x)
-          case None => zFailure(ErrorContrasenaNoExiste(errorContrasenaActualNoExiste))
-        }
-    })
-  }
-
   def validacionConsultaTiempoExpiracion(): Future[Validation[ErrorValidacion, Configuracion]] = {
-    val configuracionFuture = dataAccesAdaptarConf.obtenerConfiguracionPorLlave(TiposConfiguracion.EXPIRACION_PIN.llave)
+    val configuracionFuture = dataAccesAdaptarConf.obtenerConfiguracionPorLlave(ConfiguracionEnum.EXPIRACION_PIN.name)
     configuracionFuture.map(_.leftMap(pe => ErrorPersistence(pe.message, pe)).flatMap {
       (x: Option[Configuracion]) =>
         x match {

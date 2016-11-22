@@ -5,8 +5,8 @@ import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
-import co.com.alianza.infrastructure.dto.{ Configuracion, Pregunta, Respuesta, RespuestaCompleta }
-import co.com.alianza.persistence.entities.{ Configuraciones, PreguntaAutovalidacion }
+import co.com.alianza.infrastructure.dto.{ Pregunta, Respuesta, RespuestaCompleta }
+import co.com.alianza.persistence.entities.{ Configuracion, PreguntaAutovalidacion }
 import co.com.alianza.util.json.JsonUtil
 import enumerations.ConfiguracionEnum
 import portal.transaccional.autenticacion.service.drivers.configuracion.{ ConfiguracionRepository, DataAccessTranslator => configuracionDTO }
@@ -38,16 +38,15 @@ case class PreguntasAutovalidacionDriverRepository(
     } yield respuesta
   }
 
-  private def resolveObtenerPreguntas(preguntasEntities: List[PreguntaAutovalidacion], configuracionesEntities: List[Configuraciones]): Future[ResponseObtenerPreguntas] = Future {
+  private def resolveObtenerPreguntas(preguntasEntities: List[PreguntaAutovalidacion], configuraciones: List[Configuracion]): Future[ResponseObtenerPreguntas] = Future {
     val preguntasDto = preguntasEntities.map(pregunta => preguntasAutovalidacionDTO.entityToDto(pregunta))
-    val configuracionesDto = configuracionesEntities.map(conf => configuracionDTO.entityToDto(conf))
-    val numeroPreguntas = obtenerValorEntero(configuracionesDto, ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS.name)
-    val numeroPreguntasLista = obtenerValorEntero(configuracionesDto, ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS_LISTA.name)
+    val numeroPreguntas = obtenerValorEntero(configuraciones, ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS.name)
+    val numeroPreguntasLista = obtenerValorEntero(configuraciones, ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS_LISTA.name)
     val preguntas = Random.shuffle(preguntasDto).take(numeroPreguntasLista)
     ResponseObtenerPreguntas(preguntasDto, numeroPreguntas)
   }
 
-  private def obtenerValorEntero(configuraciones: List[Configuracion], llave: String): Int = {
+  private def obtenerValorEntero(configuraciones: Seq[Configuracion], llave: String): Int = {
     configuraciones.filter(conf => conf.llave.equals(llave)).head.valor.toInt
   }
 
@@ -74,17 +73,15 @@ case class PreguntasAutovalidacionDriverRepository(
 
   }
 
-  private def resolveObtenerPreguntasComprobar(preguntasDto: List[Pregunta], configuracionesEntities: List[Configuraciones]): Future[ResponseObtenerPreguntasComprobar] = Future {
-    val configuracionesDto = configuracionesEntities.map(conf => configuracionDTO.entityToDto(conf))
-    val numeroIntentos = obtenerValorEntero(configuracionesDto, ConfiguracionEnum.AUTOVALIDACION_NUMERO_REINTENTOS.name)
-    val numeroPreguntasComprobacion = obtenerValorEntero(configuracionesDto, ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS_COMPROBACION.name)
+  private def resolveObtenerPreguntasComprobar(preguntasDto: List[Pregunta], configuraciones: List[Configuracion]): Future[ResponseObtenerPreguntasComprobar] = Future {
+    val numeroIntentos = obtenerValorEntero(configuraciones, ConfiguracionEnum.AUTOVALIDACION_NUMERO_REINTENTOS.name)
+    val numeroPreguntasComprobacion = obtenerValorEntero(configuraciones, ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS_COMPROBACION.name)
     val preguntasRandom = Random.shuffle(preguntasDto).take(numeroPreguntasComprobacion)
     ResponseObtenerPreguntasComprobar(preguntasRandom, numeroIntentos)
   }
 
-  private def validarParametrizacion(numeroRespuestas: Int, configuraciones: List[Configuraciones], llaveNumeroPreguntas: String): Future[Boolean] = {
-    val configuracionesDto = configuraciones.map(conf => configuracionDTO.entityToDto(conf))
-    val numeroRespuestasParametrizadas = obtenerValorEntero(configuracionesDto, llaveNumeroPreguntas)
+  private def validarParametrizacion(numeroRespuestas: Int, configuraciones: List[Configuracion], llaveNumeroPreguntas: String): Future[Boolean] = {
+    val numeroRespuestasParametrizadas = obtenerValorEntero(configuraciones, llaveNumeroPreguntas)
     val comparacion = numeroRespuestas == numeroRespuestasParametrizadas
     comparacion match {
       case true => Future.successful(comparacion)
@@ -111,7 +108,7 @@ case class PreguntasAutovalidacionDriverRepository(
       respuestasCompletas <- futureRespuestas
       respuesta <- validarRespuestasValidation(
         preguntasAutovalidacionDTO.toRespuestaCompletaList(respuestasCompletas),
-        respuestas, obtenerValorEntero(configuraciones.toList.map(conf => configuracionDTO.entityToDto(conf)), llavePreguntasCambio)
+        respuestas, obtenerValorEntero(configuraciones, llavePreguntasCambio)
       )
     } yield respuesta
   }
@@ -122,8 +119,8 @@ case class PreguntasAutovalidacionDriverRepository(
    * @param respuestas
    * @return
    */
-  private def validarRespuestasValidation(response: List[RespuestaCompleta], respuestas: List[Respuesta], numeroPreguntasCambio: Int): Future[String] = {
-    val respuestasGuardadas: List[Respuesta] = response.map(res => Respuesta(res.idPregunta, res.respuesta))
+  private def validarRespuestasValidation(response: Seq[RespuestaCompleta], respuestas: List[Respuesta], numeroPreguntasCambio: Int): Future[String] = {
+    val respuestasGuardadas: Seq[Respuesta] = response.map(res => Respuesta(res.idPregunta, res.respuesta))
     //comprobar que las respuestas concuerden
     val existe: Boolean = respuestas.foldLeft(true)((existe, respuesta) => existe && respuestasGuardadas.contains(respuesta))
     existe match {
@@ -131,16 +128,16 @@ case class PreguntasAutovalidacionDriverRepository(
       case false => {
         //en caso que no concuerden, se envian la preguntas restantes mas una de las contestadas
         //1. obtener los ids de las respuestas
-        val idsRespuesta: List[Int] = respuestas.map(_.idPregunta)
+        val idsRespuesta: Seq[Int] = respuestas.map(_.idPregunta)
         //2. obtener los ids de las preguntas que se van a repetir
         val numeroPreguntasRepetidas: Int = respuestas.size - numeroPreguntasCambio
-        val idsPreguntasRepetidas: List[Int] = Random.shuffle(idsRespuesta).take(numeroPreguntasRepetidas)
+        val idsPreguntasRepetidas: Seq[Int] = Random.shuffle(idsRespuesta).take(numeroPreguntasRepetidas)
         //3. obtener ids de las preguntas que no corresponden a las preguntas contestadas
-        val idsPreguntasNuevas: List[Int] = response.filter(res => !idsRespuesta.contains(res.idPregunta)).map(_.idPregunta)
+        val idsPreguntasNuevas: Seq[Int] = response.filter(res => !idsRespuesta.contains(res.idPregunta)).map(_.idPregunta)
         //4. obtener ids de las preguntas repetidas mas las preguntas nuevas
-        val idsPreguntas: List[Int] = idsPreguntasRepetidas ++ Random.shuffle(idsPreguntasNuevas).take(numeroPreguntasCambio)
+        val idsPreguntas: Seq[Int] = idsPreguntasRepetidas ++ Random.shuffle(idsPreguntasNuevas).take(numeroPreguntasCambio)
         //5. con los ids, obtener las preguntas a devolver
-        val preguntas: List[Pregunta] = response.filter(res => (idsPreguntas).contains(res.idPregunta)).map(x => Pregunta(x.idPregunta, x.pregunta))
+        val preguntas: Seq[Pregunta] = response.filter(res => (idsPreguntas).contains(res.idPregunta)).map(x => Pregunta(x.idPregunta, x.pregunta))
         //6. reenviar preguntas desordenadamente
         val preguntasRandom: String = JsonUtil.toJson(Random.shuffle(preguntas).take(preguntas.size))
         Future.failed(ValidacionException("", preguntasRandom))

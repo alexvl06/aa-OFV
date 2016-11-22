@@ -4,7 +4,7 @@ import java.sql.Timestamp
 
 import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
-import co.com.alianza.persistence.entities.{ Empresa, UsuarioComercial, UsuarioComercialAdmin }
+import co.com.alianza.persistence.entities.UsuarioComercialAdmin
 
 import scala.concurrent.Future
 

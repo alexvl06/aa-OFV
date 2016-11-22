@@ -22,6 +22,7 @@ object MailMessageJsonSupport extends DefaultJsonProtocol with SprayJsonSupport 
  * @author smontanez
  */
 class SmtpServiceClient(implicit val system: ActorSystem) extends ServiceClient with Directives {
+
   import MailMessageJsonSupport._
 
   import system.dispatcher
@@ -32,12 +33,9 @@ class SmtpServiceClient(implicit val system: ActorSystem) extends ServiceClient 
   def send[T](message: MailMessage, functionSuccess: (HttpEntity, StatusCode) => T): Future[Validation[ServiceException, T]] = {
     val endPoint = conf.getString("autenticacion.service.smtp.location")
     val pipeline = sendReceive
-
     val header: HttpHeader = `Content-Type`(ContentTypes.`application/json`)
-
     val futureRequest: Future[HttpResponse] = pipeline(Post(s"$endPoint", message) ~> header)
     val successStatusCodes = List(StatusCodes.OK)
-
     resolveFutureRequest[T](functionSuccess, futureRequest, successStatusCodes, "Enviar Correo")
   }
 

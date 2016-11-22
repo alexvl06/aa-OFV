@@ -95,38 +95,10 @@ class UsuariosEmpresaRepository(implicit executionContext: ExecutionContext) ext
       resolveTry(resultTry, "Actualizar Contrasena clientes admin y fecha de actualizacion")
   }
 
-  def consultaContrasenaActualAgenteEmpresarial(pw_actual: String, idUsuario: Int): Future[Validation[PersistenceException, Option[UsuarioAgenteEmpresarial]]] = loan {
-    implicit session =>
-      val resultTry = session.database.run(usuariosEmpresariales.filter(x => x.id === idUsuario && x.contrasena === pw_actual).result.headOption)
-      resolveTry(resultTry, "Consulta contrasena actual de cliente admin  " + pw_actual)
-  }
-
-  def actualizarContrasenaAgenteEmpresarial(pw_nuevo: String, idUsuario: Int): Future[Validation[PersistenceException, Int]] = loan {
-    implicit session =>
-      val query = for {
-        u <- usuariosEmpresariales if u.id === idUsuario
-      } yield (u.contrasena, u.fechaActualizacion, u.numeroIngresosErroneos)
-      val fechaAct = new org.joda.time.DateTime().getMillis
-      val act = (Some(pw_nuevo), new Timestamp(fechaAct), 0)
-      val resultTry = session.database.run(query.update(act))
-      resolveTry(resultTry, "Actualizar Contrasena agente empresariales y fecha de actualizacion")
-  }
-
   def asociarPerfiles(perfiles: List[PerfilAgenteAgente]): Future[Validation[PersistenceException, List[Int]]] = loan {
     implicit session =>
       val resultTry = perfiles.map(perfil => session.database.run(perfilesAgentes += perfil))
       resolveTry(Future.sequence(resultTry), "Asociar perfiles del cliente administrador")
-  }
-
-  def caducarFechaUltimoCambioContrasenaAgenteEmpresarial(idUsuario: Int): Future[Validation[PersistenceException, Int]] = loan {
-    implicit session =>
-      val calendar = Calendar.getInstance()
-      calendar.clear(Calendar.YEAR)
-      val time = calendar.getTimeInMillis
-      val timestamp = new Timestamp(time)
-      val query = for { u <- usuariosEmpresariales if u.id === idUsuario } yield u.fechaActualizacion
-      val resultTry = session.database.run(query.update(timestamp))
-      resolveTry(resultTry, "Caducar Contrasena usuario Agente empresarial")
   }
 
   def obtieneClientePorNitYUsuario(nit: String, usuario: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarialAdmin]]] = loan {

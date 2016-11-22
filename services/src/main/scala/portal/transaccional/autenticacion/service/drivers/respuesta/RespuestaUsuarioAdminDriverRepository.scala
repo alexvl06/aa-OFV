@@ -22,10 +22,9 @@ case class RespuestaUsuarioAdminDriverRepository(
   }
 
   def guardarRespuestas(idUsuario: Int, respuestas: List[Respuesta]): Future[Option[Int]] = {
-    val llave = ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS.name
     val respuestasPersistencia = respuestas.map(x => new RespuestasAutovalidacionUsuario(x.idPregunta, idUsuario, x.respuesta))
     for {
-      configuracion <- configuracionRepository.getConfiguracion(llave)
+      configuracion <- configuracionRepository.getConfiguracion(ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS)
       validar <- validarParametrizacion(respuestasPersistencia.size, configuracion.valor.toInt)
       borrar <- respuestaDAO.delete(idUsuario)
       guardar <- respuestaDAO.insert(respuestasPersistencia)

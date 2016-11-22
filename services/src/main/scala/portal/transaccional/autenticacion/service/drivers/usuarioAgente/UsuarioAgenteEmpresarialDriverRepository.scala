@@ -63,6 +63,10 @@ case class UsuarioAgenteEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresari
     usuarioDAO.updateLastEntryDate(idUsuario, fechaActual)
   }
 
+  def actualizarFechaActualizacion(idUsuario: Int, fechaActual: Timestamp): Future[Int] = {
+    usuarioDAO.updateUpdateDate(idUsuario, fechaActual)
+  }
+
   /**
    * Guardar contrasena
    *
@@ -78,6 +82,10 @@ case class UsuarioAgenteEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresari
     } yield cambiar
   }
 
+  def actualizarEstado(idUsuario: Int, estado: EstadosEmpresaEnum.estadoEmpresa): Future[Int] = {
+    usuarioDAO.updateStateById(idUsuario, estado.id)
+  }
+
   def actualizarInfoUsuario(usuario: UsuarioAgenteEmpresarial, ip: String): Future[Int] = {
     for {
       intentos <- usuarioDAO.updateIncorrectEntries(usuario.id, 0)
@@ -88,7 +96,7 @@ case class UsuarioAgenteEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresari
 
   /////////////////////////////// validaciones //////////////////////////////////
 
-  def validacionBloqueoAdmin(usuario: UsuarioAgenteEmpresarial): Future[Boolean] = {
+  def validarBloqueoAdmin(usuario: UsuarioAgenteEmpresarial): Future[Boolean] = {
     val bloqueoPorAdmin: Int = EstadosEmpresaEnum.bloqueadoPorAdmin.id
     usuario.estado match {
       case `bloqueoPorAdmin` => Future.failed(ValidacionException("409.13", "Usuario Bloqueado Admin"))
@@ -122,7 +130,7 @@ case class UsuarioAgenteEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresari
    * @return
    */
   def validarEstado(usuario: UsuarioAgenteEmpresarial): Future[Boolean] = {
-    val estado = usuario.estado
+    val estado: Int = usuario.estado
     if (estado == EstadosEmpresaEnum.bloqueContraseña.id) {
       Future.failed(ValidacionException("401.8", "Usuario Bloqueado"))
     } else if (estado == EstadosEmpresaEnum.pendienteActivacion.id) {
@@ -189,4 +197,5 @@ case class UsuarioAgenteEmpresarialDriverRepository(usuarioDAO: UsuarioEmpresari
       Future.successful(true)
     }
   }
+
 }

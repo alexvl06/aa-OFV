@@ -5,7 +5,7 @@ import java.util.Date
 
 import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.exceptions.ValidacionException
-import co.com.alianza.persistence.entities.Usuario
+import co.com.alianza.persistence.entities.{ Usuario, UsuarioAgenteEmpresarial }
 import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.token.Token
 import enumerations.{ AppendPasswordUser, EstadosUsuarioEnum }
@@ -18,6 +18,8 @@ import scala.concurrent.{ ExecutionContext, Future }
  * Created by hernando on 25/07/16.
  */
 case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: ExecutionContext) extends UsuarioRepository {
+
+  def getById(idUsuario: Int): Future[Option[Usuario]] = usuarioDAO.getById(idUsuario)
 
   def getByIdentificacion(numeroIdentificacion: String): Future[Usuario] = {
     usuarioDAO.getByIdentity(numeroIdentificacion) flatMap {
@@ -193,6 +195,13 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
     usuarioDAO.deleteToken(token) flatMap {
       case r: Int => Future.successful(r)
       case _ => Future.failed(ValidacionException("401.9", "No se pudo borrar el token"))
+    }
+  }
+
+  def validarUsuario(usuarioOption: Option[Usuario]): Future[Usuario] = {
+    usuarioOption match {
+      case Some(usuario) => Future.successful(usuario)
+      case _ => Future.failed(ValidacionException("409.01", "No existe usuario"))
     }
   }
 

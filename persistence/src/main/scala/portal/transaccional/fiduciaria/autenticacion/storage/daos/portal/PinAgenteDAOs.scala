@@ -15,4 +15,6 @@ trait PinAgenteDAOs {
 
   def delete(token: String): Future[Int]
 
+  def deleteAll(idUsuario: Int): Future[Int]
+
 }

@@ -23,7 +23,8 @@ class UltimasContrasenasUsuarioAgenteEmpresarialRepository(implicit executionCon
 
   def obtenerUltimasContrasenas(numeroUltimasContrasenas: String, usuarioId: Int): Future[Validation[PersistenceException, Seq[UltimaContrasena]]] = loan {
     implicit session =>
-      val resultTry = session.database.run(ultimasContrasenas.filter(_.idUsuario === usuarioId).sortBy(_.fechaUltimaContrasena.desc).take(numeroUltimasContrasenas.toInt).result)
+      val resultTry = session.database.run(ultimasContrasenas.filter(_.idUsuario === usuarioId).sortBy(_.fechaUltimaContrasena.desc)
+        .take(numeroUltimasContrasenas.toInt).result)
       resolveTry(resultTry, "Consulta las ultimas 'N' Contrasenas de un agente empresarial")
   }
 
