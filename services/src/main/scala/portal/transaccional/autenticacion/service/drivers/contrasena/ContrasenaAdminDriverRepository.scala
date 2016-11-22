@@ -20,6 +20,10 @@ case class ContrasenaAdminDriverRepository(ultimaContrasenaRepo: UltimaContrasen
     reglaRepo: ReglaContrasenaRepository)(implicit val ex: ExecutionContext) extends ContrasenaAdminRepository {
 
   def cambiarContrasena(idUsuario: Int, contrasena: String, contrasenaActual: String): Future[Int] = {
+    println("cambiarContrasena")
+    println("cambiarContrasena")
+    println("cambiarContrasena")
+    println("cambiarContrasena")
     //val tk_validation = Token.autorizarToken(message.token)
     for {
       admin <- adminRepo.getById(idUsuario)
@@ -32,9 +36,10 @@ case class ContrasenaAdminDriverRepository(ultimaContrasenaRepo: UltimaContrasen
     } yield actualizar
   }
 
-  def validarContrasena(admin: UsuarioEmpresarialAdmin, contrasena: String): Future[Boolean] = {
-    val contrasenaHash = Crypto.hashSha512(contrasena.concat(AppendPasswordUser.appendUsuariosFiducia), admin.id)
-    admin.contrasena.equals(contrasenaHash) match {
+  def validarContrasena(admin: UsuarioEmpresarialAdmin, contrasenaActual: String): Future[Boolean] = {
+    val contrasenaHash = Crypto.hashSha512(contrasenaActual.concat(AppendPasswordUser.appendUsuariosFiducia), admin.id)
+    val contrasena = admin.contrasena.getOrElse("")
+    contrasena.equals(contrasenaHash) match {
       case true => Future.successful(true)
       case _ => Future.failed(ValidacionException("409.7", "No existe la contrasena"))
     }

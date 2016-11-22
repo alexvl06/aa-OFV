@@ -72,9 +72,10 @@ case class ContrasenaAgenteDriverRepository(
     } yield actualizar
   }
 
-  def validarContrasena(agente: UsuarioAgenteEmpresarial, contrasena: String): Future[Boolean] = {
-    val contrasenaHash = Crypto.hashSha512(contrasena.concat(AppendPasswordUser.appendUsuariosFiducia), agente.id)
-    agente.contrasena.equals(contrasenaHash) match {
+  def validarContrasena(agente: UsuarioAgenteEmpresarial, contrasenaActual: String): Future[Boolean] = {
+    val contrasenaHash = Crypto.hashSha512(contrasenaActual.concat(AppendPasswordUser.appendUsuariosFiducia), agente.id)
+    val contrasena = agente.contrasena.getOrElse("")
+    contrasena.equals(contrasenaHash) match {
       case true => Future.successful(true)
       case _ => Future.failed(ValidacionException("409.7", "No existe la contrasena"))
     }

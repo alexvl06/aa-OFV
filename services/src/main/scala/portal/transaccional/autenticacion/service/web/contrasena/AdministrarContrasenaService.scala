@@ -76,6 +76,12 @@ case class AdministrarContrasenaService(
             val us_id = claim.getCustomClaim("us_id").toString.toInt
             val us_tipo = claim.getCustomClaim("us_tipo").toString
             val tipoCliente = TiposCliente.withName(us_tipo)
+
+            println("TiposCliente")
+            println("TiposCliente")
+            println("TiposCliente")
+            println(tipoCliente)
+
             tipoCliente match {
               case TiposCliente.agenteEmpresarial =>
                 val resultado: Future[Int] = contrasenaAgenteRepo.cambiarContrasena(us_id, data.pw_nuevo, data.pw_actual)
