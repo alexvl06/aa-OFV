@@ -30,13 +30,14 @@ case class ContrasenaUsuarioDriverRepository(
       _ <- reglaRepo.validarContrasenaReglasGenerales(idUsuario, PerfilesUsuario.clienteIndividual, contrasena)
       contrasenaHash <- Future.successful(Crypto.hashSha512(contrasena.concat(AppendPasswordUser.appendUsuariosFiducia), idUsuario))
       actualizar <- usuarioRepo.actualizarContrasena(idUsuario, contrasenaHash)
-      _ <- ultimaContrasenaRepo.crearUltimaContrasenaAgente(UltimaContrasena(None, idUsuario, contrasenaHash, new Timestamp(new Date().getTime)))
+      _ <- ultimaContrasenaRepo.crearUltimaContrasena(UltimaContrasena(None, idUsuario, contrasenaHash, new Timestamp(new Date().getTime)))
     } yield actualizar
   }
 
-  def validarContrasena(usuario: Usuario, contrasena: String): Future[Boolean] = {
-    val contrasenaHash = Crypto.hashSha512(contrasena.concat(AppendPasswordUser.appendUsuariosFiducia), usuario.id.get)
-    usuario.contrasena.equals(contrasenaHash) match {
+  def validarContrasena(usuario: Usuario, contrasenaActual: String): Future[Boolean] = {
+    val contrasenaHash = Crypto.hashSha512(contrasenaActual.concat(AppendPasswordUser.appendUsuariosFiducia), usuario.id.get)
+    val contrasena = usuario.contrasena.getOrElse("")
+    contrasena.equals(contrasenaHash) match {
       case true => Future.successful(true)
       case _ => Future.failed(ValidacionException("409.7", "No existe la contrasena"))
     }
