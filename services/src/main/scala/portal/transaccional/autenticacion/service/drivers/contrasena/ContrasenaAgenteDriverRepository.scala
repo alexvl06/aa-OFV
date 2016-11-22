@@ -54,10 +54,10 @@ case class ContrasenaAgenteDriverRepository(
       optionAgente <- agenteRepo.getByIdentityAndUser(admin.identificacion, usuarioAgente)
       agente <- agenteRepo.validarUsuario(optionAgente)
       resultado <- if (agente.estado == estadoBloqueado) {
-          desbloquear(agente)
-        } else {
-          agenteRepo.actualizarEstado(agente.id, EstadosEmpresaEnum.bloqueadoPorAdmin).map(_ > 0)
-        }
+        desbloquear(agente)
+      } else {
+        agenteRepo.actualizarEstado(agente.id, EstadosEmpresaEnum.bloqueadoPorAdmin).map(_ > 0)
+      }
     } yield resultado
   }
 
@@ -76,7 +76,7 @@ case class ContrasenaAgenteDriverRepository(
 
   def validarContrasena(agente: UsuarioAgenteEmpresarial, contrasena: String): Future[Boolean] = {
     val contrasenaHash = Crypto.hashSha512(contrasena.concat(AppendPasswordUser.appendUsuariosFiducia), agente.id)
-    agente.contrasena.equals(contrasenaHash) match {
+    agente.contrasena.getOrElse("").equals(contrasenaHash) match {
       case true => Future.successful(true)
       case _ => Future.failed(ValidacionException("409.7", "No existe la contrasena"))
     }

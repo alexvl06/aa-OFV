@@ -33,8 +33,8 @@ case class ContrasenaAdminDriverRepository(ultimaContrasenaRepo: UltimaContrasen
   }
 
   def validarContrasena(admin: UsuarioEmpresarialAdmin, contrasena: String): Future[Boolean] = {
-    val contrasenaHash = Crypto.hashSha512(contrasena.concat(AppendPasswordUser.appendUsuariosFiducia), admin.id)
-    admin.contrasena.equals(contrasenaHash) match {
+    val contrasenaHash: String = Crypto.hashSha512(contrasena.concat(AppendPasswordUser.appendUsuariosFiducia), admin.id)
+    admin.contrasena.getOrElse("").equals(contrasenaHash) match {
       case true => Future.successful(true)
       case _ => Future.failed(ValidacionException("409.7", "No existe la contrasena"))
     }
