@@ -1,5 +1,8 @@
 package portal.transaccional.autenticacion.service.drivers.smtp
 
+import spray.httpx.SprayJsonSupport
+import spray.json.DefaultJsonProtocol
+
 import scala.concurrent.Future
 
 /**
@@ -11,4 +14,8 @@ trait SmtpRepository {
 
 }
 
-case class Mensaje(de: String, para: String, cc: List[String], asunto: String, contenido: String)
+object MensajeJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
+  implicit val MensajeFormatter = jsonFormat5(Mensaje)
+}
+
+case class Mensaje(from: String, to: String, cc: List[String], asunto: String, contenidoMensaje: String)
