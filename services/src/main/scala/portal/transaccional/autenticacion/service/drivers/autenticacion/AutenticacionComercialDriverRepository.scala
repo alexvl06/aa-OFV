@@ -4,13 +4,10 @@ import java.sql.Timestamp
 import java.util.Date
 
 import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
-import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.exceptions.ValidacionException
-import co.com.alianza.infrastructure.dto.Cliente
 import co.com.alianza.persistence.dto.UsuarioLdapDTO
-import co.com.alianza.persistence.entities.{ Usuario, UsuarioComercial, UsuarioComercialAdmin }
+import co.com.alianza.persistence.entities.{ UsuarioComercial, UsuarioComercialAdmin }
 import co.com.alianza.util.token.{ AesUtil, Token }
 import enumerations.ConfiguracionEnum
 import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionRepository

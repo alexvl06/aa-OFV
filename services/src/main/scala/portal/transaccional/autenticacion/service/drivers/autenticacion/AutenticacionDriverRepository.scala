@@ -5,7 +5,7 @@ import java.util.Date
 
 import akka.util.Timeout
 import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.constants.{ LlavesReglaContrasena, TiposConfiguracion }
+import co.com.alianza.constants.LlavesReglaContrasena
 import co.com.alianza.infrastructure.dto.Cliente
 import co.com.alianza.persistence.entities.Usuario
 import co.com.alianza.util.token.{ AesUtil, Token }

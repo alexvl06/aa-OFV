@@ -87,20 +87,16 @@ case class AutorizacionUsuarioComercialDriverRepository(sesionRepo: SesionReposi
    * @return
    */
   private def resolveMessageRecursos(usuarioOption: Option[UsuarioComercial], recursos: Seq[RecursoPerfil], url: String, tipoCliente: TiposCliente): Future[ValidacionAutorizacion] = Future {
-    //si la url es "", viene desde el mismo componente, por lo tanto no hay que hacer filtro alguno
-    println("UrlValidar****", url)
     val recursosFiltro: Seq[RecursoPerfil] = {
       if (url.nonEmpty && !url.startsWith("/comercial")) recursoRepo.filtrarRecursos(recursos, url)
       else Seq(RecursoPerfil(0, url, false, None))
     }
     val usuarioDTO: UsuarioComercialDTO = UsuarioComercialDTO(tipoCliente, usuarioOption.get.id, usuarioOption.get.usuario)
-    println("RecursosSAC-ClienteIndividual****", recursosFiltro.nonEmpty)
     recursosFiltro.nonEmpty match {
       case false =>
         val usuarioForbidden: ForbiddenMessage = ForbiddenMessage(usuarioDTO, None)
         Prohibido("403.1", JsonUtil.toJson(usuarioForbidden))
       case true =>
-        println("Primero****", recursosFiltro.head.filtro)
         recursosFiltro.head.filtro match {
           case filtro @ Some(_) =>
             val usuarioForbidden: ForbiddenMessage = ForbiddenMessage(usuarioDTO, filtro)

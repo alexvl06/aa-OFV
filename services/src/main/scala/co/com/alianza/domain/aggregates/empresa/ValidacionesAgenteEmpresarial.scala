@@ -1,19 +1,14 @@
 package co.com.alianza.domain.aggregates.empresa
 
-import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.domain.aggregates.usuarios._
 import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{ DataAccessAdapter => DataAccessAdapterUsuarioAE }
 import co.com.alianza.infrastructure.anticorruption.usuariosClienteAdmin.{ DataAccessAdapter => CliAdmDataAccessAdapter }
-import co.com.alianza.infrastructure.dto.{ Configuracion, Empresa, UsuarioEmpresarial, UsuarioEmpresarialAdmin }
+import co.com.alianza.infrastructure.dto.{ Empresa, UsuarioEmpresarial, UsuarioEmpresarialAdmin }
 import co.com.alianza.infrastructure.messages.ErrorMessage
 import enumerations.empresa.EstadosDeEmpresaEnum
-import enumerations.{ EstadosEmpresaEnum, PerfilesUsuario }
-import co.com.alianza.infrastructure.anticorruption.configuraciones.{ DataAccessAdapter => dataAccesAdaptarConf }
-import portal.transaccional.autenticacion.service.drivers.reglas.ValidacionClave
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
-import co.com.alianza.util.clave.{ Crypto, ValidarClave }
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => UsDataAdapter }
 import co.com.alianza.persistence.util.DataBaseExecutionContext

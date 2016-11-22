@@ -7,7 +7,7 @@ import scala.concurrent.Future
 
 trait ConfiguracionRepository {
 
-  def getConfiguracion(configuracion: ConfiguracionEnum.Val): Future[Configuracion]
+  def getConfiguracion(configuracion: ConfiguracionEnum.Value): Future[Configuracion]
 
   def getAll(): Future[Seq[Configuracion]]
 

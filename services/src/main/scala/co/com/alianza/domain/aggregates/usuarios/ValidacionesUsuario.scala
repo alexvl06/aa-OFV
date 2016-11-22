@@ -1,6 +1,5 @@
 package co.com.alianza.domain.aggregates.usuarios
 
-import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.exceptions.{ PersistenceException, ServiceException }
 import portal.transaccional.autenticacion.service.drivers.reglas.ValidacionClave
 import spray.http.StatusCodes._
@@ -14,10 +13,10 @@ import co.com.alianza.infrastructure.anticorruption.clientes.{ DataAccessAdapter
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => DataAccessAdapterUsuario }
 import co.com.alianza.infrastructure.anticorruption.configuraciones.{ DataAccessAdapter => dataAccesAdaptarConf }
 import co.com.alianza.persistence.util.DataBaseExecutionContext
-import enumerations.{ EstadosCliente, PerfilesUsuario, TipoIdentificacion }
+import enumerations.{ConfiguracionEnum, EstadosCliente, PerfilesUsuario, TipoIdentificacion}
 
 import scalaz.Validation.FlatMap._
-import co.com.alianza.util.clave.{ Crypto, ValidarClave }
+import co.com.alianza.util.clave.{ ValidarClave }
 import co.com.alianza.util.captcha.ValidarCaptcha
 import com.typesafe.config.Config
 
@@ -125,7 +124,7 @@ object ValidacionesUsuario {
   }
 
   def validacionConsultaTiempoExpiracion(): Future[Validation[ErrorValidacion, Configuracion]] = {
-    val configuracionFuture = dataAccesAdaptarConf.obtenerConfiguracionPorLlave(TiposConfiguracion.EXPIRACION_PIN.llave)
+    val configuracionFuture = dataAccesAdaptarConf.obtenerConfiguracionPorLlave(ConfiguracionEnum.EXPIRACION_PIN.name)
     configuracionFuture.map(_.leftMap(pe => ErrorPersistence(pe.message, pe)).flatMap {
       (x: Option[Configuracion]) =>
         x match {

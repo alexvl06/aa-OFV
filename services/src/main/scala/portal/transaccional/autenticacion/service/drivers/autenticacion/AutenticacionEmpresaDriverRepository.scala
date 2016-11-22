@@ -6,7 +6,7 @@ import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
 import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.constants.{ LlavesReglaContrasena, TiposConfiguracion }
+import co.com.alianza.constants.LlavesReglaContrasena
 import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.infrastructure.messages.CrearSesionUsuario
 import co.com.alianza.persistence.entities.{ Empresa, UsuarioAgenteEmpresarial, UsuarioEmpresarialAdmin }
@@ -18,7 +18,7 @@ import portal.transaccional.autenticacion.service.drivers.empresa.{ EmpresaRepos
 import portal.transaccional.autenticacion.service.drivers.ipempresa.IpEmpresaRepository
 import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaRepository
 import portal.transaccional.autenticacion.service.drivers.respuesta.RespuestaUsuarioRepository
-import portal.transaccional.autenticacion.service.drivers.sesion.{ SesionDriverRepository, SesionRepository }
+import portal.transaccional.autenticacion.service.drivers.sesion.SesionRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioAdminRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioAgenteEmpresarialRepository
 

@@ -40,12 +40,12 @@ case class AdministrarContrasenaService(
     put {
       clientIP {
         ip =>
-          entity(as[CambiarContrasenaMessage]) {
+          entity(as[CambiarContrasena]) {
             data =>
               mapRequestContext {
                 r: RequestContext =>
                   val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, user.usuario)
-                  requestAuditing[PersistenceException, CambiarContrasenaMessage](r, AuditingHelper.fiduciariaTopic,
+                  requestAuditing[PersistenceException, CambiarContrasena](r, AuditingHelper.fiduciariaTopic,
                     AuditingHelper.cambioContrasenaIndex, ip.value, kafkaActor, usuario, Some(data.copy(pw_actual = null, pw_nuevo = null)))
               } {
                 val resultado: Future[Int] = contrasenaUsuarioRepo.cambiarContrasena(user.id, data.pw_nuevo, data.pw_actual)
@@ -69,7 +69,7 @@ case class AdministrarContrasenaService(
 
   private def cambiarContrasenaCaducada = {
     put {
-      entity(as[CambiarContrasenaCaducadaRequestMessage]) {
+      entity(as[CambiarContrasenaCaducada]) {
         data =>
           {
             val claim = (Token.getToken(data.token)).getJWTClaimsSet()
@@ -105,8 +105,8 @@ case class AdministrarContrasenaService(
     ex match {
       case ex: ValidacionException => complete((Conflict, ex))
       case ex: PersistenceException =>
-        ex.printStackTrace(); complete((StatusCodes.InternalServerError, "Error inesperado"))
-      case ex: Throwable => ex.printStackTrace(); complete((StatusCodes.InternalServerError, "Error inesperado"))
+        ex.printStackTrace(); complete((InternalServerError, "Error inesperado"))
+      case ex: Throwable => ex.printStackTrace(); complete((InternalServerError, "Error inesperado"))
     }
   }
 

@@ -6,6 +6,7 @@ import co.com.alianza.infrastructure.security.ServiceAuthorization
 import co.com.alianza.web.empresa.UsuarioEmpresaService
 import portal.transaccional.autenticacion.service.drivers.actualizacion.ActualizacionRepository
 import portal.transaccional.autenticacion.service.drivers.autorizacion._
+import portal.transaccional.autenticacion.service.drivers.contrasena.{ ContrasenaUsuarioRepository, ContrasenaAdminRepository, ContrasenaAgenteRepository }
 import portal.transaccional.autenticacion.service.drivers.pin.PinRepository
 import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaRepository
 import portal.transaccional.autenticacion.service.web.actualizacion.ActualizacionService
@@ -39,8 +40,9 @@ case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, autenticaci
   usuarioAgenteRepositorio: UsuarioAgenteEmpresarialRepository, usuarioAdminRepositorio: UsuarioAdminRepository,
   autorizacionUsuarioRepo: AutorizacionUsuarioRepository, kafkaActor: ActorSelection,
   usuariosActor: ActorSelection, confrontaActor: ActorSelection, actualizacionRepo: ActualizacionRepository, permisoTransaccionalActor: ActorSelection,
-  agenteEmpresarialActor: ActorSelection, pinRepo: PinRepository, contrasenasAgenteEmpresarialActor: ActorSelection,
-  contrasenasClienteAdminActor: ActorSelection, contrasenasActor: ActorSelection, autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository,
+  agenteEmpresarialActor: ActorSelection, pinRepo: PinRepository, contrasenaAgenteRepo: ContrasenaAgenteRepository,
+  contrasenaAdminRepo: ContrasenaAdminRepository, contrasenaUsuarioRepo: ContrasenaUsuarioRepository,
+  autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository,
   autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository, preguntasValidacionRepository: PreguntasAutovalidacionRepository,
   respuestaUsuarioRepository: RespuestaUsuarioRepository, respuestaUsuarioAdminRepository: RespuestaUsuarioRepository, ipRepo: IpRepository,
   autorizacionComercialRepo: AutorizacionUsuarioComercialRepository, autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository,
@@ -64,7 +66,7 @@ case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, autenticaci
       ReglaContrasenaService(reglaRepo).route ~
       //TODO: refactorizar
       PinService(kafkaActor, pinRepo).route ~
-      new AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).route ~
+      new AdministrarContrasenaService(kafkaActor, contrasenaUsuarioRepo, contrasenaAgenteRepo, contrasenaAdminRepo).route ~
       authenticate(authenticateUser) {
         user =>
           IpService(user, kafkaActor, ipRepo).route ~
@@ -74,10 +76,8 @@ case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, autenticaci
             ComercialService(user, kafkaActor, usuarioComercialAdminRepo).route ~
             ActualizacionService(user, kafkaActor, actualizacionRepo).route ~
             HorarioEmpresaService(user, kafkaActor, horarioEmpresaRepository).route ~
-            //TODO: refactorizar
-            new AdministrarContrasenaService(kafkaActor, contrasenasActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).routeSeguro(user) ~
-            // TODO Cambiar al authenticate de cliente empresarial
-            new AdministrarContrasenaEmpresaService(user, kafkaActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor).route ~
+            new AdministrarContrasenaService(kafkaActor, contrasenaUsuarioRepo, contrasenaAgenteRepo, contrasenaAdminRepo).routeSeguro(user) ~
+            new AdministrarContrasenaEmpresaService(user, kafkaActor, contrasenaAgenteRepo, contrasenaAdminRepo).route ~
             //TODO: refactorizar
             UsuarioEmpresaService(kafkaActor, agenteEmpresarialActor).secureUserRouteEmpresa(user) ~
             //TODO: refactorizar

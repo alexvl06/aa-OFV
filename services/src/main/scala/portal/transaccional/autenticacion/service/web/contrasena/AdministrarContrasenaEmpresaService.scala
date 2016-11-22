@@ -2,7 +2,7 @@ package portal.transaccional.autenticacion.service.web.contrasena
 
 import akka.actor.ActorSelection
 import co.com.alianza.app.CrossHeaders
-import co.com.alianza.exceptions.{ ValidacionException, PersistenceException }
+import co.com.alianza.exceptions.{ PersistenceException, ValidacionException }
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.infrastructure.auditing.AuditingUser.AuditingUserData
@@ -11,10 +11,10 @@ import portal.transaccional.autenticacion.service.drivers.contrasena.{ Contrasen
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import spray.http.StatusCodes._
-import spray.routing.{ StandardRoute, RequestContext }
+import spray.routing.{ RequestContext, StandardRoute }
 
-import scala.concurrent.{ Future, ExecutionContext }
-import scala.util.{ Success, Failure }
+import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{ Failure, Success }
 
 /**
  * Created by S4N on 17/12/14.
@@ -92,14 +92,14 @@ case class AdministrarContrasenaEmpresaService(user: UsuarioAuth, kafkaActor: Ac
 
   private def actualizarContrasenaAgente = {
     put {
-      entity(as[CambiarContrasenaAgenteEmpresarialMessage]) {
+      entity(as[CambiarContrasena]) {
         data =>
           clientIP {
             ip =>
               mapRequestContext {
                 r: RequestContext =>
                   val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, user.usuario)
-                  requestAuditing[PersistenceException, CambiarContrasenaAgenteEmpresarialMessage](r, AuditingHelper.fiduciariaTopic,
+                  requestAuditing[PersistenceException, CambiarContrasena](r, AuditingHelper.fiduciariaTopic,
                     AuditingHelper.cambioContrasenaAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, Some(data.copy(pw_nuevo = null, pw_actual = null)))
               } {
                 val resultado: Future[Int] = contrasenaAgenteRepo.cambiarContrasena(user.id, data.pw_nuevo, data.pw_actual)
@@ -115,14 +115,14 @@ case class AdministrarContrasenaEmpresaService(user: UsuarioAuth, kafkaActor: Ac
 
   private def actualizarContrasenaAdmin = {
     put {
-      entity(as[CambiarContrasenaClienteAdminMessage]) {
+      entity(as[CambiarContrasena]) {
         data =>
           clientIP {
             ip =>
               mapRequestContext {
                 r: RequestContext =>
                   val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, user.usuario)
-                  requestAuditing[PersistenceException, CambiarContrasenaClienteAdminMessage](r, AuditingHelper.fiduciariaTopic,
+                  requestAuditing[PersistenceException, CambiarContrasena](r, AuditingHelper.fiduciariaTopic,
                     cambioContrasenaClienteAdministradorIndex, ip.value, kafkaActor, usuario, Some(data.copy(pw_nuevo = null, pw_actual = null)))
               } {
                 val resultado: Future[Int] = contrasenaAdminRepo.cambiarContrasena(user.id, data.pw_nuevo, data.pw_actual)

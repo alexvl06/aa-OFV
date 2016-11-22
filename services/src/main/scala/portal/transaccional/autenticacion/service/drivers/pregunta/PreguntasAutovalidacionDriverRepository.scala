@@ -46,7 +46,7 @@ case class PreguntasAutovalidacionDriverRepository(
     ResponseObtenerPreguntas(preguntasDto, numeroPreguntas)
   }
 
-  private def obtenerValorEntero(configuraciones: List[Configuracion], llave: String): Int = {
+  private def obtenerValorEntero(configuraciones: Seq[Configuracion], llave: String): Int = {
     configuraciones.filter(conf => conf.llave.equals(llave)).head.valor.toInt
   }
 
@@ -119,8 +119,8 @@ case class PreguntasAutovalidacionDriverRepository(
    * @param respuestas
    * @return
    */
-  private def validarRespuestasValidation(response: List[RespuestaCompleta], respuestas: List[Respuesta], numeroPreguntasCambio: Int): Future[String] = {
-    val respuestasGuardadas: List[Respuesta] = response.map(res => Respuesta(res.idPregunta, res.respuesta))
+  private def validarRespuestasValidation(response: Seq[RespuestaCompleta], respuestas: List[Respuesta], numeroPreguntasCambio: Int): Future[String] = {
+    val respuestasGuardadas: Seq[Respuesta] = response.map(res => Respuesta(res.idPregunta, res.respuesta))
     //comprobar que las respuestas concuerden
     val existe: Boolean = respuestas.foldLeft(true)((existe, respuesta) => existe && respuestasGuardadas.contains(respuesta))
     existe match {
@@ -128,16 +128,16 @@ case class PreguntasAutovalidacionDriverRepository(
       case false => {
         //en caso que no concuerden, se envian la preguntas restantes mas una de las contestadas
         //1. obtener los ids de las respuestas
-        val idsRespuesta: List[Int] = respuestas.map(_.idPregunta)
+        val idsRespuesta: Seq[Int] = respuestas.map(_.idPregunta)
         //2. obtener los ids de las preguntas que se van a repetir
         val numeroPreguntasRepetidas: Int = respuestas.size - numeroPreguntasCambio
-        val idsPreguntasRepetidas: List[Int] = Random.shuffle(idsRespuesta).take(numeroPreguntasRepetidas)
+        val idsPreguntasRepetidas: Seq[Int] = Random.shuffle(idsRespuesta).take(numeroPreguntasRepetidas)
         //3. obtener ids de las preguntas que no corresponden a las preguntas contestadas
-        val idsPreguntasNuevas: List[Int] = response.filter(res => !idsRespuesta.contains(res.idPregunta)).map(_.idPregunta)
+        val idsPreguntasNuevas: Seq[Int] = response.filter(res => !idsRespuesta.contains(res.idPregunta)).map(_.idPregunta)
         //4. obtener ids de las preguntas repetidas mas las preguntas nuevas
-        val idsPreguntas: List[Int] = idsPreguntasRepetidas ++ Random.shuffle(idsPreguntasNuevas).take(numeroPreguntasCambio)
+        val idsPreguntas: Seq[Int] = idsPreguntasRepetidas ++ Random.shuffle(idsPreguntasNuevas).take(numeroPreguntasCambio)
         //5. con los ids, obtener las preguntas a devolver
-        val preguntas: List[Pregunta] = response.filter(res => (idsPreguntas).contains(res.idPregunta)).map(x => Pregunta(x.idPregunta, x.pregunta))
+        val preguntas: Seq[Pregunta] = response.filter(res => (idsPreguntas).contains(res.idPregunta)).map(x => Pregunta(x.idPregunta, x.pregunta))
         //6. reenviar preguntas desordenadamente
         val preguntasRandom: String = JsonUtil.toJson(Random.shuffle(preguntas).take(preguntas.size))
         Future.failed(ValidacionException("", preguntasRandom))

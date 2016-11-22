@@ -7,6 +7,8 @@ object ConfiguracionEnum extends Enumeration(1) {
 
   protected case class Val(name: String) extends super.Val(nextId, name) {}
 
+  type configuracion = Value
+
   val AUTOVALIDACION_NUMERO_PREGUNTAS = Val("AUTOVALIDACION_NUMERO_PREGUNTAS")
   val AUTOVALIDACION_NUMERO_PREGUNTAS_COMPROBACION = Val("AUTOVALIDACION_NUMERO_PREGUNTAS_COMPROBACION")
   val AUTOVALIDACION_NUMERO_PREGUNTAS_CAMBIAR = Val("AUTOVALIDACION_NUMERO_PREGUNTAS_CAMBIAR")

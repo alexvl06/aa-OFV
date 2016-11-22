@@ -3,10 +3,8 @@ package co.com.alianza.app
 import akka.actor.{ ActorRef, ActorSystem, Props }
 import akka.cluster.Cluster
 import co.com.alianza.domain.aggregates.autenticacion._
-import co.com.alianza.domain.aggregates.autoregistro.ConsultaClienteActorSupervisor
 import co.com.alianza.domain.aggregates.confronta.ConfrontaActorSupervisor
-import co.com.alianza.domain.aggregates.contrasenas.ContrasenasActorSupervisor
-import co.com.alianza.domain.aggregates.empresa.{ AgenteEmpresarialActorSupervisor, ContrasenasAgenteEmpresarialActorSupervisor, ContrasenasClienteAdminActorSupervisor }
+import co.com.alianza.domain.aggregates.empresa.AgenteEmpresarialActorSupervisor
 import co.com.alianza.domain.aggregates.permisos.PermisoTransaccionalActorSupervisor
 import co.com.alianza.domain.aggregates.usuarios.UsuariosActorSupervisor
 import co.com.alianza.infrastructure.auditing.KafkaActorSupervisor
@@ -17,6 +15,7 @@ import portal.transaccional.autenticacion.service.drivers.autenticacion.{ Autent
 import portal.transaccional.autenticacion.service.drivers.autorizacion._
 import portal.transaccional.autenticacion.service.drivers.cliente.ClienteDriverCoreRepository
 import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionDriverRepository
+import portal.transaccional.autenticacion.service.drivers.contrasena.{ ContrasenaAdminDriverRepository, ContrasenaAgenteDriverRepository, ContrasenaUsuarioDriverRepository }
 import portal.transaccional.autenticacion.service.drivers.empresa.EmpresaDriverRepository
 import portal.transaccional.autenticacion.service.drivers.horarioEmpresa.HorarioEmpresaDriverRepository
 import portal.transaccional.autenticacion.service.drivers.ip.IpDriverRepository
@@ -30,6 +29,7 @@ import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasena
 import portal.transaccional.autenticacion.service.drivers.respuesta.{ RespuestaUsuarioAdminDriverRepository, RespuestaUsuarioDriverRepository }
 import portal.transaccional.autenticacion.service.drivers.rolRecursoComercial.{ RecursoComercialDriverRepository, RolComercialDriverRepository, RolRecursoComercialDriverRepository }
 import portal.transaccional.autenticacion.service.drivers.sesion.SesionDriverRepository
+import portal.transaccional.autenticacion.service.drivers.smtp.SmtpDriverRepository
 import portal.transaccional.autenticacion.service.drivers.ultimaContrasena.UltimaContrasenaDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioAdminDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioAgenteEmpresarialDriverRepository
@@ -76,18 +76,6 @@ trait CoreActors {
   val confrontaActorSupervisor = system.actorOf(Props[ConfrontaActorSupervisor], "confrontaActorSupervisor")
   val confrontaActor = system.actorSelection(confrontaActorSupervisor.path)
   //TODO: verificar que usuarios ya no se están utilizando y eliminarlos
-  val consultaClienteActorSupervisor = system.actorOf(Props[ConsultaClienteActorSupervisor], "consultaClienteActorSupervisor")
-  val consultaClienteActor = system.actorSelection(consultaClienteActorSupervisor.path)
-  //TODO: verificar que usuarios ya no se están utilizando y eliminarlos
-  val contrasenasActorSupervisor = system.actorOf(Props[ContrasenasActorSupervisor], "contrasenasActorSupervisor")
-  val contrasenasActor = system.actorSelection(contrasenasActorSupervisor.path)
-  val contrasenasAgenteEmpresarialActorSupervisor =
-    system.actorOf(Props[ContrasenasAgenteEmpresarialActorSupervisor], "contrasenasAgenteEmpresarialActorSupervisor")
-  val contrasenasAgenteEmpresarialActor = system.actorSelection(contrasenasAgenteEmpresarialActorSupervisor.path)
-  //TODO: verificar que usuarios ya no se están utilizando y eliminarlos
-  val contrasenasClienteAdminActorSupervisor = system.actorOf(Props[ContrasenasClienteAdminActorSupervisor], "contrasenasClienteAdminActorSupervisor")
-  val contrasenasClienteAdminActor = system.actorSelection(contrasenasClienteAdminActorSupervisor.path)
-  //TODO: verificar que usuarios ya no se están utilizando y eliminarlos
   val sesionActorSupervisor = system.actorOf(Props[SesionActorSupervisor], "sesionActorSupervisor")
   //TODO: verificar que usuarios ya no se están utilizando y eliminarlos
   val agenteEmpresarialActorSupervisor = system.actorOf(Props[AgenteEmpresarialActorSupervisor], "agenteEmpresarialActorSupervisor")
@@ -104,6 +92,7 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
 
   val sessionActor: ActorRef
 
+  lazy val smtpRepo = SmtpDriverRepository()
   lazy val sesionRepo = SesionDriverRepository(sessionActor)
   lazy val ldapRepo = LdapDriverRepository(alianzaLdapDAO)
   lazy val recursoRepo = RecursoDriverRepository(alianzaDAO)
@@ -147,6 +136,10 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val horarioEmpresaRepository = HorarioEmpresaDriverRepository(empresaRepo, horarioEmpresaDAO, diaFestivoDAO)
   lazy val pinRepository = PinDriverRepository(pinUsuarioDAO, pinAdminDAO, pinAgenteDAO, empresaRepo, ipUsuarioRepo, ipEmpresaRepo, usuarioRepo,
     usuarioAdminRepo, usuarioAgenteRepo, ultimaContrasenaRepo, reglaContrasenaRepo)
+  lazy val contrasenaUsuarioRepo = ContrasenaUsuarioDriverRepository(ultimaContrasenaRepo, usuarioRepo, reglaContrasenaRepo)
+  lazy val contrasenaAgenteRepo = ContrasenaAgenteDriverRepository(usuarioAgenteRepo, pinAgenteDAO, ultimaContrasenaRepo, configuracionRepo, smtpRepo,
+    reglaContrasenaRepo)
+  lazy val contrasenaAdminRepo = ContrasenaAdminDriverRepository(ultimaContrasenaRepo, usuarioAdminRepo, reglaContrasenaRepo)
 
 }
 
