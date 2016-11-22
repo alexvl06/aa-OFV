@@ -13,10 +13,11 @@ import co.com.alianza.util.ConfigApp
 import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.token.{ PinData, TokenPin }
 import com.typesafe.config.Config
-import enumerations.{ AppendPasswordUser, ConfiguracionEnum, EstadosEmpresaEnum, UsoPinEmpresaEnum }
+import enumerations._
 import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionRepository
 import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaRepository
 import portal.transaccional.autenticacion.service.drivers.smtp.{ Mensaje, SmtpRepository }
+import portal.transaccional.autenticacion.service.drivers.ultimaContrasena.UltimaContrasenaRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioAgenteEmpresarialRepository
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.PinAgenteDAOs
 
@@ -26,6 +27,7 @@ import scala.concurrent.{ ExecutionContext, Future }
  * Created by hernando on 10/11/16.
  */
 case class ContrasenaAgenteDriverRepository(
+    ultimaContrasenaRepo: UltimaContrasenaRepository,
     agenteRepo: UsuarioAgenteEmpresarialRepository,
     pinAgenteDAO: PinAgenteDAOs,
     configuracionRepo: ConfiguracionRepository, smtpRepo: SmtpRepository, reglaRepo: ReglaContrasenaRepository
@@ -55,12 +57,17 @@ case class ContrasenaAgenteDriverRepository(
     } yield resultado
   }
 
-  def cambiarContrasena(usuarioAgente: UsuarioAuth, contrasena: String, contrasenaActual: String): Future[Boolean] = {
+  def cambiarContrasena(idUsuario: Int, contrasena: String, contrasenaActual: String): Future[Int] = {
     for {
-      agenteOption <- agenteRepo.getById(usuarioAgente.id)
-      agente <- agenteRepo.validarEstado(agenteOption)
-      validar <- validarContrasena(agente, contrasena)
-    } yield validar
+      agenteOption <- agenteRepo.getById(idUsuario)
+      agente <- agenteRepo.validarUsuario(agenteOption)
+      _ <- agenteRepo.validarEstado(agente)
+      _ <- validarContrasena(agente, contrasenaActual)
+      _ <- reglaRepo.validarContrasenaReglasGenerales(agente.id, PerfilesUsuario.agenteEmpresarial, contrasena)
+      contrasenaHash <- Future.successful(Crypto.hashSha512(contrasena.concat(AppendPasswordUser.appendUsuariosFiducia), agente.id))
+      actualizar <- agenteRepo.actualizarContrasena(agente.id, contrasenaHash)
+      _ <- ultimaContrasenaRepo.crearUltimaContrasenaAgente(UltimaContrasena(None, agente.id, contrasenaHash, new Timestamp(new Date().getTime)))
+    } yield actualizar
   }
 
   def validarContrasena(agente: UsuarioAgenteEmpresarial, contrasena: String): Future[Boolean] = {

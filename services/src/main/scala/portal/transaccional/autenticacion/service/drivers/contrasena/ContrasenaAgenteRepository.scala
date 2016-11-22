@@ -13,6 +13,6 @@ trait ContrasenaAgenteRepository {
 
   def cambiarEstado(admin: UsuarioAuth, usuarioAgente: String): Future[Boolean]
 
-  def cambiarContrasena(agente: UsuarioAuth, contrasena: String, contrasenaActual: String): Future[Boolean]
+  def cambiarContrasena(idUsuario: Int, contrasena: String, contrasenaActual: String): Future[Int]
 
 }

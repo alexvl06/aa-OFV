@@ -95,12 +95,6 @@ class UsuariosEmpresaRepository(implicit executionContext: ExecutionContext) ext
       resolveTry(resultTry, "Actualizar Contrasena clientes admin y fecha de actualizacion")
   }
 
-  def consultaContrasenaActualAgenteEmpresarial(pw_actual: String, idUsuario: Int): Future[Validation[PersistenceException, Option[UsuarioAgenteEmpresarial]]] = loan {
-    implicit session =>
-      val resultTry = session.database.run(usuariosEmpresariales.filter(x => x.id === idUsuario && x.contrasena === pw_actual).result.headOption)
-      resolveTry(resultTry, "Consulta contrasena actual de cliente admin  " + pw_actual)
-  }
-
   def actualizarContrasenaAgenteEmpresarial(pw_nuevo: String, idUsuario: Int): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
       val query = for {

@@ -103,7 +103,7 @@ case class AdministrarContrasenaEmpresaService(user: UsuarioAuth, kafkaActor: Ac
                   requestAuditing[PersistenceException, CambiarContrasenaAgenteEmpresarialMessage](r, AuditingHelper.fiduciariaTopic,
                     AuditingHelper.cambioContrasenaAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, Some(data.copy(pw_nuevo = null, pw_actual = null)))
               } {
-                val resultado: Future[Boolean] = contrasenaAgenteRepo.cambiarContrasena(user, data.pw_nuevo, data.pw_actual)
+                val resultado: Future[Int] = contrasenaAgenteRepo.cambiarContrasena(user.id, data.pw_nuevo, data.pw_actual)
                 onComplete(resultado) {
                   case Success(value) => complete(OK)
                   case Failure(ex) => execution(ex)

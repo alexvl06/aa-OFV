@@ -84,32 +84,6 @@ object ValidacionesAgenteEmpresarial {
     })
   }
 
-  def validacionConsultaContrasenaActualAgenteEmpresarial(pw_actual: String, idUsuario: Int): Future[Validation[ErrorValidacion, Option[UsuarioEmpresarial]]] = {
-    val contrasenaActualFuture = DataAccessAdapterUsuarioAE.consultaContrasenaActualAgenteEmpresarial(Crypto.hashSha512(pw_actual, idUsuario), idUsuario)
-    contrasenaActualFuture.map(_.leftMap(pe => ErrorPersistence(pe.message, pe)).flatMap {
-      (x: Option[UsuarioEmpresarial]) =>
-        x match {
-          case Some(c) => zSuccess(x)
-          case None => zFailure(ErrorContrasenaNoExiste(errorContrasenaActualNoExiste))
-          case _ => zFailure(ErrorContrasenaNoExiste(errorContrasenaActualNoContempla))
-        }
-    })
-  }
-
-  def validacionReglasClave(contrasena: String, idUsuario: Int, perfilUsuario: PerfilesUsuario.perfilUsuario): Future[Validation[ErrorValidacion, Unit.type]] = {
-    val usuarioFuture: Future[Validation[PersistenceException, List[ValidacionClave]]] = ValidarClave.aplicarReglas(contrasena, Some(idUsuario), perfilUsuario, ValidarClave.reglasGenerales: _*)
-    usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message, pe)).flatMap {
-      (x: List[ValidacionClave]) =>
-        x match {
-          case List() => zSuccess(Unit)
-          case erroresList =>
-            val errores = erroresList.foldLeft("")((z, i) => i.toString + "-" + z)
-            zFailure(ErrorFormatoClave(errorClave(errores)))
-        }
-    })
-
-  }
-
   def validarEstadoEmpresa(nit: String): Future[Validation[ErrorValidacion, Boolean]] = {
     val empresaActiva: Int = EstadosDeEmpresaEnum.activa.id
     val estadoEmpresaFuture: Future[Validation[PersistenceException, Option[Empresa]]] = UsDataAdapter.obtenerEstadoEmpresa(nit)
