@@ -59,11 +59,12 @@ trait UsuarioInmobiliarioRepository {
    * @param estado         Filtro - Estado(s) del agente inmobiliario - Opcional
    * @param pagina         Paginación - Número de página - Opcional
    * @param itemsPorPagina Paginación - Número de agentes por página - Opcional
+   * @param ordenarPor     Ordenamiento - Criterio para ordenar la lista - Opcional
    * @return La lista de agentes inmobiliarios (entidad de servicio)
    */
   def getAgenteInmobiliarioList(identificacion: String, nombre: Option[String], usuario: Option[String],
     correo: Option[String], estado: Option[String],
-    pagina: Option[Int], itemsPorPagina: Option[Int]): Future[ConsultarAgenteInmobiliarioListResponse]
+    pagina: Option[Int], itemsPorPagina: Option[Int], ordenarPor: Option[String]): Future[ConsultarAgenteInmobiliarioListResponse]
 
   /**
    * Actualiza la información de un agente inmobiliario

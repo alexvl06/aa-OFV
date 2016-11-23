@@ -82,9 +82,9 @@ case class UsuarioInmobiliarioDriverRepository(
 
   override def getAgenteInmobiliarioList(identificacion: String, nombre: Option[String], usuario: Option[String],
     correo: Option[String], estado: Option[String],
-    pagina: Option[Int], itemsPorPagina: Option[Int]): Future[ConsultarAgenteInmobiliarioListResponse] = {
+    pagina: Option[Int], itemsPorPagina: Option[Int], ordenarPor: Option[String]): Future[ConsultarAgenteInmobiliarioListResponse] = {
     usuariosDao
-      .getAll(identificacion, nombre, usuario, correo, estado, pagina, itemsPorPagina)
+      .getAll(identificacion, nombre, usuario, correo, estado, pagina, itemsPorPagina, ordenarPor)
       .map(res => {
         val agentes: Seq[ConsultarAgenteInmobiliarioResponse] = res._5.map(agente => ConsultarAgenteInmobiliarioResponse(
           agente.id, agente.correo, agente.usuario, agente.estado,
