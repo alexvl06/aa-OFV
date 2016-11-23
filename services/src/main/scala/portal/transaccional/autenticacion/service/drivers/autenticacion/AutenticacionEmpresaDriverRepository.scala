@@ -62,7 +62,7 @@ case class AutenticacionEmpresaDriverRepository(
    * @return Future[Boolean]
    * Success => True
    */
-  private def autenticar(agente: Option[UsuarioAgente], admin: Option[UsuarioEmpresarialAdmin], agenteInmob: Option[UsuarioAgente],
+  private def autenticar(agente: Option[UsuarioAgente], admin: Option[UsuarioEmpresarialAdmin], agenteInmob: Option[UsuarioAgenteInmobiliario],
     contrasena: String, ip: String): Future[String] = {
     if (agente.isDefined) {
       autenticarAgente(agente.get, contrasena, ip)
@@ -132,20 +132,29 @@ case class AutenticacionEmpresaDriverRepository(
    * - asociar token
    * - crear session de usuario
    */
-  private def autenticarAgenteInmob(usuario: UsuarioAgente, contrasena: String, ip: String): Future[String] = {
+  private def autenticarAgenteInmob(usuario: UsuarioAgenteInmobiliario, contrasena: String, ip: String): Future[String] = {
+    println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> entro a autenticar!", usuario.usuarioInterno)
     for {
       empresa <- obtenerEmpresaValida(usuario.identificacion) //OK
       reintentosErroneos <- reglaRepo.getRegla(LlavesReglaContrasena.CANTIDAD_REINTENTOS_INGRESO_CONTRASENA.llave) //ok
-      validar <- usuarioAgenteInmobRepo.validarUsuario(usuario, contrasena, reintentosErroneos.valor.toInt)
-      //cliente <- clienteCoreRepo.getCliente(usuario.identificacion, Some(usuario.tipoIdentificacion)) //ok
-      //estadoCore <- clienteCoreRepo.validarEstado(cliente) //ok
+      validar <- usuarioAgenteInmobRepo.validarUsuario(usuario, contrasena, reintentosErroneos.valor.toInt) //ok
+      cliente <- {
+        if(!usuario.usuarioInterno) {
+          println("entro aqui")
+          for {
+            cliente <- clienteCoreRepo.getCliente(usuario.identificacion, Some(usuario.tipoIdentificacion)) //ok
+            estadoCore <- clienteCoreRepo.validarEstado(cliente) //ok
+          } yield estadoCore
+        } else {
+          println("no paso por ahi!")
+          Future.successful(true)
+        }
+      }
       reglaDias <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA.llave) //ok
       caducidad <- usuarioRepo.validarCaducidadContrasena(TiposCliente.agenteInmobiliario, usuario, reglaDias.valor.toInt)
       actualizar <- usuarioAgenteInmobRepo.actualizarInfoUsuario(usuario, ip)
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave) //ok
       token <- generarTokenAgente(usuario, ip, inactividad.valor) //ok
-      //ips <- ipRepo.getIpsByEmpresaId(empresa.id)
-      //validacionIps <- ipRepo.validarControlIpAgente(ip, ips, token)
       asociarToken <- usuarioAgenteInmobRepo.actualizarToken(usuario.id, AesUtil.encriptarToken(token))
       sesion <- sesionRepo.crearSesion(token, inactividad.valor.toInt, Option(EmpresaDTO.entityToDto(empresa)))
     } yield token
@@ -174,14 +183,13 @@ case class AutenticacionEmpresaDriverRepository(
       empresa <- obtenerEmpresaValida(usuario.identificacion)
       reintentosErroneos <- reglaRepo.getRegla(LlavesReglaContrasena.CANTIDAD_REINTENTOS_INGRESO_CONTRASENA.llave)
       validar <- usuarioAdminRepo.validarUsuario(usuario, contrasena, reintentosErroneos.valor.toInt)
-      //cliente <- clienteCoreRepo.getCliente(usuario.identificacion, Some(usuario.tipoIdentificacion))
-      //estadoCore <- clienteCoreRepo.validarEstado(cliente)
+      cliente <- clienteCoreRepo.getCliente(usuario.identificacion, Some(usuario.tipoIdentificacion))
+      estadoCore <- clienteCoreRepo.validarEstado(cliente)
       reglaDias <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA.llave)
       caducidad <- usuarioAdminRepo.validarCaducidadContrasena(TiposCliente.clienteAdministrador, usuario, reglaDias.valor.toInt)
       actualizar <- usuarioAdminRepo.actualizarInfoUsuario(usuario, ip)
       inactividad <- configuracionRepo.getConfiguracion(TiposConfiguracion.EXPIRACION_SESION.llave)
-      //token <- generarToken(usuario, ip, inactividad.valor, cliente.wcli_constructor)
-      token <- generarToken(usuario, ip, inactividad.valor, "S")
+      token <- generarToken(usuario, ip, inactividad.valor, cliente.wcli_constructor)
       sesion <- sesionRepo.crearSesion(token, inactividad.valor.toInt, Option(EmpresaDTO.entityToDto(empresa)))
       asociarToken <- usuarioAdminRepo.actualizarToken(usuario.id, AesUtil.encriptarToken(token))
       respuestas <- respuestasRepo.getRespuestasById(usuario.id)

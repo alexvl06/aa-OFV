@@ -40,8 +40,7 @@ case class UsuarioInmobiliarioDriverRepository(
       case true =>
         val agente = UsuarioAgenteInmobiliario(
           0, identificacion, tipoIdentificacion, usuario, correo, EstadosUsuarioEnum.pendienteActivacion.id,
-          None, None, new Timestamp(System.currentTimeMillis()), 0, None, nombre, cargo, descripcion, None
-        )
+          None, None, new Timestamp(System.currentTimeMillis()), 0, None, nombre, cargo, descripcion, None, false)
         for {
           idAgente <- usuariosDao.create(agente)
           configExpiracion <- configDao.getByKey(TiposConfiguracion.EXPIRACION_PIN.llave)
