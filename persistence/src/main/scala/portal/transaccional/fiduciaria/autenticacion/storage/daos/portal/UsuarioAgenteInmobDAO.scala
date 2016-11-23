@@ -2,13 +2,14 @@ package portal.transaccional.fiduciaria.autenticacion.storage.daos.portal
 
 import java.sql.Timestamp
 
-import co.com.alianza.persistence.entities.{ UsuarioAgenteInmobiliario, UsuarioAgenteInmobiliarioTable }
+import co.com.alianza.persistence.entities.{UsuarioAgenteInmobiliario, UsuarioAgenteInmobiliarioTable}
 import co.com.alianza.persistence.util.SlickExtensions
 import enumerations.EstadosUsuarioEnumInmobiliario.estadoUsuarioInmobiliario
+import enumerations.{EstadosUsuarioEnumInmobiliario, OrdenamientoAgentesInmobEnum}
 import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
 import slick.lifted.TableQuery
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * Implementación del DAOde agentes inmobiliarios
@@ -48,7 +49,7 @@ case class UsuarioAgenteInmobDAO(implicit dcConfig: DBConfig) extends UsuarioAge
 
   override def getAll(identificacion: String, nombre: Option[String],
     usuario: Option[String], correo: Option[String], estado: Option[String], pagina: Option[Int],
-    itemsPorPagina: Option[Int])(implicit ec: ExecutionContext): Future[(Int, Int, Int, Int, Seq[UsuarioAgenteInmobiliario])] = {
+    itemsPorPagina: Option[Int], ordenarPor: Option[String])(implicit ec: ExecutionContext): Future[(Int, Int, Int, Int, Seq[UsuarioAgenteInmobiliario])] = {
 
     val estados: Option[Seq[Int]] = estado match {
       case None => None
@@ -65,12 +66,27 @@ case class UsuarioAgenteInmobDAO(implicit dcConfig: DBConfig) extends UsuarioAge
       .filter(correo)(c => agente => agente.correo.toLowerCase like s"%${c.toLowerCase}%")
       .filter(estados)(e => agente => agente.estado inSetBind e)
       .query
-      .sortBy(_.usuario)
+
+    val baseQueryOrd = ordenarPor match {
+      case None => basequery
+      case Some(ord) =>
+        OrdenamientoAgentesInmobEnum.values.find(_.toString == ord).map {
+          case OrdenamientoAgentesInmobEnum.ID => basequery.sortBy(_.id)
+          case OrdenamientoAgentesInmobEnum.NOMBRE => basequery.sortBy(_.nombre)
+          case OrdenamientoAgentesInmobEnum.USUARIO => basequery.sortBy(_.usuario)
+          case OrdenamientoAgentesInmobEnum.CORREO => basequery.sortBy(_.correo)
+          case OrdenamientoAgentesInmobEnum.ESTADO => basequery.sortBy(_.estado)
+          case OrdenamientoAgentesInmobEnum.ESTADO_PENDIENTE_ACTIVACION => basequery.sortBy { agente =>
+            (Case If (agente.estado === EstadosUsuarioEnumInmobiliario.pendienteActivacion.id) Then 1, agente.usuario)
+          }
+          case _ => basequery
+        }.getOrElse(basequery)
+    }
 
     run(
       for {
-        totalAgentes <- basequery.length.result
-        agentes <- basequery.paginate(pagina, itemsPorPagina).result
+        totalAgentes <- baseQueryOrd.length.result
+        agentes <- baseQueryOrd.paginate(pagina, itemsPorPagina).result
       } yield {
         (pagina.getOrElse(defaultPage), itemsPorPagina.getOrElse(defaultPageSize), agentes.length, totalAgentes, agentes)
       }

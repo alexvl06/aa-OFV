@@ -120,12 +120,12 @@ case class AgenteInmobiliarioService(
     get {
       requestUri { uri =>
         parameters('nombre.as[Option[String]], 'usuario.as[Option[String]],
-          'correo.as[Option[String]], 'estado.as[Option[String]], 'pagina.as[Option[Int]], 'itemsPorPagina.as[Option[Int]]) {
-          (nombreOpt, usuarioOpt, correoOpt, estadoOpt, paginaOpt, itemsPorPaginaOpt) =>
+          'correo.as[Option[String]], 'estado.as[Option[String]], 'pagina.as[Option[Int]], 'itemsPorPagina.as[Option[Int]], 'ordenarPor.as[Option[String]]) {
+          (nombreOpt, usuarioOpt, correoOpt, estadoOpt, paginaOpt, itemsPorPaginaOpt, ordenarPorOpt) =>
           {
             val agentesF: Future[ConsultarAgenteInmobiliarioListResponse] = usuariosRepo.getAgenteInmobiliarioList(
               usuarioAuth.identificacion, nombreOpt,
-              usuarioOpt, correoOpt, estadoOpt, paginaOpt, itemsPorPaginaOpt
+              usuarioOpt, correoOpt, estadoOpt, paginaOpt, itemsPorPaginaOpt, ordenarPorOpt
             )
             onComplete(agentesF) {
               case Success(agentes) =>
