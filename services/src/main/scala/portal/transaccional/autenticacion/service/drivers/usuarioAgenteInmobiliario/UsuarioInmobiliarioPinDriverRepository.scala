@@ -35,20 +35,20 @@ case class UsuarioInmobiliarioPinDriverRepository(pinDao: PinAgenteInmobiliarioD
     PinAgenteInmobiliario(None, idUsuario, pin.token, fechaExpiracion, pin.tokenHash.getOrElse(""), usoPin)
   }
 
-  override def generarCorreoActivacion(pin: String, caducidad: Int, usuario: String,
+  override def generarCorreoActivacion(pin: String, caducidad: Int, nombreAgente: String, usuarioAgente: String,
     correo: String)(implicit config: Config): MailMessage = {
     val remitente: String = config.getString("alianza.smtp.from")
     val asunto: String = config.getString("alianza.smtp.asunto.creacionAgenteInmobiliario")
     val cuerpo: String = new MailMessageEmpresa("alianza.smtp.templatepin.creacionAgenteInmobiliario")
-      .getMessageAgenteInmobiliario(pin, caducidad, Some(usuario))
+      .getMessageAgenteInmobiliario(pin, caducidad, nombreAgente, Some(usuarioAgente))
     MailMessage(remitente, correo, Nil, asunto, cuerpo, "")
   }
 
-  override def generarCorreoReinicio(pin: String, caducidad: Int, correo: String)(implicit config: Config): MailMessage = {
+  override def generarCorreoReinicio(pin: String, caducidad: Int, nombreAgente: String, correo: String)(implicit config: Config): MailMessage = {
     val remitente: String = config.getString("alianza.smtp.from")
     val asunto: String = config.getString("alianza.smtp.asunto.reiniciarContrasenaAgenteInmobiliario")
     val cuerpo: String = new MailMessageEmpresa("alianza.smtp.templatepin.reiniciarContrasenaAgenteInmobiliario")
-      .getMessageAgenteInmobiliario(pin, caducidad, None)
+      .getMessageAgenteInmobiliario(pin, caducidad, nombreAgente, None)
     MailMessage(remitente, correo, Nil, asunto, cuerpo, "")
   }
 

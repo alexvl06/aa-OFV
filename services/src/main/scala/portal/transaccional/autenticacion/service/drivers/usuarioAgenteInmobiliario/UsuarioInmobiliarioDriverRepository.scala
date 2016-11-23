@@ -49,7 +49,7 @@ case class UsuarioInmobiliarioDriverRepository(
           idPin <- pinRepository.asociarPinAgente(pinAgente)
           correoActivacion: MailMessage = pinRepository.generarCorreoActivacion(
             pinAgente.tokenHash,
-            configExpiracion.valor.toInt, usuario, correo
+            configExpiracion.valor.toInt, nombre.getOrElse(usuario), usuario, correo
           )
         } yield {
           // el envío del correo se ejecuta de forma asíncrona dado que no interesa el éxito de la operación,
@@ -114,7 +114,7 @@ case class UsuarioInmobiliarioDriverRepository(
               idPin <- pinRepository.asociarPinAgente(pinAgente)
               correoReinicio: MailMessage = pinRepository.generarCorreoReinicio(
                 pinAgente.tokenHash,
-                configExpiracion.valor.toInt, correo
+                configExpiracion.valor.toInt, nombre.getOrElse(usuario), correo
               )
             } yield {
               pinRepository.enviarEmail(correoReinicio)

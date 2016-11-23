@@ -451,7 +451,7 @@ class UsuariosActor(
             pinAgente: PinAgenteInmobiliario = agentesInmobPinRepo.generarPinAgente(configExpiracion, agente.id, reinicio = true)
             idPin <- agentesInmobPinRepo.asociarPinAgente(pinAgente)
             correoReinicio: MailMessage = agentesInmobPinRepo.generarCorreoReinicio(
-              pinAgente.tokenHash, configExpiracion.valor.toInt, agente.correo
+              pinAgente.tokenHash, configExpiracion.valor.toInt, agente.nombre.getOrElse(agente.usuario), agente.correo
             )
           } yield {
             agentesInmobPinRepo.enviarEmail(correoReinicio)(context.system)
