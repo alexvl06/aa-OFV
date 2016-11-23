@@ -134,7 +134,7 @@ case class AutenticacionEmpresaDriverRepository(
       cliente <- clienteCoreRepo.getCliente(usuario.identificacion, Some(usuario.tipoIdentificacion))
       estadoCore <- clienteCoreRepo.validarEstado(cliente)
       reglaDias <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA)
-      caducidad <- usuarioAdminRepo.validarCaducidadContrasena(TiposCliente.agenteEmpresarial, usuario, reglaDias.valor.toInt)
+      caducidad <- usuarioAdminRepo.validarCaducidadContrasena(TiposCliente.clienteAdministrador, usuario, reglaDias.valor.toInt)
       actualizar <- usuarioAdminRepo.actualizarInfoUsuario(usuario, ip)
       inactividad <- configuracionRepo.getConfiguracion(ConfiguracionEnum.EXPIRACION_SESION)
       token <- generarTokenAdmin(usuario, ip, inactividad.valor)
