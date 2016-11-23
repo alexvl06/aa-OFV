@@ -54,10 +54,10 @@ case class ContrasenaAgenteDriverRepository(
       optionAgente <- agenteRepo.getByIdentityAndUser(admin.identificacion, usuarioAgente)
       agente <- agenteRepo.validarUsuario(optionAgente)
       resultado <- if (agente.estado == estadoBloqueado) {
-          desbloquear(agente)
-        } else {
-          agenteRepo.actualizarEstado(agente.id, EstadosEmpresaEnum.bloqueadoPorAdmin).map(_ > 0)
-        }
+        desbloquear(agente)
+      } else {
+        agenteRepo.actualizarEstado(agente.id, EstadosEmpresaEnum.bloqueadoPorAdmin).map(_ > 0)
+      }
     } yield resultado
   }
 
