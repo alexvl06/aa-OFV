@@ -109,7 +109,8 @@ case class IpService(user: UsuarioAuth, kafkaActor: ActorSelection, ipRepo: IpRe
         val resultado: Future[String] = ipRepo.agregarIp(user, ipPeticion)
         onComplete(resultado) {
           case Success(value) => complete(value)
-          case Failure(ex) => complete((StatusCodes.Conflict, "Error al agregar"))
+          case Failure(ex) =>
+            complete((StatusCodes.Conflict, "Error al agregar"))
         }
       }
     }
