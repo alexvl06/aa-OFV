@@ -9,5 +9,5 @@ object OrdenamientoAgentesInmobEnum extends Enumeration(0) {
   val USUARIO = Value("US")
   val CORREO = Value("EM")
   val ESTADO = Value("ES")
-  val ESTADO_PENDIENTE_ACTIVACION = Value("ES:PA")
+  val ESTADO_PENDIENTE_ACTIVACION = Value("ES-PA")
 }
