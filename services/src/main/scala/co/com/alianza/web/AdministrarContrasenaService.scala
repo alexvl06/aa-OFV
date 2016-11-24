@@ -75,7 +75,7 @@ case class AdministrarContrasenaService(kafkaActor: ActorSelection, contrasenasA
                       requestExecute(CambiarContrasenaCaducadaClienteAdminMessage(data.token, data.pw_actual, data.pw_nuevo, Some(us_id)), contrasenasClienteAdminActor)
                     case TiposCliente.clienteIndividual =>
                       requestExecute(CambiarContrasenaCaducadaMessage(data.token, data.pw_actual, data.pw_nuevo, us_id, us_tipo), contrasenasActor)
-                    case TiposCliente.agenteInmobiliario => {
+                    case TiposCliente.agenteInmobiliario | TiposCliente.agenteInmobiliarioInterno => {
                       val response = agenteInmobContrasenaRepo.actualizarContrasenaCaducada(Option(data.token), data.pw_actual, data.pw_nuevo, Option.empty)
                       onComplete(response) {
                         case Success(resultado) => complete(StatusCodes.OK)

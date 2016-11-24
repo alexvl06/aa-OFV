@@ -12,7 +12,7 @@ import scala.concurrent.Future
  */
 trait AutorizacionRepository {
 
-  def autorizar(token: String, encriptedToken: String, url: Option[String], ip: String): Future[GenericValidacionAutorizacion]
+  def autorizar(token: String, encriptedToken: String, url: Option[String], ip: String, tipoCliente : String): Future[GenericValidacionAutorizacion]
 
   def filtrarRecuros(agente: UsuarioInmobiliarioAuth, recursos: Seq[RecursoBackendInmobiliario], urlO: Option[String]): Future[GenericValidacionAutorizacion]
 

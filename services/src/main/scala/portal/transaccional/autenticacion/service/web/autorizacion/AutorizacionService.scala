@@ -55,6 +55,7 @@ case class AutorizacionService(
   val comercialAdmin = TiposCliente.comercialAdmin.toString
   val adminInmobiliaria = TiposCliente.clienteAdminInmobiliario.toString
   val agenteInmobiliario = TiposCliente.agenteInmobiliario.toString
+  val agenteInmobiliarioInterno = TiposCliente.agenteInmobiliarioInterno.toString
 
   val route: Route = {
     path(invalidarTokenPath) {
@@ -78,7 +79,7 @@ case class AutorizacionService(
             val usuario = getTokenData(token)
             val resultado: Future[Int] = usuario.tipoCliente match {
               case `agente` => sesionUtilAgenteEmpresarial.invalidarToken(token, encriptedToken)
-              case `agenteInmobiliario` => sesionUtilAgenteInmobiliario.invalidarToken(token, encriptedToken)
+              case `agenteInmobiliario` | `agenteInmobiliarioInterno` => sesionUtilAgenteInmobiliario.invalidarToken(token, encriptedToken)
               case `admin` | `adminInmobiliaria` => autorizacionAdminRepo.invalidarToken(token, encriptedToken)
               case `individual` => autorizacionRepository.invalidarToken(token, encriptedToken)
               case `comercialFiduciaria` | `comercialValores` => autorizacionComercialRepo.invalidarToken(token, encriptedToken)
@@ -107,7 +108,7 @@ case class AutorizacionService(
             case `agente` => autorizacionAgenteRepo.autorizar(token, encriptedToken, url, ipRemota)
             case `admin` | `adminInmobiliaria` => autorizacionAdminRepo.autorizar(token, encriptedToken, url, ipRemota, `admin`)
             case `individual` => autorizacionRepository.autorizar(token, encriptedToken, url)
-            case `agenteInmobiliario` => autorizacionAgenteInmob.autorizar(token, encriptedToken, Option(url), ipRemota)
+            case `agenteInmobiliario`  | `agenteInmobiliarioInterno` => autorizacionAgenteInmob.autorizar(token, encriptedToken, Option(url), ipRemota, usuario.tipoCliente )
             //TODO: Agregar la autorizacion de url para los tipo comerciales (Pendiente HU) By : Hernando
             case `comercialFiduciaria` => obtenerUsuarioComercialMock(TiposCliente.comercialFiduciaria, usuario.usuario)
             case `comercialValores` => obtenerUsuarioComercialMock(TiposCliente.comercialValores, usuario.usuario)
@@ -135,7 +136,7 @@ case class AutorizacionService(
 
               val responseF = usuario.tipoCliente match {
                 case `adminInmobiliaria` => autorizacionAdminRepo.autorizar(decriptedToken, token, url, ipRemota.value, `adminInmobiliaria`)
-                case `agenteInmobiliario` => autorizacionAgenteInmob.autorizar(decriptedToken, token, Option(url), ipRemota.value)
+                case `agenteInmobiliario`  | `agenteInmobiliarioInterno`=> autorizacionAgenteInmob.autorizar(decriptedToken, token, Option(url), ipRemota.value, usuario.tipoCliente)
               }
 
               onComplete(responseF) {
@@ -174,7 +175,7 @@ case class AutorizacionService(
     val nToken = Token.getToken(token).getJWTClaimsSet
     val tipoCliente = nToken.getCustomClaim("tipoCliente").toString
     //TODO: el nit no lo pide si es tipo comercial
-    val nit = if (tipoCliente == agente || tipoCliente == admin || tipoCliente == adminInmobiliaria || tipoCliente == agenteInmobiliario) nToken.getCustomClaim("nit").toString else ""
+    val nit = if (tipoCliente == agente || tipoCliente == admin || tipoCliente == adminInmobiliaria || tipoCliente == agenteInmobiliario || tipoCliente == agenteInmobiliarioInterno) nToken.getCustomClaim("nit").toString else ""
     val lastIp = nToken.getCustomClaim("ultimaIpIngreso").toString
     val user = nToken.getCustomClaim("nombreUsuario").toString
     val email = nToken.getCustomClaim("correo").toString

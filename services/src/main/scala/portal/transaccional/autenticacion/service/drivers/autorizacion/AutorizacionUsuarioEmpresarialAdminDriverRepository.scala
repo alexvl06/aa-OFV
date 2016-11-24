@@ -70,7 +70,7 @@ case class AutorizacionUsuarioEmpresarialAdminDriverRepository(adminRepo: Usuari
       } yield result
     } else {
       for {
-        recursos <- alianzaDAO.get4()
+        recursos <- alianzaDAO.getMenuAdmin(isInterno = false)
         result <- {
           val authUser = UsuarioInmobiliarioAuth(adminDTO.id, adminDTO.tipoCliente, adminDTO.identificacion, adminDTO.tipoIdentificacion, adminDTO.usuario)
           authInmobiliario.filtrarRecuros(authUser, recursos, Option(url))

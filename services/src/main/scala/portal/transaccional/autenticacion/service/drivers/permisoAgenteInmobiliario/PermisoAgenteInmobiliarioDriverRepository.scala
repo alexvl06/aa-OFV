@@ -3,6 +3,7 @@ package portal.transaccional.autenticacion.service.drivers.permisoAgenteInmobili
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.persistence.entities.{ PermisoAgenteInmobiliario, RecursoGraficoInmobiliario }
+import enumerations.PerfilInmobiliarioEnum
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ AlianzaDAO, PermisoInmobiliarioDAOs, UsuarioAgenteInmobDAOs }
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -34,11 +35,12 @@ case class PermisoAgenteInmobiliarioDriverRepository(alianzaDao: AlianzaDAO, usu
   def getRecurso(idUser: Int, tiposCliente: TiposCliente, isMatriz: Boolean): Future[Seq[RecursoGraficoInmobiliario]] = {
     tiposCliente match {
       case TiposCliente.agenteInmobiliario => alianzaDao.getAgentResourcesById(idUser)
+      case TiposCliente.agenteInmobiliarioInterno =>  alianzaDao.getAdminResourcesVisible(PerfilInmobiliarioEnum.agenteInterno.toString)
       case _ =>
         if (isMatriz) {
-          alianzaDao.getAdminResourcesVisible(false).map(_.filter(_.administrable))
+          alianzaDao.getAdminResourcesVisible(PerfilInmobiliarioEnum.agente.toString).map(_.filter(_.administrable))
         } else {
-          alianzaDao.getAdminResourcesVisible(true)
+          alianzaDao.getAdminResourcesVisible(PerfilInmobiliarioEnum.admin.toString)
         }
     }
   }

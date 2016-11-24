@@ -196,9 +196,8 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
   }
 
   // Obtiene el menu de constructor o agente
-  def getAdminResourcesVisible(admin: Boolean): Future[Seq[RecursoGraficoInmobiliario]] = {
-    val tipo = if (admin) PerfilInmobiliarioEnum.admin.toString else PerfilInmobiliarioEnum.agente.toString
-    val query = getGraphicalResources(tipo)
+  def getAdminResourcesVisible(tipoPermisos : String): Future[Seq[RecursoGraficoInmobiliario]] = {
+    val query = getGraphicalResources(tipoPermisos)
     run(query.result)
   }
 
@@ -216,9 +215,10 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
   }
 
   //Obtiene los recursos a los que puede acceder Admin
-  def get4(): Future[Seq[RecursoBackendInmobiliario]] = {
+  def getMenuAdmin(isInterno : Boolean): Future[Seq[RecursoBackendInmobiliario]] = {
+    val tipoAdmin = if(isInterno) PerfilInmobiliarioEnum.agenteInterno.toString else PerfilInmobiliarioEnum.admin.toString
     val query = for {
-      g <- getGraphicalResources(PerfilInmobiliarioEnum.admin.toString)
+      g <- getGraphicalResources(tipoAdmin)
       r <- getBackendResources(g)
     } yield r
     run(query.result)
@@ -230,7 +230,7 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
   }
 
   //Obtiene los recursos a los que puede acceder Agente
-  def get5(idAgente: Int): Future[Seq[RecursoBackendInmobiliario]] = {
+  def getMenuAgenteInmob(idAgente: Int): Future[Seq[RecursoBackendInmobiliario]] = {
     val query = for {
       g <- getAgentPermission(idAgente)
       r <- getBackendResources(g)

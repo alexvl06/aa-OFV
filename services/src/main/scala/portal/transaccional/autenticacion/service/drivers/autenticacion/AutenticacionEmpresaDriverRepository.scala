@@ -28,9 +28,9 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scala.reflect.ClassTag
 
 case class AutenticacionEmpresaDriverRepository(
-    usuarioRepo: UsuarioEmpresarialRepository[UsuarioEmpresarial], usuarioAdminRepo: UsuarioEmpresarialAdminRepository, clienteCoreRepo: ClienteRepository,
-    empresaRepo: EmpresaRepository, reglaRepo: ReglaContrasenaRepository, configuracionRepo: ConfiguracionRepository, ipRepo: IpEmpresaRepository,
-    sesionRepo: SesionRepository, respuestasRepo: RespuestaUsuarioRepository, usuarioAgenteInmobRepo: UsuarioEmpresarialRepository[UsuarioAgenteInmobiliario]
+  usuarioRepo: UsuarioEmpresarialRepository[UsuarioEmpresarial], usuarioAdminRepo: UsuarioEmpresarialAdminRepository, clienteCoreRepo: ClienteRepository,
+  empresaRepo: EmpresaRepository, reglaRepo: ReglaContrasenaRepository, configuracionRepo: ConfiguracionRepository, ipRepo: IpEmpresaRepository,
+  sesionRepo: SesionRepository, respuestasRepo: RespuestaUsuarioRepository, usuarioAgenteInmobRepo: UsuarioEmpresarialRepository[UsuarioAgenteInmobiliario]
 )(implicit val ex: ExecutionContext) extends AutenticacionEmpresaRepository {
 
   implicit val timeout = Timeout(5.seconds)
@@ -133,23 +133,11 @@ case class AutenticacionEmpresaDriverRepository(
    * - crear session de usuario
    */
   private def autenticarAgenteInmob(usuario: UsuarioAgenteInmobiliario, contrasena: String, ip: String): Future[String] = {
-    println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> entro a autenticar!", usuario.usuarioInterno)
     for {
       empresa <- obtenerEmpresaValida(usuario.identificacion) //OK
       reintentosErroneos <- reglaRepo.getRegla(LlavesReglaContrasena.CANTIDAD_REINTENTOS_INGRESO_CONTRASENA.llave) //ok
       validar <- usuarioAgenteInmobRepo.validarUsuario(usuario, contrasena, reintentosErroneos.valor.toInt) //ok
-      cliente <- {
-        if(!usuario.usuarioInterno) {
-          println("entro aqui")
-          for {
-            cliente <- clienteCoreRepo.getCliente(usuario.identificacion, Some(usuario.tipoIdentificacion)) //ok
-            estadoCore <- clienteCoreRepo.validarEstado(cliente) //ok
-          } yield estadoCore
-        } else {
-          println("no paso por ahi!")
-          Future.successful(true)
-        }
-      }
+      cliente <- isClienteAlianza(usuario)
       reglaDias <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA.llave) //ok
       caducidad <- usuarioRepo.validarCaducidadContrasena(TiposCliente.agenteInmobiliario, usuario, reglaDias.valor.toInt)
       actualizar <- usuarioAgenteInmobRepo.actualizarInfoUsuario(usuario, ip)
@@ -159,6 +147,7 @@ case class AutenticacionEmpresaDriverRepository(
       sesion <- sesionRepo.crearSesion(token, inactividad.valor.toInt, Option(EmpresaDTO.entityToDto(empresa)))
     } yield token
   }
+
 
   /**
    * Flujo:
@@ -206,6 +195,17 @@ case class AutenticacionEmpresaDriverRepository(
     (actor ? msg).mapTo[T]
   }
 
+  private def isClienteAlianza(usuario : UsuarioAgenteInmobiliario ): Future[Boolean] ={
+    if(!usuario.usuarioInterno) {
+      for {
+        cliente <- clienteCoreRepo.getCliente(usuario.identificacion, Some(usuario.tipoIdentificacion)) //ok
+        estadoCore <- clienteCoreRepo.validarEstado(cliente) //ok
+      } yield estadoCore
+    } else {
+      Future.successful(true)
+    }
+  }
+
   private def obtenerEmpresaValida(nit: String): Future[Empresa] = {
     for {
       empresa <- empresaRepo.getByIdentity(nit)
@@ -222,7 +222,7 @@ case class AutenticacionEmpresaDriverRepository(
   private def tipoAgente(u: UsuarioAgente) = {
     u match {
       case usuario: UsuarioEmpresarial => TiposCliente.agenteEmpresarial
-      case usuario: UsuarioAgenteInmobiliario => TiposCliente.agenteInmobiliario
+      case usuario: UsuarioAgenteInmobiliario => if (usuario.usuarioInterno) TiposCliente.agenteInmobiliarioInterno else TiposCliente.agenteInmobiliario
     }
   }
 
