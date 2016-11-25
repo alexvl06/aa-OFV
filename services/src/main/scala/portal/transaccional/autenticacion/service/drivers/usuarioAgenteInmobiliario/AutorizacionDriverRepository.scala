@@ -23,7 +23,7 @@ case class AutorizacionDriverRepository(sesionRepo: SesionRepository, alianzaDAO
       _ <- sesionRepo.obtenerSesion(token)
       agente <- alianzaDAO.getByTokenAgenteInmobiliario(encriptedToken)
       recursos <- if (isInterno) alianzaDAO.getMenuAdmin(isInterno) else alianzaDAO.getMenuAgenteInmob(agente.id)
-      permisoProyecto <- getPermiso(agente.id, agente.identificacion, url.getOrElse(""))
+      permisoProyecto <- getPermiso(agente.id, agente.identificacion, url.getOrElse(""), isInterno)
       validacion <- filtrarRecuros(DataAccessTranslator.entityToDto(agente), recursos, url)
     } yield validacion
   }
@@ -35,13 +35,13 @@ case class AutorizacionDriverRepository(sesionRepo: SesionRepository, alianzaDAO
     }
   }
 
-  private def getPermiso(idUsuario: Int, nit: String, url: String) = {
+  private def getPermiso(idUsuario: Int, nit: String, url: String, isInterno: Boolean) = {
     val sacarProyecto = "(/[\\w]*)*/fideicomisos/([0-9]+)/proyectos/([0-9]+)(/[\\w|\\W]*)".r
 
     url match {
       case sacarProyecto(inicio, fideicomiso, proyecto, fin) =>
         alianzaDAO.getPermisosProyectoInmobiliario(nit, fideicomiso.toInt, proyecto.toInt, Seq(idUsuario)).flatMap { permisos =>
-          if (permisos.isEmpty) {
+          if (permisos.isEmpty && !isInterno) {
             Future.failed(GenericNoAutorizado("403.1", "El usuario no tiene permisos suficientes para ver información del proyecto."))
           } else {
             Future.successful(permisos)
