@@ -12,7 +12,7 @@ import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.infrastructure.messages.CrearSesionUsuario
 import co.com.alianza.persistence.entities._
 import co.com.alianza.util.token.{ AesUtil, Token }
-import enumerations.{ EstadosEmpresaEnum, TipoIdentificacion }
+import enumerations.{ EstadosEmpresaEnum, TipoAgenteInmobiliario, TipoIdentificacion }
 import portal.transaccional.autenticacion.service.drivers.cliente.ClienteRepository
 import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionRepository
 import portal.transaccional.autenticacion.service.drivers.empresa.{ EmpresaRepository, DataAccessTranslator => EmpresaDTO }
@@ -28,9 +28,9 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scala.reflect.ClassTag
 
 case class AutenticacionEmpresaDriverRepository(
-  usuarioRepo: UsuarioEmpresarialRepository[UsuarioEmpresarial], usuarioAdminRepo: UsuarioEmpresarialAdminRepository, clienteCoreRepo: ClienteRepository,
-  empresaRepo: EmpresaRepository, reglaRepo: ReglaContrasenaRepository, configuracionRepo: ConfiguracionRepository, ipRepo: IpEmpresaRepository,
-  sesionRepo: SesionRepository, respuestasRepo: RespuestaUsuarioRepository, usuarioAgenteInmobRepo: UsuarioEmpresarialRepository[UsuarioAgenteInmobiliario]
+    usuarioRepo: UsuarioEmpresarialRepository[UsuarioEmpresarial], usuarioAdminRepo: UsuarioEmpresarialAdminRepository, clienteCoreRepo: ClienteRepository,
+    empresaRepo: EmpresaRepository, reglaRepo: ReglaContrasenaRepository, configuracionRepo: ConfiguracionRepository, ipRepo: IpEmpresaRepository,
+    sesionRepo: SesionRepository, respuestasRepo: RespuestaUsuarioRepository, usuarioAgenteInmobRepo: UsuarioEmpresarialRepository[UsuarioAgenteInmobiliario]
 )(implicit val ex: ExecutionContext) extends AutenticacionEmpresaRepository {
 
   implicit val timeout = Timeout(5.seconds)
@@ -148,7 +148,6 @@ case class AutenticacionEmpresaDriverRepository(
     } yield token
   }
 
-
   /**
    * Flujo:
    * - buscar y validar empresa
@@ -195,8 +194,8 @@ case class AutenticacionEmpresaDriverRepository(
     (actor ? msg).mapTo[T]
   }
 
-  private def isClienteAlianza(usuario : UsuarioAgenteInmobiliario ): Future[Boolean] ={
-    if(!usuario.usuarioInterno) {
+  private def isClienteAlianza(usuario: UsuarioAgenteInmobiliario): Future[Boolean] = {
+    if (usuario.tipoAgente ==  TipoAgenteInmobiliario.empresarial.toString) {
       for {
         cliente <- clienteCoreRepo.getCliente(usuario.identificacion, Some(usuario.tipoIdentificacion)) //ok
         estadoCore <- clienteCoreRepo.validarEstado(cliente) //ok
@@ -222,7 +221,7 @@ case class AutenticacionEmpresaDriverRepository(
   private def tipoAgente(u: UsuarioAgente) = {
     u match {
       case usuario: UsuarioEmpresarial => TiposCliente.agenteEmpresarial
-      case usuario: UsuarioAgenteInmobiliario => if (usuario.usuarioInterno) TiposCliente.agenteInmobiliarioInterno else TiposCliente.agenteInmobiliario
+      case usuario: UsuarioAgenteInmobiliario => if (usuario.tipoAgente ==  TipoAgenteInmobiliario.internoAdmin.toString) TiposCliente.agenteInmobiliarioInterno else TiposCliente.agenteInmobiliario
     }
   }
 

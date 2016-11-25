@@ -2,14 +2,14 @@ package portal.transaccional.fiduciaria.autenticacion.storage.daos.portal
 
 import java.sql.Timestamp
 
-import co.com.alianza.persistence.entities.{UsuarioAgenteInmobiliario, UsuarioAgenteInmobiliarioTable}
+import co.com.alianza.persistence.entities.{ UsuarioAgenteInmobiliario, UsuarioAgenteInmobiliarioTable }
 import co.com.alianza.persistence.util.SlickExtensions
 import enumerations.EstadosUsuarioEnumInmobiliario.estadoUsuarioInmobiliario
-import enumerations.{EstadosUsuarioEnumInmobiliario, OrdenamientoAgentesInmobEnum}
+import enumerations.{ EstadosUsuarioEnumInmobiliario, OrdenamientoAgentesInmobEnum }
 import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
 import slick.lifted.TableQuery
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * Implementación del DAOde agentes inmobiliarios

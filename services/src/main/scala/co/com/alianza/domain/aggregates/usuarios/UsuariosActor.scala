@@ -34,7 +34,7 @@ import scalaz.std.AllInstances._
 import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 
 class UsuariosActorSupervisor(
-  agentesInmobDao: UsuarioAgenteInmobDAOs,
+    agentesInmobDao: UsuarioAgenteInmobDAOs,
     agentesInmobPinRepo: UsuarioInmobiliarioPinRepository,
     configDao: ConfiguracionDAOs
 ) extends Actor with ActorLogging {
@@ -65,7 +65,7 @@ class UsuariosActorSupervisor(
 }
 
 class UsuariosActor(
-  agentesInmobDao: UsuarioAgenteInmobDAOs,
+    agentesInmobDao: UsuarioAgenteInmobDAOs,
     agentesInmobPinRepo: UsuarioInmobiliarioPinRepository,
     configDao: ConfiguracionDAOs
 ) extends Actor with ActorLogging {

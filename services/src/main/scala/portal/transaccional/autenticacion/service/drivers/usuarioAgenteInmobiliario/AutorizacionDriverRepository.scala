@@ -13,11 +13,10 @@ import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.Alianza
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-case class AutorizacionDriverRepository(sesionRepo: SesionRepository, alianzaDAO: AlianzaDAOs, recursoRepo: RecursoRepository)
-  (implicit val ex: ExecutionContext) extends AutorizacionRepository {
+case class AutorizacionDriverRepository(sesionRepo: SesionRepository, alianzaDAO: AlianzaDAOs, recursoRepo: RecursoRepository)(implicit val ex: ExecutionContext) extends AutorizacionRepository {
 
-  def autorizar(token: String, encriptedToken: String, url: Option[String], ip: String, tipoCliente : String): Future[GenericValidacionAutorizacion] = {
-    val isInterno = if (tipoCliente ==  TiposCliente.agenteInmobiliarioInterno.toString) true else false
+  def autorizar(token: String, encriptedToken: String, url: Option[String], ip: String, tipoCliente: String): Future[GenericValidacionAutorizacion] = {
+    val isInterno = if (tipoCliente == TiposCliente.agenteInmobiliarioInterno.toString) true else false
     for {
       _ <- validarToken(token)
       _ <- sesionRepo.validarSesion(token)
@@ -53,7 +52,7 @@ case class AutorizacionDriverRepository(sesionRepo: SesionRepository, alianzaDAO
 
   }
 
-  def filtrarRecuros(agente: UsuarioInmobiliarioAuth, recursos: Seq[RecursoBackendInmobiliario], urlO: Option[String]): Future[GenericValidacionAutorizacion] ={
+  def filtrarRecuros(agente: UsuarioInmobiliarioAuth, recursos: Seq[RecursoBackendInmobiliario], urlO: Option[String]): Future[GenericValidacionAutorizacion] = {
 
     val usuarioExitoso = Future.successful(GenericAutorizado[UsuarioInmobiliarioAuth](agente))
     val usuarioNoExitoso = Future.failed(GenericNoAutorizado("403.1", s"El usuario no tiene permisos suficientes para ingresar al servicio." + urlO.getOrElse("")))

@@ -108,7 +108,7 @@ case class AutorizacionService(
             case `agente` => autorizacionAgenteRepo.autorizar(token, encriptedToken, url, ipRemota)
             case `admin` | `adminInmobiliaria` => autorizacionAdminRepo.autorizar(token, encriptedToken, url, ipRemota, `admin`)
             case `individual` => autorizacionRepository.autorizar(token, encriptedToken, url)
-            case `agenteInmobiliario`  | `agenteInmobiliarioInterno` => autorizacionAgenteInmob.autorizar(token, encriptedToken, Option(url), ipRemota, usuario.tipoCliente )
+            case `agenteInmobiliario` | `agenteInmobiliarioInterno` => autorizacionAgenteInmob.autorizar(token, encriptedToken, Option(url), ipRemota, usuario.tipoCliente)
             //TODO: Agregar la autorizacion de url para los tipo comerciales (Pendiente HU) By : Hernando
             case `comercialFiduciaria` => obtenerUsuarioComercialMock(TiposCliente.comercialFiduciaria, usuario.usuario)
             case `comercialValores` => obtenerUsuarioComercialMock(TiposCliente.comercialValores, usuario.usuario)
@@ -136,7 +136,7 @@ case class AutorizacionService(
 
               val responseF = usuario.tipoCliente match {
                 case `adminInmobiliaria` => autorizacionAdminRepo.autorizar(decriptedToken, token, url, ipRemota.value, `adminInmobiliaria`)
-                case `agenteInmobiliario`  | `agenteInmobiliarioInterno`=> autorizacionAgenteInmob.autorizar(decriptedToken, token, Option(url), ipRemota.value, usuario.tipoCliente)
+                case `agenteInmobiliario` | `agenteInmobiliarioInterno` => autorizacionAgenteInmob.autorizar(decriptedToken, token, Option(url), ipRemota.value, usuario.tipoCliente)
               }
 
               onComplete(responseF) {

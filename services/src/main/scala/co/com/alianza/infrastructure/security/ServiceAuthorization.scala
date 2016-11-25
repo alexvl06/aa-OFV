@@ -78,7 +78,7 @@ trait ServiceAuthorization {
       autorizacionAgenteRepo.autorizar(token, encriptedToken, "", obtenerIp(ctx).get.value)
     } else if (tipoCliente == TiposCliente.clienteAdministrador.toString || tipoCliente == TiposCliente.clienteAdminInmobiliario.toString) {
       autorizacionAdminRepo.autorizar(token, encriptedToken, "", obtenerIp(ctx).get.value, TiposCliente.clienteAdministrador.toString)
-    } else if (tipoCliente == TiposCliente.agenteInmobiliario.toString || tipoCliente == TiposCliente.agenteInmobiliarioInterno.toString ) {
+    } else if (tipoCliente == TiposCliente.agenteInmobiliario.toString || tipoCliente == TiposCliente.agenteInmobiliarioInterno.toString) {
       autorizacionInmobRepo.autorizar(token, encriptedToken, Option.empty, obtenerIp(ctx).get.value, tipoCliente)
     } else {
       autorizacionUsuarioRepo.autorizar(token, encriptedToken, "")

@@ -88,14 +88,14 @@ case class AgenteInmobiliarioService(
         val idAgente: Future[Int] = usuariosRepo.createAgenteInmobiliario(
           usuarioAuth.id, usuarioAuth.tipoIdentificacion, usuarioAuth.identificacion,
           r.correo, r.usuario,
-          r.nombre, r.cargo, r.descripcion
+          r.nombre, r.cargo, r.descripcion, r.tipoAgente
         )
         onComplete(idAgente) {
           case Success(id) => id match {
             case 0 => complete(StatusCodes.Conflict)
             case _ => complete(StatusCodes.Created)
           }
-          case Failure(exception) => complete(StatusCodes.InternalServerError)
+          case Failure(exception) => println(exception);complete(StatusCodes.InternalServerError)
         }
       }
     }
@@ -154,7 +154,7 @@ case class AgenteInmobiliarioService(
             case 0 => complete(StatusCodes.NotFound)
             case _ => complete(StatusCodes.OK)
           }
-          case Failure(exception) => complete(StatusCodes.InternalServerError)
+          case Failure(exception) => complete(StatusCodes.InternalServerError, exception)
         }
       }
     }

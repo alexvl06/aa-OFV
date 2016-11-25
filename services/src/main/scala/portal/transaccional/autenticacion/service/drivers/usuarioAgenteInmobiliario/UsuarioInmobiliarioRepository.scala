@@ -25,9 +25,8 @@ trait UsuarioInmobiliarioRepository {
    * @return Un futuro con el identificador del agente agregado.
    *         Si el agente ya existe, el identificador que devuleve corresponde a cero (0)
    */
-  def createAgenteInmobiliario(idConstructor: Int, tipoIdentificacion: Int, identificacion: String,
-    correo: String, usuario: String,
-    nombre: Option[String], cargo: Option[String], descripcion: Option[String]): Future[Int]
+  def createAgenteInmobiliario(idConstructor: Int, tipoIdentificacion: Int, identificacion: String, correo: String, usuario: String, nombre: Option[String],
+    cargo: Option[String], descripcion: Option[String], tipoAgente: String): Future[Int]
 
   /**
    * Obtiene un agente inmobiliario dado su identificador

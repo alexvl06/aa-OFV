@@ -35,7 +35,7 @@ case class PermisoAgenteInmobiliarioDriverRepository(alianzaDao: AlianzaDAO, usu
   def getRecurso(idUser: Int, tiposCliente: TiposCliente, isMatriz: Boolean): Future[Seq[RecursoGraficoInmobiliario]] = {
     tiposCliente match {
       case TiposCliente.agenteInmobiliario => alianzaDao.getAgentResourcesById(idUser)
-      case TiposCliente.agenteInmobiliarioInterno =>  alianzaDao.getAdminResourcesVisible(PerfilInmobiliarioEnum.agenteInterno.toString)
+      case TiposCliente.agenteInmobiliarioInterno => alianzaDao.getAdminResourcesVisible(PerfilInmobiliarioEnum.agenteInterno.toString)
       case _ =>
         if (isMatriz) {
           alianzaDao.getAdminResourcesVisible(PerfilInmobiliarioEnum.agente.toString).map(_.filter(_.administrable))

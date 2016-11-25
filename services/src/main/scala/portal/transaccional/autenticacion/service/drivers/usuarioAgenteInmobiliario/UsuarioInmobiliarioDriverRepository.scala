@@ -9,7 +9,7 @@ import co.com.alianza.microservices.MailMessage
 import co.com.alianza.persistence.entities.{ PinAgenteInmobiliario, UsuarioAgenteInmobiliario, UsuarioAgenteInmobiliarioTable }
 import com.typesafe.config.Config
 import enumerations.EstadosUsuarioEnumInmobiliario._
-import enumerations.{ EstadosUsuarioEnum, EstadosUsuarioEnumInmobiliario }
+import enumerations.{ EstadosUsuarioEnum, EstadosUsuarioEnumInmobiliario, TipoAgenteInmobiliario }
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.{ UsuarioEmpresarialRepository, UsuarioEmpresarialRepositoryG }
 import portal.transaccional.autenticacion.service.web.agenteInmobiliario.{ ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse, PaginacionMetadata }
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal._
@@ -25,22 +25,26 @@ case class UsuarioInmobiliarioDriverRepository(
     extends UsuarioEmpresarialRepositoryG[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario](usuariosDao)
     with UsuarioEmpresarialRepository[UsuarioAgenteInmobiliario] with UsuarioInmobiliarioRepository {
 
-  override def createAgenteInmobiliario(idConstructor: Int, tipoIdentificacion: Int, identificacion: String,
-    correo: String, usuario: String,
-    nombre: Option[String], cargo: Option[String], descripcion: Option[String]): Future[Int] = {
+  override def createAgenteInmobiliario(idConstructor: Int, tipoIdentificacion: Int, identificacion: String, correo: String, usuario: String,
+    nombre: Option[String], cargo: Option[String], descripcion: Option[String], tipoAgente: String): Future[Int] = {
     // se verifica que el agente inmobiliario no se vaya a crear con el mismo nombre de usuario del constructor
     // y que no haya sido creado previamente
-    val proceder: Future[Boolean] = for {
-      constructorOp <- constructoresDao.getById(idConstructor)
-      existeAgente <- usuariosDao.exists(0, identificacion, usuario)
-    } yield constructorOp.isDefined && constructorOp.get.usuario != usuario && !existeAgente
+    val proceder: Future[Boolean] =
+    if(tipoAgente !=  TipoAgenteInmobiliario.empresarial.toString) {
+      usuariosDao.exists(0, identificacion, usuario)
+    } else {
+      for {
+        constructorOp <- constructoresDao.getById(idConstructor)
+        existeAgente: Boolean <- usuariosDao.exists(0, identificacion, usuario)
+      } yield constructorOp.isDefined && constructorOp.get.usuario != usuario && !existeAgente
+    }
 
     proceder.flatMap({
       case false => Future.successful(0)
       case true =>
         val agente = UsuarioAgenteInmobiliario(
           0, identificacion, tipoIdentificacion, usuario, correo, EstadosUsuarioEnum.pendienteActivacion.id,
-          None, None, new Timestamp(System.currentTimeMillis()), 0, None, nombre, cargo, descripcion, None, false)
+          None, None, new Timestamp(System.currentTimeMillis()), 0, None, nombre, cargo, descripcion, None, tipoAgente)
         for {
           idAgente <- usuariosDao.create(agente)
           configExpiracion <- configDao.getByKey(TiposConfiguracion.EXPIRACION_PIN.llave)
@@ -75,7 +79,8 @@ case class UsuarioInmobiliarioDriverRepository(
       agente.estado,
       agente.nombre,
       agente.cargo,
-      agente.descripcion
+      agente.descripcion,
+      agente.tipoAgente
     )))
   }
 
@@ -87,7 +92,7 @@ case class UsuarioInmobiliarioDriverRepository(
       .map(res => {
         val agentes: Seq[ConsultarAgenteInmobiliarioResponse] = res._5.map(agente => ConsultarAgenteInmobiliarioResponse(
           agente.id, agente.correo, agente.usuario, agente.estado,
-          agente.nombre, agente.cargo, agente.descripcion
+          agente.nombre, agente.cargo, agente.descripcion, agente.tipoAgente
         ))
         ConsultarAgenteInmobiliarioListResponse(
           PaginacionMetadata(res._1, res._2, res._3, res._4),
@@ -138,7 +143,7 @@ case class UsuarioInmobiliarioDriverRepository(
           usuariosDao.updateState(identificacion, usuario, estado).map {
             case x if x == 0 => Option.empty
             case _ => Option(ConsultarAgenteInmobiliarioResponse(agente.id, agente.correo, agente.usuario, estado.id,
-              agente.nombre, agente.cargo, agente.descripcion))
+              agente.nombre, agente.cargo, agente.descripcion, agente.tipoAgente))
           }
         }.getOrElse(Future.successful(Option.empty))
     }

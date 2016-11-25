@@ -8,7 +8,7 @@ import CustomDriver.simple._
  */
 case class UsuarioAgenteInmobiliario(id: Int, identificacion: String, tipoIdentificacion: Int, usuario: String, correo: String, estado: Int,
   contrasena: Option[String], token: Option[String], fechaActualizacion: Timestamp, numeroIngresosErroneos: Int, ipUltimoIngreso: Option[String],
-  nombre: Option[String], cargo: Option[String], descripcion: Option[String], fechaUltimoIngreso: Option[Timestamp], usuarioInterno : Boolean) extends UsuarioAgente
+  nombre: Option[String], cargo: Option[String], descripcion: Option[String], fechaUltimoIngreso: Option[Timestamp], tipoAgente: String) extends UsuarioAgente
 
 class UsuarioAgenteInmobiliarioTable(tag: Tag) extends UsuarioAgenteTable[UsuarioAgenteInmobiliario](tag, "USUARIO_AGENTE_INMOBILIARIO") {
 
@@ -27,9 +27,9 @@ class UsuarioAgenteInmobiliarioTable(tag: Tag) extends UsuarioAgenteTable[Usuari
   val cargo = column[Option[String]]("CARGO")
   override val descripcion = column[Option[String]]("DESCRIPCION")
   override val fechaUltimoIngreso = column[Option[Timestamp]]("FECHA_ULTIMO_INGRESO")
-  val usuarioInterno = column[Boolean]("USUARIO_INTERNO")
+  val tipoAgente = column[String]("TIPO_AGENTE")
 
   def * = (id, identificacion, tipoIdentificacion, usuario, correo, estado, contrasena, token, fechaActualizacion, numeroIngresosErroneos, ipUltimoIngreso,
-    nombre, cargo, descripcion, fechaUltimoIngreso, usuarioInterno) <> (UsuarioAgenteInmobiliario.tupled, UsuarioAgenteInmobiliario.unapply)
+    nombre, cargo, descripcion, fechaUltimoIngreso, tipoAgente) <> (UsuarioAgenteInmobiliario.tupled, UsuarioAgenteInmobiliario.unapply)
 }
 
