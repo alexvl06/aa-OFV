@@ -154,7 +154,7 @@ case class AgenteInmobiliarioService(
             case 0 => complete(StatusCodes.NotFound)
             case _ => complete(StatusCodes.OK)
           }
-          case Failure(exception) => complete(StatusCodes.InternalServerError, exception)
+          case Failure(exception) => complete(StatusCodes.InternalServerError -> exception)
         }
       }
     }
@@ -205,18 +205,35 @@ case class AgenteInmobiliarioService(
 
   private def updatePermisosProyecto(fideicomiso: Int, proyecto: Int): Route = {
     put {
-      parameters("ids" ? "") { ids =>
-        entity(as[Seq[PermisoAgenteInmobiliario]]) { permisos =>
-          val idAgentes: Seq[Int] = ids match {
-            case x if x.isEmpty => Seq.empty
-            case x => x.split(",").map(_.toInt).toSeq
-          }
-          val updateF: Future[Option[Int]] = permisosRepo.updatePermisosProyecto(
-            usuarioAuth.identificacion, fideicomiso, proyecto, idAgentes, permisos
-          )
-          onComplete(updateF) {
-            case Success(update) => complete(StatusCodes.OK)
-            case Failure(exception) => complete(StatusCodes.InternalServerError)
+      parameter('fromFid.?) { fidOpt =>
+        parameter('fromPro.?) { proOpt =>
+          (fidOpt, proOpt) match {
+            case (Some(fromFid), Some(fromPro)) =>
+              val updateF: Future[Option[Int]] = permisosRepo.replicatePermisosProyecto(
+                usuarioAuth.identificacion, fromFid.toInt, fromPro.toInt, fideicomiso, proyecto
+              )
+              onComplete(updateF) {
+                case Success(update) => complete(StatusCodes.OK)
+                case Failure(exception) =>
+                  exception.printStackTrace()
+                  complete(StatusCodes.InternalServerError)
+              }
+            case _ =>
+              parameter('ids ? "") { ids =>
+                entity(as[Seq[PermisoAgenteInmobiliario]]) { permisos =>
+                  val idAgentes: Seq[Int] = ids match {
+                    case x if x.isEmpty => Seq.empty
+                    case x => x.split(",").map(_.toInt).toSeq
+                  }
+                  val updateF: Future[Option[Int]] = permisosRepo.updatePermisosProyecto(
+                    usuarioAuth.identificacion, fideicomiso, proyecto, idAgentes, permisos
+                  )
+                  onComplete(updateF) {
+                    case Success(update) => complete(StatusCodes.OK)
+                    case Failure(exception) => complete(StatusCodes.InternalServerError)
+                  }
+                }
+              }
           }
         }
       }

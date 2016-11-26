@@ -32,6 +32,18 @@ case class PermisoAgenteInmobiliarioDriverRepository(alianzaDao: AlianzaDAO, usu
     } yield actualizar
   }
 
+  def replicatePermisosProyecto(identificacion: String, fideicomiso: Int, proyecto: Int,
+                                fideicomisoDestino: Int, proyectoDestino: Int): Future[Option[Int]] = {
+    for {
+      permisosProyectoReplicar <- alianzaDao.getPermisosProyectoInmobiliario(identificacion, fideicomiso, proyecto)
+      permisosProyectoDestino <- alianzaDao.getPermisosProyectoInmobiliario(identificacion, fideicomisoDestino, proyectoDestino)
+      permisosAgregar: Seq[PermisoAgenteInmobiliario] = permisosProyectoReplicar
+        .map(_.copy(fideicomiso = fideicomisoDestino, proyecto = proyectoDestino))
+        .diff(permisosProyectoDestino)
+      actualizar <- permisosDAO.update(Seq.empty, permisosAgregar)
+    } yield actualizar
+  }
+
   def getRecurso(idUser: Int, tiposCliente: TiposCliente, isMatriz: Boolean): Future[Seq[RecursoGraficoInmobiliario]] = {
     tiposCliente match {
       case TiposCliente.agenteInmobiliario => alianzaDao.getAgentResourcesById(idUser)
