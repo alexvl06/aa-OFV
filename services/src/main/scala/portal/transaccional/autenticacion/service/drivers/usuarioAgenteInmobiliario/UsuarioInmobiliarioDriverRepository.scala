@@ -3,6 +3,7 @@ package portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobili
 import java.sql.Timestamp
 
 import akka.actor.ActorSystem
+import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.exceptions.ValidacionExceptionPasswordRules
 import co.com.alianza.microservices.MailMessage
@@ -22,22 +23,14 @@ case class UsuarioInmobiliarioDriverRepository(
   usuariosDao: UsuarioAgenteInmobDAO,
   pinRepository: UsuarioInmobiliarioPinRepository
 )(implicit val ex: ExecutionContext, system: ActorSystem, config: Config)
-    extends UsuarioEmpresarialRepositoryG[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario](usuariosDao)
+  extends UsuarioEmpresarialRepositoryG[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario](usuariosDao)
     with UsuarioEmpresarialRepository[UsuarioAgenteInmobiliario] with UsuarioInmobiliarioRepository {
 
   override def createAgenteInmobiliario(idConstructor: Int, tipoIdentificacion: Int, identificacion: String, correo: String, usuario: String,
     nombre: Option[String], cargo: Option[String], descripcion: Option[String], tipoAgente: String): Future[Int] = {
     // se verifica que el agente inmobiliario no se vaya a crear con el mismo nombre de usuario del constructor
     // y que no haya sido creado previamente
-    val proceder: Future[Boolean] =
-    if(tipoAgente !=  TipoAgenteInmobiliario.empresarial.toString) {
-      usuariosDao.exists(0, identificacion, usuario)
-    } else {
-      for {
-        constructorOp <- constructoresDao.getById(idConstructor)
-        existeAgente: Boolean <- usuariosDao.exists(0, identificacion, usuario)
-      } yield constructorOp.isDefined && constructorOp.get.usuario != usuario && !existeAgente
-    }
+    val proceder: Future[Boolean] = validateUniqueness(idConstructor, identificacion, usuario, tipoAgente)
 
     proceder.flatMap({
       case false => Future.successful(0)
@@ -62,6 +55,18 @@ case class UsuarioInmobiliarioDriverRepository(
           idAgente
         }
     })
+  }
+
+  private def validateUniqueness(idConstructor : Int, identificacion: String, usuario: String, tipoAgente: String): Future[Boolean] = {
+
+    if(tipoAgente != TipoAgenteInmobiliario.empresarial.toString) {
+      usuariosDao.exists(0, identificacion, usuario).map(!_)
+    } else {
+      for {
+        constructorOp <- constructoresDao.getById(idConstructor)
+        existeAgente <- usuariosDao.exists(0, identificacion, usuario)
+      } yield constructorOp.isDefined && constructorOp.get.usuario != usuario && !existeAgente
+    }
   }
 
   override def getAgenteInmobiliario(id: Int): Future[Option[UsuarioAgenteInmobiliario]] = {
