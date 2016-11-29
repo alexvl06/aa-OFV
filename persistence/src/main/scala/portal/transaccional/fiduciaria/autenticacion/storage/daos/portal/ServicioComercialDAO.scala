@@ -37,7 +37,7 @@ case class ServicioComercialDAO()(dcConfig: DBConfig) extends ServicioComercialD
   override def existe(url: String): Future[Boolean] = {
 
     val concat = SimpleBinaryOperator[String]("||")
-    val query = servicios.filter(s => LiteralColumn(url) like concat("%", s.url)).exists
+    val query = servicios.filter(s => LiteralColumn(url) like concat(concat("%", s.url), "%")).exists
     val resOption = query.result
     run(resOption)
   }
