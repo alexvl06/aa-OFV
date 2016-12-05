@@ -7,7 +7,7 @@ import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
-import co.com.alianza.persistence.entities.{ Empresa, UsuarioComercialAdmin }
+import co.com.alianza.persistence.entities.UsuarioComercialAdmin
 import co.com.alianza.util.clave.Crypto
 import enumerations.AppendPasswordUser
 import portal.transaccional.autenticacion.service.drivers.empresa.EmpresaRepository

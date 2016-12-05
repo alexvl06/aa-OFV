@@ -18,6 +18,10 @@ object TiposCliente extends Enumeration {
     this.values.filter(tipo => tipo.toString.equals(tipoCliente)).head
   }
 
+  def getTipoCliente(idTipo: Int): TiposCliente = {
+    this.values.filter(tipo => tipo.id == idTipo).head
+  }
+
   private val tiposIdIndividual: List[Int] = List(
     1, // CedulaCiudadania
     2, // CedulaExtranjeria

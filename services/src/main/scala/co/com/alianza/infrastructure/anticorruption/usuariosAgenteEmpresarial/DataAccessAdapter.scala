@@ -30,33 +30,8 @@ object DataAccessAdapter {
 
   val repo = new UsuariosEmpresarialRepository()
 
-  def consultaContrasenaActualAgenteEmpresarial(pw_actual: String, idUsuario: Int): Future[Validation[PersistenceException, Option[dtoUsuario]]] = {
-    val repo = new UsuariosEmpresaRepository()
-    repo.consultaContrasenaActualAgenteEmpresarial(pw_actual, idUsuario) map {
-      x => transformValidation(x)
-    }
-  }
-
   def validacionAgenteEmpresarial(numIdentificacionAgenteEmpresarial: String, correoUsuarioAgenteEmpresarial: String, tipoIdentiAgenteEmpresarial: Int, idClienteAdmin: Int): Future[Validation[PersistenceException, Option[(Int, Int)]]] = {
     repo.validacionAgenteEmpresarial(numIdentificacionAgenteEmpresarial: String, correoUsuarioAgenteEmpresarial: String, tipoIdentiAgenteEmpresarial: Int, idClienteAdmin: Int)
-  }
-
-  def actualizarContrasenaAgenteEmpresarial(pw_nuevo: String, idUsuario: Int): Future[Validation[PersistenceException, Int]] = {
-    val repo = new UsuariosEmpresaRepository()
-    repo.actualizarContrasenaAgenteEmpresarial(Crypto.hashSha512(pw_nuevo, idUsuario), idUsuario)
-  }
-
-  def caducarFechaUltimoCambioContrasenaAgenteEmpresarial(idUsuario: Int): Future[Validation[PersistenceException, Int]] = {
-    val repo = new UsuariosEmpresaRepository()
-    repo.caducarFechaUltimoCambioContrasenaAgenteEmpresarial(idUsuario)
-  }
-
-  def cambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa): Future[Validation[PersistenceException, Int]] = {
-    repo.AcambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial, estado)
-  }
-
-  def cambiarBloqueoDesbloqueoAgenteEmpresarial(idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa, timestamp: Timestamp): Future[Validation[PersistenceException, Int]] = {
-    repo.cambiarBloqueoDesbloqueoAgenteEmpresarial(idUsuarioAgenteEmpresarial, estado, timestamp)
   }
 
   def crearPinEmpresaAgenteEmpresarial(pinEmpresaAgenteEmpresarial: ePinEmpresa): Future[Validation[PersistenceException, Int]] = {
@@ -69,10 +44,6 @@ object DataAccessAdapter {
 
   def actualizarAgenteEmpresarial(id: Int, usuario: String, correo: String, nombreUsuario: String, cargo: String, descripcion: String): Future[Validation[PersistenceException, Int]] = {
     repo.actualizarAgente(id, usuario, correo, nombreUsuario, cargo, Option(descripcion))
-  }
-
-  def eliminarPinEmpresaReiniciarAnteriores(idUsuarioAgenteEmpresarial: Int, usoPinEmpresa: Int): Future[Validation[PersistenceException, Int]] = {
-    repo.eliminarPinEmpresaReiniciarAnteriores(idUsuarioAgenteEmpresarial, usoPinEmpresa)
   }
 
   def obtenerEmpresaPorNit(nit: String): Future[Validation[PersistenceException, Option[Empresa]]] = {

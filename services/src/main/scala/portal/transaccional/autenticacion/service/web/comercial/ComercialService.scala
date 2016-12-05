@@ -54,7 +54,7 @@ case class ComercialService(user: UsuarioAuth, kafkaActor: ActorSelection, comer
               //auditoria
               mapRequestContext {
                 r: RequestContext =>
-                  val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, Option(user.usuario))
+                  val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, user.usuario)
                   requestAuditing[PersistenceException, CrearAdministradorRequest](r, AuditingHelper.fiduciariaTopic,
                     AuditingHelper.crearAdministradorComercialIndex, ip.value, kafkaActor, usuario, Some(request))
               } {
@@ -73,16 +73,17 @@ case class ComercialService(user: UsuarioAuth, kafkaActor: ActorSelection, comer
     put {
       entity(as[ActualizarContrasenaRequest]) {
         request =>
-          val resultado = comercialRepo.actualizarContrasena(user, request.contrasenaActual, request.contrasenaNueva)
           clientIP {
             ip =>
               //auditoria
               mapRequestContext {
                 r: RequestContext =>
-                  val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, Option(user.usuario))
+                  val msg: Option[ActualizarContrasenaRequest] = Option(request.copy(contrasenaActual = "", contrasenaNueva = ""))
+                  val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, user.usuario)
                   requestAuditing[PersistenceException, ActualizarContrasenaRequest](r, AuditingHelper.fiduciariaTopic,
-                    AuditingHelper.cambioContrasenaAdministradorComercialIndex, ip.value, kafkaActor, usuario, Some(request))
+                    AuditingHelper.cambioContrasenaAdministradorComercialIndex, ip.value, kafkaActor, usuario, msg)
               } {
+                val resultado = comercialRepo.actualizarContrasena(user, request.contrasenaActual, request.contrasenaNueva)
                 onComplete(resultado) {
                   case Success(value) => complete(value.toString)
                   case Failure(ex) => execution(ex)

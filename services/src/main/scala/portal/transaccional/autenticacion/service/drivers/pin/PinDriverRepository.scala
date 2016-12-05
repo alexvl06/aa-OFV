@@ -7,26 +7,25 @@ import java.util.Date
 import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.persistence.entities._
 import co.com.alianza.util.clave.Crypto
-import enumerations.{AppendPasswordUser, EstadosEmpresaEnum, EstadosUsuarioEnum, PerfilesUsuario}
+import enumerations._
 import portal.transaccional.autenticacion.service.drivers.empresa.EmpresaRepository
 import portal.transaccional.autenticacion.service.drivers.ipempresa.IpEmpresaRepository
 import portal.transaccional.autenticacion.service.drivers.ipusuario.IpUsuarioRepository
 import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaRepository
 import portal.transaccional.autenticacion.service.drivers.ultimaContrasena.UltimaContrasenaRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioAdminRepository
-import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialRepository
-import portal.transaccional.autenticacion.service.drivers.usuarioAgenteEmpresarial.UsuarioEmpresarialCustomRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialRepositoryG
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioRepository
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{PinAdminDAOs, PinAgenteDAOs, PinUsuarioDAOs}
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ PinAdminDAOs, PinAgenteDAOs, PinUsuarioDAOs }
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * Created by hernando on 25/10/16.
  */
 case class PinDriverRepository(pinUsuarioDAO: PinUsuarioDAOs, pinAdminDAO: PinAdminDAOs, pinAgenteDAO: PinAgenteDAOs,
     empresaRepo: EmpresaRepository, ipUsuarioRepo: IpUsuarioRepository, ipEmpresaRepo: IpEmpresaRepository,
-    usuarioRepo: UsuarioRepository, usuarioAdminRepo: UsuarioAdminRepository, usuarioAgenteRepo: UsuarioEmpresarialRepository[UsuarioEmpresarial] with UsuarioEmpresarialCustomRepository,
+    usuarioRepo: UsuarioRepository, usuarioAdminRepo: UsuarioAdminRepository, usuarioAgenteRepo: UsuarioEmpresarialRepositoryG[UsuarioEmpresarialTable, UsuarioEmpresarial],
     ultimaContrasenaRepo: UltimaContrasenaRepository, reglasRepo: ReglaContrasenaRepository)(implicit val ex: ExecutionContext) extends PinRepository {
 
   def validarPinUsuario(token: String, funcionalidad: Int): Future[Boolean] = {
@@ -60,7 +59,7 @@ case class PinDriverRepository(pinUsuarioDAO: PinUsuarioDAOs, pinAdminDAO: PinAd
       validar <- validar(token, pin.token, pin.tokenHash, new Date(pin.fechaExpiracion.getTime))
       agenteOption <- usuarioAgenteRepo.getById(pin.idUsuarioEmpresarial)
       agente <- usuarioAgenteRepo.validarUsuario(agenteOption)
-      _ <- usuarioAgenteRepo.validacionBloqueoAdmin(agente)
+      _ <- usuarioAgenteRepo.validarBloqueoAdmin(agente)
       optionEmpresa <- empresaRepo.getByIdentity(agente.identificacion)
       _ <- empresaRepo.validarEmpresa(optionEmpresa)
     } yield validar
@@ -86,7 +85,7 @@ case class PinDriverRepository(pinUsuarioDAO: PinUsuarioDAOs, pinAdminDAO: PinAd
       pin <- validarPinOption(pinOption)
       _ <- validar(token, pin.token, pin.tokenHash, new Date(pin.fechaExpiracion.getTime))
       admin <- usuarioAdminRepo.getById(pin.idUsuario)
-      _ <- usuarioAdminRepo.validarEstado(admin)
+      _ <- usuarioAdminRepo.validacionBloqueoAdmin(admin)
       optionEmpresa <- empresaRepo.getByIdentity(admin.identificacion)
       _ <- empresaRepo.validarEmpresa(optionEmpresa)
       _ <- validar(token, pin.token, pin.tokenHash, new Date(pin.fechaExpiracion.getTime))
@@ -106,7 +105,7 @@ case class PinDriverRepository(pinUsuarioDAO: PinUsuarioDAOs, pinAdminDAO: PinAd
       validar <- validar(token, pin.token, pin.tokenHash, new Date(pin.fechaExpiracion.getTime))
       agenteOption <- usuarioAgenteRepo.getById(pin.idUsuarioEmpresarial)
       agente <- usuarioAgenteRepo.validarUsuario(agenteOption)
-      _ <- usuarioAgenteRepo.validacionBloqueoAdmin(agente)
+      _ <- usuarioAgenteRepo.validarBloqueoAdmin(agente)
       optionEmpresa <- empresaRepo.getByIdentity(agente.identificacion)
       _ <- empresaRepo.validarEmpresa(optionEmpresa)
       _ <- reglasRepo.validarContrasenaReglasGenerales(pin.idUsuarioEmpresarial, PerfilesUsuario.agenteEmpresarial, contrasena)
@@ -126,7 +125,15 @@ case class PinDriverRepository(pinUsuarioDAO: PinUsuarioDAOs, pinAdminDAO: PinAd
 
   private def guardarIpEmpresa(idEmpresa: Int, ipOption: Option[String]): Future[String] = {
     ipOption match {
-      case Some(ip: String) => ipEmpresaRepo.guardarIp(IpsEmpresa(idEmpresa, ip))
+      case Some(ip: String) =>
+        for {
+          ips <- ipEmpresaRepo.getIpsByEmpresaId(idEmpresa)
+          guardar <- if (ips.exists(_.ip.equals(ip))) {
+            Future.successful("")
+          } else {
+            ipEmpresaRepo.guardarIp(IpsEmpresa(idEmpresa, ip))
+          }
+        } yield guardar
       case _ => Future.successful("")
     }
   }

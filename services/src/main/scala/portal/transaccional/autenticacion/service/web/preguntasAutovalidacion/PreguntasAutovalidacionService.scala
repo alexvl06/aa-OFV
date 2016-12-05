@@ -85,7 +85,7 @@ case class PreguntasAutovalidacionService(user: UsuarioAuth, kafkaActor: ActorSe
         request =>
           clientIP {
             ip =>
-              val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, Option(user.usuario))
+              val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, user.usuario)
               mapRequestContext((r: RequestContext) =>
                 requestAuditing[PersistenceException, RespuestasComprobacionRequest](r, AuditingHelper.fiduciariaTopic,
                   AuditingHelper.autovalidacionComprobarIndex, ip.value, kafkaActor, usuario, Some(request))) {
@@ -104,7 +104,7 @@ case class PreguntasAutovalidacionService(user: UsuarioAuth, kafkaActor: ActorSe
     delete {
       clientIP {
         ip =>
-          val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, Option(user.usuario))
+          val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, user.usuario)
           mapRequestContext((r: RequestContext) =>
             requestAuditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.autovalidacionBloquearIndex, ip.value, kafkaActor, usuario, None)) {
             val resultado: Future[Int] = preguntasAutoValidacionRepository.bloquearRespuestas(user.id: Int, user.tipoCliente)

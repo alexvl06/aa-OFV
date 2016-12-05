@@ -47,7 +47,7 @@ case class IpService(user: UsuarioAuth, kafkaActor: ActorSelection, ipRepo: IpRe
       mapRequestContext {
         r: RequestContext =>
           requestAuditing[PersistenceException, Any](r, AuditingHelper.fiduciariaTopic, AuditingHelper.usuarioConsultarIpIndex,
-            ipPeticion, kafkaActor, getAuditingUser(user.tipoIdentificacion, user.identificacion, Option(user.usuario)), None)
+            ipPeticion, kafkaActor, getAuditingUser(user.tipoIdentificacion, user.identificacion, user.usuario), None)
       } {
         val resultado: Future[Seq[IpResponse]] = ipRepo.obtenerIps(user)
         onComplete(resultado) {
@@ -64,7 +64,7 @@ case class IpService(user: UsuarioAuth, kafkaActor: ActorSelection, ipRepo: IpRe
         eliminarIp =>
           mapRequestContext {
             r: RequestContext =>
-              val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, Option(user.usuario))
+              val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, user.usuario)
               requestAuditing[PersistenceException, IpRequest](r, AuditingHelper.fiduciariaTopic,
                 AuditingHelper.usuarioEliminarIpIndex, ipPeticion, kafkaActor, usuario, Some(eliminarIp))
           } {
@@ -84,7 +84,7 @@ case class IpService(user: UsuarioAuth, kafkaActor: ActorSelection, ipRepo: IpRe
         agregarIp =>
           mapRequestContext {
             r: RequestContext =>
-              val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, Option(user.usuario))
+              val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, user.usuario)
               requestAuditing[PersistenceException, IpRequest](r, AuditingHelper.fiduciariaTopic,
                 AuditingHelper.usuarioAgregarIpIndex, ipPeticion, kafkaActor, usuario, Some(agregarIp))
           } {
@@ -102,14 +102,15 @@ case class IpService(user: UsuarioAuth, kafkaActor: ActorSelection, ipRepo: IpRe
     get {
       mapRequestContext {
         r: RequestContext =>
-          val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, Option(user.usuario))
+          val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, user.usuario)
           requestAuditing[PersistenceException, String](r, AuditingHelper.fiduciariaTopic, AuditingHelper.usuarioConsultarIpIndex,
             ipPeticion, kafkaActor, usuario, Some(ipPeticion))
       } {
         val resultado: Future[String] = ipRepo.agregarIp(user, ipPeticion)
         onComplete(resultado) {
           case Success(value) => complete(value)
-          case Failure(ex) => complete((StatusCodes.Conflict, "Error al agregar"))
+          case Failure(ex) =>
+            complete((StatusCodes.Conflict, "Error al agregar"))
         }
       }
     }

@@ -9,10 +9,10 @@ import co.com.alianza.persistence.util.DataBaseExecutionContext
 import co.com.alianza.util.json.MarshallableImplicits._
 import enumerations.EstadosPin
 import enumerations.EstadosPin.EstadoPin
-import org.joda.time.{DateTime, DateTimeZone}
+import org.joda.time.{ DateTime, DateTimeZone }
 
 import scala.concurrent.ExecutionContext
-import scalaz.{Failure => zFailure, Success => zSuccess}
+import scalaz.{ Failure => zFailure, Success => zSuccess }
 
 object PinUtil {
 

@@ -43,7 +43,8 @@ object AuditingHelper extends AuditingHelper {
   val autovalidacionComprobarIndex = "autovalidacion-comprobar-fiduciaria"
   //comercial
   val autenticacionComercialIndex = "autenticacion-comercial-fiduciaria"
-  val recursosComercialIndex = "actualizar-recursos-comercial-fiduciaria"
+  val recursosComercialIndex = "consulta-recursos-comercial-fiduciaria"
+  val recursosComercialActualizacionIndex = "actualizar-recursos-comercial-fiduciaria"
   val crearAdministradorComercialIndex = "crear-administrador-comercial-fiduciaria"
   val cambioContrasenaAdministradorComercialIndex = "cambio-contrasena-administrador-comercial-fiduciaria"
 }
@@ -76,21 +77,9 @@ trait AuditingHelper {
                 val httpReq: HttpRequest = ctx.request
                 val auditingMsg: AuditRequest =
                   AuditRequest(
-                    AudRequest(
-                      httpReq.method.toString(),
-                      httpReq.uri.toRelative.toString(),
-                      extraParameters.getOrElse(""),
-                      ip,
-                      usuario
-                    ),
-                    AudResponse(
-                      response.status.intValue.toString,
-                      response.status.reason,
-                      response.entity.data.asString
-                    ),
-                    kafkaTopic,
-                    elasticIndex,
-                    httpReq.uri.toRelative.toString().split("/")(1)
+                    AudRequest(httpReq.method.toString(), httpReq.uri.toRelative.toString(), extraParameters.getOrElse(""), ip, usuario),
+                    AudResponse(response.status.intValue.toString, response.status.reason, response.entity.data.asString),
+                    kafkaTopic, elasticIndex, httpReq.uri.toRelative.toString().split("/")(1)
                   )
                 kafkaActor ! auditingMsg
               }
@@ -119,8 +108,8 @@ trait AuditingHelper {
     }
   }
 
-  def getAuditingUser(tipoIdentificacion: Int, identificacion: String, usuario: Option[String]): Option[AuditingUserData] = {
-    Option(AuditingUserData(tipoIdentificacion, identificacion, usuario))
+  def getAuditingUser(tipoIdentificacion: Int, identificacion: String, usuario: String): Option[AuditingUserData] = {
+    Option(AuditingUserData(tipoIdentificacion, identificacion, Option(usuario)))
   }
 
 }

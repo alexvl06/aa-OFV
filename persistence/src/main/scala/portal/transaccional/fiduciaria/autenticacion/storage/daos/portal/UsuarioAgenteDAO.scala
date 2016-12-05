@@ -16,7 +16,6 @@ import scala.reflect.{ ClassTag, _ }
 abstract class UsuarioAgenteDAO[T <: UsuarioAgenteTable[E], E <: UsuarioAgente: ClassTag](clazz: TableQuery[T])(implicit dcConfig: DBConfig) extends UsuarioAgenteDAOs[T, E] {
 
   val table: TableQuery[T] = clazz
-  //lazy val clazzEntity = classTag[E].runtimeClass
 
   import dcConfig.DB._
   import dcConfig.driver.api._
@@ -41,6 +40,14 @@ abstract class UsuarioAgenteDAO[T <: UsuarioAgenteTable[E], E <: UsuarioAgente: 
 
   def updateLastEntryDate(idUsuario: Int, fechaActual: Timestamp): Future[Int] = {
     run(table.filter(_.id === idUsuario).map(_.fechaUltimoIngreso).update(Some(fechaActual)))
+  }
+
+  def updateUpdateDate(idUsuario: Int, fecha: Timestamp): Future[Int] = {
+    run(table.filter(_.id === idUsuario).map(_.fechaActualizacion).update(fecha))
+  }
+
+  def updatePasswordById(idUsuario: Int, contrasena: String): Future[Int] = {
+    run(table.filter(_.id === idUsuario).map(_.contrasena).update(Some(contrasena)))
   }
 
   def updateStateById(idUsuario: Int, estado: Int): Future[Int] = {
@@ -70,4 +77,5 @@ abstract class UsuarioAgenteDAO[T <: UsuarioAgenteTable[E], E <: UsuarioAgente: 
   def deleteToken(token: String): Future[Int] = {
     run(table.filter(_.token === token).map(_.token).update(Some(null)))
   }
+
 }

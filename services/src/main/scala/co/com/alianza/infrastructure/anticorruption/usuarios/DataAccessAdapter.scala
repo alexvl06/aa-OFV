@@ -2,15 +2,15 @@ package co.com.alianza.infrastructure.anticorruption.usuarios
 
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.auditing.AuditingUser.AuditingUserData
-import co.com.alianza.infrastructure.dto.{Usuario, _}
+import co.com.alianza.infrastructure.dto.{ Usuario, _ }
 import co.com.alianza.persistence.entities
-import co.com.alianza.persistence.entities.{IpsEmpresa, IpsUsuario, PerfilUsuario, Empresa => eEmpresa, PinUsuario => ePinUsuario, Usuario => eUsuario, UsuarioAgente => eUsuarioEmpresarial, UsuarioEmpresarialAdmin => eUsuarioEmpresarialAdmin}
-import co.com.alianza.persistence.repositories.{IpsUsuarioRepository, UsuariosRepository, _}
+import co.com.alianza.persistence.entities.{ IpsEmpresa, IpsUsuario, PerfilUsuario, Empresa => eEmpresa, PinUsuario => ePinUsuario, Usuario => eUsuario, UsuarioAgente => eUsuarioEmpresarial, UsuarioEmpresarialAdmin => eUsuarioEmpresarialAdmin }
+import co.com.alianza.persistence.repositories.{ IpsUsuarioRepository, UsuariosRepository, _ }
 import co.com.alianza.persistence.util.DataBaseExecutionContext
 import enumerations.EstadosUsuarioEnum
 
-import scala.concurrent.{ExecutionContext, Future}
-import scalaz.{Validation, Failure => zFailure, Success => zSuccess}
+import scala.concurrent.{ ExecutionContext, Future }
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 
 object DataAccessAdapter {
 
@@ -70,13 +70,6 @@ object DataAccessAdapter {
     }
   }
 
-  def consultaContrasenaActual(pw_actual: String, idUsuario: Int): Future[Validation[PersistenceException, Option[Usuario]]] = {
-    val repo = new UsuariosRepository()
-    repo.consultaContrasenaActual(pw_actual, idUsuario) map {
-      x => transformValidation(x)
-    }
-  }
-
   def actualizarEstadoConfronta(numeroIdentificacion: String): Future[Validation[PersistenceException, Int]] = {
     val repo = new UsuariosRepository()
     repo.actualizarEstadoUsuario(numeroIdentificacion, EstadosUsuarioEnum.activo.id)
@@ -98,7 +91,7 @@ object DataAccessAdapter {
   }
 
   def actualizarEstadoUsuarioEmpresarialAdmin(idUsuario: Int, estado: Int): Future[Validation[PersistenceException, Int]] =
-    new UsuarioEmpresarialAdminRepository() actualizarEstadoUsuario(idUsuario, estado)
+    new UsuarioEmpresarialAdminRepository() actualizarEstadoUsuario (idUsuario, estado)
 
   def cambiarPassword(idUsuario: Int, password: String): Future[Validation[PersistenceException, Int]] = {
     val repo = new UsuariosRepository()
@@ -162,8 +155,8 @@ object DataAccessAdapter {
   }
 
   /**
-    * Devuelvo la tupla del usuario empresarial y el estado de la empresa, ya tranformando la entidad de persistencia UsuarioEmpresarial en el objeto DTO
-    */
+   * Devuelvo la tupla del usuario empresarial y el estado de la empresa, ya tranformando la entidad de persistencia UsuarioEmpresarial en el objeto DTO
+   */
   private def transformValidationTuplaUsuarioEmpresarialEstadoEmpresa(origin: Validation[PersistenceException, Option[(eUsuarioEmpresarial, Int)]]): Validation[PersistenceException, Option[(UsuarioEmpresarial, Int)]] = {
     origin match {
       case zSuccess(response) =>
@@ -186,8 +179,8 @@ object DataAccessAdapter {
     }
 
   /**
-    * Devuelvo la tupla del usuario empresarial Admin y el estado de la empresa, ya tranformando la entidad de persistencia UsuarioEmpresarialAdmin en el objeto DTO
-    */
+   * Devuelvo la tupla del usuario empresarial Admin y el estado de la empresa, ya tranformando la entidad de persistencia UsuarioEmpresarialAdmin en el objeto DTO
+   */
   private def transformValidationUsuarioEmpresarialAdminEstadoEmpresa(origin: Validation[PersistenceException, Option[(eUsuarioEmpresarialAdmin, Int)]]): Validation[PersistenceException, Option[(UsuarioEmpresarialAdmin, Int)]] = {
     origin match {
       case zSuccess(response) =>

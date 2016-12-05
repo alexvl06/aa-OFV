@@ -2,6 +2,7 @@ package portal.transaccional.autenticacion.service.drivers.reglas
 
 import java.util.regex.Pattern
 
+import co.com.alianza.constants.LlavesReglaContrasena
 import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.persistence.entities.{ ReglaContrasena, UltimaContrasena }
 import co.com.alianza.util.clave.Crypto
@@ -26,8 +27,8 @@ case class ReglaContrasenaDriverRepository(
   //TODO: CambioContrasena Falta realizar la validacion de la fecha sumando los días establecidos en la DB
   val REGLAS_INGRESO_USUARIO = List(IntentosIngresoContrasena, CambioContrasena)
 
-  def getRegla(llave: String): Future[ReglaContrasena] = {
-    reglaDAO.getByKey(llave)
+  def getRegla(llave: LlavesReglaContrasena.Val): Future[ReglaContrasena] = {
+    reglaDAO.getByKey(llave.llave)
   }
 
   def getReglas(): Future[Seq[ReglaContrasena]] = {
@@ -44,7 +45,7 @@ case class ReglaContrasenaDriverRepository(
     for {
       reglas <- getReglas()
       mapa <- Future.successful(reglas.map(x => (x.llave, x.valor)).toMap)
-      ultimasContrasenas <- obtenerUltimasContrasenas(mapa.get("ULTIMAS_CONTRASENAS_NO_VALIDAS").getOrElse("0")toInt)
+      ultimasContrasenas <- obtenerUltimasContrasenas(mapa.get("ULTIMAS_CONTRASENAS_NO_VALIDAS").getOrElse("0").toInt)
       validacion <- aplicarReglas(contrasena, mapa, Option(ultimasContrasenas), REGLAS_GENERALES)
     } yield validacion
   }

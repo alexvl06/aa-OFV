@@ -22,6 +22,10 @@ trait UsuarioAgenteDAOs[T <: UsuarioAgenteTable[E], E <: UsuarioAgente] {
 
   def updateLastEntryDate(idUsuario: Int, fechaActual: Timestamp): Future[Int]
 
+  def updateUpdateDate(idUsuario: Int, fechaActual: Timestamp): Future[Int]
+
+  def updatePasswordById(idUsuario: Int, contrasena: String): Future[Int]
+
   def updateStateById(idUsuario: Int, estado: Int): Future[Int]
 
   def updateState(idUsuario: Int, estado: Int): Future[Int]

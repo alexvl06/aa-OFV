@@ -3,13 +3,12 @@ package portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobili
 import java.sql.Timestamp
 
 import akka.actor.ActorSystem
-import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.exceptions.ValidacionExceptionPasswordRules
 import co.com.alianza.microservices.MailMessage
 import co.com.alianza.persistence.entities.{ PinAgenteInmobiliario, UsuarioAgenteInmobiliario, UsuarioAgenteInmobiliarioTable }
 import com.typesafe.config.Config
 import enumerations.EstadosUsuarioEnumInmobiliario._
-import enumerations.{ EstadosUsuarioEnum, EstadosUsuarioEnumInmobiliario }
+import enumerations.{ ConfiguracionEnum, EstadosUsuarioEnum, EstadosUsuarioEnumInmobiliario }
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.{ UsuarioEmpresarialRepository, UsuarioEmpresarialRepositoryG }
 import portal.transaccional.autenticacion.service.web.agenteInmobiliario.{ ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse, PaginacionMetadata }
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal._
@@ -44,7 +43,7 @@ case class UsuarioInmobiliarioDriverRepository(
         )
         for {
           idAgente <- usuariosDao.create(agente)
-          configExpiracion <- configDao.getByKey(TiposConfiguracion.EXPIRACION_PIN.llave)
+          configExpiracion <- configDao.getByKey(ConfiguracionEnum.EXPIRACION_PIN.name)
           pinAgente: PinAgenteInmobiliario = pinRepository.generarPinAgente(configExpiracion, idAgente)
           idPin <- pinRepository.asociarPinAgente(pinAgente)
           correoActivacion: MailMessage = pinRepository.generarCorreoActivacion(
@@ -109,7 +108,7 @@ case class UsuarioInmobiliarioDriverRepository(
             Future.successful(r)
           } else {
             for {
-              configExpiracion <- configDao.getByKey(TiposConfiguracion.EXPIRACION_PIN.llave)
+              configExpiracion <- configDao.getByKey(ConfiguracionEnum.EXPIRACION_PIN.name)
               pinAgente: PinAgenteInmobiliario = pinRepository.generarPinAgente(configExpiracion, agente.id, reinicio = true)
               idPin <- pinRepository.asociarPinAgente(pinAgente)
               correoReinicio: MailMessage = pinRepository.generarCorreoReinicio(

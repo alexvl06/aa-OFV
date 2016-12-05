@@ -58,7 +58,8 @@ case class RecursoDriverRepository(generalDAO: AlianzaDAOs) extends RecursoRepos
     recursos.filter(filtrarRecursosClienteAdmin(_, url))
   }
 
-  /**PinEmpresa
+  /**
+   * PinEmpresa
    * Filtra el listado de recursos que concuerden con la url
    * @param recurso recursos asociados al admin
    * @param url la url a validar

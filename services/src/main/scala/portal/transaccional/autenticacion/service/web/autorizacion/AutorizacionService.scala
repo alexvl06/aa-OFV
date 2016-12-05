@@ -8,7 +8,7 @@ import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.infrastructure.dto.UsuarioInmobiliarioAuth
 import co.com.alianza.persistence.entities.UsuarioEmpresarial
-import co.com.alianza.util.token.{AesUtil, Token}
+import co.com.alianza.util.token.{ AesUtil, Token }
 import portal.transaccional.autenticacion.service.drivers.autorizacion._
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioAdminRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialRepository
@@ -16,12 +16,12 @@ import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobilia
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioRepository
 import portal.transaccional.autenticacion.service.drivers.util.SesionAgenteUtilRepository
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
-import portal.transaccional.autenticacion.service.util.ws.{CommonRESTFul, GenericAutorizado, GenericNoAutorizado}
-import spray.http.{MediaTypes, StatusCodes}
-import spray.routing.{RequestContext, Route, StandardRoute}
+import portal.transaccional.autenticacion.service.util.ws.{ CommonRESTFul, GenericAutorizado, GenericNoAutorizado }
+import spray.http.{ MediaTypes, StatusCodes }
+import spray.routing.{ RequestContext, Route, StandardRoute }
 
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
+import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{ Failure, Success }
 
 /**
  * Created by s4n 2016

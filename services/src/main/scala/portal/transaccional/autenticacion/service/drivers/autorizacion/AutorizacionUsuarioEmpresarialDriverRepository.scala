@@ -1,21 +1,21 @@
 package portal.transaccional.autenticacion.service.drivers.autorizacion
 
 import akka.util.Timeout
-import co.com.alianza.exceptions.{Autorizado, Prohibido, ValidacionAutorizacion, ValidacionException}
+import co.com.alianza.exceptions.{ Autorizado, Prohibido, ValidacionAutorizacion, ValidacionException }
 import co.com.alianza.infrastructure.dto.UsuarioEmpresarial
 import co.com.alianza.infrastructure.messages.ResponseMessage
-import co.com.alianza.persistence.entities.{RecursoPerfilAgente, UsuarioEmpresarial => UsuarioEmpresarialE}
+import co.com.alianza.persistence.entities.{ RecursoPerfilAgente, UsuarioEmpresarial => UsuarioEmpresarialE }
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.token.Token
 import enumerations.empresa.EstadosDeEmpresaEnum
 import portal.transaccional.autenticacion.service.drivers.recurso.RecursoRepository
 import portal.transaccional.autenticacion.service.drivers.sesion.SesionDriverRepository
-import portal.transaccional.autenticacion.service.drivers.usuarioAgente.{DataAccessTranslator, UsuarioEmpresarialRepository}
+import portal.transaccional.autenticacion.service.drivers.usuarioAgente.{ DataAccessTranslator, UsuarioEmpresarialRepository }
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.AlianzaDAO
 import spray.http.StatusCodes
 
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * Created by s4n on 2016

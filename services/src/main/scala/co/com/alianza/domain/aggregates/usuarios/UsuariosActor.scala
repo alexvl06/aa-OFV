@@ -3,36 +3,34 @@ package co.com.alianza.domain.aggregates.usuarios
 import java.sql.Timestamp
 import java.util.Calendar
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import akka.routing.RoundRobinPool
-import co.cifin.confrontaultra.dto.ultra.{CuestionarioULTRADTO, ParametrosSeguridadULTRADTO, ParametrosULTRADTO, ResultadoEvaluacionCuestionarioULTRADTO}
-import co.com.alianza.constants.TiposConfiguracion
-import co.com.alianza.exceptions.{BusinessLevel, PersistenceException}
-import co.com.alianza.infrastructure.anticorruption.usuarios.{DataAccessAdapter => DataAccessAdapterUsuario}
-import co.com.alianza.infrastructure.dto.{Empresa, _}
-import co.com.alianza.infrastructure.messages.{OlvidoContrasenaMessage, ResponseMessage, UsuarioMessage, _}
-import co.com.alianza.microservices.{MailMessage, SmtpServiceClient}
-import co.com.alianza.persistence.entities.{PinAdmin, PinAgenteInmobiliario, PinUsuario, UsuarioAgenteInmobiliario}
+import co.cifin.confrontaultra.dto.ultra.{ CuestionarioULTRADTO, ParametrosSeguridadULTRADTO, ParametrosULTRADTO, ResultadoEvaluacionCuestionarioULTRADTO }
+import co.com.alianza.exceptions.{ BusinessLevel, PersistenceException }
+import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => DataAccessAdapterUsuario }
+import co.com.alianza.infrastructure.dto.{ Empresa, _ }
+import co.com.alianza.infrastructure.messages.{ OlvidoContrasenaMessage, ResponseMessage, UsuarioMessage, _ }
+import co.com.alianza.microservices.{ MailMessage, SmtpServiceClient }
+import co.com.alianza.persistence.entities.{ PinAdmin, PinAgenteInmobiliario, PinUsuario, UsuarioAgenteInmobiliario }
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.json.MarshallableImplicits._
-import co.com.alianza.util.token.{PinData, TokenPin}
+import co.com.alianza.util.token.{ PinData, TokenPin }
 import co.com.alianza.util.transformers.ValidationT
-import com.asobancaria.cifinpruebas.cifin.confrontav2plusws.services.ConfrontaUltraWS.{ConfrontaUltraWSSoapBindingStub, ConfrontaUltraWebServiceServiceLocator}
+import com.asobancaria.cifinpruebas.cifin.confrontav2plusws.services.ConfrontaUltraWS.{ ConfrontaUltraWSSoapBindingStub, ConfrontaUltraWebServiceServiceLocator }
 import com.typesafe.config.Config
 import enumerations.empresa.EstadosDeEmpresaEnum
-import enumerations.{EstadosEmpresaEnum, EstadosUsuarioEnum, EstadosUsuarioEnumInmobiliario}
+import enumerations.{ ConfiguracionEnum, EstadosEmpresaEnum, EstadosUsuarioEnum, EstadosUsuarioEnumInmobiliario }
 import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.UsuarioInmobiliarioPinRepository
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ConfiguracionDAOs, UsuarioAgenteInmobDAOs}
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ ConfiguracionDAOs, UsuarioAgenteInmobDAOs }
 import spray.http.StatusCodes._
-
-import scala.concurrent.Future
-import scala.util.{Failure => sFailure, Success => sSuccess}
-import scalaz.Validation.FlatMap._
 import scalaz.std.AllInstances._
-import scalaz.{Validation, Failure => zFailure, Success => zSuccess}
+import scala.concurrent.Future
+import scala.util.{ Failure => sFailure, Success => sSuccess }
+import scalaz.Validation.FlatMap._
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 
 class UsuariosActorSupervisor(
-  agentesInmobDao: UsuarioAgenteInmobDAOs,
+    agentesInmobDao: UsuarioAgenteInmobDAOs,
     agentesInmobPinRepo: UsuarioInmobiliarioPinRepository,
     configDao: ConfiguracionDAOs
 ) extends Actor with ActorLogging {
@@ -63,12 +61,12 @@ class UsuariosActorSupervisor(
 }
 
 class UsuariosActor(
-  agentesInmobDao: UsuarioAgenteInmobDAOs,
+    agentesInmobDao: UsuarioAgenteInmobDAOs,
     agentesInmobPinRepo: UsuarioInmobiliarioPinRepository,
     configDao: ConfiguracionDAOs
 ) extends Actor with ActorLogging {
 
-  import ValidacionesUsuario._
+  import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario._
   implicit val config: Config = context.system.settings.config
 
   def receive = {
@@ -393,7 +391,6 @@ class UsuariosActor(
         new MailMessageUsuario(templateBody).getMessagePin(pinUsuarioDto, numHorasCaducidad, "1", "1")
       case pinUsuarioEmpresarialAdminDto @ PinAdmin(param1, param2, param3, param4, param5) =>
         new MailMessageUsuario(templateBody).getMessagePin(pinUsuarioEmpresarialAdminDto, numHorasCaducidad, "2", "1")
-
     }
     val asunto: String = config.getString(asuntoTemp)
     MailMessage(config.getString("alianza.smtp.from"), "luisaceleita@seven4n.com", List(), asunto, body, "")
@@ -442,7 +439,7 @@ class UsuariosActor(
       case zSuccess(_) =>
         if (agente.estado != EstadosUsuarioEnumInmobiliario.inactivo.id) {
           for {
-            configExpiracion <- configDao.getByKey(TiposConfiguracion.EXPIRACION_PIN.llave)
+            configExpiracion <- configDao.getByKey(ConfiguracionEnum.EXPIRACION_PIN.name)
             pinAgente: PinAgenteInmobiliario = agentesInmobPinRepo.generarPinAgente(configExpiracion, agente.id, reinicio = true)
             idPin <- agentesInmobPinRepo.asociarPinAgente(pinAgente)
             correoReinicio: MailMessage = agentesInmobPinRepo.generarCorreoReinicio(

@@ -5,7 +5,7 @@ import co.com.alianza.persistence.entities.CustomDriver.simple._
 /**
  * Created by alexandra in 2016.
  */
-case class RecursoGraficoInmobiliario(id: Int, nombre: String, url: String, visibleMenu: Boolean, administrable : Boolean, menuPrincipal: Int)
+case class RecursoGraficoInmobiliario(id: Int, nombre: String, url: String, visibleMenu: Boolean, administrable: Boolean, menuPrincipal: Int)
 
 case class RecursoGraficoInmobiliarioTable(tag: Tag) extends Table[RecursoGraficoInmobiliario](tag, "RECURSO_GRAFICO_INMOBILIARIO") {
 

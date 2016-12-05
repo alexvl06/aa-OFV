@@ -4,10 +4,10 @@ import java.sql.Timestamp
 
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.persistence.entities.CustomDriver.simple._
-import co.com.alianza.persistence.entities.{CustomDriver, EmpresaTable, UsuarioEmpresarialEmpresaTable, UsuarioEmpresarialTable, _}
+import co.com.alianza.persistence.entities.{ CustomDriver, EmpresaTable, UsuarioEmpresarialEmpresaTable, UsuarioEmpresarialTable, _ }
 import enumerations.EstadosEmpresaEnum
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scalaz.Validation
 
 /**
@@ -76,7 +76,8 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
       resolveTry(resultTry, "Consulta usuario empresarial por token: " + token)
   }
 
-  def validacionAgenteEmpresarial(numIdentificacionAgenteEmpresarial: String, correoUsuarioAgenteEmpresarial: String, tipoIdentiAgenteEmpresarial: Int, idClienteAdmin: Int): Future[Validation[PersistenceException, Option[(Int, Int)]]] = loan {
+  def validacionAgenteEmpresarial(numIdentificacionAgenteEmpresarial: String, correoUsuarioAgenteEmpresarial: String,
+    tipoIdentiAgenteEmpresarial: Int, idClienteAdmin: Int): Future[Validation[PersistenceException, Option[(Int, Int)]]] = loan {
     implicit session =>
       val query =
         (for {

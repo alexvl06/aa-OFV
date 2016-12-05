@@ -196,7 +196,6 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
     run(respuestasClienteAdministradorTable.filter(x => x.idUsuario === idUsuario).delete)
   }
 
-
   //  ------------------  Agente inmobiliario ---------------------------
 
   def getPermisosProyectoInmobiliario(nit: String, idFideicomiso: Int, idProyecto: Int, idAgentes: Seq[Int]): Future[Seq[PermisoAgenteInmobiliario]] = {

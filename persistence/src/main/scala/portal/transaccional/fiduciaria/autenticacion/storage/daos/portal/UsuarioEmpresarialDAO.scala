@@ -2,17 +2,18 @@ package portal.transaccional.fiduciaria.autenticacion.storage.daos.portal
 
 import java.sql.Timestamp
 
-import co.com.alianza.persistence.entities.{UsuarioEmpresarial, UsuarioEmpresarialTable}
+import co.com.alianza.persistence.entities.{ UsuarioEmpresarial, UsuarioEmpresarialTable }
 import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
 import slick.lifted.TableQuery
 
 import scala.concurrent.Future
 
 /**
-  * Created by s4n on 2016
-  */
+ * Created by s4n on 2016
+ */
 case class UsuarioEmpresarialDAO(implicit dcConfig: DBConfig) extends UsuarioAgenteDAO[UsuarioEmpresarialTable, UsuarioEmpresarial](
-  TableQuery[UsuarioEmpresarialTable]) with UsuarioEmpresarialDAOs {
+  TableQuery[UsuarioEmpresarialTable]
+) with UsuarioEmpresarialDAOs {
 
   import dcConfig.DB._
   import dcConfig.driver.api._
@@ -26,11 +27,12 @@ case class UsuarioEmpresarialDAO(implicit dcConfig: DBConfig) extends UsuarioAge
     run(query.update(correo, usuario, nombreUsuario, cargo, Some(descripcion)))
   }
 
-  def updatePasswordById(idUsuario: Int, contrasena: String): Future[Int] = {
+  override def updatePasswordById(idUsuario: Int, contrasena: String): Future[Int] = {
     run(table.filter(_.id === idUsuario).map(_.contrasena).update(Option(contrasena)))
   }
 
-  def updateUpdateDate(idUsuario: Int, fechaActual: Timestamp): Future[Int] = {
+  override def updateUpdateDate(idUsuario: Int, fechaActual: Timestamp): Future[Int] = {
     run(table.filter(_.id === idUsuario).map(_.fechaActualizacion).update(fechaActual))
   }
+
 }

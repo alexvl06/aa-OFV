@@ -40,7 +40,6 @@ case class PinService(kafkaActor: ActorSelection, pinRepo: PinRepository)(implic
 
   private def validarPin(pin: String, funcionalidad: Int) = {
     post {
-      println("validar pin")
       val resultado: Future[Boolean] = pinRepo.validarPinUsuario(pin, funcionalidad)
       onComplete(resultado) {
         case Success(value) => complete(value.toString)

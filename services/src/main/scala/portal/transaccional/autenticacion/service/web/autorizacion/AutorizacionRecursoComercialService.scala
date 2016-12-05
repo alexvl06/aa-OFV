@@ -20,7 +20,9 @@ import scala.util.{ Failure, Success }
 /**
  * Created by dfbaratov on 23/08/16.
  */
-case class AutorizacionRecursoComercialService(user: UsuarioAuth, kafkaActor: ActorSelection, autorizacionRepository: AutorizacionRecursoComercialRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
+case class AutorizacionRecursoComercialService(user: UsuarioAuth, kafkaActor: ActorSelection,
+  autorizacionRepository: AutorizacionRecursoComercialRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul
+    with DomainJsonFormatters with CrossHeaders {
 
   val route: Route = {
     pathPrefix("recursoComercial" / Segment) {
@@ -58,9 +60,9 @@ case class AutorizacionRecursoComercialService(user: UsuarioAuth, kafkaActor: Ac
               //auditoria
               mapRequestContext {
                 r: RequestContext =>
-                  val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, Option(user.usuario))
+                  val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, user.usuario)
                   requestAuditing[PersistenceException, PermisoRecursoDTO](r, AuditingHelper.fiduciariaTopic,
-                    AuditingHelper.recursosComercialIndex, ip.value, kafkaActor, usuario, Some(permisoRecurso))
+                    AuditingHelper.recursosComercialActualizacionIndex, ip.value, kafkaActor, usuario, Some(permisoRecurso))
               } {
                 onComplete(respuesta) {
                   case Success(value) => complete(StatusCodes.OK)

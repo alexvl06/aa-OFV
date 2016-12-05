@@ -55,7 +55,7 @@ case class HorarioEmpresaService(user: UsuarioAuth, kafkaActor: ActorSelection,
             ip =>
               mapRequestContext {
                 r: RequestContext =>
-                  val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, Option(user.usuario))
+                  val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, user.usuario)
                   requestAuditing[PersistenceException, AgregarHorarioEmpresaRequest](r, AuditingHelper.fiduciariaTopic,
                     AuditingHelper.cambioHorarioIndex, ip.value, kafkaActor, usuario, Some(request))
               } {

@@ -3,7 +3,7 @@ package portal.transaccional.autenticacion.service.drivers.usuarioAgente
 import java.sql.Timestamp
 
 import co.com.alianza.commons.enumerations.TiposCliente._
-import co.com.alianza.persistence.entities.{UsuarioAgente, UsuarioEmpresarial}
+import co.com.alianza.persistence.entities.{ UsuarioAgente, UsuarioEmpresarial }
 
 import scala.concurrent.Future
 

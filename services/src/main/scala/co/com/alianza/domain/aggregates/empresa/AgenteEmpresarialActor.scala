@@ -3,14 +3,12 @@ package co.com.alianza.domain.aggregates.empresa
 import java.sql.Timestamp
 import java.util.Calendar
 
-import akka.actor.{ Actor, ActorLogging, ActorSystem, Props }
+import akka.actor.{ Actor, ActorLogging, Props }
 import akka.routing.RoundRobinPool
 
 import co.com.alianza.domain.aggregates.usuarios.ErrorValidacion
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.DataAccessTranslator
 import co.com.alianza.infrastructure.dto.{ Configuracion, UsuarioEmpresarialEstado }
-import co.com.alianza.infrastructure.messages.ResponseMessage
 import co.com.alianza.infrastructure.messages.empresa._
 import co.com.alianza.microservices.{ MailMessage, SmtpServiceClient }
 import co.com.alianza.persistence.entities.{ PinAgente, UsuarioEmpresarialEmpresa }
@@ -23,7 +21,6 @@ import scalaz.std.AllInstances._
 import scalaz.{ Success => zSuccess }
 import scala.concurrent.Future
 import scalaz.Validation
-import spray.http.StatusCodes._
 import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.DataAccessAdapter
 import co.com.alianza.util.FutureResponse
 import co.com.alianza.util.json.MarshallableImplicits._
