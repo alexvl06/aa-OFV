@@ -94,8 +94,8 @@ case class UsuarioAgenteInmobDAO(implicit dcConfig: DBConfig) extends UsuarioAge
   }
 
   private def buildAgentesListQuery(identificacion: String, nombre: Option[String],
-                                    usuario: Option[String], correo: Option[String],
-                                    estado: Option[String], ordenarPor: Option[String]): Query[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario, Seq] = {
+    usuario: Option[String], correo: Option[String],
+    estado: Option[String], ordenarPor: Option[String]): Query[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario, Seq] = {
     val estados: Option[Seq[Int]] = estado match {
       case None => None
       case Some(e) => e match {

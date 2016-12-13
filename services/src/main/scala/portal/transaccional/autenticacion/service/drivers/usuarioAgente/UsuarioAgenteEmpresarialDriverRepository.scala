@@ -22,9 +22,9 @@ abstract class UsuarioEmpresarialRepositoryG[T <: UsuarioAgenteTable[E], E <: Us
 
   implicit val ex: ExecutionContext
 
-  def getById(idUsuario: Int): Future[Option[UsuarioAgente]] = usuarioDAO.getById(idUsuario)
+  def getById(idUsuario: Int): Future[Option[E]] = usuarioDAO.getById(idUsuario)
 
-  def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[UsuarioAgente]] = {
+  def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[E]] = {
     usuarioDAO.getByIdentityAndUser(identificacion, usuario)
   }
 

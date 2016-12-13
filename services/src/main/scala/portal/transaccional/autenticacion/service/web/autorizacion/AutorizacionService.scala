@@ -77,7 +77,6 @@ case class AutorizacionService(
             val token: String = AesUtil.desencriptarToken(encriptedToken)
             val usuario = getTokenData(token)
             val resultado: Future[Int] = usuario.tipoCliente match {
-              case `agente` => sesionUtilAgenteEmpresarial.invalidarToken(token, encriptedToken)
               case `agenteInmobiliario` | `agenteInmobiliarioInterno` => sesionUtilAgenteInmobiliario.invalidarToken(token, encriptedToken)
               case `admin` | `adminInmobiliaria` => autorizacionAdminRepo.invalidarToken(token, encriptedToken)
               case `agente` => autorizacionAgenteRepo.invalidarToken(token, encriptedToken)

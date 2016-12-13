@@ -140,7 +140,7 @@ case class AutenticacionEmpresaDriverRepository(
       reintentosErroneos <- reglaRepo.getRegla(LlavesReglaContrasena.CANTIDAD_REINTENTOS_INGRESO_CONTRASENA) //ok
       validar <- usuarioAgenteInmobRepo.validarUsuario(usuario, contrasena, reintentosErroneos.valor.toInt) //ok
       cliente <- isClienteAlianza(usuario)
-      reglaDias <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA.llave) //ok
+      reglaDias <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA) //ok
       caducidad <- usuarioRepo.validarCaducidadContrasena(TiposCliente.agenteInmobiliario, usuario, reglaDias.valor.toInt)
       actualizar <- usuarioAgenteInmobRepo.actualizarInfoUsuario(usuario, ip)
       inactividad <- configuracionRepo.getConfiguracion(ConfiguracionEnum.EXPIRACION_SESION) //ok
@@ -197,7 +197,7 @@ case class AutenticacionEmpresaDriverRepository(
   }
 
   private def isClienteAlianza(usuario: UsuarioAgenteInmobiliario): Future[Boolean] = {
-    if (usuario.tipoAgente ==  TipoAgenteInmobiliario.empresarial.toString) {
+    if (usuario.tipoAgente == TipoAgenteInmobiliario.empresarial.toString) {
       for {
         cliente <- clienteCoreRepo.getCliente(usuario.identificacion, Some(usuario.tipoIdentificacion)) //ok
         estadoCore <- clienteCoreRepo.validarEstado(cliente) //ok
@@ -223,7 +223,7 @@ case class AutenticacionEmpresaDriverRepository(
   private def tipoAgente(u: UsuarioAgente) = {
     u match {
       case usuario: UsuarioEmpresarial => TiposCliente.agenteEmpresarial
-      case usuario: UsuarioAgenteInmobiliario => if (usuario.tipoAgente ==  TipoAgenteInmobiliario.internoAdmin.toString) TiposCliente.agenteInmobiliarioInterno else TiposCliente.agenteInmobiliario
+      case usuario: UsuarioAgenteInmobiliario => if (usuario.tipoAgente == TipoAgenteInmobiliario.internoAdmin.toString) TiposCliente.agenteInmobiliarioInterno else TiposCliente.agenteInmobiliario
     }
   }
 
