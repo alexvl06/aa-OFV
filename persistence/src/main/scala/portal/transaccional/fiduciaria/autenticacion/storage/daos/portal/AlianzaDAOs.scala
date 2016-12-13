@@ -29,6 +29,8 @@ trait AlianzaDAOs {
 
   def getIndividualClientQuestions(idUsuario: Int): Future[Seq[(PreguntaAutovalidacion, RespuestasAutovalidacionUsuario)]]
 
+  def getPermisosProyectoInmobiliario(nit: String, idFideicomiso: Int, idProyecto: Int): Future[Seq[PermisoAgenteInmobiliario]]
+
   def getAdministratorClientQuestions(idUsuario: Int): Future[Seq[(PreguntaAutovalidacion, RespuestasAutovalidacionUsuario)]]
 
   def deleteIndividualClientAnswers(idUsuario: Int): Future[Int]
@@ -41,15 +43,12 @@ trait AlianzaDAOs {
 
   def getByTokenAgenteInmobiliario(token: String): Future[UsuarioAgenteInmobiliario]
 
-  def getAdminResourcesVisible(isAdmin: Boolean): Future[Seq[RecursoGraficoInmobiliario]]
+  def getAdminResourcesVisible(tipoPermisos: String): Future[Seq[RecursoGraficoInmobiliario]]
 
-  //Obtiene su propio menu
   def getAgentResourcesById(idAgente: Int): Future[Seq[RecursoGraficoInmobiliario]]
 
-  //Obtiene los recursos a los que puede acceder Admin
-  def get4(): Future[Seq[RecursoBackendInmobiliario]]
+  def getMenuAdmin(isInterno: Boolean): Future[Seq[RecursoBackendInmobiliario]]
 
-  //Obtiene los recursos a los que puede acceder Agente
-  def get5(idAgente: Int): Future[Seq[RecursoBackendInmobiliario]]
+  def getMenuAgenteInmob(idAgente: Int): Future[Seq[RecursoBackendInmobiliario]]
 
 }

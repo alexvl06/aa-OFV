@@ -26,7 +26,8 @@ object PerfilInmobiliarioEnum extends Enumeration(1) {
 
   type perfilInmobiliario = Value
 
-  val agente = Value("AGENTE") //valor id = 1
-  val admin = Value("ADMIN") //valor id = 2
+  val agente = Value("AGENTE")
+  val admin = Value("ADMIN")
+  val agenteInterno = Value("AGENTE_INTERNO")
 
 }

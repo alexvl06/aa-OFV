@@ -88,14 +88,14 @@ case class AgenteInmobiliarioService(
         val idAgente: Future[Int] = usuariosRepo.createAgenteInmobiliario(
           usuarioAuth.id, usuarioAuth.tipoIdentificacion, usuarioAuth.identificacion,
           r.correo, r.usuario,
-          r.nombre, r.cargo, r.descripcion
+          r.nombre, r.cargo, r.descripcion, r.tipoAgente
         )
         onComplete(idAgente) {
           case Success(id) => id match {
             case 0 => complete(StatusCodes.Conflict)
             case _ => complete(StatusCodes.Created)
           }
-          case Failure(exception) => complete(StatusCodes.InternalServerError)
+          case Failure(exception) => println(exception);complete(StatusCodes.InternalServerError)
         }
       }
     }
@@ -120,12 +120,12 @@ case class AgenteInmobiliarioService(
     get {
       requestUri { uri =>
         parameters('nombre.as[Option[String]], 'usuario.as[Option[String]],
-          'correo.as[Option[String]], 'estado.as[Option[String]], 'pagina.as[Option[Int]], 'itemsPorPagina.as[Option[Int]]) {
-          (nombreOpt, usuarioOpt, correoOpt, estadoOpt, paginaOpt, itemsPorPaginaOpt) =>
+          'correo.as[Option[String]], 'estado.as[Option[String]], 'pagina.as[Option[Int]], 'itemsPorPagina.as[Option[Int]], 'ordenarPor.as[Option[String]]) {
+          (nombreOpt, usuarioOpt, correoOpt, estadoOpt, paginaOpt, itemsPorPaginaOpt, ordenarPorOpt) =>
           {
             val agentesF: Future[ConsultarAgenteInmobiliarioListResponse] = usuariosRepo.getAgenteInmobiliarioList(
               usuarioAuth.identificacion, nombreOpt,
-              usuarioOpt, correoOpt, estadoOpt, paginaOpt, itemsPorPaginaOpt
+              usuarioOpt, correoOpt, estadoOpt, paginaOpt, itemsPorPaginaOpt, ordenarPorOpt
             )
             onComplete(agentesF) {
               case Success(agentes) =>
@@ -154,7 +154,7 @@ case class AgenteInmobiliarioService(
             case 0 => complete(StatusCodes.NotFound)
             case _ => complete(StatusCodes.OK)
           }
-          case Failure(exception) => complete(StatusCodes.InternalServerError)
+          case Failure(exception) => complete(StatusCodes.InternalServerError -> exception)
         }
       }
     }
@@ -205,18 +205,35 @@ case class AgenteInmobiliarioService(
 
   private def updatePermisosProyecto(fideicomiso: Int, proyecto: Int): Route = {
     put {
-      parameters("ids" ? "") { ids =>
-        entity(as[Seq[PermisoAgenteInmobiliario]]) { permisos =>
-          val idAgentes: Seq[Int] = ids match {
-            case x if x.isEmpty => Seq.empty
-            case x => x.split(",").map(_.toInt).toSeq
-          }
-          val updateF: Future[Option[Int]] = permisosRepo.updatePermisosProyecto(
-            usuarioAuth.identificacion, fideicomiso, proyecto, idAgentes, permisos
-          )
-          onComplete(updateF) {
-            case Success(update) => complete(StatusCodes.OK)
-            case Failure(exception) => complete(StatusCodes.InternalServerError)
+      parameter('fromFid.?) { fidOpt =>
+        parameter('fromPro.?) { proOpt =>
+          (fidOpt, proOpt) match {
+            case (Some(fromFid), Some(fromPro)) =>
+              val updateF: Future[Option[Int]] = permisosRepo.replicatePermisosProyecto(
+                usuarioAuth.identificacion, fromFid.toInt, fromPro.toInt, fideicomiso, proyecto
+              )
+              onComplete(updateF) {
+                case Success(update) => complete(StatusCodes.OK)
+                case Failure(exception) =>
+                  exception.printStackTrace()
+                  complete(StatusCodes.InternalServerError)
+              }
+            case _ =>
+              parameter('ids ? "") { ids =>
+                entity(as[Seq[PermisoAgenteInmobiliario]]) { permisos =>
+                  val idAgentes: Seq[Int] = ids match {
+                    case x if x.isEmpty => Seq.empty
+                    case x => x.split(",").map(_.toInt).toSeq
+                  }
+                  val updateF: Future[Option[Int]] = permisosRepo.updatePermisosProyecto(
+                    usuarioAuth.identificacion, fideicomiso, proyecto, idAgentes, permisos
+                  )
+                  onComplete(updateF) {
+                    case Success(update) => complete(StatusCodes.OK)
+                    case Failure(exception) => complete(StatusCodes.InternalServerError)
+                  }
+                }
+              }
           }
         }
       }

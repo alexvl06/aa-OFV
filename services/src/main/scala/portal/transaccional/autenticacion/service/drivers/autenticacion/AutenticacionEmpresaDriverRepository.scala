@@ -12,6 +12,7 @@ import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.infrastructure.messages.CrearSesionUsuario
 import co.com.alianza.persistence.entities.{ Empresa, UsuarioEmpresarialAdmin, _ }
 import co.com.alianza.util.token.{ AesUtil, Token }
+import enumerations.{ EstadosEmpresaEnum, TipoAgenteInmobiliario, TipoIdentificacion }
 import enumerations.{ ConfiguracionEnum, EstadosEmpresaEnum, TipoIdentificacion }
 import portal.transaccional.autenticacion.service.drivers.cliente.ClienteRepository
 import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionRepository
@@ -34,7 +35,7 @@ case class AutenticacionEmpresaDriverRepository(
     sesionRepo: SesionRepository, respuestasRepo: RespuestaUsuarioRepository, usuarioAgenteInmobRepo: UsuarioEmpresarialRepository[UsuarioAgenteInmobiliario]
 )(implicit val ex: ExecutionContext) extends AutenticacionEmpresaRepository {
 
-  implicit val timeout = Timeout(10.seconds)
+  implicit val timeout = Timeout(5.seconds)
 
   /**
    * Flujo:
@@ -63,7 +64,7 @@ case class AutenticacionEmpresaDriverRepository(
    * @return Future[Boolean]
    * Success => True
    */
-  private def autenticar(agente: Option[UsuarioAgente], admin: Option[UsuarioEmpresarialAdmin], agenteInmob: Option[UsuarioAgente],
+  private def autenticar(agente: Option[UsuarioAgente], admin: Option[UsuarioEmpresarialAdmin], agenteInmob: Option[UsuarioAgenteInmobiliario],
     contrasena: String, ip: String): Future[String] = {
     if (agente.isDefined) {
       autenticarAgente(agente.get, contrasena, ip)
@@ -133,20 +134,17 @@ case class AutenticacionEmpresaDriverRepository(
    * - asociar token
    * - crear session de usuario
    */
-  private def autenticarAgenteInmob(usuario: UsuarioAgente, contrasena: String, ip: String): Future[String] = {
+  private def autenticarAgenteInmob(usuario: UsuarioAgenteInmobiliario, contrasena: String, ip: String): Future[String] = {
     for {
       empresa <- obtenerEmpresaValida(usuario.identificacion) //OK
       reintentosErroneos <- reglaRepo.getRegla(LlavesReglaContrasena.CANTIDAD_REINTENTOS_INGRESO_CONTRASENA) //ok
-      validar <- usuarioAgenteInmobRepo.validarUsuario(usuario, contrasena, reintentosErroneos.valor.toInt)
-      //cliente <- clienteCoreRepo.getCliente(usuario.identificacion, Some(usuario.tipoIdentificacion)) //ok
-      //estadoCore <- clienteCoreRepo.validarEstado(cliente) //ok
-      reglaDias <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA) //ok
+      validar <- usuarioAgenteInmobRepo.validarUsuario(usuario, contrasena, reintentosErroneos.valor.toInt) //ok
+      cliente <- isClienteAlianza(usuario)
+      reglaDias <- reglaRepo.getRegla(LlavesReglaContrasena.DIAS_VALIDA.llave) //ok
       caducidad <- usuarioRepo.validarCaducidadContrasena(TiposCliente.agenteInmobiliario, usuario, reglaDias.valor.toInt)
       actualizar <- usuarioAgenteInmobRepo.actualizarInfoUsuario(usuario, ip)
       inactividad <- configuracionRepo.getConfiguracion(ConfiguracionEnum.EXPIRACION_SESION) //ok
       token <- generarTokenAgente(usuario, ip, inactividad.valor) //ok
-      //ips <- ipRepo.getIpsByEmpresaId(empresa.id)
-      //validacionIps <- ipRepo.validarControlIpAgente(ip, ips, token)
       asociarToken <- usuarioAgenteInmobRepo.actualizarToken(usuario.id, AesUtil.encriptarToken(token))
       sesion <- sesionRepo.crearSesion(token, inactividad.valor.toInt, Option(EmpresaDTO.entityToDto(empresa)))
     } yield token
@@ -198,6 +196,17 @@ case class AutenticacionEmpresaDriverRepository(
     (actor ? msg).mapTo[T]
   }
 
+  private def isClienteAlianza(usuario: UsuarioAgenteInmobiliario): Future[Boolean] = {
+    if (usuario.tipoAgente ==  TipoAgenteInmobiliario.empresarial.toString) {
+      for {
+        cliente <- clienteCoreRepo.getCliente(usuario.identificacion, Some(usuario.tipoIdentificacion)) //ok
+        estadoCore <- clienteCoreRepo.validarEstado(cliente) //ok
+      } yield estadoCore
+    } else {
+      Future.successful(true)
+    }
+  }
+
   private def obtenerEmpresaValida(nit: String): Future[Empresa] = {
     for {
       empresa <- empresaRepo.getByIdentity(nit)
@@ -214,7 +223,7 @@ case class AutenticacionEmpresaDriverRepository(
   private def tipoAgente(u: UsuarioAgente) = {
     u match {
       case usuario: UsuarioEmpresarial => TiposCliente.agenteEmpresarial
-      case usuario: UsuarioAgenteInmobiliario => TiposCliente.agenteInmobiliario
+      case usuario: UsuarioAgenteInmobiliario => if (usuario.tipoAgente ==  TipoAgenteInmobiliario.internoAdmin.toString) TiposCliente.agenteInmobiliarioInterno else TiposCliente.agenteInmobiliario
     }
   }
 

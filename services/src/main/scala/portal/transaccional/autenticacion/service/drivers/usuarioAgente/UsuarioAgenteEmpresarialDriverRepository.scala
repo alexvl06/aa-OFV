@@ -158,9 +158,6 @@ abstract class UsuarioEmpresarialRepositoryG[T <: UsuarioAgenteTable[E], E <: Us
     if (hash.contentEquals(usuario.contrasena.get)) {
       Future.successful(true)
     } else {
-      //si las contraseñas no concuerdan:
-      //1. actualizar ingresos erroneos
-      //2. bloquear usuario si es necesario
       val reintentos: Int = usuario.numeroIngresosErroneos + 1
       for {
         actualizarIngresos <- actualizarIngresosErroneosUsuario(usuario.id, reintentos)

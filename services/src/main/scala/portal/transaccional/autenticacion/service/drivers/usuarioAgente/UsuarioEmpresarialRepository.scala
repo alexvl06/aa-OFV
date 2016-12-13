@@ -12,11 +12,11 @@ import scala.concurrent.Future
  */
 trait UsuarioEmpresarialRepository[E <: UsuarioAgente] {
 
-  def getById(idUsuario: Int): Future[Option[UsuarioAgente]]
+  def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[E]]
+
+  def getById(idUsuario: Int): Future[Option[E]]
 
   def actualizarInfoUsuario(usuario: UsuarioAgente, ip: String): Future[Int]
-
-  def getByIdentityAndUser(identificacion: String, usuario: String): Future[Option[UsuarioAgente]]
 
   def actualizarToken(idUsuario: Int, token: String): Future[Int]
 

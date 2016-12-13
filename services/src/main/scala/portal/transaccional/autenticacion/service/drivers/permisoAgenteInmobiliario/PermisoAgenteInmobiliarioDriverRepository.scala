@@ -3,6 +3,7 @@ package portal.transaccional.autenticacion.service.drivers.permisoAgenteInmobili
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.persistence.entities.{ PermisoAgenteInmobiliario, RecursoGraficoInmobiliario }
+import enumerations.PerfilInmobiliarioEnum
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ AlianzaDAO, PermisoInmobiliarioDAOs, UsuarioAgenteInmobDAOs }
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -31,15 +32,25 @@ case class PermisoAgenteInmobiliarioDriverRepository(alianzaDao: AlianzaDAO, usu
     } yield actualizar
   }
 
+  def replicatePermisosProyecto(identificacion: String, fideicomiso: Int, proyecto: Int,
+                                fideicomisoDestino: Int, proyectoDestino: Int): Future[Option[Int]] = {
+    for {
+      permisosProyectoReplicar <- alianzaDao.getPermisosProyectoInmobiliario(identificacion, fideicomiso, proyecto)
+      permisosProyectoDestino <- alianzaDao.getPermisosProyectoInmobiliario(identificacion, fideicomisoDestino, proyectoDestino)
+      permisosAgregar: Seq[PermisoAgenteInmobiliario] = permisosProyectoReplicar
+        .map(_.copy(fideicomiso = fideicomisoDestino, proyecto = proyectoDestino))
+        .diff(permisosProyectoDestino)
+      actualizar <- permisosDAO.update(Seq.empty, permisosAgregar)
+    } yield actualizar
+  }
+
   def getRecurso(idUser: Int, tiposCliente: TiposCliente, isMatriz: Boolean): Future[Seq[RecursoGraficoInmobiliario]] = {
     tiposCliente match {
       case TiposCliente.agenteInmobiliario => alianzaDao.getAgentResourcesById(idUser)
-      case _ =>
-        if (isMatriz) {
-          alianzaDao.getAdminResourcesVisible(false).map(_.filter(_.administrable))
-        } else {
-          alianzaDao.getAdminResourcesVisible(true)
-        }
+      case x if tiposCliente == TiposCliente.agenteInmobiliarioInterno && !isMatriz =>
+        alianzaDao.getAdminResourcesVisible(PerfilInmobiliarioEnum.agenteInterno.toString)
+      case x if isMatriz => alianzaDao.getAdminResourcesVisible(PerfilInmobiliarioEnum.agente.toString).map(_.filter(_.administrable))
+      case _ => alianzaDao.getAdminResourcesVisible(PerfilInmobiliarioEnum.admin.toString)
     }
   }
 }

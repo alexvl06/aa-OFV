@@ -39,6 +39,17 @@ trait PermisoAgenteInmobiliarioRepository {
     idAgentes: Seq[Int], permisos: Seq[PermisoAgenteInmobiliario]): Future[Option[Int]]
 
   /**
+    * Replica los permisos de un proyecto a otro
+    * @param identificacion      Identificación de la empresa
+    * @param fideicomiso         Número identificador del fideicomiso que va a ser replicado
+    * @param proyecto            Número identificador del proyecto que va a ser replicado
+    * @param fideicomisoDestino  Número identificador del fideicomiso que va a heredar los permisos
+    * @param proyectoDestino     Número identificador del proyecto que va a heredar los permisos
+    */
+  def replicatePermisosProyecto(identificacion: String, fideicomiso: Int, proyecto: Int,
+                                fideicomisoDestino: Int, proyectoDestino: Int): Future[Option[Int]]
+
+  /**
    * Actualiza (agrega y/o elimina) los permisos de un proyecto
    *
    * @param idUser Id de la persona que fue autenticada, puede ser tanto constructor como agente inmobiliario.

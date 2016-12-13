@@ -5,6 +5,7 @@ import java.sql.Timestamp
 import co.com.alianza.persistence.entities.{ UsuarioAgenteInmobiliario, UsuarioAgenteInmobiliarioTable }
 import co.com.alianza.persistence.util.SlickExtensions
 import enumerations.EstadosUsuarioEnumInmobiliario.estadoUsuarioInmobiliario
+import enumerations.{ EstadosUsuarioEnumInmobiliario, OrdenamientoAgentesInmobEnum }
 import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
 import slick.lifted.TableQuery
 
@@ -48,29 +49,15 @@ case class UsuarioAgenteInmobDAO(implicit dcConfig: DBConfig) extends UsuarioAge
 
   override def getAll(identificacion: String, nombre: Option[String],
     usuario: Option[String], correo: Option[String], estado: Option[String], pagina: Option[Int],
-    itemsPorPagina: Option[Int])(implicit ec: ExecutionContext): Future[(Int, Int, Int, Int, Seq[UsuarioAgenteInmobiliario])] = {
+    itemsPorPagina: Option[Int], ordenarPor: Option[String])(implicit ec: ExecutionContext): Future[(Int, Int, Int, Int, Seq[UsuarioAgenteInmobiliario])] = {
 
-    val estados: Option[Seq[Int]] = estado match {
-      case None => None
-      case Some(e) => e match {
-        case x if x.isEmpty => Some(Seq.empty)
-        case x => Some(x.split(",").map(_.toInt).toSeq)
-      }
-    }
-
-    val basequery: Query[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario, Seq] = MaybeFilter(table)
-      .filter(Some(identificacion))(id => agente => agente.identificacion === id)
-      .filter(nombre)(n => agente => agente.nombre.toLowerCase like s"%${n.toLowerCase}%")
-      .filter(usuario)(u => agente => agente.usuario.toLowerCase like s"%${u.toLowerCase}%")
-      .filter(correo)(c => agente => agente.correo.toLowerCase like s"%${c.toLowerCase}%")
-      .filter(estados)(e => agente => agente.estado inSetBind e)
-      .query
-      .sortBy(_.usuario)
+    val query: Query[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario, Seq] =
+      buildAgentesListQuery(identificacion, nombre, usuario, correo, estado, ordenarPor)
 
     run(
       for {
-        totalAgentes <- basequery.length.result
-        agentes <- basequery.paginate(pagina, itemsPorPagina).result
+        totalAgentes <- query.length.result
+        agentes <- query.paginate(pagina, itemsPorPagina).result
       } yield {
         (pagina.getOrElse(defaultPage), itemsPorPagina.getOrElse(defaultPageSize), agentes.length, totalAgentes, agentes)
       }
@@ -97,13 +84,53 @@ case class UsuarioAgenteInmobDAO(implicit dcConfig: DBConfig) extends UsuarioAge
     )
   }
 
-  def getContrasena(contrasena: String, idUsuario: Int): Future[Option[UsuarioAgenteInmobiliario]] = {
+  override def getContrasena(contrasena: String, idUsuario: Int): Future[Option[UsuarioAgenteInmobiliario]] = {
     run(table.filter(_.id === idUsuario).filter(_.contrasena === contrasena).result.headOption)
   }
 
-  def updateContrasena(contrasena: String, idUsuario: Int): Future[Int] = {
+  override def updateContrasena(contrasena: String, idUsuario: Int): Future[Int] = {
     val query = table.filter(_.id === idUsuario).map(a => (a.contrasena, a.fechaActualizacion))
     run(query.update(Option(contrasena), new Timestamp(new org.joda.time.DateTime().getMillis)))
   }
 
+  private def buildAgentesListQuery(identificacion: String, nombre: Option[String],
+                                    usuario: Option[String], correo: Option[String],
+                                    estado: Option[String], ordenarPor: Option[String]): Query[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario, Seq] = {
+    val estados: Option[Seq[Int]] = estado match {
+      case None => None
+      case Some(e) => e match {
+        case x if x.isEmpty => Some(Seq.empty)
+        case x => Some(x.split(",").map(_.toInt).toSeq)
+      }
+    }
+
+    val basequery: Query[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario, Seq] = MaybeFilter(table)
+      .filter(Some(identificacion))(id => agente => agente.identificacion === id)
+      .filter(nombre)(n => agente => agente.nombre.toLowerCase like s"%${n.toLowerCase}%")
+      .filter(usuario)(u => agente => agente.usuario.toLowerCase like s"%${u.toLowerCase}%")
+      .filter(correo)(c => agente => agente.correo.toLowerCase like s"%${c.toLowerCase}%")
+      .filter(estados)(e => agente => agente.estado inSetBind e)
+      .query
+
+    ordenarPor match {
+      case None => basequery
+      case Some(ord) =>
+        OrdenamientoAgentesInmobEnum.values.find(_.toString == ord).map {
+          case OrdenamientoAgentesInmobEnum.ID => basequery.sortBy(_.id)
+          case OrdenamientoAgentesInmobEnum.NOMBRE => basequery.sortBy(_.nombre)
+          case OrdenamientoAgentesInmobEnum.USUARIO => basequery.sortBy(_.usuario)
+          case OrdenamientoAgentesInmobEnum.CORREO => basequery.sortBy(_.correo)
+          case OrdenamientoAgentesInmobEnum.ESTADO => basequery.sortBy(_.estado)
+          case OrdenamientoAgentesInmobEnum.ESTADO_PENDIENTE_ACTIVACION => basequery.sortBy { agente =>
+            Case
+              .If(agente.estado === EstadosUsuarioEnumInmobiliario.pendienteActivacion.id).Then(0)
+              .If(agente.estado === EstadosUsuarioEnumInmobiliario.pendienteReinicio.id).Then(1)
+              .If(agente.estado === EstadosUsuarioEnumInmobiliario.activo.id).Then(2)
+              .If(agente.estado === EstadosUsuarioEnumInmobiliario.bloqueContraseña.id).Then(3)
+              .If(agente.estado === EstadosUsuarioEnumInmobiliario.inactivo.id).Then(4)
+          }
+          case _ => basequery
+        }.getOrElse(basequery)
+    }
+  }
 }

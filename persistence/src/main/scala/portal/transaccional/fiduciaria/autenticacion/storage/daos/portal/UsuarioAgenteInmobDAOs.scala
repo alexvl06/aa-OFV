@@ -63,12 +63,13 @@ trait UsuarioAgenteInmobDAOs {
    * @param estado         Filtro - Estado(s) del agente inmobiliario - Opcional
    * @param pagina         Paginación - Número de página - Opcional
    * @param itemsPorPagina Paginación - Número de agentes por página - Opcional
+   * @param ordenarPor     Ordenamiento - Criterio para ordenar la lista - Opcional
    * @return Una tupla de 5 elementos de la siguiente forma: <br/>
    *         <b>(pagina, maxItemsPorPagina, totalItemsEnPagina, totalItemsEnBD, itemsPagina)<b/>
    */
   def getAll(identificacion: String, nombre: Option[String],
-    usuario: Option[String], correo: Option[String], estado: Option[String], pagina: Option[Int],
-    itemsPorPagina: Option[Int])(implicit ec: ExecutionContext): Future[(Int, Int, Int, Int, Seq[UsuarioAgenteInmobiliario])]
+    usuario: Option[String], correo: Option[String], estado: Option[String], pagina: Option[Int], itemsPorPagina: Option[Int],
+    ordenarPor: Option[String])(implicit ec: ExecutionContext): Future[(Int, Int, Int, Int, Seq[UsuarioAgenteInmobiliario])]
 
   /**
    * Actualiza la información de un agente inmobiliario

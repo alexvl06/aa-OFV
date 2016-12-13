@@ -7,7 +7,8 @@ case class ConsultarAgenteInmobiliarioResponse(
   estado: Int,
   nombre: Option[String],
   cargo: Option[String],
-  descripcion: Option[String]
+  descripcion: Option[String],
+  tipoAgente: String
 )
 
 case class ConsultarAgenteInmobiliarioListResponse(

@@ -57,8 +57,8 @@ trait ServiceAuthorization {
             autorizacionAgenteRepo.autorizar(token, encriptedToken, "", obtenerIp(ctx).get.value)
           } else if (tipoCliente == TiposCliente.clienteAdministrador.toString || tipoCliente == TiposCliente.clienteAdminInmobiliario.toString) {
             autorizacionAdminRepo.autorizar(token, encriptedToken, "", obtenerIp(ctx).get.value, TiposCliente.clienteAdministrador.toString)
-          } else if (tipoCliente == TiposCliente.agenteInmobiliario.toString) {
-            autorizacionInmobRepo.autorizar(token, encriptedToken, Option.empty, obtenerIp(ctx).get.value)
+          } else if (tipoCliente == TiposCliente.agenteInmobiliario.toString || tipoCliente == TiposCliente.agenteInmobiliarioInterno.toString) {
+            autorizacionInmobRepo.autorizar(token, encriptedToken, Option.empty, obtenerIp(ctx).get.value, tipoCliente)
           } else if (tipoCliente == TiposCliente.clienteIndividual.toString) {
             autorizacionUsuarioRepo.autorizar(token, encriptedToken, "")
           } else if (tipoCliente == TiposCliente.comercialFiduciaria.toString) {
@@ -132,3 +132,4 @@ trait ServiceAuthorization {
 }
 
 case class UsuarioForbidden(usuario: Usuario, filtro: String)
+
