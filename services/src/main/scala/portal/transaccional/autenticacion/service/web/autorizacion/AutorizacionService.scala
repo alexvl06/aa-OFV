@@ -136,6 +136,7 @@ case class AutorizacionService(
               val responseF = usuario.tipoCliente match {
                 case `adminInmobiliaria` => autorizacionAdminRepo.autorizar(decriptedToken, token, url, ipRemota.value, `adminInmobiliaria`)
                 case `agenteInmobiliario` | `agenteInmobiliarioInterno` => autorizacionAgenteInmob.autorizar(decriptedToken, token, Option(url), ipRemota.value, usuario.tipoCliente)
+                case _ => Future.failed(GenericNoAutorizado("403", "Rol no autorizado para acceder a esta funcionalidad"))
               }
 
               onComplete(responseF) {
