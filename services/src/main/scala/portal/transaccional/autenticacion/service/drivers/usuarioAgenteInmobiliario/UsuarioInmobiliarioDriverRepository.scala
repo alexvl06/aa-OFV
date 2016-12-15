@@ -3,17 +3,17 @@ package portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobili
 import java.sql.Timestamp
 
 import akka.actor.ActorSystem
-import co.com.alianza.exceptions.ValidacionExceptionPasswordRules
+import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.microservices.MailMessage
-import co.com.alianza.persistence.entities.{ PinAgenteInmobiliario, UsuarioAgenteInmobiliario, UsuarioAgenteInmobiliarioTable }
+import co.com.alianza.persistence.entities.{PinAgenteInmobiliario, UsuarioAgenteInmobiliario, UsuarioAgenteInmobiliarioTable}
 import com.typesafe.config.Config
 import enumerations.EstadosUsuarioEnumInmobiliario._
-import enumerations.{ ConfiguracionEnum, EstadosUsuarioEnum, EstadosUsuarioEnumInmobiliario, TipoAgenteInmobiliario }
-import portal.transaccional.autenticacion.service.drivers.usuarioAgente.{ UsuarioEmpresarialRepository, UsuarioEmpresarialRepositoryG }
-import portal.transaccional.autenticacion.service.web.agenteInmobiliario.{ ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse, PaginacionMetadata }
+import enumerations.{ConfiguracionEnum, EstadosUsuarioEnum, EstadosUsuarioEnumInmobiliario, TipoAgenteInmobiliario}
+import portal.transaccional.autenticacion.service.drivers.usuarioAgente.{UsuarioEmpresarialRepository, UsuarioEmpresarialRepositoryG}
+import portal.transaccional.autenticacion.service.web.agenteInmobiliario.{ConsultarAgenteInmobiliarioListResponse, ConsultarAgenteInmobiliarioResponse, PaginacionMetadata}
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal._
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 case class UsuarioInmobiliarioDriverRepository(
   configDao: ConfiguracionDAOs,
@@ -156,7 +156,7 @@ case class UsuarioInmobiliarioDriverRepository(
   override def getContrasena(contrasena: String, idUsuario: Int): Future[UsuarioAgenteInmobiliario] = {
     usuariosDao.getContrasena(contrasena, idUsuario).flatMap {
       case Some(agente) => Future.successful(agente)
-      case None => Future.failed(ValidacionExceptionPasswordRules("409.7", "No existe la contrasena actual", "", "", ""))
+      case None => Future.failed(ValidacionException("409.7", "No existe la contrasena actual"))
     }
   }
 

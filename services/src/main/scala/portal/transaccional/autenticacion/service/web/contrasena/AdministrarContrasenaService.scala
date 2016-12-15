@@ -3,21 +3,21 @@ package portal.transaccional.autenticacion.service.web.contrasena
 import akka.actor.ActorSelection
 import co.com.alianza.app.CrossHeaders
 import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.exceptions.{ PersistenceException, ValidacionException }
+import co.com.alianza.exceptions.{PersistenceException, ValidacionException, ValidacionExceptionPasswordRules}
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.infrastructure.auditing.AuditingUser.AuditingUserData
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.util.token.Token
-import portal.transaccional.autenticacion.service.drivers.contrasena.{ ContrasenaAdminRepository, ContrasenaAgenteRepository, ContrasenaUsuarioRepository }
+import portal.transaccional.autenticacion.service.drivers.contrasena.{ContrasenaAdminRepository, ContrasenaAgenteRepository, ContrasenaUsuarioRepository}
 import portal.transaccional.autenticacion.service.drivers.contrasenaAgenteInmobiliario.ContrasenaAgenteInmobiliarioRepository
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import spray.http.StatusCodes._
-import spray.routing.{ RequestContext, StandardRoute }
+import spray.routing.{RequestContext, StandardRoute}
 
-import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.{ Failure, Success }
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 /**
  * Created by seven4n on 01/09/14.
@@ -98,6 +98,7 @@ case class AdministrarContrasenaService(
   private def execution(ex: Throwable): StandardRoute = {
     ex match {
       case ex: ValidacionException => complete((Conflict, ex))
+      case ex: ValidacionExceptionPasswordRules => complete((Conflict, ex.copy(data = ex.detail, code = "409.12")))
       case ex: PersistenceException =>
         ex.printStackTrace(); complete((InternalServerError, "Error inesperado"))
       case ex: Throwable => ex.printStackTrace(); complete((InternalServerError, "Error inesperado"))
