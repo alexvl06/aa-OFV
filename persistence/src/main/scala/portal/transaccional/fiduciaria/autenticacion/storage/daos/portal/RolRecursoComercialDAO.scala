@@ -21,7 +21,8 @@ case class RolRecursoComercialDAO()(dcConfig: DBConfig) extends RolRecursoComerc
 
   override def obtenerRolesPorRecurso(nombreRecurso: String): Future[Seq[RolComercial]] = {
     val rolRecursoJoin = for {
-      ((recurso: RecursoComercialTable, rolRecurso: RolRecursoComercialTable), rol: RolComercialTable) <- recursos join rolesRecurso on (_.id === _.idRecurso) join roles on (_._2.idRol === _.id)
+      ((recurso: RecursoComercialTable, rolRecurso: RolRecursoComercialTable),
+        rol: RolComercialTable) <- recursos join rolesRecurso on (_.id === _.idRecurso) join roles on (_._2.idRol === _.id)
       if recurso.nombre === nombreRecurso
     } yield rol
     run(rolRecursoJoin.result)
