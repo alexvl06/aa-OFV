@@ -152,9 +152,9 @@ case class PinDriverRepository(pinUsuarioDAO: PinUsuarioDAOs, pinAdminDAO: PinAd
   }
 
   private def deserializarPin(pin: String, fechaExpiracion: Date): String = {
-    val md = MessageDigest.getInstance("SHA-512")
-    val hash = md.digest(s"""${pin} - ${fechaExpiracion}""".getBytes)
-    val hexString = new StringBuffer()
+    val md: MessageDigest = MessageDigest.getInstance("SHA-512")
+    val hash: Array[Byte] = md.digest(s"""${pin} - ${fechaExpiracion}""".getBytes)
+    val hexString: StringBuffer = new StringBuffer()
     for (i <- hash) hexString.append(Integer.toHexString(0xFF & i))
     hexString.toString
   }
