@@ -81,7 +81,7 @@ case class AdministrarContrasenaService(
 
             val resultado = tipoCliente match {
               case TiposCliente.agenteEmpresarial => contrasenaAgenteRepo.cambiarContrasena(us_id, data.pw_nuevo, data.pw_actual)
-              case TiposCliente.clienteAdministrador => contrasenaAdminRepo.cambiarContrasena(us_id, data.pw_nuevo, data.pw_actual)
+              case TiposCliente.clienteAdministrador | TiposCliente.clienteAdminInmobiliario => contrasenaAdminRepo.cambiarContrasena(us_id, data.pw_nuevo, data.pw_actual)
               case TiposCliente.clienteIndividual => contrasenaUsuarioRepo.cambiarContrasena(us_id, data.pw_nuevo, data.pw_actual)
               case TiposCliente.agenteInmobiliario | TiposCliente.agenteInmobiliarioInterno => agenteInmobContrasenaRepo.actualizarContrasenaCaducada(Option(data.token), data.pw_actual, data.pw_nuevo, Option.empty)
             }

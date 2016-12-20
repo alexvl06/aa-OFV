@@ -80,12 +80,12 @@ object ValidacionesUsuario {
   def validacionConsultaCliente(identificacion: String, tipoIdentificacion: Int, validarCorreo: Boolean): Future[Validation[ErrorValidacion, Cliente]] = {
     if (tipoIdentificacion != TipoIdentificacion.GRUPO.identificador) {
       val usuarioFuture = DataAccessAdapterCliente.consultarCliente(identificacion)
+
       usuarioFuture.map(_.leftMap(pe => ErrorPersistence(pe.message, pe)).flatMap {
         (x: Option[Cliente]) =>
           x match {
             case None => zFailure(ErrorClienteNoExiste(errorClienteNoExiste))
-            case Some(cliente) =>
-              validacionConsultaClienteCore(cliente, tipoIdentificacion, validarCorreo)
+            case Some(cliente) => validacionConsultaClienteCore(cliente, tipoIdentificacion, validarCorreo)
           }
       })
     } else {
