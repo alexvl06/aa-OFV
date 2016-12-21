@@ -22,37 +22,37 @@ class AgenteInmobiliarioServiceSpec extends RouteTest {
     val contrasenasRepo = stub[ContrasenaAgenteInmobiliarioRepository]
 
     // empty list
-    (agentesRepo.getAgenteInmobiliarioList _).when("", None, None, None, None, None, None, None)
+    (agentesRepo.getAgenteInmobiliarioList _).when("", 0 ,None, None, None, None, None, None, None)
       .returns(Future.successful(ConsultarAgenteInmobiliarioListResponse(PaginacionMetadata(0, 0, 0, 0, None), Seq.empty)))
 
     // list with one element
-    (agentesRepo.getAgenteInmobiliarioList _).when("1", None, None, None, None, None, None, None)
+    (agentesRepo.getAgenteInmobiliarioList _).when("1", 0, None, None, None, None, None, None, None)
       .returns(Future.successful(ConsultarAgenteInmobiliarioListResponse(
         PaginacionMetadata(1, 1, 1, 1, None),
         Seq(ConsultarAgenteInmobiliarioResponse(1, "agente@constructor.com", "agente", 1, Some("Agente"), None, None, "E"))
       )))
 
     // paginated list
-    (agentesRepo.getAgenteInmobiliarioList _).when("2", None, None, None, None, Some(1), Some(1), None)
+    (agentesRepo.getAgenteInmobiliarioList _).when("2", 0, None, None, None, None, Some(1), Some(1), None)
       .returns(Future.successful(ConsultarAgenteInmobiliarioListResponse(
         PaginacionMetadata(1, 1, 1, 3, None),
         Seq(ConsultarAgenteInmobiliarioResponse(1, "agente@constructor.com", "agente", 1, Some("Agente"), None, None, "E"))
       )))
 
-    (agentesRepo.getAgenteInmobiliarioList _).when("2", None, None, None, None, Some(2), Some(1), None)
+    (agentesRepo.getAgenteInmobiliarioList _).when("2", 0, None, None, None, None, Some(2), Some(1), None)
       .returns(Future.successful(ConsultarAgenteInmobiliarioListResponse(
         PaginacionMetadata(2, 1, 1, 3, None),
         Seq(ConsultarAgenteInmobiliarioResponse(1, "agente2@constructor.com", "agente2", 1, Some("Agente2"), None, None, "E"))
       )))
 
-    (agentesRepo.getAgenteInmobiliarioList _).when("2", None, None, None, None, Some(3), Some(1), None)
+    (agentesRepo.getAgenteInmobiliarioList _).when("2", 0, None, None, None, None, Some(3), Some(1), None)
       .returns(Future.successful(ConsultarAgenteInmobiliarioListResponse(
         PaginacionMetadata(3, 1, 1, 3, None),
         Seq(ConsultarAgenteInmobiliarioResponse(1, "agente3@constructor.com", "agente3", 1, Some("Agente3"), None, None, "E"))
       )))
 
     // error
-    (agentesRepo.getAgenteInmobiliarioList _).when("error", None, None, None, None, None, None, None)
+    (agentesRepo.getAgenteInmobiliarioList _).when("error", 0, None, None, None, None, None, None, None)
       .returns(Future.failed(new Exception()))
 
     AgenteInmobiliarioService(constructor, agentesRepo, permisosRepo, contrasenasRepo)

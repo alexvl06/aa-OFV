@@ -124,7 +124,7 @@ case class AgenteInmobiliarioService(
           (nombreOpt, usuarioOpt, correoOpt, estadoOpt, paginaOpt, itemsPorPaginaOpt, ordenarPorOpt) =>
           {
             val agentesF: Future[ConsultarAgenteInmobiliarioListResponse] = usuariosRepo.getAgenteInmobiliarioList(
-              usuarioAuth.identificacion, nombreOpt,
+              usuarioAuth.identificacion, usuarioAuth.id, nombreOpt,
               usuarioOpt, correoOpt, estadoOpt, paginaOpt, itemsPorPaginaOpt, ordenarPorOpt
             )
             onComplete(agentesF) {

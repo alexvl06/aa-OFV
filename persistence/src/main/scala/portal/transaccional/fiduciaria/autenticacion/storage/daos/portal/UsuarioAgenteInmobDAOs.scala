@@ -67,7 +67,7 @@ trait UsuarioAgenteInmobDAOs {
    * @return Una tupla de 5 elementos de la siguiente forma: <br/>
    *         <b>(pagina, maxItemsPorPagina, totalItemsEnPagina, totalItemsEnBD, itemsPagina)<b/>
    */
-  def getAll(identificacion: String, nombre: Option[String],
+  def getAll(identificacion: String, id : Int, nombre: Option[String],
     usuario: Option[String], correo: Option[String], estado: Option[String], pagina: Option[Int], itemsPorPagina: Option[Int],
     ordenarPor: Option[String])(implicit ec: ExecutionContext): Future[(Int, Int, Int, Int, Seq[UsuarioAgenteInmobiliario])]
 

@@ -47,12 +47,12 @@ case class UsuarioAgenteInmobDAO(implicit dcConfig: DBConfig) extends UsuarioAge
     run(table.filter(_.identificacion === identificacion).result)
   }
 
-  override def getAll(identificacion: String, nombre: Option[String],
+  override def getAll(identificacion: String, id : Int, nombre: Option[String],
     usuario: Option[String], correo: Option[String], estado: Option[String], pagina: Option[Int],
     itemsPorPagina: Option[Int], ordenarPor: Option[String])(implicit ec: ExecutionContext): Future[(Int, Int, Int, Int, Seq[UsuarioAgenteInmobiliario])] = {
 
     val query: Query[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario, Seq] =
-      buildAgentesListQuery(identificacion, nombre, usuario, correo, estado, ordenarPor)
+      buildAgentesListQuery(identificacion, id, nombre, usuario, correo, estado, ordenarPor)
 
     run(
       for {
@@ -93,7 +93,7 @@ case class UsuarioAgenteInmobDAO(implicit dcConfig: DBConfig) extends UsuarioAge
     run(query.update(Option(contrasena), new Timestamp(new org.joda.time.DateTime().getMillis)))
   }
 
-  private def buildAgentesListQuery(identificacion: String, nombre: Option[String],
+  private def buildAgentesListQuery(identificacion: String, idAuth : Int, nombre: Option[String],
                                     usuario: Option[String], correo: Option[String],
                                     estado: Option[String], ordenarPor: Option[String]): Query[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario, Seq] = {
     val estados: Option[Seq[Int]] = estado match {
@@ -106,6 +106,7 @@ case class UsuarioAgenteInmobDAO(implicit dcConfig: DBConfig) extends UsuarioAge
 
     val basequery: Query[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario, Seq] = MaybeFilter(table)
       .filter(Some(identificacion))(id => agente => agente.identificacion === id)
+      .filter(Some(idAuth))(id => agente => agente.id =!= id)
       .filter(nombre)(n => agente => agente.nombre.toLowerCase like s"%${n.toLowerCase}%")
       .filter(usuario)(u => agente => agente.usuario.toLowerCase like s"%${u.toLowerCase}%")
       .filter(correo)(c => agente => agente.correo.toLowerCase like s"%${c.toLowerCase}%")

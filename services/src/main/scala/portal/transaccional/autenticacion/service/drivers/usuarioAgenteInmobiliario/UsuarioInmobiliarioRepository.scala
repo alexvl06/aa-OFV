@@ -52,6 +52,7 @@ trait UsuarioInmobiliarioRepository {
    * Obtiene la lista de agentes inmobiliarios de la empresa
    *
    * @param identificacion Identificación de la empresa
+   * @param id             Id de la base de datos
    * @param nombre         Filtro - Nombre del agente inmobiliario - Opcional
    * @param usuario        Filtro - Nombre de usuario del agente inmobiliario - Opcional
    * @param correo         Filtro - Correo del agente inmobiliario - Opcional
@@ -61,7 +62,7 @@ trait UsuarioInmobiliarioRepository {
    * @param ordenarPor     Ordenamiento - Criterio para ordenar la lista - Opcional
    * @return La lista de agentes inmobiliarios (entidad de servicio)
    */
-  def getAgenteInmobiliarioList(identificacion: String, nombre: Option[String], usuario: Option[String],
+  def getAgenteInmobiliarioList(identificacion: String, id : Int, nombre: Option[String], usuario: Option[String],
     correo: Option[String], estado: Option[String],
     pagina: Option[Int], itemsPorPagina: Option[Int], ordenarPor: Option[String]): Future[ConsultarAgenteInmobiliarioListResponse]
 
