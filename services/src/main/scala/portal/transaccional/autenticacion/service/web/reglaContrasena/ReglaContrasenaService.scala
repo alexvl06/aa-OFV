@@ -26,8 +26,7 @@ case class ReglaContrasenaService(reglasRepo: ReglaContrasenaRepository)(implici
 
   private def reglas() = {
     get {
-      val reglas: Future[Seq[ReglaContrasena]] = reglasRepo.getReglas()
-      onComplete(reglas) {
+      onComplete(reglasRepo.getReglas()) {
         case Success(value) => complete(value)
         case Failure(ex) => complete(StatusCodes.NoContent)
       }

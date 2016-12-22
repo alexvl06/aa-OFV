@@ -3,21 +3,21 @@ package portal.transaccional.autenticacion.service.web.contrasena
 import akka.actor.ActorSelection
 import co.com.alianza.app.CrossHeaders
 import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.exceptions.{PersistenceException, ValidacionException, ValidacionExceptionPasswordRules}
+import co.com.alianza.exceptions.{ PersistenceException, ValidacionException, ValidacionExceptionPasswordRules }
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.infrastructure.auditing.AuditingUser.AuditingUserData
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.util.token.Token
-import portal.transaccional.autenticacion.service.drivers.contrasena.{ContrasenaAdminRepository, ContrasenaAgenteRepository, ContrasenaUsuarioRepository}
+import portal.transaccional.autenticacion.service.drivers.contrasena.{ ContrasenaAdminRepository, ContrasenaAgenteRepository, ContrasenaUsuarioRepository }
 import portal.transaccional.autenticacion.service.drivers.contrasenaAgenteInmobiliario.ContrasenaAgenteInmobiliarioRepository
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import spray.http.StatusCodes._
-import spray.routing.{RequestContext, StandardRoute}
+import spray.routing.{ RequestContext, StandardRoute }
 
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
+import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{ Failure, Success }
 
 /**
  * Created by seven4n on 01/09/14.
@@ -81,7 +81,7 @@ case class AdministrarContrasenaService(
 
             val resultado = tipoCliente match {
               case TiposCliente.agenteEmpresarial => contrasenaAgenteRepo.cambiarContrasena(us_id, data.pw_nuevo, data.pw_actual)
-              case TiposCliente.clienteAdministrador => contrasenaAdminRepo.cambiarContrasena(us_id, data.pw_nuevo, data.pw_actual)
+              case TiposCliente.clienteAdministrador | TiposCliente.clienteAdminInmobiliario => contrasenaAdminRepo.cambiarContrasena(us_id, data.pw_nuevo, data.pw_actual)
               case TiposCliente.clienteIndividual => contrasenaUsuarioRepo.cambiarContrasena(us_id, data.pw_nuevo, data.pw_actual)
               case TiposCliente.agenteInmobiliario | TiposCliente.agenteInmobiliarioInterno => agenteInmobContrasenaRepo.actualizarContrasenaCaducada(Option(data.token), data.pw_actual, data.pw_nuevo, Option.empty)
             }

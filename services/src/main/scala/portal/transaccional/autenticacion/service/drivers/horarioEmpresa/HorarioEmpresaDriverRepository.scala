@@ -27,7 +27,10 @@ case class HorarioEmpresaDriverRepository(
       _ <- empresaRepo.validarEmpresa(empresa)
       horarioEmpresa <- horarioEmpresaDAO.obtenerHorarioEmpresa(empresa.get.id)
     } yield {
-      horarioTranslator.entityToDto(horarioEmpresa.get)
+      horarioEmpresa match {
+        case Some(horario) => horarioTranslator.entityToDto(horario)
+        case _ => None
+      }
     }
   }
 

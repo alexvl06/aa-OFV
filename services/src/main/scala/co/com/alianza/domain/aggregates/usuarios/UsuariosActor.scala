@@ -206,8 +206,7 @@ class UsuariosActor(
                           case agenteInmobiliario: UsuarioAgenteInmobiliario =>
                             olvidoContrasenaAgenteInmobiliario(currentSender, agenteInmobiliario)
 
-                          case _ =>
-                            log.info("Error al obtener usuario para olvido de contrasena")
+                          case _ => log.info("Error al obtener usuario para olvido de contrasena")
                         }
                       case zFailure(error) =>
                         error match {
@@ -412,11 +411,8 @@ class UsuariosActor(
   // Extensión portal alianza inmobiliaria
   // --------------------------------------
 
-  def buscarAgenteInmobiliario(
-    busquedaUsuarioPortal: Validation[PersistenceException, Option[Any]],
-    identificacion: String,
-    usuario: String
-  ): Future[Validation[PersistenceException, Option[Any]]] = {
+  def buscarAgenteInmobiliario(busquedaUsuarioPortal: Validation[PersistenceException, Option[Any]], identificacion: String, usuario: String): Future[Validation[PersistenceException, Option[Any]]] = {
+
     busquedaUsuarioPortal match {
       case zFailure(failure) => Future.successful(Validation.failure(failure))
       case zSuccess(usuarioOpt) => usuarioOpt match {
@@ -458,3 +454,4 @@ class UsuariosActor(
     }
   }
 }
+
