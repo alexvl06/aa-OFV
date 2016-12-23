@@ -223,14 +223,19 @@ case class AutenticacionEmpresaDriverRepository(
   private def tipoAgente(u: UsuarioAgente) = {
     u match {
       case usuario: UsuarioEmpresarial => TiposCliente.agenteEmpresarial
-      case usuario: UsuarioAgenteInmobiliario => if (usuario.tipoAgente == TipoAgenteInmobiliario.internoAdmin.toString) TiposCliente.agenteInmobiliarioInterno else TiposCliente.agenteInmobiliario
+      case usuario: UsuarioAgenteInmobiliario =>
+        if (usuario.tipoAgente == TipoAgenteInmobiliario.internoAdmin.toString) {
+          TiposCliente.agenteInmobiliarioInterno
+        } else {
+          TiposCliente.agenteInmobiliario
+        }
     }
   }
 
   private def generarTokenAdmin(usuario: UsuarioEmpresarialAdmin, ip: String, inactividad: String, tiposCliente: TiposCliente): Future[String] = {
     Future {
       Token.generarToken(usuario.usuario, usuario.correo, getTipoPersona(usuario.tipoIdentificacion),
-        usuario.ipUltimoIngreso.get, usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())),
+        usuario.ipUltimoIngreso.getOrElse(""), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())),
         inactividad, tiposCliente, Some(usuario.identificacion))
     }
   }
