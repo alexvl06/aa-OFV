@@ -87,10 +87,10 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with FutureResponse
       _ <- ValidationT(toErrorValidation(DataAccessAdapter.asociarAgenteConEmpresa(UsuarioEmpresarialEmpresa(empresa.get.id, idAgente))))
       confTiempo <- ValidationT(validacionConsultaTiempoExpiracion())
       pinUsuario <- ValidationT(obtenerPinUsuario(confTiempo, idAgente))
-      guardarPin <- ValidationT(toErrorValidation(DataAccessAdapter.crearPinEmpresaAgenteEmpresarial(pinUsuario)))
-      envioCorreo <- ValidationT(enviarCorreoPin(pinUsuario, confTiempo: Configuracion, plantilla, asunto, message.usuario, message.correo))
+      _ <- ValidationT(toErrorValidation(DataAccessAdapter.crearPinEmpresaAgenteEmpresarial(pinUsuario)))
+      _ <- ValidationT(enviarCorreoPin(pinUsuario, confTiempo: Configuracion, plantilla, asunto, message.usuario, message.correo))
     } yield {
-      envioCorreo
+      idAgente
     }).run
     resolveFutureValidation(future, (response: Int) => response.toJson, errorValidacion, currentSender)
   }
