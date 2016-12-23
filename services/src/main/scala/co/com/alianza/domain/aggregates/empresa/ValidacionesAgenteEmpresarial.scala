@@ -68,6 +68,22 @@ object ValidacionesAgenteEmpresarial {
       }
     }
 
+  /**
+   * Validar usuario
+   * @param usuario
+   * @return
+   */
+  def validarUsuarioAgenteNit(nit: String, usuario: String): Future[Validation[ErrorValidacion, Boolean]] =
+    DataAccessAdapterUsuarioAE existeUsuarioEmpresarialPorUsuario (nit, usuario) map {
+      _ leftMap { e => ErrorPersistence(e.message, e) } flatMap {
+        existe: Boolean =>
+          existe match {
+            case false => zSuccess(true)
+            case true => zFailure(ErrorUsuarioClienteAdmin(errorUsuarioClienteAdmin))
+          }
+      }
+    }
+
   def validacionEstadoActualizacionAgenteEmpresarial(idAgenteEmpresarial: Int): Future[Validation[ErrorValidacion, Boolean]] = {
     val usuarioAgenteEmpresarialFuture = DataAccessAdapterUsuarioAE.obtenerUsuarioEmpresarialPorId(idAgenteEmpresarial)
     usuarioAgenteEmpresarialFuture.map(_.leftMap(pe => ErrorPersistence(pe.message, pe)).flatMap {

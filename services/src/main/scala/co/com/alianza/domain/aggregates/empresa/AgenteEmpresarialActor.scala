@@ -57,6 +57,7 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with FutureResponse
   import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial.validarUsuarioClienteAdmin
   import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial.validarEstadoEmpresa
   import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial.validarUsuarioAgente
+  import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial.validarUsuarioAgenteNit
   import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial.validacionEstadoActualizacionAgenteEmpresarial
 
   import context.dispatcher
@@ -78,11 +79,12 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with FutureResponse
     val asunto = "alianza.smtp.asunto.creacionAgenteEmpresarial"
     val plantilla = "alianza.smtp.templatepin.creacionAgenteEmpresarial"
     val future: Future[Validation[ErrorValidacion, Int]] = (for {
-      clienteAdmin <- ValidationT(validarUsuarioClienteAdmin(message.nit, message.usuario))
+      _ <- ValidationT(validarUsuarioClienteAdmin(message.nit, message.usuario))
+      _ <- ValidationT(validarUsuarioAgenteNit(message.nit, message.usuario))
       idAgente <- ValidationT(toErrorValidation(DataAccessAdapter.crearAgenteEmpresarial(usuarioEntity)))
-      resultAsociarPerfiles <- ValidationT(toErrorValidation(DataAccessAdapter.asociarPerfiles(idAgente, perfiles)))
+      _ <- ValidationT(toErrorValidation(DataAccessAdapter.asociarPerfiles(idAgente, perfiles)))
       empresa <- ValidationT(toErrorValidation(DataAccessAdapter.obtenerEmpresaPorNit(message.nit)))
-      resultAsociarEmpresa <- ValidationT(toErrorValidation(DataAccessAdapter.asociarAgenteConEmpresa(UsuarioEmpresarialEmpresa(empresa.get.id, idAgente))))
+      _ <- ValidationT(toErrorValidation(DataAccessAdapter.asociarAgenteConEmpresa(UsuarioEmpresarialEmpresa(empresa.get.id, idAgente))))
       confTiempo <- ValidationT(validacionConsultaTiempoExpiracion())
       pinUsuario <- ValidationT(obtenerPinUsuario(confTiempo, idAgente))
       guardarPin <- ValidationT(toErrorValidation(DataAccessAdapter.crearPinEmpresaAgenteEmpresarial(pinUsuario)))
@@ -105,7 +107,8 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with FutureResponse
       usuarioAdmin <- ValidationT(validarUsuarioClienteAdmin(nit, message.usuario))
       existeUsuario <- ValidationT(validarUsuarioAgente(message.id, nit, message.usuario))
       estadoAgente <- ValidationT(validacionEstadoActualizacionAgenteEmpresarial(message.id))
-      actualizar <- ValidationT(toErrorValidation(DataAccessAdapter.actualizarAgenteEmpresarial(message.id, message.usuario, message.correo, message.nombreUsuario, message.cargo, message.descripcion)))
+      actualizar <- ValidationT(toErrorValidation(DataAccessAdapter.actualizarAgenteEmpresarial(message.id, message.usuario,
+        message.correo, message.nombreUsuario, message.cargo, message.descripcion)))
     } yield actualizar).run
     resolveFutureValidation(future, (response: Int) => response.toJson, errorValidacion, currentSender)
   }
@@ -146,7 +149,8 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with FutureResponse
    * @param correo
    * @return
    */
-  private def enviarCorreoPin(pin: PinAgente, confTiempo: Configuracion, plantilla: String, asunto: String, usuario: String, correo: String): Future[Validation[ErrorValidacion, Int]] = {
+  private def enviarCorreoPin(pin: PinAgente, confTiempo: Configuracion, plantilla: String, asunto: String, usuario: String,
+    correo: String): Future[Validation[ErrorValidacion, Int]] = {
     val message = buildMessage(pin, confTiempo.valor.toInt, plantilla, asunto, usuario, correo)
     toErrorValidationCorreo(new SmtpServiceClient()(context.system).send(message, (_, _) => 1))
   }

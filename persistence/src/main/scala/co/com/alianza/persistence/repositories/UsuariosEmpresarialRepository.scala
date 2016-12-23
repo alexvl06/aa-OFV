@@ -154,6 +154,12 @@ class UsuariosEmpresarialRepository(implicit executionContext: ExecutionContext)
       resolveTry(resultTry, "Existe agente con mismo usuario pero diferente id ?")
   }
 
+  def existeUsuario(nit: String, usuario: String): Future[Validation[PersistenceException, Boolean]] = loan {
+    implicit session =>
+      val resultTry = session.database.run(usuariosEmpresariales.filter(usu => usu.usuario === usuario && usu.identificacion === nit).exists.result)
+      resolveTry(resultTry, "Existe agente con mismo usuario pero diferente id ?")
+  }
+
   def obtenerUsuarioPorToken(token: String): Future[Validation[PersistenceException, Option[UsuarioEmpresarial]]] = loan {
     implicit session =>
       val resultTry = session.database.run(usuariosEmpresariales.filter(_.token === token).result.headOption)

@@ -62,6 +62,10 @@ object DataAccessAdapter {
     repo.existeUsuario(idUsuario, nit, usuario)
   }
 
+  def existeUsuarioEmpresarialPorUsuario(nit: String, usuario: String): Future[Validation[PersistenceException, Boolean]] = {
+    repo.existeUsuario(nit, usuario)
+  }
+
   def obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token: String): Future[Validation[PersistenceException, Option[AuditingUserData]]] = {
     repo.obtenerUsuarioPorToken(token) map {
       x => transformValidationTuple(x)

@@ -49,7 +49,6 @@ class UsuariosEmpresaRepository(implicit executionContext: ExecutionContext) ext
       val correoFiltrado = if (correoUsuario != null && correoUsuario.nonEmpty && usuariosQuery != null) usuariosQuery.filter(_.correo === correoUsuario) else usuariosQuery
       val usuarioFiltrado = if (usuario != null && usuario.nonEmpty && usuariosQuery != null) correoFiltrado.filter(_.usuario === usuario) else correoFiltrado
       val nombreFiltrado = if (nombreUsuario != null && nombreUsuario.nonEmpty && usuariosQuery != null) usuarioFiltrado.filter(_.nombreUsuario === nombreUsuario) else usuarioFiltrado
-
       val resultTry = session.database.run(nombreFiltrado.result)
 
       resolveTry(resultTry, "Consulta agentes empresariales que pertenezcan a la empresa del cliente administrador y cumpla con parametros de busqueda")
