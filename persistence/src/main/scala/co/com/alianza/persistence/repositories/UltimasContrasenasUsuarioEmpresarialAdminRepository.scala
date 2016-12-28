@@ -16,17 +16,18 @@ import scalaz.Validation
  */
 class UltimasContrasenasUsuarioEmpresarialAdminRepository(implicit executionContext: ExecutionContext) extends AlianzaRepository {
 
-  val ultimasContrasenas = TableQuery[UltimaContrasenaUsuarioEmpresarialAdminTable]
+  val ultimasContrasenas = TableQuery[UltimaContrasenaAdminTable]
 
-  def guardarUltimaContrasena(nuevaUltimaContrasena: UltimaContrasenaUsuarioEmpresarialAdmin): Future[Validation[PersistenceException, Int]] = loan {
+  def guardarUltimaContrasena(nuevaUltimaContrasena: UltimaContrasena): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
       val resultTry = session.database.run((ultimasContrasenas returning ultimasContrasenas.map(_.id.get)) += nuevaUltimaContrasena)
       resolveTry(resultTry, "Guarda última contraseña registrada de un cliente admin")
   }
 
-  def obtenerUltimasContrasenas(numeroUltimasContrasenas: String, usuarioId: Int): Future[Validation[PersistenceException, Seq[UltimaContrasenaUsuarioEmpresarialAdmin]]] = loan {
+  def obtenerUltimasContrasenas(numeroUltimasContrasenas: String, usuarioId: Int): Future[Validation[PersistenceException, Seq[UltimaContrasena]]] = loan {
     implicit session =>
-      val resultTry = session.database.run(ultimasContrasenas.filter(_.idUsuario === usuarioId).sortBy(_.fechaUltimaContrasena.desc).take(numeroUltimasContrasenas.toInt).result)
+      val resultTry = session.database.run(ultimasContrasenas.filter(_.idUsuario === usuarioId)
+        .sortBy(_.fechaUltimaContrasena.desc).take(numeroUltimasContrasenas.toInt).result)
       resolveTry(resultTry, "Consulta las ultimas 'N' Contrasenas de un cliente admin")
   }
 

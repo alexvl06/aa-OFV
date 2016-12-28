@@ -2,7 +2,7 @@ package portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobili
 
 import akka.actor.ActorSystem
 import co.com.alianza.microservices.MailMessage
-import co.com.alianza.persistence.entities.{ Configuraciones, PinAgenteInmobiliario }
+import co.com.alianza.persistence.entities.{ Configuracion, PinAgenteInmobiliario }
 import com.typesafe.config.Config
 import enumerations.EstadosPin.EstadoPin
 
@@ -38,7 +38,7 @@ trait UsuarioInmobiliarioPinRepository {
    * @param reinicio         Indica si el pin debe ser generado para reinicio de contraseña
    * @return Una instancia de la clase PinAgenteInmobiliario con el pin generado
    */
-  def generarPinAgente(configExpiracion: Configuraciones, idUsuario: Int, reinicio: Boolean = false): PinAgenteInmobiliario
+  def generarPinAgente(configExpiracion: Configuracion, idUsuario: Int, reinicio: Boolean = false): PinAgenteInmobiliario
 
   /**
    * Genera el correo de activación del agente inmobiliario

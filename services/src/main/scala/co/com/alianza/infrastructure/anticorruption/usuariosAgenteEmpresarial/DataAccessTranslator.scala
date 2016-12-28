@@ -2,8 +2,8 @@ package co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial
 
 import java.sql.Timestamp
 
-import co.com.alianza.infrastructure.dto.{ UsuarioEmpresarial, UsuarioEmpresarialEstado, estadoUsuario, PinEmpresa }
-import co.com.alianza.persistence.entities.{ PinEmpresa => ePinEmpresa, UsuarioEmpresarial => dUsuario }
+import co.com.alianza.infrastructure.dto.{ UsuarioEmpresarial, UsuarioEmpresarialEstado, estadoUsuario }
+import co.com.alianza.persistence.entities.{ PinAgente => ePinEmpresa, UsuarioEmpresarial => dUsuario }
 import co.com.alianza.commons.enumerations.TiposCliente
 import enumerations.EstadosEmpresaEnum
 
@@ -11,10 +11,6 @@ import enumerations.EstadosEmpresaEnum
  * Created by S4N on 22/12/14.
  */
 object DataAccessTranslator {
-
-  def translateEntityPinEmpresa(pin: PinEmpresa): ePinEmpresa = {
-    ePinEmpresa(pin.id, pin.idUsuarioEmpresarial, pin.token, new Timestamp(pin.fechaExpiracion.getTime), pin.tokenHash, pin.uso)
-  }
 
   def translateUsuarioEmpresarial(ue: dUsuario): UsuarioEmpresarial =
     UsuarioEmpresarial(ue.id, ue.correo, ue.fechaActualizacion, ue.identificacion, ue.tipoIdentificacion,

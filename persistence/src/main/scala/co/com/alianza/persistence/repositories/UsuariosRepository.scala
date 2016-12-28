@@ -20,22 +20,10 @@ class UsuariosRepository(implicit executionContext: ExecutionContext) extends Al
   val perfilesUsuarios = TableQuery[PerfilUsuarioTable]
   val pinusuarios = TableQuery[PinUsuarioTable]
 
-  def obtenerUsuarios(): Future[Validation[PersistenceException, Seq[Usuario]]] = loan {
-    implicit session =>
-      val resultTry = session.database.run(usuarios.result)
-      resolveTry(resultTry, "Consulta todos los Usuarios")
-  }
-
   def obtenerUsuarioNumeroIdentificacion(numeroIdentificacion: String): Future[Validation[PersistenceException, Option[Usuario]]] = loan {
     implicit session =>
       val resultTry = session.database.run(usuarios.filter(_.identificacion === numeroIdentificacion).result.headOption)
       resolveTry(resultTry, "Consulta usuario con identificador " + numeroIdentificacion)
-  }
-
-  def obtenerUsuarioId(idUsuario: Int): Future[Validation[PersistenceException, Option[Usuario]]] = loan {
-    implicit session =>
-      val resultTry = session.database.run(usuarios.filter(_.id === idUsuario).result.headOption)
-      resolveTry(resultTry, "Consulta usuario con identificador " + idUsuario)
   }
 
   def obtenerUsuarioToken(token: String): Future[Validation[PersistenceException, Option[Usuario]]] = loan {
@@ -44,75 +32,15 @@ class UsuariosRepository(implicit executionContext: ExecutionContext) extends Al
       resolveTry(resultTry, "Consulta usuario con token" + token)
   }
 
-  def obtenerUsuarioCorreo(correo: String): Future[Validation[PersistenceException, Option[Usuario]]] = loan {
-    implicit session =>
-      val resultTry = session.database.run(usuarios.filter(_.correo === correo).result.headOption)
-      resolveTry(resultTry, "Consulta usuario con correo " + correo)
-  }
-
-  def consultaContrasenaActual(pw_actual: String, idUsuario: Int): Future[Validation[PersistenceException, Option[Usuario]]] = loan {
-    implicit session =>
-      val resultTry = session.database.run(usuarios.filter(x => x.contrasena === pw_actual && x.id === idUsuario).result.headOption)
-      resolveTry(resultTry, "Consulta contrasena actual de usuario " + pw_actual)
-  }
-
   def guardar(usuario: Usuario): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
       val resultTry = session.database.run((usuarios returning usuarios.map(_.id.get)) += usuario)
       resolveTry(resultTry, "Crea usuario")
   }
 
-  def asociarTokenUsuario(numeroIdentificacion: String, token: String): Future[Validation[PersistenceException, Int]] = loan {
-
-    implicit session =>
-      val resultTry = session.database.run(usuarios.filter(_.identificacion === numeroIdentificacion).map(_.token).update(Some(token)))
-      resolveTry(resultTry, "Actualizar usuario en token")
-  }
-
-  def invalidarTokenUsuario(token: String): Future[Validation[PersistenceException, Int]] = loan {
-
-    implicit session =>
-      val resultTry = session.database.run(usuarios.filter(_.token === token).map(_.token).update(Some(null)))
-      resolveTry(resultTry, "Invalidar token usuario")
-  }
-
-  def actualizarNumeroIngresosErroneos(numeroIdentificacion: String, numeroIntentos: Int): Future[Validation[PersistenceException, Int]] = loan {
-
-    implicit session =>
-      val resultTry = session.database.run(usuarios.filter(_.identificacion === numeroIdentificacion).map(_.numeroIngresosErroneos).update(numeroIntentos))
-      resolveTry(resultTry, "Actualizar usuario en numeroIngresosErroneos ")
-  }
-
-  def actualizarNumeroIngresosErroneos(idUsuario: Int, numeroIntentos: Int): Future[Validation[PersistenceException, Int]] = loan {
-
-    implicit session =>
-      val resultTry = session.database.run(usuarios.filter(_.id === idUsuario).map(_.numeroIngresosErroneos).update(numeroIntentos))
-      resolveTry(resultTry, "Actualizar usuario en numeroIngresosErroneos ")
-  }
-
-  def actualizarIpUltimoIngreso(numeroIdentificacion: String, ipActual: String): Future[Validation[PersistenceException, Int]] = loan {
-
-    implicit session =>
-      val resultTry = session.database.run(usuarios.filter(_.identificacion === numeroIdentificacion).map(_.ipUltimoIngreso).update(Some(ipActual)))
-      resolveTry(resultTry, "Actualizar usuario en actualizarIpUltimoIngreso ")
-  }
-
-  def actualizarFechaUltimoIngreso(numeroIdentificacion: String, fechaActual: Timestamp): Future[Validation[PersistenceException, Int]] = loan {
-
-    implicit session =>
-      val resultTry = session.database.run(usuarios.filter(_.identificacion === numeroIdentificacion).map(_.fechaUltimoIngreso).update(Some(fechaActual)))
-      resolveTry(resultTry, "Actualizar usuario en actualizarFechaUltimoIngreso ")
-  }
-
   def actualizarEstadoUsuario(numeroIdentificacion: String, estado: Int): Future[Validation[PersistenceException, Int]] = loan {
     implicit session =>
       val resultTry = session.database.run(usuarios.filter(_.identificacion === numeroIdentificacion).map(_.estado).update(estado))
-      resolveTry(resultTry, "Actualizar estado del usuario ")
-  }
-
-  def actualizarEstadoUsuario(idUsuario: Int, estado: Int): Future[Validation[PersistenceException, Int]] = loan {
-    implicit session =>
-      val resultTry = session.database.run(usuarios.filter(_.id === idUsuario).map(_.estado).update(estado))
       resolveTry(resultTry, "Actualizar estado del usuario ")
   }
 
@@ -123,7 +51,6 @@ class UsuariosRepository(implicit executionContext: ExecutionContext) extends Al
   }
 
   def asociarPerfiles(perfiles: List[PerfilUsuario]): Future[Validation[PersistenceException, List[Int]]] = loan {
-
     implicit session =>
       val resultTry = perfiles.map(perfil => session.database.run(perfilesUsuarios += perfil))
       resolveTry(Future.sequence(resultTry), "Actualizar usuario en token")

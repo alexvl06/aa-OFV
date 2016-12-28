@@ -20,3 +20,9 @@ case class Usuario(
   fechaUltimoIngreso: Option[Date],
   tipoCliente: TiposCliente
 )
+
+case class UsuarioComercialDTO(
+  tipoCliente: TiposCliente,
+  id: Int,
+  usuario: String
+)

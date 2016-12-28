@@ -5,7 +5,7 @@ package co.com.alianza.infrastructure.anticorruption.ultimasContrasenasAgenteEmp
  */
 
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.persistence.entities.UltimaContrasenaUsuarioAgenteEmpresarial
+import co.com.alianza.persistence.entities.UltimaContrasena
 import co.com.alianza.persistence.repositories.UltimasContrasenasUsuarioAgenteEmpresarialRepository
 import co.com.alianza.persistence.util.DataBaseExecutionContext
 
@@ -19,10 +19,10 @@ object DataAccessAdapter {
 
   implicit val ec: ExecutionContext = DataBaseExecutionContext.executionContext
 
-  def guardarUltimaContrasena(nuevaUltimaContrasena: UltimaContrasenaUsuarioAgenteEmpresarial): Future[Validation[PersistenceException, Int]] =
+  def guardarUltimaContrasena(nuevaUltimaContrasena: UltimaContrasena): Future[Validation[PersistenceException, Int]] =
     new UltimasContrasenasUsuarioAgenteEmpresarialRepository guardarUltimaContrasena nuevaUltimaContrasena
 
-  def obtenerUltimasContrasenas(numeroUltimasContrasenas: String, idUsuario: Int): Future[Validation[PersistenceException, Seq[UltimaContrasenaUsuarioAgenteEmpresarial]]] =
+  def obtenerUltimasContrasenas(numeroUltimasContrasenas: String, idUsuario: Int): Future[Validation[PersistenceException, Seq[UltimaContrasena]]] =
     new UltimasContrasenasUsuarioAgenteEmpresarialRepository obtenerUltimasContrasenas (numeroUltimasContrasenas, idUsuario)
 
 }

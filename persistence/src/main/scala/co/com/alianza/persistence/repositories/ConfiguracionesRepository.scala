@@ -12,13 +12,13 @@ class ConfiguracionesRepository(implicit executionContext: ExecutionContext) ext
 
   val configuraciones = TableQuery[ConfiguracionesTable]
 
-  def obtenerConfiguraciones(): Future[Validation[PersistenceException, Seq[Configuraciones]]] = loan {
+  def obtenerConfiguraciones(): Future[Validation[PersistenceException, Seq[Configuracion]]] = loan {
     implicit session =>
       val resultTry = session.database.run(configuraciones.result)
       resolveTry(resultTry, "Consulta todas las configuraciones del administrador de fiduciaria")
   }
 
-  def obtenerConfiguracionPorLlave(llave: String): Future[Validation[PersistenceException, Option[Configuraciones]]] = loan {
+  def obtenerConfiguracionPorLlave(llave: String): Future[Validation[PersistenceException, Option[Configuracion]]] = loan {
     implicit session =>
       val resultTry = session.database.run(configuraciones.filter(_.llave === llave).result.headOption)
 

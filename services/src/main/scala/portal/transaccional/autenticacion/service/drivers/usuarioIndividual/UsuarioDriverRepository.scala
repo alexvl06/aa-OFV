@@ -1,6 +1,7 @@
 package portal.transaccional.autenticacion.service.drivers.usuarioIndividual
 
 import java.sql.Timestamp
+import java.util.Date
 
 import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.exceptions.ValidacionException
@@ -17,6 +18,8 @@ import scala.concurrent.{ ExecutionContext, Future }
  * Created by hernando on 25/07/16.
  */
 case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: ExecutionContext) extends UsuarioRepository {
+
+  def getById(idUsuario: Int): Future[Option[Usuario]] = usuarioDAO.getById(idUsuario)
 
   def getByIdentificacion(numeroIdentificacion: String): Future[Usuario] = {
     usuarioDAO.getByIdentity(numeroIdentificacion) flatMap {
@@ -39,6 +42,10 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
    */
   def actualizarToken(numeroIdentificacion: String, token: String): Future[Int] = {
     usuarioDAO.createToken(numeroIdentificacion, token)
+  }
+
+  def actualizarEstado(idUsuario: Int, estado: Int): Future[Int] = {
+    usuarioDAO.updateStateById(idUsuario, estado)
   }
 
   /**
@@ -66,12 +73,12 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
   /**
    * Actualizar fecha ingreso
    *
-   * @param numeroIdentificacion
+   * @param idUsuario
    * @param fechaActual
    * @return
    */
-  def actualizarFechaIngreso(numeroIdentificacion: String, fechaActual: Timestamp): Future[Int] = {
-    usuarioDAO.updateLastDate(numeroIdentificacion, fechaActual)
+  def actualizarFechaIngreso(idUsuario: Int, fechaActual: Timestamp): Future[Int] = {
+    usuarioDAO.updateLastDate(idUsuario, fechaActual)
   }
 
   /////////////////////////////// validaciones //////////////////////////////////
@@ -90,6 +97,21 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
     else if (estado == EstadosUsuarioEnum.pendienteReinicio.id)
       Future.failed(ValidacionException("401.12", "Usuario Bloqueado"))
     else Future.successful(true)
+  }
+
+  /**
+   * Guardar contrasena
+   *
+   * @param idUsuario
+   * @param contrasena
+   */
+  def actualizarContrasena(idUsuario: Int, contrasena: String): Future[Int] = {
+    for {
+      cambiar <- usuarioDAO.updatePassword(idUsuario, contrasena)
+      _ <- usuarioDAO.updateStateById(idUsuario, EstadosUsuarioEnum.activo.id)
+      _ <- usuarioDAO.updateUpdateDate(idUsuario, new Timestamp(new Date().getTime))
+      _ <- usuarioDAO.updateIncorrectEntries(idUsuario, 0)
+    } yield cambiar
   }
 
   /**
@@ -173,6 +195,13 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
     usuarioDAO.deleteToken(token) flatMap {
       case r: Int => Future.successful(r)
       case _ => Future.failed(ValidacionException("401.9", "No se pudo borrar el token"))
+    }
+  }
+
+  def validarUsuario(usuarioOption: Option[Usuario]): Future[Usuario] = {
+    usuarioOption match {
+      case Some(usuario) => Future.successful(usuario)
+      case _ => Future.failed(ValidacionException("409.01", "No existe usuario"))
     }
   }
 

@@ -41,7 +41,12 @@ object AuditingHelper extends AuditingHelper {
   val olvidoContrasenaIndex = "olvido-contrasena-fiduciaria"
   val autovalidacionBloquearIndex = "autovalidacion-bloquear-fiduciaria"
   val autovalidacionComprobarIndex = "autovalidacion-comprobar-fiduciaria"
-
+  //comercial
+  val autenticacionComercialIndex = "autenticacion-comercial-fiduciaria"
+  val recursosComercialIndex = "consulta-recursos-comercial-fiduciaria"
+  val recursosComercialActualizacionIndex = "actualizar-recursos-comercial-fiduciaria"
+  val crearAdministradorComercialIndex = "crear-administrador-comercial-fiduciaria"
+  val cambioContrasenaAdministradorComercialIndex = "cambio-contrasena-administrador-comercial-fiduciaria"
 }
 
 trait AuditingHelper {
@@ -50,34 +55,19 @@ trait AuditingHelper {
     requestParameters: Any): RequestContext = {
     ctx.withRouteResponseMapped {
       case response: HttpResponse =>
-
         val httpReq: HttpRequest = ctx.request
-
-        val auditingMsg: AuditRequest =
-          AuditRequest(
-            AudRequest(
-              httpReq.method.toString(),
-              httpReq.uri.toRelative.toString(),
-              requestParameters,
-              ip
-            ),
-            AudResponse(
-              response.status.intValue.toString,
-              response.status.reason,
-              response.entity.data.asString
-            ),
-            kafkaTopic,
-            elasticIndex,
-            httpReq.uri.toRelative.toString().split("/")(1)
-          )
-
+        val elasticDocumentType: String = httpReq.uri.toRelative.toString().split("/")(1)
+        val request: AudRequest = AudRequest(httpReq.method.toString(), httpReq.uri.toRelative.toString(), requestParameters, ip)
+        val responseAud: AudResponse = AudResponse(response.status.intValue.toString, response.status.reason, response.entity.data.asString)
+        val auditingMsg: AuditRequest = AuditRequest(request, responseAud, kafkaTopic, elasticIndex, elasticDocumentType)
         kafkaActor ! auditingMsg
         response
       case a => a
     }
   }
 
-  def requestWithFutureAuditing[E, T](ctx: RequestContext, kafkaTopic: String, elasticIndex: String, ip: String, kafkaActor: ActorSelection, futureAuditParameters: Future[Validation[E, Option[AuditingUserData]]], extraParameters: Option[T] = None)(implicit executionContext: ExecutionContext): RequestContext = {
+  def requestWithFutureAuditing[E, T](ctx: RequestContext, kafkaTopic: String, elasticIndex: String, ip: String, kafkaActor: ActorSelection,
+    futureAuditParameters: Future[Validation[E, Option[AuditingUserData]]], extraParameters: Option[T] = None)(implicit executionContext: ExecutionContext): RequestContext = {
     ctx.withRouteResponseMapped {
       case response: HttpResponse =>
         futureAuditParameters onComplete {
@@ -87,21 +77,9 @@ trait AuditingHelper {
                 val httpReq: HttpRequest = ctx.request
                 val auditingMsg: AuditRequest =
                   AuditRequest(
-                    AudRequest(
-                      httpReq.method.toString(),
-                      httpReq.uri.toRelative.toString(),
-                      extraParameters.getOrElse(""),
-                      ip,
-                      usuario
-                    ),
-                    AudResponse(
-                      response.status.intValue.toString,
-                      response.status.reason,
-                      response.entity.data.asString
-                    ),
-                    kafkaTopic,
-                    elasticIndex,
-                    httpReq.uri.toRelative.toString().split("/")(1)
+                    AudRequest(httpReq.method.toString(), httpReq.uri.toRelative.toString(), extraParameters.getOrElse(""), ip, usuario),
+                    AudResponse(response.status.intValue.toString, response.status.reason, response.entity.data.asString),
+                    kafkaTopic, elasticIndex, httpReq.uri.toRelative.toString().split("/")(1)
                   )
                 kafkaActor ! auditingMsg
               }
@@ -112,6 +90,26 @@ trait AuditingHelper {
       case a => a
     }
 
+  }
+
+  def requestAuditing[E, T](ctx: RequestContext, kafkaTopic: String, elasticIndex: String, ip: String,
+    kafkaActor: ActorSelection, user: Option[AuditingUserData],
+    extraParameters: Option[T] = None)(implicit executionContext: ExecutionContext): RequestContext = {
+    ctx.withRouteResponseMapped {
+      case response: HttpResponse =>
+        val httpReq: HttpRequest = ctx.request
+        val elasticDocumentType: String = httpReq.uri.toRelative.toString().split("/")(1)
+        val request = AudRequest(httpReq.method.toString(), httpReq.uri.toRelative.toString(), extraParameters.getOrElse(""), ip, user)
+        val responseAud: AudResponse = AudResponse(response.status.intValue.toString, response.status.reason, response.entity.data.asString)
+        val auditingMsg: AuditRequest = AuditRequest(request, responseAud, kafkaTopic, elasticIndex, elasticDocumentType)
+        kafkaActor ! auditingMsg
+        response
+      case a => a
+    }
+  }
+
+  def getAuditingUser(tipoIdentificacion: Int, identificacion: String, usuario: String): Option[AuditingUserData] = {
+    Option(AuditingUserData(tipoIdentificacion, identificacion, Option(usuario)))
   }
 
 }

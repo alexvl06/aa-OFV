@@ -12,6 +12,8 @@ case class RecursoDriverRepository(generalDAO: AlianzaDAOs) extends RecursoRepos
 
   def obtenerRecursos(usuarioId: Int): Future[Seq[RecursoPerfil]] = generalDAO.getResources(usuarioId)
 
+  def obtenerRecursosClienteIndividual(): Future[Seq[RecursoPerfil]] = generalDAO.getClienteIndividualResources()
+
   def filtrarRecursos(recursos: Seq[RecursoPerfil], url: String): Seq[RecursoPerfil] = {
     recursos.filter(filtrarRecursos(_, url))
   }
@@ -57,6 +59,7 @@ case class RecursoDriverRepository(generalDAO: AlianzaDAOs) extends RecursoRepos
   }
 
   /**
+   * PinEmpresa
    * Filtra el listado de recursos que concuerden con la url
    * @param recurso recursos asociados al admin
    * @param url la url a validar
@@ -64,14 +67,10 @@ case class RecursoDriverRepository(generalDAO: AlianzaDAOs) extends RecursoRepos
    */
   private def filtrarRecursosClienteAdmin(recurso: RecursoPerfilClienteAdmin, url: String): Boolean = {
     val indexSlash: Int = recurso.urlRecurso.lastIndexOf("/")
-    val myUrl: String =
-      if (recurso.urlRecurso.contains("/*") && url.size > recurso.urlRecurso.size) {
-        url.substring(0, indexSlash)
-      } else if (url.endsWith("/")) {
-        url.substring(0, url.lastIndexOf("/"))
-      } else {
-        url
-      }
+    val myUrl: String = (if (recurso.urlRecurso.contains("/*") && url.size > recurso.urlRecurso.size)
+      url.substring(0, indexSlash)
+    else if (url.endsWith("/")) url.substring(0, url.lastIndexOf("/"))
+    else url)
     val urlR: String = recurso.urlRecurso.substring(0, indexSlash)
     urlR.contains(myUrl) && urlR.equals(myUrl) && recurso.acceso
   }

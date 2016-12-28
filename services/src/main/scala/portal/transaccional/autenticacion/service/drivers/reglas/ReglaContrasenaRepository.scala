@@ -1,6 +1,8 @@
 package portal.transaccional.autenticacion.service.drivers.reglas
 
-import co.com.alianza.persistence.entities.{ ReglasContrasenas }
+import co.com.alianza.constants.LlavesReglaContrasena
+import co.com.alianza.persistence.entities.ReglaContrasena
+import enumerations.PerfilesUsuario
 
 import scala.concurrent.Future
 
@@ -9,6 +11,14 @@ import scala.concurrent.Future
  */
 trait ReglaContrasenaRepository {
 
-  def getRegla(llave: String): Future[ReglasContrasenas]
+  def getRegla(llave: LlavesReglaContrasena.Val): Future[ReglaContrasena]
+
+  def getReglas(): Future[Seq[ReglaContrasena]]
+
+  def validarContrasenaReglasGenerales(idUsuario: Int, perfilUsuario: PerfilesUsuario.perfilUsuario, contrasena: String): Future[Boolean]
+
+  def validarContrasenaReglasAutorregistro(contrasena: String): Future[Boolean]
+
+  def validarContrasenaReglasIngresoUsuario(contrasena: String): Future[Boolean]
 
 }

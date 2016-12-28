@@ -1,7 +1,7 @@
 package co.com.alianza.persistence.repositories
 
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.persistence.entities.{ CustomDriver, PinUsuarioEmpresarialAdmin, PinUsuarioEmpresarialAdminTable }
+import co.com.alianza.persistence.entities.{ CustomDriver, PinAdmin, PinUsuarioEmpresarialAdminTable }
 
 import scala.concurrent.{ Future, ExecutionContext }
 
@@ -19,7 +19,7 @@ class PinUsuarioEmpresarialAdminRepository(implicit executionContext: ExecutionC
 
   val pin = TableQuery[PinUsuarioEmpresarialAdminTable]
 
-  def obtenerPin(tokenHash: String): Future[Validation[PersistenceException, Option[PinUsuarioEmpresarialAdmin]]] = loan {
+  def obtenerPin(tokenHash: String): Future[Validation[PersistenceException, Option[PinAdmin]]] = loan {
     implicit session =>
       val resultTry = session.database.run(pin.filter(_.tokenHash === tokenHash).result.headOption)
       resolveTry(resultTry, "Consulta un pin de cliente administrador dado su hash")

@@ -24,6 +24,7 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
   val recursosPerfilesAdmin = TableQuery[RecursoPerfilClienteAdminTable]
   val preguntasTable = TableQuery[PreguntasAutovalidacionTable]
   val respuestasUsuarioTable = TableQuery[RespuestasAutovalidacionUsuarioTable]
+  val respuestasClienteAdministradorTable = TableQuery[RespuestasAutovalidacionUsuarioAdministradorTable]
   val usuariosAgentesInmobiliarios = TableQuery[UsuarioAgenteInmobiliarioTable]
   val permisosInmobiliarios = TableQuery[PermisoInmobiliarioTable]
   val recursosGraficosInmobiliarios = TableQuery[RecursoGraficoInmobiliarioTable]
@@ -65,6 +66,10 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
         (_._2.idPerfil === _.idPerfil) if usu.id === idUsuario
     } yield rec
     run(resources.result)
+  }
+
+  def getClienteIndividualResources(): Future[Seq[RecursoPerfil]] = {
+    run(this.recursos.result)
   }
 
   //  --------------- Usuario empresarial -------------------
@@ -173,6 +178,22 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
       if respuesta.idUsuario === idUsuario
     } yield (pregunta, respuesta)
     run(query.result)
+  }
+
+  def getAdministratorClientQuestions(idUsuario: Int): Future[Seq[(PreguntaAutovalidacion, RespuestasAutovalidacionUsuario)]] = {
+    val query = for {
+      (pregunta, respuesta) <- preguntasTable join respuestasClienteAdministradorTable on (_.id === _.idPregunta)
+      if respuesta.idUsuario === idUsuario
+    } yield (pregunta, respuesta)
+    run(query.result)
+  }
+
+  def deleteIndividualClientAnswers(idUsuario: Int): Future[Int] = {
+    run(respuestasUsuarioTable.filter(x => x.idUsuario === idUsuario).delete)
+  }
+
+  def bloquearRespuestasClienteAdministrador(idUsuario: Int): Future[Int] = {
+    run(respuestasClienteAdministradorTable.filter(x => x.idUsuario === idUsuario).delete)
   }
 
   //  ------------------  Agente inmobiliario ---------------------------

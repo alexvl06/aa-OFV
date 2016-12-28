@@ -6,7 +6,7 @@ import akka.actor.ActorLogging
 import akka.actor.ActorSelection.toScala
 import akka.actor.actorRef2Scala
 import co.com.alianza.infrastructure.messages.{ ResponseMessage, MessageService }
-import co.com.alianza.exceptions.{ TimeoutLevel, PersistenceException, AlianzaException }
+import co.com.alianza.exceptions.{ TimeoutLevel, AlianzaException }
 
 class AnonymousActor(actorService: ActorSelection) extends Actor with ActorLogging {
 
@@ -77,4 +77,5 @@ class AnonymousActor(actorService: ActorSelection) extends Actor with ActorLoggi
       true
     } else false
   }
+
 }

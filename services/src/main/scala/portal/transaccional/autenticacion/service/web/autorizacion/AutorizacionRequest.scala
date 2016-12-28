@@ -1,7 +1,5 @@
 package portal.transaccional.autenticacion.service.web.autorizacion
 
-import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
-
 /**
  * Created by jonathan on 27/07/16.
  */

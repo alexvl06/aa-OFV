@@ -6,7 +6,7 @@ import co.com.alianza.exceptions.PersistenceException
 
 import scalaz.{ Failure => zFailure, Success => zSuccess }
 import co.com.alianza.infrastructure.dto.Configuracion
-import co.com.alianza.persistence.entities.{ Configuraciones => eConfiguraciones }
+import co.com.alianza.persistence.entities.{ Configuracion => eConfiguraciones }
 import co.com.alianza.persistence.repositories.ConfiguracionesRepository
 import co.com.alianza.persistence.util.DataBaseExecutionContext
 

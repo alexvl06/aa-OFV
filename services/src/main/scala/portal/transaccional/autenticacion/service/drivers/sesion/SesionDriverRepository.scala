@@ -3,10 +3,11 @@ package portal.transaccional.autenticacion.service.drivers.sesion
 import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
+import co.com.alianza.domain.aggregates.autenticacion.{ ObtenerIps, RemoverIp, ObtenerEmpresaActor, AgregarIp }
 import co.com.alianza.domain.aggregates.autenticacion.SesionActorSupervisor.SesionUsuarioCreada
 import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.infrastructure.dto.Empresa
-import co.com.alianza.infrastructure.messages.{ BuscarSesion, CrearSesionUsuario, InvalidarSesion, ValidarSesion }
+import co.com.alianza.infrastructure.messages._
 
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
@@ -39,4 +40,27 @@ case class SesionDriverRepository(sessionActor: ActorRef)(implicit val ex: Execu
       case _ => Future.failed(ValidacionException("403.9", "Error sesión"))
     }
   }
+
+  def agregarIpEmpresa(idEmpresa: Int, ip: String): Future[List[String]] = {
+    sessionActor ? ObtenerEmpresaSesionActorId(idEmpresa) flatMap {
+      case Some(empresaActor: ActorRef) => (empresaActor ? AgregarIp(ip)).mapTo[List[String]]
+      case _ => Future.successful(List.empty[String])
+    }
+  }
+
+  def eliminarIpEmpresa(idEmpresa: Int, ip: String): Future[List[String]] = {
+    sessionActor ? ObtenerEmpresaSesionActorId(idEmpresa) flatMap {
+      case Some(empresaActor: ActorRef) => (empresaActor ? RemoverIp(ip)).mapTo[List[String]]
+      case _ => Future.successful(List.empty[String])
+    }
+  }
+
+  def obtenerIps(sesion: ActorRef): Future[List[String]] = {
+    (sesion ? ObtenerEmpresaActor).flatMap {
+      case Some(empresaSesionActor: ActorRef) => (empresaSesionActor ? ObtenerIps).mapTo[List[String]]
+      case None => Future.failed(ValidacionException("401.21", "Error sesión"))
+      case _ => Future.failed(ValidacionException("401.21", "esta devolviendo otra cosa"))
+    }
+  }
+
 }

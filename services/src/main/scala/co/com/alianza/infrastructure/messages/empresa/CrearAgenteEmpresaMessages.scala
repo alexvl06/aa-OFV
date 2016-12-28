@@ -4,9 +4,9 @@ import java.sql.Timestamp
 
 import co.com.alianza.infrastructure.messages.MessageService
 import co.com.alianza.persistence.entities.UsuarioEmpresarial
-import enumerations.{ TipoIdentificacion, EstadosEmpresaEnum }
-import spray.json.DefaultJsonProtocol
+import enumerations.EstadosEmpresaEnum
 import spray.httpx.SprayJsonSupport
+import spray.json.DefaultJsonProtocol
 
 /**
  * Created by S4N on 17/12/14.

@@ -1,8 +1,12 @@
 package portal.transaccional.autenticacion.service.web.preguntasAutovalidacion
 
+import akka.actor.ActorSelection
 import co.com.alianza.app.CrossHeaders
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.exceptions._
+import co.com.alianza.infrastructure.auditing.AuditingHelper
+import co.com.alianza.infrastructure.auditing.AuditingHelper._
+import co.com.alianza.infrastructure.auditing.AuditingUser.AuditingUserData
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import portal.transaccional.autenticacion.service.drivers.pregunta.PreguntasAutovalidacionRepository
 import portal.transaccional.autenticacion.service.drivers.respuesta.RespuestaUsuarioRepository
@@ -17,9 +21,9 @@ import scala.util.{ Failure, Success }
 /**
  * Created by s4n on 3/08/16.
  */
-case class PreguntasAutovalidacionService(user: UsuarioAuth, preguntasAutoValidacionRepository: PreguntasAutovalidacionRepository,
-    respuestaUsuarioRepository: RespuestaUsuarioRepository,
-    respuestaUsuarioAdminRepository: RespuestaUsuarioRepository)(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
+case class PreguntasAutovalidacionService(user: UsuarioAuth, kafkaActor: ActorSelection, preguntasAutoValidacionRepository: PreguntasAutovalidacionRepository,
+  respuestaUsuarioRepository: RespuestaUsuarioRepository, respuestaUsuarioAdminRepository: RespuestaUsuarioRepository)(implicit val ec: ExecutionContext)
+    extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   val preguntasAutovalidacionPath = "preguntasAutovalidacion"
   val comprobarPath = "comprobar"
@@ -27,17 +31,16 @@ case class PreguntasAutovalidacionService(user: UsuarioAuth, preguntasAutoValida
   val route: Route = {
     path(preguntasAutovalidacionPath) {
       pathEndOrSingleSlash {
-        obtenerPreguntasAutovalidacion() ~
-          guardarRespuestas(user)
+        obtenerPreguntasAutovalidacion ~ guardarRespuestas
       }
     } ~ path(preguntasAutovalidacionPath / comprobarPath) {
       pathEndOrSingleSlash {
-        obtenerPreguntasComprobar()
+        obtenerPreguntas ~ comprobar ~ bloquear
       }
     }
   }
 
-  private def obtenerPreguntasAutovalidacion() = {
+  private def obtenerPreguntasAutovalidacion = {
     get {
       val resultado: Future[ResponseObtenerPreguntas] = preguntasAutoValidacionRepository.obtenerPreguntas()
       onComplete(resultado) {
@@ -47,7 +50,7 @@ case class PreguntasAutovalidacionService(user: UsuarioAuth, preguntasAutoValida
     }
   }
 
-  private def guardarRespuestas(user: UsuarioAuth) = {
+  private def guardarRespuestas = {
     put {
       entity(as[GuardarRespuestasRequest]) {
         request =>
@@ -65,7 +68,7 @@ case class PreguntasAutovalidacionService(user: UsuarioAuth, preguntasAutoValida
     }
   }
 
-  private def obtenerPreguntasComprobar() = {
+  private def obtenerPreguntas = {
     get {
       val resultado: Future[ResponseObtenerPreguntasComprobar] =
         preguntasAutoValidacionRepository.obtenerPreguntasComprobar(user.id, user.tipoCliente)
@@ -73,29 +76,54 @@ case class PreguntasAutovalidacionService(user: UsuarioAuth, preguntasAutoValida
         case Success(value) => complete(value)
         case Failure(ex) => execution(ex)
       }
-    } ~ post {
+    }
+  }
+
+  private def comprobar = {
+    post {
       entity(as[RespuestasComprobacionRequest]) {
         request =>
           clientIP {
             ip =>
-              // TODO: AUDITORIA by:Jonathan
-              val resultado: Future[Unit] =
-                preguntasAutoValidacionRepository.validarRespuestas(user.id, user.tipoCliente, request.respuestas, request.numeroIntentos)
-              onComplete(resultado) {
-                case Success(value) => complete(value.toString)
-                case Failure(ex) => execution(ex)
+              val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, user.usuario)
+              mapRequestContext((r: RequestContext) =>
+                requestAuditing[PersistenceException, RespuestasComprobacionRequest](r, AuditingHelper.fiduciariaTopic,
+                  AuditingHelper.autovalidacionComprobarIndex, ip.value, kafkaActor, usuario, Some(request))) {
+                val resultado: Future[String] = preguntasAutoValidacionRepository.validarRespuestas(user, request.respuestas, request.numeroIntentos)
+                onComplete(resultado) {
+                  case Success(value) => complete(value)
+                  case Failure(ex) => execution(ex)
+                }
               }
           }
       }
     }
   }
 
-  def execution(ex: Any): StandardRoute = {
+  private def bloquear = {
+    delete {
+      clientIP {
+        ip =>
+          val usuario: Option[AuditingUserData] = getAuditingUser(user.tipoIdentificacion, user.identificacion, user.usuario)
+          mapRequestContext((r: RequestContext) =>
+            requestAuditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.autovalidacionBloquearIndex, ip.value, kafkaActor, usuario, None)) {
+            val resultado: Future[Int] = preguntasAutoValidacionRepository.bloquearRespuestas(user.id: Int, user.tipoCliente)
+            onComplete(resultado) {
+              case Success(value) => complete(value.toString)
+              case Failure(ex) => execution(ex)
+            }
+          }
+      }
+    }
+  }
+
+  def execution(ex: Throwable): StandardRoute = {
     ex match {
-      case ex: ValidacionException => complete((StatusCodes.Conflict, ex))
+      case ex: ValidacionException => complete((StatusCodes.Conflict, ex.data))
       case ex: PersistenceException =>
         ex.printStackTrace(); complete((StatusCodes.InternalServerError, "Error inesperado"))
       case ex: Throwable => ex.printStackTrace(); complete((StatusCodes.InternalServerError, "Error inesperado"))
     }
   }
+
 }

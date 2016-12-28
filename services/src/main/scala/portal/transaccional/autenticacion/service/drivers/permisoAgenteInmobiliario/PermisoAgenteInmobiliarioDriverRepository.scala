@@ -33,7 +33,7 @@ case class PermisoAgenteInmobiliarioDriverRepository(alianzaDao: AlianzaDAO, usu
   }
 
   def replicatePermisosProyecto(identificacion: String, fideicomiso: Int, proyecto: Int,
-                                fideicomisoDestino: Int, proyectoDestino: Int): Future[Option[Int]] = {
+    fideicomisoDestino: Int, proyectoDestino: Int): Future[Option[Int]] = {
     for {
       permisosProyectoReplicar <- alianzaDao.getPermisosProyectoInmobiliario(identificacion, fideicomiso, proyecto)
       permisosProyectoDestino <- alianzaDao.getPermisosProyectoInmobiliario(identificacion, fideicomisoDestino, proyectoDestino)

@@ -11,6 +11,8 @@ trait IpEmpresaRepository {
 
   def getIpsByEmpresaId(idEmpresa: Int): Future[Seq[IpsEmpresa]]
 
+  def guardarIp(ipEmpresa: IpsEmpresa): Future[String]
+
   def validarControlIpAgente(ip: String, ips: Seq[IpsEmpresa], token: String): Future[Boolean]
 
   def validarControlIpAdmin(ip: String, ips: Seq[IpsEmpresa], token: String, tieneRespuestas: Boolean): Future[String]

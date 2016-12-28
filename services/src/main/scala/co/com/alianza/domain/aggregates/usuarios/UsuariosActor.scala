@@ -1,20 +1,17 @@
 package co.com.alianza.domain.aggregates.usuarios
 
+import java.sql.Timestamp
 import java.util.Calendar
 
 import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import akka.routing.RoundRobinPool
 import co.cifin.confrontaultra.dto.ultra.{ CuestionarioULTRADTO, ParametrosSeguridadULTRADTO, ParametrosULTRADTO, ResultadoEvaluacionCuestionarioULTRADTO }
-import co.com.alianza.constants.TiposConfiguracion
 import co.com.alianza.exceptions.{ BusinessLevel, PersistenceException }
-import co.com.alianza.infrastructure.anticorruption.pin.{ DataAccessTranslator => DataAccessTranslatorPin }
-import co.com.alianza.infrastructure.anticorruption.pinclienteadmin.{ DataAccessTranslator => DataAccessTranslatorPinClienteAdmin }
 import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter => DataAccessAdapterUsuario }
 import co.com.alianza.infrastructure.dto.{ Empresa, _ }
 import co.com.alianza.infrastructure.messages.{ OlvidoContrasenaMessage, ResponseMessage, UsuarioMessage, _ }
 import co.com.alianza.microservices.{ MailMessage, SmtpServiceClient }
-import co.com.alianza.persistence.entities
-import co.com.alianza.persistence.entities.{ PinAgenteInmobiliario, UsuarioAgenteInmobiliario }
+import co.com.alianza.persistence.entities.{ PinAdmin, PinAgenteInmobiliario, PinUsuario, UsuarioAgenteInmobiliario }
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.json.MarshallableImplicits._
 import co.com.alianza.util.token.{ PinData, TokenPin }
@@ -22,15 +19,14 @@ import co.com.alianza.util.transformers.ValidationT
 import com.asobancaria.cifinpruebas.cifin.confrontav2plusws.services.ConfrontaUltraWS.{ ConfrontaUltraWSSoapBindingStub, ConfrontaUltraWebServiceServiceLocator }
 import com.typesafe.config.Config
 import enumerations.empresa.EstadosDeEmpresaEnum
-import enumerations.{ EstadosEmpresaEnum, EstadosUsuarioEnum, EstadosUsuarioEnumInmobiliario }
+import enumerations.{ ConfiguracionEnum, EstadosEmpresaEnum, EstadosUsuarioEnum, EstadosUsuarioEnumInmobiliario }
 import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.UsuarioInmobiliarioPinRepository
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ ConfiguracionDAOs, UsuarioAgenteInmobDAOs }
 import spray.http.StatusCodes._
-
+import scalaz.std.AllInstances._
 import scala.concurrent.Future
 import scala.util.{ Failure => sFailure, Success => sSuccess }
 import scalaz.Validation.FlatMap._
-import scalaz.std.AllInstances._
 import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 
 class UsuariosActorSupervisor(
@@ -70,7 +66,7 @@ class UsuariosActor(
     configDao: ConfiguracionDAOs
 ) extends Actor with ActorLogging {
 
-  import ValidacionesUsuario._
+  import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario._
   implicit val config: Config = context.system.settings.config
 
   def receive = {
@@ -210,8 +206,7 @@ class UsuariosActor(
                           case agenteInmobiliario: UsuarioAgenteInmobiliario =>
                             olvidoContrasenaAgenteInmobiliario(currentSender, agenteInmobiliario)
 
-                          case _ =>
-                            log.info("Error al obtener usuario para olvido de contrasena")
+                          case _ => log.info("Error al obtener usuario para olvido de contrasena")
                         }
                       case zFailure(error) =>
                         error match {
@@ -261,19 +256,16 @@ class UsuariosActor(
             val tokenPin: PinData = TokenPin.obtenerToken(fechaActual.getTime)
 
             val pin = perfilCliente match {
-              case 1 => PinUsuario(None, idUsuario.get, tokenPin.token, tokenPin.fechaExpiracion, tokenPin.tokenHash.get)
-              case 2 => PinUsuarioEmpresarialAdmin(None, idUsuario.get, tokenPin.token, tokenPin.fechaExpiracion, tokenPin.tokenHash.get)
+              case 1 => PinUsuario(None, idUsuario.get, tokenPin.token, new Timestamp(tokenPin.fechaExpiracion.getTime), tokenPin.tokenHash.get)
+              case 2 => PinAdmin(None, idUsuario.get, tokenPin.token, new Timestamp(tokenPin.fechaExpiracion.getTime), tokenPin.tokenHash.get)
               case _ => unhandled((): Unit)
             }
 
             val resultCrearPinUsuario: Future[Validation[PersistenceException, Int]] = pin match {
-              case pinUsuarioDto @ PinUsuario(param1, param2, param3, param4, param5) =>
-                val puPersistence: entities.PinUsuario = DataAccessTranslatorPin.translateEntityPinUsuario(pinUsuarioDto)
-                DataAccessAdapterUsuario.crearUsuarioPin(puPersistence)
-              case pinUsuarioEmpresarialAdminDto @ PinUsuarioEmpresarialAdmin(param1, param2, param3, param4, param5) =>
-                val pueaPersistence: entities.PinUsuarioEmpresarialAdmin =
-                  DataAccessTranslatorPinClienteAdmin.translateEntityPinUsuario(pinUsuarioEmpresarialAdminDto)
-                DataAccessAdapterUsuario.crearUsuarioClienteAdministradorPin(pueaPersistence)
+              case pinUsuario @ PinUsuario(param1, param2, param3, param4, param5) =>
+                DataAccessAdapterUsuario.crearUsuarioPin(pinUsuario)
+              case pinAdmin @ PinAdmin(param1, param2, param3, param4, param5) =>
+                DataAccessAdapterUsuario.crearUsuarioClienteAdministradorPin(pinAdmin)
               case _ => Future.successful(Validation.failure(PersistenceException(new Exception, BusinessLevel,
                 "Error ... por verifique los datos y vuelva a intentarlo")))
             }
@@ -295,7 +287,7 @@ class UsuariosActor(
                         ), template, asunto), (_, _) => Unit)
                         currentSender ! ResponseMessage(Created)
 
-                      case pinUsuarioEmpresarialAdminDto @ PinUsuarioEmpresarialAdmin(param1, param2, param3, param4, param5) =>
+                      case pinUsuarioEmpresarialAdminDto @ PinAdmin(param1, param2, param3, param4, param5) =>
                         new SmtpServiceClient()(context.system).send(buildMessage(pinUsuarioEmpresarialAdminDto, responseConf.valor.toInt,
                           UsuarioMessage(correoCliente, identificacion, tipoIdentificacion, null, false, None), template, asunto), (_, _) => Unit)
                         currentSender ! ResponseMessage(Created)
@@ -396,9 +388,8 @@ class UsuariosActor(
     val body: String = pinUsuario match {
       case pinUsuarioDto @ PinUsuario(param1, param2, param3, param4, param5) =>
         new MailMessageUsuario(templateBody).getMessagePin(pinUsuarioDto, numHorasCaducidad, "1", "1")
-      case pinUsuarioEmpresarialAdminDto @ PinUsuarioEmpresarialAdmin(param1, param2, param3, param4, param5) =>
+      case pinUsuarioEmpresarialAdminDto @ PinAdmin(param1, param2, param3, param4, param5) =>
         new MailMessageUsuario(templateBody).getMessagePin(pinUsuarioEmpresarialAdminDto, numHorasCaducidad, "2", "1")
-
     }
     val asunto: String = config.getString(asuntoTemp)
     MailMessage(config.getString("alianza.smtp.from"), "luisaceleita@seven4n.com", List(), asunto, body, "")
@@ -420,11 +411,8 @@ class UsuariosActor(
   // Extensión portal alianza inmobiliaria
   // --------------------------------------
 
-  def buscarAgenteInmobiliario(
-    busquedaUsuarioPortal: Validation[PersistenceException, Option[Any]],
-    identificacion: String,
-    usuario: String
-  ): Future[Validation[PersistenceException, Option[Any]]] = {
+  def buscarAgenteInmobiliario(busquedaUsuarioPortal: Validation[PersistenceException, Option[Any]], identificacion: String, usuario: String): Future[Validation[PersistenceException, Option[Any]]] = {
+
     busquedaUsuarioPortal match {
       case zFailure(failure) => Future.successful(Validation.failure(failure))
       case zSuccess(usuarioOpt) => usuarioOpt match {
@@ -447,7 +435,7 @@ class UsuariosActor(
       case zSuccess(_) =>
         if (agente.estado != EstadosUsuarioEnumInmobiliario.inactivo.id) {
           for {
-            configExpiracion <- configDao.getByKey(TiposConfiguracion.EXPIRACION_PIN.llave)
+            configExpiracion <- configDao.getByKey(ConfiguracionEnum.EXPIRACION_PIN.name)
             pinAgente: PinAgenteInmobiliario = agentesInmobPinRepo.generarPinAgente(configExpiracion, agente.id, reinicio = true)
             idPin <- agentesInmobPinRepo.asociarPinAgente(pinAgente)
             correoReinicio: MailMessage = agentesInmobPinRepo.generarCorreoReinicio(
@@ -466,3 +454,4 @@ class UsuariosActor(
     }
   }
 }
+

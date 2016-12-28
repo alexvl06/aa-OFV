@@ -3,6 +3,7 @@ package portal.transaccional.autenticacion.service.web.autenticacion
 import akka.actor.ActorSelection
 import co.com.alianza.app.CrossHeaders
 import co.com.alianza.commons.enumerations.TiposCliente
+import co.com.alianza.commons.enumerations.TiposCliente.TiposCliente
 import co.com.alianza.exceptions.{ PersistenceException, ValidacionException }
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper.requestWithAuiditing
@@ -51,9 +52,10 @@ case class AutenticacionService(
       entity(as[AutenticarRequest]) {
         request =>
           clientIP { ip =>
-            val resultado = autenticacionRepositorio.autenticar(request.tipoIdentificacion, request.numeroIdentificacion, request.password, ip.value)
-            mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.autenticacionIndex,
-              ip.value, kafkaActor, request.copy(password = null))) {
+            mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic,
+              AuditingHelper.autenticacionIndex, ip.value, kafkaActor, request.copy(password = null))) {
+              val resultado = autenticacionRepositorio.autenticar(request.tipoIdentificacion, request.numeroIdentificacion,
+                request.password, ip.value)
               onComplete(resultado) {
                 case Success(token) => encriptarToken(token)
                 case Failure(ex) => execution(ex)
@@ -69,9 +71,10 @@ case class AutenticacionService(
       entity(as[AutenticarUsuarioEmpresarialRequest]) {
         request =>
           clientIP { ip =>
-            val resultado: Future[String] = autenticacionEmpresaRepositorio.autenticarUsuarioEmpresa(request.nit, request.usuario, request.password, ip.value)
-            mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.autenticacionIndex,
-              ip.value, kafkaActor, request.copy(password = null))) {
+            mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic,
+              AuditingHelper.autenticacionIndex, ip.value, kafkaActor, request.copy(password = null))) {
+              val resultado: Future[String] = autenticacionEmpresaRepositorio.autenticarUsuarioEmpresa(request.nit, request.usuario,
+                request.password, ip.value)
               onComplete(resultado) {
                 case Success(token) => encriptarToken(token)
                 case Failure(ex) => execution(ex)
@@ -87,10 +90,17 @@ case class AutenticacionService(
       entity(as[AutenticarUsuarioComercialRequest]) {
         request =>
           clientIP { ip =>
-            val resultado: Future[String] = autenticacionComercialRepositorio.autenticar(request.usuario.toLowerCase, request.tipoUsuario, request.contrasena, ip.value)
-            onComplete(resultado) {
-              case Success(token) => encriptarToken(token)
-              case Failure(ex) => execution(ex)
+            val tipoCliente: String = TiposCliente.getTipoCliente(request.tipoUsuario).toString
+            mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic,
+              AuditingHelper.autenticacionComercialIndex, ip.value, kafkaActor, request.copy(contrasena = null, tipoCliente = Option(tipoCliente)))) {
+              val resultado: Future[String] = autenticacionComercialRepositorio.autenticar(
+                request.usuario.toLowerCase,
+                request.tipoUsuario, request.contrasena, ip.value
+              )
+              onComplete(resultado) {
+                case Success(token) => encriptarToken(token)
+                case Failure(ex) => execution(ex)
+              }
             }
           }
       }
@@ -103,10 +113,14 @@ case class AutenticacionService(
 
   def execution(ex: Any): StandardRoute = {
     ex match {
-      case ex: ValidacionException => complete((StatusCodes.Unauthorized, ex))
+      case ex: ValidacionException =>
+        complete((StatusCodes.Unauthorized, ex))
       case ex: PersistenceException =>
-        print(ex); complete((StatusCodes.InternalServerError, "Error inesperado"))
-      case ex: Throwable => print(ex.printStackTrace); complete((StatusCodes.InternalServerError, "Error inesperado"))
+        ex.printStackTrace()
+        complete((StatusCodes.InternalServerError, "Error inesperado"))
+      case ex: Throwable =>
+        ex.printStackTrace()
+        complete((StatusCodes.InternalServerError, "Error inesperado"))
     }
   }
 

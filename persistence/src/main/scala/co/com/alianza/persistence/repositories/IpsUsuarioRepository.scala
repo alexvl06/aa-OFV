@@ -16,34 +16,10 @@ class IpsUsuarioRepository(implicit executionContext: ExecutionContext) extends 
 
   val ipsUsuario = TableQuery[IpsUsuarioTable]
 
-  def obtenerIpsUsuario(): Future[Validation[PersistenceException, Seq[IpsUsuario]]] = loan {
-    session =>
-      val resultTry = session.database.run(ipsUsuario.result)
-      resolveTry(resultTry, "Consulta todas las IpsUsuario")
-  }
-
-  def obtenerIpsUsuario(idUsuario: Int): Future[Validation[PersistenceException, Seq[IpsUsuario]]] = loan {
-    session =>
-      val resultTry = session.database.run(ipsUsuario.filter(x => x.idUsuario === idUsuario).result)
-      resolveTry(resultTry, "Consulta todas las IpsUsuario")
-  }
-
-  def obtenerIpUsuario(idUsuario: Int, ip: String): Future[Validation[PersistenceException, Option[IpsUsuario]]] = loan {
-    session =>
-      val resultTry = session.database.run(ipsUsuario.filter(x => x.idUsuario === idUsuario && x.ip === ip).result.headOption)
-      resolveTry(resultTry, "Consulta todas las IpsUsuario")
-  }
-
   def guardar(ip: IpsUsuario): Future[Validation[PersistenceException, String]] = loan {
     implicit session =>
       val resultTry = session.database.run((ipsUsuario returning ipsUsuario.map(_.ip)) += ip)
       resolveTry(resultTry, "Relaciona Ip Usuario")
-  }
-
-  def eliminar(ipsUsuarioE: IpsUsuario): Future[Validation[PersistenceException, Int]] = loan {
-    implicit session =>
-      val resultTry = session.database.run(ipsUsuario.filter(x => x.idUsuario === ipsUsuarioE.idUsuario && x.ip === ipsUsuarioE.ip).delete)
-      resolveTry(resultTry, "Elimina Ip Usuario")
   }
 
 }

@@ -7,6 +7,8 @@ import scala.concurrent.Future
 
 trait AlianzaDAOs {
 
+  def getClienteIndividualResources(): Future[Seq[RecursoPerfil]]
+
   def getResources(idUsuario: Int): Future[Seq[RecursoPerfil]]
 
   def getAgenteResources(idUsuario: Int): Future[Seq[RecursoPerfilAgente]]
@@ -28,6 +30,12 @@ trait AlianzaDAOs {
   def getIndividualClientQuestions(idUsuario: Int): Future[Seq[(PreguntaAutovalidacion, RespuestasAutovalidacionUsuario)]]
 
   def getPermisosProyectoInmobiliario(nit: String, idFideicomiso: Int, idProyecto: Int): Future[Seq[PermisoAgenteInmobiliario]]
+
+  def getAdministratorClientQuestions(idUsuario: Int): Future[Seq[(PreguntaAutovalidacion, RespuestasAutovalidacionUsuario)]]
+
+  def deleteIndividualClientAnswers(idUsuario: Int): Future[Int]
+
+  def bloquearRespuestasClienteAdministrador(idUsuario: Int): Future[Int]
 
   def getPermisosProyectoInmobiliario(nit: String, idFideicomiso: Int, idProyecto: Int, idAgentes: Seq[Int]): Future[Seq[PermisoAgenteInmobiliario]]
 

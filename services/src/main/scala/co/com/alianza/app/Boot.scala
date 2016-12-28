@@ -9,14 +9,13 @@ object Boot extends App with HostBinding with Core with BootedCore with CoreActo
   val sessionActor: ActorRef = sesionActorSupervisor
 
   private val rootService = system.actorOf(
-    Props(AlianzaRouter(autenticacionRepo, autenticacionEmpresaRepo, autenticacionComercialRepo,
-      usuarioRepo, usuarioAgenteRepo, usuarioAdminRepo, autorizacionUsuarioRepo, kafkaActor, preguntasAutovalidacionActor, usuariosActor,
-      confrontaActor, actualizacionActor, permisoTransaccionalActor, agenteEmpresarialActor, pinActor, pinUsuarioEmpresarialAdminActor,
-      pinUsuarioAgenteEmpresarialActor, ipsUsuarioActor, horarioEmpresaActor, contrasenasAgenteEmpresarialActor, contrasenasClienteAdminActor,
-      contrasenasActor, autorizacionActorSupervisor, autorizacionAgenteRepo, autorizacionAdminRepo, preguntasValidacionRepository,
-      respuestaUsuarioRepo, respuestaUsuariAdminoRepo, ipRepo, autorizacionComercialRepo, autorizacionComercialAdminRepo,
-      autorizacionRecursoComercialRepository, recursoComercialRepository, rolComercialRepository, agenteInmobRepo, permisoAgenteInmob,
-      sesionUtilAgenteEmpresarial, sesionUtilAgenteInmobiliario, agenteInmobContrasenaRepo, pinAgenteInmobRepository, autorizacionAgenteInmob)),
+    Props(AlianzaRouter(autenticacionRepo, autenticacionEmpresaRepo, autenticacionComercialRepo, usuarioRepo, usuarioAgenteRepo, usuarioAdminRepo,
+      autorizacionUsuarioRepo, kafkaActor, usuariosActor, confrontaActor, actualizacionRepository, permisoTransaccionalActor, agenteEmpresarialActor,
+      pinRepository, contrasenaAgenteRepo, contrasenaAdminRepo, contrasenaUsuarioRepo, autorizacionAgenteRepo, autorizacionAdminRepo,
+      preguntasValidacionRepository, respuestaUsuarioRepo, respuestaUsuariAdminoRepo, ipRepo, autorizacionComercialRepo, autorizacionComercialAdminRepo,
+      autorizacionRecursoComercialRepository, recursoComercialRepository, rolComercialRepository, usuarioComercialAdminRepo, reglaContrasenaRepo,
+      horarioEmpresaRepository, agenteInmobRepo, permisoAgenteInmob,
+      sesionUtilAgenteInmobiliario, agenteInmobContrasenaRepo, pinAgenteInmobRepository, autorizacionAgenteInmob)),
     name = "api-AlianzaRouter"
   )
 

@@ -1,8 +1,7 @@
 package portal.transaccional.fiduciaria.autenticacion.storage.conn.pg
 
-import com.typesafe.config.{ Config, ConfigFactory }
-import com.mchange.v2.c3p0.ComboPooledDataSource
 import co.com.alianza.util.ConfigApp
+import com.typesafe.config.Config
 import org.postgresql.ds.PGPoolingDataSource
 import portal.transaccional.fiduciaria.autenticacion.storage.conn.ConnectionConf
 

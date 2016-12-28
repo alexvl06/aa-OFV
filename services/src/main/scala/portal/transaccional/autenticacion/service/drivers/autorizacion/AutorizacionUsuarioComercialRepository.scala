@@ -1,5 +1,7 @@
 package portal.transaccional.autenticacion.service.drivers.autorizacion
 
+import co.com.alianza.exceptions.ValidacionAutorizacion
+
 import scala.concurrent.Future
 
 /**
@@ -8,5 +10,13 @@ import scala.concurrent.Future
 trait AutorizacionUsuarioComercialRepository {
 
   def invalidarToken(token: String, encriptedToken: String): Future[Int]
+
+  def invalidarTokenSAC(token: String, encriptedToken: String): Future[Int]
+
+  def autorizarFiduciaria(token: String, encriptedToken: String, url: String): Future[ValidacionAutorizacion]
+
+  def autorizarValores(token: String, encriptedToken: String, url: String): Future[ValidacionAutorizacion]
+
+  def autorizarSAC(token: String, encriptedToken: String, url: String): Future[ValidacionAutorizacion]
 
 }

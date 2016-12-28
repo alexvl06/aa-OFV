@@ -3,7 +3,7 @@ package co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial
 import java.sql.Timestamp
 
 import co.com.alianza.infrastructure.auditing.AuditingUser.AuditingUserData
-import co.com.alianza.persistence.entities.{ PinEmpresa => ePinEmpresa, UsuarioEmpresarial => eUsuario, _ }
+import co.com.alianza.persistence.entities.{ PinAgente => ePinEmpresa, UsuarioAgente => eUsuario, _ }
 import co.com.alianza.persistence.repositories.UsuariosEmpresarialRepository
 import co.com.alianza.exceptions.PersistenceException
 import enumerations.EstadosEmpresaEnum
@@ -30,49 +30,20 @@ object DataAccessAdapter {
 
   val repo = new UsuariosEmpresarialRepository()
 
-  def consultaContrasenaActualAgenteEmpresarial(pw_actual: String, idUsuario: Int): Future[Validation[PersistenceException, Option[dtoUsuario]]] = {
-    val repo = new UsuariosEmpresaRepository()
-    repo.consultaContrasenaActualAgenteEmpresarial(pw_actual, idUsuario) map {
-      x => transformValidation(x)
-    }
-  }
-
   def validacionAgenteEmpresarial(numIdentificacionAgenteEmpresarial: String, correoUsuarioAgenteEmpresarial: String, tipoIdentiAgenteEmpresarial: Int, idClienteAdmin: Int): Future[Validation[PersistenceException, Option[(Int, Int)]]] = {
     repo.validacionAgenteEmpresarial(numIdentificacionAgenteEmpresarial: String, correoUsuarioAgenteEmpresarial: String, tipoIdentiAgenteEmpresarial: Int, idClienteAdmin: Int)
-  }
-
-  def actualizarContrasenaAgenteEmpresarial(pw_nuevo: String, idUsuario: Int): Future[Validation[PersistenceException, Int]] = {
-    val repo = new UsuariosEmpresaRepository()
-    repo.actualizarContrasenaAgenteEmpresarial(Crypto.hashSha512(pw_nuevo, idUsuario), idUsuario)
-  }
-
-  def caducarFechaUltimoCambioContrasenaAgenteEmpresarial(idUsuario: Int): Future[Validation[PersistenceException, Int]] = {
-    val repo = new UsuariosEmpresaRepository()
-    repo.caducarFechaUltimoCambioContrasenaAgenteEmpresarial(idUsuario)
-  }
-
-  def cambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa): Future[Validation[PersistenceException, Int]] = {
-    repo.AcambiarEstadoAgenteEmpresarial(idUsuarioAgenteEmpresarial, estado)
-  }
-
-  def cambiarBloqueoDesbloqueoAgenteEmpresarial(idUsuarioAgenteEmpresarial: Int, estado: EstadosEmpresaEnum.estadoEmpresa, timestamp: Timestamp): Future[Validation[PersistenceException, Int]] = {
-    repo.cambiarBloqueoDesbloqueoAgenteEmpresarial(idUsuarioAgenteEmpresarial, estado, timestamp)
   }
 
   def crearPinEmpresaAgenteEmpresarial(pinEmpresaAgenteEmpresarial: ePinEmpresa): Future[Validation[PersistenceException, Int]] = {
     repo.guardarPinEmpresaAgenteEmpresarial(pinEmpresaAgenteEmpresarial)
   }
 
-  def crearAgenteEmpresarial(nuevoUsuarioAgenteEmpresarial: eUsuario): Future[Validation[PersistenceException, Int]] = {
+  def crearAgenteEmpresarial(nuevoUsuarioAgenteEmpresarial: UsuarioEmpresarial): Future[Validation[PersistenceException, Int]] = {
     repo.insertarAgenteEmpresarial(nuevoUsuarioAgenteEmpresarial)
   }
 
   def actualizarAgenteEmpresarial(id: Int, usuario: String, correo: String, nombreUsuario: String, cargo: String, descripcion: String): Future[Validation[PersistenceException, Int]] = {
     repo.actualizarAgente(id, usuario, correo, nombreUsuario, cargo, Option(descripcion))
-  }
-
-  def eliminarPinEmpresaReiniciarAnteriores(idUsuarioAgenteEmpresarial: Int, usoPinEmpresa: Int): Future[Validation[PersistenceException, Int]] = {
-    repo.eliminarPinEmpresaReiniciarAnteriores(idUsuarioAgenteEmpresarial, usoPinEmpresa)
   }
 
   def obtenerEmpresaPorNit(nit: String): Future[Validation[PersistenceException, Option[Empresa]]] = {
@@ -89,6 +60,10 @@ object DataAccessAdapter {
 
   def existeUsuarioEmpresarialPorUsuario(idUsuario: Int, nit: String, usuario: String): Future[Validation[PersistenceException, Boolean]] = {
     repo.existeUsuario(idUsuario, nit, usuario)
+  }
+
+  def existeUsuarioEmpresarialPorUsuario(nit: String, usuario: String): Future[Validation[PersistenceException, Boolean]] = {
+    repo.existeUsuario(nit, usuario)
   }
 
   def obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token: String): Future[Validation[PersistenceException, Option[AuditingUserData]]] = {
@@ -115,7 +90,7 @@ object DataAccessAdapter {
   def asociarPerfiles(idAgente: Int, idsPerfiles: List[Int]): Future[Validation[PersistenceException, List[Int]]] =
     new UsuariosEmpresaRepository() asociarPerfiles (idsPerfiles map { PerfilAgenteAgente(idAgente, _) })
 
-  private def transformValidation(origin: Validation[PersistenceException, Option[eUsuario]]): Validation[PersistenceException, Option[dtoUsuario]] = {
+  private def transformValidation(origin: Validation[PersistenceException, Option[UsuarioEmpresarial]]): Validation[PersistenceException, Option[dtoUsuario]] = {
     origin match {
       case zSuccess(response) =>
         response match {
@@ -127,7 +102,7 @@ object DataAccessAdapter {
     }
   }
 
-  private def transformValidationList(origin: Validation[PersistenceException, Seq[eUsuario]]): Validation[PersistenceException, List[dtoEstadoUsuario]] = {
+  private def transformValidationList(origin: Validation[PersistenceException, Seq[UsuarioEmpresarial]]): Validation[PersistenceException, List[dtoEstadoUsuario]] = {
     origin match {
       case zSuccess(response: Seq[eUsuario]) => zSuccess(DataAccessTranslator.translateUsuarioEstado(response))
       case zFailure(error) => zFailure(error)
@@ -139,7 +114,7 @@ object DataAccessAdapter {
       case zSuccess(response) =>
         response match {
           case Some(usuario) => {
-            zSuccess(Some(AuditingUserData(usuario.tipoIdentificacion, usuario.identificacion, Some(usuario.nombreUsuario))))
+            zSuccess(Some(AuditingUserData(usuario.tipoIdentificacion, usuario.identificacion, Some(usuario.usuario))))
           }
           case _ => zSuccess(None)
         }

@@ -3,9 +3,9 @@ package portal.transaccional.autenticacion.service.web.agenteInmobiliario
 import scala.util.matching.Regex
 
 case class ActualizarCredencialesAgenteRequest(
-  contrasena: String,
-  confirmarContrasena: String,
-  contrasenaActual: Option[String]
+    contrasena: String,
+    confirmarContrasena: String,
+    contrasenaActual: Option[String]
 ) {
   require(!contrasena.isEmpty, "Field contrasena cannot be empty")
   require(!confirmarContrasena.isEmpty, "Field confirmarContrasena cannot be empty")
@@ -16,12 +16,12 @@ case class ActualizarCredencialesAgenteRequest(
 case class ConsultarPermisoRequest(idAgente: String)
 
 case class CrearAgenteInmobiliarioRequest(
-  correo: String,
-  usuario: String,
-  nombre: Option[String],
-  cargo: Option[String],
-  descripcion: Option[String],
-  tipoAgente: String
+    correo: String,
+    usuario: String,
+    nombre: Option[String],
+    cargo: Option[String],
+    descripcion: Option[String],
+    tipoAgente: String
 ) {
   require(!correo.isEmpty, "Field correo cannot be empty")
   require(isValidEmail(correo), "Field email is not a valid email address")

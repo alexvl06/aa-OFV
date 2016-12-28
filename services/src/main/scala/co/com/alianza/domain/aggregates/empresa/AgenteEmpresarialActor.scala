@@ -1,18 +1,17 @@
 package co.com.alianza.domain.aggregates.empresa
 
+import java.sql.Timestamp
 import java.util.Calendar
 
-import akka.actor.{ Actor, ActorLogging, ActorSystem, Props }
+import akka.actor.{ Actor, ActorLogging, Props }
 import akka.routing.RoundRobinPool
 
 import co.com.alianza.domain.aggregates.usuarios.ErrorValidacion
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.DataAccessTranslator
-import co.com.alianza.infrastructure.dto.{ Configuracion, PinEmpresa, UsuarioEmpresarialEstado }
-import co.com.alianza.infrastructure.messages.ResponseMessage
+import co.com.alianza.infrastructure.dto.{ Configuracion, UsuarioEmpresarialEstado }
 import co.com.alianza.infrastructure.messages.empresa._
 import co.com.alianza.microservices.{ MailMessage, SmtpServiceClient }
-import co.com.alianza.persistence.entities.UsuarioEmpresarialEmpresa
+import co.com.alianza.persistence.entities.{ PinAgente, UsuarioEmpresarialEmpresa }
 import co.com.alianza.util.token.{ PinData, TokenPin }
 import co.com.alianza.util.transformers.ValidationT
 import com.typesafe.config.Config
@@ -22,7 +21,6 @@ import scalaz.std.AllInstances._
 import scalaz.{ Success => zSuccess }
 import scala.concurrent.Future
 import scalaz.Validation
-import spray.http.StatusCodes._
 import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.DataAccessAdapter
 import co.com.alianza.util.FutureResponse
 import co.com.alianza.util.json.MarshallableImplicits._
@@ -59,6 +57,7 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with FutureResponse
   import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial.validarUsuarioClienteAdmin
   import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial.validarEstadoEmpresa
   import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial.validarUsuarioAgente
+  import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial.validarUsuarioAgenteNit
   import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial.validacionEstadoActualizacionAgenteEmpresarial
 
   import context.dispatcher
@@ -80,17 +79,18 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with FutureResponse
     val asunto = "alianza.smtp.asunto.creacionAgenteEmpresarial"
     val plantilla = "alianza.smtp.templatepin.creacionAgenteEmpresarial"
     val future: Future[Validation[ErrorValidacion, Int]] = (for {
-      clienteAdmin <- ValidationT(validarUsuarioClienteAdmin(message.nit, message.usuario))
+      _ <- ValidationT(validarUsuarioClienteAdmin(message.nit, message.usuario))
+      _ <- ValidationT(validarUsuarioAgenteNit(message.nit, message.usuario))
       idAgente <- ValidationT(toErrorValidation(DataAccessAdapter.crearAgenteEmpresarial(usuarioEntity)))
-      resultAsociarPerfiles <- ValidationT(toErrorValidation(DataAccessAdapter.asociarPerfiles(idAgente, perfiles)))
+      _ <- ValidationT(toErrorValidation(DataAccessAdapter.asociarPerfiles(idAgente, perfiles)))
       empresa <- ValidationT(toErrorValidation(DataAccessAdapter.obtenerEmpresaPorNit(message.nit)))
-      resultAsociarEmpresa <- ValidationT(toErrorValidation(DataAccessAdapter.asociarAgenteConEmpresa(UsuarioEmpresarialEmpresa(empresa.get.id, idAgente))))
+      _ <- ValidationT(toErrorValidation(DataAccessAdapter.asociarAgenteConEmpresa(UsuarioEmpresarialEmpresa(empresa.get.id, idAgente))))
       confTiempo <- ValidationT(validacionConsultaTiempoExpiracion())
       pinUsuario <- ValidationT(obtenerPinUsuario(confTiempo, idAgente))
-      guardarPin <- ValidationT(toErrorValidation(DataAccessAdapter.crearPinEmpresaAgenteEmpresarial(DataAccessTranslator.translateEntityPinEmpresa(pinUsuario))))
-      envioCorreo <- ValidationT(enviarCorreoPin(pinUsuario, confTiempo: Configuracion, plantilla, asunto, message.usuario, message.correo))
+      _ <- ValidationT(toErrorValidation(DataAccessAdapter.crearPinEmpresaAgenteEmpresarial(pinUsuario)))
+      _ <- ValidationT(enviarCorreoPin(pinUsuario, confTiempo: Configuracion, plantilla, asunto, message.usuario, message.correo))
     } yield {
-      envioCorreo
+      idAgente
     }).run
     resolveFutureValidation(future, (response: Int) => response.toJson, errorValidacion, currentSender)
   }
@@ -107,7 +107,8 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with FutureResponse
       usuarioAdmin <- ValidationT(validarUsuarioClienteAdmin(nit, message.usuario))
       existeUsuario <- ValidationT(validarUsuarioAgente(message.id, nit, message.usuario))
       estadoAgente <- ValidationT(validacionEstadoActualizacionAgenteEmpresarial(message.id))
-      actualizar <- ValidationT(toErrorValidation(DataAccessAdapter.actualizarAgenteEmpresarial(message.id, message.usuario, message.correo, message.nombreUsuario, message.cargo, message.descripcion)))
+      actualizar <- ValidationT(toErrorValidation(DataAccessAdapter.actualizarAgenteEmpresarial(message.id, message.usuario,
+        message.correo, message.nombreUsuario, message.cargo, message.descripcion)))
     } yield actualizar).run
     resolveFutureValidation(future, (response: Int) => response.toJson, errorValidacion, currentSender)
   }
@@ -129,12 +130,12 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with FutureResponse
    * @param idUsuario
    * @return
    */
-  private def obtenerPinUsuario(configuracionTiempo: Configuracion, idUsuario: Int): Future[Validation[ErrorValidacion, PinEmpresa]] = Future {
+  private def obtenerPinUsuario(configuracionTiempo: Configuracion, idUsuario: Int): Future[Validation[ErrorValidacion, PinAgente]] = Future {
     val fechaActual = Calendar.getInstance()
     val usoPin = UsoPinEmpresaEnum.creacionAgenteEmpresarial.id
     fechaActual.add(Calendar.HOUR_OF_DAY, configuracionTiempo.valor.toInt)
     val tokenPin: PinData = TokenPin.obtenerToken(fechaActual.getTime)
-    val pin: PinEmpresa = PinEmpresa(None, idUsuario, tokenPin.token, tokenPin.fechaExpiracion, tokenPin.tokenHash.get, usoPin)
+    val pin: PinAgente = PinAgente(None, idUsuario, tokenPin.token, new Timestamp(tokenPin.fechaExpiracion.getTime), tokenPin.tokenHash.get, usoPin)
     zSuccess(pin)
   }
 
@@ -148,7 +149,8 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with FutureResponse
    * @param correo
    * @return
    */
-  private def enviarCorreoPin(pin: PinEmpresa, confTiempo: Configuracion, plantilla: String, asunto: String, usuario: String, correo: String): Future[Validation[ErrorValidacion, Int]] = {
+  private def enviarCorreoPin(pin: PinAgente, confTiempo: Configuracion, plantilla: String, asunto: String, usuario: String,
+    correo: String): Future[Validation[ErrorValidacion, Int]] = {
     val message = buildMessage(pin, confTiempo.valor.toInt, plantilla, asunto, usuario, correo)
     toErrorValidationCorreo(new SmtpServiceClient()(context.system).send(message, (_, _) => 1))
   }
@@ -163,7 +165,7 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with FutureResponse
    * @param correo
    * @return
    */
-  private def buildMessage(pinEmpresa: PinEmpresa, numHorasCaducidad: Int, templateBody: String, asuntoTemp: String, usuario: String, correo: String) = {
+  private def buildMessage(pinEmpresa: PinAgente, numHorasCaducidad: Int, templateBody: String, asuntoTemp: String, usuario: String, correo: String) = {
     val body: String = new MailMessageEmpresa(templateBody).getMessagePinCreacionAgente(pinEmpresa, numHorasCaducidad, usuario)
     val asunto: String = config.getString(asuntoTemp)
     MailMessage(config.getString("alianza.smtp.from"), "luisaceleita@seven4n.com", List(), asunto, body, "")

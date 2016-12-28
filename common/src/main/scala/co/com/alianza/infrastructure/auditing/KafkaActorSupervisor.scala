@@ -70,7 +70,7 @@ class KafkaActor extends Actor with ActorLogging {
 
     try {
       //producer.send(data)
-      println("Mensaje enviado exitosamente a los brokers de kafka")
+      //println("Mensaje enviado exitosamente a los brokers de kafka")
     } catch {
       case e: Exception =>
         println("Error enviando el mensaje a los brokers de kafka: " + kafkaServers)

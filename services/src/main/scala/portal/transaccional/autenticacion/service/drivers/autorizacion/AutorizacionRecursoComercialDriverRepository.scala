@@ -1,5 +1,9 @@
 package portal.transaccional.autenticacion.service.drivers.autorizacion
 
+import co.com.alianza.commons.enumerations.TiposCliente
+import co.com.alianza.exceptions.ValidacionException
+import co.com.alianza.infrastructure.dto.security.UsuarioAuth
+import co.com.alianza.persistence.entities.{ RolComercial, RolRecursoComercial }
 import co.com.alianza.persistence.entities.{ RolComercial, RolRecursoComercial }
 import portal.transaccional.autenticacion.service.drivers.rolRecursoComercial.RolRecursoComercialRepository
 import portal.transaccional.autenticacion.service.dto.PermisoRecursoDTO
@@ -15,11 +19,24 @@ case class AutorizacionRecursoComercialDriverRepository(rolRecursoRepo: RolRecur
     rolRecursoRepo.obtenerRolesPorRecurso(nombreRecurso)
   }
 
-  override def actualizarRecursos(permiso: PermisoRecursoDTO): Future[Option[Int]] = {
+  override def actualizarRecursos(user: UsuarioAuth, permiso: PermisoRecursoDTO): Future[Option[Int]] = {
+    //transformar permisos
     val rolesRecursos: Seq[RolRecursoComercial] = for {
       recurso <- permiso.recursos
       rol <- recurso.roles
     } yield RolRecursoComercial(Some(rol), Some(recurso.idRecurso))
-    rolRecursoRepo.actualizarPermisos(rolesRecursos)
+    //actualizar
+    for {
+      _ <- validarUsuario(user)
+      actualizar <- rolRecursoRepo.actualizarPermisos(rolesRecursos)
+    } yield actualizar
   }
+
+  private def validarUsuario(user: UsuarioAuth): Future[Boolean] = {
+    user.tipoCliente match {
+      case TiposCliente.comercialAdmin => Future.successful(true)
+      case _ => Future.failed(new ValidacionException("401.1", "Credenciales inválidas"))
+    }
+  }
+
 }

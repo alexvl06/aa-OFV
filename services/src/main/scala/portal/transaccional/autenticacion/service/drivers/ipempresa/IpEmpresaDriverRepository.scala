@@ -21,6 +21,10 @@ case class IpEmpresaDriverRepository(ipDAO: IpEmpresaDAOs)(implicit val ex: Exec
     ipDAO.getById(idEmpresa)
   }
 
+  def guardarIp(ipEmpresa: IpsEmpresa): Future[String] = {
+    ipDAO.create(ipEmpresa)
+  }
+
   /**
    * Valida si el agente tiene alguna ip guardada
    * @param ip
@@ -28,9 +32,9 @@ case class IpEmpresaDriverRepository(ipDAO: IpEmpresaDAOs)(implicit val ex: Exec
    * @return
    */
   def validarControlIpAgente(ip: String, ips: Seq[IpsEmpresa], token: String): Future[Boolean] = {
-    val tieneIp = ips.exists(_.ip == ip)
+    val tieneIp = ips.exists(_.ip.equals(ip))
     if (tieneIp) Future.successful(true)
-    else Future.failed(ValidacionException("401.4", "Error ip"))
+    else Future.failed(ValidacionException("401.4", "Error ip agente"))
   }
 
   /**
@@ -42,7 +46,7 @@ case class IpEmpresaDriverRepository(ipDAO: IpEmpresaDAOs)(implicit val ex: Exec
    * @return
    */
   def validarControlIpAdmin(ip: String, ips: Seq[IpsEmpresa], token: String, tieneRespuestas: Boolean): Future[String] = {
-    val tieneIp = ips.exists(_.ip == ip)
+    val tieneIp = ips.exists(_.ip.equals(ip))
     val encryptedToken: String = AesUtil.encriptarToken(token)
     if (tieneRespuestas) {
       if (tieneIp) Future.successful(token)

@@ -4,9 +4,9 @@ import java.sql.Timestamp
 
 import co.com.alianza.constants.LlavesReglaContrasena
 import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial._
-import co.com.alianza.exceptions.{ PersistenceException, ValidacionException, ValidacionExceptionPasswordRules }
+import co.com.alianza.exceptions.{ ValidacionException, ValidacionExceptionPasswordRules }
 import co.com.alianza.persistence.entities.{ UltimaContrasenaAgenteInmobiliario, UsuarioAgenteInmobiliario }
-import co.com.alianza.util.clave.{ Crypto, ErrorValidacionClave, ValidarClave }
+import co.com.alianza.util.clave.{ Crypto, ValidarClave }
 import co.com.alianza.util.token.Token
 import enumerations.{ AppendPasswordUser, EstadosUsuarioEnumInmobiliario, PerfilesUsuario, UsoPinEmpresaEnum }
 import org.joda.time.DateTime
@@ -15,7 +15,7 @@ import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobilia
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.UltimaContraseñaAgenteInmobiliarioDAOs
 
 import scala.concurrent.Future
-import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
+import scalaz.{ Failure => zFailure, Success => zSuccess }
 
 /**
  * Created by s4n in 2016
@@ -57,7 +57,7 @@ case class ContrasenaAgenteInmobiliarioDriverRepository(agenteRepo: UsuarioInmob
     for {
       agente <- if (agenteOp.isEmpty) agenteRepo.getContrasena(hashContrasenaActual, idAgente) else Future.successful(agenteOp.get)
       validacionReglas <- validacionReglasClave(nuevaContrasena, idAgente, PerfilesUsuario.agenteEmpresarial, valoresRegla)
-      cantRepetidas <- reglaRepo.getRegla(LlavesReglaContrasena.ULTIMAS_CONTRASENAS_NO_VALIDAS.llave)
+      cantRepetidas <- reglaRepo.getRegla(LlavesReglaContrasena.ULTIMAS_CONTRASENAS_NO_VALIDAS)
       contrasenasViejas <- validarContrasenasAnteriores(cantRepetidas.valor.toInt, idAgente, hashNuevaContrasena, agente.contrasena.get, valoresRegla)
       contrasenaActual <- agenteRepo.updateContrasena(hashNuevaContrasena, idAgente)
       ultimasContrasenas <- oldPassDAO.create(UltimaContrasenaAgenteInmobiliario(None, idAgente, hashNuevaContrasena, new Timestamp(new DateTime().getMillis)))
