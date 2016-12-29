@@ -148,14 +148,23 @@ case class PinDriverRepository(pinUsuarioDAO: PinUsuarioDAOs, pinAdminDAO: PinAd
   def validar(pin: String, token: String, tokenHash: String, fecha: Date): Future[Boolean] = {
     val pinHash: String = deserializarPin(token, fecha)
     if (pinHash.equals(tokenHash) && new Date().getTime < fecha.getTime) Future.successful(true)
-    else Future.failed(ValidacionException("409.1", "Pin invalido"))
+    else Future.failed(ValidacionException("409.1", "Pin invalido" + pinHash + "--- " + s"""${token} - ${fecha}""" ))
   }
 
   private def deserializarPin(pin: String, fechaExpiracion: Date): String = {
     val md: MessageDigest = MessageDigest.getInstance("SHA-512")
+
+    println("digest", s"""${pin} - ${fechaExpiracion}""")
+
     val hash: Array[Byte] = md.digest(s"""${pin} - ${fechaExpiracion}""".getBytes)
+
+    println(hash)
+
     val hexString: StringBuffer = new StringBuffer()
     for (i <- hash) hexString.append(Integer.toHexString(0xFF & i))
+
+    println(hexString.toString)
+
     hexString.toString
   }
 
