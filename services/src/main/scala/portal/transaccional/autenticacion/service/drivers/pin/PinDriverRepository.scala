@@ -2,6 +2,7 @@ package portal.transaccional.autenticacion.service.drivers.pin
 
 import java.security.MessageDigest
 import java.sql.Timestamp
+import java.text.SimpleDateFormat
 import java.util.Date
 
 import co.com.alianza.exceptions.ValidacionException
@@ -16,9 +17,9 @@ import portal.transaccional.autenticacion.service.drivers.ultimaContrasena.Ultim
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioAdminRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialRepositoryG
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioRepository
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ PinAdminDAOs, PinAgenteDAOs, PinUsuarioDAOs }
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{PinAdminDAOs, PinAgenteDAOs, PinUsuarioDAOs}
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * Created by hernando on 25/10/16.
@@ -153,7 +154,11 @@ case class PinDriverRepository(pinUsuarioDAO: PinUsuarioDAOs, pinAdminDAO: PinAd
 
   private def deserializarPin(pin: String, fechaExpiracion: Date): String = {
     val md: MessageDigest = MessageDigest.getInstance("SHA-512")
-    val hash: Array[Byte] = md.digest(s"""${pin} - ${fechaExpiracion}""".getBytes)
+    //formatear fecha
+    val format: SimpleDateFormat = new java.text.SimpleDateFormat("dd-MM-yyyy hh:mm:ss")
+    val fechaFormato: String = format.format(fechaExpiracion)
+    //digest
+    val hash: Array[Byte] = md.digest(s"""${pin} - ${fechaFormato}""".getBytes)
     val hexString: StringBuffer = new StringBuffer()
     for (i <- hash) hexString.append(Integer.toHexString(0xFF & i))
     hexString.toString
