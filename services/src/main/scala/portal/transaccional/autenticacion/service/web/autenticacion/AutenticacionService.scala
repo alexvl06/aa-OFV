@@ -54,8 +54,8 @@ case class AutenticacionService(
           clientIP { ip =>
             mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic,
               AuditingHelper.autenticacionIndex, ip.value, kafkaActor, request.copy(password = null))) {
-              val resultado = autenticacionRepositorio.autenticar(request.tipoIdentificacion, request.numeroIdentificacion,
-                request.password, ip.value)
+              val resultado = autenticacionRepositorio.autenticar(request.tipoIdentificacion, request.numeroIdentificacion, request.password, ip.value)
+
               onComplete(resultado) {
                 case Success(token) => encriptarToken(token)
                 case Failure(ex) => execution(ex)
@@ -73,8 +73,8 @@ case class AutenticacionService(
           clientIP { ip =>
             mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic,
               AuditingHelper.autenticacionIndex, ip.value, kafkaActor, request.copy(password = null))) {
-              val resultado: Future[String] = autenticacionEmpresaRepositorio.autenticarUsuarioEmpresa(request.nit, request.usuario,
-                request.password, ip.value)
+              val resultado: Future[String] = autenticacionEmpresaRepositorio.autenticarUsuarioEmpresa(request.nit, request.usuario, request.password, ip.value)
+
               onComplete(resultado) {
                 case Success(token) => encriptarToken(token)
                 case Failure(ex) => execution(ex)

@@ -129,7 +129,7 @@ case class ContrasenaAgenteDriverRepository(
     val body: String = "alianza.smtp.templatepin.reiniciarContrasenaEmpresa"
     val contenido: String = new MailMessageEmpresa(body).getMessagePin(pin, expiracion.valor.toInt)
     //Future.successful(Mensaje(de, para, List.empty[String], asunto, contenido))
-    Future.successful(Mensaje(de, "luisaceleita@seven4n.com", List.empty[String], asunto, contenido))
+    Future.successful(Mensaje(de, "luisaceleita@seven4n.com", List("fernandaalayon@seven4n.com", "alexandraavendano@seven4n.com"), asunto, contenido))
   }
 
 }
