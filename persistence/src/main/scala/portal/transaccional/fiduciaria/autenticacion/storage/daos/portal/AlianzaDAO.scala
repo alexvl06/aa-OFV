@@ -235,11 +235,16 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
     val query1 = getAgentPermission(idAgente)
     val query2 =
       for {
-        x <- query1.filterNot(_.visible)
+        x <- query1
+        y <- recursosGraficosInmobiliarios.filter(_.id === x.menuPrincipal)
+      } yield y
+    val query3 =
+      for {
+        x <- query2
         y <- recursosGraficosInmobiliarios.filter(_.id === x.menuPrincipal)
       } yield y
 
-    val query = query1 ++ query2
+    val query = query1 ++ query2 ++ query3
     run(query.distinctOn(_.id).result)
   }
 

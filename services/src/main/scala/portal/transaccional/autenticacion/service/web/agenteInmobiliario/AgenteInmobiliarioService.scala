@@ -245,8 +245,8 @@ case class AgenteInmobiliarioService(
       parameters("matriz" ? false) { isMatriz =>
         val recursosF = permisosRepo.getRecurso(usuarioAuth.id, usuarioAuth.tipoCliente, isMatriz)
         onComplete(recursosF) {
-          case Success(recursos) => complete(StatusCodes.OK -> recursos)
-          case Failure(exception) => complete((StatusCodes.Conflict, "hubo un error"))
+          case Success(recursos) => complete(StatusCodes.OK -> recursos.sortBy(_.posicion))
+          case Failure(exception) =>  execution(exception)
         }
       }
     }

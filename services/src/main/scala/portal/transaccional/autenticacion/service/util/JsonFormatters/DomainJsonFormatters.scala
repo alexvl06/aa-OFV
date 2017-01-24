@@ -95,7 +95,7 @@ trait DomainJsonFormatters {
   implicit val consultarAgenteInmobResponseFormatter = jsonFormat8(ConsultarAgenteInmobiliarioResponse)
   implicit val paginationMetadataResponseFormatter = jsonFormat5(PaginacionMetadata)
   implicit val consultarAgenteInmobiliarioListResponseFormatter = jsonFormat2(ConsultarAgenteInmobiliarioListResponse)
-  implicit val recursosInmobiliariosFormatter = jsonFormat6(RecursoGraficoInmobiliario)
+  implicit val recursosInmobiliariosFormatter = jsonFormat7(RecursoGraficoInmobiliario)
   implicit val actualizarCredencialesRequestFormatter = jsonFormat3(ActualizarCredencialesAgenteRequest)
   implicit val valdiarTokenFormatter = jsonFormat1(ValidarTokenAgenteRequest)
   implicit val messageFormat2 = jsonFormat5(UsuarioInmobiliarioAuth)
