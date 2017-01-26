@@ -11,7 +11,7 @@ import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.dto.{ Configuracion, UsuarioEmpresarialEstado }
 import co.com.alianza.infrastructure.messages.empresa._
 import co.com.alianza.microservices.{ MailMessage, SmtpServiceClient }
-import co.com.alianza.persistence.entities.{ PinAgente, UsuarioEmpresarialEmpresa }
+import co.com.alianza.persistence.entities.{ UsuarioEmpresarial, PinAgente, UsuarioEmpresarialEmpresa }
 import co.com.alianza.util.token.{ PinData, TokenPin }
 import co.com.alianza.util.transformers.ValidationT
 import com.typesafe.config.Config
@@ -74,10 +74,10 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with FutureResponse
 
   private def crearAgente(message: CrearAgenteMessage) = {
     val currentSender = sender()
-    val perfiles = PerfilesAgente.agente.id :: Nil
-    val usuarioEntity = message.toEntityUsuarioAgenteEmpresarial()
-    val asunto = "alianza.smtp.asunto.creacionAgenteEmpresarial"
-    val plantilla = "alianza.smtp.templatepin.creacionAgenteEmpresarial"
+    val perfiles: List[Int] = PerfilesAgente.agente.id :: Nil
+    val usuarioEntity: UsuarioEmpresarial = message.toEntityUsuarioAgenteEmpresarial()
+    val asunto: String = "alianza.smtp.asunto.creacionAgenteEmpresarial"
+    val plantilla: String = "alianza.smtp.templatepin.creacionAgenteEmpresarial"
     val future: Future[Validation[ErrorValidacion, Int]] = (for {
       _ <- ValidationT(validarUsuarioClienteAdmin(message.nit, message.usuario))
       _ <- ValidationT(validarUsuarioAgenteNit(message.nit, message.usuario))

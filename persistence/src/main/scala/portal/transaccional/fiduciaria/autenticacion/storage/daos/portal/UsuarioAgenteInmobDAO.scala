@@ -47,7 +47,7 @@ case class UsuarioAgenteInmobDAO(implicit dcConfig: DBConfig) extends UsuarioAge
     run(table.filter(_.identificacion === identificacion).result)
   }
 
-  override def getAll(identificacion: String, id : Int, nombre: Option[String],
+  override def getAll(identificacion: String, id: Int, nombre: Option[String],
     usuario: Option[String], correo: Option[String], estado: Option[String], pagina: Option[Int],
     itemsPorPagina: Option[Int], ordenarPor: Option[String])(implicit ec: ExecutionContext): Future[(Int, Int, Int, Int, Seq[UsuarioAgenteInmobiliario])] = {
 
@@ -93,9 +93,9 @@ case class UsuarioAgenteInmobDAO(implicit dcConfig: DBConfig) extends UsuarioAge
     run(query.update(Option(contrasena), new Timestamp(new org.joda.time.DateTime().getMillis)))
   }
 
-  private def buildAgentesListQuery(identificacion: String, idAuth : Int, nombre: Option[String],
-                                    usuario: Option[String], correo: Option[String],
-                                    estado: Option[String], ordenarPor: Option[String]): Query[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario, Seq] = {
+  private def buildAgentesListQuery(identificacion: String, idAuth: Int, nombre: Option[String],
+    usuario: Option[String], correo: Option[String],
+    estado: Option[String], ordenarPor: Option[String]): Query[UsuarioAgenteInmobiliarioTable, UsuarioAgenteInmobiliario, Seq] = {
     val estados: Option[Seq[Int]] = estado match {
       case None => None
       case Some(e) => e match {

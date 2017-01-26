@@ -62,7 +62,7 @@ trait UsuarioInmobiliarioRepository {
    * @param ordenarPor     Ordenamiento - Criterio para ordenar la lista - Opcional
    * @return La lista de agentes inmobiliarios (entidad de servicio)
    */
-  def getAgenteInmobiliarioList(identificacion: String, id : Int, nombre: Option[String], usuario: Option[String],
+  def getAgenteInmobiliarioList(identificacion: String, id: Int, nombre: Option[String], usuario: Option[String],
     correo: Option[String], estado: Option[String],
     pagina: Option[Int], itemsPorPagina: Option[Int], ordenarPor: Option[String]): Future[ConsultarAgenteInmobiliarioListResponse]
 

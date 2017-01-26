@@ -17,9 +17,9 @@ import portal.transaccional.autenticacion.service.drivers.ultimaContrasena.Ultim
 import portal.transaccional.autenticacion.service.drivers.usuarioAdmin.UsuarioAdminRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioEmpresarialRepositoryG
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioRepository
-import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{PinAdminDAOs, PinAgenteDAOs, PinUsuarioDAOs}
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ PinAdminDAOs, PinAgenteDAOs, PinUsuarioDAOs }
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * Created by hernando on 25/10/16.
