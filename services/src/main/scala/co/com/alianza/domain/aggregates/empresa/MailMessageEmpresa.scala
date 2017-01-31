@@ -10,7 +10,8 @@ class MailMessageEmpresa(templateBody: String) extends MailTemplate {
     val mailParams: Map[String, Any] = Map(
       "pin" -> datos.tokenHash,
       "numHorasCaducidad" -> numHorasCaducidad,
-      "medida" -> getMedidaCaducidad(numHorasCaducidad)
+      "medida" -> getMedidaCaducidad(numHorasCaducidad),
+      "dominio" -> config.getString("alianza.smtp.domain")
     )
     engine.layout(config.getString(templateBody), mailParams)
   }
@@ -20,7 +21,8 @@ class MailMessageEmpresa(templateBody: String) extends MailTemplate {
       "pin" -> datos.tokenHash,
       "numHorasCaducidad" -> numHorasCaducidad,
       "medida" -> getMedidaCaducidad(numHorasCaducidad),
-      "usuario" -> usuario
+      "usuario" -> usuario,
+      "dominio" -> config.getString("alianza.smtp.domain")
     )
     engine.layout(config.getString(templateBody), mailParams)
   }
@@ -30,7 +32,8 @@ class MailMessageEmpresa(templateBody: String) extends MailTemplate {
       "pin" -> pin,
       "numHorasCaducidad" -> caducidad,
       "medida" -> getMedidaCaducidad(caducidad),
-      "nombre" -> nombreAgente
+      "nombre" -> nombreAgente,
+      "dominio" -> config.getString("alianza.smtp.domain")
     )
     usuarioAgente match {
       case None => engine.layout(config.getString(templateBody), mailParams)

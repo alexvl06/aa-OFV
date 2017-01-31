@@ -12,12 +12,12 @@ class MailMessageUsuario(templateBody: String) extends MailTemplate {
   def getMessagePin(datos: PinUsuario, numHorasCaducidad: Int, ut: String, funcionalidad: String)(implicit config: Config): String = {
     val medida = if (numHorasCaducidad > 1) "horas" else "hora"
     engine.layout(config.getString(templateBody), Map("pin" -> datos.tokenHash, "numHorasCaducidad" -> numHorasCaducidad,
-      "medida" -> medida, "ut" -> ut, "ft" -> funcionalidad))
+      "medida" -> medida, "ut" -> ut, "ft" -> funcionalidad, "dominio" -> config.getString("alianza.smtp.domain")))
   }
   def getMessagePin(datos: PinAdmin, numHorasCaducidad: Int, ut: String, funcionalidad: String)(implicit config: Config): String = {
     val medida = if (numHorasCaducidad > 1) "horas" else "hora"
     engine.layout(config.getString(templateBody), Map("pin" -> datos.tokenHash, "numHorasCaducidad" -> numHorasCaducidad,
-      "medida" -> medida, "ut" -> ut, "ft" -> funcionalidad))
+      "medida" -> medida, "ut" -> ut, "ft" -> funcionalidad, "dominio" -> config.getString("alianza.smtp.domain")))
   }
 }
 
