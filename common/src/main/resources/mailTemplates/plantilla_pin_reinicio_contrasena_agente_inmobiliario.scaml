@@ -2,12 +2,13 @@
 -@ val numHorasCaducidad: Int
 -@ val medida: String
 -@ val nombre: String
+-@ val dominio: String
 %p Apreciado #{nombre},
 %br
 Recibimos una solicitud de olvido de contrase&ntilde;a en nuestro portal de Alianza Inmobiliaria, para crear su nueva contrase&ntilde;a por favor ingrese al siguiente link.
 %br
 %br
-<a href="http://fiduciaria.alianza.com.co/inmobiliaria/contrasena/definir/#{pin}">Restablecer contrase&ntilde;a</a>
+<a href="#{dominio}/inmobiliaria/contrasena/definir/#{pin}">Restablecer contrase&ntilde;a</a>
 %br
 %br
 Este link es v&aacute;lido por una sola vez y tiene un vencimiento de #{numHorasCaducidad} #{medida}.
