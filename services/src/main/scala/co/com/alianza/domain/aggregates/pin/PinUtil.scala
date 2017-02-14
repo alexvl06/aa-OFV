@@ -1,6 +1,7 @@
 package co.com.alianza.domain.aggregates.pin
 
 import java.security.MessageDigest
+import java.text.SimpleDateFormat
 import java.util.Date
 
 import co.com.alianza.infrastructure.messages.ErrorMessage
@@ -9,10 +10,10 @@ import co.com.alianza.persistence.util.DataBaseExecutionContext
 import co.com.alianza.util.json.MarshallableImplicits._
 import enumerations.EstadosPin
 import enumerations.EstadosPin.EstadoPin
-import org.joda.time.{ DateTime, DateTimeZone }
+import org.joda.time.{DateTime, DateTimeZone}
 
 import scala.concurrent.ExecutionContext
-import scalaz.{ Failure => zFailure, Success => zSuccess }
+import scalaz.{Failure => zFailure, Success => zSuccess}
 
 object PinUtil {
 
@@ -20,7 +21,10 @@ object PinUtil {
 
   def deserializarPin(pin: String, fechaExpiracion: Date): String = {
     val md = MessageDigest.getInstance("SHA-512")
-    val hash = md.digest(s"""${pin} - ${fechaExpiracion}""".getBytes)
+    //formatear fecha
+    val format: SimpleDateFormat = new java.text.SimpleDateFormat("dd-MM-yyyy hh:mm:ss")
+    val fechaFormato: String = format.format(fechaExpiracion)
+    val hash = md.digest(s"""${pin} - ${fechaFormato}""".getBytes)
     val hexString = new StringBuffer()
     for (i <- hash) {
       hexString.append(Integer.toHexString(0xFF & i))
