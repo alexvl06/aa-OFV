@@ -28,12 +28,12 @@ import co.com.alianza.util.json.MarshallableImplicits._
 /**
  * Created by S4N on 17/12/14.
  */
-class AgenteEmpresarialActorSupervisor extends Actor with ActorLogging with FutureResponse {
+class AgenteEmpresarialActorSupervisor()(implicit config: Config) extends Actor with ActorLogging with FutureResponse {
 
   import akka.actor.OneForOneStrategy
   import akka.actor.SupervisorStrategy._
 
-  val agenteEmpresarialActor = context.actorOf(Props[AgenteEmpresarialActor].withRouter(RoundRobinPool(nrOfInstances = 2)), "agenteEmpresarialActor")
+  val agenteEmpresarialActor = context.actorOf(Props(AgenteEmpresarialActor()).withRouter(RoundRobinPool(nrOfInstances = 2)), "agenteEmpresarialActor")
 
   def receive = {
     case message: Any => agenteEmpresarialActor forward message
@@ -48,7 +48,7 @@ class AgenteEmpresarialActorSupervisor extends Actor with ActorLogging with Futu
 
 }
 
-class AgenteEmpresarialActor extends Actor with ActorLogging with FutureResponse {
+case class AgenteEmpresarialActor()(implicit config: Config) extends Actor with ActorLogging with FutureResponse {
 
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.errorValidacion
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.toErrorValidation
@@ -61,7 +61,6 @@ class AgenteEmpresarialActor extends Actor with ActorLogging with FutureResponse
   import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial.validacionEstadoActualizacionAgenteEmpresarial
 
   import context.dispatcher
-  implicit val config: Config = context.system.settings.config
 
   def receive = {
 

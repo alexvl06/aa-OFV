@@ -24,7 +24,7 @@ case class SmtpDriverRepository()(implicit val ex: ExecutionContext, system: Act
     val header: HttpHeader = `Content-Type`(ContentTypes.`application/json`)
     //todo : quitar en produccion - Enviando mensaje a correos de seven y alianza
     val mensajeQA = mensaje.copy(to = "luisaceleita@seven4n.com", cc = List("fernandaalayon@seven4n.com"))
-//    val futureRequest: Future[HttpResponse] = pipeline(Post(s"$endPoint", mensaje) ~> header)
+    //    val futureRequest: Future[HttpResponse] = pipeline(Post(s"$endPoint", mensaje) ~> header)
     val futureRequest: Future[HttpResponse] = pipeline(Post(s"$endPoint", mensajeQA) ~> header)
     val successStatusCodes = List(StatusCodes.OK)
     futureRequest.map {

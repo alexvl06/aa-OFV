@@ -93,7 +93,7 @@ trait CoreActors {
   //TODO: verificar que usuarios ya no se están utilizando y eliminarlos
   val sesionActorSupervisor = system.actorOf(Props[SesionActorSupervisor], "sesionActorSupervisor")
   //TODO: verificar que usuarios ya no se están utilizando y eliminarlos
-  val agenteEmpresarialActorSupervisor = system.actorOf(Props[AgenteEmpresarialActorSupervisor], "agenteEmpresarialActorSupervisor")
+  val agenteEmpresarialActorSupervisor = system.actorOf(Props(new AgenteEmpresarialActorSupervisor()), "agenteEmpresarialActorSupervisor")
   val agenteEmpresarialActor = system.actorSelection(agenteEmpresarialActorSupervisor.path)
   //TODO: verificar que usuarios ya no se están utilizando y eliminarlos
   val permisoTransaccionalActorSupervisor = system.actorOf(Props[PermisoTransaccionalActorSupervisor], "permisoTransaccionalActorSupervisor")
