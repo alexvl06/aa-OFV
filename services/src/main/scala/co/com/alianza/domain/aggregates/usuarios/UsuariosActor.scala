@@ -33,12 +33,12 @@ class UsuariosActorSupervisor(
     agentesInmobDao: UsuarioAgenteInmobDAOs,
     agentesInmobPinRepo: UsuarioInmobiliarioPinRepository,
     configDao: ConfiguracionDAOs
-) extends Actor with ActorLogging {
+)(implicit config: Config) extends Actor with ActorLogging {
 
   import akka.actor.OneForOneStrategy
   import akka.actor.SupervisorStrategy._
 
-  val usuariosActor = context.actorOf(Props(new UsuariosActor(agentesInmobDao, agentesInmobPinRepo, configDao))
+  val usuariosActor = context.actorOf(Props(UsuariosActor(agentesInmobDao, agentesInmobPinRepo, configDao))
     .withRouter(RoundRobinPool(nrOfInstances = 2)), "usuariosActor")
   val usuarioEmpresarialActor = context.actorOf(Props[UsuarioEmpresarialActor]
     .withRouter(RoundRobinPool(nrOfInstances = 2)), "usuarioEmpresarialActor")
@@ -60,14 +60,13 @@ class UsuariosActorSupervisor(
   }
 }
 
-class UsuariosActor(
+case class UsuariosActor(
     agentesInmobDao: UsuarioAgenteInmobDAOs,
     agentesInmobPinRepo: UsuarioInmobiliarioPinRepository,
     configDao: ConfiguracionDAOs
-) extends Actor with ActorLogging {
+)(implicit config: Config) extends Actor with ActorLogging {
 
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario._
-  implicit val config: Config = context.system.settings.config
 
   def receive = {
     case message: UsuarioMessage =>
