@@ -97,8 +97,7 @@ class PermisoTransaccionalRepository(implicit executionContext: ExecutionContext
 
   def consultaPermisosAgenteLogin(idAgente: Int): Future[Validation[PersistenceException, Seq[Int]]] = loan {
     implicit session =>
-      val query = tablaPermisos.filter(_.idAgente === idAgente).map(_.tipoTransaccion) ++
-        tablaPermisosEncargos.filter(_.idAgente === idAgente).map(_.tipoTransaccion)
+      val query = tablaPermisos.filter(_.idAgente === idAgente).map(_.tipoTransaccion) ++ tablaPermisosEncargos.filter(_.idAgente === idAgente).map(_.tipoTransaccion)
       val resultTry = session.database.run(query.result)
       resolveTry(resultTry, "Consultar permiso transaccional de agente para login")
   }

@@ -5,13 +5,18 @@ import akka.util.Timeout
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.exceptions._
 import co.com.alianza.infrastructure.dto.Usuario
+import co.com.alianza.exceptions._
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
+import co.com.alianza.infrastructure.dto.{ Usuario, UsuarioInmobiliarioAuth }
 import co.com.alianza.infrastructure.security.AuthenticationFailedRejection.{ CredentialsMissing, CredentialsRejected }
 import co.com.alianza.persistence.entities.{ UsuarioComercial, UsuarioComercialAdmin }
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.token.{ AesUtil, Token }
 import com.typesafe.config.Config
 import portal.transaccional.autenticacion.service.drivers.autorizacion._
+import portal.transaccional.autenticacion.service.drivers.autorizacion.{ AutorizacionUsuarioEmpresarialAdminRepository, AutorizacionUsuarioEmpresarialRepository, AutorizacionUsuarioRepository }
+import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.AutorizacionRepository
+import portal.transaccional.autenticacion.service.util.ws.{ GenericAutorizado, GenericNoAutorizado }
 import spray.http.StatusCodes._
 import spray.routing.RequestContext
 import spray.routing.authentication.ContextAuthenticator
@@ -31,8 +36,9 @@ trait ServiceAuthorization {
   val autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository
   val autorizacionComercialRepo: AutorizacionUsuarioComercialRepository
   val autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository
+  val autorizacionInmobRepo: AutorizacionRepository
 
-  implicit val timeout: Timeout = Timeout(10.seconds)
+  implicit val timeout: Timeout = Timeout(5.seconds)
 
   def authenticateUser: ContextAuthenticator[UsuarioAuth] = {
     ctx =>
@@ -45,11 +51,14 @@ trait ServiceAuthorization {
         val encriptedToken: String = tokenRequest.get.value
         val token = AesUtil.desencriptarToken(encriptedToken)
         val tipoCliente: String = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
-        val futuro: Future[ValidacionAutorizacion] = {
+
+        val futuro = {
           if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
             autorizacionAgenteRepo.autorizar(token, encriptedToken, "", obtenerIp(ctx).get.value)
-          } else if (tipoCliente == TiposCliente.clienteAdministrador.toString) {
-            autorizacionAdminRepo.autorizar(token, encriptedToken, "", obtenerIp(ctx).get.value)
+          } else if (tipoCliente == TiposCliente.clienteAdministrador.toString || tipoCliente == TiposCliente.clienteAdminInmobiliario.toString) {
+            autorizacionAdminRepo.autorizar(token, encriptedToken, "", obtenerIp(ctx).get.value, TiposCliente.clienteAdministrador.toString)
+          } else if (tipoCliente == TiposCliente.agenteInmobiliario.toString || tipoCliente == TiposCliente.agenteInmobiliarioInterno.toString) {
+            autorizacionInmobRepo.autorizar(token, encriptedToken, Option.empty, obtenerIp(ctx).get.value, tipoCliente)
           } else if (tipoCliente == TiposCliente.clienteIndividual.toString) {
             autorizacionUsuarioRepo.autorizar(token, encriptedToken, "")
           } else if (tipoCliente == TiposCliente.comercialFiduciaria.toString) {
@@ -84,12 +93,12 @@ trait ServiceAuthorization {
       case validacion: AutorizadoComercial =>
         val tipo = TiposCliente.getTipoCliente(tipoCliente)
         val user = JsonUtil.fromJson[UsuarioComercial](validacion.usuario)
-        Right(UsuarioAuth(user.id, tipo, "", 0))
+        Right(UsuarioAuth(user.id, tipo, "", 0, user.usuario))
 
       case validacion: AutorizadoComercialAdmin =>
         val tipo = TiposCliente.getTipoCliente(tipoCliente)
         val user = JsonUtil.fromJson[UsuarioComercialAdmin](validacion.usuario)
-        Right(UsuarioAuth(user.id, tipo, "", 0, Option(user.usuario)))
+        Right(UsuarioAuth(user.id, tipo, "", 0, user.usuario))
 
       case validacion: ValidacionException =>
         validacion.printStackTrace()
@@ -102,6 +111,13 @@ trait ServiceAuthorization {
       case validacion: Prohibido =>
         validacion.printStackTrace()
         Left(AuthenticationFailedRejection(CredentialsRejected, List(), Some(Forbidden.intValue), None))
+
+      case validacion: GenericNoAutorizado =>
+        Left(AuthenticationFailedRejection(CredentialsRejected, List(), Some(Unauthorized.intValue), None))
+
+      case validacion: GenericAutorizado[UsuarioInmobiliarioAuth] =>
+        val user = validacion.usuario
+        Right(UsuarioAuth(user.id, user.tipoCliente, user.identificacion, user.tipoIdentificacion, user.usuario))
 
       case _ =>
         Left(AuthenticationFailedRejection(CredentialsRejected, List()))
@@ -116,3 +132,4 @@ trait ServiceAuthorization {
 }
 
 case class UsuarioForbidden(usuario: Usuario, filtro: String)
+

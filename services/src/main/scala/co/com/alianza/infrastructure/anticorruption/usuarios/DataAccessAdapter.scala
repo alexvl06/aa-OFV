@@ -1,14 +1,10 @@
 package co.com.alianza.infrastructure.anticorruption.usuarios
 
-import java.sql.{ Date, Timestamp }
-
-import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.auditing.AuditingUser.AuditingUserData
 import co.com.alianza.infrastructure.dto.{ Usuario, _ }
 import co.com.alianza.persistence.entities
-import co.com.alianza.persistence.entities.{ IpsUsuario, PerfilUsuario, Empresa => eEmpresa, HorarioEmpresa => eHorarioEmpresa, PinUsuario => ePinUsuario, Usuario => eUsuario, UsuarioAgenteEmpresarial => eUsuarioEmpresarial, UsuarioEmpresarialAdmin => eUsuarioEmpresarialAdmin, _ }
+import co.com.alianza.persistence.entities.{ IpsEmpresa, IpsUsuario, PerfilUsuario, Empresa => eEmpresa, PinUsuario => ePinUsuario, Usuario => eUsuario, UsuarioAgente => eUsuarioEmpresarial, UsuarioEmpresarialAdmin => eUsuarioEmpresarialAdmin }
 import co.com.alianza.persistence.repositories.{ IpsUsuarioRepository, UsuariosRepository, _ }
 import co.com.alianza.persistence.util.DataBaseExecutionContext
 import enumerations.EstadosUsuarioEnum

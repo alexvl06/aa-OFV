@@ -1,6 +1,6 @@
 package co.com.alianza.domain.aggregates.usuarios
 
-import akka.actor.{ Actor, ActorLogging, ActorSystem }
+import akka.actor.{ Actor, ActorLogging }
 import co.com.alianza.infrastructure.messages._
 
 import scala.util.{ Failure => sFailure, Success => sSuccess }
@@ -10,6 +10,7 @@ import scalaz.{ Failure => zFailure, Success => zSuccess }
  * Created by manuel on 18/12/14.
  */
 class UsuarioEmpresarialActor extends Actor with ActorLogging {
+
   import context.dispatcher
 
   def receive = {

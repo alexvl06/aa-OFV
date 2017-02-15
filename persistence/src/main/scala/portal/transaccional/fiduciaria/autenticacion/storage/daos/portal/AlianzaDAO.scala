@@ -1,6 +1,7 @@
 package portal.transaccional.fiduciaria.autenticacion.storage.daos.portal
 
 import co.com.alianza.persistence.entities._
+import enumerations.PerfilInmobiliarioEnum
 import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
 import slick.lifted.TableQuery
 
@@ -24,6 +25,13 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
   val preguntasTable = TableQuery[PreguntasAutovalidacionTable]
   val respuestasUsuarioTable = TableQuery[RespuestasAutovalidacionUsuarioTable]
   val respuestasClienteAdministradorTable = TableQuery[RespuestasAutovalidacionUsuarioAdministradorTable]
+  val usuariosAgentesInmobiliarios = TableQuery[UsuarioAgenteInmobiliarioTable]
+  val permisosInmobiliarios = TableQuery[PermisoInmobiliarioTable]
+  val recursosGraficosInmobiliarios = TableQuery[RecursoGraficoInmobiliarioTable]
+  val recursosInmobiliarios = TableQuery[RecursoInmobiliarioTable]
+  val recursosBackendInmobiliarios = TableQuery[RecursoBackendInmobiliarioTable]
+  val perfilInmobiliario = TableQuery[PerfilInmobiliarioTable]
+  val recursosPerfilInmobiliario = TableQuery[RecursoPerfilInmobiliarioTable]
 
   import dcConfig.DB._
   import dcConfig.driver.api._
@@ -84,7 +92,7 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
     run(query.result.headOption)
   }
 
-  def getByNitAndUserAgente(nit: String, usuario: String): Future[Option[UsuarioAgenteEmpresarial]] = {
+  def getByNitAndUserAgente(nit: String, usuario: String): Future[Option[UsuarioEmpresarial]] = {
     run(
       (for {
       ((usuarioEmpresarial, usuarioEmpresarialEmpresa), empresa) <- usuariosEmpresariales join usuariosEmpresarialesEmpresa on {
@@ -97,7 +105,7 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
   }
 
   //Obtengo como resultado una tupla que me devuelve el usuarioEmpresarial junto con el estado de la empresa
-  def getByTokenAgente(token: String): Future[(UsuarioAgenteEmpresarial, Int)] = {
+  def getByTokenAgente(token: String): Future[(UsuarioEmpresarial, Int)] = {
     val query =
       for {
         (agenteEmpresarial, empresa) <- usuariosEmpresariales join usuariosEmpresarialesEmpresa on {
@@ -110,7 +118,7 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
     run(query.result.head)
   }
 
-  def validateAgente(id: String, correo: String, tipoId: Int, idClienteAdmin: Int): Future[Option[UsuarioAgenteEmpresarial]] = {
+  def validateAgente(id: String, correo: String, tipoId: Int, idClienteAdmin: Int): Future[Option[UsuarioEmpresarial]] = {
     val query =
       for {
         (clienteAdministrador, agenteEmpresarial) <- usuariosEmpresarialesAdmin join usuariosEmpresarialesAdminEmpresa on {
@@ -186,6 +194,112 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
 
   def bloquearRespuestasClienteAdministrador(idUsuario: Int): Future[Int] = {
     run(respuestasClienteAdministradorTable.filter(x => x.idUsuario === idUsuario).delete)
+  }
+
+  //  ------------------  Agente inmobiliario ---------------------------
+
+  def getPermisosProyectoInmobiliario(nit: String, idFideicomiso: Int, idProyecto: Int): Future[Seq[PermisoAgenteInmobiliario]] = {
+    val query = for {
+      (agentes, permisos) <- usuariosAgentesInmobiliarios join permisosInmobiliarios on (_.id === _.idAgente)
+      if agentes.identificacion === nit && permisos.fideicomiso === idFideicomiso && permisos.proyecto === idProyecto
+    } yield permisos
+    run(query.result)
+  }
+
+  def getPermisosProyectoInmobiliario(nit: String, idFideicomiso: Int, idProyecto: Int, idAgentes: Seq[Int]): Future[Seq[PermisoAgenteInmobiliario]] = {
+    val query = for {
+      agentesFiltrados <- usuariosAgentesInmobiliarios.filter(_.id inSetBind idAgentes)
+      permisos <- permisosInmobiliarios if agentesFiltrados.id === permisos.idAgente
+      if agentesFiltrados.identificacion === nit && permisos.fideicomiso === idFideicomiso && permisos.proyecto === idProyecto
+    } yield permisos
+    run(query.result)
+  }
+
+  // Obtiene los permisos a los que un agente puede acceder
+  def getPermisosProyectoInmobiliarioByAgente(username: String, idAgente: Int): Future[Seq[PermisoAgenteInmobiliario]] = {
+    val query = for {
+      a <- usuariosAgentesInmobiliarios if a.id === idAgente if a.usuario === username
+      p <- permisosInmobiliarios if p.idAgente === a.id
+    } yield p
+    run(query.result)
+  }
+
+  // Obtiene el menu de constructor o agente
+  def getAdminResourcesVisible(tipoPermisos: String): Future[Seq[RecursoGraficoInmobiliario]] = {
+    val query = getGraphicalResources(tipoPermisos)
+    run(query.result)
+  }
+
+  // Obtiene su propio menu
+  def getAgentResourcesById(idAgente: Int): Future[Seq[RecursoGraficoInmobiliario]] = {
+    val query1 = getAgentPermission(idAgente)
+    val query2 =
+      for {
+        x <- query1
+        y <- recursosGraficosInmobiliarios.filter(_.id === x.menuPrincipal)
+      } yield y
+    val query3 =
+      for {
+        x <- query2
+        y <- recursosGraficosInmobiliarios.filter(_.id === x.menuPrincipal)
+      } yield y
+
+    val query = query1 ++ query2 ++ query3
+    run(query.distinctOn(_.id).result)
+  }
+
+  //Obtiene los recursos a los que puede acceder Admin
+  def getMenuAdmin(isInterno: Boolean): Future[Seq[RecursoBackendInmobiliario]] = {
+    val tipoAdmin = if (isInterno) PerfilInmobiliarioEnum.agenteInterno.toString else PerfilInmobiliarioEnum.admin.toString
+    val query = for {
+      g <- getGraphicalResources(tipoAdmin)
+      r <- getBackendResources(g)
+    } yield r
+    run(query.result)
+  }
+
+  def getByTokenAgenteInmobiliario(token: String): Future[UsuarioAgenteInmobiliario] = {
+    val query = usuariosAgentesInmobiliarios.filter(a => a.token === token)
+    run(query.result.head)
+  }
+
+  //Obtiene los recursos a los que puede acceder Agente
+  def getMenuAgenteInmob(idAgente: Int): Future[Seq[RecursoBackendInmobiliario]] = {
+    val query = for {
+      g <- getAgentPermission(idAgente)
+      r <- getBackendResources(g)
+    } yield r
+
+    val query2 = for {
+      g <- getGraphicalResources(PerfilInmobiliarioEnum.agente.toString).filterNot(_.visible)
+      r <- getBackendResources(g)
+    } yield r
+    run((query ++ query2).distinctOn(_.id).result)
+  }
+
+  private def getGraphicalResources(tipo: String) = {
+    for {
+      p <- perfilInmobiliario if p.nombre === tipo
+      pg <- recursosPerfilInmobiliario if p.id === pg.idPerfil
+      g <- recursosGraficosInmobiliarios if g.id === pg.urlRecurso
+    } yield g
+  }
+
+  private def getBackendResources(table: RecursoGraficoInmobiliarioTable) = {
+    for {
+      rg <- recursosInmobiliarios if rg.idGrafico === table.id
+      r <- recursosBackendInmobiliarios if rg.idBacken === r.id
+    } yield r
+  }
+
+  private def getAgentPermission(idAgente: Int) = {
+    val k = for {
+      a <- usuariosAgentesInmobiliarios if a.id === idAgente
+      p <- permisosInmobiliarios if p.idAgente === a.id
+      g <- recursosGraficosInmobiliarios if g.id === p.tipoPermiso
+    } yield g
+
+    k ++ recursosGraficosInmobiliarios.filter(_.id === 13)
   }
 
 }

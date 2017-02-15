@@ -1,6 +1,6 @@
 package portal.transaccional.autenticacion.service.drivers.recurso
 
-import co.com.alianza.persistence.entities.{ RecursoPerfil, RecursoPerfilAgente, RecursoPerfilClienteAdmin }
+import co.com.alianza.persistence.entities.{ RecursoBackendInmobiliario, RecursoPerfil, RecursoPerfilAgente, RecursoPerfilClienteAdmin }
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ AlianzaDAO, AlianzaDAOs }
 
 import scala.concurrent.Future
@@ -59,6 +59,7 @@ case class RecursoDriverRepository(generalDAO: AlianzaDAOs) extends RecursoRepos
   }
 
   /**
+   * PinEmpresa
    * Filtra el listado de recursos que concuerden con la url
    * @param recurso recursos asociados al admin
    * @param url la url a validar
@@ -72,6 +73,24 @@ case class RecursoDriverRepository(generalDAO: AlianzaDAOs) extends RecursoRepos
     else url)
     val urlR: String = recurso.urlRecurso.substring(0, indexSlash)
     urlR.contains(myUrl) && urlR.equals(myUrl) && recurso.acceso
+  }
+
+  def filtrarRecurso(recursos: Seq[String], urlI: String): Boolean = {
+
+    val url = urlI.replace("?", "%")
+
+    val encontrarVariablesNumericas = "/:id(\\w*)".r
+    val encontrarVariablesAlfaNumericas = "/:\\w*".r
+    val encontrarVariablesOpcionales = "%".r
+
+    recursos.exists(
+      x => {
+        val remplazo1 = "^" + encontrarVariablesNumericas.replaceAllIn(x, "/([0-9]+)") + "$"
+        val remplazo2 = encontrarVariablesOpcionales.replaceAllIn(remplazo1, "%(([a-zA-z]+)=([a-zA-Z\\d[^{}<>=:\\(\\)\\$]]*)(&)?)*")
+        val reglaGeneral = encontrarVariablesAlfaNumericas.replaceAllIn(remplazo2, "/([a-zA-Z0-9]*)").r
+        url.matches(reglaGeneral.toString())
+      }
+    )
   }
 
 }

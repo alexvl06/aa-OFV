@@ -3,7 +3,7 @@ package co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial
 import java.sql.Timestamp
 
 import co.com.alianza.infrastructure.dto.{ UsuarioEmpresarial, UsuarioEmpresarialEstado, estadoUsuario }
-import co.com.alianza.persistence.entities.{ PinAgente => ePinEmpresa, UsuarioAgenteEmpresarial => dUsuario }
+import co.com.alianza.persistence.entities.{ PinAgente => ePinEmpresa, UsuarioEmpresarial => dUsuario }
 import co.com.alianza.commons.enumerations.TiposCliente
 import enumerations.EstadosEmpresaEnum
 
@@ -19,7 +19,7 @@ object DataAccessTranslator {
 
   def translateUsuarioEstado(usuario: Seq[dUsuario]): List[UsuarioEmpresarialEstado] = {
     usuario.map(ue => UsuarioEmpresarialEstado(ue.id, ue.correo, ue.identificacion, ue.tipoIdentificacion,
-      ue.usuario, ue.cargo, ue.descripcion, estadoUsuario(ue.estado, EstadosEmpresaEnum(ue.estado).toString),
+      ue.usuario, ue.cargo, ue.descripcion.getOrElse(""), estadoUsuario(ue.estado, EstadosEmpresaEnum(ue.estado).toString),
       TiposCliente.agenteEmpresarial, Some(ue.nombreUsuario))).toList
   }
 

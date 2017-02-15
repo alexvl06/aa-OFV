@@ -5,7 +5,7 @@ import java.util.Date
 
 import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.exceptions.ValidacionException
-import co.com.alianza.persistence.entities.{ Usuario, UsuarioAgenteEmpresarial }
+import co.com.alianza.persistence.entities.Usuario
 import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.token.Token
 import enumerations.{ AppendPasswordUser, EstadosUsuarioEnum }

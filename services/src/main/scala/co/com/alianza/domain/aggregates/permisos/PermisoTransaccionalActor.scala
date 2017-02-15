@@ -148,9 +148,11 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
 
   private def verificarPermisosCore(numeroIdentificacion: String): Boolean = {
     //Se consulta los permisos del core sobre el cliente fid
-    val cliente: Future[Validation[ErrorAutenticacion, Cliente]] = (for {
-      cliente <- ValidationT(obtenerClienteSP(numeroIdentificacion))
-    } yield cliente).run
+    val cliente: Future[Validation[ErrorAutenticacion, Cliente]] = (
+      for {
+        cliente <- ValidationT(obtenerClienteSP(numeroIdentificacion))
+      } yield cliente
+    ).run
     //TODO: Await ???
     val extraccionFuturo = Await.result(cliente, 8.seconds)
     extraccionFuturo match {

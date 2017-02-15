@@ -4,6 +4,7 @@ import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.exceptions.ValidacionException
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 import co.com.alianza.persistence.entities.{ RolComercial, RolRecursoComercial }
+import co.com.alianza.persistence.entities.{ RolComercial, RolRecursoComercial }
 import portal.transaccional.autenticacion.service.drivers.rolRecursoComercial.RolRecursoComercialRepository
 import portal.transaccional.autenticacion.service.dto.PermisoRecursoDTO
 

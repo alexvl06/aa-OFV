@@ -67,7 +67,7 @@ object Common {
 
     (compile in Compile) <<= (compile in Compile).dependsOn(customCompile),
 
-    fork in Test := true,
+    fork in Test := false,
 
     javaOptions ++= commonJavaOptions,
 

@@ -10,7 +10,10 @@ object TiposCliente extends Enumeration {
   comercialAdmin, //3
   comercialFiduciaria, //4
   comercialValores, // 5
-  comercialSAC = Value //6
+  comercialSAC, // 6
+  clienteAdminInmobiliario, // 7
+  agenteInmobiliario, // 8
+  agenteInmobiliarioInterno = Value //9
 
   def getTipoCliente(tipoCliente: String): TiposCliente = {
     this.values.filter(tipo => tipo.toString.equals(tipoCliente)).head

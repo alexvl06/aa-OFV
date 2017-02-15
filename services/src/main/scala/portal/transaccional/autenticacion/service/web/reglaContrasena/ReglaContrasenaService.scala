@@ -24,11 +24,10 @@ case class ReglaContrasenaService(reglasRepo: ReglaContrasenaRepository)(implici
     }
   }
 
-  private def reglas(): Route = {
+  private def reglas() = {
     get {
       onComplete(reglasRepo.getReglas()) {
-        case Success(value) =>
-          complete(value)
+        case Success(value) => complete(value)
         case Failure(ex) => complete(StatusCodes.NoContent)
       }
     }

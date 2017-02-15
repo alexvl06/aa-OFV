@@ -20,7 +20,7 @@ import scalaz.{ Failure => zFailure, Success => zSuccess }
  */
 class EmpresaActor(var empresa: Empresa) extends Actor with ActorLogging {
 
-  implicit val _: ExecutionContext = context dispatcher
+  implicit val _: ExecutionContext = context.dispatcher
   implicit val timeout: Timeout = 5.seconds
   var sesionesActivas = List[ActorRef]()
   var ips = List[String]()

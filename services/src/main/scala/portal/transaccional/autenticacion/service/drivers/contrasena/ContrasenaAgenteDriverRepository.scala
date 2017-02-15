@@ -1,7 +1,7 @@
 package portal.transaccional.autenticacion.service.drivers.contrasena
 
 import java.sql.Timestamp
-import java.util.{ Date, Calendar }
+import java.util.{ Calendar, Date }
 
 import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.constants.LlavesReglaContrasena
@@ -18,7 +18,7 @@ import portal.transaccional.autenticacion.service.drivers.configuracion.Configur
 import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaRepository
 import portal.transaccional.autenticacion.service.drivers.smtp.{ Mensaje, SmtpRepository }
 import portal.transaccional.autenticacion.service.drivers.ultimaContrasena.UltimaContrasenaRepository
-import portal.transaccional.autenticacion.service.drivers.usuarioAgente.UsuarioAgenteEmpresarialRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioAgenteEmpresarial.UsuarioEmpresarialDriverRepository
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.PinAgenteDAOs
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -27,7 +27,7 @@ import scala.concurrent.{ ExecutionContext, Future }
  * Created by hernando on 10/11/16.
  */
 case class ContrasenaAgenteDriverRepository(
-    agenteRepo: UsuarioAgenteEmpresarialRepository,
+    agenteRepo: UsuarioEmpresarialDriverRepository,
     pinAgenteDAO: PinAgenteDAOs,
     ultimaContrasenaRepo: UltimaContrasenaRepository,
     configuracionRepo: ConfiguracionRepository,
@@ -74,7 +74,7 @@ case class ContrasenaAgenteDriverRepository(
     } yield actualizar
   }
 
-  def validarContrasena(agente: UsuarioAgenteEmpresarial, contrasena: String): Future[Boolean] = {
+  def validarContrasena(agente: UsuarioAgente, contrasena: String): Future[Boolean] = {
     val contrasenaHash = Crypto.hashSha512(contrasena.concat(AppendPasswordUser.appendUsuariosFiducia), agente.id)
     agente.contrasena.getOrElse("").equals(contrasenaHash) match {
       case true => Future.successful(true)
@@ -82,7 +82,7 @@ case class ContrasenaAgenteDriverRepository(
     }
   }
 
-  private def desbloquear(agente: UsuarioAgenteEmpresarial): Future[Boolean] = {
+  private def desbloquear(agente: UsuarioAgente): Future[Boolean] = {
     def obtenerFecha(reglaDias: ReglaContrasena) = {
       val fechaCaducada = Calendar.getInstance()
       fechaCaducada.setTime(new Date())
@@ -96,7 +96,7 @@ case class ContrasenaAgenteDriverRepository(
     } yield correo
   }
 
-  private def envioCorreoReinicio(agente: UsuarioAgenteEmpresarial): Future[Boolean] = {
+  private def envioCorreoReinicio(agente: UsuarioAgente): Future[Boolean] = {
     for {
       _ <- agenteRepo.actualizarEstado(agente.id, EstadosEmpresaEnum.pendienteReiniciarContrasena)
       expiracion <- configuracionRepo.getConfiguracion(ConfiguracionEnum.EXPIRACION_PIN)
@@ -128,8 +128,7 @@ case class ContrasenaAgenteDriverRepository(
     val asunto: String = config.getString("alianza.smtp.asunto.reiniciarContrasenaEmpresa")
     val body: String = "alianza.smtp.templatepin.reiniciarContrasenaEmpresa"
     val contenido: String = new MailMessageEmpresa(body).getMessagePin(pin, expiracion.valor.toInt)
-    //Future.successful(Mensaje(de, para, List.empty[String], asunto, contenido))
-    Future.successful(Mensaje(de, "luisaceleita@seven4n.com", List.empty[String], asunto, contenido))
+    Future.successful(Mensaje(de, para, List.empty[String], asunto, contenido))
   }
 
 }

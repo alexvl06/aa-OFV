@@ -1,21 +1,24 @@
 package portal.transaccional.autenticacion.service.util.JsonFormatters
 
-import co.com.alianza.exceptions.{ NoAutorizado, ValidacionException }
-import co.com.alianza.infrastructure.dto.{ Pregunta, Respuesta }
-import co.com.alianza.persistence.entities.{ Empresa, RecursoComercial, ReglaContrasena, RolComercial }
+import co.com.alianza.commons.enumerations.TiposCliente
+import co.com.alianza.exceptions.{ NoAutorizado, ValidacionException, ValidacionExceptionPasswordRules }
+import co.com.alianza.infrastructure.dto.{ UsuarioInmobiliarioAuth, Pregunta, Respuesta }
+import co.com.alianza.persistence.entities._
 import enumerations.{ TipoIdentificacionComercialDTO, TipoIdentificacionDTO }
 import portal.transaccional.autenticacion.service.drivers.smtp.Mensaje
 import portal.transaccional.autenticacion.service.dto.{ PermisoRecursoDTO, RecursoDTO }
-import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
+import portal.transaccional.autenticacion.service.util.ws.{ GenericNoAutorizado, CommonRESTFul }
 import portal.transaccional.autenticacion.service.web.actualizacion._
+import portal.transaccional.autenticacion.service.web.agenteInmobiliario._
 import portal.transaccional.autenticacion.service.web.autenticacion.{ AutenticarRequest, AutenticarUsuarioComercialRequest, AutenticarUsuarioEmpresarialRequest }
-import portal.transaccional.autenticacion.service.web.autorizacion.InvalidarTokenRequest
+import portal.transaccional.autenticacion.service.web.autorizacion.{ ValidarTokenAgenteRequest, InvalidarTokenRequest }
 import portal.transaccional.autenticacion.service.web.comercial.{ ActualizarContrasenaRequest, CrearAdministradorRequest, ValidarEmpresaRequest }
 import portal.transaccional.autenticacion.service.web.contrasena._
 import portal.transaccional.autenticacion.service.web.horarioEmpresa.{ AgregarHorarioEmpresaRequest, DiaFestivoRequest, ResponseObtenerHorario }
 import portal.transaccional.autenticacion.service.web.ip.{ IpRequest, IpResponse }
 import portal.transaccional.autenticacion.service.web.pin.ContrasenaUsuario
 import portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.{ GuardarRespuestasRequest, ResponseObtenerPreguntas, ResponseObtenerPreguntasComprobar, RespuestasComprobacionRequest }
+import spray.json._
 
 trait DomainJsonFormatters {
 
@@ -41,6 +44,7 @@ trait DomainJsonFormatters {
 
   //validacion
   implicit val validacionExceptionFormatter = jsonFormat2(ValidacionException)
+  implicit val validacionExceptionPasswordRulesFormatter = jsonFormat5(ValidacionExceptionPasswordRules)
   implicit val noAutorizadoExceptionFormatter = jsonFormat1(NoAutorizado)
 
   //preguntasAutovalidacion
@@ -84,6 +88,19 @@ trait DomainJsonFormatters {
   //pin
   implicit val cambioContrasenaFormatter = jsonFormat2(ContrasenaUsuario)
 
+  //permisosInmobiliarios
+  implicit val enumTipoCLienteFormatter = jsonEnum(TiposCliente)
+  implicit val permisoAgenteInmobFormatter: RootJsonFormat[PermisoAgenteInmobiliario] = jsonFormat4(PermisoAgenteInmobiliario)
+  implicit val crearAgenteInmobRequestFormatter = jsonFormat6(CrearAgenteInmobiliarioRequest)
+  implicit val consultarAgenteInmobResponseFormatter = jsonFormat8(ConsultarAgenteInmobiliarioResponse)
+  implicit val paginationMetadataResponseFormatter = jsonFormat5(PaginacionMetadata)
+  implicit val consultarAgenteInmobiliarioListResponseFormatter = jsonFormat2(ConsultarAgenteInmobiliarioListResponse)
+  implicit val recursosInmobiliariosFormatter = jsonFormat7(RecursoGraficoInmobiliario)
+  implicit val actualizarCredencialesRequestFormatter = jsonFormat3(ActualizarCredencialesAgenteRequest)
+  implicit val valdiarTokenFormatter = jsonFormat1(ValidarTokenAgenteRequest)
+  implicit val messageFormat2 = jsonFormat5(UsuarioInmobiliarioAuth)
+  implicit val asdasds = jsonFormat2(GenericNoAutorizado)
+
   //smtp
   implicit val mensajeFormatter = jsonFormat5(Mensaje)
 
@@ -93,4 +110,13 @@ trait DomainJsonFormatters {
   implicit val cambiarContrasenaFormatter = jsonFormat2(CambiarContrasena)
   implicit val cambiarContrasenaCaducadaFormatter = jsonFormat3(CambiarContrasenaCaducada)
 
+  //   ----- MAPEO DE ENUM!
+  private def jsonEnum[T <: Enumeration](enu: T) = new JsonFormat[T#Value] {
+    def write(obj: T#Value) = JsString(obj.toString)
+
+    def read(json: JsValue) = json match {
+      case JsString(txt) => enu.withName(txt)
+      case something => throw DeserializationException(s"Expected a value from enum $enu instead of $something")
+    }
+  }
 }
