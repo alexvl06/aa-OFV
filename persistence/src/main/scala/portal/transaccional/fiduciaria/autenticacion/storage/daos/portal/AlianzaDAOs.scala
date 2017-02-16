@@ -51,6 +51,6 @@ trait AlianzaDAOs {
 
   def getMenuAdmin(isInterno: Boolean): Future[Seq[RecursoBackendInmobiliario]]
 
-  def getMenuAgenteInmob(idAgente: Int): Future[Seq[RecursoBackendInmobiliario]]
+  def getBackResourcesByAgent(idAgente: Int): Future[Seq[RecursoBackendInmobiliario]]
 
 }

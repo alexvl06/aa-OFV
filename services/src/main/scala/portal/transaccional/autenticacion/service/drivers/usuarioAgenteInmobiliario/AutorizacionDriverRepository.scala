@@ -13,8 +13,7 @@ import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.Alianza
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-case class AutorizacionDriverRepository(sesionRepo: SesionRepository, alianzaDAO: AlianzaDAOs, recursoRepo: RecursoRepository)
-  (implicit val ex: ExecutionContext) extends AutorizacionRepository {
+case class AutorizacionDriverRepository(sesionRepo: SesionRepository, alianzaDAO: AlianzaDAOs, recursoRepo: RecursoRepository)(implicit val ex: ExecutionContext) extends AutorizacionRepository {
 
   def autorizar(token: String, encriptedToken: String, url: Option[String], ip: String, tipoCliente: String): Future[GenericValidacionAutorizacion] = {
     val isInterno = if (tipoCliente == TiposCliente.agenteInmobiliarioInterno.toString) true else false
@@ -23,7 +22,7 @@ case class AutorizacionDriverRepository(sesionRepo: SesionRepository, alianzaDAO
       _ <- sesionRepo.validarSesion(token)
       _ <- sesionRepo.obtenerSesion(token)
       agente <- alianzaDAO.getByTokenAgenteInmobiliario(encriptedToken)
-      permisoProyecto <- if (isInterno)  alianzaDAO.getMenuAdmin(isInterno) else  getPermiso(agente.id, url.getOrElse(""), isInterno)
+      permisoProyecto <- if (isInterno) alianzaDAO.getMenuAdmin(isInterno) else getPermiso(agente.id, url.getOrElse(""), isInterno)
       validacion <- filtrarRecuros(DataAccessTranslator.entityToDto(agente), permisoProyecto, url)
     } yield validacion
   }
@@ -51,21 +50,23 @@ case class AutorizacionDriverRepository(sesionRepo: SesionRepository, alianzaDAO
             Future.successful(permisos)
           }
         }
-      case _ => Future.successful(Seq())
+      case _ => alianzaDAO.getBackResourcesByAgent(idUsuario)
     }
 
   }
 
-  def filtrarRecuros( agente: UsuarioInmobiliarioAuth,
-                      recursos: Seq[RecursoBackendInmobiliario],
-                      request: Option[String]): Future[GenericValidacionAutorizacion] = {
+  def filtrarRecuros(
+    agente: UsuarioInmobiliarioAuth,
+    recursos: Seq[RecursoBackendInmobiliario],
+    request: Option[String]
+  ): Future[GenericValidacionAutorizacion] = {
 
     val usuarioExitoso = Future.successful(GenericAutorizado[UsuarioInmobiliarioAuth](agente))
     val usuarioNoExitoso = Future.failed(GenericNoAutorizado("403.1", s"El usuario no tiene permisos suficientes para ingresar al servicio." + request.getOrElse("")))
 
     request match {
       case Some(url) =>
-        val isMatchUrl = recursos.exists( recurso => recursoRepo.filtrarRecurso(recurso.url, url))
+        val isMatchUrl = recursos.exists(recurso => recursoRepo.filtrarRecurso(recurso.url, url))
         if (isMatchUrl) usuarioExitoso else usuarioNoExitoso
 
       case None => usuarioExitoso
