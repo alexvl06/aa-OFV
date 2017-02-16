@@ -13,7 +13,8 @@ import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.Alianza
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-case class AutorizacionDriverRepository(sesionRepo: SesionRepository, alianzaDAO: AlianzaDAOs, recursoRepo: RecursoRepository)(implicit val ex: ExecutionContext) extends AutorizacionRepository {
+case class AutorizacionDriverRepository(sesionRepo: SesionRepository, alianzaDAO: AlianzaDAOs, recursoRepo: RecursoRepository)
+  (implicit val ex: ExecutionContext) extends AutorizacionRepository {
 
   def autorizar(token: String, encriptedToken: String, url: Option[String], ip: String, tipoCliente: String): Future[GenericValidacionAutorizacion] = {
     val isInterno = if (tipoCliente == TiposCliente.agenteInmobiliarioInterno.toString) true else false
@@ -22,9 +23,8 @@ case class AutorizacionDriverRepository(sesionRepo: SesionRepository, alianzaDAO
       _ <- sesionRepo.validarSesion(token)
       _ <- sesionRepo.obtenerSesion(token)
       agente <- alianzaDAO.getByTokenAgenteInmobiliario(encriptedToken)
-      recursos <- if (isInterno) alianzaDAO.getMenuAdmin(isInterno) else alianzaDAO.getMenuAgenteInmob(agente.id)
-      permisoProyecto <- getPermiso(agente.id, agente.identificacion, url.getOrElse(""), isInterno)
-      validacion <- filtrarRecuros(DataAccessTranslator.entityToDto(agente), recursos, url)
+      permisoProyecto <- if (isInterno)  alianzaDAO.getMenuAdmin(isInterno) else  getPermiso(agente.id, url.getOrElse(""), isInterno)
+      validacion <- filtrarRecuros(DataAccessTranslator.entityToDto(agente), permisoProyecto, url)
     } yield validacion
   }
 
@@ -35,33 +35,39 @@ case class AutorizacionDriverRepository(sesionRepo: SesionRepository, alianzaDAO
     }
   }
 
-  private def getPermiso(idUsuario: Int, nit: String, url: String, isInterno: Boolean) = {
+  // Obtiene los proyectos a los cuales tiene asignados permisos un agenteInmobiliario, en caso de que no se cumpla el regex de fideicomiso,
+  // y proyecto en el Path significa que no necesita autorización por proyecto.
+  private def getPermiso(idUsuario: Int, url: String, isInterno: Boolean): Future[Seq[RecursoBackendInmobiliario]] = {
     val sacarProyecto = "(/[\\w]*)*/fideicomisos/([0-9]+)/proyectos/([0-9]+)(/[\\w|\\W]*)".r
 
     url match {
       case sacarProyecto(inicio, fideicomiso, proyecto, fin) =>
-        alianzaDAO.getPermisosProyectoInmobiliario(nit, fideicomiso.toInt, proyecto.toInt, Seq(idUsuario)).flatMap { permisos =>
-          if (permisos.isEmpty && !isInterno) {
+
+        // Probar que pasa si se le mete algo que no sea numero!
+        alianzaDAO.getResourcesByProjectAndAgent(idUsuario, proyecto.toInt, fideicomiso.toInt).flatMap { (permisos: Seq[RecursoBackendInmobiliario]) =>
+          if (permisos.isEmpty) {
             Future.failed(GenericNoAutorizado("403.1", "El usuario no tiene permisos suficientes para ver información del proyecto."))
           } else {
             Future.successful(permisos)
           }
         }
-      case _ => Future.successful()
+      case _ => Future.successful(Seq())
     }
 
   }
 
-  def filtrarRecuros(agente: UsuarioInmobiliarioAuth, recursos: Seq[RecursoBackendInmobiliario], urlO: Option[String]): Future[GenericValidacionAutorizacion] = {
+  def filtrarRecuros( agente: UsuarioInmobiliarioAuth,
+                      recursos: Seq[RecursoBackendInmobiliario],
+                      request: Option[String]): Future[GenericValidacionAutorizacion] = {
 
     val usuarioExitoso = Future.successful(GenericAutorizado[UsuarioInmobiliarioAuth](agente))
-    val usuarioNoExitoso = Future.failed(GenericNoAutorizado("403.1", s"El usuario no tiene permisos suficientes para ingresar al servicio." + urlO.getOrElse("")))
+    val usuarioNoExitoso = Future.failed(GenericNoAutorizado("403.1", s"El usuario no tiene permisos suficientes para ingresar al servicio." + request.getOrElse("")))
 
-    urlO match {
-      case Some(url) => {
-        val recursosFiltro = recursoRepo.filtrarRecurso(recursos.map(_.url), url)
-        if (recursosFiltro) usuarioExitoso else usuarioNoExitoso
-      }
+    request match {
+      case Some(url) =>
+        val isMatchUrl = recursos.exists( recurso => recursoRepo.filtrarRecurso(recurso.url, url))
+        if (isMatchUrl) usuarioExitoso else usuarioNoExitoso
+
       case None => usuarioExitoso
     }
   }

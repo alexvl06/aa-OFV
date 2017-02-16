@@ -39,6 +39,8 @@ trait AlianzaDAOs {
 
   def getPermisosProyectoInmobiliario(nit: String, idFideicomiso: Int, idProyecto: Int, idAgentes: Seq[Int]): Future[Seq[PermisoAgenteInmobiliario]]
 
+  def getResourcesByProjectAndAgent(idAgente: Int, proyecto: Int, fideicomiso: Int): Future[Seq[RecursoBackendInmobiliario]]
+
   def getPermisosProyectoInmobiliarioByAgente(username: String, idAgente: Int): Future[Seq[PermisoAgenteInmobiliario]]
 
   def getByTokenAgenteInmobiliario(token: String): Future[UsuarioAgenteInmobiliario]

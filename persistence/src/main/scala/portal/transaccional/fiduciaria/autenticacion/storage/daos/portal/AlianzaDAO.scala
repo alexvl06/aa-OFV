@@ -208,9 +208,8 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
 
   def getPermisosProyectoInmobiliario(nit: String, idFideicomiso: Int, idProyecto: Int, idAgentes: Seq[Int]): Future[Seq[PermisoAgenteInmobiliario]] = {
     val query = for {
-      agentesFiltrados <- usuariosAgentesInmobiliarios.filter(_.id inSetBind idAgentes)
-      permisos <- permisosInmobiliarios if agentesFiltrados.id === permisos.idAgente
-      if agentesFiltrados.identificacion === nit && permisos.fideicomiso === idFideicomiso && permisos.proyecto === idProyecto
+      agentesFiltrados <- usuariosAgentesInmobiliarios.filter(_.id inSetBind idAgentes) if agentesFiltrados.identificacion === nit
+      permisos <- permisosInmobiliarios if agentesFiltrados.id === permisos.idAgente && permisos.fideicomiso === idFideicomiso && permisos.proyecto === idProyecto
     } yield permisos
     run(query.result)
   }
@@ -277,6 +276,23 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
     run((query ++ query2).distinctOn(_.id).result)
   }
 
+
+  //Obtiene los recursos a los que puede acceder Agente por proyecto y fideicomiso
+  def getResourcesByProjectAndAgent(idAgente: Int, proyecto: Int, fideicomiso: Int): Future[Seq[RecursoBackendInmobiliario]] = {
+
+    val projectPermition = for {
+      g <- getAgentPermitionByProject(idAgente, proyecto, fideicomiso)
+      r <- getBackendResources(g)
+    } yield r
+
+    val rolePermitions = for {
+      g <- getGraphicalResources(PerfilInmobiliarioEnum.agente.toString).filterNot(_.visible)
+      r <- getBackendResources(g)
+    } yield r
+
+    run((projectPermition ++ rolePermitions).distinctOn(_.id).result)
+  }
+
   private def getGraphicalResources(tipo: String) = {
     for {
       p <- perfilInmobiliario if p.nombre === tipo
@@ -292,14 +308,25 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
     } yield r
   }
 
+
   private def getAgentPermission(idAgente: Int) = {
     val k = for {
-      a <- usuariosAgentesInmobiliarios if a.id === idAgente
-      p <- permisosInmobiliarios if p.idAgente === a.id
-      g <- recursosGraficosInmobiliarios if g.id === p.tipoPermiso
+      a <- usuariosAgentesInmobiliarios if a.id === idAgente          // Si el agente existe
+      p <- permisosInmobiliarios if p.idAgente === a.id               // Saque todos los proyectos a los que tiene permiso
+      g <- recursosGraficosInmobiliarios if g.id === p.tipoPermiso    // Y digame a que recursos graficos tiene permiso
     } yield g
 
-    k ++ recursosGraficosInmobiliarios.filter(_.id === 13)
+    k ++ recursosGraficosInmobiliarios.filter(_.url === "listadoProyectos")
+  }
+
+  private def getAgentPermitionByProject(idAgente: Int, proyecto: Int, fideicomiso: Int) = {
+    val k = for {
+      a <- usuariosAgentesInmobiliarios if a.id === idAgente                                                                      // Si el agente existe
+      p <- permisosInmobiliarios if p.idAgente === a.id  && p.proyecto === proyecto && p.fideicomiso === fideicomiso              // Saque todos los proyectos a los que tiene permiso segun proyecto y fid.
+      g <- recursosGraficosInmobiliarios if g.id === p.tipoPermiso                                                                // Y digame a que recursos graficos tiene permiso
+    } yield g
+
+    k ++ recursosGraficosInmobiliarios.filter(_.url === "listadoProyectos")
   }
 
 }
