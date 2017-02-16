@@ -1,7 +1,6 @@
 package portal.transaccional.autenticacion.service.drivers.smtp
 
 import akka.actor.ActorSystem
-import co.com.alianza.util.ConfigApp
 import com.typesafe.config.Config
 import spray.client.pipelining._
 import spray.http.HttpHeaders.`Content-Type`
@@ -12,9 +11,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * Created by hernando on 11/11/16.
  */
-case class SmtpDriverRepository()(implicit val ex: ExecutionContext, system: ActorSystem) extends SmtpRepository {
-
-  private val config: Config = ConfigApp.conf
+case class SmtpDriverRepository()(implicit val ex: ExecutionContext, system: ActorSystem, config: Config) extends SmtpRepository {
 
   import portal.transaccional.autenticacion.service.drivers.smtp.MensajeJsonSupport._
 
