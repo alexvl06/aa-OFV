@@ -26,7 +26,7 @@ case class RecursoDriverRepository(generalDAO: AlianzaDAOs) extends RecursoRepos
    */
   private def filtrarRecursos(recurso: RecursoPerfil, url: String): Boolean = {
     val indexSlash: Int = recurso.urlRecurso.lastIndexOf("/")
-    val myUrl: String = if (recurso.urlRecurso.contains("/*") && url.size > recurso.urlRecurso.size)
+    val myUrl: String = if (recurso.urlRecurso.contains("/*") && url.length > recurso.urlRecurso.length)
       url.substring(0, indexSlash)
     else if (url.endsWith("/")) url.substring(0, url.lastIndexOf("/"))
     else url
@@ -46,7 +46,7 @@ case class RecursoDriverRepository(generalDAO: AlianzaDAOs) extends RecursoRepos
    */
   private def filtrarRecursosAgente(recurso: RecursoPerfilAgente, url: String): Boolean = {
     val indexSlash: Int = recurso.urlRecurso.lastIndexOf("/")
-    val myUrl: String = if (recurso.urlRecurso.contains("/*") && url.size > recurso.urlRecurso.size)
+    val myUrl: String = if (recurso.urlRecurso.contains("/*") && url.length > recurso.urlRecurso.length)
       url.substring(0, indexSlash)
     else if (url.endsWith("/")) url.substring(0, url.lastIndexOf("/"))
     else url
@@ -67,15 +67,19 @@ case class RecursoDriverRepository(generalDAO: AlianzaDAOs) extends RecursoRepos
    */
   private def filtrarRecursosClienteAdmin(recurso: RecursoPerfilClienteAdmin, url: String): Boolean = {
     val indexSlash: Int = recurso.urlRecurso.lastIndexOf("/")
-    val myUrl: String = (if (recurso.urlRecurso.contains("/*") && url.size > recurso.urlRecurso.size)
-      url.substring(0, indexSlash)
-    else if (url.endsWith("/")) url.substring(0, url.lastIndexOf("/"))
-    else url)
+    val myUrl: String =
+      if (recurso.urlRecurso.contains("/*") && url.length > recurso.urlRecurso.length) {
+        url.substring(0, indexSlash)
+      } else if (url.endsWith("/")) {
+        url.substring(0, url.lastIndexOf("/"))
+      } else {
+        url
+      }
     val urlR: String = recurso.urlRecurso.substring(0, indexSlash)
     urlR.contains(myUrl) && urlR.equals(myUrl) && recurso.acceso
   }
 
-  def filtrarRecurso(recursos: Seq[String], urlI: String): Boolean = {
+  def filtrarRecurso(recurso: String, urlI: String): Boolean = {
 
     val url = urlI.replace("?", "%")
 
@@ -83,14 +87,10 @@ case class RecursoDriverRepository(generalDAO: AlianzaDAOs) extends RecursoRepos
     val encontrarVariablesAlfaNumericas = "/:\\w*".r
     val encontrarVariablesOpcionales = "%".r
 
-    recursos.exists(
-      x => {
-        val remplazo1 = "^" + encontrarVariablesNumericas.replaceAllIn(x, "/([0-9]+)") + "$"
-        val remplazo2 = encontrarVariablesOpcionales.replaceAllIn(remplazo1, "%(([a-zA-z]+)=([a-zA-Z\\d[^{}<>=:\\(\\)\\$]]*)(&)?)*")
-        val reglaGeneral = encontrarVariablesAlfaNumericas.replaceAllIn(remplazo2, "/([a-zA-Z0-9]*)").r
-        url.matches(reglaGeneral.toString())
-      }
-    )
+    val generalNum = "^" + encontrarVariablesNumericas.replaceAllIn(recurso, "/([0-9]+)") + "$"
+    val generalOptional = encontrarVariablesOpcionales.replaceAllIn(generalNum, "%(([a-zA-z]+)=([a-zA-Z\\d[^{}<>=:\\(\\)\\$]]*)(&)?)*")
+    val generalRule = encontrarVariablesAlfaNumericas.replaceAllIn(generalOptional, "/([a-zA-Z0-9]*)").r
+    url.matches(generalRule.toString())
   }
 
 }

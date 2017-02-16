@@ -20,6 +20,6 @@ trait RecursoRepository {
 
   def filtrarRecursosClienteAdmin(recursos: Seq[RecursoPerfilClienteAdmin], url: String): Seq[RecursoPerfilClienteAdmin]
 
-  def filtrarRecurso(recursos: Seq[String], url: String): Boolean
+  def filtrarRecurso(recursos: String, url: String): Boolean
 
 }
