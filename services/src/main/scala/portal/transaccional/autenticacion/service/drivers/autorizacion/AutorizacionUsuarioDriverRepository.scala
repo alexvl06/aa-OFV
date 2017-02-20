@@ -1,22 +1,17 @@
 package portal.transaccional.autenticacion.service.drivers.autorizacion
 
-import akka.actor.ActorRef
-import akka.pattern.ask
 import akka.util.Timeout
-import co.com.alianza.domain.aggregates.autenticacion.SesionActorSupervisor
 import co.com.alianza.exceptions._
 import co.com.alianza.infrastructure.dto.{ Usuario => UsuarioDTO }
-import co.com.alianza.infrastructure.messages.{ InvalidarSesion, ValidarSesion }
 import co.com.alianza.persistence.entities.{ RecursoPerfil, Usuario }
 import co.com.alianza.util.json.JsonUtil
-import co.com.alianza.util.token.{ AesUtil, Token }
+import co.com.alianza.util.token.Token
 import portal.transaccional.autenticacion.service.drivers.recurso.RecursoRepository
-import portal.transaccional.autenticacion.service.drivers.sesion.{ SesionDriverRepository, SesionRepository }
+import portal.transaccional.autenticacion.service.drivers.sesion.SesionRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.{ DataAccessTranslator, UsuarioRepository }
 
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.reflect.ClassTag
 
 /**
  * Created by seven4n on 2016

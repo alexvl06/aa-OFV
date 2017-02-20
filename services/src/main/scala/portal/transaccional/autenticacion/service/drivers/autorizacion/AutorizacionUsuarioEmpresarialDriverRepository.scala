@@ -73,12 +73,12 @@ case class AutorizacionUsuarioEmpresarialDriverRepository(agenteRepo: UsuarioEmp
       if (url.nonEmpty) recursoRepo.filtrarRecursosAgente(recursos, url)
       else Seq(RecursoPerfilAgente(0, url, false, None))
     }
-    recursosFiltro.nonEmpty match {
-      case false =>
+    recursosFiltro.headOption match {
+      case None =>
         val usuarioForbidden: ForbiddenMessageAgente = ForbiddenMessageAgente(agenteDTO, None)
         Prohibido("403.1", JsonUtil.toJson(usuarioForbidden))
-      case true =>
-        recursos.head.filtro match {
+      case Some(recurso) =>
+        recurso.filtro match {
           case filtro @ Some(_) =>
             val usuarioForbidden: ForbiddenMessageAgente = ForbiddenMessageAgente(agenteDTO, filtro)
             Prohibido("403.2", JsonUtil.toJson(usuarioForbidden))
