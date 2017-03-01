@@ -22,11 +22,4 @@ trait CrossHeaders {
     origins :: methods :: headers :: csp :: xpcd :: ns :: xfo :: xss :: strict :: Nil
   }
 
-  //HTTP Strict Transport Security
-  //Strict-Transport-Security: max-age=31536000;
-
-  //Content-Security-Policy
-  //X-Content-Type-Options con valor nosniff.
-  //X-XSS-Protection con valor 1
-
 }
