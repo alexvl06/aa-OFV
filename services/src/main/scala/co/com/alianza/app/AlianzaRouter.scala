@@ -44,20 +44,18 @@ import spray.util.LoggingContext
 case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, autenticacionEmpresaRepositorio: AutenticacionEmpresaRepository,
   autenticacionComercialRepositorio: AutenticacionComercialRepository, usuarioRepositorio: UsuarioRepository,
   usuarioAgenteRepositorio: UsuarioEmpresarialRepository[UsuarioEmpresarial], usuarioAdminRepositorio: UsuarioAdminRepository,
-  autorizacionUsuarioRepo: AutorizacionUsuarioRepository, kafkaActor: ActorSelection,
-  usuariosActor: ActorSelection, confrontaActor: ActorSelection, actualizacionRepo: ActualizacionRepository, permisoTransaccionalActor: ActorSelection,
-  agenteEmpresarialActor: ActorSelection, pinRepo: PinRepository, contrasenasAgenteRepo: ContrasenaAgenteRepository,
-  contrasenasAdminRepo: ContrasenaAdminRepository, contrasenasRepo: ContrasenaUsuarioRepository,
-  autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository,
-  autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository, preguntasValidacionRepository: PreguntasAutovalidacionRepository,
-  respuestaUsuarioRepository: RespuestaUsuarioRepository, respuestaUsuarioAdminRepository: RespuestaUsuarioRepository, ipRepo: IpRepository,
-  autorizacionComercialRepo: AutorizacionUsuarioComercialRepository, autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository,
-  autorizacionRecursoComercialRepository: AutorizacionRecursoComercialRepository, recursoComercialRepository: RecursoComercialRepository,
-  rolComercialRepository: RolComercialRepository, usuarioComercialAdminRepo: UsuarioComercialAdminRepository, reglaRepo: ReglaContrasenaRepository,
-  horarioEmpresaRepository: HorarioEmpresaRepository, usInmobiliarioRepo: UsuarioInmobiliarioRepository, permisoAgenteInmob: PermisoAgenteInmobiliarioRepository,
-  sesionUtilAgenteInmobiliario: SesionAgenteUtilRepository,
-  agenteInmobContrasenaRepo: ContrasenaAgenteInmobiliarioRepository, pinAgenteInmobRepository: UsuarioInmobiliarioPinRepository,
-  autorizacionInmobRepo: AutorizacionRepository)(implicit val system: ActorSystem)
+  autorizacionUsuarioRepo: AutorizacionUsuarioRepository, kafkaActor: ActorSelection, usuariosActor: ActorSelection, confrontaActor: ActorSelection,
+  actualizacionRepo: ActualizacionRepository, permisoTransaccionalActor: ActorSelection, agenteEmpresarialActor: ActorSelection, pinRepo: PinRepository,
+  contrasenasAgenteRepo: ContrasenaAgenteRepository, contrasenasAdminRepo: ContrasenaAdminRepository, contrasenasRepo: ContrasenaUsuarioRepository,
+  autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository, autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository,
+  preguntasValidacionRepository: PreguntasAutovalidacionRepository, respuestaUsuarioRepository: RespuestaUsuarioRepository,
+  respuestaUsuarioAdminRepository: RespuestaUsuarioRepository, ipRepo: IpRepository, autorizacionComercialRepo: AutorizacionUsuarioComercialRepository,
+  autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository, autorizacionRecursoComercialRepository: AutorizacionRecursoComercialRepository,
+  recursoComercialRepository: RecursoComercialRepository, rolComercialRepository: RolComercialRepository,
+  usuarioComercialAdminRepo: UsuarioComercialAdminRepository, reglaRepo: ReglaContrasenaRepository, horarioEmpresaRepository: HorarioEmpresaRepository,
+  usInmobiliarioRepo: UsuarioInmobiliarioRepository, permisoAgenteInmob: PermisoAgenteInmobiliarioRepository,
+  sesionUtilAgenteInmobiliario: SesionAgenteUtilRepository, agenteInmobContrasenaRepo: ContrasenaAgenteInmobiliarioRepository,
+  pinAgenteInmobRepository: UsuarioInmobiliarioPinRepository, autorizacionInmobRepo: AutorizacionRepository)(implicit val system: ActorSystem)
     extends HttpServiceActor with RouteConcatenation with CrossHeaders with ServiceAuthorization
     with ActorLogging {
 
@@ -65,8 +63,9 @@ case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, autenticaci
 
   val routes =
     AutorizacionService(kafkaActor, usuarioRepositorio, usuarioAgenteRepositorio, usuarioAdminRepositorio, autorizacionUsuarioRepo,
-      autorizacionAgenteRepo, autorizacionAdminRepo, autorizacionComercialRepo, autorizacionComercialAdminRepo, sesionUtilAgenteInmobiliario, autorizacionInmobRepo).route ~
-      AutenticacionService(autenticacionRepo, autenticacionEmpresaRepositorio, autenticacionComercialRepositorio, kafkaActor).route ~
+      autorizacionAgenteRepo, autorizacionAdminRepo, autorizacionComercialRepo, autorizacionComercialAdminRepo, sesionUtilAgenteInmobiliario,
+      autorizacionInmobRepo).route ~ AutenticacionService(autenticacionRepo, autenticacionEmpresaRepositorio, autenticacionComercialRepositorio,
+      kafkaActor).route ~
       //TODO: refactorizar
       new ConfrontaService(confrontaActor).route ~
       new EnumeracionService().route ~
