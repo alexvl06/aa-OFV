@@ -39,11 +39,10 @@ case class PreguntasAutovalidacionDriverRepository(
   }
 
   private def resolveObtenerPreguntas(preguntasEntities: List[PreguntaAutovalidacion], configuraciones: List[Configuracion]): Future[ResponseObtenerPreguntas] = Future {
-    val preguntasDto = preguntasEntities.map(pregunta => preguntasAutovalidacionDTO.entityToDto(pregunta))
-    val numeroPreguntas = obtenerValorEntero(configuraciones, ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS.name)
-    val numeroPreguntasLista = obtenerValorEntero(configuraciones, ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS_LISTA.name)
-    val preguntas = Random.shuffle(preguntasDto).take(numeroPreguntasLista)
-    ResponseObtenerPreguntas(preguntasDto, numeroPreguntas)
+    val preguntasDto: List[Pregunta] = preguntasEntities.map(pregunta => preguntasAutovalidacionDTO.entityToDto(pregunta))
+    val numeroPreguntas: Int = obtenerValorEntero(configuraciones, ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS.name)
+    val numeroPreguntasLista: Int = obtenerValorEntero(configuraciones, ConfiguracionEnum.AUTOVALIDACION_NUMERO_PREGUNTAS_LISTA.name)
+    ResponseObtenerPreguntas(Random.shuffle(preguntasDto).take(numeroPreguntasLista), numeroPreguntas)
   }
 
   private def obtenerValorEntero(configuraciones: Seq[Configuracion], llave: String): Int = {
