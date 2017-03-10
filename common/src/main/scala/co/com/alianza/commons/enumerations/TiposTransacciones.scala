@@ -1,7 +1,7 @@
 package co.com.alianza.commons.enumerations
 
 /**
- * Created by manuel on 8/01/15.
+ * Created by manuel on 2015
  */
 object TiposTransacciones extends Enumeration {
 

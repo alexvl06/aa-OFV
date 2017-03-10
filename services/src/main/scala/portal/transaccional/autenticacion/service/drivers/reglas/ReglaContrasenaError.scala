@@ -1,0 +1,13 @@
+package portal.transaccional.autenticacion.service.drivers.reglas
+
+sealed trait ValidacionClave
+
+case object ErrorMinDigitos extends ValidacionClave
+case object ErrorMinCaracteres extends ValidacionClave
+case object ErrorMinMayusculas extends ValidacionClave
+case object ErrorMinMinusculas extends ValidacionClave
+case object ErrorMinCaracteresEsp extends ValidacionClave
+case object ErrorIntentosErroneos extends ValidacionClave
+case object ErrorObteniendoReglas extends ValidacionClave
+case object ErrorUltimasContrasenas extends ValidacionClave
+case object ErrorCaracteresPermitidos extends ValidacionClave

@@ -1,75 +1,127 @@
 package co.com.alianza.infrastructure.security
 
 import akka.actor._
-import akka.pattern.ask
-import akka.event.Logging
 import akka.util.Timeout
-
-import co.com.alianza.app.MainActors
 import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.infrastructure.dto.{ Usuario, UsuarioEmpresarial }
+import co.com.alianza.exceptions._
+import co.com.alianza.infrastructure.dto.Usuario
+import co.com.alianza.exceptions._
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
-
-import co.com.alianza.infrastructure.messages._
+import co.com.alianza.infrastructure.dto.{ Usuario, UsuarioInmobiliarioAuth }
+import co.com.alianza.infrastructure.security.AuthenticationFailedRejection.{ CredentialsMissing, CredentialsRejected }
+import co.com.alianza.persistence.entities.{ UsuarioComercial, UsuarioComercialAdmin }
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.token.{ AesUtil, Token }
-
 import com.typesafe.config.Config
-import enumerations.CryptoAesParameters
-
-import scala.concurrent.duration._
-import scala.concurrent.{ ExecutionContext, Future, promise }
-import scala.util.{ Success, Failure }
-
+import portal.transaccional.autenticacion.service.drivers.autorizacion._
+import portal.transaccional.autenticacion.service.drivers.autorizacion.{ AutorizacionUsuarioEmpresarialAdminRepository, AutorizacionUsuarioEmpresarialRepository, AutorizacionUsuarioRepository }
+import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.AutorizacionRepository
+import portal.transaccional.autenticacion.service.util.ws.{ GenericAutorizado, GenericNoAutorizado }
 import spray.http.StatusCodes._
-import spray.http.RemoteAddress
 import spray.routing.RequestContext
 import spray.routing.authentication.ContextAuthenticator
-import AuthenticationFailedRejection.{ CredentialsRejected, CredentialsMissing }
+
+import scala.concurrent.Future
+import scala.concurrent.duration._
 
 trait ServiceAuthorization {
   self: ActorLogging =>
 
-  implicit val contextAuthorization: ExecutionContext
-  implicit val conf: Config
   implicit val system: ActorSystem
-  implicit val timeout: Timeout = Timeout(10 seconds)
+  import system.dispatcher
+  implicit val conf: Config = system.settings.config
+
+  val autorizacionUsuarioRepo: AutorizacionUsuarioRepository
+  val autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialRepository
+  val autorizacionAdminRepo: AutorizacionUsuarioEmpresarialAdminRepository
+  val autorizacionComercialRepo: AutorizacionUsuarioComercialRepository
+  val autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository
+  val autorizacionInmobRepo: AutorizacionRepository
+
+  implicit val timeout: Timeout = Timeout(5.seconds)
 
   def authenticateUser: ContextAuthenticator[UsuarioAuth] = {
     ctx =>
-      val token = ctx.request.headers.find(header => header.name equals "token")
-      log info (token toString)
-      if (token.isEmpty) {
+      val tokenRequest = ctx.request.headers.find(header => header.name equals "token")
+
+      log.info(tokenRequest.toString)
+      if (tokenRequest.isEmpty) {
         Future(Left(AuthenticationFailedRejection(CredentialsMissing, List())))
       } else {
-        var util = new AesUtil(CryptoAesParameters.KEY_SIZE, CryptoAesParameters.ITERATION_COUNT)
-        var decryptedToken = util.decrypt(CryptoAesParameters.SALT, CryptoAesParameters.IV, CryptoAesParameters.PASSPHRASE, token.get.value)
-        val tipoCliente = Token.getToken(decryptedToken).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
-        val p = promise[Any]
-        var futuro: Future[Any] = null
-        if (tipoCliente == TiposCliente.agenteEmpresarial.toString)
-          futuro = MainActors.autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialMessage(token.get.value, None, obtenerIp(ctx).get.value)
-        else if (tipoCliente == TiposCliente.clienteAdministrador.toString)
-          futuro = MainActors.autorizacionActorSupervisor ? AutorizarUsuarioEmpresarialAdminMessage(token.get.value, None)
-        else
-          futuro = MainActors.autorizacionActorSupervisor ? AutorizarUrl(token.get.value, "")
-        futuro map {
-          case r: ResponseMessage =>
-            r.statusCode match {
-              case Unauthorized =>
-                Left(AuthenticationFailedRejection(CredentialsRejected, List(), Some(Unauthorized.intValue), Some(r.responseBody)))
-              case OK =>
-                val user = JsonUtil.fromJson[Usuario](r.responseBody)
-                Right(UsuarioAuth(user.id.get, user.tipoCliente, user.identificacion, user.tipoIdentificacion))
-              case Forbidden =>
-                val user = JsonUtil.fromJson[UsuarioForbidden](r.responseBody)
-                Right(UsuarioAuth(user.usuario.id.get, user.usuario.tipoCliente, user.usuario.identificacion, user.usuario.tipoIdentificacion))
+        val encriptedToken: String = tokenRequest.get.value
+        val token = AesUtil.desencriptarToken(encriptedToken)
+        val tipoCliente: String = Token.getToken(token).getJWTClaimsSet.getCustomClaim("tipoCliente").toString
 
-            }
-          case _ =>
-            Left(AuthenticationFailedRejection(CredentialsRejected, List()))
+        val futuro = {
+          if (tipoCliente == TiposCliente.agenteEmpresarial.toString) {
+            autorizacionAgenteRepo.autorizar(token, encriptedToken, "", obtenerIp(ctx).get.value)
+          } else if (tipoCliente == TiposCliente.clienteAdministrador.toString || tipoCliente == TiposCliente.clienteAdminInmobiliario.toString) {
+            autorizacionAdminRepo.autorizar(token, encriptedToken, "", obtenerIp(ctx).get.value, TiposCliente.clienteAdministrador.toString)
+          } else if (tipoCliente == TiposCliente.agenteInmobiliario.toString || tipoCliente == TiposCliente.agenteInmobiliarioInterno.toString) {
+            autorizacionInmobRepo.autorizar(token, encriptedToken, Option.empty, obtenerIp(ctx).get.value, tipoCliente)
+          } else if (tipoCliente == TiposCliente.clienteIndividual.toString) {
+            autorizacionUsuarioRepo.autorizar(token, encriptedToken, "")
+          } else if (tipoCliente == TiposCliente.comercialFiduciaria.toString) {
+            autorizacionComercialRepo.autorizarFiduciaria(token, encriptedToken, "")
+          } else if (tipoCliente == TiposCliente.comercialValores.toString) {
+            autorizacionComercialRepo.autorizarValores(token, encriptedToken, "")
+          } else if (tipoCliente == TiposCliente.comercialSAC.toString) {
+            autorizacionComercialRepo.autorizarSAC(token, encriptedToken, "")
+          } else if (tipoCliente == TiposCliente.comercialAdmin.toString) {
+            autorizacionComercialAdminRepo.autorizar(token, encriptedToken, "")
+          } else {
+            Future.failed(NoAutorizado("tipo de usuario no autorizado"))
+          }
+        }
+        //mapear las respuestas y los errores
+        futuro.map {
+          x => resolverValidacion(x, tipoCliente)
+        } recover {
+          case error => resolverValidacion(error, tipoCliente)
         }
       }
+  }
+
+  private def resolverValidacion(respuesta: Any, tipoCliente: String): Either[AuthenticationFailedRejection, UsuarioAuth] with Product with Serializable = {
+
+    respuesta match {
+
+      case validacion: Autorizado =>
+        val usuarioAuth: UsuarioAuth = JsonUtil.fromJson[UsuarioAuth](validacion.usuario)
+        Right(usuarioAuth)
+
+      case validacion: AutorizadoComercial =>
+        val tipo = TiposCliente.getTipoCliente(tipoCliente)
+        val user = JsonUtil.fromJson[UsuarioComercial](validacion.usuario)
+        Right(UsuarioAuth(user.id, tipo, "", 0, user.usuario))
+
+      case validacion: AutorizadoComercialAdmin =>
+        val tipo = TiposCliente.getTipoCliente(tipoCliente)
+        val user = JsonUtil.fromJson[UsuarioComercialAdmin](validacion.usuario)
+        Right(UsuarioAuth(user.id, tipo, "", 0, user.usuario))
+
+      case validacion: ValidacionException =>
+        validacion.printStackTrace()
+        Left(AuthenticationFailedRejection(CredentialsRejected, List(), Some(Unauthorized.intValue), Option(validacion.code)))
+
+      case validacion: NoAutorizado =>
+        validacion.printStackTrace()
+        Left(AuthenticationFailedRejection(CredentialsRejected, List(), Some(Unauthorized.intValue), None))
+
+      case validacion: Prohibido =>
+        validacion.printStackTrace()
+        Left(AuthenticationFailedRejection(CredentialsRejected, List(), Some(Forbidden.intValue), None))
+
+      case validacion: GenericNoAutorizado =>
+        Left(AuthenticationFailedRejection(CredentialsRejected, List(), Some(Unauthorized.intValue), None))
+
+      case validacion: GenericAutorizado[UsuarioInmobiliarioAuth] =>
+        val user = validacion.usuario
+        Right(UsuarioAuth(user.id, user.tipoCliente, user.identificacion, user.tipoIdentificacion, user.usuario))
+
+      case _ =>
+        Left(AuthenticationFailedRejection(CredentialsRejected, List()))
+    }
   }
 
   private def obtenerIp(ctx: RequestContext) = ctx.request.headers.find {
@@ -79,4 +131,5 @@ trait ServiceAuthorization {
 
 }
 
-case class UsuarioForbidden(usuario: Usuario, filtro: String, code: String)
+case class UsuarioForbidden(usuario: Usuario, filtro: String)
+

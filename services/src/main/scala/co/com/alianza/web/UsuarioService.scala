@@ -1,20 +1,24 @@
 package co.com.alianza.web
 
-import co.com.alianza.app.{ CrossHeaders, AlianzaCommons }
+import akka.actor.{ ActorSelection, ActorSystem }
+import co.com.alianza.app.{ AlianzaCommons, CrossHeaders }
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.infrastructure.messages.OlvidoContrasenaMessage
 import co.com.alianza.infrastructure.messages.UsuarioMessage
-import spray.routing.{ RequestContext, Directives }
+import spray.routing.{ Directives, RequestContext }
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
 import co.com.alianza.util.clave.Crypto
 import enumerations.AppendPasswordUser
+
+import scala.concurrent.ExecutionContext
 
 /**
  *
  * @author seven4n
  */
-class UsuarioService extends Directives with AlianzaCommons with CrossHeaders {
+case class UsuarioService(kafkaActor: ActorSelection, usuariosActor: ActorSelection)(implicit val system: ActorSystem) extends Directives with AlianzaCommons
+    with CrossHeaders {
 
   import UsuariosMessagesJsonSupport._
 
@@ -26,7 +30,8 @@ class UsuarioService extends Directives with AlianzaCommons with CrossHeaders {
             usuario =>
               respondWithMediaType(mediaType) {
                 clientIP { ip =>
-                  mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.autoRegistroIndex, ip.value, kafkaActor, usuario.copy(contrasena = null))) {
+                  mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic,
+                    AuditingHelper.autoRegistroIndex, ip.value, kafkaActor, usuario.copy(contrasena = null))) {
                     val nuevoUsuario: UsuarioMessage = usuario.copy(clientIp = Some(ip.value))
                     requestExecute(nuevoUsuario, usuariosActor)
                   }
@@ -49,7 +54,8 @@ class UsuarioService extends Directives with AlianzaCommons with CrossHeaders {
           clientIP { ip =>
             entity(as[OlvidoContrasenaMessage]) {
               olvidarContrasena =>
-                mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.olvidoContrasenaIndex, ip.value, kafkaActor, olvidarContrasena)) {
+                mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic,
+                  AuditingHelper.olvidoContrasenaIndex, ip.value, kafkaActor, olvidarContrasena)) {
                   requestExecute(olvidarContrasena, usuariosActor)
                 }
             }

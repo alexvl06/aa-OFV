@@ -21,7 +21,7 @@ import co.com.alianza.infrastructure.messages.ResponseMessage
 import scala.Some
 import akka.actor.OneForOneStrategy
 
-class ApiSupervisor(r: RequestContext, props: Props, message: MessageService) extends Actor with AlianzaCommons {
+class ApiSupervisor(r: RequestContext, props: Props, message: MessageService)(implicit val system: ActorSystem) extends Actor with AlianzaCommons {
 
   import context._
 
@@ -93,7 +93,8 @@ class ApiSupervisor(r: RequestContext, props: Props, message: MessageService) ex
 
 trait ApiRequestCreator {
 
-  import co.com.alianza.app.MainActors._
+  implicit val system: ActorSystem
+  import system.dispatcher
 
   def apiRequest(r: RequestContext, props: Props, message: MessageService) =
     system.actorOf(Props(new ApiSupervisor(r, props, message)))

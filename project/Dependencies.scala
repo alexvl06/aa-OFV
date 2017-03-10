@@ -1,22 +1,22 @@
 import sbt._
 
 /**
-  * Maneja las dependencias de la aplicación.
-  */
+ * Maneja las dependencias de la aplicación.
+ */
 object Dependencies {
 
   /**
-    * Define exclusiones necesarias en las librerías para evitar conflictos.
-    *
-    * Hay dos tipos:
-    * - Exclusions: que son paquetes de exclusiones usado por solo una librería.
-    * - Exclude: que una sola exclusión especifica que puede ser usada por una o varias librerías.
-    *
-    * Orden:
-    * - Primero Exclusions luego Exclude.
-    * - Alfabético entre Exclusions.
-    * - Por composición entre Exclude.
-    */
+   * Define exclusiones necesarias en las librerías para evitar conflictos.
+   *
+   * Hay dos tipos:
+   * - Exclusions: que son paquetes de exclusiones usado por solo una librería.
+   * - Exclude: que una sola exclusión especifica que puede ser usada por una o varias librerías.
+   *
+   * Orden:
+   * - Primero Exclusions luego Exclude.
+   * - Alfabético entre Exclusions.
+   * - Por composición entre Exclude.
+   */
   private[Dependencies] implicit class Exclude(module: ModuleID) {
 
     def kafkaExclusions: ModuleID = {
@@ -29,6 +29,12 @@ object Dependencies {
         ExclusionRule("jline", "jline")
       )
     }
+
+    // Hay un problema de compatibilidad binaria con slick-pg_2.11 que que no fue posible resolver de la forma correcta haciendo upgrade o downgrade
+    def slickPGCoreExclucions: ModuleID = module.logScalaExclude.excludeAll(
+      ExclusionRule("com.github.tminglei", "slick-pg_core_2.11"),
+      ExclusionRule("com.typesafe.slick", "slick_2.11")
+    )
 
     // Hay un problema de compatibilidad binaria con play-json que que no fue posible resolver de la forma correcta haciendo upgrade o downgrade
     def jodaTimeExclude: ModuleID = module.logScalaExclude.exclude("joda-time", "joda-time")
@@ -65,10 +71,10 @@ object Dependencies {
   }
 
   /**
-    * Define las librerías necesarias para compilar.
-    *
-    * Orden por importancia y prioridad, primero cosas como scala, akka y finalmente utilidades y log.
-    */
+   * Define las librerías necesarias para compilar.
+   *
+   * Orden por importancia y prioridad, primero cosas como scala, akka y finalmente utilidades y log.
+   */
   private[Dependencies] object CompileDep {
 
     import Versions._
@@ -98,9 +104,11 @@ object Dependencies {
 
     val slickLib              = "com.typesafe.slick"            %% "slick"                    % slick logScalaExclude
     val slickPGLib            = "com.github.tminglei"           %% "slick-pg"                 % slickPG logScalaExclude
-    val slickPGJodaTimeLib    = "com.github.tminglei"           %% "slick-pg_joda-time"       % slickPGJodaTime logScalaExclude
+    val slickPGJodaTimeLib    = "com.github.tminglei"           %% "slick-pg_joda-time"       % slickPGJodaTime slickPGCoreExclucions
+    val freeslickLib          = "org.suecarter"                 %% "freeslick"                % freeslick
 
     val c3p0Lib               = "c3p0"                           % "c3p0"                     % c3p0 logScalaExclude
+    //val hikariCPLib           = "com.zaxxer"                     % "HikariCP"                 % hikariCP logScalaExclude
     val postgresqlLib         = "org.postgresql"                 % "postgresql"               % postgresql logScalaExclude
     val oracleLib             = "oracle"                         % "ojdbc"                    % oracle logScalaExclude
     val h2Lib                 = "com.h2database"                 % "h2"                       % h2 logScalaExclude
@@ -111,7 +119,7 @@ object Dependencies {
     val axisLib               = "org.apache.axis"                % "axis"                     % apacheAxis logScalaExclude
     val wss4jLib              = "org.apache.ws.security"         % "wss4j"                    % wss4j jodaTimeExclude
     val commonsCodecLib       = "commons-codec"                  % "commons-codec"            % apacheCodec logScalaExclude
-    val discoveryLib          = "commons-discovery"              % "commons-discovery"        % "0.2"
+    val discoveryLib          = "commons-discovery"              % "commons-discovery"        % commonsDiscovery
     val wsdl4jLib             = "wsdl4j"                         % "wsdl4j"                   % wsdl4j logScalaExclude
     val jaxrpcLib             = "javax.xml"                      % "jaxrpc-api"               % jaxrpc logScalaExclude
     val playJsonLib           = "com.typesafe.play"             %% "play-json"                % playJson logScalaExclude
@@ -132,10 +140,10 @@ object Dependencies {
   }
 
   /**
-    * Define las librerías necesarias para pruebas.
-    *
-    * Orden alfabético.
-    */
+   * Define las librerías necesarias para pruebas.
+   *
+   * Orden alfabético.
+   */
   private[Dependencies] object TestDep {
 
     import Versions._
@@ -146,7 +154,7 @@ object Dependencies {
     val scalatestLib    = "org.scalatest"          %% "scalatest"     % scalatest % Test logScalaExclude
     val scalacheckLib   = "org.scalacheck"         %% "scalacheck"    % scalacheck % Test logScalaExclude
     val sprayTestkitLib = "io.spray"               %% "spray-testkit" % spray % Test specs2Exclude
-    val specs2Lib       = "org.specs2"             %% "specs2"        % specs2 % Test logScalaExclude
+    val scalaMockLib    = "org.scalamock"          %% "scalamock-scalatest-support" % scalaMock % Test
   }
 
   import Dependencies.CompileDep._
@@ -158,7 +166,7 @@ object Dependencies {
   val kafkaLibs: Seq[ModuleID]      = Seq(kafkaLib)
   val functionalLibs: Seq[ModuleID] = Seq(scalaIOCore, scalaIOFile, scalazLib, shapelessLib)
   val slickLibs: Seq[ModuleID]      = Seq(slickLib, slickPGLib, slickPGJodaTimeLib)
-  val dbLibs: Seq[ModuleID]         = Seq(postgresqlLib, c3p0Lib, oracleLib, h2Lib)
+  val dbLibs: Seq[ModuleID]         = Seq(postgresqlLib, oracleLib, h2Lib, freeslickLib, c3p0Lib)
 
   val utilLibs: Seq[ModuleID]       = Seq(
     commonsLang3Lib, commonsCodecLib, discoveryLib, playJsonLib, wsdl4jLib, jacksonDatabindLib, jacksonModuleScalaLib, jasyptLib, scalateLib, axisLib, jaxrpcLib, wss4jLib, ninbusLib, jsonTokenLib
@@ -166,5 +174,5 @@ object Dependencies {
 
   val recaptchaLibs: Seq[ModuleID]  = Seq(recaptcha4jLib)
   val loggingLibs: Seq[ModuleID]    = Seq(scalaLoggingLib, slf4jApi, jclOverSlf4j, log4jOverSlf4j, julToSlf4j, logbackClassic, logbackCore)
-  val testLibs: Seq[ModuleID]       = Seq(akkaTestkit, sprayTestkitLib, scalatestLib, junitLib, restAssuredLib, scalacheckLib, specs2Lib)
+  val testLibs: Seq[ModuleID]       = Seq(akkaTestkit, sprayTestkitLib, scalatestLib, junitLib, restAssuredLib, scalacheckLib, scalaMockLib)
 }

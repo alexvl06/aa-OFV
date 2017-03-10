@@ -1,44 +1,62 @@
 package co.com.alianza.web
 
+import akka.actor.{ ActorSelection, ActorSystem }
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
-import spray.routing.{ RequestContext, Directives }
-
-import co.com.alianza.app.{ AlianzaActors, MainActors, CrossHeaders, AlianzaCommons }
+import spray.routing.{ Directives, RequestContext }
+import co.com.alianza.app.{ AlianzaCommons, CrossHeaders }
+import co.com.alianza.commons.enumerations.TiposCliente
 import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.infrastructure.messages._
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
+import spray.http.StatusCodes
+
+import scala.concurrent.ExecutionContext
 
 /**
  * Created by manuel on 7/01/15.
  */
-class PermisosTransaccionalesService extends Directives with AlianzaCommons with CrossHeaders with AlianzaActors {
+case class PermisosTransaccionalesService(kafkaActor: ActorSelection, permisoTransaccionalActor: ActorSelection)(implicit val system: ActorSystem)
+    extends Directives with AlianzaCommons with CrossHeaders {
+
+  import system.dispatcher
   import PermisosTransaccionalesJsonSupport._
 
-  val permisoTransaccionalActorSupervisor = MainActors.system.actorSelection(MainActors.permisoTransaccionalActorSupervisor.path)
   val rutaPermisosTx = "permisosTx"
   val permisosLogin = "permisosLogin"
 
   def route(user: UsuarioAuth) = pathPrefix(rutaPermisosTx) {
     respondWithMediaType(mediaType) {
       post {
-        entity(as[GuardarPermisosAgenteMessage]) {
-          permisosMessage =>
-            clientIP {
-              ip =>
-                mapRequestContext {
-                  r: RequestContext =>
-                    val token = r.request.headers.find(header => header.name equals "token")
-                    val usuario = DataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
+        //TODO: esta validacion no va acá !!
+        if (user.tipoCliente.eq(TiposCliente.comercialSAC))
+          complete((StatusCodes.Unauthorized, "Tipo usuario SAC no está autorizado para realizar esta acción"))
+        else
+          entity(as[GuardarPermisosAgenteMessage]) {
+            permisosMessage =>
+              clientIP {
+                ip =>
+                  mapRequestContext {
+                    r: RequestContext =>
+                      val token = r.request.headers.find(header => header.name equals "token")
+                      val usuario = DataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
 
-                    requestWithFutureAuditing[PersistenceException, GuardarPermisosAgenteMessage](r, AuditingHelper.fiduciariaTopic, AuditingHelper.actualizarPermisosAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, Some(permisosMessage))
-                } {
-                  requestExecute(permisosMessage.copy(idClienteAdmin = if (user.tipoCliente == clienteAdministrador) Some(user.id) else None), permisoTransaccionalActorSupervisor)
-                }
-            }
-        }
+                      requestWithFutureAuditing[PersistenceException, GuardarPermisosAgenteMessage](r, AuditingHelper.fiduciariaTopic,
+                        AuditingHelper.actualizarPermisosAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, Some(permisosMessage))
+                  } {
+                    requestExecute(
+                      permisosMessage.copy(idClienteAdmin = if (user.tipoCliente == clienteAdministrador) Some(user.id) else None),
+                      permisoTransaccionalActor
+                    )
+                    requestExecute(
+                      permisosMessage.copy(idClienteAdmin = if (user.tipoCliente == clienteAdministrador) Some(user.id) else None),
+                      permisoTransaccionalActor
+                    )
+                  }
+              }
+          }
       }
     } ~ path(permisosLogin) {
       respondWithMediaType(mediaType) {
@@ -49,9 +67,10 @@ class PermisosTransaccionalesService extends Directives with AlianzaCommons with
                 r: RequestContext =>
                   val token = r.request.headers.find(header => header.name equals "token")
                   val usuario = DataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
-                  requestWithFutureAuditing[PersistenceException, Any](r, AuditingHelper.fiduciariaTopic, AuditingHelper.consultaPermisosAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, None)
+                  requestWithFutureAuditing[PersistenceException, Any](r, AuditingHelper.fiduciariaTopic, AuditingHelper.consultaPermisosAgenteEmpresarialIndex,
+                    ip.value, kafkaActor, usuario, None)
               } {
-                requestExecute(ConsultarPermisosAgenteLoginMessage(user), permisoTransaccionalActorSupervisor)
+                requestExecute(ConsultarPermisosAgenteLoginMessage(user), permisoTransaccionalActor)
               }
           }
         }
@@ -66,9 +85,10 @@ class PermisosTransaccionalesService extends Directives with AlianzaCommons with
                   r: RequestContext =>
                     val token = r.request.headers.find(header => header.name equals "token")
                     val usuario = DataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
-                    requestWithFutureAuditing[PersistenceException, Any](r, AuditingHelper.fiduciariaTopic, AuditingHelper.consultaPermisosAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, None)
+                    requestWithFutureAuditing[PersistenceException, Any](r, AuditingHelper.fiduciariaTopic,
+                      AuditingHelper.consultaPermisosAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, None)
                 } {
-                  requestExecute(ConsultarPermisosAgenteMessage(idAgente), permisoTransaccionalActorSupervisor)
+                  requestExecute(ConsultarPermisosAgenteMessage(idAgente), permisoTransaccionalActor)
                 }
             }
           }

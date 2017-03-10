@@ -3,7 +3,6 @@ package co.com.alianza.infrastructure.dto
 import java.util.Date
 import co.com.alianza.commons.enumerations.TiposCliente
 import TiposCliente._
-import co.com.alianza.commons.enumerations.TiposCliente
 
 /**
  *
@@ -16,10 +15,14 @@ case class Usuario(
   identificacion: String,
   tipoIdentificacion: Int,
   estado: Int,
-  contrasena: Option[String],
   numeroIngresosErroneos: Int,
   ipUltimoIngreso: Option[String],
   fechaUltimoIngreso: Option[Date],
   tipoCliente: TiposCliente
 )
 
+case class UsuarioComercialDTO(
+  tipoCliente: TiposCliente,
+  id: Int,
+  usuario: String
+)

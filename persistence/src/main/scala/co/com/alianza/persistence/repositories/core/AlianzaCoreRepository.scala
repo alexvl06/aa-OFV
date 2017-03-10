@@ -1,20 +1,18 @@
 package co.com.alianza.persistence.repositories.core
 
-import java.sql.{ CallableStatement, ResultSet, Connection }
+import java.sql.{ CallableStatement, Connection, ResultSet }
 
-import scala.concurrent.{ Future, ExecutionContext }
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.{ Failure, Success, Try }
-
-import scalaz.{ Failure => zFailure, Success => zSuccess, Validation }
+import scalaz.{ Validation, Failure => zFailure, Success => zSuccess }
 import co.com.alianza.exceptions._
-import co.com.alianza.persistence.conn.core.DataBaseAccesCoreAlianza
-import scala.util.Failure
-import scala.util.Success
 import oracle.net.ns.NetException
 import java.net.SocketTimeoutException
+import org.apache.commons.lang3.StringEscapeUtils
+
+import portal.transaccional.fiduciaria.autenticacion.storage.conn.oracle.DataBaseAccesOracleAlianza
 
 /**
- * Repositorio que obtiene la conexión del DataSource: [[DataBaseAccesCoreAlianza.ds]]
  *
  * @author seven4n
  */
@@ -23,7 +21,7 @@ class AlianzaCoreRepository(implicit val executionContex: ExecutionContext) {
   def loan[R](f: Connection => Validation[PersistenceException, R]): Future[Validation[PersistenceException, R]] = {
     Future {
       Try {
-        val connectionDataSource = DataBaseAccesCoreAlianza.ds
+        val connectionDataSource = DataBaseAccesOracleAlianza.ds
         connectionDataSource.getConnection
       } match {
         case Success(connection) =>
@@ -84,7 +82,7 @@ class AlianzaCoreRepository(implicit val executionContex: ExecutionContext) {
         val numCol = r.getMetaData.getColumnCount
         while (r next ()) {
           for (a <- 1 to numCol) {
-            val x = if (r.getString(a) != null) r.getString(a).replaceAll("\"", "'") else ""
+            val x = formatField(r.getString(a))
             if (a == 1)
               record = record + "{\n"
             if (a == numCol)
@@ -128,6 +126,10 @@ class AlianzaCoreRepository(implicit val executionContex: ExecutionContext) {
         val msg = s"Error ejecutando prodecimiento $codeResponse - $detailResponse"
         throw PersistenceException(new Exception(codeResponse.toString), BusinessLevel, msg)
     }
+  }
+
+  private def formatField(value: String): String = {
+    if (value != null) StringEscapeUtils.escapeEcmaScript(value.replaceAll("""\r\n|\r|\n""", """<br>""").replaceAll("""\t""", "&#x9;").replaceAll("\'", "&#39;")) else ""
   }
 
 }

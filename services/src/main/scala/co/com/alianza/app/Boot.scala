@@ -1,15 +1,25 @@
 package co.com.alianza.app
 
-import akka.actor.Props
+import akka.actor.{ ActorRef, Props }
+import akka.io.IO
+import spray.can.Http
 
-object Boot extends App with HostBinding {
-  import akka.io.IO
-  import spray.can.Http
-  val sys = MainActors.system
-  implicit val _ = sys.dispatcher
-  val rootService = sys.actorOf(Props(new AlianzaRouter), name = "api-AlianzaRouter")
+object Boot extends App with HostBinding with Core with BootedCore with CoreActors with Storage {
 
-  IO(Http)(sys) ! Http.Bind(rootService, interface = machineIp(), port = portNumber(args))
+  val sessionActor: ActorRef = sesionActorSupervisor
+
+  private val rootService = system.actorOf(
+    Props(AlianzaRouter(autenticacionRepo, autenticacionEmpresaRepo, autenticacionComercialRepo, usuarioRepo, usuarioAgenteRepo, usuarioAdminRepo,
+      autorizacionUsuarioRepo, kafkaActor, usuariosActor, confrontaActor, actualizacionRepository, permisoTransaccionalActor, agenteEmpresarialActor,
+      pinRepository, contrasenaAgenteRepo, contrasenaAdminRepo, contrasenaUsuarioRepo, autorizacionAgenteRepo, autorizacionAdminRepo,
+      preguntasValidacionRepository, respuestaUsuarioRepo, respuestaUsuariAdminoRepo, ipRepo, autorizacionComercialRepo, autorizacionComercialAdminRepo,
+      autorizacionRecursoComercialRepository, recursoComercialRepository, rolComercialRepository, usuarioComercialAdminRepo, reglaContrasenaRepo,
+      horarioEmpresaRepository, agenteInmobRepo, permisoAgenteInmob,
+      sesionUtilAgenteInmobiliario, agenteInmobContrasenaRepo, pinAgenteInmobRepository, autorizacionAgenteInmob)),
+    name = "api-AlianzaRouter"
+  )
+
+  IO(Http)(system) ! Http.Bind(rootService, interface = machineIp(), port = portNumber(args))
 }
 
 trait HostBinding {
@@ -22,5 +32,5 @@ trait HostBinding {
     "0.0.0.0" //NetworkInterface.getByName( s"eth0" ).getInetAddresses.map( matchIp ).flatten.mkString
 
   private def matchIp(address: InetAddress): Option[String] =
-    """\b(?:\d{1,3}\.){3}\d{1,3}\b""".r.findFirstIn(address.getHostAddress())
+    """\b(?:\d{1,3}\.){3}\d{1,3}\b""".r.findFirstIn(address.getHostAddress)
 }

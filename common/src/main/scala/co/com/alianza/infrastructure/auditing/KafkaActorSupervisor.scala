@@ -1,11 +1,12 @@
 package co.com.alianza.infrastructure.auditing
 
-import co.com.alianza.util.json.JsonUtil
 import java.util.Properties
+
 import akka.actor.{ Actor, ActorLogging, Props }
 import akka.routing.RoundRobinPool
 import co.com.alianza.exceptions.{ AlianzaException, TechnicalLevel }
 import co.com.alianza.infrastructure.auditing.AuditingMessages.AuditRequest
+import co.com.alianza.util.json.JsonUtil
 import com.typesafe.config.{ Config, ConfigFactory }
 import kafka.producer.{ KeyedMessage, ProducerConfig, Producer }
 
@@ -17,10 +18,8 @@ class KafkaActorSupervisor extends Actor with ActorLogging {
   val kafkaActor = context.actorOf(Props[KafkaActor].withRouter(RoundRobinPool(nrOfInstances = 10)), "kafkaActor")
 
   def receive = {
-
     case message: Any =>
       kafkaActor forward message
-
   }
 
   override val supervisorStrategy = OneForOneStrategy() {

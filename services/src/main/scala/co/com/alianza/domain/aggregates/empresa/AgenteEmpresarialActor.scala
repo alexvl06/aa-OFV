@@ -3,31 +3,24 @@ package co.com.alianza.domain.aggregates.empresa
 import java.sql.Timestamp
 import java.util.Calendar
 
-import akka.actor.{ ActorRef, Actor, ActorLogging, Props }
+import akka.actor.{ Actor, ActorLogging, Props }
 import akka.routing.RoundRobinPool
-import co.com.alianza.app.{ AlianzaActors, MainActors }
-import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial._
-import co.com.alianza.domain.aggregates.usuarios.{ ErrorPersistence, MailMessageUsuario, ErrorValidacion }
+
+import co.com.alianza.domain.aggregates.usuarios.ErrorValidacion
 import co.com.alianza.exceptions.PersistenceException
-import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.{ DataAccessTranslator, DataAccessAdapter }
-import co.com.alianza.infrastructure.dto.{ UsuarioEmpresarialEstado, Configuracion, UsuarioEmpresarial, PinEmpresa }
-import co.com.alianza.infrastructure.messages.{ UsuarioMessage, ResponseMessage }
-import co.com.alianza.infrastructure.messages.empresa.{ GetAgentesEmpresarialesMessage, CrearAgenteMessage, UsuarioMessageCorreo, ReiniciarContrasenaAgenteEMessage }
+import co.com.alianza.infrastructure.dto.{ Configuracion, UsuarioEmpresarialEstado }
+import co.com.alianza.infrastructure.messages.empresa._
 import co.com.alianza.microservices.{ MailMessage, SmtpServiceClient }
-import co.com.alianza.persistence.entities.{ UsuarioEmpresarialEmpresa, Empresa, IpsUsuario, UltimaContrasena }
-import co.com.alianza.util.clave.Crypto
+import co.com.alianza.persistence.entities.{ UsuarioEmpresarial, PinAgente, UsuarioEmpresarialEmpresa }
 import co.com.alianza.util.token.{ PinData, TokenPin }
 import co.com.alianza.util.transformers.ValidationT
 import com.typesafe.config.Config
-import enumerations.{ TipoIdentificacion, UsoPinEmpresaEnum, EstadosEmpresaEnum, PerfilesAgente }
-import scalaz.std.AllInstances._
-import scala.util.{ Failure => sFailure, Success => sSuccess }
-import scalaz.{ Failure => zFailure, Success => zSuccess }
-import co.com.alianza.persistence.entities
+import enumerations.{ PerfilesAgente, UsoPinEmpresaEnum }
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scalaz.std.AllInstances._
+import scalaz.{ Success => zSuccess }
+import scala.concurrent.Future
 import scalaz.Validation
-import spray.http.StatusCodes._
 import co.com.alianza.infrastructure.anticorruption.usuariosAgenteEmpresarial.DataAccessAdapter
 import co.com.alianza.util.FutureResponse
 import co.com.alianza.util.json.MarshallableImplicits._
@@ -35,12 +28,12 @@ import co.com.alianza.util.json.MarshallableImplicits._
 /**
  * Created by S4N on 17/12/14.
  */
-class AgenteEmpresarialActorSupervisor extends Actor with ActorLogging {
+class AgenteEmpresarialActorSupervisor()(implicit config: Config) extends Actor with ActorLogging with FutureResponse {
 
   import akka.actor.OneForOneStrategy
   import akka.actor.SupervisorStrategy._
 
-  val agenteEmpresarialActor = context.actorOf(Props[AgenteEmpresarialActor].withRouter(RoundRobinPool(nrOfInstances = 2)), "agenteEmpresarialActor")
+  val agenteEmpresarialActor = context.actorOf(Props(AgenteEmpresarialActor()).withRouter(RoundRobinPool(nrOfInstances = 2)), "agenteEmpresarialActor")
 
   def receive = {
     case message: Any => agenteEmpresarialActor forward message
@@ -55,128 +48,126 @@ class AgenteEmpresarialActorSupervisor extends Actor with ActorLogging {
 
 }
 
-class AgenteEmpresarialActor extends Actor with ActorLogging with AlianzaActors with FutureResponse {
+case class AgenteEmpresarialActor()(implicit config: Config) extends Actor with ActorLogging with FutureResponse {
 
-  import scala.concurrent.ExecutionContext
   import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.errorValidacion
+  import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.toErrorValidation
+  import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.toErrorValidationCorreo
+  import co.com.alianza.domain.aggregates.usuarios.ValidacionesUsuario.validacionConsultaTiempoExpiracion
+  import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial.validarUsuarioClienteAdmin
+  import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial.validarEstadoEmpresa
+  import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial.validarUsuarioAgente
+  import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial.validarUsuarioAgenteNit
+  import co.com.alianza.domain.aggregates.empresa.ValidacionesAgenteEmpresarial.validacionEstadoActualizacionAgenteEmpresarial
 
-  implicit val ex: ExecutionContext = MainActors.dataAccesEx
-  implicit val sys = context.system
-  implicit private val config: Config = MainActors.conf
+  import context.dispatcher
 
   def receive = {
-    //toUsuarioEmpresarialEmpresa(empresa, idUsuarioAgenteEmpresarial)
-    case message: CrearAgenteMessage => {
-      val currentSender = sender()
-      val usuarioCreadoFuture: Future[Validation[ErrorValidacion, Int]] = (for {
-        clienteAdmin <- ValidationT(validarUsuarioClienteAdmin(message.nit, message.usuario))
-        idUsuarioAgenteEmpresarial <- ValidationT(crearAgenteEmpresarial(message))
-        resultAsociarPerfiles <- ValidationT(asociarPerfiles(idUsuarioAgenteEmpresarial))
-        empresa <- ValidationT(obtenerEmpresaPorNit(message.nit))
-        resultAsociarEmpresa <- ValidationT(asociarAgenteEmpresarialConEmpresa(empresa.get.id, idUsuarioAgenteEmpresarial))
-      } yield {
-        idUsuarioAgenteEmpresarial
-      }).run
-      resolveCrearAgenteEmpresarialFuture(usuarioCreadoFuture, message, currentSender)
-    }
 
-    case message: GetAgentesEmpresarialesMessage =>
-      val currentSender = sender()
-      val future: Future[Validation[PersistenceException, List[UsuarioEmpresarialEstado]]] = DataAccessAdapter.obtenerUsuariosBusqueda(message.toGetUsuariosEmpresaBusquedaRequest)
-      resolveFutureValidation(future, (response: List[UsuarioEmpresarialEstado]) => response.toJson, errorValidacion, currentSender)
+    case message: CrearAgenteMessage => crearAgente(message)
+
+    case message: ActualizarAgenteMessage => actualizarAgente(message)
+
+    case message: GetAgentesEmpresarialesMessage => obtenerAgentesEmpresariales(message)
   }
 
-  private def crearAgenteEmpresarial(message: CrearAgenteMessage): Future[Validation[ErrorValidacion, Int]] =
-    DataAccessAdapter.crearAgenteEmpresarial(message.toEntityUsuarioAgenteEmpresarial()).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
-
-  private def asociarPerfiles(idUsuarioAgenteEmpresarial: Int): Future[Validation[ErrorValidacion, List[Int]]] =
-    DataAccessAdapter.asociarPerfiles(idUsuarioAgenteEmpresarial, PerfilesAgente.agente.id :: Nil).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
-
-  private def obtenerEmpresaPorNit(nit: String): Future[Validation[ErrorValidacion, Option[Empresa]]] =
-    DataAccessAdapter.obtenerEmpresaPorNit(nit).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
-
-  private def asociarAgenteEmpresarialConEmpresa(idEmpresa: Int, idAgente: Int): Future[Validation[ErrorValidacion, Int]] =
-    DataAccessAdapter.asociarAgenteConEmpresa(UsuarioEmpresarialEmpresa(idEmpresa, idAgente)).map(_.leftMap(pe => ErrorPersistence(pe.message, pe)))
-
-  private def resolveCrearAgenteEmpresarialFuture(crearAgenteEmpresarialFuture: Future[Validation[ErrorValidacion, Int]], message: CrearAgenteMessage, currentSender: ActorRef) {
-    crearAgenteEmpresarialFuture onComplete {
-      case sFailure(failure) =>
-        currentSender ! failure
-      case sSuccess(value) =>
-        value match {
-
-          case zSuccess(idUsuarioAgenteEmpresarial: Int) => {
-
-            val validacionConsulta = validacionConsultaTiempoExpiracion()
-
-            validacionConsulta onComplete {
-              case sFailure(failure) => currentSender ! failure
-              case sSuccess(value) =>
-                value match {
-                  case zSuccess(responseConf: Configuracion) =>
-
-                    enviarCorreo(responseConf.valor.toInt, message, idUsuarioAgenteEmpresarial, currentSender)
-
-                  case zFailure(error) =>
-                    error match {
-                      case errorPersistence: ErrorPersistence => currentSender ! errorPersistence.exception
-                      case errorFail => currentSender ! ResponseMessage(Conflict, errorFail.msg)
-                    }
-                }
-            }
-
-          }
-          case zFailure(error) =>
-            error match {
-              case errorValidacion: ErrorValidacion =>
-                currentSender ! ResponseMessage(Conflict, errorValidacion.msg)
-              case errorPersistence: ErrorPersistence => {
-                currentSender ! ResponseMessage(Conflict, s"Usuario ya registrado para el NIT: ${message.nit}")
-              }
-              case unknownError @ _ => {
-                currentSender ! ResponseMessage(InternalServerError, "Se ha producido un error inesperado.")
-              }
-            }
-
-        }
-    }
-  }
-
-  private def toIpsUsuarioArray(ips: Array[String], idUsuarioAgenteEmpresarial: Int): Array[IpsUsuario] = ips.map(ip => IpsUsuario(idUsuarioAgenteEmpresarial, ip))
-
-  private def enviarCorreo(numHorasCaducidad: Int, message: CrearAgenteMessage, idUsuarioAgenteEmpresarial: Int, currentSender: ActorRef) = {
-    val fechaActual: Calendar = Calendar.getInstance()
-    fechaActual.add(Calendar.HOUR_OF_DAY, numHorasCaducidad)
-    val tokenPin: PinData = TokenPin.obtenerToken(fechaActual.getTime)
-
-    val pin: PinEmpresa = PinEmpresa(None, idUsuarioAgenteEmpresarial, tokenPin.token, tokenPin.fechaExpiracion, tokenPin.tokenHash.get, UsoPinEmpresaEnum.creacionAgenteEmpresarial.id)
-    val pinEmpresaAgenteEmpresarial: entities.PinEmpresa = DataAccessTranslator.translateEntityPinEmpresa(pin)
-
-    val resultCrearPinEmpresaAgenteEmpresarial = for {
-      idResultGuardarPinEmpresa <- DataAccessAdapter.crearPinEmpresaAgenteEmpresarial(pinEmpresaAgenteEmpresarial)
+  private def crearAgente(message: CrearAgenteMessage) = {
+    val currentSender = sender()
+    val perfiles: List[Int] = PerfilesAgente.agente.id :: Nil
+    val usuarioEntity: UsuarioEmpresarial = message.toEntityUsuarioAgenteEmpresarial()
+    val asunto: String = "alianza.smtp.asunto.creacionAgenteEmpresarial"
+    val plantilla: String = "alianza.smtp.templatepin.creacionAgenteEmpresarial"
+    val future: Future[Validation[ErrorValidacion, Int]] = (for {
+      _ <- ValidationT(validarUsuarioClienteAdmin(message.nit, message.usuario))
+      _ <- ValidationT(validarUsuarioAgenteNit(message.nit, message.usuario))
+      idAgente <- ValidationT(toErrorValidation(DataAccessAdapter.crearAgenteEmpresarial(usuarioEntity)))
+      _ <- ValidationT(toErrorValidation(DataAccessAdapter.asociarPerfiles(idAgente, perfiles)))
+      empresa <- ValidationT(toErrorValidation(DataAccessAdapter.obtenerEmpresaPorNit(message.nit)))
+      _ <- ValidationT(toErrorValidation(DataAccessAdapter.asociarAgenteConEmpresa(UsuarioEmpresarialEmpresa(empresa.get.id, idAgente))))
+      confTiempo <- ValidationT(validacionConsultaTiempoExpiracion())
+      pinUsuario <- ValidationT(obtenerPinUsuario(confTiempo, idAgente))
+      _ <- ValidationT(toErrorValidation(DataAccessAdapter.crearPinEmpresaAgenteEmpresarial(pinUsuario)))
+      _ <- ValidationT(enviarCorreoPin(pinUsuario, confTiempo: Configuracion, plantilla, asunto, message.usuario, message.correo))
     } yield {
-      idResultGuardarPinEmpresa
-    }
-
-    resultCrearPinEmpresaAgenteEmpresarial onComplete {
-      case sFailure(fail) => currentSender ! fail
-      case sSuccess(valueResult) =>
-        valueResult match {
-          case zFailure(fail) => currentSender ! fail
-          case zSuccess(intResult) =>
-            if (intResult == 1) {
-              new SmtpServiceClient().send(buildMessage(numHorasCaducidad, pin, UsuarioMessageCorreo(message.correo, message.nit, TipoIdentificacion.NIT.id), "alianza.smtp.templatepin.creacionAgenteEmpresarial", "alianza.smtp.asunto.creacionAgenteEmpresarial", message.usuario), (_, _) => Unit)
-              currentSender ! ResponseMessage(Created, idUsuarioAgenteEmpresarial.toString)
-            }
-        }
-    }
+      idAgente
+    }).run
+    resolveFutureValidation(future, (response: Int) => response.toJson, errorValidacion, currentSender)
   }
 
-  private def buildMessage(numHorasCaducidad: Int, pinEmpresa: PinEmpresa, message: UsuarioMessageCorreo, templateBody: String, asuntoTemp: String, usuario: String) = {
+  /**
+   * Actualizar agente
+   * @param message
+   */
+  private def actualizarAgente(message: ActualizarAgenteMessage) = {
+    val currentSender = sender()
+    val nit = message.nit.get
+    val future = (for {
+      estadoEmpresa <- ValidationT(validarEstadoEmpresa(nit))
+      usuarioAdmin <- ValidationT(validarUsuarioClienteAdmin(nit, message.usuario))
+      existeUsuario <- ValidationT(validarUsuarioAgente(message.id, nit, message.usuario))
+      estadoAgente <- ValidationT(validacionEstadoActualizacionAgenteEmpresarial(message.id))
+      actualizar <- ValidationT(toErrorValidation(DataAccessAdapter.actualizarAgenteEmpresarial(message.id, message.usuario,
+        message.correo, message.nombreUsuario, message.cargo, message.descripcion)))
+    } yield actualizar).run
+    resolveFutureValidation(future, (response: Int) => response.toJson, errorValidacion, currentSender)
+  }
+
+  /**
+   * Obtener agentes empresariales
+   * @param message
+   */
+  private def obtenerAgentesEmpresariales(message: GetAgentesEmpresarialesMessage) = {
+    val currentSender = sender()
+    val future: Future[Validation[PersistenceException, List[UsuarioEmpresarialEstado]]] =
+      DataAccessAdapter.obtenerUsuariosBusqueda(message.toGetUsuariosEmpresaBusquedaRequest)
+    resolveFutureValidation(future, (response: List[UsuarioEmpresarialEstado]) => response.toJson, errorValidacion, currentSender)
+  }
+
+  /**
+   * Obtener el pin
+   * @param configuracionTiempo
+   * @param idUsuario
+   * @return
+   */
+  private def obtenerPinUsuario(configuracionTiempo: Configuracion, idUsuario: Int): Future[Validation[ErrorValidacion, PinAgente]] = Future {
+    val fechaActual = Calendar.getInstance()
+    val usoPin = UsoPinEmpresaEnum.creacionAgenteEmpresarial.id
+    fechaActual.add(Calendar.HOUR_OF_DAY, configuracionTiempo.valor.toInt)
+    val tokenPin: PinData = TokenPin.obtenerToken(fechaActual.getTime)
+    val pin: PinAgente = PinAgente(None, idUsuario, tokenPin.token, new Timestamp(tokenPin.fechaExpiracion.getTime), tokenPin.tokenHash.get, usoPin)
+    zSuccess(pin)
+  }
+
+  /**
+   * Enviar correo
+   * @param pin
+   * @param confTiempo
+   * @param plantilla
+   * @param asunto
+   * @param usuario
+   * @param correo
+   * @return
+   */
+  private def enviarCorreoPin(pin: PinAgente, confTiempo: Configuracion, plantilla: String, asunto: String, usuario: String,
+    correo: String): Future[Validation[ErrorValidacion, Int]] = {
+    val message = buildMessage(pin, confTiempo.valor.toInt, plantilla, asunto, usuario, correo)
+    toErrorValidationCorreo(new SmtpServiceClient()(context.system).send(message, (_, _) => 1))
+  }
+
+  /**
+   * Construir el mensaje de correo
+   * @param pinEmpresa
+   * @param numHorasCaducidad
+   * @param templateBody
+   * @param asuntoTemp
+   * @param usuario
+   * @param correo
+   * @return
+   */
+  private def buildMessage(pinEmpresa: PinAgente, numHorasCaducidad: Int, templateBody: String, asuntoTemp: String, usuario: String, correo: String) = {
     val body: String = new MailMessageEmpresa(templateBody).getMessagePinCreacionAgente(pinEmpresa, numHorasCaducidad, usuario)
     val asunto: String = config.getString(asuntoTemp)
-    //MailMessage(config.getString("alianza.smtp.from"), "luisaceleita@seven4n.com",  List(), asunto, body, "")
-    MailMessage(config.getString("alianza.smtp.from"), message.correo, List(), asunto, body, "")
+    MailMessage(config.getString("alianza.smtp.from"), correo, List(), asunto, body, "")
   }
 
 }
