@@ -34,10 +34,7 @@ class SmtpServiceClient(implicit val system: ActorSystem) extends ServiceClient 
     val endPoint = conf.getString("autenticacion.service.smtp.location")
     val pipeline = sendReceive
     val header: HttpHeader = `Content-Type`(ContentTypes.`application/json`)
-    //todo : quitar en produccion - Enviando mensaje a correos de seven y alianza
-    val mensajeQA = message.copy(to = "luisaceleita@seven4n.com", cc = List("fernandaalayon@seven4n.com", "caosorio@alianza.com.co", "dcontreras.ext@alianza.com.co"))
-    //    val futureRequest: Future[HttpResponse] = pipeline(Post(s"$endPoint", message) ~> header)
-    val futureRequest: Future[HttpResponse] = pipeline(Post(s"$endPoint", mensajeQA) ~> header)
+    val futureRequest: Future[HttpResponse] = pipeline(Post(s"$endPoint", message) ~> header)
     val successStatusCodes = List(StatusCodes.OK)
     resolveFutureRequest[T](functionSuccess, futureRequest, successStatusCodes, "Enviar Correo")
   }
