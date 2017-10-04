@@ -16,10 +16,10 @@ object ConfigApp {
 
   private val encryptor = new StandardPBEStringEncryptor()
   //Linux
-  //val network = NetworkInterface.getByName("eth0")
+  val network = NetworkInterface.getByName("eth0")
   //Windows
-  val ip: InetAddress = InetAddress.getLocalHost
-  val network = NetworkInterface.getByInetAddress(ip);
+  //val ip: InetAddress = InetAddress.getLocalHost
+  //val network = NetworkInterface.getByInetAddress(ip);
   //fin windows
   val mac = network.getHardwareAddress map { "%02x" format _ } mkString "-"
   encryptor.setPassword(mac.toUpperCase + "4l14nz4_p4ss_k3y")
