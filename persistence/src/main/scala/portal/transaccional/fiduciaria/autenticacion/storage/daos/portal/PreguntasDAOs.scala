@@ -8,4 +8,6 @@ trait PreguntasDAOs {
 
   def getAll(): Future[Seq[PreguntaAutovalidacion]]
 
+  def getAllActive(): Future[Seq[PreguntaAutovalidacion]]
+
 }

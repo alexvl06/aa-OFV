@@ -15,7 +15,12 @@ object ConfigApp {
   private val classPathConf = ConfigFactory.load
 
   private val encryptor = new StandardPBEStringEncryptor()
-  val network = NetworkInterface.getByName("eth0")
+  //Linux
+  //val network = NetworkInterface.getByName("eth0")
+  //Windows
+  val ip: InetAddress = InetAddress.getLocalHost
+  val network = NetworkInterface.getByInetAddress(ip);
+  //fin windows
   val mac = network.getHardwareAddress map { "%02x" format _ } mkString "-"
   encryptor.setPassword(mac.toUpperCase + "4l14nz4_p4ss_k3y")
 

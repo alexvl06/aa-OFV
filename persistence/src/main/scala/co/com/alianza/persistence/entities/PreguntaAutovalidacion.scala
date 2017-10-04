@@ -12,6 +12,7 @@ case class PreguntaAutovalidacion(id: Int, pregunta: String)
 class PreguntasAutovalidacionTable(tag: Tag) extends Table[PreguntaAutovalidacion](tag, "PREGUNTAS_AUTOVALIDACION") {
   def id = column[Int]("ID", O.PrimaryKey, O.AutoInc)
   def pregunta = column[String]("PREGUNTA")
+  def activa = column[Boolean]("ACTIVA")
 
   def * = (id, pregunta) <> (PreguntaAutovalidacion.tupled, PreguntaAutovalidacion.unapply)
 }

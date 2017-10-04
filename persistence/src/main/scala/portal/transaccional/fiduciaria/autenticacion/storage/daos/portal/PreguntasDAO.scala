@@ -14,4 +14,8 @@ case class PreguntasDAO()(implicit dcConfig: DBConfig) extends TableQuery(new Pr
     run(this.result)
   }
 
+  def getAllActive(): Future[Seq[PreguntaAutovalidacion]] = {
+    run(this.filter(_.activa === true).result)
+  }
+
 }
