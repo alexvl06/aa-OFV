@@ -8,6 +8,6 @@ import scala.concurrent.{ ExecutionContext, Future }
 case class PreguntasDriverRepository(preguntaDAO: PreguntasDAOs)(implicit val ex: ExecutionContext) extends PreguntasRepository {
 
   def obtenerPreguntas(): Future[Seq[PreguntaAutovalidacion]] = {
-    preguntaDAO.getAll()
+    preguntaDAO.getAllActive()
   }
 }

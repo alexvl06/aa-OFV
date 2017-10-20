@@ -15,7 +15,7 @@ object DataAccessTranslator {
   }
 
   def toRespuestaCompletaList(pregunta: Seq[(ePregunta, eRespuesta)]): List[RespuestaCompleta] = {
-    pregunta.map(pre => RespuestaCompleta(pre._1.id, pre._1.pregunta, pre._2.respuesta)).toList
+    pregunta.map(pre => RespuestaCompleta(pre._1.id, pre._1.pregunta, pre._2.respuesta.toUpperCase)).toList
   }
 
 }
