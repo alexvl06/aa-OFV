@@ -11,7 +11,7 @@ import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter
 import co.com.alianza.infrastructure.dto.{ Empresa, _ }
 import co.com.alianza.infrastructure.messages.{ OlvidoContrasenaMessage, ResponseMessage, UsuarioMessage, _ }
 import co.com.alianza.microservices.{ MailMessage, SmtpServiceClient }
-import co.com.alianza.persistence.entities.{ PinAdmin, PinAgenteInmobiliario, PinUsuario, UsuarioAgenteInmobiliario }
+import co.com.alianza.persistence.entities.{ Configuracion => _, Usuario => _, UsuarioAgenteInmobiliario => _, UsuarioEmpresarialAdmin => _, _ }
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.json.MarshallableImplicits._
 import co.com.alianza.util.token.{ PinData, TokenPin }
@@ -23,6 +23,7 @@ import enumerations.{ ConfiguracionEnum, EstadosEmpresaEnum, EstadosUsuarioEnum,
 import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.UsuarioInmobiliarioPinRepository
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.{ ConfiguracionDAOs, UsuarioAgenteInmobDAOs }
 import spray.http.StatusCodes._
+
 import scalaz.std.AllInstances._
 import scala.concurrent.Future
 import scala.util.{ Failure => sFailure, Success => sSuccess }
@@ -125,6 +126,12 @@ case class UsuariosActor(
         }
       else
         currentSender ! None
+
+    case message: UsuarioAceptaHabeasDataMessage =>
+      val currentSender = sender
+      val usuarioHabeas: UsuarioAceptaHabeasDataMessage = message
+      enviarCorreoHabeasData(usuarioHabeas.perfilCliente, usuarioHabeas.identificacion, usuarioHabeas.tipoIdentificacion,
+        usuarioHabeas.correoCliente, currentSender, usuarioHabeas.idUsuario, usuarioHabeas.habeasData, usuarioHabeas.idFormulario)
   }
 
   private def resolveDesbloquearContrasenaFuture(futureCliente: Future[Validation[ErrorValidacion, (Option[Usuario], Cliente)]], currentSender: ActorRef,
@@ -389,6 +396,19 @@ case class UsuariosActor(
         new MailMessageUsuario(templateBody).getMessagePin(pinUsuarioDto, numHorasCaducidad, "1", "1")
       case pinUsuarioEmpresarialAdminDto @ PinAdmin(param1, param2, param3, param4, param5) =>
         new MailMessageUsuario(templateBody).getMessagePin(pinUsuarioEmpresarialAdminDto, numHorasCaducidad, "2", "1")
+      case pinUsuarioEmpresarialAdminDto @ PinAgente(param1, param2, param3, param4, param5, param6) =>
+        new MailMessageUsuario(templateBody).getMessagePin(pinUsuarioEmpresarialAdminDto, numHorasCaducidad, "2", "5")
+    }
+    val asunto: String = config.getString(asuntoTemp)
+    MailMessage(config.getString("alianza.smtp.from"), message.correo, List(), asunto, body, "")
+  }
+
+  private def buildMessagePin(pinUsuario: Any, numHorasCaducidad: Int, message: UsuarioMessage, templateBody: String, asuntoTemp: String, idFormulario: String) = {
+    val body: String = pinUsuario match {
+      case pinUsuarioDto @ PinUsuario(param1, param2, param3, param4, param5) =>
+        new MailMessageUsuario(templateBody).getMessagePin(pinUsuarioDto, numHorasCaducidad, "1", "1", idFormulario)
+      case pinUsuarioEmpresarialAdminDto @ PinAgente(param1, param2, param3, param4, param5, param6) =>
+        new MailMessageUsuario(templateBody).getMessagePin(pinUsuarioEmpresarialAdminDto, numHorasCaducidad, "2", "5", idFormulario)
     }
     val asunto: String = config.getString(asuntoTemp)
     MailMessage(config.getString("alianza.smtp.from"), message.correo, List(), asunto, body, "")
@@ -437,7 +457,10 @@ case class UsuariosActor(
             pinAgente: PinAgenteInmobiliario = agentesInmobPinRepo.generarPinAgente(configExpiracion, agente.id, reinicio = true)
             idPin <- agentesInmobPinRepo.asociarPinAgente(pinAgente)
             correoReinicio: MailMessage = agentesInmobPinRepo.generarCorreoReinicio(
-              pinAgente.tokenHash, configExpiracion.valor.toInt, agente.nombre.getOrElse(agente.usuario), agente.correo
+              pinAgente.tokenHash, configExpiracion.valor.toInt,
+              //agente.nombre.getOrElse(agente.usuario),
+              agente.usuario,
+              agente.correo
             )
           } yield {
             agentesInmobPinRepo.enviarEmail(correoReinicio)(context.system)
@@ -451,5 +474,69 @@ case class UsuariosActor(
       case sSuccess(responseMessage) => currentSender ! responseMessage
     }
   }
+
+  private def enviarCorreoHabeasData(perfilCliente: Int, identificacion: String, tipoIdentificacion: Int, correoCliente: String, currentSender: ActorRef,
+    idUsuario: Option[Int], habeasData: Boolean = false, idFormaulario: String) = {
+
+    val validacionConsulta = validacionConsultaTiempoExpiracion()
+
+    validacionConsulta onComplete {
+      case sFailure(failure) => currentSender ! failure
+      case sSuccess(value) =>
+        value match {
+          case zSuccess(responseConf: Configuracion) =>
+
+            val fechaActual: Calendar = Calendar.getInstance()
+            fechaActual.add(Calendar.HOUR_OF_DAY, responseConf.valor.toInt)
+            val tokenPin: PinData = TokenPin.obtenerToken(fechaActual.getTime)
+
+            val pin = perfilCliente match {
+              case 1 => PinUsuario(None, idUsuario.get, tokenPin.token, new Timestamp(tokenPin.fechaExpiracion.getTime), tokenPin.tokenHash.get)
+              case 2 => PinAgente(None, idUsuario.get, tokenPin.token, new Timestamp(tokenPin.fechaExpiracion.getTime), tokenPin.tokenHash.get, 99)
+              case _ => unhandled((): Unit)
+            }
+
+            val resultCrearPinUsuario: Future[Validation[PersistenceException, Int]] = pin match {
+              case pinUsuario @ PinUsuario(param1, param2, param3, param4, param5) =>
+                DataAccessAdapterUsuario.crearUsuarioPin(pinUsuario)
+              case pinAdmin @ PinAdmin(param1, param2, param3, param4, param5) =>
+                DataAccessAdapterUsuario.crearUsuarioClienteAdministradorPin(pinAdmin)
+              case _ => Future.successful(Validation.failure(PersistenceException(new Exception, BusinessLevel,
+                "Error ... por verifique los datos y vuelva a intentarlo")))
+            }
+
+            val asunto: String = if (habeasData) "alianza.smtp.asunto.habeasdata" else "alianza.smtp.asunto.reiniciarContrasena"
+            val template: String = if (habeasData) "alianza.smtp.templatepin.aceptacionHabeasDataTerceros" else "alianza.smtp.templatepin.reiniciarContrasena"
+
+            resultCrearPinUsuario onComplete {
+              case sFailure(fail) => currentSender ! fail
+              case sSuccess(valueResult) =>
+                valueResult match {
+                  case zFailure(fail) => currentSender ! fail
+                  case zSuccess(intResult) =>
+                    pin match {
+                      case pinUsuarioDto @ PinUsuario(param1, param2, param3, param4, param5) =>
+                        new SmtpServiceClient()(context.system).send(buildMessagePin(pinUsuarioDto, responseConf.valor.toInt, UsuarioMessage(
+                          correoCliente,
+                          identificacion, tipoIdentificacion, null, false, None
+                        ), template, asunto, idFormaulario), (_, _) => Unit)
+                        currentSender ! ResponseMessage(Created)
+
+                      case pinUsuarioEmpresarialAdminDto @ PinAgente(param1, param2, param3, param4, param5, parm6) =>
+                        new SmtpServiceClient()(context.system).send(buildMessagePin(pinUsuarioEmpresarialAdminDto, responseConf.valor.toInt,
+                          UsuarioMessage(correoCliente, identificacion, tipoIdentificacion, null, false, None), template, asunto, idFormaulario), (_, _) => Unit)
+                        currentSender ! ResponseMessage(Created)
+                    }
+                }
+            }
+          case zFailure(error) =>
+            error match {
+              case errorPersistence: ErrorPersistence => currentSender ! errorPersistence.exception
+              case errorFail => currentSender ! ResponseMessage(Conflict, errorFail.msg)
+            }
+        }
+    }
+  }
+
 }
 

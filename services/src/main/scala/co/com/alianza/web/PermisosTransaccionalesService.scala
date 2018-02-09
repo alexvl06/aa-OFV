@@ -1,19 +1,17 @@
 package co.com.alianza.web
 
 import akka.actor.{ ActorSelection, ActorSystem }
+import co.com.alianza.app.{ AlianzaCommons, CrossHeaders }
+import co.com.alianza.commons.enumerations.TiposCliente
+import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.anticorruption.usuarios.DataAccessAdapter
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper._
-import spray.routing.{ Directives, RequestContext }
-import co.com.alianza.app.{ AlianzaCommons, CrossHeaders }
-import co.com.alianza.commons.enumerations.TiposCliente
-import co.com.alianza.commons.enumerations.TiposCliente._
-import co.com.alianza.infrastructure.messages._
 import co.com.alianza.infrastructure.dto.security.UsuarioAuth
+import co.com.alianza.infrastructure.messages._
 import spray.http.StatusCodes
-
-import scala.concurrent.ExecutionContext
+import spray.routing.{ Directives, RequestContext }
 
 /**
  * Created by manuel on 7/01/15.
@@ -21,11 +19,12 @@ import scala.concurrent.ExecutionContext
 case class PermisosTransaccionalesService(kafkaActor: ActorSelection, permisoTransaccionalActor: ActorSelection)(implicit val system: ActorSystem)
     extends Directives with AlianzaCommons with CrossHeaders {
 
-  import system.dispatcher
   import PermisosTransaccionalesJsonSupport._
+  import system.dispatcher
 
   val rutaPermisosTx = "permisosTx"
   val permisosLogin = "permisosLogin"
+  val permisoFideicomiso = "permisoFideicomiso"
 
   def route(user: UsuarioAuth) = pathPrefix(rutaPermisosTx) {
     respondWithMediaType(mediaType) {
@@ -93,6 +92,25 @@ case class PermisosTransaccionalesService(kafkaActor: ActorSelection, permisoTra
             }
           }
         }
+    } ~ path(permisoFideicomiso) {
+      respondWithMediaType(mediaType) {
+        respondWithMediaType(mediaType) {
+          get {
+            clientIP {
+              ip =>
+                mapRequestContext {
+                  r: RequestContext =>
+                    val token = r.request.headers.find(header => header.name equals "token")
+                    val usuario = DataAccessAdapter.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
+                    requestWithFutureAuditing[PersistenceException, Any](r, AuditingHelper.fiduciariaTopic, AuditingHelper.consultaPermisosAgenteEmpresarialIndex,
+                      ip.value, kafkaActor, usuario, None)
+                } {
+                  requestExecute(ConsultarFideicomiso(user), permisoTransaccionalActor)
+                }
+            }
+          }
+        }
+      }
     }
   }
 

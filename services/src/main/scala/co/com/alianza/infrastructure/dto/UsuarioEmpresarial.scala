@@ -18,7 +18,8 @@ case class UsuarioEmpresarialEstado(
   descripcion: String,
   estado: estadoUsuario,
   tipoCliente: TiposCliente,
-  nombreUsuario: Option[String]
+  nombreUsuario: Option[String],
+  interventor: Boolean
 )
 
 case class UsuarioEmpresarial(
@@ -34,7 +35,8 @@ case class UsuarioEmpresarial(
   ipUltimoIngreso: Option[String],
   fechaUltimoIngreso: Option[Date],
   tipoCliente: TiposCliente,
-  nombreUsuario: Option[String]
+  nombreUsuario: Option[String],
+  interventor: Boolean
 )
 
 case class UsuarioEmpresarialAdmin(

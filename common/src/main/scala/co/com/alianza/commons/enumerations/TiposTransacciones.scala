@@ -12,5 +12,6 @@ object TiposTransacciones extends Enumeration {
   val `PAGOS MASIVOS` = TipoTransaccion(3, "Pagos Masivos")
   val `TRANSFERENCIAS Y RETIROS` = TipoTransaccion(4, "Transferencias y Retiros")
   val `PROGRAMACION DE PAGOS` = TipoTransaccion(6, "Programación de pagos")
+  val `PAGOS MASIVOS FIDEICOMISOS` = TipoTransaccion(7, "Pago Masivo Fideicomisos")
 
 }

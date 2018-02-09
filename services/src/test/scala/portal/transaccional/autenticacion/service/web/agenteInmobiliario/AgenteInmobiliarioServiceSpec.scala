@@ -22,7 +22,7 @@ class AgenteInmobiliarioServiceSpec extends RouteTest {
     val contrasenasRepo = stub[ContrasenaAgenteInmobiliarioRepository]
 
     // empty list
-    (agentesRepo.getAgenteInmobiliarioList _).when("", 0 ,None, None, None, None, None, None, None)
+    (agentesRepo.getAgenteInmobiliarioList _).when("", 0, None, None, None, None, None, None, None)
       .returns(Future.successful(ConsultarAgenteInmobiliarioListResponse(PaginacionMetadata(0, 0, 0, 0, None), Seq.empty)))
 
     // list with one element

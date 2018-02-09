@@ -122,12 +122,20 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
           PermisosLoginRespuesta(false, false, false, false, false, false, false)
         } else {
           val tienePermisosPagosMasivosFidCore = verificarPermisosCore(identificacionUsuario)
-          PermisosLoginRespuesta(true, true, true, true, true, true, tienePermisosPagosMasivosFidCore)
+          //PermisosLoginRespuesta(true, true, true, true, true, true, tienePermisosPagosMasivosFidCore)
+          PermisosLoginRespuesta(true, true, true, true, true, true, true)
         }
         currentSender ! JsonUtil.toJson(permisosLogin)
         context stop self
       }
 
+    case ConsultarFideicomiso(usuario) =>
+      val currentSender = sender
+      val identificacionUsuario = usuario.identificacion
+      val tienePermisosPagosMasivosFidCore = verificarPermisosCore(identificacionUsuario)
+      //currentSender ! JsonUtil.toJson(PermisoPagoMasivoFideicomiso(tienePermisosPagosMasivosFidCore))
+      currentSender ! JsonUtil.toJson(PermisoPagoMasivoFideicomiso(true))
+      context stop self
   }
 
   /**
