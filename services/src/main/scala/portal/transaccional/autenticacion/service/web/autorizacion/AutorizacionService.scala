@@ -43,6 +43,9 @@ case class AutorizacionService(
   val invalidarTokenPath = "invalidarToken"
   val validarTokenPath = "validarToken"
   val validarTokenInmobiliarioPath = "validarTokenInmobiliario"
+  /**OFV LOGIN FASE 1**/
+  val validarTokenGeneralPath = "validarToken-general"
+  val invalidarTokenGeneralPath = "invalidarToken-general"
 
   //tipos clientes
   val agente = TiposCliente.agenteEmpresarial.toString
@@ -65,6 +68,11 @@ case class AutorizacionService(
       token => validarToken(token)
     } ~ path(validarTokenInmobiliarioPath) {
       validarTokenInmobiliario()
+    } ~ path(validarTokenGeneralPath) {
+      /**OFV LOGIN FASE 1**/
+      validarTokenGeneral()
+    } ~ path(invalidarTokenGeneralPath) {
+      invalidarTokenGen
     }
   }
 
@@ -147,6 +155,48 @@ case class AutorizacionService(
           }
         }
       }
+    }
+  }
+
+  /**OFV LOGIN FASE 1**/
+  private def validarTokenGeneral() = {
+    get {
+      clientIP { ipRemota =>
+        headerValueByName("token") { tokenEncripted =>
+          headerValueByName("url") { (url) =>
+            respondWithMediaType(MediaTypes.`application/json`) {
+              val token: String = AesUtil.desencriptarToken(tokenEncripted)
+              val usuario: AuditityUser = getTokenData(token)
+              val response = autorizacionRepository.autorizarGeneral(token, url)
+              onComplete(response) {
+                case Success(value) => execution(value)
+                case Failure(ex) => execution(ex)
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  /**OFV LOGIN FASE 1**/
+  private def invalidarTokenGen = {
+    entity(as[InvalidarTokenRequest]) {
+      tokenRequest =>
+        delete {
+          clientIP { ip =>
+            val encriptedToken: String = tokenRequest.token
+            val token: String = AesUtil.desencriptarToken(encriptedToken)
+            val usuario = getTokenData(token)
+            val resultado: Future[Any] = autorizacionRepository.invalidarToken(token, encriptedToken)
+            mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic, AuditingHelper.cierreSesionIndex, ip.value,
+              kafkaActor, usuario)) {
+              onComplete(resultado) {
+                case Success(value) => complete(value.toString)
+                case Failure(ex) => execution(ex)
+              }
+            }
+          }
+        }
     }
   }
 

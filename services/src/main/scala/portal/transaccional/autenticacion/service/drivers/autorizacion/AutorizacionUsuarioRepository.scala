@@ -15,4 +15,21 @@ trait AutorizacionUsuarioRepository {
 
   def invalidarToken(token: String, encriptedToken: String): Future[Int]
 
+  /**OFV LOGIN FASE 1**/
+  /**
+   * Realiza validación de acceso a un recurso backend mediante el token para usuarios generales.
+   * @param token Token generado.
+   * @param url Recurso backend a validar.
+   * @return Future[ValidacionAutorizacion]
+   */
+  def autorizarGeneral(token: String, url: String): Future[ValidacionAutorizacion]
+
+  /**OFV LOGIN FASE 1**/
+  /**
+   * Invalidar token de acceso para usuarios generales
+   * @param token
+   * @param encriptedToken
+   * @return
+   */
+  def invalidarTokenGeneral(token: String, encriptedToken: String): Future[Any]
 }

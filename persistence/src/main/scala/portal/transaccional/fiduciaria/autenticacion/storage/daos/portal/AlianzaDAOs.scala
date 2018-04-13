@@ -1,7 +1,7 @@
 package portal.transaccional.fiduciaria.autenticacion.storage.daos.portal
 
 import co.com.alianza.commons.enumerations.TiposCliente._
-import co.com.alianza.persistence.entities._
+import co.com.alianza.persistence.entities.{ Menu, PerfilLdap, ValidacionPerfil, _ }
 
 import scala.concurrent.Future
 
@@ -53,4 +53,43 @@ trait AlianzaDAOs {
 
   def getBackResourcesByAgent(idAgente: Int): Future[Seq[RecursoBackendInmobiliario]]
 
+  /**OFV LOGIN FASE 1**/
+  /**
+   * Consulta el menú según el perfil enviado.
+   * @param idPerfil Identificador unico del perfil
+   * @return Seg[(Menu,Menu)] El primer parametro son las opciones a las que tiene permitido ingresar,
+   *         el segundo es todo el menú.
+   */
+  def getMenuByPerfil(idPerfil: Int): Future[Seq[(Menu, Int, String)]]
+
+  /**
+   *
+   * @param idPerfil
+   * @return
+   */
+  def getValidacionByPerfil(idPerfil: Int): Future[(Seq[ValidacionPerfil])]
+
+  /**
+   * Consulta las opciones del menú a las que tenga permisos el perfil enviado.
+   * @param idPerfil Identificador unico del perfil
+   * @return Future[(Seq[Menu], Seq[Menu])] El primer parametro son las opciones a las que tiene permitido ingresar,
+   *         el segundo es todo el menú.
+   */
+  def getPermisosMenuByPerfil(idPerfil: Int): Future[Seq[Menu]]
+
+  /**
+   * Homologación de perfiles.
+   * @param ldapText Validar parametro que llega en el ldap
+   * @return
+   */
+  def getProfileByLdap(ldapText: String): Future[Option[PerfilLdap]]
+
+  /**
+   * Realizá consulta si una url esta asociada a un perfil
+   * @param idPerfil Identificador del perfil
+   * @param url Recurso backend
+   * @return Future[Boolean]
+   */
+  def validResourceByPerfil(idPerfil: Int, url: String): Future[Boolean]
+  /**OFV LOGIN FASE 1**/
 }

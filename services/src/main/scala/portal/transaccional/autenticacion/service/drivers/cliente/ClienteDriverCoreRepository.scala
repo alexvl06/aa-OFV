@@ -45,7 +45,8 @@ case class ClienteDriverCoreRepository(clienteCoreRepo: ClienteDAO)(implicit val
   }
 
   def validarEstado(cliente: Cliente): Future[Boolean] = {
-    if (cliente.wcli_estado != EstadosCliente.inactivo && cliente.wcli_estado != EstadosCliente.bloqueado && cliente.wcli_estado != EstadosCliente.activo) {
+    if (cliente.wcli_estado != EstadosCliente.inactivo && cliente.wcli_estado != EstadosCliente.bloqueado && cliente.wcli_estado != EstadosCliente.activo
+      && cliente.wcli_estado != EstadosCliente.pendienteConfirmacion) {
       Future.failed(ValidacionException("401.1", "Cliente inactivo core"))
     } else {
       Future.successful(true)

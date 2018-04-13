@@ -505,8 +505,8 @@ case class UsuariosActor(
                 "Error ... por verifique los datos y vuelva a intentarlo")))
             }
 
-            val asunto: String = if (habeasData) "alianza.smtp.asunto.habeasdata" else "alianza.smtp.asunto.reiniciarContrasena"
-            val template: String = if (habeasData) "alianza.smtp.templatepin.aceptacionHabeasDataTerceros" else "alianza.smtp.templatepin.reiniciarContrasena"
+            val asunto: String = if (habeasData) "alianza.smtp.asunto.habeasdata" else "alianza.smtp.asunto.creacionAgenteEmpresarial"
+            val template: String = if (habeasData) "alianza.smtp.templatepin.aceptacionHabeasDataTerceros" else "alianza.smtp.templatepin.activacionTerceroInmo"
 
             resultCrearPinUsuario onComplete {
               case sFailure(fail) => currentSender ! fail

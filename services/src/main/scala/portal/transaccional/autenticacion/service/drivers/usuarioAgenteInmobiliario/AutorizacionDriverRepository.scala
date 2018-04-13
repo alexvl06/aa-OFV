@@ -52,7 +52,6 @@ case class AutorizacionDriverRepository(sesionRepo: SesionRepository, alianzaDAO
         }
       case _ => alianzaDAO.getBackResourcesByAgent(idUsuario)
     }
-
   }
 
   def filtrarRecuros(

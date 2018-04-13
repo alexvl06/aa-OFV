@@ -5,13 +5,14 @@ import co.com.alianza.exceptions.{ NoAutorizado, ValidacionException, Validacion
 import co.com.alianza.infrastructure.dto.{ UsuarioInmobiliarioAuth, Pregunta, Respuesta }
 import co.com.alianza.persistence.entities._
 import enumerations.{ TipoIdentificacionComercialDTO, TipoIdentificacionDTO }
+import portal.transaccional.autenticacion.service.drivers.menu._
 import portal.transaccional.autenticacion.service.drivers.smtp.Mensaje
 import portal.transaccional.autenticacion.service.dto.{ PermisoRecursoDTO, RecursoDTO }
 import portal.transaccional.autenticacion.service.util.ws.{ GenericNoAutorizado, CommonRESTFul }
 import portal.transaccional.autenticacion.service.web.actualizacion._
 import portal.transaccional.autenticacion.service.web.agenteInmobiliario._
-import portal.transaccional.autenticacion.service.web.autenticacion.{ AutenticarRequest, AutenticarUsuarioComercialRequest, AutenticarUsuarioEmpresarialRequest }
-import portal.transaccional.autenticacion.service.web.autorizacion.{ ValidarTokenAgenteRequest, InvalidarTokenRequest }
+import portal.transaccional.autenticacion.service.web.autenticacion.{ AutenticarRequest, AutenticarUsuarioComercialRequest, AutenticarUsuarioEmpresarialRequest, UsuarioGenRequest }
+import portal.transaccional.autenticacion.service.web.autorizacion.{ InvalidarTokenRequest, ValidarTokenAgenteRequest }
 import portal.transaccional.autenticacion.service.web.comercial.{ ActualizarContrasenaRequest, CrearAdministradorRequest, ValidarEmpresaRequest }
 import portal.transaccional.autenticacion.service.web.contrasena._
 import portal.transaccional.autenticacion.service.web.horarioEmpresa.{ AgregarHorarioEmpresaRequest, DiaFestivoRequest, ResponseObtenerHorario }
@@ -19,6 +20,8 @@ import portal.transaccional.autenticacion.service.web.ip.{ IpRequest, IpResponse
 import portal.transaccional.autenticacion.service.web.pin.ContrasenaUsuario
 import portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.{ GuardarRespuestasRequest, ResponseObtenerPreguntas, ResponseObtenerPreguntasComprobar, RespuestasComprobacionRequest }
 import spray.json._
+
+import scala.collection.mutable.ListBuffer
 
 trait DomainJsonFormatters {
 
@@ -28,6 +31,8 @@ trait DomainJsonFormatters {
   implicit val autenticarFormatter = jsonFormat3(AutenticarRequest)
   implicit val autenticarUsuarioEmpresarialFormatter = jsonFormat3(AutenticarUsuarioEmpresarialRequest)
   implicit val autenticarUsuarioComercialRequestFormatter = jsonFormat4(AutenticarUsuarioComercialRequest)
+  /**OFV LOGIN FASE 1**/
+  implicit val autenticarUsuarioGenRequest = jsonFormat6(UsuarioGenRequest)
 
   //autorizacion
   implicit val invalidarTokenFormatter = jsonFormat1(InvalidarTokenRequest)
@@ -109,6 +114,22 @@ trait DomainJsonFormatters {
   implicit val cambiarEstadoAgenteFormatter = jsonFormat1(CambiarEstadoAgente)
   implicit val cambiarContrasenaFormatter = jsonFormat2(CambiarContrasena)
   implicit val cambiarContrasenaCaducadaFormatter = jsonFormat3(CambiarContrasenaCaducada)
+
+  /**OFV LOGIN FASE 1**/
+  implicit def listBufferFormat[T: JsonFormat] = new RootJsonFormat[ListBuffer[T]] {
+    def write(listBuffer: ListBuffer[T]) = JsArray(listBuffer.map(_.toJson).toVector)
+    def read(value: JsValue): ListBuffer[T] = value match {
+      case JsArray(elements) => elements.map(_.convertTo[T])(collection.breakOut)
+      case x => deserializationError("Expected ListBuffer as JsArray, but got " + x)
+    }
+  }
+  /**OFV LOGIN FASE 1**/
+  //MenuResponse
+  implicit val menuSubItemUsuario = jsonFormat4(SubItemMenu)
+  implicit val menuItemSubUsuario = jsonFormat5(ItemMenuSub)
+  implicit val menuItemUsuario = jsonFormat5(ItemMenu)
+  implicit val menuUsuarioGen = jsonFormat2(MenuUsuario)
+  implicit val menuResponse = jsonFormat1(MenuResponse)
 
   //   ----- MAPEO DE ENUM!
   private def jsonEnum[T <: Enumeration](enu: T) = new JsonFormat[T#Value] {

@@ -10,6 +10,7 @@ import co.com.alianza.util.clave.Crypto
 import co.com.alianza.util.token.Token
 import enumerations.{ AppendPasswordUser, EstadosUsuarioEnum }
 import org.joda.time.DateTime
+import portal.transaccional.autenticacion.service.web.autenticacion.UsuarioGenRequest
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.UsuarioDAOs
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -140,6 +141,24 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
   }
 
   /**
+   * Valida que las contrasenas concuerden
+   *
+   * @param contrasena
+   * @param usuario
+   * @return
+   */
+  def validarContrasena(contrasena: String, usuario: Usuario): Future[Boolean] = {
+    val hash = Crypto.hashSha512(contrasena.concat(AppendPasswordUser.appendUsuariosFiducia), usuario.id.get)
+    if (hash.contentEquals(usuario.contrasena.get)) {
+      Future.successful(true)
+    } else {
+      for {
+        error <- Future.failed(ValidacionException("401.3", "Error Credenciales"))
+      } yield error
+    }
+  }
+
+  /**
    * Bloquea el usuario si se incumple la regla por parametro
    *
    * @param idUsuario
@@ -203,6 +222,40 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
       case Some(usuario) => Future.successful(usuario)
       case _ => Future.failed(ValidacionException("409.01", "No existe usuario"))
     }
+  }
+
+  def getByUsuario(usuario: UsuarioGenRequest): Future[Usuario] = {
+    val usuaResp = compareInfo(usuario.email, usuario.numeroIdentificacion, usuario.tipoIdentificacion, usuario.usuario)
+    usuaResp flatMap {
+      (usuarioOption: Option[Usuario]) =>
+        usuarioOption match {
+          case Some(usuario: Usuario) => Future.successful(usuario)
+          case _ => Future.failed(ValidacionException("401.3", "Error usuario no existe"))
+        }
+    }
+  }
+
+  private def compareInfo(email: Option[String], identificacion: Option[String], tipoIdentificacion: Option[Int], usuario: Option[String]): Future[Option[Usuario]] =
+    (email, identificacion, tipoIdentificacion, usuario) match {
+      case (None, None, None, Some(usuario)) => usuarioDAO.getUser(usuario)
+      case (Some(email), None, None, Some(usuario)) => usuarioDAO.getUser(usuario, email)
+      case (None, Some(identificacion), Some(tipoIdentificacion), None) => usuarioDAO.getUser(tipoIdentificacion, identificacion)
+      case (None, Some(identificacion), Some(tipoIdentificacion), Some(usuario)) => usuarioDAO.getUser(usuario, tipoIdentificacion, identificacion)
+      case (Some(email), Some(identificacion), Some(tipoIdentificacion), Some(usuario)) =>
+        usuarioDAO.getUser(usuario, email, tipoIdentificacion, identificacion)
+      case (None, None, None, None) => Future.failed(ValidacionException("409.2", "Error campos usuario"))
+    }
+
+  /**
+   * Crea un usuario si no existe en base de datos
+   * @param usuario Usuario a crear
+   * @return
+   */
+  def createIfNotExist(usuario: Usuario): Future[Int] = {
+    for {
+      existe <- usuarioDAO.existsByIdentity(usuario.identificacion)
+      creado <- if (existe != None) Future.successful(existe.get.id.get) else usuarioDAO.create(usuario)
+    } yield creado
   }
 
 }

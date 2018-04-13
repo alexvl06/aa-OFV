@@ -8,7 +8,7 @@ import co.com.alianza.exceptions.{ PersistenceException, ValidacionException }
 import co.com.alianza.infrastructure.auditing.AuditingHelper
 import co.com.alianza.infrastructure.auditing.AuditingHelper.requestWithAuiditing
 import co.com.alianza.util.token.AesUtil
-import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionComercialRepository, AutenticacionEmpresaRepository, AutenticacionRepository }
+import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionComercialRepository, AutenticacionEmpresaRepository, AutenticacionRepository, AutenticacionUsuarioRepository }
 import portal.transaccional.autenticacion.service.util.JsonFormatters.DomainJsonFormatters
 import portal.transaccional.autenticacion.service.util.ws.CommonRESTFul
 import spray.http.StatusCodes
@@ -21,6 +21,8 @@ case class AutenticacionService(
   autenticacionRepositorio: AutenticacionRepository,
   autenticacionEmpresaRepositorio: AutenticacionEmpresaRepository,
   autenticacionComercialRepositorio: AutenticacionComercialRepository,
+  /**OFV LOGIN FASE 1**/
+  autenticacionUsuarioRepository: AutenticacionUsuarioRepository,
   kafkaActor: ActorSelection
 )(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters
     with CrossHeaders {
@@ -28,6 +30,8 @@ case class AutenticacionService(
   val autenticar = "autenticar"
   val autenticarUsuarioEmpresa = "autenticarUsuarioEmpresa"
   val comercialPath = "comercial"
+  /**OFV LOGIN FASE 1**/
+  var autenticarGeneral = "autenticacion-general"
 
   val route: Route = {
     pathPrefix(autenticar) {
@@ -43,6 +47,12 @@ case class AutenticacionService(
       pathPrefix(comercialPath / autenticar) {
         pathEndOrSingleSlash {
           autenticarUsuarioComercial
+        }
+        /**OFV LOGIN FASE 1**/
+      } ~
+      pathPrefix(autenticarGeneral) {
+        pathEndOrSingleSlash {
+          autenticacionGeneral
         }
       }
   }
@@ -99,6 +109,25 @@ case class AutenticacionService(
               )
               onComplete(resultado) {
                 case Success(token) => encriptarToken(token)
+                case Failure(ex) => execution(ex)
+              }
+            }
+          }
+      }
+    }
+  }
+
+  /**OFV LOGIN FASE 1**/
+  private def autenticacionGeneral = {
+    post {
+      entity(as[UsuarioGenRequest]) {
+        request =>
+          clientIP { ip =>
+            mapRequestContext((r: RequestContext) => requestWithAuiditing(r, AuditingHelper.fiduciariaTopic,
+              AuditingHelper.autenticacionIndex, ip.value, kafkaActor, request.copy())) {
+              val resultado = autenticacionUsuarioRepository.autenticarGeneral(request, ip.value)
+              onComplete(resultado) {
+                case Success(token) => complete((StatusCodes.OK, "{ \"token\" : \"" + token + "\"}"))
                 case Failure(ex) => execution(ex)
               }
             }

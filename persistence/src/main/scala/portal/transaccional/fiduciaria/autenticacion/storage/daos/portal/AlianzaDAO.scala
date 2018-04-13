@@ -1,6 +1,6 @@
 package portal.transaccional.fiduciaria.autenticacion.storage.daos.portal
 
-import co.com.alianza.persistence.entities._
+import co.com.alianza.persistence.entities.{ Menu, MenuTable, ModuloMenuTable, PerfilLdap, PerfilLdapTable, PerfilMenuTable, RecursoBackendTable, TipoValidacionTable, ValidacionPerfil, ValidacionPerfilTable, _ }
 import enumerations.PerfilInmobiliarioEnum
 import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
 import slick.lifted.TableQuery
@@ -32,6 +32,16 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
   val recursosBackendInmobiliarios = TableQuery[RecursoBackendInmobiliarioTable]
   val perfilInmobiliario = TableQuery[PerfilInmobiliarioTable]
   val recursosPerfilInmobiliario = TableQuery[RecursoPerfilInmobiliarioTable]
+  /**OFV LOGIN FASE 1**/
+  val menu = TableQuery[MenuTable]
+  val moduloMenu = TableQuery[ModuloMenuTable]
+  val perfilMenu = TableQuery[PerfilMenuTable]
+  val validacionPerfil = TableQuery[ValidacionPerfilTable]
+  val tipoValidacion = TableQuery[TipoValidacionTable]
+  val perfilLdap = TableQuery[PerfilLdapTable]
+  var recursoPerfil = TableQuery[RecursoBackendTable]
+  var recusroHasPerfil = TableQuery[RecursoBackPerfilTable]
+  /**OFV LOGIN FASE 1**/
 
   import dcConfig.DB._
   import dcConfig.driver.api._
@@ -292,6 +302,48 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
     run((projectPermition ++ rolePermitions).distinctOn(_.id).result)
   }
 
+  /**OFV LOGIN FASE 1**/
+  /**
+   * Consulta el menú según el perfil enviado.
+   * @param idPerfil Identificador unico del perfil
+   * @return Future[(Seq[Menu], Seq[Menu])] El primer parametro son las opciones a las que tiene permitido ingresar,
+   *         el segundo es todo el menú.
+   */
+  def getMenuByPerfil(idPerfil: Int): Future[Seq[(Menu, Int, String)]] = {
+    val query = for {
+      (pm, mo) <- perfilMenu join menu on (_.idMenu === _.idMenu)
+      me <- moduloMenu if (mo.modulo === me.idModuloempresarial)
+    } yield (mo, pm.idMenu, me.modulo)
+    run(query.distinct.sortBy(r => (r._3, r._1.posicion, r._1.idMenu)).result)
+  }
+
+  /**
+   * Consulta las opciones del menú a las que tenga permisos el perfil enviado.
+   * @param idPerfil Identificador unico del perfil
+   * @return Future[(Seq[Menu], Seq[Menu])] El primer parametro son las opciones a las que tiene permitido ingresar,
+   *         el segundo es todo el menú.
+   */
+  def getPermisosMenuByPerfil(idPerfil: Int): Future[Seq[Menu]] = {
+    val query = for {
+      pm <- perfilMenu
+      mo <- menu if pm.idMenu === mo.idMenu && pm.idPerfil === idPerfil
+    } yield mo
+    run(query.distinct.sortBy(r => (r.modulo, r.idMenu)).result)
+  }
+
+  /**
+   *
+   * @param idPerfil
+   * @return
+   */
+  def getValidacionByPerfil(idPerfil: Int): Future[(Seq[ValidacionPerfil])] = {
+    val query = for {
+      (t, v) <- tipoValidacion join validacionPerfil on (_.id === _.idTipoValidacion)
+    } yield (v)
+    run(query.sortBy(_.jerarquia).result)
+  }
+  /**OFV LOGIN FASE 1**/
+
   private def getGraphicalResources(tipo: String) = {
     for {
       p <- perfilInmobiliario if p.nombre === tipo
@@ -326,5 +378,29 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
 
     k ++ recursosGraficosInmobiliarios.filter(_.url === "listadoProyectos")
   }
+
+  /**OFV LOGIN FASE 1**/
+  /**
+   * Homologación de perfiles.
+   * @param ldapText Validar parametro que llega en el ldap
+   * @return
+   */
+  def getProfileByLdap(ldapText: String): Future[Option[PerfilLdap]] = {
+    run(perfilLdap.filter(_.ldapPerfil.toUpperCase === ldapText.toUpperCase).result.headOption)
+  }
+
+  /**
+   * Realizá consulta si una url esta asociada a un perfil
+   * @param idPerfil Identificador del perfil
+   * @param url Recurso backend
+   * @return Future[Boolean]
+   */
+  def validResourceByPerfil(idPerfil: Int, url: String): Future[Boolean] = {
+    val query = for {
+      a <- recusroHasPerfil join recursoPerfil on (_.idRecurso === _.id) filter { x => (x._1.idPerfil === idPerfil && x._2.url === url) }
+    } yield a
+    run(query.exists.result)
+  }
+  /**OFV LOGIN FASE 1**/
 
 }

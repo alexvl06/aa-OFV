@@ -7,3 +7,5 @@ case class AutenticarRequest(tipoIdentificacion: Int, numeroIdentificacion: Stri
 case class AutenticarUsuarioEmpresarialRequest(nit: String, usuario: String, password: String)
 
 case class AutenticarUsuarioComercialRequest(usuario: String, tipoUsuario: Int, contrasena: String, tipoCliente: Option[String])
+/**OFV LOGIN FASE 1**/
+case class UsuarioGenRequest(tipoIngreso: Int, usuario: Option[String], email: Option[String], numeroIdentificacion: Option[String], tipoIdentificacion: Option[Int], password: String)

@@ -12,9 +12,9 @@ import co.com.alianza.persistence.entities.UsuarioAgenteInmobiliario
 import co.com.alianza.util.ConfigApp
 import com.typesafe.config.Config
 import portal.transaccional.autenticacion.service.drivers.actualizacion.ActualizacionDriverRepository
-import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionComercialDriverRepository, AutenticacionDriverRepository, AutenticacionEmpresaDriverRepository }
+import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionComercialDriverRepository, _ }
 import portal.transaccional.autenticacion.service.drivers.autorizacion._
-import portal.transaccional.autenticacion.service.drivers.cliente.ClienteDriverCoreRepository
+import portal.transaccional.autenticacion.service.drivers.cliente.{ ClienteDriverCoreRepository, ClienteRepository }
 import portal.transaccional.autenticacion.service.drivers.configuracion.ConfiguracionDriverRepository
 import portal.transaccional.autenticacion.service.drivers.contrasena.{ ContrasenaAdminDriverRepository, ContrasenaAgenteDriverRepository, ContrasenaUsuarioDriverRepository }
 import portal.transaccional.autenticacion.service.drivers.contrasenaAgenteInmobiliario.ContrasenaAgenteInmobiliarioDriverRepository
@@ -22,14 +22,15 @@ import portal.transaccional.autenticacion.service.drivers.empresa.EmpresaDriverR
 import portal.transaccional.autenticacion.service.drivers.horarioEmpresa.HorarioEmpresaDriverRepository
 import portal.transaccional.autenticacion.service.drivers.ip.IpDriverRepository
 import portal.transaccional.autenticacion.service.drivers.ipempresa.IpEmpresaDriverRepository
-import portal.transaccional.autenticacion.service.drivers.ipusuario.IpUsuarioDriverRepository
+import portal.transaccional.autenticacion.service.drivers.ipusuario.{ IpUsuarioDriverRepository, IpUsuarioRepository }
 import portal.transaccional.autenticacion.service.drivers.ldap.LdapDriverRepository
+import portal.transaccional.autenticacion.service.drivers.menu.MenuUsuarioDriverRepository
 import portal.transaccional.autenticacion.service.drivers.permisoAgenteInmobiliario.PermisoAgenteInmobiliarioDriverRepository
 import portal.transaccional.autenticacion.service.drivers.pin.PinDriverRepository
 import portal.transaccional.autenticacion.service.drivers.pregunta.{ PreguntasAutovalidacionDriverRepository, PreguntasDriverRepository }
 import portal.transaccional.autenticacion.service.drivers.recurso.RecursoDriverRepository
-import portal.transaccional.autenticacion.service.drivers.reglas.ReglaContrasenaDriverRepository
-import portal.transaccional.autenticacion.service.drivers.respuesta.{ RespuestaUsuarioAdminDriverRepository, RespuestaUsuarioDriverRepository }
+import portal.transaccional.autenticacion.service.drivers.reglas.{ ReglaContrasenaDriverRepository, ReglaContrasenaRepository }
+import portal.transaccional.autenticacion.service.drivers.respuesta.{ RespuestaUsuarioAdminDriverRepository, RespuestaUsuarioDriverRepository, RespuestaUsuarioRepository }
 import portal.transaccional.autenticacion.service.drivers.rolRecursoComercial.{ RecursoComercialDriverRepository, RolComercialDriverRepository, RolRecursoComercialDriverRepository }
 import portal.transaccional.autenticacion.service.drivers.sesion.SesionDriverRepository
 import portal.transaccional.autenticacion.service.drivers.smtp.SmtpDriverRepository
@@ -39,11 +40,13 @@ import portal.transaccional.autenticacion.service.drivers.usuarioAgenteEmpresari
 import portal.transaccional.autenticacion.service.drivers.usuarioAgenteInmobiliario.{ AutorizacionDriverRepository, UsuarioInmobiliarioDriverRepository, UsuarioInmobiliarioPinDriverRepository, _ }
 import portal.transaccional.autenticacion.service.drivers.usuarioComercial.UsuarioComercialDriverRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioComercialAdmin.{ UsuarioComercialAdminDriverRepository, UsuarioComercialAdminRepository }
-import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.UsuarioDriverRepository
+import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.{ UsuarioDriverRepository, UsuarioRepository }
 import portal.transaccional.autenticacion.service.drivers.util.{ SesionAgenteUtilDriverRepository, SesionAgenteUtilRepository }
+import portal.transaccional.autenticacion.service.drivers.validacion.ValidacionPerfilDriverRepository
 import portal.transaccional.fiduciaria.autenticacion.storage.config.DBConfig
 import portal.transaccional.fiduciaria.autenticacion.storage.config.pg.{ OracleConfig, PGConfig }
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.core.{ ActualizacionDAO, ClienteDAO }
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.daos.driver.PerfilUsuarioDAO
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.ldap.AlianzaLdapDAO
 import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal._
 
@@ -128,7 +131,7 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val respuestaUsuarioRepo = RespuestaUsuarioDriverRepository(respuestaUsuarioDAO, configuracionRepo)
   lazy val usuarioAdminRepo = UsuarioAdminDriverRepository(usuarioAdminDAO)
   lazy val respuestaUsuariAdminoRepo = RespuestaUsuarioAdminDriverRepository(respuestaUsuarioAdminDAO, configuracionRepo)
-  lazy val autorizacionUsuarioRepo = AutorizacionUsuarioDriverRepository(usuarioRepo, recursoRepo, sesionRepo)
+  lazy val autorizacionUsuarioRepo = AutorizacionUsuarioDriverRepository(usuarioRepo, recursoRepo, sesionRepo, alianzaDAO)
   lazy val autorizacionComercialRepo = AutorizacionUsuarioComercialDriverRepository(sesionRepo, recursoRepo, usuarioComercialRepo, servicioComercialRepository)
   lazy val autorizacionComercialAdminRepo = AutorizacionUsuarioComercialAdminDriverRepository(usuarioComercialAdminRepo)
   lazy val autenticacionRepo = AutenticacionDriverRepository(usuarioRepo, clienteRepo, configuracionRepo, reglaContrasenaRepo, ipUsuarioRepo,
@@ -137,6 +140,9 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
     configuracionRepo, ipEmpresaRepo, sesionRepo, respuestaUsuariAdminoRepo, agenteInmobRepo)
   lazy val autenticacionComercialRepo = AutenticacionComercialDriverRepository(ldapRepo, usuarioComercialRepo,
     usuarioComercialAdminRepo: UsuarioComercialAdminRepository, configuracionRepo, sesionRepo)
+  /**OFV LOGIN FASE 1**/
+  lazy val validacionPerfilRepository = ValidacionPerfilDriverRepository(alianzaDAO, ipUsuarioRepo, respuestaUsuarioRepo, reglaContrasenaRepo, usuarioRepo, clienteRepo)
+  lazy val autenticacionUsuarioRepository = AutenticacionUsuarioDriverRepository(validacionPerfilRepository, usuarioRepo, ldapRepo, perfilUsuarioDao, configuracionRepo, sesionRepo, alianzaDAO)
   lazy val autorizacionAgenteRepo: AutorizacionUsuarioEmpresarialDriverRepository = AutorizacionUsuarioEmpresarialDriverRepository(
     usuarioAgenteRepo, alianzaDAO, sesionRepo, recursoRepo
   )
@@ -163,7 +169,8 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val contrasenaAgenteRepo = ContrasenaAgenteDriverRepository(usuarioAgenteRepo, pinAgenteDAO, ultimaContrasenaRepo, configuracionRepo, smtpRepo,
     reglaContrasenaRepo)
   lazy val contrasenaAdminRepo = ContrasenaAdminDriverRepository(ultimaContrasenaRepo, usuarioAdminRepo, reglaContrasenaRepo)
-
+  /**OFV LOGIN FASE 1**/
+  lazy val menuUsuario = MenuUsuarioDriverRepository(alianzaDAO, sesionRepo)
 }
 
 private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
@@ -202,4 +209,6 @@ private[app] sealed trait StoragePGAlianzaDB extends BootedCore {
   lazy val permisoInmobDAO = PermisoInmobiliarioDAO()(config)
   lazy val ultimaContraseñaAgenteInmobDAO = UltimaContraseñaAgenteInmobiliarioDAO()(config)
   lazy val pinInmobDAO = PinAgenteInmobiliarioDAO()(config)
+  /**OFV LOGIN FASE 1**/
+  lazy val perfilUsuarioDao = PerfilUsuarioDAO()(config)
 }

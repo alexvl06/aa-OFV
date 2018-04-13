@@ -25,7 +25,7 @@ case class CrearAgenteMessage(
     cargo: String,
     correo: String,
     descripcion: String,
-    interventor: Boolean
+    interventor: Option[Boolean] = Some(false)
 
 ) extends MessageService {
 

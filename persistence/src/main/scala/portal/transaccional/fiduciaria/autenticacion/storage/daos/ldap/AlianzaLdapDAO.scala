@@ -57,7 +57,11 @@ case class AlianzaLdapDAO() extends AlianzaLdapDAOs {
         val attrs: Attributes = search.next().getAttributes
         val esSAC: Boolean = getAtributeSAC(attrs, "postOfficeBox")
         val identificacion: Option[String] = getAtributes(attrs, "sAMAccountType")
-        Option(UsuarioLdapDTO(user, identificacion, esSAC))
+        /**OFV LOGIN FASE 1**/
+        val perfilLdap: Option[String] = getAtributes(attrs, "postOfficeBox")
+        val mail: Option[String] = getAtributes(attrs, "mail")
+        Option(UsuarioLdapDTO(user, identificacion, esSAC, perfilLdap, mail))
+      /**OFV LOGIN FASE 1**/
       case false => None
     }
     userInstance
@@ -71,7 +75,11 @@ case class AlianzaLdapDAO() extends AlianzaLdapDAOs {
     // SEARCH ATTRIBUTES
     val attrIDs: Array[String] = Array(
       "postOfficeBox",
-      "sAMAccountType"
+      "sAMAccountType",
+      /**OFV LOGIN FASE 1**/
+      "department",
+      "mail"
+    /**OFV LOGIN FASE 1**/
     )
     // SEARCH CONTROLS
     val sc = new SearchControls()

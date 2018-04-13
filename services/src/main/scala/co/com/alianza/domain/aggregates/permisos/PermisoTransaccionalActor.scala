@@ -114,6 +114,7 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
             context stop self
             PermisosLoginRespuesta(listaPermisos.contains(2), listaPermisos.contains(4), listaPermisos.contains(3),
               listaPermisos.contains(1), listaPermisos.contains(6), listaPermisos.contains(7), tienePermisosPagosMasivosFidCore).toJson
+            //listaPermisos.contains(1), listaPermisos.contains(6), listaPermisos.contains(7), true).toJson
           }, errorValidacion, currentSender
         )
       } else {
@@ -122,7 +123,7 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
           PermisosLoginRespuesta(false, false, false, false, false, false, false)
         } else {
           val tienePermisosPagosMasivosFidCore = verificarPermisosCore(identificacionUsuario)
-          //PermisosLoginRespuesta(true, true, true, true, true, true, tienePermisosPagosMasivosFidCore)
+          PermisosLoginRespuesta(true, true, true, true, true, true, tienePermisosPagosMasivosFidCore)
           PermisosLoginRespuesta(true, true, true, true, true, true, true)
         }
         currentSender ! JsonUtil.toJson(permisosLogin)
@@ -133,8 +134,8 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
       val currentSender = sender
       val identificacionUsuario = usuario.identificacion
       val tienePermisosPagosMasivosFidCore = verificarPermisosCore(identificacionUsuario)
-      //currentSender ! JsonUtil.toJson(PermisoPagoMasivoFideicomiso(tienePermisosPagosMasivosFidCore))
-      currentSender ! JsonUtil.toJson(PermisoPagoMasivoFideicomiso(true))
+      currentSender ! JsonUtil.toJson(PermisoPagoMasivoFideicomiso(tienePermisosPagosMasivosFidCore))
+      //currentSender ! JsonUtil.toJson(PermisoPagoMasivoFideicomiso(true))
       context stop self
   }
 
@@ -165,7 +166,7 @@ class PermisoTransaccionalActor extends Actor with ActorLogging with FutureRespo
     val extraccionFuturo = Await.result(cliente, 8.seconds)
     extraccionFuturo match {
       case zSuccess(cliente) =>
-        cliente.wcli_cias_pagos_masivos == PermisosFideicomisosCoreAlianza.`SI`.nombre
+        cliente.wcli_op_portal == PermisosFideicomisosCoreAlianza.`SI`.nombre
       case zFailure(error) => false
     }
 

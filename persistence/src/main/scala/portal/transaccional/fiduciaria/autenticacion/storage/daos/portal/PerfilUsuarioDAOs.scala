@@ -11,4 +11,5 @@ trait PerfilUsuarioDAOs {
 
   def create(perfiles: Seq[PerfilUsuario]): Future[Option[Int]]
 
+  def getProfileByUsuario(idUsuario: Int): Future[Option[PerfilUsuario]]
 }

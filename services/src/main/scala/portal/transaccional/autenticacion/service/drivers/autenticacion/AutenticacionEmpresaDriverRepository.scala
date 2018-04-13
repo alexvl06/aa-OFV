@@ -217,7 +217,7 @@ case class AutenticacionEmpresaDriverRepository(
   private def generarTokenAgente(usuario: UsuarioAgente, ip: String, inactividad: String): Future[String] = Future {
     Token.generarToken(usuario.usuario, usuario.correo, getTipoPersona(usuario.tipoIdentificacion),
       usuario.ipUltimoIngreso.getOrElse(ip), usuario.fechaUltimoIngreso.getOrElse(new Date(System.currentTimeMillis())),
-      inactividad, tipoAgente(usuario), Some(usuario.identificacion))
+      inactividad, tipoAgente(usuario), Some(usuario.identificacion), Some(usuario.interventor))
   }
 
   private def tipoAgente(u: UsuarioAgente) = {

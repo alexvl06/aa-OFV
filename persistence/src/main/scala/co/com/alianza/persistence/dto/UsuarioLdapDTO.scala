@@ -6,5 +6,7 @@ package co.com.alianza.persistence.dto
 case class UsuarioLdapDTO(
   usuario: String,
   identificacion: Option[String],
-  esSAC: Boolean
+  esSAC: Boolean,
+  perfilLdap: Option[String],
+  mail: Option[String]
 )

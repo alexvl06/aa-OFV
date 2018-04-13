@@ -19,4 +19,8 @@ case class PerfilUsuarioDAO()(implicit dcConfig: DBConfig) extends TableQuery(ne
     run(this ++= perfiles)
   }
 
+  def getProfileByUsuario(idUsuario: Int): Future[Option[PerfilUsuario]] = {
+    run(filter(_.idUsuario === idUsuario).result.headOption)
+  }
+
 }

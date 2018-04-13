@@ -19,7 +19,7 @@ case class UsuarioEmpresarialEstado(
   estado: estadoUsuario,
   tipoCliente: TiposCliente,
   nombreUsuario: Option[String],
-  interventor: Boolean
+  interventor: Option[Boolean]
 )
 
 case class UsuarioEmpresarial(
@@ -36,7 +36,7 @@ case class UsuarioEmpresarial(
   fechaUltimoIngreso: Option[Date],
   tipoCliente: TiposCliente,
   nombreUsuario: Option[String],
-  interventor: Boolean
+  interventor: Option[Boolean]
 )
 
 case class UsuarioEmpresarialAdmin(

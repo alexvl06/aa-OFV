@@ -103,7 +103,8 @@ object ValidacionesUsuario {
   }
 
   def validacionConsultaClienteCore(cliente: Cliente, tipoPersona: Int, validarCorreo: Boolean): Validation[ErrorValidacion, Cliente] = {
-    if (cliente.wcli_estado != EstadosCliente.inactivo && cliente.wcli_estado != EstadosCliente.bloqueado && cliente.wcli_estado != EstadosCliente.activo)
+    if (cliente.wcli_estado != EstadosCliente.inactivo && cliente.wcli_estado != EstadosCliente.bloqueado && cliente.wcli_estado != EstadosCliente.activo &&
+      EstadosCliente.pendienteConfirmacion != cliente.wcli_estado)
       zFailure(ErrorClienteNoExiste(errorClienteInactivo))
     else if (getTipoPersona(tipoPersona) != cliente.wcli_person)
       zFailure(ErrorClienteNoExiste(errorClienteNoExiste))
