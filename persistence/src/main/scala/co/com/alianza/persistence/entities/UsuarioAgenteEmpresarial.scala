@@ -7,8 +7,10 @@ import CustomDriver.simple._
  * Created by s4n on 2014
  */
 case class UsuarioEmpresarial(id: Int, correo: String, fechaActualizacion: Timestamp, identificacion: String, tipoIdentificacion: Int, usuario: String,
-  estado: Int, contrasena: Option[String], token: Option[String], numeroIngresosErroneos: Int, ipUltimoIngreso: Option[String],
-  fechaUltimoIngreso: Option[Timestamp], nombreUsuario: String, cargo: String, descripcion: Option[String]) extends UsuarioAgente
+    estado: Int, contrasena: Option[String], token: Option[String], numeroIngresosErroneos: Int, ipUltimoIngreso: Option[String],
+    fechaUltimoIngreso: Option[Timestamp], nombreUsuario: String, cargo: String, descripcion: Option[String], interventor1: Option[Boolean] = Some(false)) extends UsuarioAgente {
+  interventor = interventor1.getOrElse(false)
+}
 
 class UsuarioEmpresarialTable(tag: Tag) extends UsuarioAgenteTable[UsuarioEmpresarial](tag, "USUARIO_EMPRESARIAL") {
 
@@ -27,9 +29,10 @@ class UsuarioEmpresarialTable(tag: Tag) extends UsuarioAgenteTable[UsuarioEmpres
   val nombreUsuario = column[String]("NOMBRE")
   val cargo = column[String]("CARGO")
   override val descripcion = column[Option[String]]("DESCRIPCION")
+  val interventor = column[Option[Boolean]]("INTERVENTOR")
 
   def * = (id, correo, fechaActualizacion, identificacion, tipoIdentificacion, usuario, estado, contrasena, token,
-    numeroIngresosErroneos, ipUltimoIngreso, fechaUltimoIngreso, nombreUsuario, cargo, descripcion) <>
+    numeroIngresosErroneos, ipUltimoIngreso, fechaUltimoIngreso, nombreUsuario, cargo, descripcion, interventor) <>
     (UsuarioEmpresarial.tupled, UsuarioEmpresarial.unapply)
 
 }

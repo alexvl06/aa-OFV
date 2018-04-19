@@ -9,13 +9,13 @@ object Boot extends App with HostBinding with Core with BootedCore with CoreActo
   val sessionActor: ActorRef = sesionActorSupervisor
 
   private val rootService = system.actorOf(
-    Props(AlianzaRouter(autenticacionRepo, autenticacionEmpresaRepo, autenticacionComercialRepo, usuarioRepo, usuarioAgenteRepo, usuarioAdminRepo,
+    Props(AlianzaRouter(autenticacionRepo, autenticacionEmpresaRepo, autenticacionComercialRepo, autenticacionUsuarioRepository, usuarioRepo, usuarioAgenteRepo, usuarioAdminRepo,
       autorizacionUsuarioRepo, kafkaActor, usuariosActor, confrontaActor, actualizacionRepository, permisoTransaccionalActor, agenteEmpresarialActor,
       pinRepository, contrasenaAgenteRepo, contrasenaAdminRepo, contrasenaUsuarioRepo, autorizacionAgenteRepo, autorizacionAdminRepo,
       preguntasValidacionRepository, respuestaUsuarioRepo, respuestaUsuariAdminoRepo, ipRepo, autorizacionComercialRepo, autorizacionComercialAdminRepo,
       autorizacionRecursoComercialRepository, recursoComercialRepository, rolComercialRepository, usuarioComercialAdminRepo, reglaContrasenaRepo,
       horarioEmpresaRepository, agenteInmobRepo, permisoAgenteInmob,
-      sesionUtilAgenteInmobiliario, agenteInmobContrasenaRepo, pinAgenteInmobRepository, autorizacionAgenteInmob)),
+      sesionUtilAgenteInmobiliario, agenteInmobContrasenaRepo, pinAgenteInmobRepository, autorizacionAgenteInmob, menuUsuario)),
     name = "api-AlianzaRouter"
   )
 

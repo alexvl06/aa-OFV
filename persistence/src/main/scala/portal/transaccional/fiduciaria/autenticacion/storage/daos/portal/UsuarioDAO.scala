@@ -80,4 +80,74 @@ case class UsuarioDAO()(implicit dcConfig: DBConfig) extends TableQuery(new Usua
     run(this.filter(_.id === idUsuario).map(_.contrasena).update(Some(password)))
   }
 
+  /**
+   * Consulta un usuario por el campo usuario
+   * @param usuario Usuario del cliente
+   * @return Option[Usuario]
+   */
+  def getUser(usuario: String): Future[Option[Usuario]] = {
+    run(this.filter(_.usuario === usuario).result.headOption)
+  }
+
+  /**
+   * Consulta un usuario por el campo usuario y correo
+   * @param usuario
+   * @param email
+   * @return Option[Usuario]
+   */
+  def getUser(usuario: String, email: String): Future[Option[Usuario]] = {
+    run(this.filter(x => x.usuario === usuario
+      && x.correo === email)
+      .result.headOption)
+  }
+
+  /**
+   * Consulta un usuario por tipo de identificacion y numero de identificacion.
+   * @param tipoId Tipo identificacion
+   * @param identifiacion Numero de identificacion
+   * @return Option[Usuario]
+   */
+  def getUser(tipoId: Int, identifiacion: String): Future[Option[Usuario]] = {
+    run(this.filter(x => x.tipoIdentificacion === tipoId &&
+      x.identificacion === identifiacion)
+      .result.headOption)
+  }
+
+  /**
+   * Consulta un cliente por Usuario, Tipo Identificacion y numero de identificacion.
+   * @param usuario Usuario cliente
+   * @param tipoId Tipo identificacion
+   * @param identifiacion Numero de identificacion
+   * @return Option[Usuario]
+   */
+  def getUser(usuario: String, tipoId: Int, identifiacion: String): Future[Option[Usuario]] = {
+    run(this.filter(x => x.tipoIdentificacion === tipoId
+      && x.identificacion === identifiacion
+      && x.usuario === usuario)
+      .result.headOption)
+  }
+
+  /**
+   * Consulta un cliente por Usuario, correo, Tipo Identificacion y numero de identificacion.
+   * @param usuario Usuario cliente
+   * @param email Correo del cliente.
+   * @param tipoId Tipo identificacion
+   * @param identifiacion Numero de identificacion
+   * @return Option[Usuario]
+   */
+  def getUser(usuario: String, email: String, tipoId: Int, identifiacion: String): Future[Option[Usuario]] = {
+    run(this.filter(x => x.tipoIdentificacion === tipoId
+      && x.identificacion === identifiacion
+      && x.usuario === usuario
+      && x.correo === email).result.headOption)
+  }
+
+  /**
+   * Consulta si existe usuario numero de identificación
+   * @param numeroIdentificacion
+   * @return
+   */
+  def existsByIdentity(numeroIdentificacion: String): Future[Option[Usuario]] = {
+    run(this.filter(_.identificacion === numeroIdentificacion).result.headOption)
+  }
 }

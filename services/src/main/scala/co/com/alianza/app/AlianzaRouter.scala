@@ -7,12 +7,13 @@ import co.com.alianza.persistence.entities.UsuarioEmpresarial
 import co.com.alianza.web._
 import co.com.alianza.web.empresa.UsuarioEmpresaService
 import portal.transaccional.autenticacion.service.drivers.actualizacion.ActualizacionRepository
-import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionComercialRepository, AutenticacionEmpresaRepository, AutenticacionRepository }
+import portal.transaccional.autenticacion.service.drivers.autenticacion.{ AutenticacionComercialRepository, AutenticacionEmpresaRepository, AutenticacionRepository, AutenticacionUsuarioRepository }
 import portal.transaccional.autenticacion.service.drivers.autorizacion._
 import portal.transaccional.autenticacion.service.drivers.contrasena.{ ContrasenaUsuarioRepository, ContrasenaAdminRepository, ContrasenaAgenteRepository }
 import portal.transaccional.autenticacion.service.drivers.contrasenaAgenteInmobiliario.ContrasenaAgenteInmobiliarioRepository
 import portal.transaccional.autenticacion.service.drivers.horarioEmpresa.HorarioEmpresaRepository
 import portal.transaccional.autenticacion.service.drivers.ip.IpRepository
+import portal.transaccional.autenticacion.service.drivers.menu.MenuUsuarioRepository
 import portal.transaccional.autenticacion.service.drivers.permisoAgenteInmobiliario.PermisoAgenteInmobiliarioRepository
 import portal.transaccional.autenticacion.service.drivers.pin.PinRepository
 import portal.transaccional.autenticacion.service.drivers.pregunta.PreguntasAutovalidacionRepository
@@ -34,6 +35,7 @@ import portal.transaccional.autenticacion.service.web.contrasena.{ AdministrarCo
 import portal.transaccional.autenticacion.service.web.enumeracion.EnumeracionService
 import portal.transaccional.autenticacion.service.web.horarioEmpresa.HorarioEmpresaService
 import portal.transaccional.autenticacion.service.web.ip.{ IpService, PinService }
+import portal.transaccional.autenticacion.service.web.menu.MenuService
 import portal.transaccional.autenticacion.service.web.preguntasAutovalidacion.PreguntasAutovalidacionService
 import portal.transaccional.autenticacion.service.web.recursoComercial.RecursoGraficoComercialService
 import portal.transaccional.autenticacion.service.web.reglaContrasena.ReglaContrasenaService
@@ -42,7 +44,7 @@ import spray.routing._
 import spray.util.LoggingContext
 
 case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, autenticacionEmpresaRepositorio: AutenticacionEmpresaRepository,
-  autenticacionComercialRepositorio: AutenticacionComercialRepository, usuarioRepositorio: UsuarioRepository,
+  autenticacionComercialRepositorio: AutenticacionComercialRepository, autenticacionUsuarioRepository: AutenticacionUsuarioRepository, usuarioRepositorio: UsuarioRepository,
   usuarioAgenteRepositorio: UsuarioEmpresarialRepository[UsuarioEmpresarial], usuarioAdminRepositorio: UsuarioAdminRepository,
   autorizacionUsuarioRepo: AutorizacionUsuarioRepository, kafkaActor: ActorSelection, usuariosActor: ActorSelection, confrontaActor: ActorSelection,
   actualizacionRepo: ActualizacionRepository, permisoTransaccionalActor: ActorSelection, agenteEmpresarialActor: ActorSelection, pinRepo: PinRepository,
@@ -55,7 +57,7 @@ case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, autenticaci
   usuarioComercialAdminRepo: UsuarioComercialAdminRepository, reglaRepo: ReglaContrasenaRepository, horarioEmpresaRepository: HorarioEmpresaRepository,
   usInmobiliarioRepo: UsuarioInmobiliarioRepository, permisoAgenteInmob: PermisoAgenteInmobiliarioRepository,
   sesionUtilAgenteInmobiliario: SesionAgenteUtilRepository, agenteInmobContrasenaRepo: ContrasenaAgenteInmobiliarioRepository,
-  pinAgenteInmobRepository: UsuarioInmobiliarioPinRepository, autorizacionInmobRepo: AutorizacionRepository)(implicit val system: ActorSystem)
+  pinAgenteInmobRepository: UsuarioInmobiliarioPinRepository, autorizacionInmobRepo: AutorizacionRepository, menuUsuarioRepository: MenuUsuarioRepository)(implicit val system: ActorSystem)
     extends HttpServiceActor with RouteConcatenation with CrossHeaders with ServiceAuthorization
     with ActorLogging {
 
@@ -64,7 +66,7 @@ case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, autenticaci
   val routes =
     AutorizacionService(kafkaActor, usuarioRepositorio, usuarioAgenteRepositorio, usuarioAdminRepositorio, autorizacionUsuarioRepo,
       autorizacionAgenteRepo, autorizacionAdminRepo, autorizacionComercialRepo, autorizacionComercialAdminRepo, sesionUtilAgenteInmobiliario,
-      autorizacionInmobRepo).route ~ AutenticacionService(autenticacionRepo, autenticacionEmpresaRepositorio, autenticacionComercialRepositorio,
+      autorizacionInmobRepo).route ~ AutenticacionService(autenticacionRepo, autenticacionEmpresaRepositorio, autenticacionComercialRepositorio, autenticacionUsuarioRepository,
       kafkaActor).route ~
       //TODO: refactorizar
       new ConfrontaService(confrontaActor).route ~
@@ -76,6 +78,7 @@ case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, autenticaci
       PinService(kafkaActor, pinRepo).route ~
       AdministrarContrasenaService(kafkaActor, contrasenasRepo, contrasenasAgenteRepo, contrasenasAdminRepo, agenteInmobContrasenaRepo).route ~
       AgenteImobiliarioPinService(pinAgenteInmobRepository, agenteInmobContrasenaRepo).route ~
+      MenuService(menuUsuarioRepository).route ~
       authenticate(authenticateUser) {
         user =>
           IpService(user, kafkaActor, ipRepo).route ~

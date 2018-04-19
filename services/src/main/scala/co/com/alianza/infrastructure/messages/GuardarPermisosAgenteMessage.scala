@@ -13,8 +13,10 @@ import co.com.alianza.infrastructure.dto.security.UsuarioAuth
 case class GuardarPermisosAgenteMessage(idAgente: Int, permisos: List[Permiso], encargosPermisos: List[EncargoPermisos], idClienteAdmin: Option[Int]) extends MessageService
 case class ConsultarPermisosAgenteMessage(idAgente: Int) extends MessageService
 case class ConsultarPermisosAgenteLoginMessage(agente: UsuarioAuth) extends MessageService
+case class ConsultarFideicomiso(fideicomiso: UsuarioAuth) extends MessageService
 case class PermisosRespuesta(permisos: List[Permiso], encargosPermisos: List[EncargoPermisos])
 case class PermisosLoginRespuesta(permiteInscripciones: Boolean, permiteTransferencias: Boolean, permitePagosMasivos: Boolean, permiteConsultas: Boolean, permiteProgramacion: Boolean, permitePagosMasivosFideicomisos: Boolean, permitePagosMasivosFideicomisosCore: Boolean)
+case class PermisoPagoMasivoFideicomiso(permitePagoMasivo: Boolean)
 
 object PermisosTransaccionalesJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
   implicit val AgenteFormat = jsonFormat2(Autorizador)

@@ -21,6 +21,7 @@ trait UsuarioAgente {
   val fechaUltimoIngreso: Option[Timestamp]
   val tipoIdentificacion: Int
   val descripcion: Option[String]
+  var interventor: Boolean = false
 }
 
 abstract class UsuarioAgenteTable[E: ClassTag](tag: Tag, tableName: String)

@@ -54,43 +54,43 @@ case class UsuarioEmpresaService(kafkaActor: ActorSelection, agenteEmpresarialAc
       } ~
         path("usuarioAgenteEmpresarial") {
           //TODO: esta validacion no va acá !!
-          if (user.tipoCliente.eq(TiposCliente.comercialSAC))
-            complete((StatusCodes.Unauthorized, "Tipo usuario SAC no esta autorizado para realizar esta acción"))
-          else
-            respondWithMediaType(mediaType) {
-              pathEndOrSingleSlash {
-                clientIP {
-                  ip =>
-                    put {
-                      entity(as[CrearAgenteMessage]) {
-                        data =>
-                          mapRequestContext {
-                            r: RequestContext =>
-                              val token = r.request.headers.find(header => header.name equals "token")
-                              val usuario = DataAccessAdapterClienteAdmin.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
-                              requestWithFutureAuditing[PersistenceException, CrearAgenteMessage](r, AuditingHelper.fiduciariaTopic,
-                                AuditingHelper.crearAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, Some(data))
-                          } {
-                            requestExecute(data, agenteEmpresarialActor)
-                          }
-                      }
-                    } ~ post {
-                      entity(as[ActualizarAgenteMessage]) {
-                        data =>
-                          mapRequestContext {
-                            r: RequestContext =>
-                              val token = r.request.headers.find(header => header.name equals "token")
-                              val usuario = DataAccessAdapterClienteAdmin.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
-                              requestWithFutureAuditing[PersistenceException, ActualizarAgenteMessage](r, AuditingHelper.fiduciariaTopic,
-                                AuditingHelper.editarAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, Some(data))
-                          } {
-                            requestExecute(data.copy(nit = Some(user.identificacion)), agenteEmpresarialActor)
-                          }
-                      }
+          //  if (user.tipoCliente.eq(TiposCliente.comercialSAC))
+          // complete((StatusCodes.Unauthorized, "Tipo usuario SAC no esta autorizado para realizar esta acción"))
+          //else
+          respondWithMediaType(mediaType) {
+            pathEndOrSingleSlash {
+              clientIP {
+                ip =>
+                  put {
+                    entity(as[CrearAgenteMessage]) {
+                      data =>
+                        mapRequestContext {
+                          r: RequestContext =>
+                            val token = r.request.headers.find(header => header.name equals "token")
+                            val usuario = DataAccessAdapterClienteAdmin.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
+                            requestWithFutureAuditing[PersistenceException, CrearAgenteMessage](r, AuditingHelper.fiduciariaTopic,
+                              AuditingHelper.crearAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, Some(data))
+                        } {
+                          requestExecute(data, agenteEmpresarialActor)
+                        }
                     }
-                }
+                  } ~ post {
+                    entity(as[ActualizarAgenteMessage]) {
+                      data =>
+                        mapRequestContext {
+                          r: RequestContext =>
+                            val token = r.request.headers.find(header => header.name equals "token")
+                            val usuario = DataAccessAdapterClienteAdmin.obtenerTipoIdentificacionYNumeroIdentificacionUsuarioToken(token.get.value)
+                            requestWithFutureAuditing[PersistenceException, ActualizarAgenteMessage](r, AuditingHelper.fiduciariaTopic,
+                              AuditingHelper.editarAgenteEmpresarialIndex, ip.value, kafkaActor, usuario, Some(data))
+                        } {
+                          requestExecute(data.copy(nit = Some(user.identificacion)), agenteEmpresarialActor)
+                        }
+                    }
+                  }
               }
             }
+          }
         }
     }
 

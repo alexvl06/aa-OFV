@@ -4,6 +4,7 @@ import java.sql.Timestamp
 
 import co.com.alianza.commons.enumerations.TiposCliente._
 import co.com.alianza.persistence.entities.Usuario
+import portal.transaccional.autenticacion.service.web.autenticacion.UsuarioGenRequest
 
 import scala.concurrent.Future
 
@@ -22,6 +23,8 @@ trait UsuarioRepository {
 
   def validarContrasena(contrasena: String, usuario: Usuario, reintentosErroneos: Int): Future[Boolean]
 
+  def validarContrasena(contrasena: String, usuario: Usuario): Future[Boolean]
+
   def actualizarToken(numeroIdentificacion: String, token: String): Future[Int]
 
   def actualizarEstado(idUsuario: Int, estado: Int): Future[Int]
@@ -39,5 +42,14 @@ trait UsuarioRepository {
   def invalidarToken(token: String): Future[Int]
 
   def validarUsuario(usuarioOption: Option[Usuario]): Future[Usuario]
+
+  def getByUsuario(usuario: UsuarioGenRequest): Future[Usuario]
+
+  /**
+   * Crea un usuario si no existe en base de datos
+   * @param usuario Usuario a crear
+   * @return
+   */
+  def createIfNotExist(usuario: Usuario): Future[Int]
 
 }

@@ -4,7 +4,7 @@ import co.com.alianza.exceptions.PersistenceException
 import co.com.alianza.infrastructure.auditing.AuditingUser.AuditingUserData
 import co.com.alianza.infrastructure.dto.{ Usuario, _ }
 import co.com.alianza.persistence.entities
-import co.com.alianza.persistence.entities.{ IpsEmpresa, IpsUsuario, PerfilUsuario, Empresa => eEmpresa, PinUsuario => ePinUsuario, Usuario => eUsuario, UsuarioAgente => eUsuarioEmpresarial, UsuarioEmpresarialAdmin => eUsuarioEmpresarialAdmin }
+import co.com.alianza.persistence.entities.{ IpsEmpresa, IpsUsuario, PerfilUsuario, PinAgente, Empresa => eEmpresa, PinUsuario => ePinUsuario, Usuario => eUsuario, UsuarioAgente => eUsuarioEmpresarial, UsuarioEmpresarialAdmin => eUsuarioEmpresarialAdmin }
 import co.com.alianza.persistence.repositories.{ IpsUsuarioRepository, UsuariosRepository, _ }
 import co.com.alianza.persistence.util.DataBaseExecutionContext
 import enumerations.EstadosUsuarioEnum
@@ -116,6 +116,11 @@ object DataAccessAdapter {
   def crearUsuarioClienteAdministradorPin(pinUsuario: entities.PinAdmin): Future[Validation[PersistenceException, Int]] = {
     val repo = new UsuarioEmpresarialAdminRepository()
     repo.guardarPinUsuarioClienteAdmin(pinUsuario)
+  }
+
+  def guardarPinEmpresaAgenteEmpresarial(pinEmpresaAgenteEmpresarial: PinAgente): Future[Validation[PersistenceException, Int]] = {
+    val repo = new UsuariosEmpresarialRepository()
+    repo.guardarPinEmpresaAgenteEmpresarial(pinEmpresaAgenteEmpresarial)
   }
 
   private def transformValidation(origin: Validation[PersistenceException, Option[eUsuario]]): Validation[PersistenceException, Option[Usuario]] = {

@@ -13,7 +13,7 @@ import spray.json.DefaultJsonProtocol
  */
 
 object CrearAgenteEMessageJsonSupport extends DefaultJsonProtocol with SprayJsonSupport {
-  implicit val crearAgenteEMessageMessageFormat = jsonFormat7(CrearAgenteMessage)
+  implicit val crearAgenteEMessageMessageFormat = jsonFormat8(CrearAgenteMessage)
   implicit val actualizarAgenteEMessageMessageFormat = jsonFormat7(ActualizarAgenteMessage)
 }
 
@@ -24,13 +24,15 @@ case class CrearAgenteMessage(
     nombre: String,
     cargo: String,
     correo: String,
-    descripcion: String
+    descripcion: String,
+    interventor: Option[Boolean] = Some(false)
+
 ) extends MessageService {
 
   def toEntityUsuarioAgenteEmpresarial(): UsuarioEmpresarial = {
     UsuarioEmpresarial(0, correo, new Timestamp(System.currentTimeMillis()), nit, tipoIdentificacion, usuario,
       EstadosEmpresaEnum.pendienteActivacion.id, contrasena = None, token = None, numeroIngresosErroneos = 0,
-      ipUltimoIngreso = None, fechaUltimoIngreso = None, nombre, cargo, Option(descripcion))
+      ipUltimoIngreso = None, fechaUltimoIngreso = None, nombre, cargo, Option(descripcion), interventor)
   }
 
 }

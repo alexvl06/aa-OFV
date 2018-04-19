@@ -9,14 +9,21 @@ import co.com.alianza.util.token.Token
 import portal.transaccional.autenticacion.service.drivers.recurso.RecursoRepository
 import portal.transaccional.autenticacion.service.drivers.sesion.SesionRepository
 import portal.transaccional.autenticacion.service.drivers.usuarioIndividual.{ DataAccessTranslator, UsuarioRepository }
+import portal.transaccional.autenticacion.service.web.autorizacion.{ AuditityUser, UserResponseAuthGen }
+import portal.transaccional.fiduciaria.autenticacion.storage.daos.portal.AlianzaDAOs
 
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 
+import spray.json._
+import DefaultJsonProtocol._
+
 /**
  * Created by seven4n on 2016
  */
-case class AutorizacionUsuarioDriverRepository(usuarioRepo: UsuarioRepository, recursoRepo: RecursoRepository, sesionRepo: SesionRepository)(implicit val ex: ExecutionContext) extends AutorizacionUsuarioRepository {
+case class AutorizacionUsuarioDriverRepository(usuarioRepo: UsuarioRepository, recursoRepo: RecursoRepository, sesionRepo: SesionRepository,
+    /**OFV LOGIN FASE 1**/
+    alianzaDAOs: AlianzaDAOs)(implicit val ex: ExecutionContext) extends AutorizacionUsuarioRepository {
 
   implicit val timeout = Timeout(5.seconds)
 
@@ -79,6 +86,60 @@ case class AutorizacionUsuarioDriverRepository(usuarioRepo: UsuarioRepository, r
             Autorizado(usuarioJson)
         }
     }
+  }
+
+  /**OFV LOGIN FASE 1**/
+  /**
+   * Realiza validación de acceso a un recurso backend mediante el token para usuarios generales.
+   * @param token Token generado.
+   * @param url Recurso backend a validar.
+   * @return Future[ValidacionAutorizacion]
+   */
+  def autorizarGeneral(token: String, url: String): Future[ValidacionAutorizacion] = {
+    for {
+      validar <- validarToken(token)
+      validarSesion <- sesionRepo.validarSesion(token)
+      existe <- alianzaDAOs.validResourceByPerfil(getProfile(token), url)
+      validarRecursoGen <- validarRecursoGen(existe, url, token)
+    } yield validarRecursoGen
+  }
+  /**OFV LOGIN FASE 1**/
+  /**
+   * Invalidar token de acceso para usuarios generales
+   * @param token
+   * @param encriptedToken
+   * @return
+   */
+  def invalidarTokenGeneral(token: String, encriptedToken: String): Future[Any] = {
+    for {
+      n <- sesionRepo.eliminarSesion(token)
+    } yield n
+  }
+
+  /**OFV LOGIN FASE 1**/
+  private def getProfile(token: String): Int = {
+    val nToken = Token.getToken(token).getJWTClaimsSet
+    nToken.getCustomClaim("tipoCliente").toString.toInt
+  }
+
+  /**OFV LOGIN FASE 1**/
+  private def validarRecursoGen(validacion: Boolean, url: String, token: String): Future[ValidacionAutorizacion] = Future {
+    validacion match {
+      case false => Prohibido("403.2", "{\"url\":\"" + url + "\"}")
+      case true => Autorizado(JsonUtil.toJson(this.getTokenData(token)))
+    }
+  }
+
+  private def getTokenData(token: String): UserResponseAuthGen = {
+    val nToken = Token.getToken(token).getJWTClaimsSet
+    val tipoCliente = nToken.getCustomClaim("tipoCliente").toString
+    //TODO: el nit no lo pide si es tipo comercial
+    val idPerfil = nToken.getCustomClaim("tipoCliente").toString
+    val idUsuario = nToken.getCustomClaim("idUsuario").toString
+    val email = nToken.getCustomClaim("correo").toString
+    val lastEntry = nToken.getCustomClaim("ultimaFechaIngreso").toString
+    val nitType = nToken.getCustomClaim("tipoIdentificacion").toString
+    UserResponseAuthGen(idPerfil, idUsuario)
   }
 }
 

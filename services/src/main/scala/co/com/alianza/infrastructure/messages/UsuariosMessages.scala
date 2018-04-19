@@ -15,11 +15,12 @@ object UsuariosMessagesJsonSupport extends DefaultJsonProtocol with SprayJsonSup
   implicit val UsuarioMessageormat = jsonFormat10(UsuarioMessage)
   implicit val DesbloquearFormat = jsonFormat1(DesbloquearMessage)
   implicit val OlvidoContrasenaMessageFormat = jsonFormat4(OlvidoContrasenaMessage)
+  implicit val UsuarioHabeasDataFormat = jsonFormat7(UsuarioAceptaHabeasDataMessage)
 }
 
 case class UsuarioMessage(correo: String, identificacion: String, tipoIdentificacion: Int, contrasena: String, activarIP: Boolean, clientIp: Option[String] = None, challenge: String = "", uresponse: String = "", primerApellido: Option[String] = None, fechaExpedicion: Option[String] = None) extends MessageService {
   //TODO: Completar los datos automaticos del usuario
-  def toEntityUsuario: eUsuario = eUsuario(None, correo, new Timestamp(System.currentTimeMillis()), identificacion, tipoIdentificacion, EstadosUsuarioEnum.activo.id, None, null, 0, None, None)
+  def toEntityUsuario: eUsuario = eUsuario(None, correo, new Timestamp(System.currentTimeMillis()), identificacion, tipoIdentificacion, EstadosUsuarioEnum.activo.id, None, null, 0, None, None, None)
 }
 
 case class ConsultaUsuarioMessage(
@@ -47,6 +48,21 @@ case class ConsultaUsuarioEmpresarialAdminMessage(
   token: Option[String] = None
 ) extends MessageService
 
+case class UsuarioAceptaHabeasDataMessage(
+  perfilCliente: Int,
+  identificacion: String,
+  tipoIdentificacion: Int,
+  correoCliente: String,
+  idUsuario: Option[Int],
+  habeasData: Boolean,
+  idFormulario: String
+) extends MessageService
+
 case class OlvidoContrasenaMessage(perfilCliente: Int, identificacion: String, tipoIdentificacion: Int, usuarioClienteAdmin: Option[String]) extends MessageService
 
 case class DesbloquearMessage(identificacion: String) extends MessageService
+
+case class UsuarioGenMessage(tipoIngreso: Int, usuario: Option[String], email: String, identificacion: String, tipoIdentificacion: Int, contrasena: String, activarIP: Boolean, clientIp: Option[String] = None) extends MessageService {
+  //TODO: Completar los datos automaticos del usuario
+  def toEntityUsuario: eUsuario = eUsuario(None, email, new Timestamp(System.currentTimeMillis()), identificacion, tipoIdentificacion, EstadosUsuarioEnum.activo.id, None, null, 0, None, None, usuario)
+}
