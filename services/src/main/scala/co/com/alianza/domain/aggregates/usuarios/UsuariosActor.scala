@@ -11,7 +11,7 @@ import co.com.alianza.infrastructure.anticorruption.usuarios.{ DataAccessAdapter
 import co.com.alianza.infrastructure.dto.{ Empresa, _ }
 import co.com.alianza.infrastructure.messages.{ OlvidoContrasenaMessage, ResponseMessage, UsuarioMessage, _ }
 import co.com.alianza.microservices.{ MailMessage, SmtpServiceClient }
-import co.com.alianza.persistence.entities.{ Configuracion => _, Usuario => _, UsuarioAgenteInmobiliario => _, UsuarioEmpresarialAdmin => _, _ }
+import co.com.alianza.persistence.entities.{ PinAdmin, PinAgenteInmobiliario, PinUsuario, UsuarioAgenteInmobiliario, PinAgente }
 import co.com.alianza.util.json.JsonUtil
 import co.com.alianza.util.json.MarshallableImplicits._
 import co.com.alianza.util.token.{ PinData, TokenPin }
@@ -458,8 +458,7 @@ case class UsuariosActor(
             idPin <- agentesInmobPinRepo.asociarPinAgente(pinAgente)
             correoReinicio: MailMessage = agentesInmobPinRepo.generarCorreoReinicio(
               pinAgente.tokenHash, configExpiracion.valor.toInt,
-              //agente.nombre.getOrElse(agente.usuario),
-              agente.usuario,
+              agente.nombre.getOrElse(agente.usuario),
               agente.correo
             )
           } yield {
