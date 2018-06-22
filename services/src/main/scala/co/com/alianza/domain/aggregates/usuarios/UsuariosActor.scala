@@ -486,7 +486,7 @@ case class UsuariosActor(
           case zSuccess(responseConf: Configuracion) =>
 
             val fechaActual: Calendar = Calendar.getInstance()
-            fechaActual.add(Calendar.HOUR_OF_DAY, responseConf.valor.toInt)
+            fechaActual.add(Calendar.YEAR, 1)
             val tokenPin: PinData = TokenPin.obtenerToken(fechaActual.getTime)
 
             val pin = perfilCliente match {
