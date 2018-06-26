@@ -403,4 +403,7 @@ case class AlianzaDAO()(implicit dcConfig: DBConfig) extends AlianzaDAOs {
   }
   /**OFV LOGIN FASE 1**/
 
+  def getByTokenUsuario(token: String): Future[Option[Usuario]] = {
+    run(usuarios.filter(_.token === token).result.headOption)
+  }
 }
