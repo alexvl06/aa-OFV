@@ -171,6 +171,7 @@ trait Storage extends StoragePGAlianzaDB with BootedCore {
   lazy val contrasenaAdminRepo = ContrasenaAdminDriverRepository(ultimaContrasenaRepo, usuarioAdminRepo, reglaContrasenaRepo)
   /**OFV LOGIN FASE 1**/
   lazy val menuUsuario = MenuUsuarioDriverRepository(alianzaDAO, sesionRepo)
+  lazy val autorizacionOFVRepository = AutorizacionOFVDriverRepository(alianzaDAO)
 }
 
 private[app] sealed trait StoragePGAlianzaDB extends BootedCore {

@@ -37,7 +37,8 @@ case class AutorizacionService(
     autorizacionComercialRepo: AutorizacionUsuarioComercialRepository,
     autorizacionComercialAdminRepo: AutorizacionUsuarioComercialAdminRepository,
     sesionUtilAgenteInmobiliario: SesionAgenteUtilRepository,
-    autorizacionAgenteInmob: AutorizacionRepository
+    autorizacionAgenteInmob: AutorizacionRepository,
+    autorizacionOFVRepository: AutorizacionOFVRepository
 )(implicit val ec: ExecutionContext) extends CommonRESTFul with DomainJsonFormatters with CrossHeaders {
 
   val invalidarTokenPath = "invalidarToken"
@@ -46,6 +47,9 @@ case class AutorizacionService(
   /**OFV LOGIN FASE 1**/
   val validarTokenGeneralPath = "validarToken-general"
   val invalidarTokenGeneralPath = "invalidarToken-general"
+
+  /** VALIDACION TEMPORAL OFV FASE 1 **/
+  val validarUsuarioOFV = "validar-ofv"
 
   //tipos clientes
   val agente = TiposCliente.agenteEmpresarial.toString
@@ -73,6 +77,8 @@ case class AutorizacionService(
       validarTokenGeneral()
     } ~ path(invalidarTokenGeneralPath) {
       invalidarTokenGen
+    } ~ path(validarUsuarioOFV) {
+      validarOfvFase0
     }
   }
 
@@ -197,6 +203,21 @@ case class AutorizacionService(
             }
           }
         }
+    }
+  }
+
+  private def validarOfvFase0 = {
+    get {
+      headerValueByName("token") {
+        (token) =>
+          val decriptedToken = AesUtil.desencriptarToken(token)
+          val usuario = getTokenData(decriptedToken)
+          val resultado = autorizacionOFVRepository.validar(token, usuario.tipoCliente)
+          onComplete(resultado) {
+            case Success(value) => complete((StatusCodes.OK, value.toString))
+            case Failure(ex) => execution(ex)
+          }
+      }
     }
   }
 

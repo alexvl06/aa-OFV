@@ -57,7 +57,8 @@ case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, autenticaci
   usuarioComercialAdminRepo: UsuarioComercialAdminRepository, reglaRepo: ReglaContrasenaRepository, horarioEmpresaRepository: HorarioEmpresaRepository,
   usInmobiliarioRepo: UsuarioInmobiliarioRepository, permisoAgenteInmob: PermisoAgenteInmobiliarioRepository,
   sesionUtilAgenteInmobiliario: SesionAgenteUtilRepository, agenteInmobContrasenaRepo: ContrasenaAgenteInmobiliarioRepository,
-  pinAgenteInmobRepository: UsuarioInmobiliarioPinRepository, autorizacionInmobRepo: AutorizacionRepository, menuUsuarioRepository: MenuUsuarioRepository)(implicit val system: ActorSystem)
+  pinAgenteInmobRepository: UsuarioInmobiliarioPinRepository, autorizacionInmobRepo: AutorizacionRepository, menuUsuarioRepository: MenuUsuarioRepository,
+  autorizacionOFVRepository: AutorizacionOFVRepository)(implicit val system: ActorSystem)
     extends HttpServiceActor with RouteConcatenation with CrossHeaders with ServiceAuthorization
     with ActorLogging {
 
@@ -66,7 +67,7 @@ case class AlianzaRouter(autenticacionRepo: AutenticacionRepository, autenticaci
   val routes =
     AutorizacionService(kafkaActor, usuarioRepositorio, usuarioAgenteRepositorio, usuarioAdminRepositorio, autorizacionUsuarioRepo,
       autorizacionAgenteRepo, autorizacionAdminRepo, autorizacionComercialRepo, autorizacionComercialAdminRepo, sesionUtilAgenteInmobiliario,
-      autorizacionInmobRepo).route ~ AutenticacionService(autenticacionRepo, autenticacionEmpresaRepositorio, autenticacionComercialRepositorio, autenticacionUsuarioRepository,
+      autorizacionInmobRepo, autorizacionOFVRepository).route ~ AutenticacionService(autenticacionRepo, autenticacionEmpresaRepositorio, autenticacionComercialRepositorio, autenticacionUsuarioRepository,
       kafkaActor).route ~
       //TODO: refactorizar
       new ConfrontaService(confrontaActor).route ~
