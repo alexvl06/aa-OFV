@@ -23,6 +23,7 @@ case class AutorizacionOFVDriverRepository(alianzaDAO: AlianzaDAO)(implicit val 
       case `admin` | `adminInmobiliaria` => validarAdmin(token)
       case `individual` => validarIndividual(token)
       case `agenteInmobiliario` => validarAgenteInmobiliario(token)
+      case _ => Future.successful(false)
     }
     resultado
   }
