@@ -16,6 +16,7 @@ case class AutorizacionOFVDriverRepository(alianzaDAO: AlianzaDAO)(implicit val 
   val individual = TiposCliente.clienteIndividual.toString
   val adminInmobiliaria = TiposCliente.clienteAdminInmobiliario.toString
   val agenteInmobiliario = TiposCliente.agenteInmobiliario.toString
+  val agenteInmobiliarioInterno = TiposCliente.agenteInmobiliarioInterno.toString
 
   def validar(token: String, tipoCliente: String): Future[Boolean] = {
     val resultado = tipoCliente match {
@@ -23,6 +24,7 @@ case class AutorizacionOFVDriverRepository(alianzaDAO: AlianzaDAO)(implicit val 
       case `admin` | `adminInmobiliaria` => validarAdmin(token)
       case `individual` => validarIndividual(token)
       case `agenteInmobiliario` => validarAgenteInmobiliario(token)
+      case `agenteInmobiliarioInterno` => validarAgenteInmobiliarioInt(token)
       case _ => Future.successful(false)
     }
     resultado
@@ -53,6 +55,13 @@ case class AutorizacionOFVDriverRepository(alianzaDAO: AlianzaDAO)(implicit val 
     for {
       usuario <- alianzaDAO.getByTokenAgenteInmobiliario(token)
       existe <- identificacionesConfiguradas(usuario.identificacion, "ofv.tester.agenteinmo.ids")
+    } yield existe
+  }
+
+  def validarAgenteInmobiliarioInt(token: String): Future[Boolean] = {
+    for {
+      usuario <- alianzaDAO.getByTokenAgenteInmobiliario(token)
+      existe <- identificacionesConfiguradas(usuario.identificacion, "ofv.tester.agenteinmoint.ids")
     } yield existe
   }
 
