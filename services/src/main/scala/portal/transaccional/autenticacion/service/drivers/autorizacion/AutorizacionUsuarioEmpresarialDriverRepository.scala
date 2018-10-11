@@ -34,7 +34,7 @@ case class AutorizacionUsuarioEmpresarialDriverRepository(agenteRepo: UsuarioEmp
       agenteEstado: (UsuarioEmpresarialE, Int) <- alianzaDAO.getByTokenAgente(encriptedToken)
       _ <- validarEstadoEmpresa(agenteEstado._2)
       ips <- sesionRepo.obtenerIps(sesion)
-      validarIp <- validarIps(ips, ip)
+      //validarIp <- validarIps(ips, ip)
       recursos <- alianzaDAO.getAgenteResources(agenteEstado._1.id)
       result <- resolveMessageRecursos(DataAccessTranslator.entityToDto(agenteEstado._1), recursos, url)
     } yield result

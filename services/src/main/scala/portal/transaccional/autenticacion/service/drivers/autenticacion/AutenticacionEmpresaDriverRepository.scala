@@ -108,8 +108,8 @@ case class AutenticacionEmpresaDriverRepository(
       actualizar <- usuarioRepo.actualizarInfoUsuario(usuario, ip)
       inactividad <- configuracionRepo.getConfiguracion(ConfiguracionEnum.EXPIRACION_SESION)
       token <- generarTokenAgente(usuario, ip, inactividad.valor)
-      ips <- ipRepo.getIpsByEmpresaId(empresa.id)
-      validacionIps <- ipRepo.validarControlIpAgente(ip, ips, token)
+      //ips <- ipRepo.getIpsByEmpresaId(empresa.id)
+      //validacionIps <- ipRepo.validarControlIpAgente(ip, ips, token)
       asociarToken <- usuarioRepo.actualizarToken(usuario.id, AesUtil.encriptarToken(token))
       sesion <- sesionRepo.crearSesion(token, inactividad.valor.toInt, Option(EmpresaDTO.entityToDto(empresa)))
     } yield token
@@ -183,8 +183,8 @@ case class AutenticacionEmpresaDriverRepository(
       sesion <- sesionRepo.crearSesion(token, inactividad.valor.toInt, Option(EmpresaDTO.entityToDto(empresa)))
       asociarToken <- usuarioAdminRepo.actualizarToken(usuario.id, AesUtil.encriptarToken(token))
       respuestas <- respuestasRepo.getRespuestasById(usuario.id)
-      ips <- ipRepo.getIpsByEmpresaId(empresa.id)
-      validacionIps <- ipRepo.validarControlIpAdmin(ip, ips, token, respuestas.nonEmpty)
+      //ips <- ipRepo.getIpsByEmpresaId(empresa.id)
+      //validacionIps <- ipRepo.validarControlIpAdmin(ip, ips, token, respuestas.nonEmpty)
     } yield token
   }
 

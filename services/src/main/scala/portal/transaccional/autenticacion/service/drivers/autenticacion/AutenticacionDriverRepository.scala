@@ -66,9 +66,9 @@ case class AutenticacionDriverRepository(usuarioRepo: UsuarioRepository, cliente
       asociarToken <- usuarioRepo.actualizarToken(numeroIdentificacion, AesUtil.encriptarToken(token))
       rsp <- sesionRepo.crearSesion(token, inactividad.valor.toInt, None)
       respuestas <- respuestasRepo.getRespuestasById(usuario.id.get)
-      ips <- ipRepo.getIpsUsuarioById(usuario.id.get)
-      validacionIps <- ipRepo.validarControlIp(ip, ips, token, respuestas.nonEmpty)
-    } yield validacionIps
+      //ips <- ipRepo.getIpsUsuarioById(usuario.id.get)
+      //validacionIps <- ipRepo.validarControlIp(ip, ips, token, respuestas.nonEmpty)
+    } yield token
   }
 
   /**
