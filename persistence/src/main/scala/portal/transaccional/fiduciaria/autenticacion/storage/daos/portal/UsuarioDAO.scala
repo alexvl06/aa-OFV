@@ -24,6 +24,10 @@ case class UsuarioDAO()(implicit dcConfig: DBConfig) extends TableQuery(new Usua
     run(this.filter(_.identificacion === numeroIdentificacion).result.headOption)
   }
 
+  def getByIdentityAndTypeId(numeroIdentificacion: String, tipoIdentificacion: Int): Future[Option[Usuario]] = {
+    run(this.filter(x => x.identificacion === numeroIdentificacion && x.tipoIdentificacion === tipoIdentificacion).result.headOption)
+  }
+
   def getById(idUsuario: Int): Future[Option[Usuario]] = {
     run(this.filter(_.id === idUsuario).result.headOption)
   }

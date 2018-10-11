@@ -22,8 +22,8 @@ case class UsuarioDriverRepository(usuarioDAO: UsuarioDAOs)(implicit val ex: Exe
 
   def getById(idUsuario: Int): Future[Option[Usuario]] = usuarioDAO.getById(idUsuario)
 
-  def getByIdentificacion(numeroIdentificacion: String): Future[Usuario] = {
-    usuarioDAO.getByIdentity(numeroIdentificacion) flatMap {
+  def getByIdentificacion(numeroIdentificacion: String, tipoIdentificacion: Int): Future[Usuario] = {
+    usuarioDAO.getByIdentityAndTypeId(numeroIdentificacion, tipoIdentificacion) flatMap {
       (usuarioOption: Option[Usuario]) =>
         usuarioOption match {
           case Some(usuario: Usuario) => Future.successful(usuario)

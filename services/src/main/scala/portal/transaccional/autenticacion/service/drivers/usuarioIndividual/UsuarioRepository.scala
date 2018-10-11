@@ -15,7 +15,7 @@ trait UsuarioRepository {
 
   def getById(idUsuario: Int): Future[Option[Usuario]]
 
-  def getByIdentificacion(numeroIdentificacion: String): Future[Usuario]
+  def getByIdentificacion(numeroIdentificacion: String, tipoIdentificacion: Int): Future[Usuario]
 
   def getByToken(token: String): Future[Option[Usuario]]
 

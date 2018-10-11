@@ -50,7 +50,7 @@ case class AutenticacionDriverRepository(usuarioRepo: UsuarioRepository, cliente
    */
   def autenticar(tipoIdentificacion: Int, numeroIdentificacion: String, contrasena: String, ip: String): Future[String] = {
     for {
-      usuario <- usuarioRepo.getByIdentificacion(numeroIdentificacion)
+      usuario <- usuarioRepo.getByIdentificacion(numeroIdentificacion, tipoIdentificacion)
       estado <- usuarioRepo.validarEstado(usuario.estado)
       reintentosErroneos <- reglaRepo.getRegla(LlavesReglaContrasena.CANTIDAD_REINTENTOS_INGRESO_CONTRASENA)
       contrasena <- usuarioRepo.validarContrasena(contrasena, usuario, reintentosErroneos.valor.toInt)

@@ -15,6 +15,8 @@ trait UsuarioDAOs {
 
   def getByIdentity(numeroIdentificacion: String): Future[Option[Usuario]]
 
+  def getByIdentityAndTypeId(numeroIdentificacion: String, tipoIdentificacion: Int): Future[Option[Usuario]]
+
   def getById(idUsuario: Int): Future[Option[Usuario]]
 
   def getByToken(token: String): Future[Option[Usuario]]
