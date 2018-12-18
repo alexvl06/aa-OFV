@@ -515,14 +515,14 @@ case class UsuariosActor(
                   case zSuccess(intResult) =>
                     pin match {
                       case pinUsuarioDto @ PinUsuario(param1, param2, param3, param4, param5) =>
-                        new SmtpServiceClient()(context.system).send(buildMessagePin(pinUsuarioDto, responseConf.valor.toInt, UsuarioMessage(
+                        new SmtpServiceClient()(context.system).send(buildMessagePin(pinUsuarioDto, config.getString("ofv.email.expiracion").toInt, UsuarioMessage(
                           correoCliente,
                           identificacion, tipoIdentificacion, null, false, None
                         ), template, asunto, idFormaulario), (_, _) => Unit)
                         currentSender ! ResponseMessage(Created)
 
                       case pinUsuarioEmpresarialAdminDto @ PinAgente(param1, param2, param3, param4, param5, parm6) =>
-                        new SmtpServiceClient()(context.system).send(buildMessagePin(pinUsuarioEmpresarialAdminDto, responseConf.valor.toInt,
+                        new SmtpServiceClient()(context.system).send(buildMessagePin(pinUsuarioEmpresarialAdminDto, config.getString("ofv.email.expiracion").toInt,
                           UsuarioMessage(correoCliente, identificacion, tipoIdentificacion, null, false, None), template, asunto, idFormaulario), (_, _) => Unit)
                         currentSender ! ResponseMessage(Created)
                     }
